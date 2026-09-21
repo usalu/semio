@@ -218,8 +218,14 @@ mod conformance_laws {
     /// `print_dsl`/`encode_pack` output of `demo_ifc2x3_snapshot()`.
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
-        const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-        const FIXTURE_PACK: &[u8] = include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
+        // 🧫️ This standard's OWN fixtures. `📚️examples/🎬️demo/🖼️assets/` beside them is the
+        // ARTIFACT-level `demo` example (`ifc::examples::demo`), whose text is IFC4's
+        // `stdio.ifc.dsl` Part-21 body — the registered `s.stdio.ifc` codec's, asserted by `4`'s own
+        // `fixture_honesty_law`. `Ifc2x3Snapshot` prints a different DSL entirely
+        // (`stdio.ifc.2x3`, the tagged value encoding), so pointing this law at that shared asset
+        // only ever asserted one standard's fixture against another standard's printer.
+        const FIXTURE_DSL: &str = include_str!("../../../🧫️fixtures/🎬️demo/🗣️.dsl.semio");
+        const FIXTURE_PACK: &[u8] = include_bytes!("../../../🧫️fixtures/🎬️demo/🎒️.pack.semio");
 
         let demo = demo_ifc2x3_snapshot();
 
@@ -230,6 +236,20 @@ mod conformance_laws {
         let decoded = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_ifc2x3_snapshot()");
         assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_ifc2x3_snapshot()) drifted from the shipped .pack.semio fixture");
+    }
+
+    /// 🖊️ The ONLY way this standard's two shipped fixtures are ever refreshed: real
+    /// `print_dsl`/`encode_pack` output of `demo_ifc2x3_snapshot()`, never a hand edit. Run it
+    /// deliberately after a codec change — `cargo test -p semio-s-artifact-stdio-ifc --lib --
+    /// --ignored zzz_write` — then re-run the law.
+    #[semio_framework_async_macros::async_test]
+    #[ignore]
+    async fn zzz_write_demo_fixtures() {
+        let demo = demo_ifc2x3_snapshot();
+        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧫️fixtures/🎬️demo");
+        std::fs::create_dir_all(&assets).expect("create 🧫️fixtures/🎬️demo");
+        std::fs::write(assets.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
+        std::fs::write(assets.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
     }
 }
 //#endregion 🔖️ConformanceLaws

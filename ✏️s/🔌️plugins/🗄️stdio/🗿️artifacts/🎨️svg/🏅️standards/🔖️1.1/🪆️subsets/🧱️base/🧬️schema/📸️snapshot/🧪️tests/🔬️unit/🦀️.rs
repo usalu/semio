@@ -42,13 +42,32 @@ async fn schema_facets_reject_source_and_raw_doctype_shadow_state() {
         include_str!("../../../🧬️mutations/💾️binary/🟦️.ts"),
     ];
     for facet in persistence_facets {
-        assert!(!facet.to_ascii_lowercase().contains("json"), "SVG diff/mutation persistence facet must describe the structured codec");
+        // 🧾️ A JSON-Schema facet necessarily names `json-schema.org` in `$schema` and carries a
+        // `…/text.json` `$id`; those two meta keys say where the SCHEMA lives, never what the
+        // persisted form is. The law is about the described CODEC — the body must not offer a JSON
+        // serialization of a diff/mutation — so the meta header is not part of what it reads.
+        let described: String = facet.lines().filter(|line| !line.trim_start().starts_with("\"$schema\"") && !line.trim_start().starts_with("\"$id\"")).collect::<Vec<_>>().join("\n");
+        assert!(!described.to_ascii_lowercase().contains("json"), "SVG diff/mutation persistence facet must describe the structured codec");
     }
 }
 
+/// 🚪️ The semio envelope is what SELECTS the branch (see `parse_dsl`'s own two-branch contract):
+/// text carrying the preamble is this artifact's structured snapshot DSL and nothing else — raw
+/// `.svg` markup under a preamble is refused — while text without one is the document's own markup,
+/// imported losslessly, which is what `from_text` (this subset's `DerivedConstruction`) and
+/// `📚️examples`' raw markup both hand in. Refusing the envelope-less branch outright, as this law
+/// used to, is what made every one of those callers fail on the preamble check alone.
 #[semio_framework_async_macros::async_test]
-async fn artifact_dsl_rejects_native_svg_without_a_semio_envelope() {
-    assert!(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(r#"<svg xmlns="http://www.w3.org/2000/svg"/>"#).is_err());
+async fn artifact_dsl_routes_native_svg_by_its_semio_envelope() {
+    const NATIVE: &str = r#"<svg xmlns="http://www.w3.org/2000/svg"/>"#;
+    let imported = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(NATIVE).expect("envelope-less native markup is imported, not refused");
+    assert_eq!(imported, SvgSnapshot::import_utf8(NATIVE.as_bytes()).expect("import_utf8 of the same markup"), "the envelope-less branch IS the lossless native import");
+
+    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<SvgSnapshot as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+    assert!(
+        <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&store::semio_format::wrap_text(&envelope, NATIVE)).is_err(),
+        "native svg markup under a semio preamble is not this artifact's structured state DSL"
+    );
 }
 
 //#region PathGrammar

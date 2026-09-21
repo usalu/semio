@@ -94,9 +94,54 @@ pub enum XmlDtdDeclaration {
     Entity { parameter: bool, name: String, value: String },
 }
 
+/// 🗣️ Which delimiter quotes the XML declaration's pseudo-attribute values. XML 1.0 §2.8 admits
+/// `"` and `'` interchangeably, so this is real document state rather than retained source text: a
+/// document written `<?xml version='1.0' encoding='UTF-8'?>` has to come back out that way
+/// (`🎨️svg`'s own `exact_native_analyzer_text_and_pack_roundtrip`/`…_composer_…` laws read a real
+/// third-party file byte for byte, and the declaration was the one place the writer normalized).
+/// `Double` is the default spelling, so a declaration that never names a quote is the one every
+/// generator in this tree emits and every committed fixture already carries.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub enum XmlQuote {
+    #[default]
+    Double,
+    Single,
+}
+
+impl XmlQuote {
+    /// 🔡️ The delimiter itself.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn as_char(self) -> char {
+        match self {
+            Self::Double => '"',
+            Self::Single => '\'',
+        }
+    }
+
+    /// 🔡️ The delimiter a parser just consumed; anything that is not `'` is the double quote,
+    /// because `parse_attr_value` has already rejected every other byte in that position.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn from_char(quote: char) -> Self {
+        if quote == '\'' {
+            Self::Single
+        } else {
+            Self::Double
+        }
+    }
+
+    /// 🫥 `skip_serializing_if` for the default spelling: a double-quoted declaration writes no
+    /// `quote` key at all, which is what keeps every pre-existing wire value byte-identical.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_double(&self) -> bool {
+        matches!(self, Self::Double)
+    }
+}
+
 /// 🏳️ Typed XML declaration (`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`).
 /// `version` is mandatory per the XML 1.0 spec whenever a declaration is present at all;
-/// `encoding`/`standalone` are each independently optional.
+/// `encoding`/`standalone` are each independently optional. `quote` is the delimiter all three
+/// pseudo-attributes are written with (see [`XmlQuote`]).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 #[value(rename_all = "camelCase")]
 pub struct XmlDeclaration {
@@ -105,6 +150,19 @@ pub struct XmlDeclaration {
     pub encoding: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub standalone: Option<bool>,
+    #[value(default, skip_serializing_if = "XmlQuote::is_double")]
+    pub quote: XmlQuote,
+}
+
+impl XmlDeclaration {
+    /// 🏳️ A declaration in the DEFAULT spelling — every caller that MINTS one (rather than reading
+    /// one out of a document) goes through here, so adding a further modeled facet of the
+    /// declaration can never again silently miss a struct literal. A reader that recovered a real
+    /// delimiter builds the struct directly and sets [`XmlDeclaration::quote`] itself.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn new(version: impl Into<String>, encoding: Option<String>, standalone: Option<bool>) -> Self {
+        Self { version: version.into(), encoding, standalone, quote: XmlQuote::Double }
+    }
 }
 
 //#endregion 🔖️XmlModel
@@ -253,18 +311,22 @@ fn xml_unescape_text(s: &str) -> Result<String, String> {
 pub fn xml_document_to_text(doc: &XmlDocument) -> String {
     let mut out = String::new();
     if let Some(decl) = &doc.declaration {
-        out.push_str("<?xml version=\"");
+        let quote = decl.quote.as_char();
+        out.push_str("<?xml version=");
+        out.push(quote);
         out.push_str(&decl.version);
-        out.push('\"');
+        out.push(quote);
         if let Some(encoding) = &decl.encoding {
-            out.push_str(" encoding=\"");
+            out.push_str(" encoding=");
+            out.push(quote);
             out.push_str(encoding);
-            out.push('\"');
+            out.push(quote);
         }
         if let Some(standalone) = decl.standalone {
-            out.push_str(" standalone=\"");
+            out.push_str(" standalone=");
+            out.push(quote);
             out.push_str(if standalone { "yes" } else { "no" });
-            out.push('\"');
+            out.push(quote);
         }
         out.push_str("?>\n");
     }
@@ -425,6 +487,9 @@ fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option<XmlDe
     let mut version = None;
     let mut encoding = None;
     let mut standalone = None;
+    // 🗣️ `version` is mandatory and always first, so its delimiter is the declaration's own
+    // (see `XmlQuote`); a declaration whose pseudo-attributes disagree normalizes to that one.
+    let mut quote = XmlQuote::default();
     loop {
         skip_ws(s, pos);
         if s[*pos..].starts_with("?>") {
@@ -436,16 +501,20 @@ fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option<XmlDe
             return Err("expected = in xml declaration".into());
         }
         *pos += 1;
-        let value = xml_unescape_text(&parse_attr_value(s, pos)?)?;
+        let (raw, delimiter) = parse_attr_value_quoted(s, pos)?;
+        let value = xml_unescape_text(&raw)?;
         match name.as_str() {
-            "version" => version = Some(value),
+            "version" => {
+                version = Some(value);
+                quote = delimiter;
+            }
             "encoding" => encoding = Some(value),
             "standalone" => standalone = Some(value == "yes"),
             other => return Err(format!("unknown xml declaration attribute {other}")),
         }
     }
     *pos += 2;
-    Ok(Some(XmlDeclaration { version: version.ok_or("xml declaration missing version")?, encoding, standalone }))
+    Ok(Some(XmlDeclaration { version: version.ok_or("xml declaration missing version")?, encoding, standalone, quote }))
 }
 
 /// 🚧️ Parses prolog processing instructions, comments, and a typed document declaration.
@@ -595,6 +664,13 @@ fn is_name_char(ch: char) -> bool {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_attr_value(s: &str, pos: &mut usize) -> Result<String, String> {
+    parse_attr_value_quoted(s, pos).map(|(value, _)| value)
+}
+
+/// 🗣️ `parse_attr_value` plus the delimiter it consumed — the XML declaration is the one place
+/// whose quoting is modeled state ([`XmlQuote`]), so only that caller needs the second half.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn parse_attr_value_quoted(s: &str, pos: &mut usize) -> Result<(String, XmlQuote), String> {
     skip_ws(s, pos);
     let quote = s[*pos..].chars().next().ok_or("expected attribute value")?;
     if quote != '"' && quote != '\'' {
@@ -607,7 +683,7 @@ fn parse_attr_value(s: &str, pos: &mut usize) -> Result<String, String> {
         if ch == quote {
             let value = s[start..*pos].to_string();
             *pos += 1;
-            return Ok(value);
+            return Ok((value, XmlQuote::from_char(quote)));
         }
         *pos += ch.len_utf8();
     }

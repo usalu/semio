@@ -4816,8 +4816,18 @@ pub mod vcs_integration {
         }
     }
 
+    impl store::retirement::RetireOwned for HashProjection {
+        fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+            store::retirement::RetireOwned::retirement(self.latest_hash)
+        }
+    }
+
     impl store::MemberStoreOwner<HashMutation> for HashProjection {
-        type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
+        /// 📦️ The version graph's projection opens as an owned member through its own `ArtifactPack`
+        /// codec. It declared `UnsupportedMemberSnapshotOpen` until 2026-09-21, whose `step` has exactly
+        /// one answer — `Rejected(MemberOpenDiagnostic::Decode)` — so a composed document owning a
+        /// version-graph member was refused at member-open step 0, always.
+        type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
 
         fn member_store_owners() -> store::DocumentStoreOwners<Self, HashMutation> {
             store::DocumentStoreOwners::new(

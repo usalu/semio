@@ -2,7 +2,11 @@
   "document": {
     "schema": "layout.layout",
     "name": "Sprachneutrales Blatt",
-    "grid": { "baselineGrid": 12, "baselineOffset": 0, "snapToBaseline": true },
+    "grid": {
+      "baselineGrid": 12.0,
+      "baselineOffset": 0.0,
+      "snapToBaseline": true
+    },
     "paragraphStyles": [],
     "characterStyles": [],
     "stories": [],
@@ -17,35 +21,63 @@
         "childId": "background-drawing-canonical-fixture",
         "target": {
           "artifactId": "background-drawing-canonical-fixture",
-          "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "drawing" }
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "drawing"
+          }
         }
       },
       "content": {
         "schema": "stdio.semio.drawing",
-        "canvas": { "width": 420, "height": 297 },
+        "canvas": {
+          "width": 420.0,
+          "height": 297.0
+        },
         "styles": [],
-        "layers": [{
-          "id": "hintergrund",
-          "name": "Hintergrund",
-          "visible": true,
-          "root": {
-            "kind": "group",
-            "transform": {
-              "translation": { "x": 0, "y": 0, "z": 0 },
-              "rotation": { "x": 0, "y": 0, "z": 0, "w": 1 },
-              "scale": { "x": 1, "y": 1, "z": 1 }
-            },
-            "children": []
+        "layers": [
+          {
+            "id": "hintergrund",
+            "name": "Hintergrund",
+            "visible": true,
+            "root": {
+              "kind": "group",
+              "transform": {
+                "translation": {
+                  "x": 0.0,
+                  "y": 0.0,
+                  "z": 0.0
+                },
+                "rotation": {
+                  "x": 0.0,
+                  "y": 0.0,
+                  "z": 0.0,
+                  "w": 1.0
+                },
+                "scale": {
+                  "x": 1.0,
+                  "y": 1.0,
+                  "z": 1.0
+                }
+              },
+              "children": []
+            }
           }
-        }]
+        ]
       }
     },
     "referencedModel": {
       "target": {
         "artifactId": "architect-model-fixture",
-        "dialect": { "artifactKind": "s.architect.model", "standard": "1", "subset": "*" }
+        "dialect": {
+          "artifactKind": "s.architect.model",
+          "standard": "1",
+          "subset": "*"
+        }
       },
-      "pin": { "kind": "head" },
+      "pin": {
+        "kind": "head"
+      },
       "role": "model"
     }
   },
@@ -68,12 +100,19 @@
         "childId": "background-drawing-canonical-fixture",
         "target": {
           "artifactId": "background-drawing-canonical-fixture",
-          "dialect": { "artifactKind": "s.stdio.semio", "standard": "v1", "subset": "drawing" }
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "drawing"
+          }
         }
       },
       "content": {
         "schema": "stdio.semio.drawing",
-        "canvas": { "width": 420, "height": 297 },
+        "canvas": {
+          "width": 420.0,
+          "height": 297.0
+        },
         "styles": [],
         "layers": []
       }

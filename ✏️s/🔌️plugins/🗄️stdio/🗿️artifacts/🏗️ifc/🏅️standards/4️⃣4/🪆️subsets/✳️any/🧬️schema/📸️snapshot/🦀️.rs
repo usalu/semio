@@ -129,12 +129,24 @@ pub struct IfcEntity {
 /// 📇️ The three standard `HEADER;` records (`FILE_DESCRIPTION`/`FILE_NAME`/`FILE_SCHEMA`), typed
 /// via IFC's own [`IfcValue`] — kept as their raw tuple-of-values shape (not schema-interpreted
 /// into named sub-fields), matching the recipe's "typed HEADER section" completeness target.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct IfcHeader {
     pub file_description: Vec<IfcValue>,
     pub file_name: Vec<IfcValue>,
     pub file_schema: Vec<IfcValue>,
+}
+
+/// 🌱 ISO 10303-21 §8.2's conformant minimum HEADER, in IFC's own value type — the exact mirror of
+/// [`Part21Header::default`] (`iso_10303_21_minimum`). A derived all-empty default is NOT a fixed
+/// point of this artifact's own codec: `write_part21` pads every mandatory record to its full
+/// attribute arity and spells an empty `LIST[1:?] OF STRING` `('')`, so an all-empty header would
+/// come back from `parse_dsl`/`decode_pack` as this one anyway.
+/// https://www.iso.org/standard/63141.html
+impl Default for IfcHeader {
+    fn default() -> Self {
+        ifc_header_from_part21(&Part21Header::default())
+    }
 }
 //#endregion 🔖️Header
 

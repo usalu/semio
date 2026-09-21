@@ -139,13 +139,17 @@ message ProgramDiff {
   // @state artifact
   optional ProgramTemplatesDelta templates = 67;
   // @state artifact
-  optional semio.os.store.ArtifactChild knowledge = 68;
+  repeated KnowledgeRecord knowledge_payload = 68;
   // @state artifact
-  optional semio.os.store.ArtifactChild benchmarks = 69;
+  optional semio.os.store.ArtifactChild knowledge = 69;
   // @state artifact
-  optional ProgramTracesDelta traces = 70;
+  repeated BenchmarkRecord benchmarks_payload = 70;
   // @state artifact
-  optional Governance governance = 71;
+  optional semio.os.store.ArtifactChild benchmarks = 71;
+  // @state artifact
+  optional ProgramTracesDelta traces = 72;
+  // @state artifact
+  optional Governance governance = 73;
 }
 
 message ProgramStakeholdersDelta {

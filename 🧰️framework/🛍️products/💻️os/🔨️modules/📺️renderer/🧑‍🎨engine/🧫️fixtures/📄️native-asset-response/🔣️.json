@@ -1,0 +1,73 @@
+{
+  "$schema": "./📐️schema.json",
+  "schema": "semio.native-asset-response.v8",
+  "pageBytes": 16384,
+  "patternPeriod": 251,
+  "cases": [
+    { "bytes": 1, "accepted": true, "transferredBytes": 1 },
+    { "bytes": 16384, "accepted": true, "transferredBytes": 16384 },
+    { "bytes": 16385, "accepted": false, "transferredBytes": 0 }
+  ],
+  "referenceDecodeRetirement": {
+    "maximumItems": 1,
+    "zeroGrantReleasedBytes": 0,
+    "phaseZero": {
+      "encodedBytes": 32785,
+      "decodedPixelBytes": 32800,
+      "decodedPageReleases": [16384, 16384, 32],
+      "encodedPageReleases": [16384, 16384, 17],
+      "releasedBytes": 65585
+    },
+    "phaseTwoWaiting": {
+      "encodedBytes": 16385,
+      "decodedPixelBytes": 32800,
+      "retainedAfterOneTurn": true,
+      "closeTurns": 9
+    },
+    "terminalOwners": 0
+  },
+  "transportCancellation": {
+    "stalledHostId": "component-world-a",
+    "siblingHostId": "component-world-b",
+    "responseBytes": 1,
+    "observationDeadlineMs": 2000,
+    "cleanupDeadlineMs": 5000,
+    "serviceOutcomes": {
+      "idle": "idle",
+      "socket": "interrupted",
+      "httpsReadDeadlineMs": 15000,
+      "faultDetail": "transport cancellation probe failed"
+    },
+    "abandonedStart": {
+      "outstandingCap": 1,
+      "siblingRefusedBeforeWorkerTerminal": true,
+      "workerTerminalBeforeSibling": true,
+      "siblingAdmitted": true
+    },
+    "abandonedBodyRead": {
+      "outstandingCap": 1,
+      "readPendingBeforeBodyDrop": true,
+      "siblingRefusedBeforeReaderTerminal": true,
+      "readerTerminalBeforeSibling": true,
+      "siblingAdmitted": true
+    },
+    "publishedStalledResponses": 0,
+    "terminalTransportLeases": 0,
+    "frameFaults": 0
+  },
+  "localPageCancellation": {
+    "pageBytes": 16384,
+    "publishedCancelledBytes": 0,
+    "retainedPageBytesBeforeClose": 16384,
+    "pageRetirementTurns": 1,
+    "terminalNativeOwners": 0,
+    "frameFaults": 0
+  },
+  "rendererIoContention": {
+    "registrationState": "checkedOut",
+    "exactGenerationLive": true,
+    "poll": "pending",
+    "wakeCount": 1,
+    "terminalOwners": 0
+  }
+}

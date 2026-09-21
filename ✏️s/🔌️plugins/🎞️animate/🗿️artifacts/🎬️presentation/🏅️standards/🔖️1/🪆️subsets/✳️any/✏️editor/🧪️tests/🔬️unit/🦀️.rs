@@ -1,9 +1,36 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
-    
-    pub type PresentationApp = VcsArtifactApp<EditorApp<AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, settle_registered_typed_operation};
+    use semio_framework_plugin::{EditorApp, Effect, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+
+    type MountedPresentationApp = VcsArtifactApp<EditorApp<AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+
+    /// 🔒️ Self-closing app handle: every registry-backed app owns Stores that must retire through the
+    /// bounded close protocol before drop (`artifact store reached Drop without its exact terminal-empty
+    /// shallow-shell witness`), so `Drop` runs `close_registered_fixture_app` for every test that returns
+    /// early — a panicking test leaves the witness alone so the FIRST failure stays the reported one.
+    pub struct PresentationApp(MountedPresentationApp);
+
+    impl std::ops::Deref for PresentationApp {
+        type Target = MountedPresentationApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for PresentationApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for PresentationApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
     
     /// ✏️ `AnimatePresentationPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<AnimatePresentationPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -29,11 +56,33 @@ pub(crate) mod context {
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn presentation_app_with_registry() -> PresentationApp {
-        new_app_with_registry_and_members::<EditorApp<AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(animate_presentation_app_manifest_for_tests).await
+        let mut app = new_app_with_registry_and_members::<EditorApp<AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(animate_presentation_app_manifest_for_tests).await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        PresentationApp(app)
     }
     
+    /// 🧾️ A SETTLED dispatch: a mounted app answers first and publishes afterwards, so every caller
+    /// must drive the same bounded continuation and ACK protocol the plugin host drives
+    /// (`settle_registered_typed_operation`) before reading the snapshot back — and must apply the
+    /// `LoadDocument` effects the host would apply. Without the `bind_instance_id`/settle pair every
+    /// typed command is refused with `interactive-job.live-instance`.
     pub async fn dispatch(app: &mut PresentationApp, command: PresentationCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        let mut result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.expect("settle");
+        result.requested_effects.extend(settled.effects);
+        for effect in &result.requested_effects {
+            if let Effect::LoadDocument { pack, spr } = effect {
+                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+            }
+        }
+        result
+    }
+
+    /// ↩️ An `undo`/`redo` verb is a FRAMEWORK-RESERVED job, not a typed command: admitted, then
+    /// committed through its reserved job, then published — all three steps or the projection never moves.
+    pub async fn history_verb(app: &mut PresentationApp, action: &str) {
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, meta("local").instance_id).await;
     }
     
     pub async fn render(app: &mut PresentationApp, body_key: &str) -> String {
@@ -113,11 +162,11 @@ async fn deck_schema_is_animate_presentation() {
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = presentation_app().await;
-    app.dispatch_typed(PresentationCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }), &meta("local")).await.expect("seed grid");
+    context::dispatch(&mut app, PresentationCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
     assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
-    app.handle_action("undo", None, &meta("local")).await.expect("undo");
+    context::history_verb(&mut app, "undo").await;
     assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
-    app.handle_action("redo", None, &meta("local")).await.expect("redo");
+    context::history_verb(&mut app, "redo").await;
     assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
 }
 
@@ -199,22 +248,22 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a);
     instance_a.dispatch_typed(PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }), &meta("actor-a")).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's edit publishes");
+    settle_registered_typed_operation(&mut *instance_a, receiver).await.expect("a's edit publishes");
     instance_b.dispatch_typed(PresentationCommand::SetSource(set_source::SetSource { source }), &meta("actor-b")).await.expect("b applies its edit");
-    settle_registered_typed_operation(&mut instance_b, receiver).await.expect("b's edit publishes");
+    settle_registered_typed_operation(&mut *instance_b, receiver).await.expect("b's edit publishes");
     instance_a.tick_backbone().await.expect("a folds b's events");
     instance_b.tick_backbone().await.expect("b folds a's events");
     assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
     let admitted = instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("a commits a checkpoint");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a, admitted).await.expect("a's checkpoint commit settles");
-    settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's checkpoint publication settles");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *instance_a, admitted).await.expect("a's checkpoint commit settles");
+    settle_registered_typed_operation(&mut *instance_a, receiver).await.expect("a's checkpoint publication settles");
     instance_b.tick_backbone().await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a), probe(&instance_b), "a replicated checkpoint keeps both instances converged");
     assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
-    close_registered_fixture_app(&mut instance_a);
-    close_registered_fixture_app(&mut instance_b);
+    close_registered_fixture_app(&mut *instance_a);
+    close_registered_fixture_app(&mut *instance_b);
 }
 
 //#region 🔖️PortTests
@@ -423,24 +472,31 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
         std::thread::yield_now();
     }
     let (parent_pack, parent_spr) = loaded.expect("the demo example publishes a document load");
-    PluginApp::begin_document_archive_load(&mut app, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
+    PluginApp::begin_document_archive_load(&mut *app, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut app, 91).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut *app, 91).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
         }
-        let _ = PluginApp::maintenance_step(&mut app, 1, 4_096).expect("archive maintenance step");
+        let _ = PluginApp::maintenance_step(&mut *app, 1, 4_096).expect("archive maintenance step");
         std::thread::yield_now();
     }
     let status = status.expect("archive load reaches a terminal state");
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
-    PluginApp::acknowledge_document_archive_load(&mut app, 91).expect("archive acknowledgement");
+    PluginApp::acknowledge_document_archive_load(&mut *app, 91).expect("archive acknowledgement");
     let snapshot = app.snapshot().expect("loaded snapshot");
     for (slot, child_id) in [("presentation", snapshot.presentation.child_id.clone()), ("animation", snapshot.animation.child_id.clone())] {
         assert!(app.child_store(slot, &child_id).await.is_some(), "the genesis-derived {slot} member is live after the load");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    let (source, tiles) = crate::presentation_working_scene(&snapshot);
+    assert!(!tiles.is_empty(), "the demo example must survive the archive door with its tile crops, not an empty deck");
+    assert!(!source.src.is_empty(), "the demo example must survive the archive door with its source figure");
+    let derived = crate::genesis_presentation_child_pack(&snapshot, "presentation", &snapshot.presentation.child_id).expect("the loaded snapshot still derives its own presentation member");
+    let deck = <semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&derived).expect("the derived presentation member decodes");
+    assert_eq!(deck.slides.len(), tiles.len(), "the genesis-derived deck must carry one slide per loaded tile");
+    assert!(!deck.masters.is_empty(), "the genesis-derived deck must carry the loaded source figure as its master");
+    artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 //#endregion 🔖️ExampleArchiveLoad

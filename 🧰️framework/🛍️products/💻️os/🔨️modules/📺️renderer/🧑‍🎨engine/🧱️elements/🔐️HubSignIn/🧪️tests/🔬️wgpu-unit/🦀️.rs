@@ -102,12 +102,7 @@ fn every_origin_vector_normalizes_exactly_as_the_react_twin_does() {
 
 #[test]
 fn the_mint_body_carries_the_shared_field_order_and_lowercases_the_email() {
-    let credential = HubSignInCredential {
-        email: "  Ada@Example.ORG ".to_string(),
-        password: "correct horse".to_string(),
-        device_instance_id: "device-1".to_string(),
-        client_class: HubSignInClientClass::Native,
-    };
+    let credential = HubSignInCredential { email: "  Ada@Example.ORG ".to_string(), password: "correct horse".to_string(), device_instance_id: "device-1".to_string(), client_class: HubSignInClientClass::Native };
     let body = hub_session_mint_request_json(&credential).expect("a valid credential seals");
     let order: Vec<String> = rows("requestFieldOrder").iter().map(|value| value.as_str().expect("field").to_string()).collect();
     let mut cursor = 0usize;
@@ -132,12 +127,7 @@ fn a_malformed_credential_never_reaches_the_wire() {
 fn the_widest_admissible_credential_still_fits_the_hubs_own_body_limit() {
     let email = format!("{}@{}", "a".repeat(126), "a".repeat(127));
     assert_eq!(email.len(), HUB_SIGN_IN_EMAIL_MAX_BYTES);
-    let widest = HubSignInCredential {
-        email,
-        password: "a".repeat(HUB_SIGN_IN_PASSWORD_MAX_BYTES),
-        device_instance_id: "d".repeat(HUB_SIGN_IN_DEVICE_INSTANCE_MAX_BYTES),
-        client_class: HubSignInClientClass::Browser,
-    };
+    let widest = HubSignInCredential { email, password: "a".repeat(HUB_SIGN_IN_PASSWORD_MAX_BYTES), device_instance_id: "d".repeat(HUB_SIGN_IN_DEVICE_INSTANCE_MAX_BYTES), client_class: HubSignInClientClass::Browser };
     let body = hub_session_mint_request_json(&widest).expect("every in-bounds credential seals");
     assert!(
         body.len() <= HUB_SESSION_MINT_REQUEST_MAX_BYTES,

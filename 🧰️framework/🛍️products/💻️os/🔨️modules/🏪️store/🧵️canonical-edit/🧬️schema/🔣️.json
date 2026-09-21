@@ -146,12 +146,12 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "plugin_id", "mutation_id", "payload_hash"],
+          "required": ["kind", "pluginId", "mutationId", "payloadHash"],
           "properties": {
             "kind": { "const": "contributed" },
-            "plugin_id": { "type": "string" },
-            "mutation_id": { "type": "string" },
-            "payload_hash": {
+            "pluginId": { "type": "string" },
+            "mutationId": { "type": "string" },
+            "payloadHash": {
               "type": "array",
               "minItems": 32,
               "maxItems": 32,

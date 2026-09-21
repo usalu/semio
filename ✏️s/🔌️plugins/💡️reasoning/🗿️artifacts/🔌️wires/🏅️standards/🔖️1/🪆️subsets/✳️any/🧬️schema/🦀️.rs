@@ -232,60 +232,16 @@ pub fn node_position(node: &DslValue) -> (f64, f64) {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️ExampleFixture
-/// 📄️ The `metabolism` example, parsed once from `crate::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT`
-/// — falls back to the empty document if the fixture ever fails to parse.
+/// 📄️ The `metabolism` example, parsed from `crate::dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT`.
+/// The committed asset IS the example — the only content `setActiveExample`, the `.example` manifest
+/// registration and every metabolism test ever see. It used to be a stub envelope (an empty board
+/// plus one "Demo" node) that a hand-built in-code graph silently stood in for whenever the parse
+/// yielded fewer than seven nodes, so the play pane, which loads the asset itself, rendered an empty
+/// canvas while every unit test saw the seven-node graph. The fallback is gone and the asset carries
+/// the real graph (regenerated with this crate's own `ArtifactDsl::print_dsl`).
 pub fn metabolism_wires_example_snapshot() -> protocol::MutationApplyResult<crate::WiresSnapshot> {
-    match <crate::WiresSnapshot as store::ArtifactDsl>::parse_dsl(crate::document_dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT) {
-        Ok(snapshot) if fixture_nodes(&crate::wires_working_board(&snapshot)).len() >= 7 => Ok(snapshot),
-        _ => handcrafted_metabolism_snapshot(),
-    }
+    <crate::WiresSnapshot as store::ArtifactDsl>::parse_dsl(crate::document_dsl::REASONING_WIRES_EXAMPLE_METABOLISM_TEXT)
+        .map_err(|error| protocol::MutationApplyError::new("example.unparsable", format!("the committed metabolism example must parse: {error:?}")))
 }
 
-/// 🧪️ Hand-built metabolism demo when the bundled `.dsl.semio` asset is still a stub envelope.
-fn handcrafted_metabolism_snapshot() -> protocol::MutationApplyResult<crate::WiresSnapshot> {
-    let mut snapshot = crate::empty_wires_snapshot();
-    for i in 1..=7 {
-        let node_id = format!("node-{i}");
-        let label = if i == 1 { "Metabolism".to_string() } else { format!("Topic {i}") };
-        let node = DslValue::object([
-            ("id".into(), DslValue::String(node_id.clone())),
-            ("nodeKind".into(), DslValue::String("identity".into())),
-            ("shape".into(), DslValue::String("circle".into())),
-            ("x".into(), DslValue::float((i as f64) * 40.0)),
-            ("y".into(), DslValue::float((i as f64) * 30.0)),
-            ("radius".into(), DslValue::float(24.0)),
-            ("text".into(), DslValue::String(label.clone())),
-            ("handles".into(), DslValue::Array(vec![])),
-        ]);
-        snapshot = store::apply_mutation(&snapshot, &crate::mutations::create_node(node))?.0;
-        array_mut(&mut snapshot.wires_fixture, "identities").push(DslValue::object([
-            ("identityId".into(), DslValue::uint(i as u64)),
-            ("identityKind".into(), DslValue::String("topic".into())),
-            ("label".into(), DslValue::String(label)),
-            ("nodeId".into(), DslValue::String(node_id)),
-        ]));
-    }
-    for i in 1..=9 {
-        let edge_id = format!("edge-{i}");
-        let source = format!("node-{}", ((i - 1) % 7) + 1);
-        let target = format!("node-{}", (i % 7) + 1);
-        let kind = if i == 8 { "is" } else { "owns" };
-        let edge = DslValue::object([("id".into(), DslValue::String(edge_id.clone())), ("source".into(), DslValue::String(source)), ("target".into(), DslValue::String(target))]);
-        let relationship = DslValue::object([
-            ("relationshipId".into(), DslValue::uint(i as u64)),
-            ("kind".into(), DslValue::String(kind.into())),
-            ("sourceIdentityId".into(), DslValue::uint((((i - 1) % 7) + 1) as u64)),
-            ("targetIdentityId".into(), DslValue::uint(((i % 7) + 1) as u64)),
-            ("edgeId".into(), DslValue::String(edge_id)),
-        ]);
-        snapshot = store::apply_mutation(&snapshot, &crate::mutations::connect_nodes(edge, relationship))?.0;
-    }
-    let board = crate::wires_working_board(&snapshot);
-    if let DslValue::Object(entries) = &mut snapshot.wires_fixture {
-        if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == "board") {
-            *slot = board;
-        }
-    }
-    Ok(snapshot)
-}
 //#endregion 🔖️ExampleFixture

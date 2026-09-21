@@ -50,12 +50,12 @@ async fn pointer_down_selects_the_hit_node_inline() {
         crate::editor::wires::unit_tests::context::retire_envelope(envelope);
         let meta = ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("inline-pick") };
         app.dispatch_typed(WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await.map_err(|error| format!("{error:?}"))?;
-        artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        artifact_app_laws::settle_registered_typed_operation(&mut *app, 1).await.map_err(|error| format!("{error:?}"))?;
         let admitted = app.dispatch_typed(WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &meta).await.map_err(|error| format!("{error:?}"))?;
         if !admitted.mutations.is_empty() {
             return Err("a pointer down never mutates the document directly".into());
         }
-        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 1).await.map_err(|error| format!("{error:?}"))?;
         if receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)) {
             return Err(format!("interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects));
         }
@@ -66,7 +66,7 @@ async fn pointer_down_selects_the_hit_node_inline() {
         Ok(())
     }
     .await;
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    app.close();
     result.expect("inline pick");
 }
 

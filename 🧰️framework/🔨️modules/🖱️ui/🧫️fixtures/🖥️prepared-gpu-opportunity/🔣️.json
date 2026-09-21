@@ -75,13 +75,13 @@
     }
   ],
   "glassCommandPages": {
-    "comment": "One command page per measured step: the step that retires the glass section carries index == len and addresses nothing.",
+    "comment": "Every authored glass command addresses exactly one live region; there is no terminal glass command.",
     "rows": [
       {
         "region": 0,
         "len": 0,
         "addressed": null,
-        "stale": false
+        "stale": true
       },
       {
         "region": 0,
@@ -99,7 +99,7 @@
         "region": 3,
         "len": 3,
         "addressed": null,
-        "stale": false
+        "stale": true
       },
       {
         "region": 4,

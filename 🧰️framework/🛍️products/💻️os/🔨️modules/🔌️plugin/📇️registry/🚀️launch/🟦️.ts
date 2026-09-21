@@ -184,11 +184,26 @@ function defaultDevLauncher(playground: PlaygroundEntry, order: number, repoRoot
 //#endregion
 
 //#region 🔖️Generate
+/** @emoji 🔒️ Every variant must own its launch name: the synthesis pass below adds a launcher only
+ * when the skeleton does not already carry that name, so two variants resolving to the same
+ * {@link playgroundLaunchNamePrefix} would leave the second one with NO dev launcher at all. Refuse
+ * loudly here instead of emitting a `launch.json` that silently drops a playground. */
+function assertDistinctLaunchNamePrefixes(playgrounds: readonly PlaygroundEntry[], repoRoot: string): void {
+  const owners = new Map<string, string>();
+  for (const playground of playgrounds) {
+    const prefix = playgroundLaunchNamePrefix(playground, repoRoot, playgrounds);
+    const owner = owners.get(prefix);
+    if (owner !== undefined) throw new Error(`🚀️launch/🟦️.ts: playground variants ${JSON.stringify(owner)} and ${JSON.stringify(playground.variant)} both resolve to the launch name prefix ${JSON.stringify(prefix)} — one of them would get no dev launcher`);
+    owners.set(prefix, playground.variant);
+  }
+}
+
 /** @emoji 🏗️ Renders the full `.vscode/launch.json` text: seed skeleton with every
  * `@generated:<variant>:<renderer>` placeholder substituted by a fresh, registry-ported entry. */
 export function generateLaunchJson(repoRoot: string, playgrounds: readonly PlaygroundEntry[], _components: readonly { project: string; pluginId: string }[], readText?: (path: string) => string): string {
   const { skeleton, devLaunchers } = readSeed(repoRoot, readText);
   const byVariant = new Map(playgrounds.map((entry) => [entry.variant, entry]));
+  assertDistinctLaunchNamePrefixes(playgrounds, repoRoot);
   let out = skeleton;
   for (const [variant, launcher] of Object.entries(devLaunchers)) {
     const playground = byVariant.get(variant);

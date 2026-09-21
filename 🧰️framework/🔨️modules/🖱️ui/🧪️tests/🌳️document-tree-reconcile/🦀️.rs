@@ -68,6 +68,28 @@ fn reconcile_window(tree: &mut UiTree, cursor: &mut UiDocumentReconcileCursor, g
     panic!("document reconcile did not terminate inside its own node budget");
 }
 
+fn reconcile_ui_window(ui: &mut Ui, window_id: &str, controller: &str, generation: u64) {
+    let operation = semio_framework_job::allocate_operation_id();
+    let cancel = semio_framework_job::CancelToken::root_now();
+    let mut sequence = 0;
+    for _ in 0..4096 {
+        let mut cx = semio_framework_job::StepContext::new(
+            operation,
+            semio_framework_job::Generation(generation),
+            semio_framework_job::StepBudget::new(4096, u64::MAX),
+            cancel.clone(),
+            test_clock,
+            &mut sequence,
+        );
+        match ui.step_document_reconcile(window_id, controller, &mut cx) {
+            UiDocumentReconcileStep::Pending => {}
+            UiDocumentReconcileStep::Complete => return,
+            UiDocumentReconcileStep::Fault(fault) => panic!("document reconcile faulted: {fault:?}"),
+        }
+    }
+    panic!("document reconcile did not terminate inside its opportunity ceiling");
+}
+
 fn tree_order(tree: &UiTree) -> Vec<String> {
     let mut order = Vec::new();
     let Some(root) = tree.root else { return order };
@@ -160,16 +182,7 @@ fn a_published_document_mounts_its_records_and_the_arena_it_produces_paints() {
     let mut ui = Ui::new();
     let document = document_from(&law, &ids, law["document"]["generation"].as_u64().expect("generation"), law["document"]["revision"].as_u64().expect("revision"), None);
     assert!(ui.publish_document("procedural-main", document));
-    let mut cx_sequence = 0;
-    let mut cx = semio_framework_job::StepContext::new(
-        semio_framework_job::allocate_operation_id(),
-        semio_framework_job::Generation(law["document"]["generation"].as_u64().expect("generation")),
-        semio_framework_job::StepBudget::new(4096, u64::MAX),
-        semio_framework_job::CancelToken::root_now(),
-        test_clock,
-        &mut cx_sequence,
-    );
-    assert_eq!(ui.step_document_reconcile("procedural-main", "generation3d", &mut cx), UiDocumentReconcileStep::Complete);
+    reconcile_ui_window(&mut ui, "procedural-main", "generation3d", law["document"]["generation"].as_u64().expect("generation"));
     assert!(ui.tree("procedural-main").and_then(|tree| tree.root).is_some(), "the engine's own window tree now has a root");
 
     let mut atlas = FontAtlas::builtin();
@@ -237,7 +250,7 @@ fn retiring_a_document_frees_every_node_it_mounted_one_step_at_a_time() {
     let mounted = law["expected"]["arenaNodeCount"].as_u64().expect("count") as usize;
 
     let mut steps = 0;
-    while !tree.close_document_binding_step(&mut |_, _| true) {
+    while !tree.close_document_binding_step(&mut |_, _, _| true) {
         steps += 1;
         assert!(steps <= mounted, "retirement must free exactly the nodes it mounted, one per step");
     }
@@ -533,7 +546,7 @@ fn tiny_document(surface: &str, revision: u64, root: &serde_json::Value, child: 
 /// allocator notices — and a neighbouring test running in parallel meets `ArenaFull` instead of its
 /// own law. Retiring explicitly is the same rule the runtime itself follows.
 fn retire(mut tree: UiTree) {
-    while !tree.close_document_binding_step(&mut |_, _| true) {}
+    while !tree.close_document_binding_step(&mut |_, _, _| true) {}
     if let Some(mut document) = tree.take_document() {
         while !document.close_step() {}
     }
@@ -680,7 +693,7 @@ fn same_key_scene_kind_replacement_emits_the_exact_old_identity_once() {
     let mut retired = Vec::new();
     let mut component_mount_generation = 1;
     for _ in 0..4096 {
-        let step = tree.step_document_reconcile_preserving(&mut cursor, "scene-window", "fixture", None, 7, None, &mut component_mount_generation, &mut |row| {
+        let step = tree.step_document_reconcile_preserving(&mut cursor, "scene-window", "fixture", None, 7, None, true, &mut component_mount_generation, &mut |row| {
             retired.push(row);
             true
         });
@@ -713,6 +726,7 @@ fn a_full_scene_retirement_ledger_yields_before_mutating_the_old_node() {
     let mounted = tree.node(node).expect("Map root remains live");
     let UiNode::ComponentScene(scene) = &mounted.spec.0 else { panic!("root is a scene") };
     let template = UiRetiredComponentScene {
+        document_id: UiNodeId(0),
         host_id: scene.host_id.clone(),
         window_id: "scene-backpressure".into(),
         window_generation: 9,
@@ -730,7 +744,7 @@ fn a_full_scene_retirement_ledger_yields_before_mutating_the_old_node() {
     let mut refused = false;
     let mut component_mount_generation = 1;
     for _ in 0..4096 {
-        let _ = tree.step_document_reconcile_preserving(&mut cursor, "scene-backpressure", "fixture", None, 9, None, &mut component_mount_generation, &mut |row| {
+        let _ = tree.step_document_reconcile_preserving(&mut cursor, "scene-backpressure", "fixture", None, 9, None, true, &mut component_mount_generation, &mut |row| {
             if ledger.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
                 refused = true;
                 return false;
@@ -746,7 +760,7 @@ fn a_full_scene_retirement_ledger_yields_before_mutating_the_old_node() {
     assert!(matches!(tree.node(node).map(|node| &node.spec.0), Some(UiNode::ComponentScene(scene)) if scene.component_kind == SurfaceKind::TiledMap), "the old scene remains observable until retirement admission succeeds");
     assert_eq!(tree.node(node).map(|node| node.component_generation()), Some(1), "backpressure cannot advance the component mount identity before retiring its old owner");
     ledger.pop();
-    let _ = tree.step_document_reconcile_preserving(&mut cursor, "scene-backpressure", "fixture", None, 9, None, &mut component_mount_generation, &mut |row| {
+    let _ = tree.step_document_reconcile_preserving(&mut cursor, "scene-backpressure", "fixture", None, 9, None, true, &mut component_mount_generation, &mut |row| {
         ledger.push(row);
         true
     });
@@ -766,7 +780,7 @@ fn a_full_scene_retirement_ledger_yields_before_closing_the_mounted_node() {
     let node = tree.document_node(UiNodeId(0)).expect("Map root mounted");
     let mut ledger = vec![node; UI_RETIRED_COMPONENT_SCENE_CAPACITY];
 
-    assert!(!tree.close_document_binding_step(&mut |retired, _| {
+    assert!(!tree.close_document_binding_step(&mut |_, retired, _| {
         if ledger.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
             return false;
         }
@@ -777,7 +791,7 @@ fn a_full_scene_retirement_ledger_yields_before_closing_the_mounted_node() {
     assert_eq!(tree.root, Some(node));
 
     ledger.pop();
-    assert!(!tree.close_document_binding_step(&mut |retired, _| {
+    assert!(!tree.close_document_binding_step(&mut |_, retired, _| {
         ledger.push(retired);
         true
     }));
@@ -827,16 +841,7 @@ fn a_document_whose_root_is_the_engine_surface_reaches_a_painted_frame() {
     let mut ui = Ui::new();
     let root = engine_surface_root_record(0, "gis2d.play.composite", "tiled-map");
     assert!(ui.publish_document("gis2d-main", tiny_document("gis2d-main", 1, &root, None)));
-    let mut cx_sequence = 0;
-    let mut cx = semio_framework_job::StepContext::new(
-        semio_framework_job::allocate_operation_id(),
-        semio_framework_job::Generation(11),
-        semio_framework_job::StepBudget::new(4096, u64::MAX),
-        semio_framework_job::CancelToken::root_now(),
-        test_clock,
-        &mut cx_sequence,
-    );
-    assert_eq!(ui.step_document_reconcile("gis2d-main", "gis", &mut cx), UiDocumentReconcileStep::Complete);
+    reconcile_ui_window(&mut ui, "gis2d-main", "gis", 11);
     assert!(ui.tree("gis2d-main").and_then(|tree| tree.root).is_some(), "the single surface record mounts as the arena root");
 
     let mut atlas = FontAtlas::builtin();

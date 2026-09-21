@@ -7982,8 +7982,12 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         Some(crate::editor::puzzle3d::config::schema::app_schema_descriptor())
     }
 
+    /// 🚀️ Boots on `default_fixture()` (Concrete Forest) and warms only ITS OWN precompute session.
+    ///
+    /// 🐛️ This used to pre-warm `NAKAGIN_EXAMPLE_FIXTURE` first — 128 755 B of DSL parsed into a typed
+    /// fixture that the boot document never reads, paid by every mount before its first frame. The
+    /// static is a `LazyLock`: the example that needs it forces it when it is actually switched to.
     fn initial_snapshot() -> Puzzle3dPlaySnapshot {
-        LazyLock::force(&NAKAGIN_EXAMPLE_FIXTURE);
         let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&default_fixture())).into());
         let config = Puzzle3dRuntime::default();
         let active_utility = puzzle3d_scene_active_utility(&config, None, None);

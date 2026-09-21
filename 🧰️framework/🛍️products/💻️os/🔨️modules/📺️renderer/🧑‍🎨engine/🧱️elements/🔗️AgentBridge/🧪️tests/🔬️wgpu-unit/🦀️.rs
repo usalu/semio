@@ -492,11 +492,7 @@ fn ui_focus_and_ui_reveal_are_queued_for_the_host_while_a_chromeless_verb_is_ref
     let inbound = state.take_inbound_shell_commands();
     assert_eq!(
         inbound,
-        vec![
-            InboundShellCommand::FocusWindow { seq: 1, window_id: Some("note-composite".to_string()) },
-            InboundShellCommand::Acknowledge { seq: 2 },
-            InboundShellCommand::RevealPanelTab { seq: 3, tab_id: "framework.chat".to_string() },
-        ]
+        vec![InboundShellCommand::FocusWindow { seq: 1, window_id: Some("note-composite".to_string()) }, InboundShellCommand::Acknowledge { seq: 2 }, InboundShellCommand::RevealPanelTab { seq: 3, tab_id: "framework.chat".to_string() },]
     );
     assert!(state.take_inbound_shell_commands().is_empty(), "taking drains the queue");
 }

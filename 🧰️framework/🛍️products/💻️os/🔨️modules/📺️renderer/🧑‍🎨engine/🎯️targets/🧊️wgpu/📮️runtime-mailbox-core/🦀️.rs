@@ -118,6 +118,10 @@ impl<T, const CAPACITY: usize> BoundedCompletionQueue<T, CAPACITY> {
         self.ready.iter().position(|completion| !completion.requires_interaction)
     }
 
+    pub(crate) fn first_interaction_restoration(&self) -> Option<usize> {
+        self.ready.iter().position(|completion| completion.restores_interaction)
+    }
+
     pub(crate) fn take_at(&mut self, index: usize) -> Option<Completion<T>> {
         self.ready.remove(index)
     }

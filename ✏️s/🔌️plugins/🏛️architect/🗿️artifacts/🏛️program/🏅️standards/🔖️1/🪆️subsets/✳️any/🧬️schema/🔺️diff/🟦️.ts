@@ -139,7 +139,11 @@ export interface ProgramDiff {
   /** @state artifact */
   templates: ProgramTemplatesDelta | null;
   /** @state artifact */
+  knowledgePayload: KnowledgeRecord[] | null;
+  /** @state artifact */
   knowledge: ArtifactChild | null;
+  /** @state artifact */
+  benchmarksPayload: BenchmarkRecord[] | null;
   /** @state artifact */
   benchmarks: ArtifactChild | null;
   /** @state artifact */

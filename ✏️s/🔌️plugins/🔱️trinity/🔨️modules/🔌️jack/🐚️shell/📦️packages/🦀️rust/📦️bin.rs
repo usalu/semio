@@ -1,13 +1,13 @@
 //! 🐚️ Jack query shell for trinity graphs.
 
 extern crate semio_framework_os_kernel as store;
+use semio_s_artifact_trinity_jack::ast::QueryResult;
+use semio_s_artifact_trinity_jack::executor::run;
 use semio_s_artifact_trinity_jack::{Graph, JackSnapshot, PropertyValue};
 use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
 use store::ArtifactDsl;
-use trinity::ast::QueryResult;
-use trinity::executor::run;
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity jack shell errors.

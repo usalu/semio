@@ -764,6 +764,12 @@ bindings: Array<ActionBinding>, };"####,
 export type TextProps = { value: Label, emphasize: boolean | null, dataAttributes: { [key in string]?: string } | null, };"####,
     },
     SchemaMetadata {
+        name: "ToggleAppearance",
+        version: 1,
+        typescript: r####"/** ☑️ Binary-control presentation. */
+export type ToggleAppearance = "button" | "checkbox";"####,
+    },
+    SchemaMetadata {
         name: "ToggleProps",
         version: 1,
         typescript: r####"/**
@@ -771,7 +777,7 @@ export type TextProps = { value: Label, emphasize: boolean | null, dataAttribute
  * `UiToggleNode` smuggled it through `presence.selected`, exactly the implicit coupling this
  * contract exists to remove. `on_change` moved to the record's `bindings`.
  */
-export type ToggleProps = { on: boolean, icon: string, text: Label | null, };"####,
+export type ToggleProps = { appearance?: ToggleAppearance, on: boolean, icon: string, text: Label | null, };"####,
     },
     SchemaMetadata {
         name: "Tone",
@@ -822,6 +828,12 @@ window: TreeWindow | null,
 granularity: string | null, rowActions: Array<RowAction>, };"####,
     },
     SchemaMetadata {
+        name: "TreePresentation",
+        version: 1,
+        typescript: r####"/** 🌳️ Inherited tree row presentation. */
+export type TreePresentation = "standard" | "compact";"####,
+    },
+    SchemaMetadata {
         name: "TreeProps",
         version: 1,
         typescript: r####"/**
@@ -830,7 +842,7 @@ granularity: string | null, rowActions: Array<RowAction>, };"####,
  * (`Component::TreeSection` / `Component::TreeItem`) reached through the record's `children`.
  * `drop_action` moved to the record's `bindings` (`Trigger::Drop`).
  */
-export type TreeProps = {
+export type TreeProps = { presentation?: TreePresentation,
 /**
  * 🕹️ Binds this tree to an app-declared `InteractionDefinition` domain — selection/hover for
  * bound items is owned by the framework's presence channel, not by per-item props.

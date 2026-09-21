@@ -135,6 +135,8 @@ export interface XmlDeclaration {
   readonly version: string;
   readonly encoding?: string;
   readonly standalone?: boolean;
+  /** 🗣️ Delimiter the pseudo-attributes are written with (XML 1.0 §2.8); absent = `double`. */
+  readonly quote?: 'double' | 'single';
 }
 
 export function parseXmlDeclaration(value: unknown, at = "$"): XmlDeclaration {
@@ -143,6 +145,7 @@ export function parseXmlDeclaration(value: unknown, at = "$"): XmlDeclaration {
     version: stdioSvg11BaseDiffGuardString(row["version"], `${at}.version`),
     encoding: row["encoding"] === undefined ? undefined : stdioSvg11BaseDiffGuardString(row["encoding"], `${at}.encoding`),
     standalone: row["standalone"] === undefined ? undefined : stdioSvg11BaseDiffGuardBoolean(row["standalone"], `${at}.standalone`),
+    quote: row["quote"] === undefined ? undefined : stdioSvg11BaseDiffGuardMember<'double' | 'single'>(row["quote"], `${at}.quote`, ["double", "single"]),
   };
 }
 

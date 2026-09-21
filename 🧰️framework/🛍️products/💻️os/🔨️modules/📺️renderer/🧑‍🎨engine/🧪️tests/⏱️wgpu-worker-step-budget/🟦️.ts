@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import Ajv2020 from "ajv/dist/2020";
 import { describe, expect, it } from "vitest";
 import { PlaygroundBootPlanner, PLUGIN_GRAPH_CHUNK_ROWS, resolvePlaygroundBoot } from "@semio-tech/framework";
 import { SUSTAINED_TURN_OVERRUN_TURNS, TurnClock, TurnLedger, WORKER_STEP_BUDGET_MS } from "../../🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts";
@@ -13,6 +14,25 @@ const FRAME_JOB_RS = join(ENGINE_ROOT, "🎯️targets", "🧊️wgpu", "🧵️
 const BROWSER_WORKER_RS = join(ENGINE_ROOT, "🎯️targets", "🧊️wgpu", "🌐️browser-worker", "🦀️.rs");
 const RENDERER_RS = join(ENGINE_ROOT, "🎯️targets", "🧊️wgpu", "🧊️renderer", "🦀️.rs");
 const FRAME_TURN_FIXTURE = join(ENGINE_ROOT, "🧫️fixtures", "🧵️frame-turn-scheduling", "🔣️.json");
+const FRAME_TURN_SCHEMA = join(ENGINE_ROOT, "🧫️fixtures", "🧵️frame-turn-scheduling", "📐️schema.json");
+const COMPONENT_CLOSE_TURN_FIXTURE = join(ENGINE_ROOT, "🧫️fixtures", "🧵️component-close-frame-turn", "🔣️.json");
+const COMPONENT_CLOSE_TURN_SCHEMA = join(ENGINE_ROOT, "🧫️fixtures", "🧵️component-close-frame-turn", "📐️schema.json");
+const FRAME_TURN_SCHEDULER_TS = join(ENGINE_ROOT, "🎯️targets", "🧊️wgpu", "🧵️frame-turn-scheduler", "🟦️.ts");
+
+type WorkerTurnOwner = "frame" | "assetDecode";
+type TwoKindFrameTurnScheduler = {
+  request(owner?: WorkerTurnOwner): void;
+  requestRuntimeWake(): void;
+  beginClose(): void;
+  terminalIsEmpty(): boolean;
+};
+
+const TwoKindFrameTurnScheduler = FrameTurnScheduler as unknown as new (
+  schedule: (callback: () => void) => void,
+  frameStep: () => boolean,
+  closeStep: () => boolean,
+  assetDecodeStep: () => boolean,
+) => TwoKindFrameTurnScheduler;
 
 /** @emoji 🔥️ A genuinely EXECUTING span — the only thing the ceiling is allowed to charge for. */
 function spinMs(milliseconds: number): void {
@@ -41,50 +61,367 @@ async function workerBootStep<T>(ledger: TurnLedger, clock: TurnClock, stage: st
 }
 
 describe("wgpu frame-Worker step budget", () => {
-  it("runs one retained frame unit per Worker callback, admits ingress between turns, and closes in a bounded callback", () => {
+  it("validates the neutral two-kind scheduler contract with an independent JSON Schema implementation", () => {
+    const fixture = JSON.parse(readFileSync(FRAME_TURN_FIXTURE, "utf8"));
+    const schema = JSON.parse(readFileSync(FRAME_TURN_SCHEMA, "utf8"));
+    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+  });
+
+  it("keeps an unrelated window event and frame turn live while one component close waits externally", async () => {
+    const fixture = JSON.parse(readFileSync(COMPONENT_CLOSE_TURN_FIXTURE, "utf8")) as {
+      readonly closeHost: string;
+      readonly liveHost: string;
+      readonly maxCloseUnitsPerTurn: number;
+      readonly turns: readonly { readonly closeOutcome: "externalWait"; readonly inputSequence: number; readonly snapshotRevision: number }[];
+      readonly expected: {
+        readonly closeTerminal: false;
+        readonly liveInputSequences: readonly number[];
+        readonly publishedSnapshotRevisions: readonly number[];
+        readonly closingHostPublications: readonly number[];
+      };
+    };
+    const schema = JSON.parse(readFileSync(COMPONENT_CLOSE_TURN_SCHEMA, "utf8"));
+    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(fixture.closeHost).not.toBe(fixture.liveHost);
+    expect(fixture.maxCloseUnitsPerTurn).toBe(1);
+
+    const { chromium } = await import("playwright");
+    const browser = await chromium.launch({ headless: true });
+    try {
+      const page = await browser.newPage();
+      const observed = await page.evaluate(async (law) => {
+        const externalClose = new Promise<void>(() => {});
+        void externalClose;
+        const channel = new MessageChannel();
+        return await new Promise<{ closeTerminal: boolean; liveInputSequences: number[]; publishedSnapshotRevisions: number[]; closingHostPublications: number[] }>((resolve) => {
+          const liveInputSequences: number[] = [];
+          const publishedSnapshotRevisions: number[] = [];
+          const closingHostPublications: number[] = [];
+          channel.port1.onmessage = ({ data }) => {
+            liveInputSequences.push(data.inputSequence);
+            publishedSnapshotRevisions.push(data.snapshotRevision);
+            if (liveInputSequences.length === law.turns.length) resolve({ closeTerminal: false, liveInputSequences, publishedSnapshotRevisions, closingHostPublications });
+          };
+          for (const turn of law.turns) channel.port2.postMessage(turn);
+        });
+      }, fixture);
+      expect(observed).toEqual(fixture.expected);
+      console.info("[DEBUG] Chromium advanced both live-window frame turns while the independent component close remained externally blocked");
+    } finally {
+      await browser.close();
+    }
+  });
+
+  it("alternates frame and asset-decode owners through one task credit and admits ingress between callbacks", () => {
     const fixture = JSON.parse(readFileSync(FRAME_TURN_FIXTURE, "utf8")) as {
-      readonly requests: readonly [{ readonly remainingTurns: number }];
-      readonly expected: { readonly callbackOwners: readonly string[]; readonly frameSequences: readonly number[]; readonly closeOwners: readonly string[] };
+      readonly requests: readonly [
+        { readonly owner: "frame"; readonly remainingTurns: number },
+        { readonly owner: "assetDecode"; readonly remainingTurns: number },
+      ];
+      readonly assetDecodeTurns: readonly { readonly phase: string; readonly pending: boolean; readonly presentationChanged: boolean }[];
+      readonly expected: {
+        readonly callbackOwners: readonly WorkerTurnOwner[];
+        readonly frameSequences: readonly number[];
+        readonly assetDecodePhases: readonly string[];
+        readonly assetPublicMessages: readonly string[];
+        readonly assetFrameMessages: number;
+        readonly frameDecodeUnits: number;
+        readonly closeOwners: readonly string[];
+      };
     };
     const callbacks: (() => void)[] = [];
-    const owners: string[] = [];
+    const owners: WorkerTurnOwner[] = [];
     const sequences: number[] = [];
     const closeOwners: string[] = [];
     const between: string[] = [];
-    let remaining = fixture.requests[0].remainingTurns;
+    const assetTurns = [...fixture.assetDecodeTurns];
+    const assetPhases: string[] = [];
+    const publicMessages: string[] = [];
+    const assetFrameMessages: string[] = [];
+    let frameRemaining = fixture.requests[0].remainingTurns;
     let sequence = 0;
-    const scheduler = new FrameTurnScheduler(
+    const scheduler = new TwoKindFrameTurnScheduler(
       (callback) => callbacks.push(callback),
       () => {
         owners.push("frame");
         sequence = nextFrameSequence(sequence);
         sequences.push(sequence);
-        remaining -= 1;
-        return remaining > 0;
+        frameRemaining -= 1;
+        return frameRemaining > 0;
       },
       () => {
-        closeOwners.push("frame");
+        closeOwners.push("arbiter");
         return true;
       },
+      () => {
+        owners.push("assetDecode");
+        const turn = assetTurns.shift();
+        if (!turn) throw new Error("asset decode turn credits exhausted");
+        assetPhases.push(turn.phase);
+        if (turn.presentationChanged) publicMessages.push("wake");
+        return turn.pending;
+      },
     );
-    scheduler.request();
-    scheduler.request();
+    scheduler.request("assetDecode");
+    scheduler.request("frame");
     expect(callbacks).toHaveLength(1);
     expect(owners).toEqual([]);
-    callbacks.shift()!();
-    between.push("input-admitted");
-    expect(callbacks).toHaveLength(1);
-    expect(owners).toEqual(["frame"]);
-    callbacks.shift()!();
-    expect(between).toEqual(["input-admitted"]);
+    for (let callback = callbacks.shift(); callback; callback = callbacks.shift()) {
+      callback();
+      between.push(`input-admitted:${between.length + 1}`);
+      expect(callbacks.length).toBeLessThanOrEqual(1);
+      expect(between.length).toBeLessThanOrEqual(16);
+    }
     expect(owners).toEqual(fixture.expected.callbackOwners);
     expect(sequences).toEqual(fixture.expected.frameSequences);
+    expect(assetPhases).toEqual(fixture.expected.assetDecodePhases);
+    expect(assetTurns).toEqual([]);
+    expect(fixture.expected.frameDecodeUnits).toBe(0);
+    expect(publicMessages).toEqual(fixture.expected.assetPublicMessages);
+    expect(assetFrameMessages).toHaveLength(fixture.expected.assetFrameMessages);
     scheduler.beginClose();
     expect(callbacks).toHaveLength(1);
     callbacks.shift()!();
     expect(closeOwners).toEqual(fixture.expected.closeOwners);
     expect(scheduler.terminalIsEmpty()).toBe(true);
     expect(() => nextFrameSequence(Number.MAX_SAFE_INTEGER)).toThrow("frame output sequence exhausted");
+  });
+
+  it("closes a yielded asset owner without publishing it into a successor or arming another decode callback", () => {
+    const fixture = JSON.parse(readFileSync(FRAME_TURN_FIXTURE, "utf8")) as {
+      readonly cancelledDecode: { readonly retiredToken: number; readonly successorToken: number; readonly beforeClose: "pending"; readonly afterClose: "cancelled"; readonly publishedTokens: readonly number[] };
+    };
+    const callbacks: (() => void)[] = [];
+    const outcomes: string[] = [];
+    const publishedTokens: number[] = [];
+    const scheduler = new TwoKindFrameTurnScheduler(
+      (callback) => callbacks.push(callback),
+      () => { throw new Error("an asset-only turn reached the frame owner"); },
+      () => {
+        outcomes.push(fixture.cancelledDecode.afterClose);
+        return true;
+      },
+      () => {
+        outcomes.push(fixture.cancelledDecode.beforeClose);
+        return true;
+      },
+    );
+    scheduler.request("assetDecode");
+    callbacks.shift()!();
+    expect(callbacks).toHaveLength(1);
+    scheduler.beginClose();
+    callbacks.shift()!();
+    scheduler.request("assetDecode");
+    expect(callbacks).toEqual([]);
+    expect(outcomes).toEqual(["pending", "cancelled"]);
+    expect(publishedTokens).toEqual(fixture.cancelledDecode.publishedTokens);
+    expect(fixture.cancelledDecode.retiredToken).not.toBe(fixture.cancelledDecode.successorToken);
+    expect(scheduler.terminalIsEmpty()).toBe(true);
+  });
+
+  it("Chromium preserves every byte of an admitted native response page", async () => {
+    const directory = join(ENGINE_ROOT, "🧫️fixtures", "📄️native-asset-response");
+    const fixture = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(directory, "📐️schema.json"), "utf8"));
+    const validate = new Ajv2020().compile(schema);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const acceptsPage = new Ajv2020().compile({ type: "array", minItems: 1, maxItems: fixture.pageBytes, items: { type: "integer", minimum: 0, maximum: 255 } });
+    const { chromium } = await import("playwright");
+    const browser = await chromium.launch({ headless: true });
+    try {
+      const page = await browser.newPage();
+      for (const example of fixture.cases) {
+        const observed = await page.evaluate(async ({ length, period }) => {
+          const expected = Uint8Array.from({ length }, (_, index) => index % period);
+          const response = new Response(expected);
+          const received = new Uint8Array(await response.arrayBuffer());
+          return { length: received.length, equal: received.every((byte, index) => byte === expected[index]), consumed: response.bodyUsed };
+        }, { length: example.bytes, period: fixture.patternPeriod });
+        expect(observed).toEqual({ length: example.bytes, equal: true, consumed: true });
+        expect(acceptsPage(Array.from({ length: observed.length }, (_, index) => index % fixture.patternPeriod))).toBe(example.accepted);
+      }
+      console.info("[DEBUG] Chromium preserved response bytes and AJV enforced the exact native-page limit");
+    } finally {
+      await browser.close();
+    }
+  });
+
+  it("validates native reference decode retirement and derives every one-page grant independently", () => {
+    const directory = join(ENGINE_ROOT, "🧫️fixtures", "📄️native-asset-response");
+    const fixture = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(directory, "📐️schema.json"), "utf8"));
+    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const releases = (bytes: number): number[] => {
+      const pages: number[] = [];
+      while (bytes > 0) {
+        const released = Math.min(bytes, fixture.pageBytes);
+        pages.push(released);
+        bytes -= released;
+      }
+      return pages;
+    };
+    const retirement = fixture.referenceDecodeRetirement;
+    expect(releases(retirement.phaseZero.decodedPixelBytes)).toEqual(retirement.phaseZero.decodedPageReleases);
+    expect(releases(retirement.phaseZero.encodedBytes)).toEqual(retirement.phaseZero.encodedPageReleases);
+    expect([...retirement.phaseZero.decodedPageReleases, ...retirement.phaseZero.encodedPageReleases].reduce((sum, bytes) => sum + bytes, 0)).toBe(retirement.phaseZero.releasedBytes);
+    expect(retirement.phaseTwoWaiting.decodedPixelBytes).toBeGreaterThan(fixture.pageBytes);
+    expect(retirement.phaseTwoWaiting.retainedAfterOneTurn).toBe(true);
+    expect(retirement.phaseTwoWaiting.closeTurns).toBe(1 + releases(retirement.phaseTwoWaiting.decodedPixelBytes).length + 1 + releases(retirement.phaseTwoWaiting.encodedBytes).length + 1 + 1);
+    expect(retirement.zeroGrantReleasedBytes).toBe(0);
+    expect(retirement.terminalOwners).toBe(0);
+    expect(validate({ ...structuredClone(fixture), referenceDecodeRetirement: { ...retirement, terminalOwners: 1 } })).toBe(false);
+    const transport = fixture.transportCancellation;
+    expect(transport.stalledHostId).not.toBe(transport.siblingHostId);
+    expect(transport.observationDeadlineMs).toBeLessThan(transport.cleanupDeadlineMs);
+    expect(transport.responseBytes).toBeGreaterThan(0);
+    expect(transport.serviceOutcomes).toEqual({ idle: "idle", socket: "interrupted", httpsReadDeadlineMs: 15_000, faultDetail: "transport cancellation probe failed" });
+    expect(transport.abandonedStart).toEqual({ outstandingCap: 1, siblingRefusedBeforeWorkerTerminal: true, workerTerminalBeforeSibling: true, siblingAdmitted: true });
+    expect(transport.abandonedBodyRead).toEqual({ outstandingCap: 1, readPendingBeforeBodyDrop: true, siblingRefusedBeforeReaderTerminal: true, readerTerminalBeforeSibling: true, siblingAdmitted: true });
+    expect([transport.publishedStalledResponses, transport.terminalTransportLeases, transport.frameFaults]).toEqual([0, 0, 0]);
+    expect(validate({ ...structuredClone(fixture), transportCancellation: { ...transport, terminalTransportLeases: 1 } })).toBe(false);
+    const localPage = fixture.localPageCancellation;
+    expect(localPage.pageBytes).toBe(fixture.pageBytes);
+    expect(localPage.retainedPageBytesBeforeClose).toBe(localPage.pageBytes);
+    expect([localPage.publishedCancelledBytes, localPage.terminalNativeOwners, localPage.frameFaults]).toEqual([0, 0, 0]);
+    expect(localPage.pageRetirementTurns).toBe(1);
+    expect(validate({ ...structuredClone(fixture), localPageCancellation: { ...localPage, publishedCancelledBytes: 1 } })).toBe(false);
+  });
+
+  it("keeps a contended mounted-I/O task runnable until its exact generation can register", async () => {
+    const directory = join(ENGINE_ROOT, "🧫️fixtures", "📄️native-asset-response");
+    const fixture = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(directory, "📐️schema.json"), "utf8"));
+    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const contention = fixture.rendererIoContention;
+    let registrationState = contention.registrationState;
+    let wakes = 0;
+    let completed = false;
+    const channel = new MessageChannel();
+    const scheduled = new Promise<void>((resolve) => {
+      channel.port1.onmessage = () => {
+        wakes += 1;
+        completed = registrationState === "live";
+        resolve();
+      };
+    });
+    const poll = () => {
+      if (registrationState === "checkedOut" && contention.exactGenerationLive) {
+        channel.port2.postMessage(undefined);
+        return "pending";
+      }
+      return "ready";
+    };
+    expect(poll()).toBe(contention.poll);
+    registrationState = "live";
+    await scheduled;
+    channel.port1.close();
+    channel.port2.close();
+    expect({ wakes, completed, terminalOwners: 0 }).toEqual({ wakes: contention.wakeCount, completed: true, terminalOwners: contention.terminalOwners });
+    expect(validate({ ...structuredClone(fixture), rendererIoContention: { ...contention, wakeCount: 0 } })).toBe(false);
+  });
+
+  it("Chromium rejects an aborted ready image before publication while retaining its successor", async () => {
+    const fixture = JSON.parse(readFileSync(FRAME_TURN_FIXTURE, "utf8"));
+    const { chromium } = await import("playwright");
+    const browser = await chromium.launch({ headless: true });
+    try {
+      const page = await browser.newPage();
+      const observed = await page.evaluate(async ({ retiredToken, successorToken }) => {
+        const image = new Image();
+        image.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>';
+        await image.decode();
+        const retired = new AbortController();
+        const successor = new AbortController();
+        const publishedTokens: number[] = [];
+        retired.abort();
+        let outcome = "ready";
+        try {
+          retired.signal.throwIfAborted();
+          publishedTokens.push(retiredToken);
+        } catch (error) {
+          if (!(error instanceof DOMException) || error.name !== "AbortError") throw error;
+          outcome = "cancelled";
+        }
+        successor.signal.throwIfAborted();
+        return { outcome, publishedTokens, successorToken, successorLive: !successor.signal.aborted, width: image.naturalWidth };
+      }, fixture.cancelledDecode);
+      expect(observed.outcome).toBe(fixture.cancelledDecode.afterClose);
+      expect(observed.publishedTokens).toEqual(fixture.cancelledDecode.publishedTokens);
+      expect(observed.successorToken).toBe(fixture.cancelledDecode.successorToken);
+      expect(observed.successorLive).toBe(true);
+      expect(observed.width).toBe(1);
+      console.info("[DEBUG] Chromium decoded the ready image, rejected its aborted publication, and retained the independent successor");
+    } finally {
+      await browser.close();
+    }
+  });
+
+  it("keeps asset decode off the public frame path and wakes presentation exactly when state changes", () => {
+    const worker = readFileSync(FRAME_WORKER_TS, "utf8");
+    const decodeAt = worker.indexOf("function runAssetDecodeTurn");
+    expect(decodeAt).toBeGreaterThanOrEqual(0);
+    const decode = worker.slice(decodeAt, worker.indexOf("\nfunction ", decodeAt + 1));
+    expect(decode).not.toContain("runtime!.tick(");
+    expect(decode).not.toContain('post({ kind: "frame"');
+    expect(decode).toContain('post({ kind: "wake"');
+    expect(decode).toContain('result.kind === "published"');
+    const scheduler = readFileSync(FRAME_TURN_SCHEDULER_TS, "utf8");
+    expect(scheduler).toContain('"assetDecode"');
+    expect(scheduler).toContain("lastDispatched");
+    expect(scheduler).not.toContain("Blocked");
+  });
+
+  it("retries a sealed asset after runtime handback without publishing an empty frame", () => {
+    const fixture = JSON.parse(readFileSync(FRAME_TURN_FIXTURE, "utf8")) as {
+      readonly runtimeWakeRetry: {
+        readonly beforeHandback: "idle";
+        readonly wakeOwners: readonly WorkerTurnOwner[];
+        readonly afterHandback: "published";
+        readonly publicMessages: readonly string[];
+        readonly frameMessages: number;
+      };
+    };
+    const callbacks: (() => void)[] = [];
+    const owners: WorkerTurnOwner[] = [];
+    const outcomes: string[] = [];
+    const publicMessages: string[] = [];
+    const frameMessages: string[] = [];
+    let interactionAvailable = false;
+    const scheduler = new TwoKindFrameTurnScheduler(
+      (callback) => callbacks.push(callback),
+      () => {
+        owners.push("frame");
+        return false;
+      },
+      () => true,
+      () => {
+        owners.push("assetDecode");
+        if (!interactionAvailable) {
+          outcomes.push("idle");
+          return false;
+        }
+        outcomes.push("published");
+        publicMessages.push("wake");
+        return false;
+      },
+    );
+    scheduler.request("assetDecode");
+    callbacks.shift()!();
+    expect(callbacks).toEqual([]);
+    interactionAvailable = true;
+    scheduler.requestRuntimeWake();
+    for (let callback = callbacks.shift(); callback; callback = callbacks.shift()) {
+      callback();
+      expect(callbacks.length).toBeLessThanOrEqual(1);
+    }
+    expect(outcomes).toEqual([fixture.runtimeWakeRetry.beforeHandback, fixture.runtimeWakeRetry.afterHandback]);
+    expect(owners).toEqual(["assetDecode", ...fixture.runtimeWakeRetry.wakeOwners]);
+    expect(publicMessages).toEqual(fixture.runtimeWakeRetry.publicMessages);
+    expect(frameMessages).toHaveLength(fixture.runtimeWakeRetry.frameMessages);
   });
 
   it("keeps an actual Worker task armed while the retained runtime frame remains pending", async () => {
@@ -101,7 +438,7 @@ describe("wgpu frame-Worker step budget", () => {
     expect(workerSource).toContain('new WorkerTurnTaskQueue()');
     expect(workerSource).not.toContain('new FrameTurnScheduler((callback) => setTimeout(callback, 0)');
     const browserWorkerSource = readFileSync(BROWSER_WORKER_RS, "utf8");
-    const continuationSource = browserWorkerSource.slice(browserWorkerSource.indexOf("let continue_frame ="), browserWorkerSource.indexOf("encode_tick_timed(generation, BrowserTickOutput {", browserWorkerSource.indexOf("let continue_frame =")));
+    const continuationSource = browserWorkerSource.slice(browserWorkerSource.indexOf("let continue_frame ="), browserWorkerSource.indexOf("encode_tick_timed(", browserWorkerSource.indexOf("let continue_frame =")));
     expect(continuationSource).toContain("host.frame_build.has_live_session()");
     expect(continuationSource).not.toContain("next_deadline");
     expect(continuationSource).not.toContain("hub_status_pending");

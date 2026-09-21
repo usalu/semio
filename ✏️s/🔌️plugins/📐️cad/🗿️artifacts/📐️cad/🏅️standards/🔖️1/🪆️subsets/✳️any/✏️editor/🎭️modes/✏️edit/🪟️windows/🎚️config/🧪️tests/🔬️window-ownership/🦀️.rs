@@ -48,40 +48,26 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                 use crate::CadCamera;
                 use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner, WindowMeasure};
 
+                /// 🪪️ The live instance this law's app is mounted on — the receiver of every typed
+                /// operation page it publishes.
+                const INSTANCE: u32 = 91;
+                /// 🪪️ A SECOND app, mounted on its own instance, that reopens the captured window packs.
+                const REOPENED_INSTANCE: u32 = 92;
+
                 fn manifest() -> App {
                     App { definition: create_cad_app(), examples: Vec::new() }
                 }
 
+                /// 🔁️ Settles through the framework's own host-shaped drain — the pages belong to the
+                /// instance this app is MOUNTED on (`INSTANCE`), and a drain reading any other receiver
+                /// leaves every page unacknowledged, so the operation never retires and the law times out.
                 async fn drain(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>) -> Result<usize, String> {
-                    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-                    let mut window_config_pages = 0;
-                    while app.has_pending_typed_operations() {
-                        if std::time::Instant::now() >= deadline {
-                            return Err("CAD window publication timed out".into());
-                        }
-                        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
-                        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
-                        if let Some(page) = app.take_typed_operation_result_page(1) {
-                            let lane = page.lane;
-                            let bytes = page.bytes().to_vec();
-                            app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
-                            match lane {
-                                semio_framework_plugin::app::TypedOperationResultLane::WindowConfig => window_config_pages += 1,
-                                semio_framework_plugin::app::TypedOperationResultLane::Fault => return Err(format!("CAD window publication fault: {}", String::from_utf8_lossy(&bytes))),
-                                _ => {}
-                            }
-                        }
-                        app.take_typed_operation_effect();
-                        app.take_typed_operation_event();
-                        app.take_typed_operation_ui_scope();
-                        app.take_typed_operation_completion().await.map_err(|error| format!("{error:?}"))?;
-                        std::thread::yield_now();
-                    }
-                    Ok(window_config_pages)
+                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, INSTANCE).await.map_err(|error| format!("{error:?}"))?;
+                    Ok(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count())
                 }
 
                 async fn dispatch(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel, command: CadCommand) -> Result<(), String> {
-                    app.dispatch_typed(command, &ActionMeta { instance_id: 91, view_state: Some(view.clone()), ..artifact_app_laws::meta("cad-window-ownership") }).await.map_err(|error| format!("{error:?}"))?;
+                    app.dispatch_typed(command, &ActionMeta { instance_id: INSTANCE, view_state: Some(view.clone()), ..artifact_app_laws::meta("cad-window-ownership") }).await.map_err(|error| format!("{error:?}"))?;
                     if drain(app).await? != 1 {
                         return Err("CAD command did not publish exactly one exact-window config result".into());
                     }
@@ -173,7 +159,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                 let left = view.for_window_instance(left_id).expect("left window");
                 let right = view.for_window_instance(right_id).expect("right window");
                 let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
-                app.bind_instance_id(91).await;
+                app.bind_instance_id(INSTANCE).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     let app_config_before = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -215,12 +201,12 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     }
                     let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                     if packs.len() != 1 || packs[0].window_id != left_id || packs[0].window_kind_id != shape::WINDOW_KIND_ID {
-                        return Err("CAD exact-window pack ownership changed".into());
+                        return Err(format!("CAD exact-window pack ownership changed, expected exactly {left_id}/{}: {:?}", shape::WINDOW_KIND_ID, packs.iter().map(|pack| (pack.window_id.clone(), pack.window_kind_id.clone())).collect::<Vec<_>>()));
                     }
                     app.load_document_pack(&document_before).await.map_err(|error| format!("{error:?}"))?;
                     assert_exact_state(&mut app, &left, &right, expected).await?;
                     let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
-                    reopened.bind_instance_id(92).await;
+                    reopened.bind_instance_id(REOPENED_INSTANCE).await;
                     for pack in packs {
                         reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;
                     }

@@ -17,5 +17,5 @@
     { "key": "ui.settings.tab.keybindings", "en": "Hotkeys", "de": "Tastenkürzel" }
   ],
   "maxPanelsPerStep": 1,
-  "requiresGuestRefresh": false
+  "requiresGuestRefresh": true
 }

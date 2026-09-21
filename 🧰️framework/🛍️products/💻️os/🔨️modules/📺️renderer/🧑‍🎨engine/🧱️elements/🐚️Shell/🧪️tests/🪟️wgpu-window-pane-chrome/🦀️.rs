@@ -44,9 +44,7 @@ fn split_pane_app() -> AppDefinition {
             children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "main".into(), title: Some(title.into()), instance_id: Some(instance.into()), template_id: None, corner: None }],
         })
     };
-    app.default_layout = Some(WindowLayout {
-        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![window("pane-top", "Top", 33.333), window("pane-perspective", "Perspective", 66.667)] }),
-    });
+    app.default_layout = Some(WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![window("pane-top", "Top", 33.333), window("pane-perspective", "Perspective", 66.667)] }) });
     app
 }
 
@@ -194,10 +192,7 @@ fn pane_chips_mount_exactly_where_react_mounts_them() {
     if let Some(session) = bare.session.as_mut() {
         session.app.utilities = Vec::new();
     }
-    assert!(
-        bare.window_pane_chips("pane-top").iter().any(|(chip, _, disabled)| *chip == WindowPaneChip::Utilities && *disabled),
-        "🪟️ a window with no utility bar keeps the chip and disables its toggle"
-    );
+    assert!(bare.window_pane_chips("pane-top").iter().any(|(chip, _, disabled)| *chip == WindowPaneChip::Utilities && *disabled), "🪟️ a window with no utility bar keeps the chip and disables its toggle");
     assert!(mounted.iter().any(|(chip, _, disabled)| *chip == WindowPaneChip::Utilities && !*disabled), "🪟️ a window that DOES declare utilities keeps its toggle live");
     assert!(mounted.iter().any(|(chip, _, disabled)| *chip == WindowPaneChip::WindowOptions && *disabled), "🪟️ a window that projects no measures document keeps the chip and disables its toggle");
 }
@@ -331,11 +326,7 @@ fn a_pane_chips_hit_row_is_flushed_after_its_window_body_and_before_the_panels_t
     }
     input.register_hit(HitTarget { rect: window, event: None, control_id: Some("framework.panelTab.framework.panel.catalogue".into()), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
     input.publish_hits();
-    assert_eq!(
-        input.hit_at(centre.0, centre.1).and_then(|hit| hit.control_id.clone()),
-        Some("framework.panelTab.framework.panel.catalogue".to_string()),
-        "📑️ a panel floating over a chip takes the pointer from it, exactly as React's stacking does"
-    );
+    assert_eq!(input.hit_at(centre.0, centre.1).and_then(|hit| hit.control_id.clone()), Some("framework.panelTab.framework.panel.catalogue".to_string()), "📑️ a panel floating over a chip takes the pointer from it, exactly as React's stacking does");
 }
 
 /// 🆔️ **The id round-trip law.** Every chip's published id decodes back to the very window instance and
@@ -412,7 +403,10 @@ fn the_footer_carries_no_utility_rail() {
     }
     for forbidden in fixture["footerComposition"]["forbiddenUtilityIds"].as_array().expect("fixture forbidden utilities").iter().map(|value| value.as_str().expect("forbidden utility")) {
         assert!(!ids.iter().any(|id| id.contains(forbidden)), "🔚️ the footer must carry no {forbidden} toggle: {ids:?}");
-        assert!(!shell.active_utilities.iter().any(|node| matches!(node, UtilityNode::Toggle { id, .. } | UtilityNode::Button { id, .. } | UtilityNode::Collection { id, .. } | UtilityNode::Separator { id, .. } if id == forbidden)), "🔚️ the shell's utility roster no longer carries the framework sync leaves either");
+        assert!(
+            !shell.active_utilities.iter().any(|node| matches!(node, UtilityNode::Toggle { id, .. } | UtilityNode::Button { id, .. } | UtilityNode::Collection { id, .. } | UtilityNode::Separator { id, .. } if id == forbidden)),
+            "🔚️ the shell's utility roster no longer carries the framework sync leaves either"
+        );
     }
     eprintln!("[DEBUG] footer hits {ids:?}");
 }
@@ -493,12 +487,15 @@ fn one_pane_chip_press_flips_one_fold_and_moves_no_surface() {
     assert!(fixture["paneFolds"]["surfacesMovedByAnyChip"].as_array().expect("fixture surface moves").is_empty(), "🎛️ the fixture states that no chip moves a surface");
     let folds = |shell: &ShellState, window_id: &str| (shell.window_actions_folded(window_id), shell.measures_rail_folded(window_id), shell.utility_bar_folded(window_id), shell.projection_pane_folded(window_id));
     let press = |shell: &mut ShellState, chip: WindowPaneChip, window_id: &str| {
-        let control_id = chip.control_id(window_id, match chip {
-            WindowPaneChip::Actions | WindowPaneChip::Search => shell.window_actions_folded(window_id),
-            WindowPaneChip::WindowOptions => shell.measures_rail_folded(window_id),
-            WindowPaneChip::Utilities => shell.utility_bar_folded(window_id),
-            WindowPaneChip::Projection => shell.projection_pane_folded(window_id),
-        });
+        let control_id = chip.control_id(
+            window_id,
+            match chip {
+                WindowPaneChip::Actions | WindowPaneChip::Search => shell.window_actions_folded(window_id),
+                WindowPaneChip::WindowOptions => shell.measures_rail_folded(window_id),
+                WindowPaneChip::Utilities => shell.utility_bar_folded(window_id),
+                WindowPaneChip::Projection => shell.projection_pane_folded(window_id),
+            },
+        );
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id), kind: HitKind::Toggle, drag_axis: None, drag_data: None };
         assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit)).expect("a pane chip press never errors"), "🎯️ the shell claims {chip:?}");
     };
@@ -599,7 +596,9 @@ fn unfolding_the_utilities_chip_publishes_reacts_own_rail_census() {
 #[test]
 fn a_pane_utility_row_is_claimed_by_the_shell_and_not_by_the_world_under_it() {
     let rect = Rect::new(10.0, 10.0, 80.0, 24.0);
-    for (control_id, kind) in [(format!("{WINDOW_UTILITY_RAIL_PARENT}toggle.pane.brush"), HitKind::Toggle), (format!("{WINDOW_UTILITY_RAIL_PARENT}button.pane.undo"), HitKind::Button), (format!("{WINDOW_UTILITY_RAIL_PARENT}collection.group"), HitKind::Button)] {
+    for (control_id, kind) in
+        [(format!("{WINDOW_UTILITY_RAIL_PARENT}toggle.pane.brush"), HitKind::Toggle), (format!("{WINDOW_UTILITY_RAIL_PARENT}button.pane.undo"), HitKind::Button), (format!("{WINDOW_UTILITY_RAIL_PARENT}collection.group"), HitKind::Button)]
+    {
         let hit = HitTarget { rect, event: None, control_id: Some(control_id.clone()), kind, drag_axis: None, drag_data: None };
         assert!(ShellState::pointer_press_belongs_to_shell_chrome(Some(&hit)), "🧰️ {control_id} is chrome, not surface");
     }

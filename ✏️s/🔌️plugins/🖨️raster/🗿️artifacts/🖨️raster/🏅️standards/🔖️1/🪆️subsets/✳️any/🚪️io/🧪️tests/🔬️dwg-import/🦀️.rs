@@ -21,6 +21,9 @@ async fn imports_dwg_polyline_into_raster_document() {
     let asset = crate::raster_asset(&document.assets, asset_key).expect("asset content cached");
     assert_eq!(asset.mime, "image/png");
     assert!(!asset.data.is_empty());
+    // 🧹️ The imported document owns a populated asset pool; it reaches the artifact's retirement
+    // seam rather than `RasterOwnedMap`'s fail-closed `Drop`.
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -36,4 +39,5 @@ async fn imports_empty_dwg_into_blank_raster_document() {
     let asset_key = image_key.as_ref().expect("image key set");
     let asset = crate::raster_asset(&document.assets, asset_key).expect("asset content cached");
     assert!(!asset.data.is_empty());
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
 }

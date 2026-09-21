@@ -72,11 +72,7 @@ fn status_replacement_and_document_retirement_share_one_projection() {
     assert_eq!(shell.hub_documents.len(), 2);
     let projection = ShellHubProjectionV1 {
         authority: ShellHubAuthorityV1::VerifiedSession { authorization_generation: 1 },
-        documents: shell
-            .hub_documents
-            .iter()
-            .map(|(document_key, remote)| ShellHubDocumentV1 { document_key: document_key.clone(), remote: remote.clone() })
-            .collect(),
+        documents: shell.hub_documents.iter().map(|(document_key, remote)| ShellHubDocumentV1 { document_key: document_key.clone(), remote: remote.clone() }).collect(),
     };
     let summary = shell_hub_connection_summary_v1(&projection);
     assert_eq!(summary.state, ShellHubConnectionState::Live(4));

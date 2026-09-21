@@ -6,7 +6,7 @@ async fn element_with_attrs_and_children_maps_to_a_kind_tagged_structure() {
     let doc = XmlDocument {
         root: Some(XmlNode::Element { name: "svg".into(), attrs: vec![XmlAttr { name: "viewBox".into(), value: "0 0 10 10".into() }], children: vec![XmlNode::Text { text: "hi".into() }, XmlNode::Comment { text: "note".into() }] }),
         doctype: None,
-        declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+        declaration: Some(XmlDeclaration::new("1.0", Some("UTF-8".into()), Some(true))),
         prolog: vec![XmlNode::Comment { text: "generated".into() }],
     };
     let value = semio_value_from_xml_document(&doc);

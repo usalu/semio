@@ -51,10 +51,7 @@ fn dense_actions_shell() -> ShellState {
     let mut ids = vec!["clearSelection".to_string(), "selectAll".to_string()];
     ids.extend((0..count.saturating_sub(3)).map(|index| format!("density{index:02}")));
     ids.push("engagementAbort".to_string());
-    kind.actions = ids
-        .into_iter()
-        .map(|id| ActionDefinition { in_palette: true, category: Some("selection".into()), ..ActionDefinition::new_catalog(id.clone(), LocalizedLabel::data(id), ActionKind::View) })
-        .collect();
+    kind.actions = ids.into_iter().map(|id| ActionDefinition { in_palette: true, category: Some("selection".into()), ..ActionDefinition::new_catalog(id.clone(), LocalizedLabel::data(id), ActionKind::View) }).collect();
     shell
 }
 
@@ -71,6 +68,7 @@ fn publish_dense_actions_chrome(shell: &mut ShellState, input: &mut InputState<A
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     for _ in 0..262_144 {
         if shell.render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, input, &theme, &mut world_resources) {
+            shell.publish_retained_hit_registry(input);
             return draw;
         }
     }
@@ -85,26 +83,14 @@ fn actions_and_search_publish_vertical_scroll_roots() {
         WindowEngagement {
             session_active: Some(true),
             options: None,
-            input: Some(ui_wgpu::wgpu::WindowEngagementInput {
-                id: Some("pane-search".into()),
-                value: Some(String::new()),
-                placeholder: None,
-                disabled: None,
-                on_change: None,
-                on_submit: None,
-                on_repeat_last: None,
-                on_abort: None,
-            }),
+            input: Some(ui_wgpu::wgpu::WindowEngagementInput { id: Some("pane-search".into()), value: Some(String::new()), placeholder: None, disabled: None, on_change: None, on_submit: None, on_repeat_last: None, on_abort: None }),
             control: None,
             controls: None,
             status: None,
             possible_engagements: None,
         },
     );
-    for (surface, node) in [
-        (window_actions_surface_id("pane-top"), shell.build_window_actions_ui("pane-top").expect("Actions body")),
-        (window_search_surface_id("pane-top"), shell.build_window_search_ui("pane-top").expect("Search body")),
-    ] {
+    for (surface, node) in [(window_actions_surface_id("pane-top"), shell.build_window_actions_ui("pane-top").expect("Actions body")), (window_search_surface_id("pane-top"), shell.build_window_search_ui("pane-top").expect("Search body"))] {
         let records = panel_ui_scroll_records(&surface, &node).expect("scroll projection");
         assert!(matches!(records[0].layout, ui_contract::LayoutSpec::Scroll(ui_contract::ScrollLayout { axes: ui_contract::ScrollAxes::Vertical, .. })), "{surface} root owns the clipped vertical viewport");
     }
@@ -129,12 +115,7 @@ fn the_mounted_actions_tree_keeps_fixed_rows_clips_the_terminal_row_and_scrolls_
     let mut input = InputState::<ActionDescriptor>::default();
 
     let row = |id: &str, input: &InputState<ActionDescriptor>| {
-        input
-            .hits()
-            .iter()
-            .find(|hit| hit.kind == HitKind::TreeItem && hit.control_id.as_deref().is_some_and(|control| control.ends_with(id)))
-            .unwrap_or_else(|| panic!("mounted Actions row '{id}' missing from the published viewport"))
-            .clone()
+        input.hits().iter().find(|hit| hit.kind == HitKind::TreeItem && hit.control_id.as_deref().is_some_and(|control| control.ends_with(id))).unwrap_or_else(|| panic!("mounted Actions row '{id}' missing from the published viewport")).clone()
     };
     let _ = publish_dense_actions_chrome(&mut shell, &mut input);
     let clear = row(first_id, &input);
@@ -150,7 +131,10 @@ fn the_mounted_actions_tree_keeps_fixed_rows_clips_the_terminal_row_and_scrolls_
     let abort = row(terminal_id, &input);
     assert!((abort.rect.h - row_height).abs() < 0.01, "the scrolled terminal row keeps its authored height: {:?}", abort.rect);
     assert!(!input.hits().iter().any(|hit| hit.control_id.as_deref().is_some_and(|control| control.ends_with(first_id))), "the first row leaves the clipped viewport after scrolling");
-    assert!(draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| instance.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH && instance.rect[1] >= abort.rect.y && instance.rect[1] < abort.rect.y + abort.rect.h), "the normal chrome walk paints the terminal row in the same band it publishes for input");
+    assert!(
+        draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| instance.params[2] == ui_wgpu::wgpu::draw::KIND_GLYPH && instance.rect[1] >= abort.rect.y && instance.rect[1] < abort.rect.y + abort.rect.h),
+        "the normal chrome walk paints the terminal row in the same band it publishes for input"
+    );
 
     let pointer = (abort.rect.x + abort.rect.w * 0.5, abort.rect.y + abort.rect.h * 0.5);
     let _ = crate::collect_fixture_actions(&mut input);
@@ -272,11 +256,7 @@ fn an_arg_carrying_row_opens_reacts_staged_form_and_refuses_execute_until_it_res
         let UiNode::Stack(stack) = &node else { panic!("stack") };
         // ⚡️ React renders Execute/Reset as the form section's own `actions`; a `TreeSection` carries
         // no action row here, so the pair follows the form as its own band of the pane stack.
-        let button = stack
-            .children
-            .iter()
-            .find_map(|child| if let UiNode::Button(button) = child { button.id.as_deref().is_some_and(|id| id.ends_with("execute")).then_some(button) } else { None })
-            .expect("the Execute button");
+        let button = stack.children.iter().find_map(|child| if let UiNode::Button(button) = child { button.id.as_deref().is_some_and(|id| id.ends_with("execute")).then_some(button) } else { None }).expect("the Execute button");
         matches!(button.presence.state, ui_wgpu::wgpu::component::ui::UiState::Disabled)
     };
     assert!(execute(&shell), "📝️ Execute is refused while a required argument is unstaged — React's `missing.length > 0`");
@@ -400,9 +380,7 @@ fn malformed_engagements_retire_the_transport_lease_and_preserve_the_last_valid_
     let mut faults = Vec::new();
     shell.install_window_engagements_section(engagements_section_document(&fixture["section"], 42), &mut faults).expect("valid section installs");
     let expected = shell.window_engagements.clone();
-    shell
-        .install_window_engagements_section(engagements_section_document(&serde_json::json!(["invalid"]), 43), &mut faults)
-        .expect("malformed source ownership still retires");
+    shell.install_window_engagements_section(engagements_section_document(&serde_json::json!(["invalid"]), 43), &mut faults).expect("malformed source ownership still retires");
     assert_eq!(shell.window_engagements, expected, "a malformed refresh preserves the last valid snapshot");
     assert_eq!(faults.len(), 1, "the producer fault is explicit");
     assert!(faults[0].2.starts_with("window engagements section parse"), "the decode fault identifies the canonical section: {:?}", faults[0]);
@@ -451,17 +429,72 @@ fn the_pane_bodies_move_no_shell_surface() {
     assert!(shell.window_actions_documents.is_empty() && shell.window_search_documents.is_empty(), "🪟️ and a shell with no live pane owns no pane document");
 }
 
-/// 🎛️ **The one-fold pin.** Both bodies read the ONE `actionsFolded` React gives the Actions/Search
-/// pair, so either chip opens and closes both — and a folded pane paints neither body.
-#[test]
-fn both_pane_bodies_read_the_one_actions_fold() {
+fn paired_pane_shell() -> ShellState {
     let mut shell = actions_shell();
-    assert!(shell.window_actions_folded("pane-top"), "🎛️ React's `useState(true)` — a pane opens folded");
-    shell.toggle_window_pane_chip("pane-top", WindowPaneChip::Search);
-    assert!(!shell.window_actions_folded("pane-top"), "🎛️ the Search chip opens the pair");
-    assert!(shell.window_actions_folded("pane-perspective"), "🎛️ and never the sibling pane's");
-    shell.toggle_window_pane_chip("pane-top", WindowPaneChip::Actions);
-    assert!(shell.window_actions_folded("pane-top"), "🎛️ the Actions chip closes the same fold");
+    shell.window_engagements.insert(
+        "pane-top".into(),
+        WindowEngagement {
+            session_active: Some(true),
+            options: None,
+            input: Some(ui_wgpu::wgpu::WindowEngagementInput {
+                id: Some("pane-engagement".into()),
+                value: Some(String::new()),
+                placeholder: None,
+                disabled: None,
+                on_change: None,
+                on_submit: None,
+                on_repeat_last: None,
+                on_abort: None,
+            }),
+            control: None,
+            controls: None,
+            status: Some(vec![ui_wgpu::wgpu::WindowEngagementStatus { id: "pane.status".into(), text: "Ready".into() }]),
+            possible_engagements: None,
+        },
+    );
+    shell.sync_dock_tabs();
+    let mut faults = Vec::new();
+    shell.refresh_window_action_panes(&["pane-top".into(), "pane-perspective".into()], &mut faults).expect("paired panes publish their retained documents");
+    assert!(faults.is_empty(), "paired pane publication is fault-free: {faults:?}");
+    shell
+}
+
+fn pane_body_census(input: &InputState<ActionDescriptor>) -> (bool, bool) {
+    let actions = input.hits().iter().any(|hit| hit.control_id.as_deref().is_some_and(|control| control.ends_with("action.addObjectKind")));
+    let search = input.hits().iter().any(|hit| hit.control_id.as_deref().is_some_and(|control| control.ends_with("pane-engagement")));
+    (actions, search)
+}
+
+/// 🎛️ **The independent-fold pin.** A real press on either accepted pane chip publishes only that
+/// pane's retained body. The sibling stays folded until its own chip receives a physical press.
+#[test]
+fn physical_actions_and_search_chips_publish_only_their_own_retained_body() {
+    let fixture = pane_fixture();
+    assert_eq!(fixture["foldOwnership"]["default"], serde_json::json!({ "actions": "folded", "search": "folded" }));
+    for step in fixture["foldOwnership"]["physicalPress"].as_array().expect("physical fold cases") {
+        let chip = match step["chip"].as_str().expect("chip") {
+            "actions" => WindowPaneChip::Actions,
+            "search" => WindowPaneChip::Search,
+            other => panic!("unknown pane chip {other}"),
+        };
+        let mut shell = paired_pane_shell();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let _ = publish_dense_actions_chrome(&mut shell, &mut input);
+        assert_eq!(pane_body_census(&input), (false, false), "both retained bodies start folded");
+        let control = chip.control_id("pane-top", true);
+        let hit = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(control.as_str())).unwrap_or_else(|| panic!("{control} physical chip hit"));
+        let point = (hit.rect.x + hit.rect.w * 0.5, hit.rect.y + hit.rect.h * 0.5);
+        semio_framework_async::block_on(shell.handle_pointer_button(point.0, point.1, true, 0, &mut input, &Theme::light())).expect("physical pane chip press routes");
+        let _ = publish_dense_actions_chrome(&mut shell, &mut input);
+        let expected = match step["visibleBody"].as_str().expect("visible body") {
+            "actions" => (true, false),
+            "search" => (false, true),
+            other => panic!("unknown visible pane body {other}"),
+        };
+        assert_eq!(pane_body_census(&input), expected, "{} opens only its own retained pane body", step["chip"]);
+        let mut faults = Vec::new();
+        shell.refresh_window_action_panes(&[], &mut faults).expect("paired pane documents retire");
+    }
 }
 
 /// 🎛️ **The engagement-control law (W14c item 2).** React's `<Engagement/>` paints a `control` and a
@@ -482,17 +515,50 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
             session_active: Some(true),
             options: None,
             input: None,
-            control: Some(ui_wgpu::wgpu::WindowEngagementControl::Slider { id: None, label: Some("Height".into()), value: 2.0, min: 0.0, max: 10.0, step: Some(0.5), unit: Some("m".into()), disabled: None, on_change: select("setHeight"), on_commit: None }),
+            control: Some(ui_wgpu::wgpu::WindowEngagementControl::Slider {
+                id: None,
+                label: Some("Height".into()),
+                value: 2.0,
+                min: 0.0,
+                max: 10.0,
+                step: Some(0.5),
+                unit: Some("m".into()),
+                disabled: None,
+                on_change: select("setHeight"),
+                on_commit: None,
+            }),
             controls: Some(vec![
                 ui_wgpu::wgpu::WindowEngagementControl::Stepper { id: None, label: None, value: 3.0, min: None, max: None, step: Some(1.0), unit: None, disabled: None, on_change: select("setCount"), on_commit: None },
-                ui_wgpu::wgpu::WindowEngagementControl::Ring { id: None, label: None, value: Some("ring.b".into()), options: vec![ui_wgpu::wgpu::WindowEngagementRingOption { id: "ring.a".into(), label: "A".into(), disabled: None }, ui_wgpu::wgpu::WindowEngagementRingOption { id: "ring.b".into(), label: "B".into(), disabled: None }], disabled: None, on_select: select("pickOrb") },
-                ui_wgpu::wgpu::WindowEngagementControl::ToggleGroup { id: Some("granularity".into()), label: None, value: Some("granularity.face".into()), options: vec![ui_wgpu::wgpu::WindowEngagementToggleGroupOption { id: "granularity.face".into(), label: "Face".into(), disabled: None }, ui_wgpu::wgpu::WindowEngagementToggleGroupOption { id: "granularity.edge".into(), label: "Edge".into(), disabled: None }], disabled: None, on_select: select("setGranularity") },
-                ui_wgpu::wgpu::WindowEngagementControl::Select { id: None, label: None, value: Some("m".into()), placeholder: None, items: vec![ui_wgpu::wgpu::WindowEngagementSelectItem { id: "m".into(), value: "m".into(), label: "Metres".into() }], disabled: None, on_change: select("setUnit") },
+                ui_wgpu::wgpu::WindowEngagementControl::Ring {
+                    id: None,
+                    label: None,
+                    value: Some("ring.b".into()),
+                    options: vec![ui_wgpu::wgpu::WindowEngagementRingOption { id: "ring.a".into(), label: "A".into(), disabled: None }, ui_wgpu::wgpu::WindowEngagementRingOption { id: "ring.b".into(), label: "B".into(), disabled: None }],
+                    disabled: None,
+                    on_select: select("pickOrb"),
+                },
+                ui_wgpu::wgpu::WindowEngagementControl::ToggleGroup {
+                    id: Some("granularity".into()),
+                    label: None,
+                    value: Some("granularity.face".into()),
+                    options: vec![
+                        ui_wgpu::wgpu::WindowEngagementToggleGroupOption { id: "granularity.face".into(), label: "Face".into(), disabled: None },
+                        ui_wgpu::wgpu::WindowEngagementToggleGroupOption { id: "granularity.edge".into(), label: "Edge".into(), disabled: None },
+                    ],
+                    disabled: None,
+                    on_select: select("setGranularity"),
+                },
+                ui_wgpu::wgpu::WindowEngagementControl::Select {
+                    id: None,
+                    label: None,
+                    value: Some("m".into()),
+                    placeholder: None,
+                    items: vec![ui_wgpu::wgpu::WindowEngagementSelectItem { id: "m".into(), value: "m".into(), label: "Metres".into() }],
+                    disabled: None,
+                    on_change: select("setUnit"),
+                },
             ]),
-            status: Some(vec![
-                ui_wgpu::wgpu::WindowEngagementStatus { id: "engagement-step".into(), text: "Pick a face".into() },
-                ui_wgpu::wgpu::WindowEngagementStatus { id: "engagement-hint".into(), text: "Shift to snap".into() },
-            ]),
+            status: Some(vec![ui_wgpu::wgpu::WindowEngagementStatus { id: "engagement-step".into(), text: "Pick a face".into() }, ui_wgpu::wgpu::WindowEngagementStatus { id: "engagement-hint".into(), text: "Shift to snap".into() }]),
             possible_engagements: None,
         },
     );
@@ -541,7 +607,8 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
 
     // 🕳️ React's `if (!control.options.length) return null` — an empty group renders NOTHING, not an
     // empty container.
-    shell.window_engagements.get_mut("pane-top").expect("the engagement").controls = Some(vec![ui_wgpu::wgpu::WindowEngagementControl::ToggleGroup { id: Some("empty".into()), label: Some("Empty".into()), value: None, options: Vec::new(), disabled: None, on_select: None }]);
+    shell.window_engagements.get_mut("pane-top").expect("the engagement").controls =
+        Some(vec![ui_wgpu::wgpu::WindowEngagementControl::ToggleGroup { id: Some("empty".into()), label: Some("Empty".into()), value: None, options: Vec::new(), disabled: None, on_select: None }]);
     let keys = published_keys(&shell, "pane-top", false);
     assert!(!keys.iter().any(|key| key.ends_with("/empty")), "🕳️ an option-less toggle group publishes nothing at all");
 }
@@ -637,7 +704,10 @@ fn the_staged_forms_category_header_registers_reacts_collapsible_row() {
 
     // ⚡️ React's section `actions` keep their own ids beside the form.
     let segment = semio_framework::element_id_segment("pane-top");
-    for expected in [form["executeId"].as_str().expect("execute").replace("{windowSegment}", &segment).replace("{actionId}", "openAddObjectDialog"), form["resetId"].as_str().expect("reset").replace("{windowSegment}", &segment).replace("{actionId}", "openAddObjectDialog")] {
+    for expected in [
+        form["executeId"].as_str().expect("execute").replace("{windowSegment}", &segment).replace("{actionId}", "openAddObjectDialog"),
+        form["resetId"].as_str().expect("reset").replace("{windowSegment}", &segment).replace("{actionId}", "openAddObjectDialog"),
+    ] {
         assert!(records.iter().any(|record| record.key.as_str().ends_with(&expected)), "⚡️ the form keeps React's '{expected}'");
     }
 }

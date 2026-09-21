@@ -22,7 +22,7 @@ async fn definition_declares_the_canvas_2d_surface_and_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn source_frame_renders_as_actual_image_layer_behind_tiles() {
     let mut app = presentation_app().await;
-    app.dispatch_typed(PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).await.expect("seed grid");
+    crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 })).await;
     let deck = app.snapshot().expect("projection");
     let layers_json = deck_to_canvas_layers(&deck);
     let layers: Vec<Value> = dsl::os_pack::json::parse(&layers_json).unwrap().as_array().cloned().unwrap_or_default();

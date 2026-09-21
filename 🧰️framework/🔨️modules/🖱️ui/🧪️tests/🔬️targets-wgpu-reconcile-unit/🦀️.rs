@@ -141,7 +141,7 @@ fn tree_ui(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String
         let selected: HashSet<String> = ids.into_iter().collect();
         ui_tree_stamp_presence(&mut sections, &selected, &HashSet::new(), None, &|_id: &str| Vec::new());
     }
-    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
+    UiNode::Tree(UiTreeNode { presentation: Default::default(), sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
 }
 
 /// 🔽️ Opens `id`'s popup the way `events::EventRouter::toggle_select_popup` does, then re-applies —
@@ -241,7 +241,7 @@ fn tree_item_control_and_trailing_actions_become_retained_children_too() {
     let item = UiTreeItemNode {
         window: None,
         granularity: None,
-        control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true), menu: None })),
+        control: Some(UiControlNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true), menu: None })),
         actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: action(), placement: Some(UiTreeActionPlacement::Menu) }]),
         ..tree_item("leaf", "Leaf")
     };

@@ -678,7 +678,7 @@ pub fn demo_svg_snapshot() -> SvgSnapshot {
     };
     let snapshot = SvgSnapshot {
         schema: STDIO_SVG_DOCUMENT_SCHEMA.into(),
-        doc: XmlDocument { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }), doctype: Some("<!DOCTYPE svg>".into()), prolog: Vec::new(), root: Some(root) },
+        doc: XmlDocument { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }), doctype: Some("<!DOCTYPE svg>".into()), prolog: Vec::new(), root: Some(root) },
     };
     let _text = crate::schema::snapshot::write_svg_xml(&snapshot.doc);
     snapshot

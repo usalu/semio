@@ -6,8 +6,7 @@ use semio_framework::{AppRole, ArtifactDialect, ModeDefinition, Modes, PluginMan
 /// `select_boot_program`'s role projection resolves a sibling by `(dialect, role)` and a table of
 /// apps that all claimed one synthetic dialect could never exercise it.
 fn boot_app(app_id: &str) -> AppDefinition {
-    let (dialect, role) = semio_framework::parse_surface_app_id(app_id)
-        .unwrap_or_else(|_| (ArtifactDialect { artifact_kind: "s.test.boot".into(), standard: "1".into(), subset: "*".into() }, AppRole::Editor));
+    let (dialect, role) = semio_framework::parse_surface_app_id(app_id).unwrap_or_else(|_| (ArtifactDialect { artifact_kind: "s.test.boot".into(), standard: "1".into(), subset: "*".into() }, AppRole::Editor));
     AppDefinition {
         id: app_id.into(),
         role,
@@ -127,11 +126,7 @@ fn boot_without_the_requested_plugin_settles_with_a_per_plugin_status() {
 fn plugin_fault_status_reads_in_both_languages() {
     let mut shell = ShellState::new(Vec::new(), "generation3d".into());
     assert!(shell.plugin_fault_status().is_none());
-    shell.plugin_faults.push(ShellPluginFault {
-        plugin_id: "flow".into(),
-        app_id: "s.flow.flow@1/*#editor".into(),
-        detail: "interactive-job.catalog-authority: tool 'addGeneration'".into(),
-    });
+    shell.plugin_faults.push(ShellPluginFault { plugin_id: "flow".into(), app_id: "s.flow.flow@1/*#editor".into(), detail: "interactive-job.catalog-authority: tool 'addGeneration'".into() });
     shell.locale_id = "en".into();
     let english = shell.plugin_fault_status().expect("english status");
     assert!(english.starts_with("Plugin unavailable: flow (s.flow.flow@1/*#editor)"), "{english}");
@@ -152,10 +147,7 @@ fn a_poisoned_surface_faults_alone() {
     let both: Vec<String> = vec!["flow-window".into(), "preview".into()];
     let mut shell = ShellState::new(Vec::new(), "generation3d".into());
     shell.settle_surface_faults(
-        vec![
-            ("flow-window".into(), "flow.body".into(), "renderDocument promise failed: wgpu-ui.intake-budget-exhausted:intake:163840001".into()),
-            ("preview".into(), "preview.body".into(), "wgpu-ui.surface-not-published:preview".into()),
-        ],
+        vec![("flow-window".into(), "flow.body".into(), "renderDocument promise failed: wgpu-ui.intake-budget-exhausted:intake:163840001".into()), ("preview".into(), "preview.body".into(), "wgpu-ui.surface-not-published:preview".into())],
         &both,
     );
     assert_eq!(shell.surface_faults.len(), 2);
@@ -180,10 +172,7 @@ fn a_poisoned_surface_faults_alone() {
 fn a_scoped_refresh_settles_only_the_surfaces_it_visited() {
     let mut shell = ShellState::new(Vec::new(), "generation3d".into());
     shell.settle_surface_faults(
-        vec![
-            ("flow-window".into(), "flow.body".into(), "renderDocument promise failed: wgpu-ui.intake-budget-exhausted:intake:163840001".into()),
-            ("preview".into(), "preview.body".into(), "wgpu-ui.surface-not-published:preview".into()),
-        ],
+        vec![("flow-window".into(), "flow.body".into(), "renderDocument promise failed: wgpu-ui.intake-budget-exhausted:intake:163840001".into()), ("preview".into(), "preview.body".into(), "wgpu-ui.surface-not-published:preview".into())],
         &["flow-window".to_string(), "preview".to_string()],
     );
     assert_eq!(shell.surface_faults.len(), 2);

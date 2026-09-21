@@ -345,6 +345,21 @@ impl ArtifactEditor for PlaygroundEditor {
         Some(semio_framework_plugin::no_presence_store_disposer())
     }
 
+    /// 👥️ The disposer alone does not close the presence store: its close loop demands the INSTALLED
+    /// local-root retirement factory (`presence close requires its installed local-root retirement
+    /// factory`), and the `ArtifactEditor` default is `None` — `EditorApp` passes it through unchanged.
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }

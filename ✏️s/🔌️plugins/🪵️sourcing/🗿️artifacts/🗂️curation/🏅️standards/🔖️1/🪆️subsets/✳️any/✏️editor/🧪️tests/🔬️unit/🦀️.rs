@@ -351,7 +351,10 @@ use semio_framework_plugin::{EditorApp, PluginApp};
 async fn view_kind_config_only_commands_pass_kind_discipline() {
     // 🧬️ A registry-backed wrapper so the View-kind declarations actually get enforced.
     let mut app = new_app().await;
-    let result = app.dispatch_typed(SourcingCurationCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "glulam".into() }), &artifact_app_laws::meta("local")).await.expect("filter query");
+    // 🏁️ Through the settling helper: a bare `dispatch_typed` leaves the migrated command's retained
+    // operation pending, and a store that still owes a publication never reaches the terminal-empty
+    // shallow shell the guard drains for on `Drop`.
+    let result = dispatch(&mut app, SourcingCurationCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "glulam".into() })).await;
     assert!(result.mutations.is_empty(), "setFilterQuery is config-only, no document operations");
 }
 

@@ -123,8 +123,19 @@ async fn cancel_of_a_parked_task_drops_it_and_frees_its_slot_for_reuse() {
     assert!(pending, "task must be parked");
     drop(executor.detach(id).expect("exact detached future"));
     assert!(!executor.has_pending(), "cancelling the only parked task must clear has_pending");
-    // 🔁️ The freed slot is reused by the next spawn — cancel must not leak the index forever.
-    let reused = executor.spawn(async move {}).expect("reused fixed executor slot");
+    // 🔁️ The freed slot comes back — cancel must not leak the index forever. The fixed arena hands
+    // its slots out FIFO from a pool pre-filled with every index, so the detached one is handed back
+    // after one full rotation, not on the very next spawn; walking the rotation is what proves it was
+    // returned to the pool at all, and the generation clause is asserted on that exact handback.
+    let mut reused = None;
+    for _ in 0..LOCAL_EXECUTOR_TASK_SLOTS {
+        let next = executor.spawn(async move {}).expect("reused fixed executor slot");
+        if next as u32 == id as u32 {
+            reused = Some(next);
+            break;
+        }
+    }
+    let reused = reused.expect("a detached slot must be reusable by a later spawn");
     assert_ne!(reused, id, "slot reuse must advance generation authority");
     assert_eq!(reused as u32, id as u32, "a detached slot must be reusable by a later spawn");
 }

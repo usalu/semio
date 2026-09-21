@@ -231,7 +231,7 @@ pub fn demo_ifc_snapshot() -> IfcSnapshot {
     IfcSnapshot {
         schema: STDIO_IFC_DOCUMENT_SCHEMA.into(),
         header: _IfcHeader {
-            file_description: vec![IfcValue::Aggregate(vec![]), IfcValue::String("2;1".into())],
+            file_description: vec![IfcValue::Aggregate(vec![IfcValue::String(String::new())]), IfcValue::String("2;1".into())],
             file_name: vec![
                 IfcValue::String("semio.ifc".into()),
                 IfcValue::String("2026-08-11T00:00:00".into()),

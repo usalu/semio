@@ -591,6 +591,16 @@ pub enum Command {
 
 /// 🎯️ Handcrafted OpBinary (P6) — `DslOps` emits `DslVariants` only.
 impl protocol::OpBinary for Command {
+    /// 🎯️ The two manifest ids this command schema owns. `app_commands!` fills this from its own rows
+    /// via `ToolCommandCatalog`; a HAND-WRITTEN `OpBinary` silently keeps the trait's
+    /// `&["typed-command"]` fallback instead. `tool_job_registration` joins these ids against the
+    /// generated `Migrated` declarations and the live concrete factories, and a join that matches
+    /// nothing is a `panic!` in app construction — which in a guest is a `wasm trap: unreachable`, so
+    /// the whole app fails to spawn. Measured 2026-09-21 on the rebuilt guest: `tool proof catalog
+    /// must exactly join migrated generated declarations to live concrete factories` (ticket
+    /// 26/09/18 S10 §3.2).
+    const TOOL_JOB_IDS: &'static [&'static str] = MODULE_RETAINED_TOOL_IDS;
+
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }

@@ -29,7 +29,9 @@ mod runtime_instance_registry_tests {
     #[test]
     fn runtime_instance_registry_has_fixed_capacity_collision_and_reuse() {
         let mut registry = RuntimeInstanceRegistry::new();
-        assert!(registry.allocation_admitted);
+        assert!(!registry.allocation_admitted, "construction takes no backing — the first admission does");
+        assert!(registry.can_insert(100_000), "the first admission gate takes the backing it promises");
+        assert!(registry.allocation_admitted, "an admitted gate leaves the fixed slot table granted");
         for index in 0..PLUGIN_RUNTIME_INSTANCE_SLOTS as u32 {
             assert!(registry.insert(index.saturating_add(100_000), index).is_ok());
         }

@@ -87,6 +87,8 @@ fn open_shell_panels_never_activate_the_window_underneath() {
         let point = (panel.x + panel.w * 0.5, panel.y + panel.h * 0.5);
         shell.dock_window_plan = vec![("pane-perspective".into(), shell.body_rect(&theme))];
         shell.active_window_id = Some("pane-top".into());
+        let mut input = InputState::<ActionDescriptor>::default();
+        shell.publish_retained_input_for_test(&mut input, &theme);
         let expected = row["activates"].as_bool().unwrap();
         assert_eq!(shell.activate_window_under_pointer(point.0, point.1, &Theme::light()), expected, "{row}");
         assert_eq!(shell.active_window_id.as_deref(), Some(if expected { "pane-perspective" } else { "pane-top" }));

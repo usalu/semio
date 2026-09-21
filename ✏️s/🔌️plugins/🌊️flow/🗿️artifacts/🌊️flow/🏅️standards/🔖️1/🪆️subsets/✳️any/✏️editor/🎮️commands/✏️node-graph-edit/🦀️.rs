@@ -3,10 +3,13 @@
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::flow::{fallible_host_operations, flow_graph_selection_domains, sync_host_selection, FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_INTERACTION_GRAPH, FLOW_STORE_MAX_MUTATION_ITEMS};
+use crate::editor::flow::{apply_canvas_options, flow_graph_selection_domains, seed_host_catalogue, sync_host_selection, FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_INTERACTION_GRAPH, FLOW_STORE_MAX_MUTATION_ITEMS};
 use crate::{op::FlowMutation, FlowSnapshot};
-use flow::FlowEvalSession;
-use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
+use flow::{neural::ColdRetire, FlowEvalSession};
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework_plugin::{app::{ChildEmit, InteractionView}, ArtifactView, ConfigView, Emit, Fault};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{set_snapshot, SemioFlowMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 
 //#region 🔖️FlowNodeGraphEditOp
 /// 🎯️ One batched edit inside a `FlowCommand::NodeGraphEdit`/`SpotlightCommit`, closed over the exact
@@ -110,13 +113,21 @@ pub fn operations_from_action(args: &dsl::DslValue) -> Result<Vec<FlowNodeGraphE
 /// mutation afterwards, the framework auto-prunes deleted ids out of `graph`'s selection via
 /// `interaction_topology`.
 pub fn node_graph_edit_result(
-    snapshot: &FlowSnapshot,
+    doc: &ArtifactView<'_, FlowSnapshot>,
     config: &FlowMainWindowConfig,
     session: &FlowEvalSession,
     operations: &[FlowNodeGraphEditOp],
     selected_nodes: &[String],
 ) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    let artifact_mutations = fallible_host_operations(snapshot, config, session, |host| {
+    let child_id = &doc.snapshot.content.child_id;
+    let content = doc.children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
+    let (widgets, synapses, layout) = crate::working_from_flow_content_snapshot(&content);
+    let live = semio_framework_artifact_flow_flow::FlowHostSnapshot { schema: "flow.host_snapshot".into(), camera: config.camera.clone(), widgets, synapses, layout };
+    let mut host = flow::flow_host_with_session(&live, session);
+    live.retire_cold();
+    seed_host_catalogue(&mut host, &config.catalogue_sections_json);
+    apply_canvas_options(&mut host, config);
+    let changed = (|| {
         for sub_operation in operations {
             match sub_operation {
                 FlowNodeGraphEditOp::SetHostSnapshot { host_snapshot_json } => {
@@ -127,7 +138,7 @@ pub fn node_graph_edit_result(
                     host.set_host_snapshot_preserving_history(parsed);
                 }
                 FlowNodeGraphEditOp::DeleteSelection => {
-                    sync_host_selection(host, selected_nodes);
+                    sync_host_selection(&mut host, selected_nodes);
                     host.delete_selection().map_err(|error| Fault::from(format!("nodeGraphEdit deleteSelection refusal: {error}")))?;
                 }
                 FlowNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
@@ -142,9 +153,24 @@ pub fn node_graph_edit_result(
                 }
             }
         }
-        Ok(!operations.is_empty())
-    })?;
-    Ok(Emit::mutations(artifact_mutations))
+        Ok::<bool, Fault>(!operations.is_empty())
+    })();
+    let mutation = match changed {
+        Ok(true) => {
+            let next = crate::flow_content_snapshot_from_working(&host.host_snapshot.widgets, &host.host_snapshot.synapses, &host.host_snapshot.layout);
+            (next != *content).then(|| SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot::new(next)))
+        }
+        Ok(false) => None,
+        Err(error) => {
+            host.retire_cold();
+            return Err(error);
+        }
+    };
+    host.retire_cold();
+    Ok(match mutation {
+        Some(mutation) => Emit { child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, &[mutation])], ui_scope: UiDirtyScope::Full, ..Default::default() },
+        None => Emit::default(),
+    })
 }
 //#endregion 🔖️SharedDispatch
 
@@ -159,14 +185,14 @@ pub struct NodeGraphEdit {
 /// it is reachable only through that macro-generated path (`FlowPlayApp::handle` always routes this
 /// command through `apply` below instead) — degrades to treating the selection as empty.
 pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    node_graph_edit_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.operations, &[])
+    node_graph_edit_result(doc, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.operations, &[])
 }
 
 /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, session)` has no `interaction` slot (see
 /// `delete_selection::apply`'s doc comment) — `FlowPlayApp::handle` routes this command through `apply`.
 pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let (nodes, _edges) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
-    node_graph_edit_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.operations, &nodes)
+    node_graph_edit_result(doc, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.operations, &nodes)
 }
 
 //#region 🧪️Tests

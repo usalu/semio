@@ -202,16 +202,23 @@ in its docstring, pinned by a new law
 (`🖐️5d/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs` `part_kind_options_are_named_kinds_and_never_catalog_uuids`)
 that refuses any option shaped like a UUID.
 
-**Re-describe after the fix: QUEUED, not measured.** The batch
-(`📜️pz1-describe-batch.sh 🗒️note 🧩️puzzle`, pid 14113, detached, capture
-`🗑️generated/pz1-describe-batch2.txt`) took its fleet-mutex ticket at 12:01 and was still third in
-the queue at 13:25 — `rb1` has held the lock since 11:56 running
-`@semio-tech/framework-os-dev:build-s-react-release` (holder pid 75301, alive, 3 `rustc` running, so
-NOT the rule-27(b) deadlock shape), with `tc3c` ahead of this slice. The batch survives this
-session: its rows land in `🗑️generated/pz1-describe-ledger.txt` and the expected outcome is
-`🗒️note rc=0` (clearing `client-e2e` red 2, §4.3) followed by `🧩️puzzle rc=0` with `🔣️.json`
-dropping from 4 803 294 B to roughly **375 KB** — the `manifest.apps` + tail measured above, since
-all seven example bodies now leave as declared assets.
+**Re-describe after the fix: NOT MEASURED — three mutex holds lost to peers, two of them to a
+tree that did not compile.** The honest record, because it is the reason this item is open:
+
+| attempt | outcome |
+| --- | --- |
+| 03:39–04:10 (session 7a) | never reached a build: a peer's `Mutation::label` → `LocalizedLabel` sweep left `semio-framework-os-kernel`/`-os`/`-plugin` uncompilable for the whole window |
+| 12:01 → 13:39 (pid 14113) | waited **98 min** in the fleet queue behind `rb1`'s `build-s-react-release`, got the lock, and both owners died **4 s and 3 s** in: `cargo build -p semio-s-plugin-note --target wasm32-wasip2 … exited with status 101`, on a peer's in-flight `UiNodeRecord: Clone` break in `🖱️ui/🧬️contract/📃️document/🦀️.rs:310`. A whole hold spent on somebody else's compile error |
+| 13:40 → (pid 65484, live) | relaunched as `📜️pz1-await-and-describe.sh` (new): it polls `cargo check -p semio-framework-plugin -p semio-framework-ui-contract` **outside** the lock and only takes the mutex once the tree is green — which it did at **13:47** (`🗑️generated/pz1-await.txt`). Queued since 13:47; `tc3c` has held the lock since 13:44 and was still holding it at 15:09 (holder alive, 9 `rustc` running — a legitimate long build, not the rule-27(b) deadlock shape) |
+
+That script is the reusable part of this item: a wasm owner should never spend a fleet-mutex hold
+discovering that the shared tree is red.
+
+**Expected rows** (`🗑️generated/pz1-describe-ledger.txt`, written by the detached run):
+`🗒️note rc=0` — clearing `client-e2e` red 2 (§4.3) — then `🧩️puzzle rc=0` with `🔣️.json` falling
+from 4 803 294 B to roughly **375 KB**, since all seven example bodies now leave as declared assets
+and §2.3's cliff is gone. Neither is claimed here: an unfinished `describe` discards its staging
+directory, so both committed pairs are byte-for-byte what they were.
 
 Whoever reads the ledger next: re-run `semio-os-mcp audit --folder <repo>` (expect **0**
 `skipping plugin` lines) and `bun ./📜️script.ts client-e2e` from `🌉️mcp/📦️packages/🟦️typescript`.
@@ -329,10 +336,11 @@ CE1 measured for `🀄️wfc`: re-describe the plugin on today's SDK.
 
 ## 6. Honest gaps
 
-1. **`🧩️puzzle` is still the one catalog diagnostic.** The §2.3 fix is landed and its law passes in
-   0.07 s (the wall clock IS the proof the 3 MB document is no longer materialised), but the
-   re-describe that would prove it end to end had not completed when this report was written — see
-   §4.4. Until it does, `🔣️.json` is still the 09-19 4 803 294 B file and `client-e2e` red 1 stands.
+1. **`🧩️puzzle` is still the one catalog diagnostic, and `client-e2e` is 30/32.** The §2.3 fix is
+   landed and its law passes in 0.07 s (the wall clock IS the proof the 3 MB document is no longer
+   materialised), but the re-describe that would prove it end to end never got a working mutex hold
+   — §4.4 records all three attempts. The run is detached (pid 65484) and queued, so the ledger may
+   answer after this report. Until it does, `🔣️.json` is still the 09-19 4 803 294 B file and `client-e2e` red 1 stands.
    Nothing is half-landed: a failed `describe` discards its staging directory, so the committed pair
    is untouched.
 2. **`🗄️stdio` finished 35 s inside a 1 800 s wall.** That is a real result, not a comfortable one
@@ -358,3 +366,15 @@ CE1 measured for `🀄️wfc`: re-describe the plugin on today's SDK.
    stdio, the registry vitest and five native `cargo check --all-targets` runs.
 7. **`🖨️raster`'s pack moved by one byte** (43 938 → 43 937) while its `🔣️.json` stayed
    byte-identical. Not investigated; it decodes and the JSON projection is unchanged.
+
+## 7. Ticket files
+
+`📜️pz1-describe-batch.sh` (A3's per-owner describe recipe with ONE mutex acquisition for a whole
+batch), `📜️pz1-await-and-describe.sh` (waits for a green shared tree outside the lock, then takes
+it — §4.4), this report. Captures: `🗑️generated/pz1-{describe-ledger,describe-🗄️stdio,
+describe-🧩️puzzle,describe-🖨️raster,describe-🗒️note,describe-batch,describe-batch2,describe-batch3,
+await,audit-after,client-e2e,part-kind-law,example-source-laws,example-assets-laws,sweep-check}.txt`.
+
+Regenerated, never hand-edited: `✏️s/🔌️plugins/🗄️stdio/{🔣️.json,🛂️.descriptor.semio}` (new) and
+`✏️s/🔌️plugins/🖨️raster/{🔣️.json,🛂️.descriptor.semio}`, each written by `bun ./📜️script.ts describe`
+in its owner's own rust package.

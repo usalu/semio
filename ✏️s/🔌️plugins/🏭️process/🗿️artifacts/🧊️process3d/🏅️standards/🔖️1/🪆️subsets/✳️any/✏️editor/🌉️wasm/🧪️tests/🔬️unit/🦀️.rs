@@ -24,8 +24,37 @@ fn drill_step(id: &str) -> ProcessStep {
     }
 }
 
+/// 🔐️ A bare `ArtifactStore::new` installs NO owner catalog, and `reserve_edit_history_slot` refuses
+/// every `Apply` without one — `edit history insertion requires its exact mutation retirement
+/// factory`. These fixtures therefore install the app's OWN exact document-store owners, the same
+/// catalog `Process3dPlayApp::build_document_store_owners` hands the runtime, which in turn obliges
+/// every fixture to finish through [`close_store`].
 async fn new_store() -> Process3dStore {
-    Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None)).await.expect("new store")
+    let mut store = Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None)).await.expect("new store");
+    store.install_document_store_owners_exact(crate::spr::process3d_document_store_owners());
+    store
+}
+
+/// 🧹️ Drains an owners-installed fixture store to the terminal-empty shallow shell `ArtifactStore`'s
+/// own `Drop` asserts — one item and one page per turn, exactly the way the host retires a closing
+/// document.
+fn close_store(mut store: Process3dStore) {
+    use semio_framework_plugin::ArtifactOwnedDisposer;
+    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
+    for _ in 0..1_048_576 {
+        match disposer.close_step(&mut store, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture store close step") {
+            semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+            }
+            semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } | semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("Process3d fixture store close blocked: {reason}"),
+            semio_framework_plugin::PluginCloseStep::Complete => {
+                assert!(disposer.terminal_is_empty(&store));
+                return;
+            }
+        }
+    }
+    panic!("Process3d fixture store did not reach its terminal-empty witness")
 }
 
 /// ↩️ Ticket `26/09/01/PROCESS-END-TO-END`: `step_payloads` is the durable, inline timeline
@@ -57,6 +86,7 @@ async fn step_mutations_dispatch_real_effects() {
     let restored_step = restored.step_payloads.iter().find(|step| step.id == "cut-1").expect("undo of DeleteStep must restore cut-1");
     assert!(!restored_step.enabled, "undo must restore the disabled flag, not just the step's presence");
     assert_eq!(restored_step.origin, Some(origin), "undo must restore the full pre-delete step, including origin");
+    close_store(store);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -67,6 +97,7 @@ async fn moves_cursor_and_undo_restores_it() {
 
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(store.snapshot().expect("snapshot").resolved_up_to, None);
+    close_store(store);
 }
 
 /// 🧬️ `Stock`'s `id` has no semantic mutation of its own (it is a fixed singleton-facet key, never
@@ -92,6 +123,7 @@ async fn sets_stock_and_backwards_restores() {
 
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(store.snapshot().expect("snapshot").stock_solid, original_solid);
+    close_store(store);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -112,6 +144,7 @@ async fn sets_stock_to_imported_solid_and_backwards_restores() {
 
     store.dispatch(ArtifactCommand::Undo).await.expect("undo");
     assert_eq!(store.snapshot().expect("snapshot").stock_solid, original_solid);
+    close_store(store);
 }
 
 //#region 🔖️DocumentTextTests
@@ -119,6 +152,7 @@ async fn sets_stock_to_imported_solid_and_backwards_restores() {
 async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
     let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None);
     let mut store = Process3dStore::new(envelope).await.expect("new store");
+    store.install_document_store_owners_exact(crate::spr::process3d_document_store_owners());
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![
@@ -135,5 +169,6 @@ async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c1".into()), authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }] }).await.expect("commit");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
+    close_store(store);
 }
 //#endregion 🔖️DocumentTextTests

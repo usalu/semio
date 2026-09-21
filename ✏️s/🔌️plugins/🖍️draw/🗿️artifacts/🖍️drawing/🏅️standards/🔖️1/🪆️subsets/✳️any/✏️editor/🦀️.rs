@@ -1494,12 +1494,18 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(semio_framework_plugin::no_draft_store_disposer())
     }
 
+    /// ♻️ A returned presence read is retired through the bounded transient root cursor, the same
+    /// factory every other presence-carrying plugin installs. `SharedValueRetirementFactory` — what
+    /// this used to be — answers `Blocked` for as long as the returned `Arc` has any other strong
+    /// reference, and the app close ladder has no way to release that reference, so every fixture
+    /// that had published presence once blocked forever on "presence returned local owner is held
+    /// during app close" and then aborted the test binary out of `FixedOperationRegistry::drop`.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(store::retirement::SharedValueRetirementFactory::<Self::Presence>::default()))
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(store::retirement::SharedValueRetirementFactory::<Self::Presence>::default()))
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Presence>())
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {

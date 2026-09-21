@@ -24,12 +24,38 @@ mod dff_public_action_admission_tests {
         crate::app::ToolOwnerWitness::test_with_name(owner_type_name)
     }
 
+    /// 🧾️ The interactive wire caps are no longer a frozen framework table keyed by verb: since the
+    /// public predecode was rebuilt on `ArtifactToolPublicContract`, the bound IS the live app's own
+    /// declared `max_raw_wire_bytes` for that exact `(owner, controller, tool)` registration. These are
+    /// the rows the four Draw/Flow/Forms editors contribute, restated so the laws below drive the
+    /// landed lookup instead of an empty contract slice (which declares NO bound at all, so every
+    /// oversized body was admitted).
+    fn dff_public_contracts() -> Vec<crate::app::ArtifactToolPublicContract> {
+        [
+            ("s.forms.forms@1/*#editor", "setTryValue", 16_384usize),
+            ("s.forms.forms@1/*#editor", "setTryValueStep", 16_384),
+            ("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192),
+            ("s.flow.flow@1/*#editor", "duplicateWidget", 8_192),
+            ("s.flow.flow@1/*#editor", "duplicateWidgetStep", 8_192),
+        ]
+        .into_iter()
+        .map(|(controller_id, tool_id, max_raw_wire_bytes)| crate::app::ArtifactToolPublicContract {
+            owner: owner(controller_id),
+            controller_id: controller_id.to_string(),
+            tool_id: tool_id.to_string(),
+            schema_id: format!("semio.{tool_id}.v1"),
+            max_raw_wire_bytes,
+            publication_lanes: &[],
+        })
+        .collect()
+    }
+
     fn admit_action(body: &str, runtime_controller_id: &str) -> Result<(), Fault> {
-        validate_public_action_envelope(body, owner(runtime_controller_id), runtime_controller_id, &[])
+        validate_public_action_envelope(body, owner(runtime_controller_id), runtime_controller_id, &dff_public_contracts())
     }
 
     fn admit_command(body: &str, runtime_controller_id: &str) -> Result<(), Fault> {
-        validate_public_command_envelope(body, owner(runtime_controller_id), runtime_controller_id, &[])
+        validate_public_command_envelope(body, owner(runtime_controller_id), runtime_controller_id, &dff_public_contracts())
     }
 
     #[test]

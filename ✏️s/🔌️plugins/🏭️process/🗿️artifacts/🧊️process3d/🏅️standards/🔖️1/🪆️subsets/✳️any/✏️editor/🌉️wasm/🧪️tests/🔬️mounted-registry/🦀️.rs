@@ -409,6 +409,7 @@ mod mounted_laws {
     fn authoritative_publication_rejects_stale_generation_aba_and_parent() {
         use semio_framework_job::{Generation, OperationId};
 
+        let _lane = crate::spr::process3d_publication_authority_lane();
         let operation = OperationId(u64::MAX - 71);
         assert_eq!(
             crate::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, crate::spr::Process3dPublicationLimits { maximum_items: PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_ENVELOPE_CONTROL_CREDITS }),

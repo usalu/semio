@@ -9356,10 +9356,19 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         Some(crate::editor::puzzle5d::config::schema::app_schema_descriptor())
     }
 
+    /// 🚀️ Boots on `default_document()` and on NOTHING else.
+    ///
+    /// 🐛️ This used to pre-warm three statics before returning: `NAKAGIN_EXAMPLE_DOCUMENT` (168 355 B
+    /// of DSL), `CAPSULE_DREAM_EXAMPLE_DOCUMENT` (3 035 200 B of DSL → ~3.5 MB of JSON → a typed
+    /// `Puzzle5dDocument` of 2 880 parts) and `PUZZLE5D_EXAMPLE_OPERATIONS` — the 4×4 matrix of
+    /// PAIRWISE semantic diffs between all four example documents, i.e. sixteen diffs, several of them
+    /// between a 2 880-part and a 180-part document. Every mount of this app paid all of it before its
+    /// first frame, which is why a pane took seconds to boot and why this crate's own example-switch
+    /// and retained-import laws ran for over a minute each (the 2026-09-21 test binary was killed by
+    /// the 10-minute watchdog). None of it is needed to produce the boot document, and nothing is lost:
+    /// each static is a `LazyLock`, and `puzzle5d_operations_from_document_change` already computes the
+    /// ONE pair it needs when the matrix has no entry for it.
     fn initial_snapshot() -> Puzzle5dPlaySnapshot {
-        LazyLock::force(&NAKAGIN_EXAMPLE_DOCUMENT);
-        LazyLock::force(&CAPSULE_DREAM_EXAMPLE_DOCUMENT);
-        LazyLock::force(&PUZZLE5D_EXAMPLE_OPERATIONS);
         Puzzle5dPlaySnapshot(serde_json::to_value(default_document()).unwrap_or(serde_json::Value::Null))
     }
 

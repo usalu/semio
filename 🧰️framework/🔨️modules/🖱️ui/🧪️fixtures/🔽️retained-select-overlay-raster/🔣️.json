@@ -6,10 +6,23 @@
   },
   "select": {
     "itemCount": 20,
-    "viewport": { "width": 160.0, "height": 100.0 },
-    "trigger": { "x": 8.0, "y": 62.0, "width": 120.0, "height": 22.4 },
+    "viewport": {
+      "width": 160.0,
+      "height": 100.0
+    },
+    "trigger": {
+      "x": 8.0,
+      "y": 62.0,
+      "width": 120.0,
+      "height": 22.4
+    },
     "expectedInitial": {
-      "menu": { "x": 8.0, "y": 8.0, "width": 120.0, "height": 50.0 },
+      "menu": {
+        "x": 8.0,
+        "y": 8.0,
+        "width": 120.0,
+        "height": 50.0
+      },
       "scroll": 0.0,
       "firstRow": 0,
       "lastRowExclusive": 2
@@ -26,8 +39,14 @@
     "decodedHeight": 2,
     "sharedKey": "fixture-decoded-image",
     "draws": [
-      { "route": "scene", "expectedPhase": "scene", "expectedOrdinal": 0 },
-      { "route": "overlay", "expectedPhase": "foreground", "expectedOrdinal": 1 }
+      {
+        "route": "scene",
+        "expectedOrdinal": 0
+      },
+      {
+        "route": "overlay",
+        "expectedOrdinal": 1
+      }
     ]
   }
 }

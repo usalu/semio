@@ -160,5 +160,5 @@ async fn the_inverse_carries_back_only_the_extent_the_payload_touched() {
     assert_eq!((*new_width, *new_height), (None, None), "the untouched extent fields stay None — masked by the payload, not filled in from BASE's 96/48");
     let semantics = <WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("resize", "node", "resize-node", "ResizedNode"), "the fixture must be bound to resize-node's own descriptor");
-    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()), "Resize node \"node-nucleus\"", "resize-node's undo label names the node but never the extent");
+    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()).resolve(protocol::Terminology::Native, protocol::Locale::En), "Resize node \"node-nucleus\"", "resize-node's undo label names the node but never the extent");
 }

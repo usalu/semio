@@ -163,298 +163,77 @@
   },
   "windows": [
     {
-      "windowId": "puzzle3d-main",
-      "activeUtilityId": "fill",
+      "windowId": "puzzle3d-main", "activeUtilityId": "fill",
       "expectedOverlay": {
-        "key": "framework.section.measures",
-        "component": {
-          "type": "container"
-        },
-        "activity": "idle",
-        "disabled": false,
-        "label": null,
-        "bindings": [],
-        "children": [
-          {
-            "key": "puzzle3d-main/puzzle3d-fill-count.field",
-            "component": {
-              "type": "container",
-              "role": "field",
-              "label": "Count"
+        "key": "framework.section.measures", "component": { "type": "tree", "presentation": "compact" }, "activity": "idle", "disabled": false, "label": null, "bindings": [],
+        "children": [{
+          "key": "puzzle3d-main/measures.rows", "component": { "type": "treeSection", "defaultOpen": true }, "activity": "idle", "disabled": false, "label": null, "bindings": [],
+          "children": [
+            {
+              "key": "puzzle3d-main/puzzle3d-fill-count.row", "component": { "type": "treeItem", "label": "Count" }, "activity": "idle", "disabled": false, "label": "Count", "bindings": [],
+              "children": [{
+                "key": "puzzle3d-main/puzzle3d-fill-count", "component": { "type": "input", "kind": "number", "value": "12", "commit": "blur", "min": 0.0, "step": 1.0 }, "activity": "loading", "disabled": false, "label": "Count",
+                "bindings": [{ "trigger": "commit", "action": { "scope": "puzzle3d", "name": "setFillCount", "version": 1 } }], "children": []
+              }]
             },
-            "activity": "idle",
-            "disabled": false,
-            "label": "Count",
-            "bindings": [],
-            "children": [
-              {
-                "key": "puzzle3d-main/puzzle3d-fill-count",
-                "component": {
-                  "type": "input",
-                  "kind": "number",
-                  "value": "12",
-                  "commit": "blur",
-                  "min": 0.0,
-                  "step": 1.0
-                },
-                "activity": "loading",
-                "disabled": false,
-                "label": "Count",
-                "bindings": [
-                  {
-                    "trigger": "commit",
-                    "action": {
-                      "scope": "puzzle3d",
-                      "name": "setFillCount",
-                      "version": 1
-                    }
-                  }
-                ],
-                "children": []
-              }
-            ]
-          },
-          {
-            "key": "puzzle3d-main/grid-opacity.field",
-            "component": {
-              "type": "container",
-              "role": "field",
-              "label": "Opacity"
+            {
+              "key": "puzzle3d-main/grid-opacity.row", "component": { "type": "treeItem", "label": "Opacity" }, "activity": "idle", "disabled": false, "label": "Opacity", "bindings": [],
+              "children": [{
+                "key": "puzzle3d-main/grid-opacity", "component": { "type": "slider", "value": 0.5, "min": 0.0, "max": 1.0, "step": 0.1 }, "activity": "idle", "disabled": false, "label": "Opacity",
+                "bindings": [{ "trigger": "change", "action": { "scope": "puzzle3d", "name": "setGridOpacity", "version": 1 }, "args": { "axis": "z" } }], "children": []
+              }]
             },
-            "activity": "idle",
-            "disabled": false,
-            "label": "Opacity",
-            "bindings": [],
-            "children": [
-              {
-                "key": "puzzle3d-main/grid-opacity",
-                "component": {
-                  "type": "slider",
-                  "value": 0.5,
-                  "min": 0.0,
-                  "max": 1.0,
-                  "step": 0.1
-                },
-                "activity": "idle",
-                "disabled": false,
-                "label": "Opacity",
-                "bindings": [
-                  {
-                    "trigger": "change",
-                    "action": {
-                      "scope": "puzzle3d",
-                      "name": "setGridOpacity",
-                      "version": 1
-                    },
-                    "args": {
-                      "axis": "z"
-                    }
-                  }
-                ],
-                "children": []
-              }
-            ]
-          },
-          {
-            "key": "puzzle3d-main/projection.field",
-            "component": {
-              "type": "container",
-              "role": "field",
-              "label": "Projection"
+            {
+              "key": "puzzle3d-main/projection.row", "component": { "type": "treeItem", "label": "Projection" }, "activity": "idle", "disabled": false, "label": "Projection", "bindings": [],
+              "children": [{
+                "key": "puzzle3d-main/projection", "component": { "type": "select", "value": "perspective", "items": [{ "value": "perspective", "label": "Perspective" }, { "value": "orthographic", "label": "Orthographic" }] }, "activity": "idle", "disabled": false, "label": "Projection",
+                "bindings": [{ "trigger": "change", "action": { "scope": "puzzle3d", "name": "setProjection", "version": 1 } }], "children": []
+              }]
             },
-            "activity": "idle",
-            "disabled": false,
-            "label": "Projection",
-            "bindings": [],
-            "children": [
-              {
-                "key": "puzzle3d-main/projection",
-                "component": {
-                  "type": "select",
-                  "value": "perspective",
-                  "items": [
-                    {
-                      "value": "perspective",
-                      "label": "Perspective"
-                    },
-                    {
-                      "value": "orthographic",
-                      "label": "Orthographic"
-                    }
-                  ]
-                },
-                "activity": "idle",
-                "disabled": false,
-                "label": "Projection",
-                "bindings": [
-                  {
-                    "trigger": "change",
-                    "action": {
-                      "scope": "puzzle3d",
-                      "name": "setProjection",
-                      "version": 1
-                    }
-                  }
-                ],
-                "children": []
-              }
-            ]
-          },
-          {
-            "key": "puzzle3d-main/grid-visible.field",
-            "component": {
-              "type": "container",
-              "role": "field",
-              "label": "Grid"
+            {
+              "key": "puzzle3d-main/grid-visible.row", "component": { "type": "treeItem", "label": "Grid" }, "activity": "idle", "disabled": false, "label": "Grid", "bindings": [],
+              "children": [{
+                "key": "puzzle3d-main/grid-visible", "component": { "type": "toggle", "appearance": "checkbox", "on": true, "icon": "layout-grid" }, "activity": "idle", "disabled": false, "label": "Grid",
+                "bindings": [{ "trigger": "change", "action": { "scope": "puzzle3d", "name": "setGridVisible", "version": 1 }, "args": { "pressed": false } }], "children": []
+              }]
             },
-            "activity": "idle",
-            "disabled": false,
-            "label": "Grid",
-            "bindings": [],
-            "children": [
-              {
-                "key": "puzzle3d-main/grid-visible",
-                "component": {
-                  "type": "toggle",
-                  "on": true,
-                  "icon": "layout-grid"
+            {
+              "key": "puzzle3d-main/distribution.row", "component": { "type": "treeItem", "label": "Distribution", "defaultOpen": true }, "activity": "idle", "disabled": false, "label": "Distribution", "bindings": [],
+              "children": [
+                {
+                  "key": "puzzle3d-main/distribution.header-slider", "component": { "type": "slider", "value": 0.25, "min": 0.0, "max": 1.0, "step": 0.05 }, "activity": "idle", "disabled": false, "label": "Distribution",
+                  "bindings": [{ "trigger": "change", "action": { "scope": "puzzle3d", "name": "setKindWeight", "version": 1 }, "args": { "kind": "cube" } }], "children": []
                 },
-                "activity": "idle",
-                "disabled": false,
-                "label": "Grid",
-                "bindings": [
-                  {
-                    "trigger": "change",
-                    "action": {
-                      "scope": "puzzle3d",
-                      "name": "setGridVisible",
-                      "version": 1
-                    },
-                    "args": {
-                      "pressed": false
-                    }
-                  }
-                ],
-                "children": []
-              }
-            ]
-          },
-          {
-            "key": "puzzle3d-main/distribution",
-            "component": {
-              "type": "container",
-              "role": "section",
-              "label": "Distribution",
-              "defaultOpen": true
-            },
-            "activity": "idle",
-            "disabled": false,
-            "label": "Distribution",
-            "bindings": [],
-            "children": [
-              {
-                "key": "puzzle3d-main/distribution.header-slider",
-                "component": {
-                  "type": "slider",
-                  "value": 0.25,
-                  "min": 0.0,
-                  "max": 1.0,
-                  "step": 0.05
-                },
-                "activity": "idle",
-                "disabled": false,
-                "label": "Distribution",
-                "bindings": [
-                  {
-                    "trigger": "change",
-                    "action": {
-                      "scope": "puzzle3d",
-                      "name": "setKindWeight",
-                      "version": 1
-                    },
-                    "args": {
-                      "kind": "cube"
-                    }
-                  }
-                ],
-                "children": []
-              },
-              {
-                "key": "puzzle3d-main/cube-scale",
-                "component": {
-                  "type": "slider",
-                  "value": 2.0,
-                  "min": 1.0,
-                  "max": 4.0,
-                  "step": 0.0
-                },
-                "activity": "waiting",
-                "disabled": true,
-                "label": null,
-                "bindings": [
-                  {
-                    "trigger": "change",
-                    "action": {
-                      "scope": "puzzle3d",
-                      "name": "setCubeScale",
-                      "version": 1
-                    }
-                  }
-                ],
-                "children": []
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "windowId": "puzzle3d-preview",
-      "activeUtilityId": null,
-      "expectedOverlay": {
-        "key": "framework.section.measures",
-        "component": {
-          "type": "container"
-        },
-        "activity": "idle",
-        "disabled": false,
-        "label": null,
-        "bindings": [],
-        "children": [
-          {
-            "key": "puzzle3d-preview/preview-axes",
-            "component": {
-              "type": "toggle",
-              "on": false,
-              "icon": "eye",
-              "text": "Axes"
-            },
-            "activity": "idle",
-            "disabled": false,
-            "label": "Axes",
-            "bindings": [
-              {
-                "trigger": "change",
-                "action": {
-                  "scope": "puzzle3d",
-                  "name": "setPreviewAxes",
-                  "version": 1
-                },
-                "args": {
-                  "pressed": true
+                {
+                  "key": "puzzle3d-main/cube-scale.row", "component": { "type": "treeItem", "label": "" }, "activity": "idle", "disabled": false, "label": "", "bindings": [],
+                  "children": [{
+                    "key": "puzzle3d-main/cube-scale", "component": { "type": "slider", "value": 2.0, "min": 1.0, "max": 4.0, "step": 0.0 }, "activity": "waiting", "disabled": true, "label": null,
+                    "bindings": [{ "trigger": "change", "action": { "scope": "puzzle3d", "name": "setCubeScale", "version": 1 } }], "children": []
+                  }]
                 }
-              }
-            ],
-            "children": []
-          }
-        ]
+              ]
+            }
+          ]
+        }]
       }
     },
     {
-      "windowId": "puzzle3d-brush-only",
-      "activeUtilityId": "brush",
-      "expectedOverlay": null
-    }
+      "windowId": "puzzle3d-preview", "activeUtilityId": null,
+      "expectedOverlay": {
+        "key": "framework.section.measures", "component": { "type": "tree", "presentation": "compact" }, "activity": "idle", "disabled": false, "label": null, "bindings": [],
+        "children": [{
+          "key": "puzzle3d-preview/measures.rows", "component": { "type": "treeSection", "defaultOpen": true }, "activity": "idle", "disabled": false, "label": null, "bindings": [],
+          "children": [{
+            "key": "puzzle3d-preview/preview-axes.row", "component": { "type": "treeItem", "label": "Axes" }, "activity": "idle", "disabled": false, "label": "Axes", "bindings": [],
+            "children": [{
+              "key": "puzzle3d-preview/preview-axes", "component": { "type": "toggle", "appearance": "checkbox", "on": false, "icon": "eye", "text": "Axes" }, "activity": "idle", "disabled": false, "label": "Axes",
+              "bindings": [{ "trigger": "change", "action": { "scope": "puzzle3d", "name": "setPreviewAxes", "version": 1 }, "args": { "pressed": true } }], "children": []
+            }]
+          }]
+        }]
+      }
+    },
+    { "windowId": "puzzle3d-brush-only", "activeUtilityId": "brush", "expectedOverlay": null }
   ],
   "gestures": [
     {

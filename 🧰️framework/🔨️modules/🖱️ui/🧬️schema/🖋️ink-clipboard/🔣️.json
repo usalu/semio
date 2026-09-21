@@ -108,11 +108,11 @@
     "ownership": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["address", "editorBypass", "completion", "close", "replacement", "admission"],
+      "required": ["address", "editorBypass", "completion", "close", "retirement", "progress", "replacement", "slotReuse", "admission"],
       "properties": {
         "address": {
           "type": "array",
-          "prefixItems": [{ "const": "windowId" }, { "const": "windowGeneration" }, { "const": "nodeId" }, { "const": "surfaceId" }],
+          "prefixItems": [{ "const": "windowId" }, { "const": "windowGeneration" }, { "const": "nodeId" }, { "const": "hostId" }],
           "items": false,
           "minItems": 4,
           "maxItems": 4
@@ -120,7 +120,10 @@
         "editorBypass": { "const": true },
         "completion": { "const": "exactLiveAddress" },
         "close": { "const": "cancelAndRetire" },
+        "retirement": { "const": "matchingOnly" },
+        "progress": { "const": "oneOwnerPerOpportunity" },
         "replacement": { "const": "rejectOldCompletion" },
+        "slotReuse": { "const": "generationToken" },
         "admission": { "const": "boundedIndependentOperations" }
       }
     }

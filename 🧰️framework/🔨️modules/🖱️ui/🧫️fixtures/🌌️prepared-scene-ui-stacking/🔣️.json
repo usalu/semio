@@ -1,0 +1,30 @@
+{
+  "schema": "semio.ui.prepared-scene-ui-stacking.v1",
+  "size": [12, 8],
+  "steps": [
+    {
+      "op": "solid",
+      "id": "shell-base",
+      "rect": [0, 0, 12, 8],
+      "rgba": [64, 64, 64, 255]
+    },
+    {
+      "op": "scene",
+      "id": "world",
+      "rect": [0, 0, 8, 8],
+      "rgba": [0, 64, 255, 255]
+    },
+    {
+      "op": "solid",
+      "id": "actions-pane",
+      "rect": [0, 0, 4, 8],
+      "rgba": [24, 24, 24, 255]
+    }
+  ],
+  "expectedOrder": ["shell-base", "world", "actions-pane"],
+  "samples": [
+    { "at": [1, 4], "rgba": [24, 24, 24, 255] },
+    { "at": [6, 4], "rgba": [0, 64, 255, 255] },
+    { "at": [10, 4], "rgba": [64, 64, 64, 255] }
+  ]
+}

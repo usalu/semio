@@ -5,7 +5,7 @@
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
 use crate::editor::animate::{interaction_select_effect, PresentationDispatchCtx};
 use crate::op::PresentationMutation;
-use crate::{default_presentation_snapshot, PresentationSnapshot};
+use crate::{demo_presentation_snapshot, PresentationSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -21,7 +21,7 @@ pub struct SetActiveExample {
 /// history) instead of an `artifact_mutations` entry.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, _ctx: &mut PresentationDispatchCtx) -> Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault> {
     if payload.example_id == "demo" || payload.example_id.is_empty() {
-        Ok(Emit { effects: vec![crate::editor::animate::reset_presentation_document_effect(&default_presentation_snapshot()), interaction_select_effect(&[], "replace")], ..Default::default() })
+        Ok(Emit { effects: vec![crate::editor::animate::reset_presentation_document_effect(&demo_presentation_snapshot()), interaction_select_effect(&[], "replace")], ..Default::default() })
     } else {
         Ok(Emit::default())
     }

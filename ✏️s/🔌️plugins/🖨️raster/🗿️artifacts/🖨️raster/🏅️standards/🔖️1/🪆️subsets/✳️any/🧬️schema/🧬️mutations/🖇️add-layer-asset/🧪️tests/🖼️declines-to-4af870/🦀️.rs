@@ -31,6 +31,12 @@ fn expected_after() -> RasterSnapshot {
 fn mutation() -> RasterMutation {
     dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
+/// 🧹️ This leaf's committed documents carry a populated `assets` pool, so every snapshot a test
+/// materializes reaches the artifact's own retirement seam instead of `RasterOwnedMap`'s
+/// fail-closed `Drop`.
+fn retire(snapshot: RasterSnapshot) {
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+}
 
 /// ▶️ A declined re-attach applies cleanly and leaves the document — and its committed child handle
 /// — exactly as committed in `after`.
@@ -38,9 +44,13 @@ fn mutation() -> RasterMutation {
 async fn applies_to_committed_after() {
     let base = before();
     let produced = apply_raster_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
-    assert_eq!(produced, expected_after(), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: applied state differs from committed after-snapshot");
+    let after = expected_after();
+    assert_eq!(produced, after, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: applied state differs from committed after-snapshot");
     assert_eq!(produced.assets, base.assets, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: a declined re-attach must not re-mint the committed content-addressed handle");
     assert_eq!(produced.assets.len(), 1, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the asset map must not grow a second entry for the same key");
+    retire(after);
+    retire(produced);
+    retire(base);
 }
 
 /// ↩️ This verb's inverse is BASE-derived, and deliberately so: over an already-present key an `add`
@@ -57,9 +67,12 @@ async fn inverse_restores_before() {
     assert!(!inverse.iter().any(|step| matches!(step, RasterMutation::RemoveLayerAsset(_))), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: an unresolvable prior asset must never invert to a destructive removal");
     let mut snapshot = apply_raster_mutation(&base, &forward).expect("forward applies");
     for step in &inverse {
-        snapshot = apply_raster_mutation(&snapshot, step).expect("inverse step applies");
+        let next = apply_raster_mutation(&snapshot, step).expect("inverse step applies");
+        retire(std::mem::replace(&mut snapshot, next));
     }
     assert_eq!(snapshot, base, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: inverse did not restore the before-snapshot");
+    retire(snapshot);
+    retire(base);
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point, and so
@@ -70,6 +83,7 @@ async fn committed_json_is_canonical() {
         let decoded: RasterSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::json::from_dsl_value(&dsl::ToValue::to_value(&decoded));
         let original = dsl::json::parse(text).expect("snapshot reparses");
+        retire(decoded);
         assert!(dsl::json::value_eq_ignoring_object_order(&reencoded, &original), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: committed {side} JSON is not canonical");
     }
     let reencoded = dsl::json::from_dsl_value(&dsl::ToValue::to_value(&mutation()));
@@ -83,8 +97,9 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome = dsl::json::parse(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(dsl::json::Value::as_str), Some("applied"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document declares an applied outcome");
-    assert!(before().assets.contains_key("cover-art"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the before-snapshot must already carry the key, or the no-op guard would not fire");
-    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &before());
+    let base = before();
+    assert!(base.assets.contains_key("cover-art"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the before-snapshot must already carry the key, or the no-op guard would not fire");
+    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &base);
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: exactly one diagnostic is expected, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.no-op", "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: an already-attached asset is reported as a no-op");
@@ -93,14 +108,18 @@ async fn declared_outcome_holds() {
     assert_eq!(declared.len(), 1, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the declared message list must match the emitted one");
     assert_eq!(declared[0].get("code").and_then(dsl::json::Value::as_str), Some(messages[0].code.0.as_str()), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the declared code must match the emitted one");
     assert_eq!(declared[0].get("level").and_then(dsl::json::Value::as_str), Some("warn"), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: the declared level must be warn");
-    assert!(apply_raster_mutation(&before(), &mutation()).is_ok(), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: declared applied but the mutation was rejected");
+    let applied = apply_raster_mutation(&base, &mutation()).expect("add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: declared applied but the mutation was rejected");
+    retire(applied);
+    retire(base);
 }
 
 /// 🔺️ The delta this mutation produces is exactly the committed diff: the artifact's `Default`
 /// — every field `null`, `assets` explicitly untouched, so the minting path is never entered.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &before());
+    let base = before();
+    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &base);
+    retire(base);
     let encoded = dsl::json::from_dsl_value(&dsl::ToValue::to_value(produced.diff()));
     let committed = dsl::json::parse(DIFF).expect("committed diff decodes");
     assert!(dsl::json::value_eq_ignoring_object_order(&encoded, &committed), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: produced diff differs from the committed 🔺️diff/🔣️.json");
@@ -123,7 +142,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
-    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: committed diff did not carry before to after");
-    assert_eq!(produced.assets, before().assets, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: applying the committed diff must not mint a handle either");
+    let base = before();
+    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &base).expect("committed diff applies to the before-snapshot");
+    let after = expected_after();
+    assert_eq!(produced, after, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: committed diff did not carry before to after");
+    assert_eq!(produced.assets, base.assets, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: applying the committed diff must not mint a handle either");
+    retire(after);
+    retire(produced);
+    retire(base);
 }

@@ -12,26 +12,31 @@
 //! for the same reason `💡️infer` picked the bare `crate::app::wire_artifact_infer` over
 //! `plugin_wire_artifact_infer` (see that module's own doc comment).
 //!
-//! Sliced across `super::run_two_phase`'s two ticks exactly like `💡️infer`: slice 1 decodes+validates
-//! `input` (reporting `(artifact_kind, mutation_id)` as progress) and checkpoints; slice 2 runs the
-//! real `wire_artifact_mutation_plan` dispatch, whose own `Result<Vec<u8>, semio_framework::Fault>`
-//! return type already matches `JobFn`'s exactly — no fault-code translation needed here, unlike
-//! `💡️infer`'s `ArtifactInferenceExecutionError` boundary.
+//! Sliced across `super::TwoPhaseBoundedJob`'s two explicit states exactly like `💡️infer`'s own
+//! registry route: `Decode` validates `input` (reporting `(artifact_kind, mutation_id)` as
+//! progress) and makes `PHASE_DECODED` its checkpoint; `Execute` runs the real
+//! `wire_artifact_mutation_plan` dispatch, whose own `Result<Vec<u8>, semio_framework::Fault>`
+//! return type already matches `BuiltinPhaseFn`'s exactly — no fault-code translation needed here,
+//! unlike `💡️infer`'s `ArtifactInferenceExecutionError` boundary.
 
-use super::{run_two_phase, JobCtx};
-use std::future::Future;
-use std::pin::Pin;
+use super::{BoundedJob, TwoPhaseBoundedJob};
 
-// 🚫️async: E4 fn-pointer slot — registered into `JobFn = fn(...) -> Pin<Box<dyn Future<...>>>`
-// (see `⚛️reactor/💼️jobs/🦀️.rs`'s `builtin_registry`); an `async fn` item's pointer type
-// is unnameable, so the registry entry itself must stay a plain `fn` returning the already-boxed
-// future (the real async work happens inside the `Box::pin(async move {...})` body below).
-pub(super) fn job_mutation_plan(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
-    Box::pin(async move {
-        let decode_input = input.clone();
-        let execute_input = input;
-        run_two_phase(ctx, restored, move || async move { decode(&decode_input).await }, move || async move { crate::plugin_runtime::wire_artifact_mutation_plan(&execute_input).await }).await
-    })
+// 🚫️async: E4 fn-pointer slot — registered into `BoundedJobFactory` (see
+// `⚛️reactor/💼️jobs/🦀️.rs`'s `builtin_registry`); the admission body is a pure constructor call.
+pub(super) fn job_mutation_plan(_job: u64, input: &[u8], restored: Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
+    Ok(Box::new(TwoPhaseBoundedJob::admit("job.mutation-plan", input, restored, decode_phase, execute_phase)))
+}
+
+// 🚫️async: E4 phase slot — `BuiltinPhaseFn` is synchronous by contract; `decode` itself has no
+// suspension point, so `settle_in_step` resolves it inside this state action.
+fn decode_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+    super::settle_in_step("job.mutation-plan", decode(input))
+}
+
+// 🚫️async: E4 phase slot — see `decode_phase`; `wire_artifact_mutation_plan` is the unchunked
+// native call this state action declares `WORK_UNITS_EXECUTE` for.
+fn execute_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+    super::settle_in_step("job.mutation-plan", crate::plugin_runtime::wire_artifact_mutation_plan(input))
 }
 
 /// 🔎️ Validates `input` decodes as a `WireArtifactMutationPlanRequest` and reports its

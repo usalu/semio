@@ -10,7 +10,41 @@ pub(crate) mod context {
     /// `PluginBuilder::editor::<Block3dPlayApp>` builds it.
     pub type Block3dApp = VcsArtifactApp<EditorApp<Block3dPlayApp>>;
     
-    pub async fn new_app() -> Block3dApp {
+    /// 🧹️ A live app fixture that CLOSES itself: the document store's `Drop` asserts its exact
+    /// terminal-empty witness, so a plainly dropped app panics with "artifact store reached Drop
+    /// without its exact terminal-empty shallow-shell witness". Dereferences to the app and drains the
+    /// same retained close ladder (`PluginApp::close_step`) the runtime uses on the way out — the twin
+    /// of block5d's `Block5dAppFixture`.
+    pub struct Block3dAppFixture(Block3dApp);
+    
+    impl std::ops::Deref for Block3dAppFixture {
+        type Target = Block3dApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+    
+    impl std::ops::DerefMut for Block3dAppFixture {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+    
+    impl Drop for Block3dAppFixture {
+        fn drop(&mut self) {
+            for _ in 0..1_000_000 {
+                if self.0.close_terminal_is_empty() {
+                    return;
+                }
+                if self.0.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).is_err() {
+                    break;
+                }
+            }
+            assert!(std::thread::panicking() || self.0.close_terminal_is_empty(), "Block3d app fixture did not reach its terminal-empty close witness");
+        }
+    }
+    
+    pub async fn new_app() -> Block3dAppFixture {
         app_with_registry().await
     }
     
@@ -21,25 +55,52 @@ pub(crate) mod context {
         semio_framework_plugin::App { definition: create_block3d_app(), examples: Vec::new() }
     }
     
-    pub async fn app_with_registry() -> Block3dApp {
+    /// 🪪️ Bound to the `local` instance id the way the runtime mounts it — an unbound app refuses
+    /// every retained typed command with `interactive-job.live-instance`, and an app bound to another
+    /// id never settles the operations this harness drives.
+    pub async fn app_with_registry() -> Block3dAppFixture {
         let mut app = new_app_with_registry::<EditorApp<Block3dPlayApp>>(block3d_app_manifest_for_tests).await;
-        app.bind_instance_id(1).await;
-        app
+        app.bind_instance_id(meta("local").instance_id).await;
+        Block3dAppFixture(app)
     }
     
+    /// 🔁️ Admits one typed command and SETTLES it through the same bounded continuation, maintenance
+    /// and ACK protocol the plugin host drives. Without the settle the command is only admitted: the
+    /// document keeps the value it had before, which is why every count/identity assertion in this
+    /// file used to read the boot document back (block5d's `dispatch` settles the same way).
     pub async fn dispatch(app: &mut Block3dApp, command: Block3dCommand) -> InvocationResult {
         let window_id = match &command {
             Block3dCommand::HoverSurface(payload) => payload.window_id.clone(),
             Block3dCommand::PlaceVortex(payload) => payload.window_id.clone(),
             Block3dCommand::LeaveSurface(_) => BLOCK3D_DEFAULT_WINDOW_ID.into(),
-            _ => return app.dispatch_typed(command, &meta("local")).await.expect("dispatch"),
+            _ => {
+                let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+                settle(app).await;
+                return result;
+            }
         };
-        dispatch_in_window(app, command, &window_id).await
+        let result = dispatch_in_window(app, command, &window_id).await;
+        settle(app).await;
+        result
     }
     
+    /// 🪟️ Admits a window-scoped command WITHOUT settling it: the window-transient partition law
+    /// drives the publication itself, turn by turn, to count the lanes each hover/leave/place reaches.
     pub async fn dispatch_in_window(app: &mut Block3dApp, command: Block3dCommand, window_id: &str) -> InvocationResult {
         let view_state = world_view_state(window_id);
         app.dispatch_typed(command, &ActionMeta { view_state: Some(view_state), ..meta("local") }).await.expect("dispatch")
+    }
+    
+    /// 🕰️ Admits one framework-RESERVED history verb (`undo`/`redo`/checkpoints) and settles it —
+    /// `handle_action` only admits such a verb; the ledger moves on the following turns.
+    pub async fn settle_history_verb(app: &mut Block3dApp, verb: &str) {
+        let admitted = app.handle_action(verb, None, &meta("local")).await.unwrap_or_else(|error| panic!("{verb}: {error:?}"));
+        semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.unwrap_or_else(|error| panic!("{verb} settle: {error:?}"));
+    }
+    
+    /// 🫧️ Drives the admitted typed operation to its publication, exactly as the host's reactor turn does.
+    pub async fn settle(app: &mut Block3dApp) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle typed operation");
     }
     
     pub fn world_view_state(window_id: &str) -> ViewModel {
@@ -56,8 +117,11 @@ pub(crate) mod context {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
     
+    /// ☑️ Window measures are collected PER LIVE WINDOW INSTANCE (`EditorApp::window_measures` walks
+    /// `ViewModel::window_instances`), so an empty view model yields an empty map — the harness mirrors
+    /// the shell and opens the one world window this app lays out by default.
     pub async fn main_window_measures(app: &mut Block3dApp) -> Vec<semio_framework_plugin::WindowMeasure> {
-        app.window_measures(&ViewModel::default()).await.get(BLOCK3D_DEFAULT_WINDOW_ID).cloned().unwrap_or_default()
+        app.window_measures(&world_view_state(BLOCK3D_DEFAULT_WINDOW_ID)).await.get(BLOCK3D_DEFAULT_WINDOW_ID).cloned().unwrap_or_default()
     }
 }
 
@@ -78,39 +142,21 @@ fn block_on_preview_law<F: std::future::Future>(future: F) -> F::Output {
     }
 }
 
+/// 🫧️ Drives ONE admitted typed operation to its publication and reports the
+/// `(artifact, config, window-transient)` lane counts it produced.
+///
+/// 🐛️ This used to be a hand-rolled turn loop that drained result pages, effects, events and UI
+/// scopes but never `take_typed_operation_completion` — and the terminal witness lands in its OWN
+/// outbox, which `has_pending_typed_operations` counts, so every operation spun here until the 30 s
+/// deadline and reported "did not finish". `settle_registered_typed_operation` is the framework's own
+/// turn driver and drains all of them.
 async fn drive_preview_operation(app: &mut Block3dApp, stage: &str) -> Result<(u64, u64, u64), String> {
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-    let mut artifact = 0;
-    let mut config = 0;
-    let mut window_transient = 0;
-    while app.has_pending_typed_operations() {
-        if std::time::Instant::now() >= deadline {
-            return Err(format!("block3d preview {stage} operation did not finish"));
-        }
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
-        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
-        if let Some(page) = app.take_typed_operation_result_page(1) {
-            let fault = (page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault)
-                .then(|| format!("block3d preview {stage} publication fault: {}", String::from_utf8_lossy(page.bytes())));
-            artifact += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::Artifact);
-            config += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::Config);
-            window_transient += u64::from(page.lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient);
-            app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
-            if let Some(fault) = fault {
-                while app.has_pending_typed_operations() {
-                    app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
-                    app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
-                    std::thread::yield_now();
-                }
-                return Err(fault);
-            }
-        }
-        app.take_typed_operation_effect();
-        app.take_typed_operation_event();
-        app.take_typed_operation_ui_scope();
-        std::thread::yield_now();
-    }
-    Ok((artifact, config, window_transient))
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id)
+        .await
+        .map_err(|error| format!("block3d preview {stage} publication fault: {error:?}"))?;
+    let lanes = |wanted: TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count() as u64;
+    Ok((lanes(TypedOperationResultLane::Artifact), lanes(TypedOperationResultLane::Config), lanes(TypedOperationResultLane::WindowTransient)))
 }
 
 //#region 🔖️CommandSurface
@@ -197,15 +243,18 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
         let contract = BLOCK3D_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == tool_id).unwrap_or_else(|| panic!("tool {tool_id} declares a publication contract"));
         assert!(!contract.lanes.is_empty(), "tool {tool_id} declares a nonempty publication lane set");
     }
-    // 🪟️ App-level actions are fanned onto every window kind by `try_build_definition`, so the
-    // world window carries the complete classified action set (`AppDefinition` has no app-level
-    // `actions` field of its own).
+    // 🪟️ App-level actions are no longer CLONED onto every window kind (that made a package
+    // descriptor grow as `apps × window kinds × actions`): `semio_framework::window_kind_actions`
+    // resolves the window's own roster plus every unclaimed app-level action at read time, and it is
+    // that resolved roster — not the raw `WindowKindDefinition::actions` field — which decides what a
+    // window can dispatch.
     let definition = create_block3d_app();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️command-roster/🔣️.json")).unwrap();
     assert_eq!(serde_json::to_value(&definition.breadcrumb).unwrap(), fixture["document"]);
     let world_window = definition.window_kinds.iter().find(|window| window.id == world::BLOCK3D_WINDOW_WORLD).expect("world window declared");
+    let world_actions = semio_framework::window_kind_actions(&definition, world_window);
     for tool_id in BLOCK3D_RETAINED_TOOL_IDS {
-        let action = world_window.actions.iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is declared by the manifest"));
+        let action = world_actions.iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is dispatchable from the world window"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "action {tool_id} must be UI-dispatchable");
     }
 }
@@ -308,7 +357,7 @@ fn brush_preview_publications_are_partitioned_by_trusted_window_context() {
         Ok(())
     }
     .await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
     outcome.expect("window-partitioned brush preview");
         }))
         .expect("spawn Block3d window-transient law")
@@ -356,7 +405,7 @@ async fn declares_the_vortex_interaction_domain_scoped_to_the_world_window() {
 /// stale selection the moment `removeRepresentation`/`removeVortex` deletes its target.
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_covers_every_representation_and_vortex() {
-    let mut app: Block3dApp = new_app().await;
+    let mut app = new_app().await;
     context::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {})).await;
     context::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {})).await;
     context::dispatch(&mut app, Block3dCommand::AddVortex(add_vortex::AddVortex {})).await;
@@ -388,7 +437,7 @@ async fn block3d_io_declares_the_catalog_out_port() {
 
 #[semio_framework_async_macros::async_test]
 async fn renders_document_tree_and_inspector() {
-    let mut app: Block3dApp = new_app().await;
+    let mut app = new_app().await;
     let json = context::render(&mut app, document_panel::BLOCK3D_BODY_ARTIFACT).await;
     assert!(json.contains("Representations"));
     let inspector = context::render(&mut app, inspection_panel::BLOCK3D_BODY_INSPECTOR).await;
@@ -407,7 +456,7 @@ async fn renders_document_tree_and_inspector() {
 /// survives into the rendered tree's JSON any more.
 #[semio_framework_async_macros::async_test]
 async fn the_editor_boots_with_a_renderable_world() {
-    let mut app: Block3dApp = new_app().await;
+    let mut app = new_app().await;
     let snapshot = app.snapshot().expect("snapshot");
     assert!(!snapshot.representations.is_empty(), "the boot document must carry at least one representation");
     assert!(snapshot.representations.iter().all(|representation| representation.mesh_url.is_some()), "every boot representation must name a mesh url");
@@ -418,7 +467,7 @@ async fn the_editor_boots_with_a_renderable_world() {
 
 #[semio_framework_async_macros::async_test]
 async fn world_scene_projects_only_the_supplied_window_preview() {
-    let mut app: Block3dApp = new_app().await;
+    let mut app = new_app().await;
     let snapshot = app.snapshot().expect("snapshot");
     let config = Block3dConfig::default();
     let view = crate::Block3dWindowView::for_window("world-a");
@@ -436,12 +485,12 @@ async fn world_scene_projects_only_the_supplied_window_preview() {
     assert_eq!(projected["position"], serde_json::json!([1.0, 2.0, 3.0]));
     assert_eq!(projected["direction"], serde_json::json!([0.0, 1.0, 0.0]));
     assert!(find_preview(&without_preview).is_none(), "a window without transient preview must render none");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn add_representation_then_set_active_then_render_world_shows_mesh() {
-    let mut app: Block3dApp = new_app().await;
+    let mut app = new_app().await;
     context::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {})).await;
     let representation_id = app.snapshot().expect("snapshot").representations[0].id.clone();
     context::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some(representation_id) })).await;
@@ -455,7 +504,7 @@ async fn add_representation_then_set_active_then_render_world_shows_mesh() {
 /// rather than against a hard-coded 1/0.
 #[semio_framework_async_macros::async_test]
 async fn add_vortex_kind_then_add_vortex_then_remove_round_trips() {
-    let mut app: Block3dApp = new_app().await;
+    let mut app = new_app().await;
     let before = app.snapshot().expect("snapshot").vortices.len();
     context::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {})).await;
     context::dispatch(&mut app, Block3dCommand::AddVortex(add_vortex::AddVortex {})).await;
@@ -468,10 +517,15 @@ async fn add_vortex_kind_then_add_vortex_then_remove_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_capsule_fixture() {
-    let mut app: Block3dApp = new_app().await;
+    let mut app = new_app().await;
     context::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
     let projection = app.snapshot().expect("snapshot");
-    assert_eq!(projection.object_kind.id, "Capsule J");
+    // 🪪️ The object kind's ID is this DOCUMENT's identity, and no mutation in the family can change it
+    // (there is no `change-object-kind-id`; the same holds for block5d's `part_kind.id`) — an example
+    // load carries the kind's authored NAME and its whole catalogue, never a new identity. The
+    // document therefore keeps the id it booted with while every authored field becomes the capsule's.
+    assert_eq!(projection.object_kind.name, "Capsule J");
+    assert_eq!(projection.object_kind.id, crate::standards::v1::subsets::any::schema::snapshot::text::block3d_boot_snapshot().object_kind.id, "an example load never re-identifies the document");
     // 🥽️ One representation, not two: the former `"1:500"` row named `/mesh/capsule_J.1to500.glb`,
     // which no mesh delivery catalog ships, so `resolveMeshAsset` threw the instant the example
     // loaded. There is no 1:500 `.glb` anywhere in the repo (only a Rhino `.3dm` source), so the
@@ -482,14 +536,17 @@ async fn set_active_example_loads_capsule_fixture() {
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_through_the_wrapper() {
-    let mut app: Block3dApp = new_app().await;
+    let mut app = new_app().await;
     let kinds = |app: &mut Block3dApp| crate::vortex_kinds_of(&app.snapshot().expect("snapshot")).len();
     let before = kinds(&mut app);
     context::dispatch(&mut app, Block3dCommand::AddVortexKind(add_vortex_kind::AddVortexKind {})).await;
     assert_eq!(kinds(&mut app), before + 1);
-    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    // 🕰️ `undo`/`redo` are framework-RESERVED verbs: `handle_action` only ADMITS them, and the history
+    // verb settles on the following turns — an unsettled admission left the ledger exactly where it
+    // was, so this law used to read the pre-undo document back.
+    context::settle_history_verb(&mut app, "undo").await;
     assert_eq!(kinds(&mut app), before);
-    app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
+    context::settle_history_verb(&mut app, "redo").await;
     assert_eq!(kinds(&mut app), before + 1);
 }
 
@@ -498,17 +555,14 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 /// exercises the "view action never touches the document" contract this test used to cover.
 #[semio_framework_async_macros::async_test]
 async fn set_active_representation_writes_config_not_document() {
-    let mut app: Block3dApp = new_app().await;
-    let result = app
-        .dispatch_typed(Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) }), &semio_framework_plugin::artifact_app_laws::meta("local"))
-        .await
-        .expect("set active representation");
+    let mut app = new_app().await;
+    let result = context::dispatch(&mut app, Block3dCommand::SetActiveRepresentation(set_active_representation::SetActiveRepresentation { representation_id: Some("r0".into()) })).await;
     assert!(result.mutations.is_empty(), "setActiveRepresentation is config-only and must emit no document operations");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
-    let mut app: Block3dApp = new_app().await;
+    let mut app = new_app().await;
     context::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
     let media = semio_framework_plugin::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
@@ -516,7 +570,11 @@ async fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
         MediaPayload::Structured { schema, json } => {
             assert_eq!(schema, "kit.catalog");
             let value: serde_json::Value = serde_json::from_str(&json).expect("valid json");
-            assert_eq!(value["objectKinds"][0]["id"], "Capsule J");
+            // 🪪️ The exported catalog row IS the live document's object kind: its authored name is the
+            // capsule's, its id is the document's own identity (no mutation re-identifies a document —
+            // see `set_active_example_loads_capsule_fixture`).
+            assert_eq!(value["objectKinds"][0]["name"], "Capsule J");
+            assert_eq!(value["objectKinds"][0]["id"].as_str(), Some(app.snapshot().expect("snapshot").object_kind.id.as_str()));
         }
         other => panic!("expected Structured payload, got {other:?}"),
     }
@@ -524,7 +582,7 @@ async fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
 
 #[semio_framework_async_macros::async_test]
 async fn place_vortex_on_surface_auto_creates_kind_and_vortex() {
-    let mut app: Block3dApp = new_app().await;
+    let mut app = new_app().await;
     context::dispatch(&mut app, Block3dCommand::SetActiveExample(set_active_example::SetActiveExample { id: set_active_example::BLOCK3D_EXAMPLE_CAPSULE.into() })).await;
     context::dispatch(&mut app, Block3dCommand::PlaceVortex(place_vortex::PlaceVortex { window_id: BLOCK3D_DEFAULT_WINDOW_ID.into(), object_id: "r0".into(), position: [0.5, 0.0, 1.0], normal: [0.0, 1.0, 0.0] })).await;
     let projection = app.snapshot().expect("snapshot");
@@ -555,7 +613,7 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
 /// spacing/brush) fresh per frame — never frozen into the manifest.
 #[semio_framework_async_macros::async_test]
 async fn world_window_measures_collect_all_five_options() {
-    let mut app: Block3dApp = new_app().await;
+    let mut app = new_app().await;
     context::dispatch(&mut app, Block3dCommand::AddRepresentation(add_representation::AddRepresentation {})).await;
     let measures = context::main_window_measures(&mut app).await;
     assert_eq!(measures.len(), 5, "world window must expose representations/quick-pick/arrangement/spacing/brush");

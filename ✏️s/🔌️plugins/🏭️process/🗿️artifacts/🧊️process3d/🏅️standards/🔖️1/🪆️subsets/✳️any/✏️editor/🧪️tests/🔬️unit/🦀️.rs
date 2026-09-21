@@ -179,14 +179,58 @@ pub(crate) mod context {
     }
     
     pub fn dispatch_with_utility(app: &mut Process3dRawApp, command: Process3dCommand, active_utility_id: &str) -> InvocationResult {
+        settled_dispatch_with_utility(app, command, active_utility_id).0
+    }
+    
+    /// 🏁️ The settling dispatch. This app is MOUNTED (`bind_instance_id`), so a migrated command is
+    /// answered BEFORE its retained operation publishes: without driving the publication home the
+    /// document never changes, `snapshot()` stays stale, and — because the store still owes a
+    /// publication — the app can never reach the terminal-empty shallow shell [`Process3dApp::drop`]
+    /// drains for. The settled receipt's effects are folded into the answer, since either surface may
+    /// be the one carrying a `LoadDocument`; its `lanes` are the observable proof that a command wrote
+    /// a store (`InvocationResult.mutations` is empty by construction on this path).
+    pub fn settled_dispatch(app: &mut Process3dRawApp, command: Process3dCommand) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
+        settled_dispatch_with_utility(app, command, PROCESS3D_DEFAULT_UTILITY)
+    }
+    
+    pub fn settled_dispatch_with_utility(app: &mut Process3dRawApp, command: Process3dCommand, active_utility_id: &str) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
         let mut view_state = ViewModel::default();
         view_state.active_utility_id = Some(active_utility_id.into());
-        let meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-        semio_framework_plugin::resolve_ready(app.dispatch_typed(command, &meta)).expect("dispatch")
+        let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
+        let mut result = semio_framework_plugin::resolve_ready(app.dispatch_typed(command, &action_meta)).expect("dispatch");
+        let receipt = settle(app);
+        result.requested_effects.extend(receipt.effects.iter().cloned());
+        (result, receipt)
     }
     
     pub fn action(app: &mut Process3dRawApp, action: &str, args: Option<&DslValue>) -> InvocationResult {
-        semio_framework_plugin::resolve_ready(app.handle_action(action, args, &meta("local"))).expect("action dispatch")
+        settled_action(app, action, args).0
+    }
+    
+    /// 🏁️ The settling action bridge — same reason as [`settled_dispatch`]: the host verb's retained
+    /// operation publishes after the call answers.
+    pub fn settled_action(app: &mut Process3dRawApp, action: &str, args: Option<&DslValue>) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
+        let admitted = semio_framework_plugin::resolve_ready(app.handle_action(action, args, &meta("local"))).expect("action dispatch");
+        // 🛂️ A framework-reserved verb (`interactionSelect`, `interactionHover`, undo/redo, …) is only
+        // ADMITTED by `handle_action` — it finishes in a reserved job handed back as an
+        // `Effect::SpawnJob`. Without driving that job home the selection never lands in the
+        // interaction store and every selection-addressed render still projects the empty state.
+        let mut result = semio_framework_plugin::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)).expect("settle the framework-reserved admission");
+        let receipt = settle(app);
+        result.requested_effects.extend(receipt.effects.iter().cloned());
+        (result, receipt)
+    }
+    
+    /// 🏁️ Drives every pending typed operation of the bound instance to its publication, the way the
+    /// plugin host's continuation does.
+    pub fn settle(app: &mut Process3dRawApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+        semio_framework_plugin::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id)).expect("settle the typed operation")
+    }
+    
+    /// 🧾️ Whether a settled publication reached the DOCUMENT lane — the mounted app's observable
+    /// "this command wrote an in-history mutation".
+    pub fn published_a_document_mutation(receipt: &semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) -> bool {
+        receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact)
     }
     
     /// 🧩️ A `BuiltNode` carries retained page children, so the rendered tree is projected through the
@@ -204,13 +248,25 @@ pub(crate) mod context {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection")
     }
     
+    /// 🪟️ The host's own view state for the single main window. `VcsArtifactApp::window_measures`
+    /// projects ONE entry per declared window INSTANCE (`ViewModel.window_instances`) and keys the
+    /// answer by that instance id — a default, instance-less view therefore answers an EMPTY map no
+    /// matter what `ArtifactEditor::window_measures` returns.
+    pub fn main_window_view() -> ViewModel {
+        ViewModel {
+            window_id: Some(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into()),
+            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into(), window_kind_id: workpiece::PROCESS_3D_PLAY_WINDOW_MAIN.into() }],
+            ..Default::default()
+        }
+    }
+    
     pub fn main_window_measures(app: &mut Process3dRawApp) -> Vec<WindowMeasure> {
-        semio_framework_plugin::resolve_ready(app.window_measures(&ViewModel::default())).get(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
+        semio_framework_plugin::resolve_ready(app.window_measures(&main_window_view())).get(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
     }
 }
 
 use super::*;
-use crate::editor::process3d::unit_tests::context::{action, app, app_with_registry, dispatch, dispatch_with_utility, main_window_measures, process3d_app_manifest_for_tests, render as render_body};
+use crate::editor::process3d::unit_tests::context::{action, app, app_with_registry, dispatch, dispatch_with_utility, main_window_measures, main_window_view, process3d_app_manifest_for_tests, published_a_document_mutation, render as render_body, settled_dispatch, settled_dispatch_with_utility};
 use semio_framework_plugin::{artifact_app_laws, ContextMenuRequest, ContextMenuSurfaceTarget, EditorApp, HistoryView, PluginApp, UiMenuRef, SET_ACTIVE_UTILITY_ACTION_ID};
 
 fn production_initial_snapshot(label: &str) -> Process3dSnapshot {
@@ -330,6 +386,10 @@ fn drive_production_envelope(app: &mut crate::editor::process3d::unit_tests::con
 /// atomic authority hook; accepted and every hostile lease retire their displaced/candidate owner.
 #[semio_framework_async_macros::async_test]
 async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_closed() {
+    // 🛣️ The publication lease table is a process-global four-slot DIRECT-MAPPED registry shared by the
+    // whole test binary; two laws admitting concurrently collide on a slot and report
+    // `process3d-publication.saturated`, which is scheduling, never the property under test.
+    let _lane = crate::spr::process3d_publication_authority_lane();
     let accepted_label = "accepted-production-swap";
     let mut accepted = crate::editor::process3d::unit_tests::context::unseeded_app_with_registry();
     let base_generation = accepted.artifact_generation_now();
@@ -928,8 +988,8 @@ async fn arg_form_set_stock_emits_ops_reading_kind_arg() {
 #[semio_framework_async_macros::async_test]
 async fn world_pointer_down_dispatches_a_mutation_for_a_real_click() {
     let mut app = app();
-    let result = dispatch_with_utility(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }), "cut");
-    assert!(!result.mutations.is_empty(), "worldPointerDown must still dispatch a mutation for a real click");
+    let (_, receipt) = settled_dispatch_with_utility(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 2.0, 3.0] }), "cut");
+    assert!(published_a_document_mutation(&receipt), "worldPointerDown must still dispatch a mutation for a real click");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -946,9 +1006,9 @@ async fn world_pointer_down_resets_active_utility_to_select() {
 #[semio_framework_async_macros::async_test]
 async fn repeated_world_pointer_down_each_dispatch_a_mutation() {
     let mut app = app();
-    let first = dispatch_with_utility(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 0.0, 0.0] }), "cut");
-    let second = dispatch_with_utility(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [2.0, 0.0, 0.0] }), "cut");
-    assert!(!first.mutations.is_empty() && !second.mutations.is_empty(), "each real click must dispatch its own mutation");
+    let (_, first) = settled_dispatch_with_utility(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [1.0, 0.0, 0.0] }), "cut");
+    let (_, second) = settled_dispatch_with_utility(&mut app, Process3dCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: [2.0, 0.0, 0.0] }), "cut");
+    assert!(published_a_document_mutation(&first) && published_a_document_mutation(&second), "each real click must dispatch its own mutation");
 }
 
 /// 🌉️ `WorldFaceDragEnd` dispatches `insert_step_mutations` → a real `CreateStep` mutation.
@@ -959,15 +1019,15 @@ async fn repeated_world_pointer_down_each_dispatch_a_mutation() {
 #[semio_framework_async_macros::async_test]
 async fn world_face_drag_end_cut_dispatches_a_mutation() {
     let mut app = app();
-    let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }));
-    assert!(!result.mutations.is_empty());
+    let (_, receipt) = settled_dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: -0.5, face_extent: Some([1.0, 1.0]) }));
+    assert!(published_a_document_mutation(&receipt), "a cut face-drag must dispatch its CreateStep mutation");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn world_face_drag_end_attach_dispatches_a_mutation() {
     let mut app = app();
-    let result = dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: Some([0.2, 0.2]) }));
-    assert!(!result.mutations.is_empty());
+    let (_, receipt) = settled_dispatch(&mut app, Process3dCommand::WorldFaceDragEnd(world_face_drag_end::WorldFaceDragEnd { normal: [0.0, 0.0, 1.0], start_point: [0.5, 0.5, 1.0], distance: 0.5, face_extent: Some([0.2, 0.2]) }));
+    assert!(published_a_document_mutation(&receipt), "an attach face-drag must dispatch its CreateStep mutation");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -980,7 +1040,7 @@ async fn world_face_drag_end_ignored_while_a_placement_utility_is_active() {
 #[semio_framework_async_macros::async_test]
 async fn toggle_sun_round_trips_through_config_and_defaults_off() {
     let mut app = app();
-    let measures = app.window_measures(&semio_framework_plugin::ViewModel::default()).await;
+    let measures = app.window_measures(&main_window_view()).await;
     let sun_group = |measures: &HashMap<String, Vec<WindowMeasure>>| {
         measures[workpiece::PROCESS_3D_PLAY_WINDOW_MAIN]
             .iter()
@@ -993,7 +1053,7 @@ async fn toggle_sun_round_trips_through_config_and_defaults_off() {
     let children = sun_group(&measures);
     assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { pressed, .. } if !*pressed)));
     dispatch(&mut app, Process3dCommand::ToggleSun(toggle_sun::ToggleSun {}));
-    let measures = app.window_measures(&semio_framework_plugin::ViewModel::default()).await;
+    let measures = app.window_measures(&main_window_view()).await;
     let children = sun_group(&measures);
     assert!(children.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { pressed, .. } if *pressed)));
 }
@@ -1026,8 +1086,8 @@ async fn window_body_accepts_the_framework_instance_suffix() {
 #[semio_framework_async_macros::async_test]
 async fn registry_enforced_app_accepts_a_declared_operation_action() {
     let mut app = app_with_registry();
-    let result = dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
-    assert!(!result.mutations.is_empty());
+    let (_, receipt) = settled_dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
+    assert!(published_a_document_mutation(&receipt), "a declared operation action must reach the document lane");
 }
 
 //#region 🔖️MediaTests
@@ -1322,6 +1382,7 @@ fn published_example_load(app: &mut context::Process3dRawApp, example: &str) -> 
 /// `Incomplete` (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP).
 #[test]
 fn every_example_loads_through_the_member_less_archive_door() {
+    let _lane = crate::spr::process3d_publication_authority_lane();
     for (operation, example) in [(71_u64, PROCESS3D_EXAMPLE_TIMBER), (72, PROCESS3D_EXAMPLE_PLATE), (73, PROCESS3D_EXAMPLE_CONCRETE_FOREST)] {
         let mut app = context::unseeded_app_with_registry();
         let (pack, spr) = published_example_load(&mut app, example);

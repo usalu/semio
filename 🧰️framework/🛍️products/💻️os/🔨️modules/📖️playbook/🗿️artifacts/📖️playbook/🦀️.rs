@@ -682,7 +682,7 @@ pub mod generation_forms {
             }],
             presence: UiPresence::default(),
         });
-        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
+        UiNode::Tree(UiTreeNode { presentation: Default::default(), sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
     }
 
     fn render_question_field(question: &PlaybookBlock, values: &PlaybookValues, controller_id: &str, patch_action: &str, generation_id: &str) -> Option<UiNode> {

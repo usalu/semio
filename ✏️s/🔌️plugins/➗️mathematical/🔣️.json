@@ -340,7 +340,29 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "operations",
+                "label": {
+                  "native": {
+                    "en": "Operations",
+                    "de": "Operationen"
+                  },
+                  "reuse": {
+                    "en": "Operations",
+                    "de": "Operationen"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "format": {
+                    "kind": "json"
+                  }
+                },
+                "required": true,
+                "default": "[{\"operation\":\"addNode\",\"x\":120.0,\"y\":80.0}]"
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -2830,8 +2852,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "d9f62a820de4c2cf8f77c2a4c3b999a812edaf25a5e5da9814f818b48e35ae81",
-    "coreWasmSha256": "60eaf93f1abed9b5eef3ec39e61b6e0fba657966b938a493bba6d56c0efba884",
-    "descriptorSha256": "e94129f029d715bbff35a40fa0cc8b7eba041a1267200f273152bee0daa53862"
+    "wasmSha256": "56935f97e580fcdcab27b2523966cc9e296fc717954650607c5aed35635f6fb3",
+    "coreWasmSha256": "e400786f264ee33687465d7f8155c566c8f0532b468b7c91e14b15aeeeca7bee",
+    "descriptorSha256": "aba6fe12babb3310a64548b08538571f0e74475040a0b4482d760ac91ad6fc75"
   }
 }

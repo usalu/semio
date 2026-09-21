@@ -1,13 +1,40 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
-    use semio_framework_plugin::{App, EditorApp, HistoryView, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, settle_registered_typed_operation};
+    use semio_framework_plugin::{App, EditorApp, Effect, HistoryView, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     /// ✏️ `ArchitectPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<ArchitectPlayApp>` (SDK adapter, contract §2.1) is the real
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
     /// `PluginBuilder::editor::<ArchitectPlayApp>` builds it.
-    pub type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+    type MountedArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+
+    /// 🔒️ Self-closing app handle: every registry-backed app owns Stores that must retire through the
+    /// bounded close protocol before drop (`artifact store reached Drop without its exact terminal-empty
+    /// shallow-shell witness`), so `Drop` runs `close_registered_fixture_app` for every test that returns
+    /// early — a panicking test leaves the witness alone so the FIRST failure stays the reported one.
+    pub struct ArchitectApp(MountedArchitectApp);
+
+    impl std::ops::Deref for ArchitectApp {
+        type Target = MountedArchitectApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for ArchitectApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for ArchitectApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
     
     /// 🧪️ The app instance every test builds — registry-backed, because there is no other kind.
     /// `EditorApp<ArchitectPlayApp>` publishes a `bounded_first_step_tool_proofs!` roster, and
@@ -29,11 +56,40 @@ pub(crate) mod context {
     
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> ArchitectApp {
-        new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(architect_app_manifest_for_tests).await
+        let mut app = new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(architect_app_manifest_for_tests).await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        ArchitectApp(app)
     }
     
+    /// 🧾️ A SETTLED dispatch: a mounted app answers first and publishes afterwards, so every caller
+    /// must drive the same bounded continuation and ACK protocol the plugin host drives
+    /// (`settle_registered_typed_operation`) before reading the snapshot back — and must apply the
+    /// `LoadDocument` effects the host would apply. Without the `bind_instance_id`/settle pair every
+    /// typed command is refused with `interactive-job.live-instance`.
     pub async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        let mut result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.expect("settle");
+        result.requested_effects.extend(settled.effects);
+        for effect in &result.requested_effects {
+            if let Effect::LoadDocument { pack, spr } = effect {
+                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+            }
+        }
+        result
+    }
+
+    /// ↩️ An `undo`/`redo` verb is a FRAMEWORK-RESERVED job, not a typed command: admitted, then
+    /// committed through its reserved job, then published — all three steps or the projection never moves.
+    pub async fn history_verb(app: &mut ArchitectApp, action: &str) {
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, meta("local").instance_id).await;
+    }
+
+    /// 🕹️ The framework's own injected `interactionSelect` verb takes that same reserved-job lane.
+    pub async fn framework_verb(app: &mut ArchitectApp, action: &str, payload: &dsl::DslValue) {
+        let admitted = app.handle_action(action, Some(payload), &meta("local")).await.unwrap_or_else(|fault| panic!("{action} admission: {fault:?}"));
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("{action} reserved-job commit: {fault:?}"));
+        settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
     }
     
     pub async fn render(app: &mut ArchitectApp, body_key: &str) -> String {
@@ -348,9 +404,9 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     let before = app.snapshot().expect("projection").elements.len();
     context::dispatch(&mut app, ArchitectCommand::AddElement(add_element::AddElement { name: "Ward".into() })).await;
     assert_eq!(app.snapshot().expect("projection").elements.len(), before + 1);
-    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    context::history_verb(&mut app, "undo").await;
     assert_eq!(app.snapshot().expect("projection").elements.len(), before);
-    app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
+    context::history_verb(&mut app, "redo").await;
     assert_eq!(app.snapshot().expect("projection").elements.len(), before + 1);
 }
 
@@ -372,7 +428,9 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
     };
     let meta = semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     let result = app.dispatch_typed(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }), &meta).await.expect("select exact Register window");
+    let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await.expect("view publication settles");
     assert!(result.mutations.is_empty(), "selectRegister is a view action and must never reach document operations under kind discipline");
+    assert!(!settled.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a view row never publishes the document lane: {:?}", settled.lanes);
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: end-to-end proof the "program"
@@ -385,9 +443,7 @@ async fn interaction_select_stamps_the_picked_element_as_selected_in_the_documen
     let mut app = context::app_with_registry().await;
     let element_id = app.snapshot().expect("snapshot").elements[0].header.id.to_string();
     let targets = serde_json::to_string(&[serde_json::json!({ "granularity": ARCHITECT_INTERACTION_GRANULARITY_ENTITY, "id": element_id })]).expect("targets json");
-    app.handle_action("interactionSelect", Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" }))), &semio_framework_plugin::artifact_app_laws::meta("test"))
-        .await
-        .expect("interactionSelect");
+    context::framework_verb(&mut app, "interactionSelect", &dsl::json::to_dsl_value(&dsl::json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" }))).await;
     let rendered = context::render(&mut app, document_panel::ARCHITECT_BODY_ARTIFACT).await;
     assert!(rendered.contains(&element_id), "the rendered tree must still list the picked element");
     assert!(rendered.contains("\"selected\":true"), "the picked element must be stamped selected by the framework wrapper");
@@ -426,24 +482,34 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
         std::thread::yield_now();
     }
     let (parent_pack, parent_spr) = loaded.expect("the demo example publishes a document load");
-    PluginApp::begin_document_archive_load(&mut app, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
+    PluginApp::begin_document_archive_load(&mut *app, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut app, 91).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut *app, 91).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
         }
-        let _ = PluginApp::maintenance_step(&mut app, 1, 4_096).expect("archive maintenance step");
+        let _ = PluginApp::maintenance_step(&mut *app, 1, 4_096).expect("archive maintenance step");
         std::thread::yield_now();
     }
     let status = status.expect("archive load reaches a terminal state");
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
-    PluginApp::acknowledge_document_archive_load(&mut app, 91).expect("archive acknowledgement");
+    PluginApp::acknowledge_document_archive_load(&mut *app, 91).expect("archive acknowledgement");
     let snapshot = app.snapshot().expect("loaded snapshot");
     for (slot, child_id) in [("knowledge", snapshot.knowledge.child_id.clone()), ("benchmarks", snapshot.benchmarks.child_id.clone())] {
         assert!(app.child_store(slot, &child_id).await.is_some(), "the genesis-derived {slot} member is live after the load");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    assert!(!crate::program_knowledge(&snapshot).is_empty(), "the demo example must survive the archive door with its knowledge rows, not an empty table");
+    assert!(!crate::program_benchmarks(&snapshot).is_empty(), "the demo example must survive the archive door with its benchmark rows, not an empty table");
+    for (slot, child_id, rows) in [
+        ("knowledge", snapshot.knowledge.child_id.clone(), crate::program_knowledge(&snapshot).len()),
+        ("benchmarks", snapshot.benchmarks.child_id.clone(), crate::program_benchmarks(&snapshot).len()),
+    ] {
+        let derived = crate::genesis_program_child_pack(&snapshot, slot, &child_id).unwrap_or_else(|| panic!("the loaded snapshot still derives its own {slot} member"));
+        let table = <semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot as store::ArtifactPack>::decode_pack(&derived).unwrap_or_else(|error| panic!("the derived {slot} member decodes: {error}"));
+        assert_eq!(table.rows.len(), rows, "the genesis-derived {slot} member must carry one row per loaded record");
+    }
+    artifact_app_laws::close_registered_fixture_app(&mut *app);
 }
 //#endregion 🔖️ExampleArchiveLoad

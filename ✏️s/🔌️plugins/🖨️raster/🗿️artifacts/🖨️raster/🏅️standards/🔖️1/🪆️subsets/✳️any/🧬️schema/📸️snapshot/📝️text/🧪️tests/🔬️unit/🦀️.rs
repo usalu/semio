@@ -73,13 +73,21 @@ fn representative_raster_document() -> RasterSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn semio_example_dsl_round_trips() {
     let fixture = crate::standards::v1::subsets::any::schema::semio_fixture_snapshot();
-    store::os_store::test_support::assert_dsl_round_trip(&fixture);
+    // 🧊️ Cold twin: a raster document owns fixed-capacity maps whose `Drop` fails closed, so the
+    // helper's own decoded value is handed back to the artifact's retirement seam.
+    store::os_store::test_support::assert_dsl_round_trip_cold(&fixture, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
     let printed = print_dsl(&fixture);
     let reparsed = parse_dsl(&printed).expect("parse printed semio fixture");
     assert_eq!(reparsed.id, fixture.id);
+    // 🧹️ Both documents own a populated asset pool and a populated `params` map, so they reach the
+    // artifact's retirement seam rather than `RasterOwnedMap`'s fail-closed `Drop`.
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(reparsed);
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(fixture);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn raster_dsl_round_trips_representative_document() {
-    store::os_store::test_support::assert_dsl_round_trip(&representative_raster_document());
+    let document = representative_raster_document();
+    store::os_store::test_support::assert_dsl_round_trip_cold(&document, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
 }

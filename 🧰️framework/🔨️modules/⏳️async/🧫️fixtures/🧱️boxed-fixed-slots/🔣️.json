@@ -22,7 +22,7 @@
       "capacityConstant": "ENGINE_SURFACE_CAPACITY",
       "capacity": 256,
       "elementType": "EngineSurfaceSlot",
-      "elementSizeBytes": 75824,
+      "elementSizeBytes": 76216,
       "ownerSizeBytes": 16
     },
     {
@@ -82,7 +82,7 @@
       "capacityConstant": "UI_LAYOUT_SURFACE_SLOTS",
       "capacity": 64,
       "elementType": "Option<UiSurfaceSlot>",
-      "elementSizeBytes": 162000,
+      "elementSizeBytes": 164128,
       "ownerSizeBytes": 520
     },
     {

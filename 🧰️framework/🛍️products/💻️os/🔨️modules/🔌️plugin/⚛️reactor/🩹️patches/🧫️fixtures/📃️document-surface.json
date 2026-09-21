@@ -2,7 +2,7 @@
   "surface": "1:document",
   "nodes": 19,
   "interactiveRows": 14,
-  "limits": { "pageBytes": 32768, "surfaceBytes": 8388608, "aggregateBytes": 33554432, "nodeBindings": 32 },
+  "limits": { "pageBytes": 32768, "surfaceBytes": 8388608, "aggregateBytes": 52559872, "nodeBindings": 32 },
   "sections": [
     {
       "id": "objects",

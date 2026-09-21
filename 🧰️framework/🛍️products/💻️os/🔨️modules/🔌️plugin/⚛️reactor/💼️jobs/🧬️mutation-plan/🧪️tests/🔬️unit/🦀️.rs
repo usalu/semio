@@ -2,6 +2,10 @@ use super::super::*;
 use super::job_test_mutation_fixture::{AddValue, JobTestOp, JobTestSnapshot};
 use store::{ArtifactPack, OpBinary};
 
+/// ⛽️ A grant that covers any state action a builtin declares — `WORK_UNITS_EXECUTE` is the price
+/// the execute state of every two-phase builtin charges for its unchunked native dispatch.
+const FULL_GRANT: JobBudget = JobBudget { fuel: WORK_UNITS_EXECUTE, deadline_ms: 1 };
+
 /// 🪪️ Commits one contributed mutation kind into the SAME process-global registry
 /// `job_mutation_plan`'s `execute` phase reads from, mirroring `🔌️plugin/🦀️.rs`'s own
 /// `contributed_mutation_wire_tests::commit_test_contribution` fixture recipe (that helper is
@@ -30,7 +34,7 @@ async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered
     let input = request_wire_bytes("s.jobtest.mutation-echo", &mutation_id, payload).await;
     start_job(300, JOB_KIND_MUTATION_PLAN, &input).await;
 
-    match step_job(300, JobBudget { fuel: 1, deadline_ms: 1 }).await {
+    match step_job(300, FULL_GRANT).await {
         JobStep::Running(Some(progress)) => {
             let (artifact_kind, decoded_mutation_id): (String, String) = serde_json::from_slice(&progress).expect("slice 1 progress decodes");
             assert_eq!(artifact_kind, "s.jobtest.mutation-echo");
@@ -43,7 +47,7 @@ async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered
         JobStep::Done(_) => panic!("slice 1 must not finish in one tick"),
         JobStep::Running(None) => panic!("slice 1 must be Running(Some(identity)), not a bare Running(None)"),
     }
-    match step_job(300, JobBudget { fuel: 1, deadline_ms: 1 }).await {
+    match step_job(300, FULL_GRANT).await {
         JobStep::Done(bytes) => {
             let value = store::pack_rt::decode_wire_value(&bytes).expect("wire value decodes");
             let result: crate::app::WireArtifactMutationPlanResult = dsl::from_dsl_value(value).expect("result decodes");
@@ -70,14 +74,14 @@ async fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
     let input = request_wire_bytes("s.jobtest.mutation-checkpoint", &mutation_id, payload).await;
 
     start_job(301, JOB_KIND_MUTATION_PLAN, &input).await;
-    step_job(301, JobBudget::default()).await;
-    let baseline = match step_job(301, JobBudget::default()).await {
+    step_job(301, FULL_GRANT).await;
+    let baseline = match step_job(301, FULL_GRANT).await {
         JobStep::Done(bytes) => bytes,
         _ => panic!("uninterrupted run must finish Done within 2 slices"),
     };
 
     start_job(302, JOB_KIND_MUTATION_PLAN, &input).await;
-    step_job(302, JobBudget::default()).await;
+    step_job(302, FULL_GRANT).await;
     let entries = checkpoint_jobs().await;
     let entry = entries.iter().find(|entry| entry.job == 302).expect("job 302 must appear in checkpoint_jobs()");
     assert_eq!(entry.checkpoint.as_deref(), Some(PHASE_DECODED));
@@ -85,7 +89,7 @@ async fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
     cancel_job(302).await;
 
     restore_job(302, JOB_KIND_MUTATION_PLAN, &input, checkpoint).await;
-    let restored_final = match step_job(302, JobBudget::default()).await {
+    let restored_final = match step_job(302, FULL_GRANT).await {
         JobStep::Done(bytes) => bytes,
         _ => panic!("a restore from PHASE_DECODED must finish Done on its FIRST step_job call"),
     };
@@ -95,7 +99,7 @@ async fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
 #[semio_framework_async_macros::async_test]
 async fn mutation_plan_job_reports_a_named_decode_fault_on_garbage_input() {
     start_job(303, JOB_KIND_MUTATION_PLAN, b"not a wire value").await;
-    match step_job(303, JobBudget::default()).await {
+    match step_job(303, FULL_GRANT).await {
         JobStep::Failed(bytes) => {
             let fault = dsl::decode_fault_bytes(&bytes);
             assert_eq!(fault.code.0, "job.mutation-plan.decode");

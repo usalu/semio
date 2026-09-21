@@ -15237,6 +15237,14 @@ pub fn take_next_completed_world3d_asset_step(state: &mut World3dState) -> Optio
     state.asset_io.take_next_completed_step()
 }
 
+pub fn begin_world3d_asset_close(state: &mut World3dState) {
+    state.asset_io.begin_close();
+}
+
+pub fn close_world3d_asset_step(state: &mut World3dState) -> bool {
+    state.asset_io.close_step() && state.asset_io.terminal_is_empty()
+}
+
 /// 📡️🎞️ Whether this surface holds a fetched asset response the decode pump still owes a turn.
 ///
 /// ⚖️ The decode ladder runs INSIDE the frame transaction, so on an event-driven shell it advances

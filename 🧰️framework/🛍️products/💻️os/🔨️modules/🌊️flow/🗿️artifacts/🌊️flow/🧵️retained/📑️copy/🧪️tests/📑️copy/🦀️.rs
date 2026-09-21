@@ -31,7 +31,7 @@ impl ErasedSnapshotRetirement for RootRetirement {
 }
 fn source() -> (Arc<Root>, Arc<AtomicUsize>) {
     let fixture = crate::os_pack::json::parse(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
-    let host_snapshot: FlowHostSnapshot = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(host_snapshot.get("hostSnapshot").unwrap())).unwrap();
+    let host_snapshot: FlowHostSnapshot = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(fixture.get("hostSnapshot").unwrap())).unwrap();
     let drops = Arc::new(AtomicUsize::new(0));
     (Arc::new(Root { host_snapshot: Some(host_snapshot), drops: drops.clone() }), drops)
 }

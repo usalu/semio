@@ -2,6 +2,7 @@ import { resolve, join, relative, isAbsolute, sep } from "node:path";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { runSceneShadingOracle } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎨️world3d-scene-shading/📜️script.ts";
+import { accessibilityProjectionSelfTests } from "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️tests/🔬️accessibility-projection/🟦️.ts";
 
 type FrameTurnFixture = {
   readonly input: { readonly inputSequence: number; readonly generation: number };
@@ -100,6 +101,9 @@ const [command, fixture, output, ...rest] = process.argv.slice(2);
 if (command === "frame-scheduler-oracle") {
   if (!fixture || output || rest.length) throw new Error("Usage: frame-scheduler-oracle <fixture>");
   await runFrameSchedulerOracle(fixture);
+} else if (command === "accessibility-projection-oracle") {
+  if (fixture || output || rest.length) throw new Error("Usage: accessibility-projection-oracle");
+  console.log(`[DEBUG] accessibility-projection-twin checks=${accessibilityProjectionSelfTests()}`);
 } else {
   if ((command !== "shading-oracle" && command !== "shading-wgpu") || !fixture || !output || rest.length) throw new Error("Usage: shading-oracle|shading-wgpu <fixture> <ticket-generated-output-directory>");
   if (resolve(fixture) !== join(process.cwd(), "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎨️scene-shading/🔣️.json")) throw new Error("The fixture must be the canonical shared World3d shading fixture");

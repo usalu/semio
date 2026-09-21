@@ -1,8 +1,8 @@
 //! 🎬️ The canonical engagements wire is the guest's reserved retained section, decoded against a
 //! language-neutral JSON fixture. `serde_json::Value` is the independent structural oracle.
 
-use super::*;
 use super::window_measures_section_tests::section_document;
+use super::*;
 
 pub(crate) fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../🧫️fixtures/🎬️window-engagements/🔣️.json")).expect("window engagements fixture parses")

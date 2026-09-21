@@ -8,7 +8,31 @@ pub(crate) mod context {
     /// ✏️ `VcsPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime `ArtifactApp`
     /// — `EditorApp<VcsPlayApp>` (SDK adapter, contract §2.1) is the real `ArtifactApp` implementor
     /// `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<VcsPlayApp>` builds it.
-    pub type VcsApp = VcsArtifactApp<EditorApp<VcsPlayApp>>;
+    /// 🔚 A GUARD, not a bare alias: a registered app's `ArtifactStore` refuses `Drop` without its
+    /// exact terminal-empty shallow-shell witness, so every fixture travels the framework's own close
+    /// loop when it leaves scope.
+    pub struct VcsApp(pub(crate) VcsArtifactApp<EditorApp<VcsPlayApp>>);
+
+    impl std::ops::Deref for VcsApp {
+        type Target = VcsArtifactApp<EditorApp<VcsPlayApp>>;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for VcsApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for VcsApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
     
     /// ✏️ Adapts `create_vcs_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `context::new_app_with_registry` still expects — framework test context gap, not
@@ -36,6 +60,7 @@ pub(crate) mod context {
     pub async fn app_with_registry() -> VcsApp {
         let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_tests).await;
         instance.bind_instance_id(meta("local").instance_id).await;
+        let mut instance = VcsApp(instance);
         seed_vcs_demo_history(&mut instance).await;
         instance
     }
@@ -43,15 +68,22 @@ pub(crate) mod context {
     /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does: on a
     /// mounted app `dispatch_typed` only QUEUES the operation, so a reader that skips this step
     /// observes the pre-dispatch document.
-    pub async fn settle(instance: &mut VcsApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(instance, meta("local").instance_id).await.expect("settle the typed operation");
+    pub async fn settle(instance: &mut VcsApp) -> Vec<semio_framework_plugin::app::TypedOperationResultLane> {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance.0, meta("local").instance_id).await.expect("settle the typed operation").lanes
     }
 
     /// 🎬️ Admits one framework-reserved action (`commitCheckpoint`, `checkoutCheckpoint`, …) and runs
     /// the spawned reserved job plus the publication it queues — `handle_action` only ADMITS.
     pub async fn settle_action(instance: &mut VcsApp, admitted: InvocationResult) {
-        semio_framework_plugin::app::settle_framework_reserved_admission(instance, admitted).await.expect("framework reserved admission");
+        settle_reserved(instance, admitted).await;
+    }
+
+    /// 🎬️ [`settle_action`] that hands the SETTLED answer back — a framework-reserved verb's events
+    /// (`history-changed`, …) are produced by the spawned job, never by the admission.
+    pub async fn settle_reserved(instance: &mut VcsApp, admitted: InvocationResult) -> InvocationResult {
+        let settled = semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance.0, admitted).await.expect("framework reserved admission");
         settle(instance).await;
+        settled
     }
     
     /// 🧾️ Builds one flat, string-valued action argument object — the `DslValue` shape
@@ -65,22 +97,103 @@ pub(crate) mod context {
         dsl::DslValue::Object(Vec::new())
     }
     
-    pub async fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> InvocationResult {
-        let result = instance.dispatch_typed(command, &meta("local")).await.expect("dispatch");
-        settle(instance).await;
-        result
+    /// 🧾️ A settled dispatch: the immediate answer plus the store lanes the retained publication
+    /// actually wrote. A mounted app publishes AFTER it answers, so `result.mutations` is ALWAYS
+    /// empty — the document edit is witnessed by the settled receipt's `Artifact` lane instead.
+    pub struct Dispatched {
+        pub result: InvocationResult,
+        pub lanes: Vec<semio_framework_plugin::app::TypedOperationResultLane>,
+    }
+
+    impl Dispatched {
+        pub fn edited_document(&self) -> bool {
+            self.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact)
+        }
+    }
+
+    impl std::ops::Deref for Dispatched {
+        type Target = InvocationResult;
+        fn deref(&self) -> &Self::Target {
+            &self.result
+        }
+    }
+
+    pub async fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> Dispatched {
+        let result = instance.0.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let lanes = settle(instance).await;
+        Dispatched { result, lanes }
     }
     
     pub async fn render(instance: &mut VcsApp, body_key: &str) -> String {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(instance.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
     
+    /// 📦️ A parsed document envelope that hands its owners back on the way out. `ArtifactEnvelope`'s
+    /// own `Drop` refuses a bare drop (`artifact envelope terminal shell reached Drop before its
+    /// app-owned bounded retirement authority detached every nested owner`), so even a test that only
+    /// READS checkpoints has to detach — the shell is a terminal witness, not a plain value.
+    pub struct SeededEnvelope(Option<ArtifactEnvelope<VcsSnapshot, VcsDemoMutation>>);
+
+    impl std::ops::Deref for SeededEnvelope {
+        type Target = ArtifactEnvelope<VcsSnapshot, VcsDemoMutation>;
+        fn deref(&self) -> &Self::Target {
+            self.0.as_ref().expect("a live seeded envelope")
+        }
+    }
+
+    /// ♻️ One bounded owned-value retirement page — the same shape `bounded_document_store_owners`
+    /// installs on the live store, which is private to the SDK, restated here so a test-parsed
+    /// envelope can leave through the identical ladder. `VcsSnapshot`/`VcsDemoMutation` own no nested
+    /// retained payload, so one page retires either of them.
+    struct SeededValueRetirement<T>(Option<T>);
+
+    impl<T: Send + 'static> store::ErasedSnapshotRetirement for SeededValueRetirement<T> {
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+            if maximum_items == 0 || maximum_bytes < store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if self.0.take().is_some() {
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES });
+            }
+            Ok(store::SnapshotRetirementStep::Complete)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.0.is_none()
+        }
+    }
+
+    struct SeededValueRetirementFactory<T>(std::marker::PhantomData<fn() -> T>);
+
+    impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for SeededValueRetirementFactory<T> {
+        fn retire_owned(&self, value: T) -> Box<dyn store::ErasedSnapshotRetirement> {
+            Box::new(SeededValueRetirement(Some(value)))
+        }
+    }
+
+    impl Drop for SeededEnvelope {
+        fn drop(&mut self) {
+            let Some(envelope) = self.0.take() else { return };
+            // ♻️ Detaching the shell is not enough: the seeded history is a populated
+            // `ArtifactHistoryLedger`, whose own `Drop` asserts `artifact history ledger reached Drop
+            // before every exact entry owner was retired`. The envelope leaves through the store's own
+            // bounded retirement ladder, exactly like `🔌️wires`' `retire_envelope`.
+            let mut retirement = store::retire_document_envelope(
+                envelope,
+                std::sync::Arc::new(SeededValueRetirementFactory::<VcsSnapshot>(std::marker::PhantomData)),
+                std::sync::Arc::new(SeededValueRetirementFactory::<VcsDemoMutation>(std::marker::PhantomData)),
+            );
+            while !matches!(retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("seeded envelope retirement"), store::SnapshotRetirementStep::Complete) {}
+            assert!(retirement.terminal_is_empty(), "a seeded envelope retires completely");
+        }
+    }
+
     /// 📦️ Parses `document_pack()` (the full envelope) for tests that need to inspect raw
     /// checkpoints/alternatives directly — safe here because none of these tests undo/redo, so every
     /// edit in the log is still applied.
-    pub async fn seeded_envelope(instance: &VcsApp) -> ArtifactEnvelope<VcsSnapshot, VcsDemoMutation> {
+    pub async fn seeded_envelope(instance: &VcsApp) -> SeededEnvelope {
         let files = instance.document_pack().await.expect("document pack");
-        store::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr).await.expect("parse document pack").envelope
+        SeededEnvelope(Some(store::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr).await.expect("parse document pack").envelope))
     }
     
     /// 🌱️ Seeds a rich, forked checkpoint/alternative history through `VcsApp`'s own public dispatch
@@ -253,7 +366,7 @@ pub(crate) mod context {
 }
 
 use super::*;
-use crate::editor::vcs::unit_tests::context::{action_args, app, dispatch, no_args, seeded_envelope};
+use crate::editor::vcs::unit_tests::context::{action_args, app, dispatch, no_args, seeded_envelope, settle_action, settle_reserved};
 use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::PluginApp;
 use serde_json::{from_str as parse, Value};
@@ -589,11 +702,16 @@ async fn checkout_then_commit_forks_across_actions() {
     let root_checkpoint_id = envelope_before.vcs.checkpoints[0].id.clone();
     let children_of_root_before = envelope_before.vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str())).count();
 
+    // 🎬️ `checkoutCheckpoint`/`commitCheckpoint` are framework-RESERVED verbs: on a mounted app
+    // `handle_action` only ADMITS them, and the checkout/commit itself lands in the spawned reserved
+    // job plus the publication it queues — dropping either receipt left the fork uncommitted.
     let checkout = instance.handle_action("checkoutCheckpoint", Some(&action_args([("checkpointId", root_checkpoint_id.clone())])), &meta("local")).await.expect("checkout");
     assert!(checkout.mutations.is_empty(), "history actions never emit KernelMutations");
+    settle_action(&mut instance, checkout).await;
 
     dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})).await;
-    instance.handle_action("commitCheckpoint", Some(&action_args([("message", "forked from root".to_string())])), &meta("local")).await.expect("commit");
+    let commit = instance.handle_action("commitCheckpoint", Some(&action_args([("message", "forked from root".to_string())])), &meta("local")).await.expect("commit");
+    settle_action(&mut instance, commit).await;
 
     let envelope_after = seeded_envelope(&instance).await;
     let children_of_root_after = envelope_after.vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(root_checkpoint_id.as_str())).count();
@@ -606,11 +724,15 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     let before = instance.snapshot().expect("materialize snapshot").counter;
     dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})).await;
     assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
+    // ↩️ `undo`/`redo` are framework-reserved jobs: `handle_action` admits, the SETTLED admission
+    // carries the `history-changed` event and the store only moves once that job has run.
     let undo = instance.handle_action("undo", None, &meta("local")).await.expect("undo");
     assert!(undo.mutations.is_empty());
-    assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
+    let undone = settle_reserved(&mut instance, undo).await;
+    assert!(undone.events.iter().any(|event| event.kind == "history-changed"));
     assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before);
-    instance.handle_action("redo", None, &meta("local")).await.expect("redo");
+    let redo = instance.handle_action("redo", None, &meta("local")).await.expect("redo");
+    settle_action(&mut instance, redo).await;
     assert_eq!(instance.snapshot().expect("materialize snapshot").counter, before + 1);
 }
 
@@ -619,6 +741,7 @@ async fn create_and_switch_alternative_round_trip_through_the_wrapper() {
     let mut instance = app().await;
     let create = instance.handle_action("createAlternative", Some(&action_args([("name", "trying-something".to_string())])), &meta("local")).await.expect("create alternative");
     assert!(create.mutations.is_empty());
+    settle_action(&mut instance, create).await;
     let envelope = seeded_envelope(&instance).await;
     assert!(envelope.active_alternative_id.is_some(), "createAlternative must set an active alternative");
 }

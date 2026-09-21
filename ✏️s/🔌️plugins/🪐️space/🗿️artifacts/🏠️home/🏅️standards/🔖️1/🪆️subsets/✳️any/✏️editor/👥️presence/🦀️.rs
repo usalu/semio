@@ -123,3 +123,41 @@ impl protocol::OpBinary for HomePresenceMutation {
     }
 }
 //#endregion 🔖️PresenceMutation
+
+//#region ♻️Retirement
+/// ♻️ Exact bounded retirement for one displaced `HomePresence` root.
+///
+/// `PresenceStore::local_read` fails closed with `presence local read requires a live exact local
+/// retirement owner` while no factory is installed, and Home reads its own presence on the
+/// `createStudio` path — so without this the local studio path is refused even though nothing is
+/// wrong with the command. `HomePresence` owns no heap collections (the launcher keeps its chrome in
+/// `HomeConfig`), so one root retires in a single step and reports one released item.
+pub struct HomePresenceRetirementFactory;
+
+impl store::SnapshotRetirementFactory<HomePresence> for HomePresenceRetirementFactory {
+    fn retire(&self, root: std::sync::Arc<HomePresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
+        Box::new(HomePresenceRetirement { root: std::mem::ManuallyDrop::new(Some(root)) })
+    }
+}
+
+struct HomePresenceRetirement {
+    root: std::mem::ManuallyDrop<Option<std::sync::Arc<HomePresence>>>,
+}
+
+impl store::ErasedSnapshotRetirement for HomePresenceRetirement {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Blocked);
+        }
+        if let Some(root) = self.root.take() {
+            drop(root);
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.root.is_none()
+    }
+}
+//#endregion ♻️Retirement

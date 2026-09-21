@@ -198,10 +198,8 @@ fn a_real_activation_arms_the_shell_window_activate_history_note() {
 /// `select-item-text`), which no canvas renderer publishes and which the verdict deliberately ignores.
 #[test]
 fn the_example_picker_publishes_reacts_trigger_and_row_control_ids() {
-    let rows = vec![
-        ShellExampleRow { control_id: "shell.example.forest".into(), label: "Concrete Forest".into(), selected: true },
-        ShellExampleRow { control_id: "shell.example.nakagin".into(), label: "Nakagin Capsule Tower".into(), selected: false },
-    ];
+    let rows =
+        vec![ShellExampleRow { control_id: "shell.example.forest".into(), label: "Concrete Forest".into(), selected: true }, ShellExampleRow { control_id: "shell.example.nakagin".into(), label: "Nakagin Capsule Tower".into(), selected: false }];
     let control = shell_example_control(&rows, true, false).expect("a dialect with examples renders the trigger");
     assert_eq!(control.control_id, "playground.navbar.fixture");
     assert_eq!(control.label, "Concrete Forest", "a select shows its value");
@@ -268,10 +266,7 @@ fn a_freshly_mounted_instance_is_announced_its_resolved_example() {
 /// `mod+alt+v`/`mod+alt+e` the chords of the same two rows.
 #[test]
 fn the_role_chips_and_their_chords_name_the_same_two_verbs() {
-    for (control_id, chord, role) in [
-        ("playground.navbar.roles.editor", "mod+alt+e", semio_framework::manifest::AppRole::Editor),
-        ("playground.navbar.roles.viewer", "mod+alt+v", semio_framework::manifest::AppRole::Viewer),
-    ] {
+    for (control_id, chord, role) in [("playground.navbar.roles.editor", "mod+alt+e", semio_framework::manifest::AppRole::Editor), ("playground.navbar.roles.viewer", "mod+alt+v", semio_framework::manifest::AppRole::Viewer)] {
         assert_eq!(shell_shortcut_for_control_id(control_id), Some(ShellShortcut::SurfaceRole(role)), "{control_id}");
         let (action, modifiers) = probe_chord(chord);
         assert_eq!(shell_shortcut_for(&action, &modifiers), Some(ShellShortcut::SurfaceRole(role)), "{chord}");

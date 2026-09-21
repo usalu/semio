@@ -314,6 +314,25 @@ fn the_composer_sends_on_enter_the_way_reacts_textarea_does() {
     assert_eq!(submit.action, "sendChatDraft", "Enter and the Send button are one code path");
     assert_eq!(submit.controller_id, "framework");
 }
+
+#[test]
+fn the_chat_composer_projects_its_explicit_localized_accessible_name_without_using_the_placeholder() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/💬️chat-input-accessibility/🔣️.json")).expect("chat accessibility fixture");
+    for row in fixture["cases"].as_array().expect("chat cases") {
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        shell.locale_id = row["locale"].as_str().expect("locale").into();
+        if row["bridge"] == "open" {
+            shell.apply_agent_bridge_frame(&GatewayToShell::Welcome { bridge_version: 1, connection: "fixture".into(), principal: "agent".into() }.encode()).expect("open bridge fixture");
+        }
+        let records = panel_ui_records(FRAMEWORK_CHAT_PANEL_ID, &shell.build_agent_chat_ui()).expect("Chat projects to retained records");
+        let draft = records.iter().find(|record| record.key.as_str().ends_with("/framework.chat.draft")).expect("retained Chat draft");
+        let expected_name = row["accessibleName"].as_str().expect("accessible name");
+        let expected_placeholder = row["placeholder"].as_str().expect("placeholder");
+        assert_ne!(expected_name, expected_placeholder, "the fixture refuses placeholder-as-name compatibility");
+        assert_eq!(draft.accessibility.label.as_ref().map(|label| label.0.as_str()), Some(expected_name), "{}:{} explicit accessible label", row["locale"], row["bridge"]);
+        assert_eq!(draft.disabled, !row["enabled"].as_bool().expect("enabled"));
+    }
+}
 //#endregion 💬️AgentChatTranscript
 
 //#region 🛂️SpaceAdministrationSheet

@@ -62,7 +62,15 @@ mod streaming_tests {
         cancel.cancel_now();
         let reads = Arc::new(AtomicUsize::new(0));
         let reader = mock_reader(vec![1, 2, 3], 1, reads.clone(), None);
-        let mut body = UreqStreamingHttpBody { reader, compute, runtime: runtime.clone(), scope, ctx: OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel, capability: None } };
+        let mut body = UreqStreamingHttpBody {
+            reader,
+            cancellation: HttpBodyCancellationHandle::read_deadline(UREQ_HTTP_READ_TIMEOUT_MS),
+            compute,
+            runtime: runtime.clone(),
+            scope,
+            ctx: OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel, capability: None },
+        };
+        assert_eq!(body.cancellation_handle().cancel_in_flight(), semio_framework_os_services::HttpBodyCancellationStep::AwaitingReadDeadline { maximum_ms: UREQ_HTTP_READ_TIMEOUT_MS });
         let result = runtime.block_on(body.next_chunk());
         assert!(matches!(result, Err(HttpPoolError::Transport(message)) if message == "ureq HTTP body cancelled"));
         assert_eq!(reads.load(Ordering::SeqCst), 0);

@@ -225,8 +225,14 @@ impl ProgramDiff {
             if let Some(delta) = &self.templates {
                 apply_collection_delta(&mut next.templates, &delta.added, &delta.removed, &delta.patched.iter().map(|p| (p.id.clone(), p.patch.clone())).collect::<Vec<_>>(), &delta.reordered).map_err(|error| error.under(["templates"]))?;
             }
+            if let Some(records) = &self.knowledge_payload {
+                next.knowledge_payload = records.clone();
+            }
             if let Some(child) = &self.knowledge {
                 next.knowledge = child.clone();
+            }
+            if let Some(records) = &self.benchmarks_payload {
+                next.benchmarks_payload = records.clone();
             }
             if let Some(child) = &self.benchmarks {
                 next.benchmarks = child.clone();
@@ -1079,8 +1085,14 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
                 None => self.templates = Some(delta),
             }
         }
+        if other.knowledge_payload.is_some() {
+            self.knowledge_payload = other.knowledge_payload;
+        }
         if other.knowledge.is_some() {
             self.knowledge = other.knowledge;
+        }
+        if other.benchmarks_payload.is_some() {
+            self.benchmarks_payload = other.benchmarks_payload;
         }
         if other.benchmarks.is_some() {
             self.benchmarks = other.benchmarks;

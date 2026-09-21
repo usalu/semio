@@ -49,3 +49,9 @@ content; no page errors, console errors or refused inputs; play unit suite + str
   component sha; the `demonstrator` lane covers cad, flow, gis, procedural, process, puzzle, sourcing (+extensions).
   Do NOT run `activate-*-react-dev` yourselves — ask the coordinator (`touch "$T/🗑️generated/activate.request/<lane>"`)
   and the coordinator runs the consistent set through the mutex.
+
+## Lock starvation (15:55)
+A private `CARGO_TARGET_DIR="$T/🗑️generated/<topic>/target"` IS allowed (the shared build dir stays shared via
+`.cargo/config.toml`; only the small uplifted deliverables divert, ≈1.6 GB per topic): it cut a 19-crate batch from
+33 min of lock waiting to 7 min. Use it. The test-binary watchdog is 30 min (load ~60–70 makes 4-thread binaries slow;
+a kill at 10 min was not a hang).

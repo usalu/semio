@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "limits": {
+    "intentSlots": 256,
+    "unitsPerOpportunity": 1
+  },
+  "cases": [
+    {
+      "id": "same-host-authored-change",
+      "presented": { "host": "ink-a", "document": "document-a" },
+      "candidate": { "host": "ink-a", "document": "document-b" },
+      "intent": { "event": "pointerdown", "document": "document-a", "status": "pending" },
+      "beforeTerminal": { "candidateSealable": false, "publishedDocument": null },
+      "afterTerminal": { "candidateSealable": true, "publishedDocument": "document-a" },
+      "afterAcknowledge": { "presentedDocument": "document-b" }
+    }
+  ],
+  "reactOracle": {
+    "event": "pointerdown",
+    "handlerCompletion": "synchronous",
+    "renderCommit": "after-handler",
+    "expectedHandlerDocument": "document-a",
+    "expectedCommittedDocument": "document-b"
+  }
+}

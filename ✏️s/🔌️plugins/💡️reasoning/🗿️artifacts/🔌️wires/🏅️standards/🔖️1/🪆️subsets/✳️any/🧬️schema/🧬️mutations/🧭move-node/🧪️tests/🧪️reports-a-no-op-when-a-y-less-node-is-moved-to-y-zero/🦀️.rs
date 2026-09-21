@@ -150,5 +150,5 @@ async fn a_missing_ordinate_reads_as_the_origin_through_node_position() {
     assert_eq!((*new_x, *new_y), (12.0, 0.0), "the inverse is an ABSOLUTE position read off BASE, never a captured offset");
     let semantics = <WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("move", "node", "move-node", "MovedNode"), "the fixture must be bound to move-node's own descriptor");
-    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()), "Move node \"node-drifter\" to (12, 0)", "move-node's undo label renders both coordinates unquoted and unpadded");
+    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()).resolve(protocol::Terminology::Native, protocol::Locale::En), "Move node \"node-drifter\" to (12, 0)", "move-node's undo label renders both coordinates unquoted and unpadded");
 }

@@ -7,43 +7,49 @@
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
 #[cfg(test)]
-use crate::dock::{push_window_silhouette_border, DockStackTab};
+use crate::dock::{DockStackTab, push_window_silhouette_border};
 #[cfg(all(test, not(target_arch = "wasm32")))]
-use semio_framework_os_kernel::os_directory::{client::DirectoryTransport, directory_command_sha256, DirectoryCommandOutcomeV1};
+use semio_framework_os_kernel::os_directory::{DirectoryCommandOutcomeV1, client::DirectoryTransport, directory_command_sha256};
 use ui_wgpu::wgpu::push_chrome_group_border;
 // 🧾️ Un-gated with the shell-owned panel builders themselves: the Command dock, the five Settings
 // leaves, the Marketplace leaf, the tool leaves and the chat transcript are all production retained
 // panel bodies now, so the whole `UiNode` vocabulary they author has to compile on every target.
-use ui_wgpu::wgpu::{Label, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow};
-
-use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette};
-use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, RetainedNodeFocusKind, UiDocumentFrameCursor};
-use crate::hub_connection::{HubDocumentRemote, HubSessionPresence, FRAMEWORK_HUB_PANEL_ID};
-use crate::hub_sign_in::{
-    hub_connection_id_for_origin, parse_hub_origin, reduce_hub_session, remove_hub_connection, select_hub_connection, serialize_hub_connection_book, upsert_hub_connection, HubConnection, HubConnectionKind,
-    HubSessionEvent, HubSessionPhase, HubSignInClientClass, HubSignInCredential, HubSignInErrorCode, HUB_CONNECTION_BOOK_STORAGE_KEY_V1,
+use ui_wgpu::wgpu::{
+    Label, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
+    UiTreeSectionNode, UiTreeWindow,
 };
-use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig, ProgramBridgeEntry};
-use crate::scenes::{toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface, SCENE_SURFACE_CAPACITY};
-use infinite_world::world::{begin_world3d_dynamic_retirement, enqueue_world3d_events, step_world3d_dynamic_retirement, world3d_catalogue_drop_origin, world3d_clear_catalogue_drop_preview, world3d_dynamic_retirement_terminal_is_empty, world3d_update_catalogue_drop_preview, World3dState, WorldInteractionIntent, WorldInteractionPhase};
-use ui_wgpu::wgpu::draw_text;
+
+use crate::dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette, compute_dock_drop_zone, drop_zone_indicator_rect, parse_path};
+use crate::hub_connection::{FRAMEWORK_HUB_PANEL_ID, HubDocumentRemote, HubSessionPresence};
+use crate::hub_sign_in::{
+    HUB_CONNECTION_BOOK_STORAGE_KEY_V1, HubConnection, HubConnectionKind, HubSessionEvent, HubSessionPhase, HubSignInClientClass, HubSignInCredential, HubSignInErrorCode, hub_connection_id_for_origin, parse_hub_origin, reduce_hub_session,
+    remove_hub_connection, select_hub_connection, serialize_hub_connection_book, upsert_hub_connection,
+};
+use crate::interpreter::{RetainedNodeFocusKind, UiDocumentFrameCursor, begin_ui_document_opportunity, framework_widget_context, render_ui_document_step};
+use crate::program_bridge::{PluginHostConfig, ProgramBridgeEntry, is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id};
+use crate::scenes::{AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, SCENE_SURFACE_CAPACITY, TiledMapSurface, toggle_vfs_row_expanded, vfs_selection_for_click};
+use infinite_world::world::{
+    World3dState, WorldInteractionIntent, WorldInteractionPhase, begin_world3d_dynamic_retirement, enqueue_world3d_events, step_world3d_dynamic_retirement, world3d_catalogue_drop_origin, world3d_clear_catalogue_drop_preview,
+    world3d_dynamic_retirement_terminal_is_empty, world3d_update_catalogue_drop_preview,
+};
+use semio_framework::IconName;
 use semio_framework::kernel::{UiDirtyScope, UiDirtySection};
 use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition, ViewModel, ViewSessionIdentity};
 use semio_framework_os_config::opening_config::{
-    apply_ui_preferences_config_mutation, decode_ui_preferences_config_mutation_json,
-    mutations::{set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_terminology, set_theme, UiPreferencesConfigMutation},
-    UiAppearance as OsUiAppearance, UiChromeLayout as OsUiChromeLayout, UiDriver as OsUiDriver, UiLocale as OsUiLocale, UiPreferences, UiTheme as OsUiTheme, UI_PREFERENCES_CONFIG_SCHEMA,
+    UI_PREFERENCES_CONFIG_SCHEMA, UiAppearance as OsUiAppearance, UiChromeLayout as OsUiChromeLayout, UiDriver as OsUiDriver, UiLocale as OsUiLocale, UiPreferences, UiTheme as OsUiTheme, apply_ui_preferences_config_mutation,
+    decode_ui_preferences_config_mutation_json,
+    mutations::{UiPreferencesConfigMutation, set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_terminology, set_theme},
 };
-use semio_framework::IconName;
 use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 #[cfg(not(target_arch = "wasm32"))]
-use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
-#[cfg(not(target_arch = "wasm32"))]
 use store_sync::PresencePeer;
-use ui_contract::{SurfaceId, UiDocumentLease, UiText, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS};
+#[cfg(not(target_arch = "wasm32"))]
+use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, PersistenceBinding, RemoteState};
 use ui_contract::UiFixedList;
+use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS, UiDocumentLease, UiText};
+use ui_wgpu::wgpu::draw_text;
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
 // lane 1-D's Rust directory client, consumed as-is (never re-declared:
 // `semio_framework_os_kernel::os_directory` is the single source of truth both this shell and the
@@ -59,21 +65,21 @@ use crate::directory_door::{ShellDirectoryClient, ShellDirectoryTransport};
 // the surface builder name the same constants rather than two copies of eighteen string literals.
 use crate::hub_connection::action as hub_action;
 use semio_framework_os_kernel::os_directory::{
+    DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectorySessionAuthorityV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1,
+    DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility,
     client::{DirectoryClient, DirectoryClientError, LocalHubCredential},
     identity::Identity,
     mint_directory_command_request_id,
-    DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectorySessionAuthorityV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1,
-    DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_kernel::os_directory::{
-    client::{CanonicalDirectoryEventPageV1, DirectoryBootstrapTransition, DirectoryEventPageAckV1, DirectoryEventPageBootstrapV1, DirectoryStream, DirectoryStreamTurn, DirectoryWsConnection, TransportError},
-    identity::{actor_id, claimed_local_hub_credential, restore_claimed, IdentityOutcome, IdentityStatus},
-    schema::{
-        reduce_gis_map_inference_port_v1, DocumentExecutionTargetLeaseFieldsV1, DocumentScope, GisMapInferenceApprovalRequestV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, GisMapInferencePortEventV1, GisMapInferencePortPhaseV1,
-        GisMapInferencePortStatusV1, GIS_MAP_INFERENCE_SERVICE_ID,
-    },
     DirectoryStreamMessage,
+    client::{CanonicalDirectoryEventPageV1, DirectoryBootstrapTransition, DirectoryEventPageAckV1, DirectoryEventPageBootstrapV1, DirectoryStream, DirectoryStreamTurn, DirectoryWsConnection, TransportError},
+    identity::{IdentityOutcome, IdentityStatus, actor_id, claimed_local_hub_credential, restore_claimed},
+    schema::{
+        DocumentExecutionTargetLeaseFieldsV1, DocumentScope, GIS_MAP_INFERENCE_SERVICE_ID, GisMapInferenceApprovalRequestV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, GisMapInferencePortEventV1, GisMapInferencePortPhaseV1,
+        GisMapInferencePortStatusV1, reduce_gis_map_inference_port_v1,
+    },
 };
 // 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): `DirectoryClient`'s request
 // methods now carry an `OperationContext` (cancellation/deadline/trace), and the native transport
@@ -89,12 +95,12 @@ use semio_framework_async::{Lane, ScopeOwner, WorkerPool};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 use ui_wgpu::wgpu::{
-    chrome_item_bg, chrome_item_text, paint_retained_glyph_step_flowed, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor,
-    RetainedGlyphStep, RetainedTextFlow, Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps, WindowStackCorner,
+    ActionDescriptor, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, Locale, LocalizedLabel, Terminology, UtilityNode,
+    WindowEngagement, WindowMeasure,
 };
 use ui_wgpu::wgpu::{
-    ActionDescriptor, Locale, LocalizedLabel, Terminology, UtilityNode, WindowEngagement,
-    WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID,
+    DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps,
+    WindowStackCorner, chrome_item_bg, chrome_item_text, paint_retained_glyph_step_flowed,
 };
 
 const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID: &str = "framework.display.windows";
@@ -493,7 +499,6 @@ pub fn semio_wgpu_set_hub_env(hub_url: String, user: String, data_dir: String) {
     let data_dir = if data_dir.is_empty() { None } else { Some(data_dir) };
     BOOT_HUB_ENV.with(|cell| *cell.borrow_mut() = Some((hub_url, user, data_dir)));
 }
-
 
 /// 🎭️ contract §C0's actor grammar: `user:{userId}#{sessionId}` once an identity is minted/restored,
 /// falling back to the pre-identity local default (`wgpu-{instanceId}`) — the same default this shell
@@ -1149,9 +1154,7 @@ impl ShellPaletteKind {
     }
 
     fn row_index(id: &str) -> Option<(Self, usize)> {
-        [(Self::Search, "ui.search.item."), (Self::Find, "ui.find.item.")]
-            .into_iter()
-            .find_map(|(kind, prefix)| id.strip_prefix(prefix).and_then(|index| index.parse().ok()).map(|index| (kind, index)))
+        [(Self::Search, "ui.search.item."), (Self::Find, "ui.find.item.")].into_iter().find_map(|(kind, prefix)| id.strip_prefix(prefix).and_then(|index| index.parse().ok()).map(|index| (kind, index)))
     }
 }
 
@@ -1234,13 +1237,7 @@ fn shell_sync_owner_matches(active: &ShellSyncOwner, completion: &ShellSyncOwner
 
 #[cfg(not(target_arch = "wasm32"))]
 fn shell_sync_channel_owner(channel: &ShellSyncChannel) -> ShellSyncOwner {
-    ShellSyncOwner {
-        plugin_id: channel.plugin_id.clone(),
-        instance_id: channel.instance_id,
-        binding_generation: channel.binding_generation,
-        actor_uri: channel.actor_uri.clone(),
-        document_key: shell_hub_document_key(&channel.document_key),
-    }
+    ShellSyncOwner { plugin_id: channel.plugin_id.clone(), instance_id: channel.instance_id, binding_generation: channel.binding_generation, actor_uri: channel.actor_uri.clone(), document_key: shell_hub_document_key(&channel.document_key) }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1253,11 +1250,10 @@ fn route_document_backbone_effects(actor_uri: &str, cmd_tx: &ArtifactMailboxSend
                     return Err("plugin document-backbone effect targeted a different actor owner".into());
                 }
                 match store_sync::os_store::decode_hot_backbone_message_exact(&payload).map_err(|error| error.to_string())? {
-                    store_sync::os_store::BackboneMessage::Mutations { .. } => cmd_tx
-                        .send(ArtifactActorMsg::DocumentBackbone { message: payload })
-                        .map_err(|_| "document-backbone mailbox refused the canonical mutation message".to_string())?,
+                    store_sync::os_store::BackboneMessage::Mutations { .. } => cmd_tx.send(ArtifactActorMsg::DocumentBackbone { message: payload }).map_err(|_| "document-backbone mailbox refused the canonical mutation message".to_string())?,
                     store_sync::os_store::BackboneMessage::Ack { .. } => {}
                     store_sync::os_store::BackboneMessage::Genesis { .. } => return Err("hot document-backbone egress cannot publish genesis".into()),
+                    store_sync::os_store::BackboneMessage::Member { .. } => return Err("a composed member requires its exact member transport lane".into()),
                 }
             }
             other => remaining.push(other),
@@ -1279,11 +1275,9 @@ const SHELL_DRIVER_AXES: &[(&str, &str, &[(&str, &str)])] = &[
 
 fn builtin_ui_driver_document(driver_id: &str) -> OsUiDriver {
     match driver_id {
-        "compact" => OsUiDriver {
-            driver_id: "compact".into(),
-            label: "Compact".into(),
-            config: serde_json::json!({ "labels": "icons", "labelTier": "normal", "drag": "surface", "chrome": "hover", "gumball": "hover", "tooltips": "none", "hotkeys": "none" }),
-        },
+        "compact" => {
+            OsUiDriver { driver_id: "compact".into(), label: "Compact".into(), config: serde_json::json!({ "labels": "icons", "labelTier": "normal", "drag": "surface", "chrome": "hover", "gumball": "hover", "tooltips": "none", "hotkeys": "none" }) }
+        }
         _ => OsUiDriver {
             driver_id: "default".into(),
             label: "Default".into(),
@@ -1412,13 +1406,7 @@ struct ShellChromeMaintenance {
 
 impl ShellChromeMaintenance {
     fn pending(&self) -> bool {
-        self.load_requested
-            || self.locale_refresh.is_some()
-            || self.introduction_read.is_some()
-            || self.introduction_write.is_some()
-            || self.layout_requested
-            || self.presence_requested
-            || self.persist_requested
+        self.load_requested || self.locale_refresh.is_some() || self.introduction_read.is_some() || self.introduction_write.is_some() || self.layout_requested || self.presence_requested || self.persist_requested
     }
 }
 
@@ -2176,13 +2164,7 @@ struct ShellDocumentRetirementRegistry {
 
 impl Default for ShellDocumentRetirementRegistry {
     fn default() -> Self {
-        Self {
-            slots: semio_framework_async::boxed_fixed_slots(|| None),
-            epochs: [0; SHELL_DOCUMENT_RETIREMENT_CAPACITY],
-            occupied: [0; SHELL_DOCUMENT_RETIREMENT_WORDS],
-            occupied_count: 0,
-            cursor: 0,
-        }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), epochs: [0; SHELL_DOCUMENT_RETIREMENT_CAPACITY], occupied: [0; SHELL_DOCUMENT_RETIREMENT_WORDS], occupied_count: 0, cursor: 0 }
     }
 }
 
@@ -2822,10 +2804,7 @@ pub fn select_boot_program(programs: &[(&str, &semio_framework::PluginManifest)]
     // declare is dropped back to the variant's own app, the same "a url is not a place to hard-fail a
     // shell" rule `?role=`/`?mode=`/`?example=` follow.
     let requested_app_id = pinned_app_id.filter(|app_id| !app_id.is_empty() && programs.iter().any(|(_, manifest)| manifest.apps.iter().any(|app| app.id == *app_id))).or_else(|| resolve_playground_app_id(plugin_filter));
-    let index = programs
-        .iter()
-        .position(|(plugin_id, _)| *plugin_id == registry_plugin_id)
-        .or_else(|| requested_app_id.and_then(|app_id| programs.iter().position(|(_, manifest)| manifest.apps.iter().any(|app| app.id == app_id))))?;
+    let index = programs.iter().position(|(plugin_id, _)| *plugin_id == registry_plugin_id).or_else(|| requested_app_id.and_then(|app_id| programs.iter().position(|(_, manifest)| manifest.apps.iter().any(|app| app.id == app_id))))?;
     let manifest = programs[index].1;
     let anchor = requested_app_id.and_then(|app_id| manifest.apps.iter().find(|app| app.id == app_id)).or_else(|| manifest.apps.first())?;
     Some((index, project_boot_app_role(manifest, anchor, app_role).clone()))
@@ -3101,8 +3080,7 @@ struct PointerCaptureSlot {
 
 impl PointerCapture {
     pub fn press(&mut self, pointer_id: ui_render::PointerId, owner: PointerHitOwner, x: f32, y: f32) -> Option<PointerHitOwner> {
-        let index = self.slots.iter().position(|slot| slot.is_some_and(|slot| slot.pointer_id == pointer_id))
-            .or_else(|| self.slots.iter().position(Option::is_none))?;
+        let index = self.slots.iter().position(|slot| slot.is_some_and(|slot| slot.pointer_id == pointer_id)).or_else(|| self.slots.iter().position(Option::is_none))?;
         self.slots[index] = Some(PointerCaptureSlot { pointer_id, owner, position: [x, y] });
         Some(owner)
     }
@@ -3110,8 +3088,7 @@ impl PointerCapture {
     /// 🖱️⬆️ Ends the sequence and answers the layer that owned it. A release with no press before it
     /// — the pointer entered the canvas already down — is the surface's, as it is in the DOM.
     pub fn release(&mut self, pointer_id: ui_render::PointerId) -> PointerHitOwner {
-        self.slots.iter_mut().find(|slot| slot.is_some_and(|slot| slot.pointer_id == pointer_id))
-            .and_then(Option::take).map_or(PointerHitOwner::Surface, |slot| slot.owner)
+        self.slots.iter_mut().find(|slot| slot.is_some_and(|slot| slot.pointer_id == pointer_id)).and_then(Option::take).map_or(PointerHitOwner::Surface, |slot| slot.owner)
     }
 
     pub fn owner_of_move(&self, pointer_id: ui_render::PointerId, under_pointer: PointerHitOwner) -> PointerHitOwner {
@@ -3242,6 +3219,7 @@ pub struct ShellState {
     /// 🪦 Closed World3d owners, detached from input immediately and drained one bounded step per
     /// frame before Drop. Keys include a shell epoch so reopening the same window id is independent.
     pub retired_world3d_states: VecDeque<(String, World3dState)>,
+    component_world3d_retirement: Option<crate::scenes::AdmittedSurfaceCloseOwner<World3dState>>,
     world3d_retirement_epoch: u64,
     world3d_retirement_sequence: u64,
     /// 🛑️ Per-World3d-surface compute status, mirrored out of the scene by the same per-frame attach
@@ -3380,6 +3358,8 @@ pub struct ShellState {
     pub active_utility_by_window: HashMap<String, String>,
     /// @emoji 📇️ Per-window Actions-rail fold state (absent = folded, the default).
     pub action_panel_folded: HashMap<String, bool>,
+    /// @emoji 🔎️ Per-window Search-pane fold state (absent = folded, the default).
+    pub search_panel_folded: HashMap<String, bool>,
     /// @emoji 🧰️ Per-window Utilities-rail fold state — React's `Window` `utilityBarFolded`
     /// (`useState(true)`, `🪟️Window/🟦️.tsx:176`), so absent = folded.
     pub utility_bar_folded: HashMap<String, bool>,
@@ -3819,11 +3799,7 @@ fn flowed_anchor_content_rect(block: ui_contract::FlowBlock, panel: Rect, bar_he
 
 /// 📑️ Places root-to-leaf tab rows from the anchor's logical block start.
 fn flowed_anchor_tab_row_y(block: ui_contract::FlowBlock, panel: Rect, row_index: usize, row_count: usize, row_height: f32) -> f32 {
-    if block.is_reversed() {
-        panel.y + panel.h - (row_index.min(row_count) + 1) as f32 * row_height
-    } else {
-        panel.y + row_index as f32 * row_height
-    }
+    if block.is_reversed() { panel.y + panel.h - (row_index.min(row_count) + 1) as f32 * row_height } else { panel.y + row_index as f32 * row_height }
 }
 
 /// 📐️ The boundary between retained content and an anchor's complete tab bar.
@@ -4052,11 +4028,7 @@ impl Default for DockSkeleton {
 const DOCK_SKELETON_VERSION: u8 = 3;
 
 fn dock_tab_skeleton_of(node: &DockTabNode) -> DockTabSkeleton {
-    DockTabSkeleton {
-        id: node.id.clone(),
-        children: node.is_branch().then(|| node.children.iter().map(dock_tab_skeleton_of).collect()),
-        trees: (!node.is_branch()).then(|| vec![dock_leaf_tree_unit_id(&node.id)]),
-    }
+    DockTabSkeleton { id: node.id.clone(), children: node.is_branch().then(|| node.children.iter().map(dock_tab_skeleton_of).collect()), trees: (!node.is_branch()).then(|| vec![dock_leaf_tree_unit_id(&node.id)]) }
 }
 
 /// 🗄️ Reduces a full {@link ShellDock} to the id-only {@link DockSkeleton} persisted across sessions.
@@ -4393,33 +4365,34 @@ fn window_pane_owner(surface_id: &str) -> Option<&str> {
         .find_map(|suffix| surface_id.strip_suffix(suffix).and_then(|owner| owner.strip_suffix('/')).filter(|owner| !owner.is_empty()))
 }
 
-/// 📏️ Projects one window instance's GENERAL measures (see `partition_window_measures`; a group
-/// tagged with a utility id belongs to the Utility Options rail) into the `ui_contract` records the
-/// Measures overlay paints, pre-order so every parent precedes its children. `None` when the window has
-/// no general measure. Mirrors React's `renderWindowMeasure`:
-///
-/// - `Number` → an `Input` of kind `number` committing on Enter/blur (`value`), so it is typed and
-///   committed by keyboard exactly like React's stepper entry.
-/// - `Slider`/`Select` → their own components bound on `Change` (`value`).
-/// - `Toggle` → a `Toggle` bound on `Change` whose authored args already carry React's `pressed`.
-/// - `Group` → a `Section` whose optional header slider precedes its children.
-/// - `loading`/`waiting` → the record's `Activity`; a label → a `Field` around the control.
-///
+/// 📏️ Projects general window measures into a compact retained Tree with one labelled row per
+/// measure. Controls preserve their original keys and action bindings; groups retain disclosure
+/// and their optional inline header slider. Utility-scoped groups belong to the utility rail.
 /// See `🧑‍🎨engine/🧫️fixtures/📏️window-measures/🔣️.json`.
 pub(crate) fn window_measures_overlay_records(window_id: &str, measures: &[WindowMeasure], active_utility_id: Option<&str>) -> Result<Option<Vec<ui_contract::UiNodeRecord>>, String> {
-    let partition = ui_wgpu::wgpu::partition_window_measures(measures, active_utility_id).map_err(|measure| format!("window '{window_id}' authored more than {} measures, refused at {measure:?}", ui_wgpu::wgpu::component::layout::WINDOW_MEASURE_PARTITION_CAPACITY))?;
+    let partition = ui_wgpu::wgpu::partition_window_measures(measures, active_utility_id)
+        .map_err(|measure| format!("window '{window_id}' authored more than {} measures, refused at {measure:?}", ui_wgpu::wgpu::component::layout::WINDOW_MEASURE_PARTITION_CAPACITY))?;
     if partition.general.is_empty() {
         return Ok(None);
     }
     let mut projection = WindowMeasuresProjection { window_id, records: Vec::new() };
     let root = projection.reserve();
+    let section = projection.reserve();
     let mut children = ui_contract::UiNodeChildren::default();
     for measure in partition.general.iter() {
         if let Some(child) = projection.measure(measure)? {
             children.try_push(child).map_err(|_| format!("window '{window_id}' measures exceed one overlay document"))?;
         }
     }
-    projection.place(root, semio_framework::UiRefreshSection::Measures.body_key().to_string(), ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Plain, None, None)), MeasureRecord { children, ..MeasureRecord::default() })?;
+    projection.place(
+        section,
+        format!("{window_id}/measures.rows"),
+        ui_contract::Component::TreeSection(ui_contract::TreeSectionProps { label: None, default_open: Some(true), window: None }),
+        MeasureRecord { children, ..MeasureRecord::default() },
+    )?;
+    let mut children = ui_contract::UiNodeChildren::default();
+    children.try_push(section).map_err(|_| "measure tree admits its section".to_string())?;
+    projection.place(root, semio_framework::UiRefreshSection::Measures.body_key().to_string(), ui_contract::Component::Tree(ui_contract::TreeProps { presentation: ui_contract::TreePresentation::Compact, interaction_domain: None }), MeasureRecord { children, ..MeasureRecord::default() })?;
     projection.records.into_iter().collect::<Option<Vec<_>>>().map(Some).ok_or_else(|| format!("window '{window_id}' measures projection left a reserved record unplaced"))
 }
 
@@ -4456,7 +4429,7 @@ impl WindowMeasuresProjection<'_> {
             id,
             key,
             component,
-            layout: ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { axis: ui_contract::Axis::Vertical, gap: ui_contract::SpaceToken::Sm, ..Default::default() }),
+            layout: ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { axis: ui_contract::Axis::Vertical, gap: ui_contract::SpaceToken::None, ..Default::default() }),
             style: Default::default(),
             activity,
             disabled,
@@ -4471,27 +4444,36 @@ impl WindowMeasuresProjection<'_> {
 
     fn control(&mut self, id: &str, label: Option<&str>, component: ui_contract::Component, record: MeasureRecord) -> Result<ui_contract::UiNodeId, String> {
         let key = format!("{}/{id}", self.window_id);
-        let Some(label) = label else {
-            let control = self.reserve();
-            return self.place(control, key, component, record);
-        };
-        let field = self.reserve();
+        let row = self.reserve();
         let control = self.reserve();
+        let row_label = label.map(measure_label).or_else(|| record.label.clone()).unwrap_or_else(|| measure_label(""));
         self.place(control, key.clone(), component, record)?;
         let mut children = ui_contract::UiNodeChildren::default();
-        children.try_push(control).map_err(|_| "measure field admits its control".to_string())?;
-        self.place(field, format!("{key}.field"), ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Field, Some(label), None)), MeasureRecord { children, label: Some(measure_label(label)), ..MeasureRecord::default() })
+        children.try_push(control).map_err(|_| "measure row admits its control".to_string())?;
+        self.place(row, format!("{key}.row"), measure_tree_item(row_label.clone(), None), MeasureRecord { children, label: Some(row_label), ..MeasureRecord::default() })
     }
 
     fn measure(&mut self, measure: &WindowMeasure) -> Result<Option<ui_contract::UiNodeId>, String> {
         match measure {
             WindowMeasure::Number { id, label, value, min, max, step, loading, waiting, disabled, on_change, .. } => {
                 let input = ui_contract::InputProps { kind: ui_contract::InputKind::Number, value: UiText::clipped(&value.to_string()), placeholder: None, commit: Some(UiText::clipped("blur")), min: *min, max: *max, step: *step, accept: None };
-                let record = MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Commit, on_change, None)?, activity: measure_activity(*loading, *waiting), disabled: disabled.unwrap_or(false), label: label.as_deref().map(measure_label), ..MeasureRecord::default() };
+                let record = MeasureRecord {
+                    bindings: measure_bindings(ui_contract::Trigger::Commit, on_change, None)?,
+                    activity: measure_activity(*loading, *waiting),
+                    disabled: disabled.unwrap_or(false),
+                    label: label.as_deref().map(measure_label),
+                    ..MeasureRecord::default()
+                };
                 self.control(id, label.as_deref(), ui_contract::Component::Input(input), record).map(Some)
             }
             WindowMeasure::Slider { id, label, value, min, max, step, loading, waiting, disabled, on_change, .. } => {
-                let record = MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Change, on_change, None)?, activity: measure_activity(*loading, *waiting), disabled: disabled.unwrap_or(false), label: label.as_deref().map(measure_label), ..MeasureRecord::default() };
+                let record = MeasureRecord {
+                    bindings: measure_bindings(ui_contract::Trigger::Change, on_change, None)?,
+                    activity: measure_activity(*loading, *waiting),
+                    disabled: disabled.unwrap_or(false),
+                    label: label.as_deref().map(measure_label),
+                    ..MeasureRecord::default()
+                };
                 self.control(id, label.as_deref(), measure_slider(*value, *min, *max, *step), record).map(Some)
             }
             WindowMeasure::Select { id, label, value, items, on_change } => {
@@ -4503,8 +4485,9 @@ impl WindowMeasuresProjection<'_> {
                 self.control(id, label.as_deref(), ui_contract::Component::Select(ui_contract::SelectProps { value: UiText::clipped(value), items: options, placeholder: None }), record).map(Some)
             }
             WindowMeasure::Toggle { id, icon_id, label, pressed, text, on_change } => {
-                let toggle = ui_contract::ToggleProps { on: *pressed, icon: UiText::clipped(icon_id.as_str()), text: text.as_deref().map(measure_label) };
-                let record = MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Change, on_change, Some(("pressed", DslValue::Bool(!pressed))))?, label: label.as_deref().or(text.as_deref()).map(measure_label), ..MeasureRecord::default() };
+                let toggle = ui_contract::ToggleProps { appearance: ui_contract::ToggleAppearance::Checkbox, on: *pressed, icon: UiText::clipped(icon_id.as_str()), text: text.as_deref().map(measure_label) };
+                let record =
+                    MeasureRecord { bindings: measure_bindings(ui_contract::Trigger::Change, on_change, Some(("pressed", DslValue::Bool(!pressed))))?, label: label.as_deref().or(text.as_deref()).map(measure_label), ..MeasureRecord::default() };
                 self.control(id, label.as_deref(), ui_contract::Component::Toggle(toggle), record).map(Some)
             }
             WindowMeasure::Group { id, label, default_open, value, min, max, step, loading, waiting, on_change, children, .. } => {
@@ -4522,10 +4505,15 @@ impl WindowMeasuresProjection<'_> {
                     }
                 }
                 let record = MeasureRecord { children: ids, activity: measure_activity(*loading, *waiting), label: Some(measure_label(label)), ..MeasureRecord::default() };
-                self.place(section, key, ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Section, Some(label), *default_open)), record).map(Some)
+                self.place(section, format!("{key}.row"), measure_tree_item(measure_label(label), Some(default_open.unwrap_or(false))), record).map(Some)
             }
         }
     }
+}
+
+/// 🌿️ One labelled measure row with a distinct control child and retained disclosure state.
+fn measure_tree_item(label: ui_contract::Label, default_open: Option<bool>) -> ui_contract::Component {
+    ui_contract::Component::TreeItem(ui_contract::TreeItemProps { label, description: None, icon: None, default_open, draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, row_actions: Default::default() })
 }
 
 fn measure_label(value: &str) -> ui_contract::Label {
@@ -4559,7 +4547,11 @@ fn measure_binding(trigger: ui_contract::Trigger, action: &ActionDescriptor, ext
         entries.retain(|(existing, _)| existing != key);
         entries.push((key.to_string(), value));
     }
-    let args = if entries.is_empty() { None } else { Some(serde_json::from_value::<ui_contract::UiValue>(dsl_value_as_json(&DslValue::Object(entries))).map_err(|error| format!("measure action '{}' args exceed the retained contract: {error}", action.action))?) };
+    let args = if entries.is_empty() {
+        None
+    } else {
+        Some(serde_json::from_value::<ui_contract::UiValue>(dsl_value_as_json(&DslValue::Object(entries))).map_err(|error| format!("measure action '{}' args exceed the retained contract: {error}", action.action))?)
+    };
     let action_id = ui_contract::ActionId::try_v1(&action.controller_id, &action.action).ok_or_else(|| format!("measure action '{}' exceeds the retained contract", action.action))?;
     Ok(ui_contract::ActionBinding { trigger, action: action_id, args, capability: None })
 }
@@ -4682,7 +4674,19 @@ impl ShellState {
     /// uses, then its hit registry above the body's. `true` once the overlay is off the walk's critical
     /// path — painted, absent, folded, or faulted after its opportunity ceiling.
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
-    fn paint_window_measures_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
+    fn paint_window_measures_step(
+        &mut self,
+        cursor: &mut ShellChromeChildCursor,
+        draw: &mut DrawList,
+        overlay: &mut Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        window_id: &str,
+        window_rect: Rect,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) -> bool {
         if !self.window_measures_documents.contains_key(window_id) {
             return true;
         }
@@ -4691,8 +4695,9 @@ impl ShellState {
         }
         let Some(document) = self.window_measures_documents.remove(window_id) else { return true };
         let surface = window_measures_surface_id(window_id);
+        crate::interpreter::set_ui_document_flow(&surface, ui_contract::UiFlow::for_anchor(ui_contract::Anchor::TopEnd));
         let rect = self.window_measures_rect(window_id, window_rect, theme);
-        if !cursor.flag {
+        if !cursor.flag && cursor.document.phase_name() == "paint" {
             draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.panel);
             cursor.flag = true;
         }
@@ -4733,7 +4738,10 @@ impl ShellState {
     /// at the window's own resized width (or the theme default), inset by the panel inset.
     fn window_measures_rect(&self, window_id: &str, body: Rect, theme: &Theme) -> Rect {
         let width = self.measures_width.get(window_id).copied().unwrap_or(theme.window_measures_default_width).min((body.w - theme.panel_inset * 2.0).max(0.0));
-        Rect::new(body.x + body.w - width - theme.panel_inset, body.y + theme.panel_inset, width, (body.h - theme.panel_inset * 2.0).max(0.0))
+        let top = theme.panel_inset + theme.control_height + theme.gap_standard;
+        let available = (body.h - top - theme.panel_inset).max(0.0);
+        let height = crate::interpreter::retained_content_height(&window_measures_surface_id(window_id)).unwrap_or(available).min(available).max(0.0);
+        Rect::new(body.x + body.w - width - theme.panel_inset, body.y + top, width, height)
     }
 }
 
@@ -4765,11 +4773,7 @@ fn panel_ui_scroll_records(surface_id: &str, root: &UiNode) -> Result<Vec<ui_con
     let Some(record) = projection.records.get_mut((root_id.0 - 1) as usize).and_then(Option::as_mut) else {
         return Err(format!("panel '{surface_id}' projection lost its root record"));
     };
-    record.layout = ui_contract::LayoutSpec::Scroll(ui_contract::ScrollLayout {
-        axes: ui_contract::ScrollAxes::Vertical,
-        padding: ui_contract::EdgeSpace::default(),
-        sizing: ui_contract::Sizing::Fill,
-    });
+    record.layout = ui_contract::LayoutSpec::Scroll(ui_contract::ScrollLayout { axes: ui_contract::ScrollAxes::Vertical, padding: ui_contract::EdgeSpace::default(), sizing: ui_contract::Sizing::Fill });
     projection.records.into_iter().collect::<Option<Vec<_>>>().ok_or_else(|| format!("panel '{surface_id}' projection left a reserved record unplaced"))
 }
 
@@ -4898,7 +4902,13 @@ impl PanelProjection<'_> {
                 let id = self.reserve();
                 let children = self.children_of(&stack.children)?;
                 let axis = if stack.direction == "horizontal" { ui_contract::Axis::Horizontal } else { ui_contract::Axis::Vertical };
-                self.place(id, key, ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Plain, None, None)), Self::stack_layout(axis, ui_contract::SpaceToken::Sm), PanelRecord { children, activity, disabled, ..PanelRecord::default() })
+                self.place(
+                    id,
+                    key,
+                    ui_contract::Component::Container(measure_container(ui_contract::ContainerRole::Plain, None, None)),
+                    Self::stack_layout(axis, ui_contract::SpaceToken::Sm),
+                    PanelRecord { children, activity, disabled, ..PanelRecord::default() },
+                )
             }
             UiNode::Section(section) => {
                 let key = self.key(Some(section.id.as_str()));
@@ -4935,7 +4945,13 @@ impl PanelProjection<'_> {
                 let key = self.key(None);
                 let id = self.reserve();
                 let props = ui_contract::TextProps { value: measure_label(text.value.as_str()), emphasize: text.emphasize, data_attributes: None };
-                self.place(id, key, ui_contract::Component::Text(props), Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None), PanelRecord { activity, disabled, label: Some(measure_label(text.value.as_str())), ..PanelRecord::default() })
+                self.place(
+                    id,
+                    key,
+                    ui_contract::Component::Text(props),
+                    Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None),
+                    PanelRecord { activity, disabled, label: Some(measure_label(text.value.as_str())), ..PanelRecord::default() },
+                )
             }
             UiNode::Separator(_) => {
                 let key = self.key(None);
@@ -4947,7 +4963,13 @@ impl PanelProjection<'_> {
                 let id = self.reserve();
                 let props = ui_contract::ButtonProps { icon: UiText::clipped(button.icon_id.as_str()), label: measure_label(button.label.as_str()) };
                 let bindings = measure_bindings(ui_contract::Trigger::Activate, &button.action, None)?;
-                self.place(id, key, ui_contract::Component::Button(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, label: Some(measure_label(button.label.as_str())), ..PanelRecord::default() })
+                self.place(
+                    id,
+                    key,
+                    ui_contract::Component::Button(props),
+                    Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None),
+                    PanelRecord { bindings, activity, disabled, label: Some(measure_label(button.label.as_str())), ..PanelRecord::default() },
+                )
             }
             UiNode::Select(select) => {
                 let key = self.key(Some(select.id.as_str()));
@@ -4964,9 +4986,15 @@ impl PanelProjection<'_> {
                 let key = self.key(Some(toggle.id.as_str()));
                 let id = self.reserve();
                 let on = presence.selected;
-                let props = ui_contract::ToggleProps { on, icon: UiText::clipped(toggle.icon_id.as_str()), text: toggle.text.as_ref().map(|label| measure_label(label.as_str())) };
+                let props = ui_contract::ToggleProps { appearance: toggle.appearance, on, icon: UiText::clipped(toggle.icon_id.as_str()), text: toggle.text.as_ref().map(|label| measure_label(label.as_str())) };
                 let bindings = measure_bindings(ui_contract::Trigger::Change, &toggle.on_change, Some(("pressed", DslValue::Bool(!on))))?;
-                self.place(id, key, ui_contract::Component::Toggle(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, label: toggle.text.as_ref().map(|label| measure_label(label.as_str())), ..PanelRecord::default() })
+                self.place(
+                    id,
+                    key,
+                    ui_contract::Component::Toggle(props),
+                    Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None),
+                    PanelRecord { bindings, activity, disabled, label: toggle.text.as_ref().map(|label| measure_label(label.as_str())), ..PanelRecord::default() },
+                )
             }
             UiNode::Input(input) => {
                 let key = self.key(Some(input.id.as_str()));
@@ -5009,7 +5037,13 @@ impl PanelProjection<'_> {
                 for entry in &list.entries {
                     entries.try_push(ui_contract::KeyValueEntry { label: measure_label(entry.label.as_str()), value: UiText::clipped(&entry.value) }).map_err(|_| format!("panel '{}' key-value list exceeds one record", self.surface_id))?;
                 }
-                self.place(id, key, ui_contract::Component::KeyValueList(ui_contract::KeyValueListProps { entries }), Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None), PanelRecord { activity, disabled, ..PanelRecord::default() })
+                self.place(
+                    id,
+                    key,
+                    ui_contract::Component::KeyValueList(ui_contract::KeyValueListProps { entries }),
+                    Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None),
+                    PanelRecord { activity, disabled, ..PanelRecord::default() },
+                )
             }
             UiNode::Progress(progress) => {
                 let key = self.key(Some(progress.id.as_str()));
@@ -5021,7 +5055,13 @@ impl PanelProjection<'_> {
                 let key = self.key(Some(slider.id.as_str()));
                 let id = self.reserve();
                 let bindings = measure_bindings(ui_contract::Trigger::Change, &slider.on_change, None)?;
-                self.place(id, key, measure_slider(slider.value, slider.min, slider.max, Some(slider.step)), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
+                self.place(
+                    id,
+                    key,
+                    measure_slider(slider.value, slider.min, slider.max, Some(slider.step)),
+                    Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None),
+                    PanelRecord { bindings, activity, disabled, ..PanelRecord::default() },
+                )
             }
             // 🔢️💍️ React's `<Engagement/>` renders a `stepper` and a `ring` control beside the slider,
             // toggle group and select (`EngagementControlView`, `🖥️ui/🎯️targets/⚛️react/🟦️.tsx:10648`),
@@ -5053,7 +5093,7 @@ impl PanelProjection<'_> {
                 self.place(
                     id,
                     key,
-                    ui_contract::Component::Tree(ui_contract::TreeProps { interaction_domain: tree.interaction_domain.as_deref().map(UiText::clipped) }),
+                    ui_contract::Component::Tree(ui_contract::TreeProps { presentation: Default::default(), interaction_domain: tree.interaction_domain.as_deref().map(UiText::clipped) }),
                     Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None),
                     PanelRecord { children, activity, disabled, ..PanelRecord::default() },
                 )
@@ -5154,7 +5194,7 @@ fn display_panel_body(panel_id: &str, sections: Vec<UiTreeSectionNode>) -> UiNod
         gap: None,
         padding: None,
         id: Some(panel_id.to_string()),
-        children: vec![UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })],
+        children: vec![UiNode::Tree(UiTreeNode { presentation: Default::default(), sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })],
         presence: UiPresence::default(),
         activate: None,
         drop_action: None,
@@ -5168,14 +5208,7 @@ fn display_panel_body(panel_id: &str, sections: Vec<UiTreeSectionNode>) -> UiNod
 /// `{ sections: [{ id: "unavailable", … }] }` fallback, folded into one row here because this
 /// renderer never has a "no host" state distinct from "no window kinds").
 fn display_unavailable_section(id: &str, is_de: bool) -> UiTreeSectionNode {
-    UiTreeSectionNode {
-        id: id.to_string(),
-        label: None,
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        items: vec![UiTreeItemNode::base(format!("{id}.row"), Label::data(shell_chrome_string("display.unavailable", is_de)))],
-        window: None,
-    }
+    UiTreeSectionNode { id: id.to_string(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base(format!("{id}.row"), Label::data(shell_chrome_string("display.unavailable", is_de)))], window: None }
 }
 
 /// 🔄️ The `createWorldProjectionTemplates` taxonomy as nested Display rows, reconstructed from
@@ -5334,7 +5367,10 @@ fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
                     step: *step,
                     accept: None,
                     on_change: on_change.clone(),
-                    on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence { state: state(*disabled), ..UiPresence::default() },
+                    on_submit: None,
+                    on_abort: None,
+                    on_repeat_last: None,
+                    presence: UiPresence { state: state(*disabled), ..UiPresence::default() },
                     menu: None,
                 })),
                 ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
@@ -5344,6 +5380,7 @@ fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
                 label: Label::data(label.clone().or_else(|| text.clone()).unwrap_or_default()),
                 icon_id: Some(icon_id.clone()),
                 control: Some(UiControlNode::Toggle(UiToggleNode {
+                    appearance: ui_contract::ToggleAppearance::Button,
                     id: id.clone(),
                     icon_id: icon_id.clone(),
                     text: text.clone().map(Label::data),
@@ -5360,11 +5397,7 @@ fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
 /// 🔢️ A measure's numeric value as the text its entry shows — an integral value prints without a
 /// fractional tail, which is what React's `String(value)` does for the same number.
 fn format_measure_number(value: f64) -> String {
-    if value.fract() == 0.0 && value.abs() < 1e15 {
-        format!("{}", value as i64)
-    } else {
-        format!("{value}")
-    }
+    if value.fract() == 0.0 && value.abs() < 1e15 { format!("{}", value as i64) } else { format!("{value}") }
 }
 
 /// ⚙️ One collapsible settings section — React's `TreeDataSection` with `defaultOpen: true`.
@@ -5474,11 +5507,7 @@ fn agent_chat_entry_node(entry: &crate::agent_bridge::AgentConversationEntry, is
             id: Some(format!("framework.chat.cancel.{}", entry.id())),
             icon_id: IconName::Square,
             label: Label::data(shell_chrome_string("chat.cancel", is_de)),
-            action: ActionDescriptor {
-                controller_id: "framework".into(),
-                action: "cancelToolCall".into(),
-                args: crate::action_args_json!({ "invocationId": entry.id().to_string() }),
-            },
+            action: ActionDescriptor { controller_id: "framework".into(), action: "cancelToolCall".into(), args: crate::action_args_json!({ "invocationId": entry.id().to_string() }) },
             style: Some(ui_wgpu::wgpu::component::ui::StyleSpec { variant: Some("ghost".into()), size: None, density: None }),
             presence: UiPresence::default(),
             menu: None,
@@ -5497,18 +5526,7 @@ fn agent_chat_entry_node(entry: &crate::agent_bridge::AgentConversationEntry, is
             }
         }
     }
-    UiNode::Stack(UiStackNode {
-        direction: "column".into(),
-        gap: None,
-        padding: None,
-        id: Some(agent_chat_entry_id(entry)),
-        children: rows,
-        presence: UiPresence::default(),
-        activate: None,
-        drop_action: None,
-        drop_overlay: None,
-        menu: None,
-    })
+    UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some(agent_chat_entry_id(entry)), children: rows, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
 }
 
 /// ⚙️ One labelled `Select` row — React's `{ id, label, control: <Select …/> }` item, whose
@@ -5582,6 +5600,7 @@ fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef
             menu: None,
         }),
         semio_framework::ActionArgControl::Toggle => UiNode::Toggle(UiToggleNode {
+            appearance: ui_contract::ToggleAppearance::Button,
             id: id.clone(),
             icon_id: IconName::Check,
             text: Some(Label::data(label.clone())),
@@ -5589,17 +5608,9 @@ fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef
             presence: UiPresence { selected: value == "true", ..UiPresence::default() },
             menu: None,
         }),
-        semio_framework::ActionArgControl::Slider { min, max, step, unit } => UiNode::Slider(UiSliderNode {
-            id: id.clone(),
-            value: value.parse::<f64>().unwrap_or(min),
-            min,
-            max,
-            step: step.unwrap_or(1.0),
-            unit,
-            on_change: on_change.clone(),
-            presence: UiPresence::default(),
-            menu: None,
-        }),
+        semio_framework::ActionArgControl::Slider { min, max, step, unit } => {
+            UiNode::Slider(UiSliderNode { id: id.clone(), value: value.parse::<f64>().unwrap_or(min), min, max, step: step.unwrap_or(1.0), unit, on_change: on_change.clone(), presence: UiPresence::default(), menu: None })
+        }
         semio_framework::ActionArgControl::Number { min, max, step } => UiNode::Input(UiInputNode {
             id: id.clone(),
             input_kind: "number".into(),
@@ -5611,7 +5622,10 @@ fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef
             step,
             accept: None,
             on_change: on_change.clone(),
-            on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
+            on_submit: None,
+            on_abort: None,
+            on_repeat_last: None,
+            presence: UiPresence::default(),
             menu: None,
         }),
         _ => UiNode::Input(UiInputNode {
@@ -5625,7 +5639,10 @@ fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef
             step: None,
             accept: None,
             on_change: on_change.clone(),
-            on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
+            on_submit: None,
+            on_abort: None,
+            on_repeat_last: None,
+            presence: UiPresence::default(),
             menu: None,
         }),
     };
@@ -5936,6 +5953,7 @@ impl ShellState {
             world3d_states: AdmittedSurfaceMap::default(),
             world3d_window_ids: HashMap::new(),
             retired_world3d_states: VecDeque::with_capacity(SCENE_SURFACE_CAPACITY),
+            component_world3d_retirement: None,
             world3d_retirement_epoch: 0,
             world3d_retirement_sequence: 0,
             world3d_status: HashMap::new(),
@@ -6011,6 +6029,7 @@ impl ShellState {
             active_utilities: Vec::new(),
             active_utility_by_window: HashMap::new(),
             action_panel_folded: HashMap::new(),
+            search_panel_folded: HashMap::new(),
             utility_bar_folded: HashMap::new(),
             projection_pane_folded: HashMap::new(),
             world_projection_template: HashMap::new(),
@@ -6070,11 +6089,7 @@ impl ShellState {
             directory_transport,
             directory_cancel,
             directory_commands: ShellDirectoryCommandQueueV1::default(),
-            hub_workspace: crate::hub_connection::HubWorkspaceState::new(crate::hub_sign_in::parse_hub_connection_book(
-                prefs_get(HUB_CONNECTION_BOOK_STORAGE_KEY_V1).as_deref(),
-                &shell_hub_bootstrap_origin(),
-                ui_wgpu::wgpu::Locale::En,
-            )),
+            hub_workspace: crate::hub_connection::HubWorkspaceState::new(crate::hub_sign_in::parse_hub_connection_book(prefs_get(HUB_CONNECTION_BOOK_STORAGE_KEY_V1).as_deref(), &shell_hub_bootstrap_origin(), ui_wgpu::wgpu::Locale::En)),
             hub_workspace_open: false,
             space_administration: None,
             space_administration_epoch: 0,
@@ -6585,10 +6600,7 @@ impl ShellState {
                     // the whole answer on the floor, so the guest's latch stayed armed and no preview ever
                     // evaluated (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
                     Ok(result) => {
-                        Self::debug_log(&format!(
-                            "[DEBUG] setContributions deferred effects {}",
-                            serde_json::json!({ "plugin": plugin.plugin_id, "app": session.app.id, "effects": result.requested_effects.len() })
-                        ));
+                        Self::debug_log(&format!("[DEBUG] setContributions deferred effects {}", serde_json::json!({ "plugin": plugin.plugin_id, "app": session.app.id, "effects": result.requested_effects.len() })));
                         self.queue_host_effects(&session.app.controller_id, result.requested_effects);
                     }
                     Err(error) => Self::debug_log(&format!("[DEBUG] setContributions command failed {} {error}", plugin.plugin_id)),
@@ -6723,8 +6735,6 @@ impl ShellState {
         }
     }
 
-
-
     fn flatten_panel_tab_leaves(tabs: &[PanelTabDefinition]) -> Vec<&PanelTabDefinition> {
         tabs.iter().flat_map(|tab| if tab.children.is_empty() { vec![tab] } else { Self::flatten_panel_tab_leaves(&tab.children) }).collect()
     }
@@ -6733,12 +6743,7 @@ impl ShellState {
         if self.host_config().is_none() || action.action != "setActivePanelTab" {
             return None;
         }
-        let target_app = self
-            .session
-            .as_ref()
-            .filter(|session| session.app.controller_id == action.controller_id)
-            .map(|session| &session.app)
-            .or_else(|| self.host_app().filter(|app| app.controller_id == action.controller_id));
+        let target_app = self.session.as_ref().filter(|session| session.app.controller_id == action.controller_id).map(|session| &session.app).or_else(|| self.host_app().filter(|app| app.controller_id == action.controller_id));
         let Some(target_app) = target_app else {
             return None;
         };
@@ -6825,8 +6830,7 @@ impl ShellState {
     /// `meshesHead="[]"` forever — measured verbatim on 6118
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-journey-probe-2026-09-13.md` §3).
     fn session_window_instances(session: &ActiveSession, dock: &DockState) -> Vec<semio_framework::ViewWindowInstance> {
-        let mut instances: Vec<semio_framework::ViewWindowInstance> =
-            session.app.window_kinds.iter().map(|kind| semio_framework::ViewWindowInstance { id: kind.id.clone(), window_kind_id: kind.id.clone() }).collect();
+        let mut instances: Vec<semio_framework::ViewWindowInstance> = session.app.window_kinds.iter().map(|kind| semio_framework::ViewWindowInstance { id: kind.id.clone(), window_kind_id: kind.id.clone() }).collect();
         for (id, window_kind_id) in dock.window_instances() {
             if instances.iter().any(|instance| instance.id == id) {
                 continue;
@@ -6867,9 +6871,7 @@ impl ShellState {
     }
 
     fn live_window_kind_id<'a>(&'a self, session: &'a ActiveSession, window_id: &str) -> Option<&'a str> {
-        self.dock
-            .window_kind_id(window_id)
-            .or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_id).map(|kind| kind.id.as_str()))
+        self.dock.window_kind_id(window_id).or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_id).map(|kind| kind.id.as_str()))
     }
 
     fn context_window_instance_id(&self, x: f32, y: f32) -> Option<&str> {
@@ -6923,20 +6925,7 @@ impl ShellState {
         }
         let window_id = self.allocate_window_instance_id(&payload.window_kind_id);
         let ghost_label = item_id.rsplit('.').next().unwrap_or(item_id).to_string();
-        self.begin_pending_dock_drag(
-            pointer_id,
-            DockDragPayload {
-                kind: DockDragKind::NewWindow,
-                window_id,
-                window_kind_id: payload.window_kind_id,
-                template_id: payload.template_id,
-                source_path: Vec::new(),
-                tab_index: 0,
-                ghost_label,
-            },
-            x,
-            y,
-        )
+        self.begin_pending_dock_drag(pointer_id, DockDragPayload { kind: DockDragKind::NewWindow, window_id, window_kind_id: payload.window_kind_id, template_id: payload.template_id, source_path: Vec::new(), tab_index: 0, ghost_label }, x, y)
     }
 
     /// 🌫️ React's `deactivateActiveWindow` (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1455-1472`), reached by
@@ -6948,8 +6937,6 @@ impl ShellState {
         }
         self.active_window_id = None;
     }
-
-
 
     /// 🐢️ Declares dirt without taking a refresh pass — the ONE way a producer (a dispatched action's
     /// `InvocationResult::ui_scope`, a command's, an extension answer's, or a host-effect fold) says
@@ -6977,28 +6964,15 @@ impl ShellState {
     /// opens intentionally carry no React journal.
     fn commit_window_topology_publication(&mut self, window_id: &str, body_key: &str, journal_token: Option<u64>) {
         debug_assert!(self.window_topology_publication_has_credit());
-        self.window_topology_publications.push_back(WindowTopologyPublication {
-            window_id: window_id.to_string(),
-            body_key: body_key.to_string(),
-            attempts: 0,
-            journal_token,
-        });
+        self.window_topology_publications.push_back(WindowTopologyPublication { window_id: window_id.to_string(), body_key: body_key.to_string(), attempts: 0, journal_token });
         self.owe_window_topology_refresh();
     }
 
     /// 🧾️ Reserves and builds one physical transfer note before the dock tree can change.
     /// The returned token binds release to this exact owner even when later bodies publish first.
     fn reserve_window_topology_action(&mut self, action: ActionDescriptor) -> Result<u64, ui_wgpu::wgpu::BoundedActionFault> {
-        match self.window_topology_actions.reserve(
-            &action.controller_id,
-            &action.action,
-            ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY,
-        ) {
-            Ok(mut reservation) => action
-                .args
-                .as_ref()
-                .map_or(Ok(()), |args| reservation.builder().value(None, args))
-                .and_then(|()| reservation.publish()),
+        match self.window_topology_actions.reserve(&action.controller_id, &action.action, ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY) {
+            Ok(mut reservation) => action.args.as_ref().map_or(Ok(()), |args| reservation.builder().value(None, args)).and_then(|()| reservation.publish()),
             Err(error) => Err(error),
         }?;
         let token = self.next_window_topology_action_token;
@@ -7037,11 +7011,7 @@ impl ShellState {
                                 self.deferred_actions.push(action);
                                 self.window_topology_journal_dispatch_owed = true;
                             }
-                            Err(error) => self.record_surface_fault(
-                                &publication.window_id,
-                                &publication.body_key,
-                                format!("window topology journal decode refused: {error:?}"),
-                            ),
+                            Err(error) => self.record_surface_fault(&publication.window_id, &publication.body_key, format!("window topology journal decode refused: {error:?}")),
                         },
                         None => self.record_surface_fault(&publication.window_id, &publication.body_key, "window topology journal owner was absent".to_string()),
                     }
@@ -7058,14 +7028,7 @@ impl ShellState {
                 continue;
             }
             self.discard_window_topology_journal(&publication);
-            self.record_surface_fault(
-                &publication.window_id,
-                &publication.body_key,
-                format!(
-                    "initial window body publication refused after {} attempts; topology journal retired without dispatch",
-                    WINDOW_TOPOLOGY_PUBLICATION_ATTEMPTS
-                ),
-            );
+            self.record_surface_fault(&publication.window_id, &publication.body_key, format!("initial window body publication refused after {} attempts; topology journal retired without dispatch", WINDOW_TOPOLOGY_PUBLICATION_ATTEMPTS));
         }
         self.window_topology_refresh_owed = !self.window_topology_publications.is_empty();
         if self.window_topology_refresh_owed {
@@ -7095,15 +7058,7 @@ impl ShellState {
             return UiDirtyScope::None;
         }
         let Some(session) = self.session.as_ref() else { return UiDirtyScope::Full };
-        UiDirtyScope::Partial {
-            window_bodies: session.app.window_kinds.iter().map(|kind| kind.body_key.clone()).collect(),
-            panel_bodies: Vec::new(),
-            utilities: true,
-            tools: true,
-            engagements: false,
-            measures: true,
-            labels: false,
-        }
+        UiDirtyScope::Partial { window_bodies: session.app.window_kinds.iter().map(|kind| kind.body_key.clone()).collect(), panel_bodies: Vec::new(), utilities: true, tools: true, engagements: false, measures: true, labels: false }
     }
 
     /// 🐢️ One refresh pass. `ask` is the [`UiDirtyScope`] the dispatch that caused it declared,
@@ -7133,11 +7088,7 @@ impl ShellState {
     /// per-surface loop, never ahead of it, so a skipped surface keeps the exact document it already
     /// owns instead of being retired and never re-minted.
     pub async fn refresh_ui(&mut self, ask: UiDirtyScope) -> Result<(), String> {
-        let mut latency = crate::frame_latency::FrameLatencyTimer::start(
-            crate::frame_latency::latest_frame_authority(),
-            crate::frame_latency::FrameLatencyStage::ShellRefresh,
-            1,
-        );
+        let mut latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::latest_frame_authority(), crate::frame_latency::FrameLatencyStage::ShellRefresh, 1);
         let scope = core::mem::replace(&mut self.owed_refresh_scope, UiDirtyScope::None).merged_with(ask);
         let Some(session) = self.session.clone() else {
             return Ok(());
@@ -7424,6 +7375,7 @@ impl ShellState {
             self.settle_pump.watches.remove(&host_id);
             self.active_utility_by_window.remove(&window_id);
             self.action_panel_folded.remove(&window_id);
+            self.search_panel_folded.remove(&window_id);
             self.utility_bar_folded.remove(&window_id);
             self.projection_pane_folded.remove(&window_id);
             self.world_projection_template.remove(&window_id);
@@ -7459,13 +7411,7 @@ impl ShellState {
             .filter_map(|host_id| {
                 let window_id = self.world3d_window_ids.get(host_id)?;
                 let kind_id = self.live_window_kind_id(&session, window_id);
-                let action_ids = session
-                    .app
-                    .window_kinds
-                    .iter()
-                    .find(|kind| Some(kind.id.as_str()) == kind_id)
-                    .map(|kind| kind.actions.iter().map(|action| action.id.clone()).collect())
-                    .unwrap_or_default();
+                let action_ids = session.app.window_kinds.iter().find(|kind| Some(kind.id.as_str()) == kind_id).map(|kind| kind.actions.iter().map(|action| action.id.clone()).collect()).unwrap_or_default();
                 Some((host_id.clone(), action_ids))
             })
             .collect();
@@ -7538,7 +7484,7 @@ impl ShellState {
         }
         let mut constructed = Vec::new();
         for registration in registrations {
-            let crate::engine_canvas::EngineSurfaceRegistration { host_id, surface_id, window_id, bounds, controller_id, detail, created } = registration;
+            let crate::engine_canvas::EngineSurfaceRegistration { host_id, surface_id, engine_token: _, window_id, bounds, controller_id, detail, created } = registration;
             match detail {
                 crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph => {
                     if let Some(surface) = node_graph_states.get_or_insert_with(host_id.clone(), || NodeGraphSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), window_id: window_id.clone() }) {
@@ -7552,7 +7498,13 @@ impl ShellState {
                     }
                 }
                 crate::engine_canvas::EngineSurfaceKindDetail::TiledMap { selection_method } => {
-                    if let Some(surface) = tiled_map_states.get_or_insert_with(host_id.clone(), || TiledMapSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), selection_method: selection_method.clone(), window_id: window_id.clone() }) {
+                    if let Some(surface) = tiled_map_states.get_or_insert_with(host_id.clone(), || TiledMapSurface {
+                        surface_id: surface_id.clone(),
+                        bounds,
+                        controller_id: controller_id.clone(),
+                        selection_method: selection_method.clone(),
+                        window_id: window_id.clone(),
+                    }) {
                         surface.surface_id = surface_id;
                         surface.bounds = bounds;
                         surface.controller_id = controller_id;
@@ -7564,7 +7516,9 @@ impl ShellState {
                     }
                 }
                 crate::engine_canvas::EngineSurfaceKindDetail::Board2d { fixture_json } => {
-                    if let Some(surface) = board2d_states.get_or_insert_with(host_id.clone(), || Board2dSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), fixture_json: fixture_json.clone(), window_id: window_id.clone() }) {
+                    if let Some(surface) =
+                        board2d_states.get_or_insert_with(host_id.clone(), || Board2dSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), fixture_json: fixture_json.clone(), window_id: window_id.clone() })
+                    {
                         surface.surface_id = surface_id;
                         surface.bounds = bounds;
                         surface.controller_id = controller_id;
@@ -7613,11 +7567,7 @@ impl ShellState {
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-blank-paint-2026-09-12.md`). Moving the one
     /// owner instead of aliasing it needs no credit at all, which is why it cannot run out.
     fn take_window_document(&mut self, window_id: &str) -> Option<UiDocumentLease> {
-        if window_id == "spawned" {
-            self.spawned_ui.take()
-        } else {
-            self.window_ui.remove(window_id)
-        }
+        if window_id == "spawned" { self.spawned_ui.take() } else { self.window_ui.remove(window_id) }
     }
 
     fn restore_window_document(&mut self, window_id: &str, document: UiDocumentLease) {
@@ -7672,11 +7622,7 @@ impl ShellState {
 
     /// 🧹 Retires every window (or panel) document whose surface the active layout no longer names.
     fn retire_documents_outside(&mut self, retained: &[String], windows: bool) -> Result<(), String> {
-        let stale: Vec<String> = if windows {
-            self.window_ui.keys().filter(|id| !retained.contains(id)).cloned().collect()
-        } else {
-            self.panel_documents.keys().filter(|id| !retained.contains(id)).cloned().collect()
-        };
+        let stale: Vec<String> = if windows { self.window_ui.keys().filter(|id| !retained.contains(id)).cloned().collect() } else { self.panel_documents.keys().filter(|id| !retained.contains(id)).cloned().collect() };
         for id in stale {
             if !crate::interpreter::request_ui_document_close(&id) {
                 return Err(format!("shell: retained UI close registry refused surface '{id}'"));
@@ -7759,12 +7705,8 @@ impl ShellState {
                 #[cfg(not(target_arch = "wasm32"))]
                 semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Backbone { uri }, payload } => {
                     let outcome = self.sync_channel.as_ref().ok_or_else(|| "document-backbone effect has no active shell owner".to_string()).and_then(|channel| {
-                        route_document_backbone_effects(
-                            &channel.actor_uri,
-                            &channel.cmd_tx,
-                            vec![semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Backbone { uri }, payload }],
-                        )
-                        .and_then(|remaining| if remaining.is_empty() { Ok(()) } else { Err("document-backbone routing left an owned effect behind".into()) })
+                        route_document_backbone_effects(&channel.actor_uri, &channel.cmd_tx, vec![semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Backbone { uri }, payload }])
+                            .and_then(|remaining| if remaining.is_empty() { Ok(()) } else { Err("document-backbone routing left an owned effect behind".into()) })
                     });
                     if let Err(error) = outcome {
                         self.sync_terminal_fault = Some(error);
@@ -7811,9 +7753,7 @@ impl ShellState {
                     #[cfg(not(target_arch = "wasm32"))]
                     {
                         let controller_id = controller_id.to_string();
-                        self.submit_shell_io_future(async move {
-                            ShellIoCompletion::Actions(file_open_import_actions(&controller_id, &import_action, request_file_open(&accept, read_as.as_deref(), multiple).await, multiple))
-                        });
+                        self.submit_shell_io_future(async move { ShellIoCompletion::Actions(file_open_import_actions(&controller_id, &import_action, request_file_open(&accept, read_as.as_deref(), multiple).await, multiple)) });
                     }
                 }
                 other => {
@@ -7822,12 +7762,6 @@ impl ShellState {
             }
         }
     }
-
-
-
-
-
-
 
     /// 🎨️ React-equivalent canonical theme tree with independently expandable virtualized groups.
     pub(crate) fn build_settings_theme_ui(&self) -> UiNode {
@@ -7904,10 +7838,7 @@ impl ShellState {
                 label: Label::data(shell_chrome_string("settings.driver.save", is_de)),
                 action: ActionDescriptor { controller_id: "framework".into(), action: "saveDriver".into(), args: None },
                 style: None,
-                presence: UiPresence {
-                    state: if self.driver_save_label.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal },
-                    ..UiPresence::default()
-                },
+                presence: UiPresence { state: if self.driver_save_label.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
             })),
             ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
@@ -7928,19 +7859,8 @@ impl ShellState {
                 ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
             });
         }
-        let label = if self.driver_draft.is_some() {
-            format!("{} ({})", shell_chrome_string("settings.tab.driver", is_de), shell_chrome_string("settings.driver.dirty", is_de))
-        } else {
-            shell_chrome_string("settings.tab.driver", is_de).to_string()
-        };
-        UiTreeSectionNode {
-            id: "framework.settings.driver.editor".into(),
-            label: Some(Label::data(label)),
-            default_open: Some(false),
-            presence: UiPresence::default(),
-            items,
-            window: None,
-        }
+        let label = if self.driver_draft.is_some() { format!("{} ({})", shell_chrome_string("settings.tab.driver", is_de), shell_chrome_string("settings.driver.dirty", is_de)) } else { shell_chrome_string("settings.tab.driver", is_de).to_string() };
+        UiTreeSectionNode { id: "framework.settings.driver.editor".into(), label: Some(Label::data(label)), default_open: Some(false), presence: UiPresence::default(), items, window: None }
     }
 
     /// ⚙️ The `framework.settings.general` leaf's body — the wgpu twin of React's
@@ -7986,19 +7906,10 @@ impl ShellState {
             "framework.settings.layout",
             shell_chrome_string("settings.tab.layout", is_de),
             &self.chrome_build.preferences.ui_layout,
-            vec![
-                ("desktop".to_string(), shell_chrome_string("settings.layout.desktop", is_de).to_string()),
-                ("tablet".to_string(), shell_chrome_string("settings.layout.tablet", is_de).to_string()),
-            ],
+            vec![("desktop".to_string(), shell_chrome_string("settings.layout.desktop", is_de).to_string()), ("tablet".to_string(), shell_chrome_string("settings.layout.tablet", is_de).to_string())],
             "setLayout",
         ));
-        general.push(settings_tree_select_item(
-            "framework.settings.driver",
-            shell_chrome_string("settings.tab.driver", is_de),
-            &self.driver_id,
-            self.driver_rows(),
-            "setDriver",
-        ));
+        general.push(settings_tree_select_item("framework.settings.driver", shell_chrome_string("settings.tab.driver", is_de), &self.driver_id, self.driver_rows(), "setDriver"));
         if locks.locale.is_empty() {
             general.push(settings_tree_select_item(
                 "framework.settings.language",
@@ -8050,7 +7961,7 @@ impl ShellState {
             window: None,
         });
         sections.push(self.build_settings_driver_editor(is_de));
-        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
+        UiNode::Tree(UiTreeNode { presentation: Default::default(), sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
     }
 
     /// 🚗️ Every selectable driver id with its display label — the two built-ins plus whatever the
@@ -8157,14 +8068,7 @@ impl ShellState {
             .map(|(dialect, role, value, options)| {
                 let mut choices = vec![(DEFAULT_APP_NONE_VALUE.to_string(), shell_chrome_string("settings.defaultApps.none", is_de).to_string())];
                 choices.extend(options);
-                settings_select_row_with(
-                    &format!("framework.settings.defaultApps.{dialect}.{role}"),
-                    &format!("{dialect} — {role}"),
-                    &value,
-                    choices,
-                    "setDefaultApp",
-                    crate::action_args_json!({ "row": format!("{dialect}/{role}") }),
-                )
+                settings_select_row_with(&format!("framework.settings.defaultApps.{dialect}.{role}"), &format!("{dialect} — {role}"), &value, choices, "setDefaultApp", crate::action_args_json!({ "row": format!("{dialect}/{role}") }))
             })
             .collect();
         UiNode::Stack(UiStackNode {
@@ -8250,14 +8154,7 @@ impl ShellState {
             if kind.surface_kind == ui_wgpu::wgpu::SurfaceKind::World3d {
                 items.extend(world_projection_template_rows(&format!("framework.display.windows.{}.projection", kind.id), &kind.id, 0, &mut 0));
             }
-            sections.push(UiTreeSectionNode {
-                id: format!("framework.display.windows.{}", kind.id),
-                label: Some(Label::data(label)),
-                default_open: Some(false),
-                presence: UiPresence::default(),
-                items,
-                window: None,
-            });
+            sections.push(UiTreeSectionNode { id: format!("framework.display.windows.{}", kind.id), label: Some(Label::data(label)), default_open: Some(false), presence: UiPresence::default(), items, window: None });
         }
         display_panel_body("framework.display.windows.panel", sections)
     }
@@ -8291,7 +8188,10 @@ impl ShellState {
                         step: None,
                         accept: None,
                         on_change: ActionDescriptor { controller_id: "framework".into(), action: "setLayoutSaveLabel".into(), args: None },
-                        on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
+                        on_submit: None,
+                        on_abort: None,
+                        on_repeat_last: None,
+                        presence: UiPresence::default(),
                         menu: None,
                     })),
                     ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
@@ -8323,14 +8223,7 @@ impl ShellState {
                 ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
             });
         }
-        let list_section = UiTreeSectionNode {
-            id: "framework.display.layout.list".into(),
-            label: Some(Label::data(shell_chrome_string("display.layouts", is_de))),
-            default_open: Some(true),
-            presence: UiPresence::default(),
-            items,
-            window: None,
-        };
+        let list_section = UiTreeSectionNode { id: "framework.display.layout.list".into(), label: Some(Label::data(shell_chrome_string("display.layouts", is_de))), default_open: Some(true), presence: UiPresence::default(), items, window: None };
         display_panel_body("framework.display.layout.panel", vec![save_section, list_section])
     }
 
@@ -8388,14 +8281,7 @@ impl ShellState {
             .collect();
         display_panel_body(
             "framework.settings.conflicts.panel",
-            vec![UiTreeSectionNode {
-                id: "framework.settings.conflicts.table".into(),
-                label: Some(Label::data(shell_chrome_string("conflict.panel", is_de))),
-                default_open: Some(true),
-                presence: UiPresence::default(),
-                items,
-                window: None,
-            }],
+            vec![UiTreeSectionNode { id: "framework.settings.conflicts.table".into(), label: Some(Label::data(shell_chrome_string("conflict.panel", is_de))), default_open: Some(true), presence: UiPresence::default(), items, window: None }],
         )
     }
 
@@ -8447,10 +8333,7 @@ impl ShellState {
                 };
                 let can_uninstall = resident.is_some() && session_plugin.as_deref() != Some(plugin_id.as_str());
                 let verbs = if resident.is_some() {
-                    vec![
-                        verb("reload", "plugins.action.reload", IconName::RotateCcw, "reloadPlugin", !in_flight),
-                        verb("uninstall", "plugins.action.uninstall", IconName::Trash2, "uninstallPlugin", can_uninstall && !in_flight),
-                    ]
+                    vec![verb("reload", "plugins.action.reload", IconName::RotateCcw, "reloadPlugin", !in_flight), verb("uninstall", "plugins.action.uninstall", IconName::Trash2, "uninstallPlugin", can_uninstall && !in_flight)]
                 } else {
                     vec![verb("install", "plugins.action.install", IconName::Download, "installPlugin", !in_flight)]
                 };
@@ -8576,10 +8459,9 @@ impl ShellState {
             accept: None,
             on_change: ActionDescriptor { controller_id: "framework".into(), action: "setChatDraft".into(), args: None },
             on_submit: Some(ActionDescriptor { controller_id: "framework".into(), action: "sendChatDraft".into(), args: None }),
-            on_abort: None, on_repeat_last: None, presence: UiPresence {
-                state: if connected { ui_wgpu::wgpu::component::ui::UiState::Normal } else { ui_wgpu::wgpu::component::ui::UiState::Disabled },
-                ..UiPresence::default()
-            },
+            on_abort: None,
+            on_repeat_last: None,
+            presence: UiPresence { state: if connected { ui_wgpu::wgpu::component::ui::UiState::Normal } else { ui_wgpu::wgpu::component::ui::UiState::Disabled }, ..UiPresence::default() },
             menu: None,
         }));
         children.push(UiNode::Button(UiButtonNode {
@@ -8588,10 +8470,7 @@ impl ShellState {
             label: Label::data(shell_chrome_string("chat.send", is_de)),
             action: ActionDescriptor { controller_id: "framework".into(), action: "sendChatDraft".into(), args: None },
             style: None,
-            presence: UiPresence {
-                state: if connected && !self.agent_chat_draft.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Normal } else { ui_wgpu::wgpu::component::ui::UiState::Disabled },
-                ..UiPresence::default()
-            },
+            presence: UiPresence { state: if connected && !self.agent_chat_draft.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Normal } else { ui_wgpu::wgpu::component::ui::UiState::Disabled }, ..UiPresence::default() },
             menu: None,
         }));
         UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("framework.chat.panel".into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
@@ -8602,17 +8481,18 @@ impl ShellState {
     pub(crate) fn build_sync_attach_ui(&self) -> UiNode {
         let is_de = self.locale_id == "de";
         let active_kind = self.sync_backbone_uri.as_deref().and_then(|uri| {
-            if uri.starts_with("file://") { Some("file") }
-            else if uri.starts_with("folder://") { Some("folder") }
-            else if uri.starts_with("remote://") { Some("remote") }
-            else { None }
+            if uri.starts_with("file://") {
+                Some("file")
+            } else if uri.starts_with("folder://") {
+                Some("folder")
+            } else if uri.starts_with("remote://") {
+                Some("remote")
+            } else {
+                None
+            }
         });
         let mut children = Vec::new();
-        for (kind, icon_id, label_key, action) in [
-            ("file", "file-json", "sync.file", "selectFile"),
-            ("folder", "folder", "sync.folder", "selectFolder"),
-            ("remote", "cloud", "sync.remote", "selectRemote"),
-        ] {
+        for (kind, icon_id, label_key, action) in [("file", "file-json", "sync.file", "selectFile"), ("folder", "folder", "sync.folder", "selectFolder"), ("remote", "cloud", "sync.remote", "selectRemote")] {
             children.push(UiNode::Button(UiButtonNode {
                 id: Some(format!("framework.sync.{kind}")),
                 icon_id: IconName::from(icon_id),
@@ -8663,10 +8543,7 @@ impl ShellState {
                 label: Label::data(shell_chrome_string("sync.attach", is_de)),
                 action: ActionDescriptor { controller_id: "framework.sync".into(), action: "attach".into(), args: crate::action_args_json!({ "kind": kind }) },
                 style: None,
-                presence: UiPresence {
-                    state: if self.sync_card_draft.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal },
-                    ..UiPresence::default()
-                },
+                presence: UiPresence { state: if self.sync_card_draft.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
             }));
         }
@@ -8693,18 +8570,7 @@ impl ShellState {
                 menu: None,
             }));
         }
-        UiNode::Stack(UiStackNode {
-            direction: "column".into(),
-            gap: None,
-            padding: None,
-            id: Some("framework.sync.panel".into()),
-            children,
-            presence: UiPresence::default(),
-            activate: None,
-            drop_action: None,
-            drop_overlay: None,
-            menu: None,
-        })
+        UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("framework.sync.panel".into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
     }
 
     /// 🧵️ The truthful Task Manager body for this target. WGPU has no actor-registry metrics or
@@ -8792,11 +8658,7 @@ impl ShellState {
     /// 🧭️ `⌘️B`'s left column and `⌘️⇧️B`'s right column — the two corner anchors that column carries,
     /// top first, the only place the former hardcoded left/right pair survives.
     fn column_anchors(left: bool) -> [PanelAnchor; 2] {
-        if left {
-            [PanelAnchor::TopLeft, PanelAnchor::BottomLeft]
-        } else {
-            [PanelAnchor::TopRight, PanelAnchor::BottomRight]
-        }
+        if left { [PanelAnchor::TopLeft, PanelAnchor::BottomLeft] } else { [PanelAnchor::TopRight, PanelAnchor::BottomRight] }
     }
 
     /// 🧭️ Projection kept for the shell's column-level reads (`⌘️B`, the overlay safe area, the tutorial
@@ -8817,12 +8679,7 @@ impl ShellState {
             self.anchor_state_mut(anchor).visible = false;
             return;
         }
-        let path = self
-            .dock_tabs
-            .locate(tab_id)
-            .filter(|(located, _)| *located == anchor)
-            .map(|(_, path)| self.dock_tabs.reconcile_path(anchor, &path))
-            .unwrap_or_else(|| self.dock_tabs.default_path(anchor));
+        let path = self.dock_tabs.locate(tab_id).filter(|(located, _)| *located == anchor).map(|(_, path)| self.dock_tabs.reconcile_path(anchor, &path)).unwrap_or_else(|| self.dock_tabs.default_path(anchor));
         let state = self.anchor_state_mut(anchor);
         state.path = path;
         state.visible = true;
@@ -8925,10 +8782,7 @@ impl ShellState {
     /// session-independent, exactly like `framework_settings_tabs`, which is why the Display chip is
     /// unconditional chrome in both renderers.
     fn framework_display_tabs(is_de: bool) -> Vec<DockTabNode> {
-        vec![
-            DockTabNode::leaf(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, shell_chrome_string("display.tab.windows", is_de), "layout-grid", 0),
-            DockTabNode::leaf(FRAMEWORK_DISPLAY_LAYOUT_TAB_ID, shell_chrome_string("display.tab.layout", is_de), "layout", 1),
-        ]
+        vec![DockTabNode::leaf(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, shell_chrome_string("display.tab.windows", is_de), "layout-grid", 0), DockTabNode::leaf(FRAMEWORK_DISPLAY_LAYOUT_TAB_ID, shell_chrome_string("display.tab.layout", is_de), "layout", 1)]
     }
 
     /// ⚙️ The five framework Settings leaves in React's own order (`createFrameworkSettingsPanelTab`):
@@ -9472,11 +9326,7 @@ impl ShellState {
                     };
                     match result {
                         Ok(effects) if self.active_sync_owner().as_ref().is_some_and(|active| shell_sync_owner_matches(active, &owner)) => {
-                            let routed = self
-                                .sync_channel
-                                .as_ref()
-                                .ok_or_else(|| "document-backbone owner retired before completion".to_string())
-                                .and_then(|channel| route_document_backbone_effects(&channel.actor_uri, &channel.cmd_tx, effects));
+                            let routed = self.sync_channel.as_ref().ok_or_else(|| "document-backbone owner retired before completion".to_string()).and_then(|channel| route_document_backbone_effects(&channel.actor_uri, &channel.cmd_tx, effects));
                             match routed {
                                 Ok(remaining) => {
                                     let controller_id = self.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
@@ -9515,8 +9365,6 @@ impl ShellState {
         }
         changed
     }
-
-
 
     /// 👥️ The roster `#s-presence-peers` paints, scoped to the attached surface. The browser build
     /// has no document-sync backbone (`ArtifactHost` is native-only here), so it answers an empty
@@ -9567,11 +9415,7 @@ impl ShellState {
     }
 
     pub(crate) fn hub_projection(&self) -> ShellHubProjectionV1 {
-        let authority = self
-            .verified_session_authority
-            .as_ref()
-            .map(|authority| ShellHubAuthorityV1::VerifiedSession { authorization_generation: authority.authorization_generation })
-            .unwrap_or(ShellHubAuthorityV1::NoVerifiedSession);
+        let authority = self.verified_session_authority.as_ref().map(|authority| ShellHubAuthorityV1::VerifiedSession { authorization_generation: authority.authorization_generation }).unwrap_or(ShellHubAuthorityV1::NoVerifiedSession);
         let documents = self.hub_documents.iter().map(|(document_key, remote)| ShellHubDocumentV1 { document_key: document_key.clone(), remote: remote.clone() }).collect();
         ShellHubProjectionV1 { authority, documents }
     }
@@ -9591,9 +9435,6 @@ impl ShellState {
     fn hub_connection_state(&self) -> ShellHubConnectionState {
         shell_hub_connection_summary_v1(&self.hub_projection()).state
     }
-
-
-
 
     /// 🎭️ ticket §1 — contract §C0's `user:{userId}#{sessionId}` once identity is minted/restored,
     /// else the pre-identity local default this shell always used (`shell_actor`'s pure decision).
@@ -10002,17 +9843,8 @@ impl ShellState {
         let cmd_tx = channels.cmd_tx.clone();
         let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
         self.sync_backbone_uri = Some(actor_uri.clone());
-        self.sync_channel = Some(ShellSyncChannel {
-            document_id,
-            document_key: channels.document_key,
-            actor_uri,
-            instance_id: session.instance_id,
-            plugin_id: session.plugin_id.clone(),
-            binding_generation,
-            cmd_tx,
-            events,
-            connected_at_ms: chrome_now_ms() as i64,
-        });
+        self.sync_channel =
+            Some(ShellSyncChannel { document_id, document_key: channels.document_key, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), binding_generation, cmd_tx, events, connected_at_ms: chrome_now_ms() as i64 });
         let channel = self.sync_channel.as_ref().expect("new sync channel is installed");
         let remaining = match route_document_backbone_effects(&channel.actor_uri, &channel.cmd_tx, binding_effects) {
             Ok(remaining) => remaining,
@@ -10051,11 +9883,7 @@ impl ShellState {
     fn schedule_sync_path_pick(&mut self, pick: impl std::future::Future<Output = Option<String>> + Send + 'static) {
         self.submit_shell_io_future(async move {
             let Some(path) = pick.await else { return ShellIoCompletion::Finished };
-            ShellIoCompletion::Actions(vec![ActionDescriptor {
-                controller_id: "framework.sync".into(),
-                action: "setSyncDraft".into(),
-                args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ "path": path }))),
-            }])
+            ShellIoCompletion::Actions(vec![ActionDescriptor { controller_id: "framework.sync".into(), action: "setSyncDraft".into(), args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ "path": path }))) }])
         });
     }
 
@@ -10194,10 +10022,7 @@ impl ShellState {
                     let arguments = action.args.as_ref().and_then(DslValue::as_object).map(|entries| entries.iter().cloned().collect()).unwrap_or_default();
                     return self
                         .dispatch_command(semio_framework::manifest::CommandInvocation {
-                            address: semio_framework::manifest::CommandAddress {
-                                owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone() },
-                                command_id: action.action.clone(),
-                            },
+                            address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone() }, command_id: action.action.clone() },
                             arguments,
                         })
                         .await;
@@ -10224,10 +10049,7 @@ impl ShellState {
                     return Ok(());
                 }
                 "setDriverField" => {
-                    if let (Some(key), Some(value)) = (
-                        action.args.as_ref().and_then(|args| args.get("key")).and_then(|value| value.as_str()),
-                        action.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str()),
-                    ) {
+                    if let (Some(key), Some(value)) = (action.args.as_ref().and_then(|args| args.get("key")).and_then(|value| value.as_str()), action.args.as_ref().and_then(|args| args.get("value")).and_then(|value| value.as_str())) {
                         if self.set_driver_field(key, value) {
                             self.republish_shell_panel_document(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)?;
                         }
@@ -10273,9 +10095,7 @@ impl ShellState {
                 "setLocale" => {
                     if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
                         let changed = self.locale_id != value;
-                        let locale_refresh_generation = changed
-                            .then(|| self.chrome_present.maintenance.locale_refresh_generation.checked_add(1).ok_or_else(|| "shell: localized panel refresh generation exhausted".to_string()))
-                            .transpose()?;
+                        let locale_refresh_generation = changed.then(|| self.chrome_present.maintenance.locale_refresh_generation.checked_add(1).ok_or_else(|| "shell: localized panel refresh generation exhausted".to_string())).transpose()?;
                         self.locale_id = value.to_string();
                         if let Some(status) = self.plugin_fault_status() {
                             self.error = Some(status);
@@ -10653,11 +10473,7 @@ impl ShellState {
                     self.submit_shell_io_future(async move {
                         let opened = request_file_open(SHELL_THEME_IMPORT_ACCEPT, Some("text"), false).await;
                         ShellIoCompletion::Actions(
-                            opened
-                                .into_iter()
-                                .take(1)
-                                .map(|file| ActionDescriptor { controller_id: "framework".into(), action: "applyImportedTheme".into(), args: crate::action_args_json!({ "value": file.contents }) })
-                                .collect(),
+                            opened.into_iter().take(1).map(|file| ActionDescriptor { controller_id: "framework".into(), action: "applyImportedTheme".into(), args: crate::action_args_json!({ "value": file.contents }) }).collect(),
                         )
                     });
                     return Ok(());
@@ -11105,26 +10921,18 @@ impl ShellState {
                     self.persist_hub_connection_book();
                 }
             }
-            hub_action::ADD_CONNECTION => {
-                match parse_hub_origin(&self.hub_workspace.address_draft) {
-                    Some(origin) => {
-                        let connection = HubConnection {
-                            id: hub_connection_id_for_origin(&origin),
-                            kind: HubConnectionKind::Remote,
-                            label: origin.clone(),
-                            last_user_id: None,
-                            origin,
-                        };
-                        let connection_id = connection.id.clone();
-                        self.hub_workspace.book = upsert_hub_connection(&self.hub_workspace.book, connection);
-                        self.hub_workspace.session = reduce_hub_session(&self.hub_workspace.session, &HubSessionEvent::SelectConnection { connection_id });
-                        self.hub_workspace.address_draft.clear();
-                        self.clear_hub_session_owner();
-                        self.persist_hub_connection_book();
-                    }
-                    None => self.hub_workspace.session.error = Some(HubSignInErrorCode::MalformedRequest),
+            hub_action::ADD_CONNECTION => match parse_hub_origin(&self.hub_workspace.address_draft) {
+                Some(origin) => {
+                    let connection = HubConnection { id: hub_connection_id_for_origin(&origin), kind: HubConnectionKind::Remote, label: origin.clone(), last_user_id: None, origin };
+                    let connection_id = connection.id.clone();
+                    self.hub_workspace.book = upsert_hub_connection(&self.hub_workspace.book, connection);
+                    self.hub_workspace.session = reduce_hub_session(&self.hub_workspace.session, &HubSessionEvent::SelectConnection { connection_id });
+                    self.hub_workspace.address_draft.clear();
+                    self.clear_hub_session_owner();
+                    self.persist_hub_connection_book();
                 }
-            }
+                None => self.hub_workspace.session.error = Some(HubSignInErrorCode::MalformedRequest),
+            },
             hub_action::FORGET_CONNECTION => {
                 let selected = self.hub_workspace.book.selected_id.clone();
                 self.hub_workspace.book = remove_hub_connection(&self.hub_workspace.book, &selected);
@@ -11184,10 +10992,7 @@ impl ShellState {
         if client.base_url() != self.hub_workspace.origin() {
             return;
         }
-        self.hub_workspace.session = reduce_hub_session(
-            &self.hub_workspace.session,
-            &HubSessionEvent::Minted { user_id: authority.user_id.clone(), expires_at_ms: Some(authority.expires_at) },
-        );
+        self.hub_workspace.session = reduce_hub_session(&self.hub_workspace.session, &HubSessionEvent::Minted { user_id: authority.user_id.clone(), expires_at_ms: Some(authority.expires_at) });
         self.hub_workspace.display_name = Some(authority.display_name.clone());
     }
 
@@ -11222,13 +11027,7 @@ impl ShellState {
                 let client = std::sync::Arc::new(DirectoryClient::authenticated(self.directory_transport.clone(), credential.clone()));
                 match client.me(&ctx).await {
                     Ok(authority) if authority.user_id == result.user_id => {
-                        self.identity = Some(Identity {
-                            user_id: authority.user_id.clone(),
-                            email: authority.email.clone(),
-                            display_name: authority.display_name.clone(),
-                            hub_base_url: origin.clone(),
-                            issued_at_ms: chrome_now_ms() as i64,
-                        });
+                        self.identity = Some(Identity { user_id: authority.user_id.clone(), email: authority.email.clone(), display_name: authority.display_name.clone(), hub_base_url: origin.clone(), issued_at_ms: chrome_now_ms() as i64 });
                         self.verified_session_authority = Some(authority);
                         self.directory_client = Some(client.clone());
                         #[cfg(not(target_arch = "wasm32"))]
@@ -11489,12 +11288,7 @@ impl ShellState {
                     Self::debug_log(&format!("[DEBUG] wgpu shell os.open-artifact could not install {plugin_id}: {error}"));
                     None
                 }
-                Ok(()) => self
-                    .plugins
-                    .iter()
-                    .find(|entry| entry.plugin_id == *plugin_id)
-                    .and_then(|program| program.manifest.apps.iter().find(|app| app.id == *app_id).cloned())
-                    .map(|app| (plugin_id.clone(), app)),
+                Ok(()) => self.plugins.iter().find(|entry| entry.plugin_id == *plugin_id).and_then(|program| program.manifest.apps.iter().find(|app| app.id == *app_id).cloned()).map(|app| (plugin_id.clone(), app)),
             },
             _ => self.resolve_activation_owner_app(&target.dialect, target.role).await,
         };
@@ -12097,7 +11891,10 @@ impl ShellState {
         self.announce_session_example().await?;
         Self::debug_log(&format!("[DEBUG] shell session switch {}", serde_json::json!({ "step": "publish", "app": self.session.as_ref().map(|session| session.app.id.clone()) })));
         self.refresh_ui(UiDirtyScope::Full).await?;
-        Self::debug_log(&format!("[DEBUG] shell session switch {}", serde_json::json!({ "step": "refresh", "app": self.session.as_ref().map(|session| session.app.id.clone()), "role": self.session.as_ref().map(|session| session.app.role.as_str()) })));
+        Self::debug_log(&format!(
+            "[DEBUG] shell session switch {}",
+            serde_json::json!({ "step": "refresh", "app": self.session.as_ref().map(|session| session.app.id.clone()), "role": self.session.as_ref().map(|session| session.app.role.as_str()) })
+        ));
         Ok(())
     }
 
@@ -12407,9 +12204,7 @@ impl ShellChromeBuildState {
         for command in commands {
             if let ui_wgpu::wgpu::UiCommand::FocusChanged { window_id, node } = command {
                 ShellState::debug_log(&format!("[DEBUG] wgpu-shell content focus window={window_id} node={node:?}"));
-                let focus = node.and_then(|node| {
-                    crate::interpreter::retained_node_focus_identity(window_id, node).map(|(key, kind)| RetainedContentFocus { node, key, kind })
-                });
+                let focus = node.and_then(|node| crate::interpreter::retained_node_focus_identity(window_id, node).map(|(key, kind)| RetainedContentFocus { node, key, kind }));
                 if focus.is_some() {
                     if let Some(previous) = self.focused_retained_surface.replace(window_id.clone()).filter(|previous| previous != window_id) {
                         self.content_focus.insert(previous, None);
@@ -12497,20 +12292,7 @@ fn tree_hit_item_id(control_id: &str) -> Option<&str> {
 
 /// 🌳️ Retained controls whose complete pointer gesture belongs to `EventRouter`.
 fn retained_router_owns_pointer(kind: HitKind) -> bool {
-    matches!(
-        kind,
-        HitKind::Button
-            | HitKind::Input
-            | HitKind::Select
-            | HitKind::Toggle
-            | HitKind::Slider
-            | HitKind::NumberStepper
-            | HitKind::Ring
-            | HitKind::IconSelect
-            | HitKind::TreeItem
-            | HitKind::TreeDragHandle
-            | HitKind::ComponentScene
-    )
+    matches!(kind, HitKind::Button | HitKind::Input | HitKind::Select | HitKind::Toggle | HitKind::Slider | HitKind::NumberStepper | HitKind::Ring | HitKind::IconSelect | HitKind::TreeItem | HitKind::TreeDragHandle | HitKind::ComponentScene)
 }
 
 impl ShellState {
@@ -12534,8 +12316,12 @@ impl ShellState {
                         infinite_world::world::world3d_cancel_relocate_drag(state);
                     }
                 }
-                ui_wgpu::wgpu::SurfaceKind::NodeGraph => { crate::engine_canvas::node_graph_pointer_cancel_into(&cancelled.host_id); }
-                ui_wgpu::wgpu::SurfaceKind::Board2d => { crate::engine_canvas::puzzle_board_pointer_cancel_into(&cancelled.host_id, input); }
+                ui_wgpu::wgpu::SurfaceKind::NodeGraph => {
+                    crate::engine_canvas::node_graph_pointer_cancel_into(&cancelled.host_id);
+                }
+                ui_wgpu::wgpu::SurfaceKind::Board2d => {
+                    crate::engine_canvas::puzzle_board_pointer_cancel_into(&cancelled.host_id, input);
+                }
                 ui_wgpu::wgpu::SurfaceKind::TiledMap => {
                     if let Some(surface) = self.tiled_map_states.get(&cancelled.host_id).filter(|surface| surface.window_id == cancelled.window_id) {
                         if let Err(fault) = crate::scenes::tiled_map_pointer_cancel_into(&cancelled.host_id, &surface.controller_id, surface.bounds, pointer_x, pointer_y, &mut *input) {
@@ -12582,7 +12368,13 @@ impl ShellState {
     }
 
     pub async fn handle_pointer_button_for(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32, down: bool, button: i16, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> Result<(), String> {
-        Self::debug_log(&format!("[DEBUG] wgpu-shell pointer button x={x} y={y} down={down} button={button} targets={} staged={} gen={} hit={:?}", input.hits().len(), input.staged_hits().len(), input.hit_generation(), input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone(), target.event.as_ref().map(|descriptor| descriptor.action.clone())))));
+        Self::debug_log(&format!(
+            "[DEBUG] wgpu-shell pointer button x={x} y={y} down={down} button={button} targets={} staged={} gen={} hit={:?}",
+            input.hits().len(),
+            input.staged_hits().len(),
+            input.hit_generation(),
+            input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone(), target.event.as_ref().map(|descriptor| descriptor.action.clone())))
+        ));
         if !down && self.chrome_pointer_owner.is_some_and(|owner| owner != pointer_id) {
             return Ok(());
         }
@@ -12594,10 +12386,7 @@ impl ShellState {
             if self.chrome_pointer_owner == Some(pointer_id) {
                 self.chrome_pointer_owner = None;
             }
-            let retained_canvas_drag = crate::interpreter::active_retained_drag_sessions()
-                .into_iter()
-                .map(|(_, _, _, drag_data)| drag_data)
-                .find(|drag_data| drag_data.contains_key(crate::scenes::CANVAS_CATALOGUE_DRAG_MIME));
+            let retained_canvas_drag = crate::interpreter::active_retained_drag_sessions().into_iter().map(|(_, _, _, drag_data)| drag_data).find(|drag_data| drag_data.contains_key(crate::scenes::CANVAS_CATALOGUE_DRAG_MIME));
             if let Some((tab_id, from_anchor)) = self.dock_tab_drag.take() {
                 self.finish_dock_tab_drag(&tab_id, from_anchor, x, y, theme);
             }
@@ -12671,19 +12460,7 @@ impl ShellState {
                 .or_else(|| captured_release.clone().map(|(window_id, body)| (window_id, body, HitKind::ComponentScene, None)));
             if canvas_drop_accepted {
                 if let Some((captured_window, captured_body)) = captured_release {
-                    self.route_retained_pointer_press(
-                        &captured_window,
-                        captured_body,
-                        captured_body.x - 1.0,
-                        captured_body.y - 1.0,
-                        false,
-                        button,
-                        HitKind::ComponentScene,
-                        None,
-                        pointer_id,
-                        input,
-                    )
-                    .await?;
+                    self.route_retained_pointer_press(&captured_window, captured_body, captured_body.x - 1.0, captured_body.y - 1.0, false, button, HitKind::ComponentScene, None, pointer_id, input).await?;
                 }
             } else if let Some((window_id, body, kind, action)) = retained_release {
                 let released_window = window_id.clone();
@@ -12855,7 +12632,8 @@ impl ShellState {
                         let tab_index = self.dock.tab_index(&path, window_id).unwrap_or(0);
                         let window_kind_id = self.dock.window_kind_id(window_id).unwrap_or(window_id).to_string();
                         let template_id = self.dock.window_template_id(window_id).map(str::to_string);
-                        let ghost_label = self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == window_kind_id).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| window_id.to_string());
+                        let ghost_label =
+                            self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == window_kind_id).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| window_id.to_string());
                         self.begin_pending_dock_drag(pointer_id, DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.to_string(), window_kind_id, template_id, source_path: path, tab_index, ghost_label }, x, y);
                         return Ok(());
                     }
@@ -12867,7 +12645,8 @@ impl ShellState {
                     if !active.is_empty() {
                         let tab_index = self.dock.tab_index(&path, &active).unwrap_or(0);
                         let window_kind_id = self.dock.window_kind_id(&active).unwrap_or(&active).to_string();
-                        let ghost_label = self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == window_kind_id).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| active.clone());
+                        let ghost_label =
+                            self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == window_kind_id).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| active.clone());
                         self.begin_pending_dock_drag(pointer_id, DockDragPayload { kind: DockDragKind::Stack, window_id: active, window_kind_id, template_id: None, source_path: path, tab_index, ghost_label }, x, y);
                         return Ok(());
                     }
@@ -12915,10 +12694,7 @@ impl ShellState {
                 self.dispatch_action(action).await?;
             } else if hit.kind == HitKind::Input {
                 if let Some(id) = hit.control_id {
-                    let seed = ShellPaletteKind::from_input_id(&id)
-                        .map(|kind| self.palette_query(kind).to_string())
-                        .or_else(|| self.widget_maps.input_metas.get(&id).map(|meta| meta.value.clone()))
-                        .unwrap_or_default();
+                    let seed = ShellPaletteKind::from_input_id(&id).map(|kind| self.palette_query(kind).to_string()).or_else(|| self.widget_maps.input_metas.get(&id).map(|meta| meta.value.clone())).unwrap_or_default();
                     input.focus_input_owned(id, seed);
                 }
             }
@@ -12975,9 +12751,10 @@ impl ShellState {
         } else {
             self.sync_world3d_catalogue_drop_preview_from_retained_ui();
         }
-        let retained_drag_data = tree_drag_payload.is_none().then(|| crate::interpreter::active_retained_drag_sessions()).and_then(|sessions| {
-            sessions.into_iter().map(|(_, _, _, drag_data)| drag_data).find(|drag_data| drag_data.contains_key(crate::scenes::CANVAS_CATALOGUE_DRAG_MIME))
-        });
+        let retained_drag_data = tree_drag_payload
+            .is_none()
+            .then(|| crate::interpreter::active_retained_drag_sessions())
+            .and_then(|sessions| sessions.into_iter().map(|(_, _, _, drag_data)| drag_data).find(|drag_data| drag_data.contains_key(crate::scenes::CANVAS_CATALOGUE_DRAG_MIME)));
         if let Some(drag_data) = tree_drag_payload.as_ref().or(retained_drag_data.as_ref()) {
             self.sync_canvas2d_catalogue_drag(x, y, drag_data, input);
         } else {
@@ -13087,11 +12864,7 @@ impl ShellState {
         // 🎯️ An abandoned or refused drop is simply nothing: the committed tree was never touched, so
         // there is no snapshot to re-apply and no `sync_dock` to pay for.
         if let Some(zone) = drag.drop_zone {
-            let body_key = self
-                .session
-                .as_ref()
-                .and_then(|session| session.app.window_kinds.iter().find(|kind| kind.id == drag.payload.window_kind_id))
-                .map(|kind| kind.body_key.clone());
+            let body_key = self.session.as_ref().and_then(|session| session.app.window_kinds.iter().find(|kind| kind.id == drag.payload.window_kind_id)).map(|kind| kind.body_key.clone());
             if body_key.is_some() && !self.window_topology_publication_has_credit() {
                 return Err("window topology publication item credits exceeded".to_string());
             }
@@ -13101,23 +12874,12 @@ impl ShellState {
             }
             let journal_token = if let Some(controller_id) = controller_id {
                 let (command_id, label, detail) = if drag.payload.kind == DockDragKind::NewWindow {
-                    (
-                        "shell.windowSplit",
-                        shell_chrome_string("command.splitWindow", self.locale_id == "de"),
-                        serde_json::json!({ "windowKindId": drag.payload.window_kind_id, "instanceId": drag.payload.window_id }),
-                    )
+                    ("shell.windowSplit", shell_chrome_string("command.splitWindow", self.locale_id == "de"), serde_json::json!({ "windowKindId": drag.payload.window_kind_id, "instanceId": drag.payload.window_id }))
                 } else {
-                    (
-                        "shell.windowMove",
-                        shell_chrome_string("command.moveWindow", self.locale_id == "de"),
-                        serde_json::json!({ "windowId": drag.payload.window_id }),
-                    )
+                    ("shell.windowMove", shell_chrome_string("command.moveWindow", self.locale_id == "de"), serde_json::json!({ "windowId": drag.payload.window_id }))
                 };
                 let note = Self::note_shell_command_action(&controller_id, command_id, label, Some(detail));
-                Some(
-                    self.reserve_window_topology_action(note)
-                        .map_err(|error| format!("window topology journal refused admission before dock mutation: {error:?}"))?,
-                )
+                Some(self.reserve_window_topology_action(note).map_err(|error| format!("window topology journal refused admission before dock mutation: {error:?}"))?)
             } else {
                 None
             };
@@ -13176,14 +12938,8 @@ impl ShellState {
         let (rect, scene) = scene_entry?;
         let (window_id, body) = owner_entry?;
         let live = live?;
-        (*rect == hit.rect
-            && rect.contains(x, y)
-            && body.contains(x, y)
-            && scene.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d
-            && scene.window_id == *window_id
-            && live.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d
-            && live == *scene)
-        .then(|| (window_id.clone(), *body))
+        (*rect == hit.rect && rect.contains(x, y) && body.contains(x, y) && scene.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d && scene.window_id == *window_id && live.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d && live == *scene)
+            .then(|| (window_id.clone(), *body))
     }
 
     /// 🧭️ A retained panel tab owns pointer routing but is not an application window instance.
@@ -13209,11 +12965,7 @@ impl ShellState {
 
     fn candidate_input_geometry(&self, theme: &Theme) -> PresentedInputGeometry {
         let body = self.body_rect(theme);
-        let panel_rects = PanelAnchor::ALL
-            .into_iter()
-            .filter(|anchor| self.anchor_open(*anchor))
-            .map(|anchor| self.anchor_rect(anchor, body, theme))
-            .collect();
+        let panel_rects = PanelAnchor::ALL.into_iter().filter(|anchor| self.anchor_open(*anchor)).map(|anchor| self.anchor_rect(anchor, body, theme)).collect();
         PresentedInputGeometry {
             dock_canvas_bounds: self.dock_canvas_bounds,
             dock_axis_separator: self.dock_axis_separator,
@@ -13244,6 +12996,13 @@ impl ShellState {
 
     pub(crate) fn presented_input_candidate_matches(&self, witness: PresentedInputCandidateWitness) -> bool {
         self.presented_input_candidate == Some(witness) && crate::interpreter::presented_input_candidate_matches(witness.0)
+    }
+
+    pub(crate) fn progress_presented_input_candidate(&self, input: &mut InputState<ActionDescriptor>, witness: PresentedInputCandidateWitness) -> crate::interpreter::PresentedInputCandidateProgress {
+        if self.presented_input_candidate != Some(witness) {
+            return crate::interpreter::PresentedInputCandidateProgress::Stale;
+        }
+        crate::interpreter::progress_presented_input_candidate(witness.0, input)
     }
 
     /// 🏁️ Promotes one GPU-accepted frame's complete input authority in one runtime lock.
@@ -13284,7 +13043,12 @@ impl ShellState {
 
     #[cfg(test)]
     fn publish_retained_hit_registry(&mut self, input: &mut InputState<ActionDescriptor>) {
-        let witness = self.seal_presented_input_candidate(&Theme::default()).expect("test input candidate witness");
+        self.publish_retained_input_for_test(input, &Theme::default());
+    }
+
+    #[cfg(test)]
+    fn publish_retained_input_for_test(&mut self, input: &mut InputState<ActionDescriptor>, theme: &Theme) {
+        let witness = self.seal_presented_input_candidate(theme).expect("test input candidate witness");
         assert!(self.acknowledge_presented_input(input, witness));
     }
 
@@ -13368,7 +13132,19 @@ impl ShellState {
     /// everything else dispatches the action the node's own spec declared through the
     /// same `dispatch_action` funnel every chrome hit uses, so a document row and a chrome row are
     /// one dispatch path.
-    async fn route_retained_pointer_press(&mut self, window_id: &str, body: Rect, x: f32, y: f32, down: bool, button: i16, kind: HitKind, action: Option<ActionDescriptor>, pointer_id: ui_render::PointerId, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
+    async fn route_retained_pointer_press(
+        &mut self,
+        window_id: &str,
+        body: Rect,
+        x: f32,
+        y: f32,
+        down: bool,
+        button: i16,
+        kind: HitKind,
+        action: Option<ActionDescriptor>,
+        pointer_id: ui_render::PointerId,
+        input: &mut InputState<ActionDescriptor>,
+    ) -> Result<(), String> {
         // 🎛️ EVERY retained interactive control routes into the retained router, which is the ONE
         // authority that turns a press on one into its own guest action (`events`' 🔖️Commit region)
         // and retires any overlay the gesture owned. Select options are synthesized retained Stacks
@@ -13505,14 +13281,16 @@ impl ShellState {
         let chrome = hit.is_some_and(|hit| {
             matches!(hit.kind, HitKind::NavbarItem | HitKind::DropdownItem | HitKind::ContextMenu | HitKind::Select | HitKind::DockSplit | HitKind::DockJoinCorner | HitKind::PanelResize | HitKind::PanelTab)
                 || hit.control_id.as_deref().is_some_and(|id| {
-                    id.starts_with("shell.") || id.starts_with("ui.introduction.") || id.starts_with("dock.") || id.starts_with("panel.resize.") || id.starts_with(WINDOW_PANE_CHIP_PARENT) || id.starts_with(WORLD_PROJECTION_PANE_PARENT) || id.starts_with(WINDOW_UTILITY_RAIL_PARENT)
+                    id.starts_with("shell.")
+                        || id.starts_with("ui.introduction.")
+                        || id.starts_with("dock.")
+                        || id.starts_with("panel.resize.")
+                        || id.starts_with(WINDOW_PANE_CHIP_PARENT)
+                        || id.starts_with(WORLD_PROJECTION_PANE_PARENT)
+                        || id.starts_with(WINDOW_UTILITY_RAIL_PARENT)
                 })
         });
-        if chrome {
-            PointerHitOwner::Chrome
-        } else {
-            PointerHitOwner::Surface
-        }
+        if chrome { PointerHitOwner::Chrome } else { PointerHitOwner::Surface }
     }
 
     /// 🚧️ Whether an overlay is MODAL for pointer input — React's menus, dropdowns, dialogs and the
@@ -13522,11 +13300,7 @@ impl ShellState {
     /// [`Self::pointer_hit_owner`] too; the other three publish hit rows for their own items only,
     /// and the point BESIDE an open menu is exactly the one that used to reach the world.
     fn candidate_pointer_input_is_modal(&self) -> bool {
-        self.context_menu.is_some()
-            || matches!(self.overlay_state, OverlayState::Search | OverlayState::Find)
-            || self.chrome_build.dialog_open()
-            || self.chrome_build.tour_is_open()
-            || self.open_selects.values().any(|open| *open)
+        self.context_menu.is_some() || matches!(self.overlay_state, OverlayState::Search | OverlayState::Find) || self.chrome_build.dialog_open() || self.chrome_build.tour_is_open() || self.open_selects.values().any(|open| *open)
     }
 
     pub fn pointer_input_is_modal(&self) -> bool {
@@ -13559,9 +13333,13 @@ impl ShellState {
 
     /// 🧲️ Resolves one published scene identity after the shell's modal and panel layers.
     pub fn scene_pointer_target_at(&self, x: f32, y: f32, input: &InputState<ActionDescriptor>, theme: &Theme) -> Option<crate::interpreter::ScenePointerTarget> {
-        if self.pointer_input_is_modal() || self.pointer_is_over_open_panel(x, y, theme) { return None; }
+        if self.pointer_input_is_modal() || self.pointer_is_over_open_panel(x, y, theme) {
+            return None;
+        }
         let hit = input.hit_at(x, y)?;
-        if !self.retained_scene_hit_is_live(hit, x, y) { return None; }
+        if !self.retained_scene_hit_is_live(hit, x, y) {
+            return None;
+        }
         let (_, target) = self.retained_scene_hits.get(hit.control_id.as_deref()?)?;
         crate::interpreter::scene_pointer_target_is_live(target).then(|| target.clone())
     }
@@ -13620,11 +13398,7 @@ impl ShellState {
         }
         if let Some((surface, body)) = self.retained_hit_window(&hit) {
             let modifiers = Self::retained_event_modifiers(input);
-            let _ = crate::interpreter::dispatch_ui_event(
-                &surface,
-                ui_wgpu::wgpu::UiEvent::Scroll { x: x - body.x, y: y - body.y, delta_x, delta_y, modifiers },
-                input,
-            );
+            let _ = crate::interpreter::dispatch_ui_event(&surface, ui_wgpu::wgpu::UiEvent::Scroll { x: x - body.x, y: y - body.y, delta_x, delta_y, modifiers }, input);
             return true;
         }
         if hit.kind != HitKind::ScrollRegion {
@@ -13759,10 +13533,7 @@ impl ShellState {
         match event {
             ui_render::AccessibilityEvent::Focus => {
                 if hit.kind == HitKind::Input {
-                    let seed = ShellPaletteKind::from_input_id(&target.node_key)
-                        .map(|kind| self.palette_query(kind).to_string())
-                        .or_else(|| self.widget_maps.input_metas.get(&target.node_key).map(|meta| meta.value.clone()))
-                        .unwrap_or_default();
+                    let seed = ShellPaletteKind::from_input_id(&target.node_key).map(|kind| self.palette_query(kind).to_string()).or_else(|| self.widget_maps.input_metas.get(&target.node_key).map(|meta| meta.value.clone())).unwrap_or_default();
                     input.focus_input_owned(target.node_key.clone(), seed);
                 }
             }
@@ -14044,11 +13815,7 @@ impl ShellState {
             id if id.starts_with("dock.tab.") && id.ends_with(".close") => {
                 if let Some((_, window_id)) = Self::parse_dock_tab_action_id(id, "close") {
                     let window_id = window_id.to_string();
-                    if self.close_dock_window(&window_id) {
-                        // 🪟️ React's `onWindowClose` journals the CLOSED WINDOW with the command
-                        // (`🏛️ShellHost/🟦️.tsx:10530-10531`), which is what makes the entry invertible.
-                        self.note_control_command(id, Some(serde_json::json!({ "windowId": window_id }))).await?;
-                    }
+                    self.close_dock_window_and_arm(&window_id, id);
                 }
                 return Ok(true);
             }
@@ -14466,10 +14233,7 @@ impl ShellState {
         let entering = matches!(step, ShellSettleStep::Wedged | ShellSettleStep::Quiescent) || matches!(self.settle_pump.traced, None | Some(ShellSettleStep::Quiescent));
         if (entering && self.settle_pump.traced != Some(step)) || self.settle_pump.steps % SHELL_SETTLE_HEARTBEAT_STEPS == 0 {
             self.settle_pump.traced = Some(step);
-            Self::debug_log(&format!(
-                "[DEBUG] wgpu-shell settle pump {}",
-                serde_json::json!({ "step": format!("{step:?}"), "steps": self.settle_pump.steps, "crossings": self.settle_pump.crossings, "watching": self.settle_pump.watches.len() })
-            ));
+            Self::debug_log(&format!("[DEBUG] wgpu-shell settle pump {}", serde_json::json!({ "step": format!("{step:?}"), "steps": self.settle_pump.steps, "crossings": self.settle_pump.crossings, "watching": self.settle_pump.watches.len() })));
         }
         step
     }
@@ -14951,10 +14715,7 @@ impl ShellState {
         }
         if items.is_empty() {
             if let Some(session) = &self.session {
-                let window_kind = window_instance_id
-                    .as_deref()
-                    .and_then(|window_id| self.live_window_kind_id(session, window_id))
-                    .and_then(|window_kind_id| session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id));
+                let window_kind = window_instance_id.as_deref().and_then(|window_id| self.live_window_kind_id(session, window_id)).and_then(|window_kind_id| session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id));
                 let actions: Vec<ui_wgpu::wgpu::ShellMenuAction> = window_kind
                     .map(|kind| semio_framework::resolve_window_actions(&session.app, kind))
                     .unwrap_or_default()
@@ -15208,31 +14969,20 @@ impl ShellState {
         if panel {
             let controller_id = self.host_controller_id().unwrap_or_default();
             for program in self.build_space_workflows() {
-                let breadcrumb = self
-                    .plugins
-                    .iter()
-                    .find_map(|plugin| plugin.manifest.apps.iter().find(|app| app.id == program.app_id))
-                    .map(|app| shell_navbar_title(app, &self.terminology_id))
-                    .unwrap_or_else(|| program.breadcrumb.join(" · "));
+                let breadcrumb = self.plugins.iter().find_map(|plugin| plugin.manifest.apps.iter().find(|app| app.id == program.app_id)).map(|app| shell_navbar_title(app, &self.terminology_id)).unwrap_or_else(|| program.breadcrumb.join(" · "));
                 items.push(SearchPaletteItem {
                     id: format!("spawn.{}", program.plugin_id),
                     label: format!("{} {breadcrumb}", shell_chrome_string("palette.spawnPrefix", is_de)),
                     description: None,
                     group: shell_chrome_string("palette.group.catalogue", is_de).into(),
-                    dispatch_action: Some(ActionDescriptor {
-                        controller_id: controller_id.clone(),
-                        action: "spawnApp".into(),
-                        args: crate::action_args_json!({ "pluginId": program.plugin_id }),
-                    }),
+                    dispatch_action: Some(ActionDescriptor { controller_id: controller_id.clone(), action: "spawnApp".into(), args: crate::action_args_json!({ "pluginId": program.plugin_id }) }),
                     action: None,
                     category: None,
                 });
             }
-            for (id, action, label_key, group_key) in [
-                ("studio.undo", "undo", "palette.undo", "palette.group.hostApp"),
-                ("studio.redo", "redo", "palette.redo", "palette.group.hostApp"),
-                ("studio.home", "goHome", "palette.goHome", "palette.group.navigation"),
-            ] {
+            for (id, action, label_key, group_key) in
+                [("studio.undo", "undo", "palette.undo", "palette.group.hostApp"), ("studio.redo", "redo", "palette.redo", "palette.group.hostApp"), ("studio.home", "goHome", "palette.goHome", "palette.group.navigation")]
+            {
                 items.push(SearchPaletteItem {
                     id: id.into(),
                     label: shell_chrome_string(label_key, is_de).into(),
@@ -15254,11 +15004,7 @@ impl ShellState {
         rank_fuzzy_items(
             self.build_search_items(),
             &self.search_query,
-            &[
-                (|item: &SearchPaletteItem| Some(item.label.as_str()), 2.0),
-                (|item: &SearchPaletteItem| item.description.as_deref(), 1.0),
-                (|item: &SearchPaletteItem| Some(item.group.as_str()), 0.5),
-            ],
+            &[(|item: &SearchPaletteItem| Some(item.label.as_str()), 2.0), (|item: &SearchPaletteItem| item.description.as_deref(), 1.0), (|item: &SearchPaletteItem| Some(item.group.as_str()), 0.5)],
             FUZZY_SEARCH_THRESHOLD,
             FUZZY_SEARCH_LIMIT,
         )
@@ -15270,11 +15016,7 @@ impl ShellState {
         rank_fuzzy_items(
             self.find_items.iter().cloned().collect(),
             &self.find_query,
-            &[
-                (|item: &ShellFindItem| Some(item.label.as_str()), 2.0),
-                (|item: &ShellFindItem| item.description.as_deref(), 1.0),
-                (|item: &ShellFindItem| item.category.as_deref(), 0.5),
-            ],
+            &[(|item: &ShellFindItem| Some(item.label.as_str()), 2.0), (|item: &ShellFindItem| item.description.as_deref(), 1.0), (|item: &ShellFindItem| item.category.as_deref(), 0.5)],
             FUZZY_SEARCH_THRESHOLD,
             FUZZY_SEARCH_LIMIT,
         )
@@ -15292,21 +15034,11 @@ impl ShellState {
         };
         let (query, placeholder, empty, rows, selected) = match kind {
             ShellPaletteKind::Search => {
-                let rows = self
-                    .filtered_search_items()
-                    .into_iter()
-                    .enumerate()
-                    .map(|(index, item)| (index, item.id, item.label, item.description, item.group))
-                    .collect::<Vec<_>>();
+                let rows = self.filtered_search_items().into_iter().enumerate().map(|(index, item)| (index, item.id, item.label, item.description, item.group)).collect::<Vec<_>>();
                 (self.search_query.clone(), shell_chrome_string("search.placeholder", self.locale_id == "de").to_string(), shell_chrome_string("search.empty", self.locale_id == "de").to_string(), rows, self.search_selected)
             }
             ShellPaletteKind::Find => {
-                let rows = self
-                    .filtered_find_items()
-                    .into_iter()
-                    .enumerate()
-                    .map(|(index, item)| (index, item.id, item.label, item.description, item.category.unwrap_or_default()))
-                    .collect::<Vec<_>>();
+                let rows = self.filtered_find_items().into_iter().enumerate().map(|(index, item)| (index, item.id, item.label, item.description, item.category.unwrap_or_default())).collect::<Vec<_>>();
                 (self.find_query.clone(), shell_chrome_string("find.placeholder", self.locale_id == "de").to_string(), shell_chrome_string("find.empty", self.locale_id == "de").to_string(), rows, self.find_selected)
             }
         };
@@ -15358,7 +15090,15 @@ impl ShellState {
             })
             .find(|(selected, _, _)| *selected);
         let scroll = selected_bounds
-            .map(|(_, top, bottom)| if bottom > viewport_list_height { bottom - viewport_list_height } else if top < 0.0 { top } else { 0.0 })
+            .map(|(_, top, bottom)| {
+                if bottom > viewport_list_height {
+                    bottom - viewport_list_height
+                } else if top < 0.0 {
+                    top
+                } else {
+                    0.0
+                }
+            })
             .unwrap_or(0.0)
             .clamp(0.0, (natural_list_height - viewport_list_height).max(0.0));
         let mut entries = Vec::with_capacity(SHELL_PALETTE_PLAN_ENTRY_CAPACITY);
@@ -15377,10 +15117,7 @@ impl ShellState {
             }
         }
         let close_size = input_height.min(theme.control_height);
-        entries.push(ShellPalettePlanEntry::Close {
-            rect: Rect::new(dialog.x + dialog.w - close_size, dialog.y, close_size, close_size),
-            label: shell_chrome_string("common.close", self.locale_id == "de").to_string(),
-        });
+        entries.push(ShellPalettePlanEntry::Close { rect: Rect::new(dialog.x + dialog.w - close_size, dialog.y, close_size, close_size), label: shell_chrome_string("common.close", self.locale_id == "de").to_string() });
         Some(ShellPalettePlan { kind, dialog, list: Rect::new(dialog.x, list_top, dialog.w, viewport_list_height), entries })
     }
 
@@ -15459,11 +15196,7 @@ impl ShellState {
                 // `SET_COMMAND_EXPANDED`). `reveal_dock_tab` is this target's spelling of the first two;
                 // `expanded_command_id` is the third, and the Commands dock reads it to open that form.
                 let command_key = command_key.to_string();
-                let category_tab = self
-                    .resolved_commands()
-                    .into_iter()
-                    .find(|entry| command_address_stable_key(&entry.address) == command_key)
-                    .map(|entry| format!("{FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX}{}", entry.definition.category));
+                let category_tab = self.resolved_commands().into_iter().find(|entry| command_address_stable_key(&entry.address) == command_key).map(|entry| format!("{FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX}{}", entry.definition.category));
                 let category_tab = category_tab.as_deref().unwrap_or(FRAMEWORK_CATEGORY_COMMAND_ID);
                 let previous_expanded = self.expanded_command_id.replace(command_key);
                 if let Err(error) = self.republish_shell_panel_document(category_tab) {
@@ -15549,12 +15282,7 @@ impl ShellState {
         if action == ui_wgpu::wgpu::KeyAction::Escape {
             if crate::scenes::cancel_canvas_interactions(input) {
                 if let Some((window_id, pointer_id)) = crate::interpreter::retained_any_pointer_capture() {
-                    crate::interpreter::dispatch_ui_pointer_event(
-                        &window_id,
-                        pointer_id,
-                        ui_wgpu::wgpu::UiEvent::PointerCancel,
-                        input,
-                    );
+                    crate::interpreter::dispatch_ui_pointer_event(&window_id, pointer_id, ui_wgpu::wgpu::UiEvent::PointerCancel, input);
                 }
                 return;
             }
@@ -15972,14 +15700,7 @@ impl ShellState {
             .app
             .keybindings
             .iter()
-            .find(|binding| {
-                binding
-                    .keys
-                    .split(',')
-                    .map(|chord| chord.trim().to_ascii_lowercase())
-                    .filter(|chord| !chord.is_empty())
-                    .any(|chord| key_event_matches_chord(action, modifiers, &chord) && !reserved.contains(&chord))
-            })
+            .find(|binding| binding.keys.split(',').map(|chord| chord.trim().to_ascii_lowercase()).filter(|chord| !chord.is_empty()).any(|chord| key_event_matches_chord(action, modifiers, &chord) && !reserved.contains(&chord)))
             .map(|binding| binding.action.clone())
     }
 
@@ -16196,7 +15917,15 @@ impl ShellState {
         let Some(window_id) = self.active_window_id.clone() else {
             return false;
         };
-        self.close_dock_window(&window_id)
+        self.close_dock_window_and_arm(&window_id, "ui.window.close")
+    }
+
+    fn close_dock_window_and_arm(&mut self, window_id: &str, control_id: &str) -> bool {
+        if !self.close_dock_window(window_id) {
+            return false;
+        }
+        self.arm_control_command(control_id, Some(serde_json::json!({ "windowId": window_id })));
+        true
     }
 
     /// 🪟️ `mod+shift+enter` — the same maximize toggle the window's own focus control performs. React
@@ -16240,10 +15969,7 @@ impl ShellState {
             return false;
         }
         let taken: Vec<String> = self.dock.window_instances().into_iter().map(|(id, _)| id).collect();
-        let instance_id = (2..)
-            .map(|index| format!("{window_kind_id}-{index}"))
-            .find(|candidate| !taken.contains(candidate))
-            .expect("an unbounded counter always clears a finite dock roster");
+        let instance_id = (2..).map(|index| format!("{window_kind_id}-{index}")).find(|candidate| !taken.contains(candidate)).expect("an unbounded counter always clears a finite dock roster");
         let Some(path) = self.dock_stack_path_for(&window_id) else {
             return false;
         };
@@ -16442,14 +16168,14 @@ mod panel_window_reservation_tests;
 mod dock_close_reopen_journal_tests;
 
 #[cfg(test)]
-#[path = "../../🧪️tests/🪟️window-lifecycle-template-drag/🦀️.rs"]
-mod window_lifecycle_template_drag_tests;
+#[path = "../../🧪️tests/🚗️driver-editor/🦀️.rs"]
+mod driver_editor_tests;
 #[cfg(test)]
 #[path = "../../🧪️tests/🔗️hub-projection-workspace/🦀️.rs"]
 mod hub_projection_workspace_tests;
 #[cfg(test)]
-#[path = "../../🧪️tests/🚗️driver-editor/🦀️.rs"]
-mod driver_editor_tests;
+#[path = "../../🧪️tests/🪟️window-lifecycle-template-drag/🦀️.rs"]
+mod window_lifecycle_template_drag_tests;
 
 #[cfg(test)]
 #[path = "../../🧪️tests/⚙️settings-general-layout/🦀️.rs"]
@@ -16540,8 +16266,6 @@ const LOGO_UNTINTED: Rgba = Rgba::new(1.0, 1.0, 1.0, 1.0);
 /// (`🖱️ui/🎨️styling/🖌️ui/🎨️.css:736-737`), so the mark is 7.5 spacings — TALLER than a 7-spacing chip,
 /// which is why it used to be sized off `control_height` and read visibly small.
 const SHELL_NAVBAR_LOGO_UI_SPACING: f32 = 7.5;
-
-
 
 #[cfg(test)]
 fn chrome_group_border(draw: &mut DrawList, rect: Rect, theme: &Theme) {
@@ -16728,7 +16452,6 @@ fn measure_chrome_group_item(atlas: &mut FontAtlas, theme: &Theme, item: &Chrome
     theme.padding_standard * 2.0 + icon_w + text_w
 }
 
-
 fn floating_panel_available_width(body: Rect, theme: &Theme) -> f32 {
     (body.w - theme.panel_inset * 2.0).max(theme.panel_min_width)
 }
@@ -16811,12 +16534,6 @@ fn anchor_panel_rect(anchor: PanelAnchor, size: f32, content_h: Option<f32>, col
     Rect::new(x, y, width, height)
 }
 
-
-
-
-
-
-
 #[cfg(test)]
 fn render_chrome_group(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, rect: Rect, items: &[ChromeGroupItem<'_>], register_hits: bool) {
     if items.is_empty() {
@@ -16887,11 +16604,7 @@ pub(crate) struct ShellChromeCenteredBand {
 /// language-neutral fixture and React helper.
 pub(crate) fn shell_chrome_free_band(width: f32, occupied: &[ShellChromeBandSpan]) -> ShellChromeBandSpan {
     let width = width.max(0.0);
-    let mut spans: Vec<ShellChromeBandSpan> = occupied
-        .iter()
-        .map(|span| ShellChromeBandSpan { left: span.left.clamp(0.0, width), right: span.right.clamp(0.0, width) })
-        .filter(|span| span.right > span.left)
-        .collect();
+    let mut spans: Vec<ShellChromeBandSpan> = occupied.iter().map(|span| ShellChromeBandSpan { left: span.left.clamp(0.0, width), right: span.right.clamp(0.0, width) }).filter(|span| span.right > span.left).collect();
     spans.sort_by(|left, right| left.left.total_cmp(&right.left));
     let mut merged: Vec<ShellChromeBandSpan> = Vec::with_capacity(spans.len());
     for span in spans {
@@ -16956,8 +16669,6 @@ fn partition_utilities_by_category(utilities: &[UtilityNode]) -> [Vec<UtilityNod
     buckets
 }
 
-
-
 //#region 🚦️SyncPill
 /// 🚦️ The remote half of the pill vocabulary — React's
 /// `SyncPillState["remote"]` (`🛠️ShellHelpers/🟦️.tsx`).
@@ -17018,7 +16729,10 @@ pub(crate) enum ShellHubConnectionState {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ShellHubAuthorityV1 {
     NoVerifiedSession,
-    VerifiedSession { #[serde(rename = "authorizationGeneration")] authorization_generation: u64 },
+    VerifiedSession {
+        #[serde(rename = "authorizationGeneration")]
+        authorization_generation: u64,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -17026,8 +16740,14 @@ pub enum ShellHubAuthorityV1 {
 pub enum ShellHubRemoteV1 {
     Detached,
     Connecting,
-    Live { #[serde(rename = "peerCount")] peer_count: usize },
-    Backoff { #[serde(rename = "retryInMs")] retry_in_ms: u64 },
+    Live {
+        #[serde(rename = "peerCount")]
+        peer_count: usize,
+    },
+    Backoff {
+        #[serde(rename = "retryInMs")]
+        retry_in_ms: u64,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -17362,8 +17082,6 @@ fn dock_tab_node_of(tab: &PanelTabDefinition, terminology: Terminology, locale: 
     }
 }
 
-
-
 //#region ActionPanelAndUtilities
 /// 🧰️ Resolves the utilities a window kind presents in the utility bar — the utility mirror of
 /// {@link semio_framework::resolve_window_actions}: explicit `window_kind.utilities` refs in declared
@@ -17470,11 +17188,7 @@ fn format_keybinding_shortcut(keys: &str) -> String {
         }
     };
     let parts: Vec<String> = chord.split('+').map(str::trim).filter(|part| !part.is_empty()).map(glyph).collect();
-    if apple {
-        parts.join("")
-    } else {
-        parts.join("+")
-    }
+    if apple { parts.join("") } else { parts.join("+") }
 }
 
 /// ⌨️ Whether a key event is one of the hardcoded shell chords (palette/find/panels/nav/surface-role/
@@ -17609,13 +17323,7 @@ pub(crate) fn shell_example_control(rows: &[ShellExampleRow], open: bool, is_de:
         return None;
     }
     let label = rows.iter().find(|row| row.selected).map_or_else(|| shell_chrome_string("example.picker", is_de).to_string(), |row| row.label.clone());
-    Some(ShellNavbarControl {
-        control_id: "playground.navbar.fixture".to_string(),
-        icon_id: Some("file"),
-        label,
-        active: open,
-        width_policy: Some(ShellNavbarWidthPolicy::RootRemClamp { minimum_rem: 12, maximum_rem: 28 }),
-    })
+    Some(ShellNavbarControl { control_id: "playground.navbar.fixture".to_string(), icon_id: Some("file"), label, active: open, width_policy: Some(ShellNavbarWidthPolicy::RootRemClamp { minimum_rem: 12, maximum_rem: 28 }) })
 }
 
 /// 🎛️ The `playground.navbar.modes.<id>` group — empty for a single-mode surface, exactly as React
@@ -17626,13 +17334,7 @@ pub(crate) fn shell_mode_controls(app: &AppDefinition, active_mode_id: Option<&s
     }
     app.modes
         .iter()
-        .map(|mode| ShellNavbarControl {
-            control_id: format!("playground.navbar.modes.{}", mode.id),
-            icon_id: None,
-            label: mode.label.resolve(terminology, locale).to_string(),
-            active: active_mode_id == Some(mode.id.as_str()),
-            width_policy: None,
-        })
+        .map(|mode| ShellNavbarControl { control_id: format!("playground.navbar.modes.{}", mode.id), icon_id: None, label: mode.label.resolve(terminology, locale).to_string(), active: active_mode_id == Some(mode.id.as_str()), width_policy: None })
         .collect()
 }
 
@@ -17647,12 +17349,7 @@ pub(crate) fn surface_role_apps<'a>(apps: &'a [AppDefinition], dialect: &semio_f
 
 /// 👁️✏️ The app a role switch would open, or `None` when the role is already mounted or the dialect
 /// declares no such sibling. Twin of `roleSwitchTargetV1`.
-pub(crate) fn role_switch_target<'a>(
-    apps: &'a [AppDefinition],
-    dialect: &semio_framework::ArtifactDialect,
-    current_role: semio_framework::manifest::AppRole,
-    requested: semio_framework::manifest::AppRole,
-) -> Option<&'a AppDefinition> {
+pub(crate) fn role_switch_target<'a>(apps: &'a [AppDefinition], dialect: &semio_framework::ArtifactDialect, current_role: semio_framework::manifest::AppRole, requested: semio_framework::manifest::AppRole) -> Option<&'a AppDefinition> {
     if current_role == requested {
         return None;
     }
@@ -17744,7 +17441,20 @@ pub(crate) struct World3dComputeStatus {
 
 impl Default for World3dComputeStatus {
     fn default() -> Self {
-        Self { computing: false, phase: "idle".to_string(), phase_label: None, units_done: 0.0, units_total: 0.0, faces_done: 0.0, faces_total: 0.0, in_flight: 0.0, ratio: 1.0, cancellable: false, cancel_action: String::new(), cancel_args: serde_json::Map::new() }
+        Self {
+            computing: false,
+            phase: "idle".to_string(),
+            phase_label: None,
+            units_done: 0.0,
+            units_total: 0.0,
+            faces_done: 0.0,
+            faces_total: 0.0,
+            in_flight: 0.0,
+            ratio: 1.0,
+            cancellable: false,
+            cancel_action: String::new(),
+            cancel_args: serde_json::Map::new(),
+        }
     }
 }
 
@@ -17894,7 +17604,6 @@ pub(crate) fn surface_overlay_row_origin(theme: &Theme, bounds: Rect, panels: &[
     [row.x + safe_area.inline, row.y + safe_area.block]
 }
 
-
 /// ⏳️🖼️ The compute-status pills a set of live World3d surfaces asks for, each with the rect it is
 /// painted in — pure over the surfaces' own bounds and status, so the laws drive it without a
 /// `ShellState`. The pill leads the surface's overlay row; `surface_overlay_controls_for` anchors
@@ -17925,13 +17634,7 @@ pub(crate) fn surface_overlay_controls_for(_graphs: &[(&str, Rect)], worlds: &[(
             continue;
         }
         let lead = world3d_status_pill_for(surface_id, &status, is_de).map(|pill| world3d_status_pill_width(theme, &pill) + theme.gap_standard).unwrap_or(0.0);
-        let control = ShellNavbarControl {
-            control_id: format!("shell.world3d.cancel::{surface_id}"),
-            icon_id: Some("x"),
-            label: shell_chrome_string("common.cancel", is_de).to_string(),
-            active: false,
-            width_policy: None,
-        };
+        let control = ShellNavbarControl { control_id: format!("shell.world3d.cancel::{surface_id}"), icon_id: Some("x"), label: shell_chrome_string("common.cancel", is_de).to_string(), active: false, width_policy: None };
         let origin = surface_overlay_row_origin(theme, *bounds, panels);
         controls.push((control, [origin[0] + lead, origin[1]]));
     }
@@ -17992,7 +17695,11 @@ pub(crate) fn world3d_compute_status(status_json: Option<&str>) -> World3dComput
         },
         cancellable: row.get("cancellable") == Some(&Value::Bool(true)) && !cancel_action.is_empty(),
         cancel_action,
-        cancel_args: row.get("cancelArgs").and_then(Value::as_object).map(|args| args.iter().filter(|(_, value)| value.is_string() || value.as_f64().is_some_and(f64::is_finite)).map(|(key, value)| (key.clone(), value.clone())).collect()).unwrap_or_default(),
+        cancel_args: row
+            .get("cancelArgs")
+            .and_then(Value::as_object)
+            .map(|args| args.iter().filter(|(_, value)| value.is_string() || value.as_f64().is_some_and(f64::is_finite)).map(|(key, value)| (key.clone(), value.clone())).collect())
+            .unwrap_or_default(),
     }
 }
 //#endregion 🔀️ChromeParity
@@ -18059,8 +17766,7 @@ impl WindowPaneChip {
     }
 
     /// 🎯️ The control id this chip's press dispatches — React's `toggleId` VERBATIM, carrying the same
-    /// fold/unfold split. `Actions` and `Search` both drive the window's ONE `actionsFolded` state,
-    /// exactly as React's two panes share `setEngagementBarFolded` (`🪟️Window/🟦️.tsx:373`/`:388`).
+    /// fold/unfold split. `Actions` and `Search` each drive the state of their own pane.
     ///
     /// 🩸️ This said "the wgpu twin of React's `toggleId`" while minting `shell.action.fold.<windowId>`
     /// and four siblings — a shell-private grammar with the window at the END. React mints
@@ -18157,21 +17863,133 @@ impl WorldProjectionTemplate {
 
 /// 🔀️ React's projection taxonomy, depth-first, branch before its own leaves.
 pub(crate) const WORLD_PROJECTION_TEMPLATES: &[WorldProjectionTemplate] = &[
-    WorldProjectionTemplate { id: "parallel", label: "Parallel", icon_id: "projection-parallel", depth: 0, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: false },
-    WorldProjectionTemplate { id: "orthographic", label: "Orthographic", icon_id: "projection-orthographic", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(ui_wgpu::wgpu::WorldCardinalView::Top), oblique_off_axis: false },
-    WorldProjectionTemplate { id: "axonometric", label: "Axonometric", icon_id: "projection-axonometric", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: false },
-    WorldProjectionTemplate { id: "axonometric-isometric", label: "Isometric", icon_id: "projection-isometric", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: false },
-    WorldProjectionTemplate { id: "axonometric-dimetric", label: "Dimetric", icon_id: "projection-dimetric", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: false },
-    WorldProjectionTemplate { id: "axonometric-trimetric", label: "Trimetric", icon_id: "projection-trimetric", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: false },
+    WorldProjectionTemplate {
+        id: "parallel",
+        label: "Parallel",
+        icon_id: "projection-parallel",
+        depth: 0,
+        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: false,
+    },
+    WorldProjectionTemplate {
+        id: "orthographic",
+        label: "Orthographic",
+        icon_id: "projection-orthographic",
+        depth: 1,
+        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(ui_wgpu::wgpu::WorldCardinalView::Top),
+        oblique_off_axis: false,
+    },
+    WorldProjectionTemplate {
+        id: "axonometric",
+        label: "Axonometric",
+        icon_id: "projection-axonometric",
+        depth: 1,
+        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: false,
+    },
+    WorldProjectionTemplate {
+        id: "axonometric-isometric",
+        label: "Isometric",
+        icon_id: "projection-isometric",
+        depth: 2,
+        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: false,
+    },
+    WorldProjectionTemplate {
+        id: "axonometric-dimetric",
+        label: "Dimetric",
+        icon_id: "projection-dimetric",
+        depth: 2,
+        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: false,
+    },
+    WorldProjectionTemplate {
+        id: "axonometric-trimetric",
+        label: "Trimetric",
+        icon_id: "projection-trimetric",
+        depth: 2,
+        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: false,
+    },
     WorldProjectionTemplate { id: "oblique", label: "Oblique", icon_id: "projection-oblique", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: true },
-    WorldProjectionTemplate { id: "oblique-cabinet", label: "Cabinet", icon_id: "projection-oblique-cabinet", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: true },
-    WorldProjectionTemplate { id: "oblique-cavalier", label: "Cavalier", icon_id: "projection-oblique-cavalier", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: true },
-    WorldProjectionTemplate { id: "oblique-military", label: "Military", icon_id: "projection-oblique-military", depth: 2, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: false },
-    WorldProjectionTemplate { id: "perspective", label: "Perspective", icon_id: "projection-perspective", depth: 0, family: ui_wgpu::wgpu::CameraProjection3d::Perspective, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: false },
-    WorldProjectionTemplate { id: "one-point", label: "1-Point", icon_id: "projection-one-point", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Perspective, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: false },
-    WorldProjectionTemplate { id: "two-point", label: "2-Point", icon_id: "projection-two-point", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Perspective, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: false },
-    WorldProjectionTemplate { id: "three-point", label: "3-Point", icon_id: "projection-three-point", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Perspective, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: false },
-    WorldProjectionTemplate { id: "curvilinear", label: "Curvilinear", icon_id: "projection-curvilinear", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Perspective, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: false },
+    WorldProjectionTemplate {
+        id: "oblique-cabinet",
+        label: "Cabinet",
+        icon_id: "projection-oblique-cabinet",
+        depth: 2,
+        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: true,
+    },
+    WorldProjectionTemplate {
+        id: "oblique-cavalier",
+        label: "Cavalier",
+        icon_id: "projection-oblique-cavalier",
+        depth: 2,
+        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: true,
+    },
+    WorldProjectionTemplate {
+        id: "oblique-military",
+        label: "Military",
+        icon_id: "projection-oblique-military",
+        depth: 2,
+        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: false,
+    },
+    WorldProjectionTemplate {
+        id: "perspective",
+        label: "Perspective",
+        icon_id: "projection-perspective",
+        depth: 0,
+        family: ui_wgpu::wgpu::CameraProjection3d::Perspective,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: false,
+    },
+    WorldProjectionTemplate {
+        id: "one-point",
+        label: "1-Point",
+        icon_id: "projection-one-point",
+        depth: 1,
+        family: ui_wgpu::wgpu::CameraProjection3d::Perspective,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: false,
+    },
+    WorldProjectionTemplate {
+        id: "two-point",
+        label: "2-Point",
+        icon_id: "projection-two-point",
+        depth: 1,
+        family: ui_wgpu::wgpu::CameraProjection3d::Perspective,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: false,
+    },
+    WorldProjectionTemplate {
+        id: "three-point",
+        label: "3-Point",
+        icon_id: "projection-three-point",
+        depth: 1,
+        family: ui_wgpu::wgpu::CameraProjection3d::Perspective,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: false,
+    },
+    WorldProjectionTemplate {
+        id: "curvilinear",
+        label: "Curvilinear",
+        icon_id: "projection-curvilinear",
+        depth: 1,
+        family: ui_wgpu::wgpu::CameraProjection3d::Perspective,
+        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        oblique_off_axis: false,
+    },
 ];
 
 /// 🔀️ The template a pane with no explicit selection reads. React resolves
@@ -18256,9 +18074,7 @@ fn world_projection_initial_seed(template_id: &str) -> Option<WorldProjectionIni
     let orientation_kind = orientation_record.get("type")?.as_str()?;
     let family = ui_wgpu::wgpu::CameraProjection3d::from_mode_kind(kind);
     let oblique_off_axis = kind == "oblique" && variant != Some("military");
-    let cardinal = (orientation_kind == "cardinal")
-        .then(|| orientation_record.get("view")?.as_str().and_then(ui_wgpu::wgpu::WorldCardinalView::from_wire))
-        .flatten();
+    let cardinal = (orientation_kind == "cardinal").then(|| orientation_record.get("view")?.as_str().and_then(ui_wgpu::wgpu::WorldCardinalView::from_wire)).flatten();
     let orientation = cardinal.map_or(ui_wgpu::wgpu::WorldProjectionOrientation::Free, ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal);
     let (direction, up) = if let Some(view) = cardinal {
         if kind == "oblique" && variant == Some("military") && view == ui_wgpu::wgpu::WorldCardinalView::Top {
@@ -18317,11 +18133,7 @@ pub(crate) fn world_projection_column_width(atlas: &mut FontAtlas, theme: &Theme
 /// 🔀️ The template row `id` names, or the default one for an id no template declares.
 pub(crate) fn world_projection_template(id: &str) -> &'static WorldProjectionTemplate {
     let id = world_projection_template_selection_id(id).unwrap_or(WORLD_PROJECTION_DEFAULT_TEMPLATE_ID);
-    WORLD_PROJECTION_TEMPLATES
-        .iter()
-        .find(|template| template.id == id)
-        .or_else(|| WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == WORLD_PROJECTION_DEFAULT_TEMPLATE_ID))
-        .expect("the default projection template is declared")
+    WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == id).or_else(|| WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == WORLD_PROJECTION_DEFAULT_TEMPLATE_ID)).expect("the default projection template is declared")
 }
 
 /// 📐️ The box one pane overlay chip occupies inside a window body — React's `anchorPositionStyle`
@@ -18401,10 +18213,14 @@ impl ShellState {
         }
     }
 
-    /// 🎛️ React's `Window` `actionsFolded` — the ONE fold both the Actions pane and the Search pane
-    /// read (`🪟️Window/🟦️.tsx:208`/`:214`); absent means folded.
+    /// 🎛️ React's `Window` Actions fold; absent means folded.
     pub(crate) fn window_actions_folded(&self, window_id: &str) -> bool {
         self.action_panel_folded.get(window_id).copied().unwrap_or(true)
+    }
+
+    /// 🔎️ React's `Window` Search fold; absent means folded.
+    pub(crate) fn window_search_folded(&self, window_id: &str) -> bool {
+        self.search_panel_folded.get(window_id).copied().unwrap_or(true)
     }
 
     /// 🪟️ The overlay chips ONE pane paints this frame, each with its fold state and whether its
@@ -18440,7 +18256,7 @@ impl ShellState {
                 // disabled-toggle case — that case is the Utilities/Measures rail, which React mounts
                 // unconditionally — so these two do not mount at all.
                 WindowPaneChip::Actions => (self.window_has_engagement_spec(window_id) || self.window_has_action_pane(window_id)).then_some((chip, self.window_actions_folded(window_id), false)),
-                WindowPaneChip::Search => self.window_has_search_spec(window_id).then_some((chip, self.window_actions_folded(window_id), false)),
+                WindowPaneChip::Search => self.window_has_search_spec(window_id).then_some((chip, self.window_search_folded(window_id), false)),
             })
             .collect()
     }
@@ -18469,10 +18285,8 @@ impl ShellState {
     /// that lands in it (`GhostRegionShell`'s `onPointerDownCapture` → `onActivate`,
     /// `🪟️Window/🟦️.tsx:302`), and a chip is painted inside the window body.
     ///
-    /// ⚖️ The five folds are INDEPENDENT of one another, with one exception React authors explicitly:
-    /// the Actions pane and the Search pane share ONE `actionsFolded`, so either chip opens and closes
-    /// both (`setEngagementBarFolded`, `🪟️Window/🟦️.tsx:373`/`:388`). No chip closes another pane's
-    /// fold, and none of them opens or closes a SURFACE — every `Pane` holds its own `useState(true)`
+    /// ⚖️ The five folds are independent. No chip closes another pane's fold, and none of them
+    /// opens or closes a SURFACE — every `Pane` holds its own `useState(true)`
     /// (`🪟️Window/🟦️.tsx:169`/`:176`/`:183`, `WorldOrbitProjectionSwitchPane`'s at
     /// `🌐️World3dHost/🟦️.tsx:5225`).
     ///
@@ -18497,9 +18311,13 @@ impl ShellState {
                 let folded = self.projection_pane_folded(window_id);
                 self.projection_pane_folded.insert(window_id.to_string(), !folded);
             }
-            WindowPaneChip::Actions | WindowPaneChip::Search => {
+            WindowPaneChip::Actions => {
                 let folded = self.window_actions_folded(window_id);
                 self.action_panel_folded.insert(window_id.to_string(), !folded);
+            }
+            WindowPaneChip::Search => {
+                let folded = self.window_search_folded(window_id);
+                self.search_panel_folded.insert(window_id.to_string(), !folded);
             }
         }
     }
@@ -18576,7 +18394,14 @@ impl ShellState {
         }
         let btn_y = window_rect.y + window_rect.h - theme.panel_inset - theme.control_height;
         if cursor.x <= 0.0 {
-            let chip = ChromeGroupItem { control_id: "", icon_id: Some(WindowPaneChip::Utilities.icon_id()), label: Some(shell_chrome_string(WindowPaneChip::Utilities.label_key(), self.locale_id == "de")), active: true, disabled: false, kind: HitKind::Toggle };
+            let chip = ChromeGroupItem {
+                control_id: "",
+                icon_id: Some(WindowPaneChip::Utilities.icon_id()),
+                label: Some(shell_chrome_string(WindowPaneChip::Utilities.label_key(), self.locale_id == "de")),
+                active: true,
+                disabled: false,
+                kind: HitKind::Toggle,
+            };
             let chip_w = retained_chrome_group_item_width(atlas, theme, &chip).unwrap_or(theme.control_height);
             cursor.x = window_pane_chip_rect(theme, window_rect, PanelAnchor::BottomLeft, chip_w).x + chip_w + theme.gap_standard;
             // 🖼️ The rail's own surface, pushed ONCE — React's unfolded `Pane` body carries a panel
@@ -18936,6 +18761,7 @@ fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementControl, is_
                         .iter()
                         .map(|option| {
                             UiNode::Toggle(UiToggleNode {
+                                appearance: ui_contract::ToggleAppearance::Button,
                                 id: option.id.clone(),
                                 icon_id: IconName::CircleDot,
                                 text: Some(Label::data(option.label.clone())),
@@ -19012,16 +18838,7 @@ fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementControl, is_
         Control::Select { id, .. } => id.as_deref().unwrap_or("engagement-control.select"),
         Control::Ring { id, .. } => id.as_deref().unwrap_or("engagement-control.ring"),
     };
-    vec![UiNode::Field(UiFieldNode {
-        id: format!("{field_id}.field"),
-        label: Label::data(label),
-        description: None,
-        required: None,
-        error: None,
-        child: Box::new(body.remove(0)),
-        presence: UiPresence::default(),
-        menu: None,
-    })]
+    vec![UiNode::Field(UiFieldNode { id: format!("{field_id}.field"), label: Label::data(label), description: None, required: None, error: None, child: Box::new(body.remove(0)), presence: UiPresence::default(), menu: None })]
 }
 
 /// 📝️ One staged ACTION argument as a labelled control — React's `renderStagedArgControl`
@@ -19044,6 +18861,7 @@ fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework
             menu: None,
         }),
         semio_framework::ActionArgControl::Toggle => UiNode::Toggle(UiToggleNode {
+            appearance: ui_contract::ToggleAppearance::Button,
             id: id.clone(),
             icon_id: IconName::Check,
             text: Some(Label::data(label.clone())),
@@ -19051,11 +18869,43 @@ fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework
             presence: UiPresence { selected: value == "true", ..UiPresence::default() },
             menu: None,
         }),
-        semio_framework::ActionArgControl::Slider { min, max, step, unit } => UiNode::Slider(UiSliderNode { id: id.clone(), value: value.parse::<f64>().unwrap_or(min), min, max, step: step.unwrap_or(1.0), unit, on_change, presence: UiPresence::default(), menu: None }),
-        semio_framework::ActionArgControl::Number { min, max, step } => {
-            UiNode::Input(UiInputNode { id: id.clone(), input_kind: "number".into(), value: value.to_string(), placeholder: Some(Label::data(label.clone())), commit: Some("blur".into()), min, max, step, accept: None, on_change, on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(), menu: None })
+        semio_framework::ActionArgControl::Slider { min, max, step, unit } => {
+            UiNode::Slider(UiSliderNode { id: id.clone(), value: value.parse::<f64>().unwrap_or(min), min, max, step: step.unwrap_or(1.0), unit, on_change, presence: UiPresence::default(), menu: None })
         }
-        _ => UiNode::Input(UiInputNode { id: id.clone(), input_kind: "text".into(), value: value.to_string(), placeholder: Some(Label::data(label.clone())), commit: Some("blur".into()), min: None, max: None, step: None, accept: None, on_change, on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(), menu: None }),
+        semio_framework::ActionArgControl::Number { min, max, step } => UiNode::Input(UiInputNode {
+            id: id.clone(),
+            input_kind: "number".into(),
+            value: value.to_string(),
+            placeholder: Some(Label::data(label.clone())),
+            commit: Some("blur".into()),
+            min,
+            max,
+            step,
+            accept: None,
+            on_change,
+            on_submit: None,
+            on_abort: None,
+            on_repeat_last: None,
+            presence: UiPresence::default(),
+            menu: None,
+        }),
+        _ => UiNode::Input(UiInputNode {
+            id: id.clone(),
+            input_kind: "text".into(),
+            value: value.to_string(),
+            placeholder: Some(Label::data(label.clone())),
+            commit: Some("blur".into()),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+            on_change,
+            on_submit: None,
+            on_abort: None,
+            on_repeat_last: None,
+            presence: UiPresence::default(),
+            menu: None,
+        }),
     };
     // 🌳️ React's form row IS a `TreeDataItem` whose `control` is the editor: the ROW carries
     // `action.<actionId>.arg.<argId>` and the editor inside it carries the bare `def.id`
@@ -19073,11 +18923,11 @@ fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework
 
 impl ShellState {
     fn chrome_accessibility_checked(&self, id: &str, kind: &HitKind) -> Option<bool> {
-        self.widget_maps.toggle_metas.get(id).map(|(pressed, _)| *pressed).or_else(|| {
-            (kind == &HitKind::Toggle).then(|| {
-                self.panel_tab_anchor(id).is_some_and(|anchor| self.anchor_open(anchor) && self.anchor_state(anchor).path.first().is_some_and(|path| path == id))
-            })
-        })
+        self.widget_maps
+            .toggle_metas
+            .get(id)
+            .map(|(pressed, _)| *pressed)
+            .or_else(|| (kind == &HitKind::Toggle).then(|| self.panel_tab_anchor(id).is_some_and(|anchor| self.anchor_open(anchor) && self.anchor_state(anchor).path.first().is_some_and(|path| path == id))))
     }
 
     fn chrome_accessibility_selected(&self, id: &str, kind: &HitKind) -> Option<bool> {
@@ -19087,9 +18937,7 @@ impl ShellState {
                 ShellPaletteKind::Find => self.find_selected == index,
             });
         }
-        (kind == &HitKind::PanelTab).then(|| {
-            self.panel_tab_anchor(id).is_some_and(|anchor| self.anchor_open(anchor) && self.anchor_state(anchor).path.iter().any(|path| path == id))
-        })
+        (kind == &HitKind::PanelTab).then(|| self.panel_tab_anchor(id).is_some_and(|anchor| self.anchor_open(anchor) && self.anchor_state(anchor).path.iter().any(|path| path == id)))
     }
 
     /// 🪟️ The window KIND one live instance renders, which is what `resolve_window_actions` scopes an
@@ -19126,9 +18974,7 @@ impl ShellState {
     /// The BODY still needs the input (React's `Search` returns `null` without one); the PANE mounts
     /// either way, which is why this is a separate question from [`Self::build_window_search_ui`].
     pub(crate) fn window_has_search_spec(&self, window_id: &str) -> bool {
-        self.window_engagements
-            .get(window_id)
-            .is_some_and(|engagement| engagement.input.is_some() || engagement.possible_engagements.as_ref().is_some_and(|possibles| !possibles.is_empty()))
+        self.window_engagements.get(window_id).is_some_and(|engagement| engagement.input.is_some() || engagement.possible_engagements.as_ref().is_some_and(|possibles| !possibles.is_empty()))
     }
 
     /// 🎬️ ONE window's Actions pane body — React's top-left `Pane` content, in its own order:
@@ -19173,11 +19019,16 @@ impl ShellState {
                 .filter_map(|option| {
                     let action = option.action.clone()?;
                     Some(UiNode::Toggle(UiToggleNode {
+                        appearance: ui_contract::ToggleAppearance::Button,
                         id: option.id.clone(),
                         icon_id: option.icon_id.clone().unwrap_or(IconName::CircleDot),
                         text: option.label.clone().map(Label::data),
                         on_change: action,
-                        presence: UiPresence { selected: option.pressed.unwrap_or(false), state: if option.disabled.unwrap_or(false) { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                        presence: UiPresence {
+                            selected: option.pressed.unwrap_or(false),
+                            state: if option.disabled.unwrap_or(false) { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal },
+                            ..UiPresence::default()
+                        },
                         menu: None,
                     }))
                 })
@@ -19237,17 +19088,10 @@ impl ShellState {
                     }
                 })
                 .collect();
-            sections.push(UiTreeSectionNode {
-                id: format!("action.category.{category}"),
-                label: Some(Label::data(action_category_label(category, is_de))),
-                default_open: Some(true),
-                presence: UiPresence::default(),
-                items,
-                window: None,
-            });
+            sections.push(UiTreeSectionNode { id: format!("action.category.{category}"), label: Some(Label::data(action_category_label(category, is_de))), default_open: Some(true), presence: UiPresence::default(), items, window: None });
         }
         if !sections.is_empty() {
-            children.push(UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }));
+            children.push(UiNode::Tree(UiTreeNode { presentation: Default::default(), sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }));
         }
         if let Some(action) = expanded.as_deref().and_then(|id| actions.iter().find(|action| action.id == id)) {
             let staged = self.staged_map_for(window_id, &action.id);
@@ -19266,8 +19110,15 @@ impl ShellState {
             // `action.category.<id>.form` header had no pressable twin here at all
             // (`📓️w13b-actions-search-pane-bodies.md` §6 gap 5).
             let category = action_category_id(action);
-            children.push(UiNode::Tree(UiTreeNode {
-                sections: vec![UiTreeSectionNode { id: format!("action.category.{category}.form"), label: Some(Label::data(action.label.resolve(terminology, locale).to_string())), default_open: Some(true), presence: UiPresence::default(), items, window: None }],
+            children.push(UiNode::Tree(UiTreeNode { presentation: Default::default(),
+                sections: vec![UiTreeSectionNode {
+                    id: format!("action.category.{category}.form"),
+                    label: Some(Label::data(action.label.resolve(terminology, locale).to_string())),
+                    default_open: Some(true),
+                    presence: UiPresence::default(),
+                    items,
+                    window: None,
+                }],
                 presence: UiPresence::default(),
                 drop_action: None,
                 menu: None,
@@ -19347,6 +19198,7 @@ impl ShellState {
         if !possibles.is_empty() {
             let open = self.search_possibles_open.get(window_id).copied().unwrap_or(false);
             children.push(UiNode::Toggle(UiToggleNode {
+                appearance: ui_contract::ToggleAppearance::Button,
                 id: WINDOW_SEARCH_SUGGESTIONS_CONTROL_ID.into(),
                 icon_id: if open { IconName::ChevronDown } else { IconName::ChevronRight },
                 text: Some(Label::data(shell_chrome_string("windowSearch.suggestions", is_de))),
@@ -19423,12 +19275,7 @@ impl ShellState {
     /// the pane inset, [`WINDOW_PANE_BODY_WIDTH_PX`] wide, growing DOWN from under its own chip row.
     pub(crate) fn window_actions_rect(theme: &Theme, body: Rect, height: f32) -> Rect {
         let top = body.y + theme.panel_inset + theme.control_height + theme.gap_standard;
-        Rect::new(
-            body.x + theme.panel_inset,
-            top,
-            WINDOW_PANE_BODY_WIDTH_PX.min((body.w - theme.panel_inset * 2.0).max(0.0)),
-            height.min((body.y + body.h - theme.panel_inset - top).max(0.0)),
-        )
+        Rect::new(body.x + theme.panel_inset, top, WINDOW_PANE_BODY_WIDTH_PX.min((body.w - theme.panel_inset * 2.0).max(0.0)), height.min((body.y + body.h - theme.panel_inset - top).max(0.0)))
     }
 
     /// 📐️ The Search pane's box — React's `top-middle` anchor: centred on the body's own width, the
@@ -19444,23 +19291,31 @@ impl ShellState {
     /// hit registry above the window body's. `true` once the body is off the walk's critical path —
     /// painted, absent, folded, or faulted after its opportunity ceiling.
     ///
-    /// ⚖️ BOTH bodies read the ONE `actionsFolded` React gives the pair (`setEngagementBarFolded`,
-    /// `🪟️Window/🟦️.tsx:373`/`:388`), which is the same fold [`WindowPaneChip::Actions`] and
-    /// [`WindowPaneChip::Search`] already share.
+    /// ⚖️ Each body reads its own fold, matching the two independent React pane controls.
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
-    fn paint_window_pane_body_step(&mut self, search: bool, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
-        if self.window_actions_folded(window_id) || !surface_fits_overlay(theme, window_rect) {
+    fn paint_window_pane_body_step(
+        &mut self,
+        search: bool,
+        cursor: &mut ShellChromeChildCursor,
+        draw: &mut DrawList,
+        overlay: &mut Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        window_id: &str,
+        window_rect: Rect,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) -> bool {
+        let folded = if search { self.window_search_folded(window_id) } else { self.window_actions_folded(window_id) };
+        if folded || !surface_fits_overlay(theme, window_rect) {
             return true;
         }
         let documents = if search { &mut self.window_search_documents } else { &mut self.window_actions_documents };
         let Some(document) = documents.remove(window_id) else { return true };
         let surface = if search { window_search_surface_id(window_id) } else { window_actions_surface_id(window_id) };
         let height = crate::interpreter::retained_content_height(&surface).unwrap_or(theme.control_height * 2.0);
-        let rect = if search {
-            Self::window_search_rect(theme, window_rect, height)
-        } else {
-            Self::window_actions_rect(theme, window_rect, height)
-        };
+        let rect = if search { Self::window_search_rect(theme, window_rect, height) } else { Self::window_actions_rect(theme, window_rect, height) };
         if !cursor.flag {
             draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.panel);
             cursor.flag = true;
@@ -19830,10 +19685,7 @@ pub(crate) fn shell_shortcut_table(overrides: &HashMap<String, String>) -> Vec<(
 /// ⌨️ The shell verb a key event asks for against a RESOLVED table, or `None` when the event belongs
 /// to the app/content. First matching row wins, in table order, exactly like React's own scan.
 pub(crate) fn shell_shortcut_for_in(table: &[(String, String)], action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellShortcut> {
-    table
-        .iter()
-        .find(|(_, keys)| keys.split(',').any(|chord| key_event_matches_chord(action, modifiers, chord.trim())))
-        .and_then(|(control_id, _)| shell_shortcut_for_control_id(control_id))
+    table.iter().find(|(_, keys)| keys.split(',').any(|chord| key_event_matches_chord(action, modifiers, chord.trim()))).and_then(|(control_id, _)| shell_shortcut_for_control_id(control_id))
 }
 
 /// ⌨️ The shell verb a key event asks for with NO override applied — the default-table projection the
@@ -19918,10 +19770,7 @@ impl ShellState {
     /// else the view-state's active kind, else the app's first kind).
     fn active_utility_bar_window_kind<'a>(&self, session: &'a ActiveSession) -> &'a semio_framework::WindowKindDefinition {
         let active_id = self.active_window_id.as_deref().or(session.view_state.window_id.as_deref());
-        active_id
-            .and_then(|id| self.live_window_kind_id(session, id))
-            .and_then(|kind_id| session.app.window_kinds.iter().find(|kind| kind.id == kind_id))
-            .unwrap_or_else(|| session.app.window_kinds.first())
+        active_id.and_then(|id| self.live_window_kind_id(session, id)).and_then(|kind_id| session.app.window_kinds.iter().find(|kind| kind.id == kind_id)).unwrap_or_else(|| session.app.window_kinds.first())
     }
 
     /// 🧰️ Derives the ACTIVE window's utility `UtilityNode`s — the roster the shell's own hit router and
@@ -20026,17 +19875,11 @@ impl ShellState {
         self.staged_action_args.get(&Self::staged_key(window_id, action_id)).and_then(|map| map.get(&arg.id).cloned()).or_else(|| arg.default.as_ref().map(dsl_value_as_json))
     }
 
-
-
     /// 🧮️ Resolves required presence and current catalog membership before native staged execution.
     pub(crate) fn resolved_execute_args(defs: &[semio_framework::ActionArgDef], staged: &serde_json::Map<String, Value>) -> Option<serde_json::Map<String, Value>> {
         let staged_dsl = DslValue::from(Value::Object(staged.clone()));
         let effective = semio_framework::effective_action_args(defs, &staged_dsl, None);
-        if semio_framework::unresolved_action_args(defs, &effective).is_empty() {
-            Value::from(&effective).as_object().cloned()
-        } else {
-            None
-        }
+        if semio_framework::unresolved_action_args(defs, &effective).is_empty() { Value::from(&effective).as_object().cloned() } else { None }
     }
 
     /// 🚀️ Executes a staged action once (P2): validates required args, dispatches exactly one
@@ -20102,10 +19945,7 @@ impl ShellState {
             CommandDefinition::new("os.setDriver", LocalizedLabel::native("Set Driver", "Treiber festlegen"), "layout", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::native("Driver", "Treiber"),
-                vec![
-                    ActionArgOption { value: "default".into(), label: LocalizedLabel::native("Default", "Standard") },
-                    ActionArgOption { value: "compact".into(), label: LocalizedLabel::native("Compact", "Kompakt") },
-                ],
+                vec![ActionArgOption { value: "default".into(), label: LocalizedLabel::native("Default", "Standard") }, ActionArgOption { value: "compact".into(), label: LocalizedLabel::native("Compact", "Kompakt") }],
             )
             .required()]),
             CommandDefinition::new("os.setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"), "language", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
@@ -20114,8 +19954,12 @@ impl ShellState {
                 vec![ActionArgOption { value: "en".into(), label: LocalizedLabel::data("English") }, ActionArgOption { value: "de".into(), label: LocalizedLabel::data("Deutsch") }],
             )
             .required()]),
-            CommandDefinition::new("os.setTerminology", LocalizedLabel::native("Set Terminology", "Terminologie festlegen"), "language", "settings", ActionKind::Shell)
-                .with_args([ActionArgDef::select("value", LocalizedLabel::native("Terminology", "Terminologie"), terminology_options).required()]),
+            CommandDefinition::new("os.setTerminology", LocalizedLabel::native("Set Terminology", "Terminologie festlegen"), "language", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
+                "value",
+                LocalizedLabel::native("Terminology", "Terminologie"),
+                terminology_options,
+            )
+            .required()]),
             CommandDefinition::new("os.setThemeId", LocalizedLabel::native("Set Theme", "Thema festlegen"), "appearance", "settings", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::native("Theme", "Design"),
@@ -20220,20 +20064,9 @@ impl ShellState {
             .iter()
             .map(|key| format!("{key}={}", shell_chrome_string(key, is_de)))
             .collect::<Vec<_>>();
-        let windows = self
-            .session
-            .as_ref()
-            .map(|session| session.app.window_kinds.iter().map(|kind| format!("{}={}", kind.id, kind.label.resolve(self.active_terminology(), self.active_locale()))).collect::<Vec<_>>())
-            .unwrap_or_default();
+        let windows = self.session.as_ref().map(|session| session.app.window_kinds.iter().map(|kind| format!("{}={}", kind.id, kind.label.resolve(self.active_terminology(), self.active_locale()))).collect::<Vec<_>>()).unwrap_or_default();
         let commands = self.build_os_commands().into_iter().map(|definition| format!("{}={}", definition.id, definition.label.resolve(self.active_terminology(), self.active_locale()))).collect::<Vec<_>>();
-        Self::debug_log(&format!(
-            "[DEBUG] wgpu-shell locale resolved={} terminology={} reason={reason} chrome=[{}] windows=[{}] commands=[{}]",
-            self.locale_id,
-            self.terminology_id,
-            chrome.join(", "),
-            windows.join(", "),
-            commands.join(", ")
-        ));
+        Self::debug_log(&format!("[DEBUG] wgpu-shell locale resolved={} terminology={} reason={reason} chrome=[{}] windows=[{}] commands=[{}]", self.locale_id, self.terminology_id, chrome.join(", "), windows.join(", "), commands.join(", ")));
     }
 
     pub(crate) async fn apply_os_command(&mut self, command_id: &str, option_value: Option<&str>) -> Result<(), String> {
@@ -20325,6 +20158,9 @@ impl ShellState {
     /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `🗑️generated/w12c-parity-run-19/steps.json` step 16).
     fn shell_command_for_control(control_id: &str, is_de: bool) -> Option<(&'static str, String)> {
         if control_id.starts_with("dock.tab.") && control_id.ends_with(".close") {
+            return Some(("shell.windowClose", shell_chrome_string("common.close", is_de).to_string()));
+        }
+        if control_id == "ui.window.close" {
             return Some(("shell.windowClose", shell_chrome_string("common.close", is_de).to_string()));
         }
         if control_id.starts_with("shell.layout.") {
@@ -20419,6 +20255,16 @@ impl ShellState {
         };
         let note = Self::note_shell_command_action(&controller_id, command_id, &label, detail);
         self.dispatch_action(note).await
+    }
+
+    fn arm_control_command(&mut self, control_id: &str, detail: Option<Value>) {
+        let Some((command_id, label)) = Self::shell_command_for_control(control_id, self.locale_id == "de") else {
+            return;
+        };
+        let Some(controller_id) = self.shell_command_controller_id() else {
+            return;
+        };
+        self.deferred_actions.push(Self::note_shell_command_action(&controller_id, command_id, &label, detail));
     }
 
     /// 🕒️ `ui.panelToggle.details`/`ui.panelToggle.settings` share this: both log the same
@@ -20522,29 +20368,15 @@ impl ShellState {
     /// 🌐️ Snapshots only mounted shell-owned leaves for one locale generation; absent and guest
     /// documents cannot enter the refresh lane and a newer locale supersedes the exact older roster.
     fn arm_localized_panel_refresh(&mut self, generation: u64) {
-        let pending = self
-            .shell_owned_panel_leaves()
-            .into_iter()
-            .filter(|tab_id| self.panel_documents.contains_key(tab_id))
-            .collect::<VecDeque<_>>();
+        let pending = self.shell_owned_panel_leaves().into_iter().filter(|tab_id| self.panel_documents.contains_key(tab_id)).collect::<VecDeque<_>>();
         self.chrome_present.maintenance.locale_refresh_generation = generation;
-        self.chrome_present.maintenance.locale_refresh = (!pending.is_empty()).then(|| Box::new(ShellLocalizedPanelRefreshCursor {
-            generation,
-            locale_id: self.locale_id.clone(),
-            pending,
-        }));
+        self.chrome_present.maintenance.locale_refresh = (!pending.is_empty()).then(|| Box::new(ShellLocalizedPanelRefreshCursor { generation, locale_id: self.locale_id.clone(), pending }));
     }
 
     /// 🌐️ Replaces at most one mounted localized owner per frame-maintenance step. Admission
     /// refusal leaves that exact surface at the cursor head so its readable prior lease can retry.
     fn advance_localized_panel_refresh_step(&mut self) {
-        let Some((generation, locale_id, tab_id)) = self
-            .chrome_present
-            .maintenance
-            .locale_refresh
-            .as_ref()
-            .and_then(|cursor| cursor.pending.front().map(|tab_id| (cursor.generation, cursor.locale_id.clone(), tab_id.clone())))
-        else {
+        let Some((generation, locale_id, tab_id)) = self.chrome_present.maintenance.locale_refresh.as_ref().and_then(|cursor| cursor.pending.front().map(|tab_id| (cursor.generation, cursor.locale_id.clone(), tab_id.clone()))) else {
             self.chrome_present.maintenance.locale_refresh = None;
             return;
         };
@@ -20610,11 +20442,7 @@ impl ShellState {
             }));
             sections.push(settings_section(&format!("command.category.{category_id}.form"), &expanded.definition.label.resolve(terminology, locale), rows));
         }
-        let list: Vec<UiNode> = entries
-            .iter()
-            .filter(|entry| expanded_key.as_deref() != Some(command_address_stable_key(&entry.address).as_str()))
-            .map(|entry| self.build_command_panel_row(entry))
-            .collect();
+        let list: Vec<UiNode> = entries.iter().filter(|entry| expanded_key.as_deref() != Some(command_address_stable_key(&entry.address).as_str())).map(|entry| self.build_command_panel_row(entry)).collect();
         if !list.is_empty() {
             sections.push(settings_section("command.category.list", &command_category_label(category_id), list));
         }
@@ -21413,8 +21241,6 @@ fn should_auto_start_introduction(seen_key: &str, has_introduction: bool, tutori
     !seen_key.is_empty() && has_introduction && !tutorial_active && (replay_on_load || !seen)
 }
 
-
-
 /// 🧭️ Item 5's "active-path tracking": true if `nodes` (recursively, through nested `Collection`s)
 /// contains a pressed `Toggle` — used so a *collapsed* ribbon `Collection` still highlights when the
 /// user's current selection lives inside it, mirroring `ui/js/react/index.tsx`'s recursive picker
@@ -21495,8 +21321,6 @@ impl ShellChromeBuildState {
     fn resolve_element_rect(&self, id: &str) -> Option<Rect> {
         self.element_rects.get(id).map(|entry| entry.rect)
     }
-
-
 }
 
 /// 🎓️ Punches `hole` out of `band`, returning up to four remaining rectangles (or the original band when
@@ -21645,12 +21469,7 @@ fn chrome_tour_anchor_rect(state: &ShellState, element_id: &str) -> Option<Rect>
     let segment = rest.split_once(".action.").map_or(rest, |(segment, _)| segment);
     let session = state.session.as_ref()?;
     let kind = session.app.window_kinds.iter().find(|kind| semio_framework::element_id_segment(&kind.id) == segment)?;
-    state
-        .dock
-        .window_instances()
-        .into_iter()
-        .filter(|(_, kind_id)| kind_id == &kind.id)
-        .find_map(|(window_id, _)| state.window_content_rects.get(&window_id).copied())
+    state.dock.window_instances().into_iter().filter(|(_, kind_id)| kind_id == &kind.id).find_map(|(window_id, _)| state.window_content_rects.get(&window_id).copied())
 }
 
 /// 🫧 Closes an overlay sheet's glass-content layer, if this walk opened one — the tour card and the
@@ -21705,11 +21524,7 @@ struct ChromeTourChip {
 /// 🎓️ Where one tour chip's leading or trailing icon sits — React's `ButtonGroupItem` puts the icon
 /// LAST, after the label and the chord badge, and only `WindowChrome`'s `close` control leads with it.
 fn chrome_tour_chip_icon_x(chip: &ChromeTourChip, theme: &Theme) -> f32 {
-    if chip.leading_icon {
-        chip.rect.x + theme.padding_standard * 2.0
-    } else {
-        chip.rect.x + chip.rect.w - theme.padding_standard * 2.0 - CHROME_ICON_TINY
-    }
+    if chip.leading_icon { chip.rect.x + theme.padding_standard * 2.0 } else { chip.rect.x + chip.rect.w - theme.padding_standard * 2.0 - CHROME_ICON_TINY }
 }
 
 /// 🎓️ The `(x, baseline, width)` one tour chip's inline label flows in — `px-double` from the chip's
@@ -21920,11 +21735,7 @@ fn engagement_completion_suffix(query: &str, possibles: Option<&[ui_wgpu::wgpu::
 /// unconditionally needs a real wgpu device, per its own `_gpu` parameter).
 #[cfg(test)]
 fn engagement_ghost_accept_on_click(ghost_rect: Rect, pointer_x: f32, pointer_y: f32, clicked_this_frame: bool, query: &str, suffix: &str) -> Option<String> {
-    if clicked_this_frame && ghost_rect.contains(pointer_x, pointer_y) {
-        Some(format!("{query}{suffix}"))
-    } else {
-        None
-    }
+    if clicked_this_frame && ghost_rect.contains(pointer_x, pointer_y) { Some(format!("{query}{suffix}")) } else { None }
 }
 //#endregion 🔖️ChromeOverlaysAndTour
 
@@ -22331,11 +22142,7 @@ fn tutorial_advance_playhead(playhead_ms: f64, dt_ms: f64, rate: f32) -> f64 {
 /// 🎚️ Pure scrub-bar progress (0–1) for a given playhead/duration — `0.0` for a zero-length timeline
 /// (the in-progress recording case) rather than dividing by zero.
 fn tutorial_scrub_progress(playhead_ms: f64, duration_ms: u64) -> f32 {
-    if duration_ms == 0 {
-        0.0
-    } else {
-        (playhead_ms / duration_ms as f64).clamp(0.0, 1.0) as f32
-    }
+    if duration_ms == 0 { 0.0 } else { (playhead_ms / duration_ms as f64).clamp(0.0, 1.0) as f32 }
 }
 
 /// 🎚️ Pure scrub-bar hit math: pointer x within `track` → target playhead ms.
@@ -22890,7 +22697,17 @@ impl ShellChromeFramePhase {
 
 impl ShellState {
     /// 🎭️ Advances one retained chrome child per worker opportunity.
-    pub(crate) fn render_chrome_step(&mut self, cursor: &mut ShellChromeFrameCursor, draw: &mut DrawList, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
+    pub(crate) fn render_chrome_step(
+        &mut self,
+        cursor: &mut ShellChromeFrameCursor,
+        draw: &mut DrawList,
+        overlay: &mut DrawList,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) -> bool {
         // 🩺️ `FrameBuildPhase::Chrome` holds the whole frame until this walk completes, so a phase
         // that cannot advance presents nothing at all. Say so — on the console and on the chrome
         // ledger `dumpChrome` reads — instead of going quiet behind an empty canvas.
@@ -23339,9 +23156,7 @@ impl ShellState {
             return !self.retired_world3d_states.is_empty();
         }
         let now = semio_framework_job::default_now_us();
-        let budget = now
-            .and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US))
-            .unwrap_or(semio_framework_job::StepBudget::new(1, u64::MAX));
+        let budget = now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(1, u64::MAX));
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(self.world3d_retirement_epoch),
             semio_framework_job::Generation(1),
@@ -23358,6 +23173,38 @@ impl ShellState {
         !self.retired_world3d_states.is_empty()
     }
 
+    pub(crate) fn close_component_world_step(&mut self, target: &crate::interpreter::ScenePointerTarget, operation: semio_framework_trace::OperationId, sequence: &mut u64) -> Result<bool, ()> {
+        if !matches!(target.kind, ui_wgpu::wgpu::SurfaceKind::World3d | ui_wgpu::wgpu::SurfaceKind::IconRender) {
+            return Ok(true);
+        }
+        if self.component_world3d_retirement.is_none() {
+            let Some(token) = self.world3d_states.token(&target.host_id) else { return Ok(true) };
+            let Some(mut owner) = self.world3d_states.take_exact_to_retirement(token) else { return Err(()) };
+            begin_world3d_dynamic_retirement(&mut owner.value);
+            self.world3d_window_ids.remove(&target.host_id);
+            self.world3d_status.remove(&target.host_id);
+            self.world3d_status_pill_trace.remove(&target.host_id);
+            self.settle_pump.watches.remove(&target.host_id);
+            self.component_world3d_retirement = Some(owner);
+            return Ok(false);
+        }
+        let owner = self.component_world3d_retirement.as_mut().expect("component World3d retirement owner");
+        if owner.id != target.host_id {
+            return Err(());
+        }
+        if world3d_dynamic_retirement_terminal_is_empty(&owner.value) {
+            self.component_world3d_retirement = None;
+            self.world3d_states.acknowledge_retired_owner();
+            return Ok(true);
+        }
+        let now = semio_framework_job::default_now_us();
+        let deadline = now.and_then(|now| now.checked_add(semio_framework_job::MAINTENANCE_LANE_WALL_US)).ok_or(())?;
+        let mut context =
+            semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, deadline), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, sequence);
+        step_world3d_dynamic_retirement(&mut owner.value, &mut context);
+        Ok(false)
+    }
+
     fn advance_chrome_preferences_load_step(&mut self) {
         let phase = self.chrome_present.maintenance.load_phase;
         match phase {
@@ -23370,7 +23217,11 @@ impl ShellState {
                 self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
                 self.chrome_build.preferences.custom_drivers = preferences.custom_drivers;
                 self.chrome_build.driver = resolve_ui_driver_chrome(&self.driver_id, &self.chrome_build.preferences.custom_drivers);
-                self.chrome_build.preferences.ui_layout = match preferences.layout { Some(OsUiChromeLayout::Tablet) => "tablet", _ => "desktop" }.to_string();
+                self.chrome_build.preferences.ui_layout = match preferences.layout {
+                    Some(OsUiChromeLayout::Tablet) => "tablet",
+                    _ => "desktop",
+                }
+                .to_string();
                 self.chrome_build.preferences.theme_id = env_lock("SEMIO_LOCKED_THEME").or(preferences.theme_id).unwrap_or_else(|| "semio".to_string());
                 self.chrome_build.preferences.custom_themes = custom_themes;
                 self.chrome_build.preferences.keybinding_overrides = preferences.keybinding_overrides;
@@ -23472,25 +23323,12 @@ impl ShellState {
     /// active — `0.0` otherwise, so `body_rect`/the canvas layout are byte-identical to before this
     /// region existed whenever no tutorial is running.
     fn tutorial_bar_reserve(&self, theme: &Theme) -> f32 {
-        if self.tutorial.is_some() {
-            tutorial_bar_height(theme)
-        } else {
-            0.0
-        }
+        if self.tutorial.is_some() { tutorial_bar_height(theme) } else { 0.0 }
     }
 
     fn shell_uri(&self) -> String {
         self.uri_history.get(self.uri_index).cloned().unwrap_or_else(|| self.session.as_ref().map(|s| format!("os://{}/{}", s.plugin_id, s.app.id)).unwrap_or_else(|| "os://home".into()))
     }
-
-
-
-
-
-
-
-
-
 
     /// 📑️ The `index`-th folded root tab of ONE anchor, in the anchor's own declared order.
     fn anchor_tab_row_item(&self, anchor: PanelAnchor, index: usize) -> Option<(PanelAnchor, DockTabNode)> {
@@ -23803,7 +23641,18 @@ impl ShellState {
         }
     }
 
-    fn render_main_window_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
+    fn render_main_window_step(
+        &mut self,
+        cursor: &mut ShellChromeChildCursor,
+        draw: &mut DrawList,
+        overlay: &mut Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        bounds: Rect,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) -> bool {
         match cursor.phase {
             0 => {
                 if ui_wgpu::wgpu::shell_floor_paints(self.chrome_floor_scope) {
@@ -24134,11 +23983,7 @@ impl ShellState {
     /// side anchors have no bonded shell row and therefore retain their root row here.
     fn anchor_panel_tab_rows(&self, anchor: PanelAnchor) -> Vec<Vec<DockTabNode>> {
         let rows = self.anchor_tab_rows(anchor);
-        if matches!(anchor.vertical(), "top" | "bottom") {
-            rows.into_iter().skip(1).collect()
-        } else {
-            rows
-        }
+        if matches!(anchor.vertical(), "top" | "bottom") { rows.into_iter().skip(1).collect() } else { rows }
     }
 
     /// 🧭️ The box the anchor's active leaf document paints into — the panel minus its tab bar.
@@ -24184,14 +24029,7 @@ impl ShellState {
                 chrome_icon(draw, icons, icon_id, chip.x + theme.padding_standard, chip.y + (chip.h - PANEL_CHROME_ICON_TINY) * 0.5, PANEL_CHROME_ICON_TINY, fg);
                 chrome_text(draw, atlas, input, theme, &node.label, chip.x + theme.padding_standard + PANEL_CHROME_ICON_TINY + theme.gap_standard, chip.y + (chip.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, fg);
                 chrome_icon(draw, icons, "grip-vertical", chip.x + chip.w - theme.padding_standard - PANEL_CHROME_GRIP_SIZE, chip.y + (chip.h - PANEL_CHROME_GRIP_SIZE) * 0.5, PANEL_CHROME_GRIP_SIZE, fg);
-                input.register_hit(HitTarget {
-                    rect: chip,
-                    event: None,
-                    control_id: Some(node.id.as_str().into()),
-                    kind: HitKind::PanelTab,
-                    drag_axis: Some(DragAxis::Both),
-                    drag_data: None,
-                });
+                input.register_hit(HitTarget { rect: chip, event: None, control_id: Some(node.id.as_str().into()), kind: HitKind::PanelTab, drag_axis: Some(DragAxis::Both), drag_data: None });
                 self.chrome_build.register_element_rect(panel_tab_introduction_element_id(&node.id), chip);
                 x += chip_w + theme.gap_standard;
             }
@@ -24267,14 +24105,24 @@ impl ShellState {
     /// 🧭️ One OPEN anchor's floating panel: its own tab bar (branch toggles and leaf tabs, hit-tested and
     /// draggable between anchors), then the active leaf's retained document, then its resize handle — the
     /// wgpu twin of React's `<Panel anchor=… />` from the `ANCHORS.map` loop in `📐️Layout/🟦️.tsx`.
-    fn render_panel_step(&mut self, cursor: &mut ShellChromeChildCursor, anchor: PanelAnchor, panel_draw: &mut DrawList, overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
+    fn render_panel_step(
+        &mut self,
+        cursor: &mut ShellChromeChildCursor,
+        anchor: PanelAnchor,
+        panel_draw: &mut DrawList,
+        overlay: Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        body: Rect,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) -> bool {
         match cursor.phase {
             0 => {
                 cursor.rect = Some(self.anchor_rect(anchor, body, theme));
                 cursor.window = self.anchor_state(anchor).active_tab().and_then(UiText::try_from_str);
-                cursor.flag = cursor.window.as_ref().is_none_or(|window| {
-                    crate::interpreter::retained_content_height(window.as_str()).is_some() || !self.panel_documents.contains_key(window.as_str())
-                });
+                cursor.flag = cursor.window.as_ref().is_none_or(|window| crate::interpreter::retained_content_height(window.as_str()).is_some() || !self.panel_documents.contains_key(window.as_str()));
                 cursor.phase = 1;
             }
             1 => {
@@ -24354,9 +24202,7 @@ impl ShellState {
                 // mirrors its overlays, its Select inline edge and its inline arrow keys, exactly as
                 // React's does — the seam `Ui::set_window_flow` was built for and never given
                 // (ticket 26/09/17 packet W15a).
-                let complete = self
-                    .render_panel_document_opportunity(cursor, window.as_str(), content, panel_draw, overlay, atlas, icons, input, theme, world_resources, anchor)
-                    .unwrap_or(false);
+                let complete = self.render_panel_document_opportunity(cursor, window.as_str(), content, panel_draw, overlay, atlas, icons, input, theme, world_resources, anchor).unwrap_or(false);
                 if !complete {
                     if !cursor.document.terminal_is_fault() {
                         return false;
@@ -24391,11 +24237,7 @@ impl ShellState {
                 };
                 for &(left, suffix) in sides {
                     let id = format!("panel.resize.{}.{suffix}", anchor.as_str());
-                    let handle = if left {
-                        Rect::new(panel.x, panel.y, theme.panel_inset, panel.h)
-                    } else {
-                        Rect::new(panel.x + panel.w - theme.panel_inset, panel.y, theme.panel_inset, panel.h)
-                    };
+                    let handle = if left { Rect::new(panel.x, panel.y, theme.panel_inset, panel.h) } else { Rect::new(panel.x + panel.w - theme.panel_inset, panel.y, theme.panel_inset, panel.h) };
                     input.register_hit(HitTarget { rect: handle, event: None, control_id: Some(id.into()), kind: HitKind::PanelResize, drag_axis: Some(DragAxis::Horizontal), drag_data: None });
                 }
                 cursor.phase = 12;
@@ -24413,7 +24255,17 @@ impl ShellState {
     /// Toggled by `ui.mobilePanel.toggle`, invisible until then, exactly as React's own
     /// `mobilePanelVisible` gate.
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
-    fn render_mobile_panel_step(&mut self, cursor: &mut ShellChromeChildCursor, panel_draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
+    fn render_mobile_panel_step(
+        &mut self,
+        cursor: &mut ShellChromeChildCursor,
+        panel_draw: &mut DrawList,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        body: Rect,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) -> bool {
         let tabs = self.mobile_panel_tabs();
         if !self.mobile_panel_visible || tabs.is_empty() {
             return true;
@@ -24545,7 +24397,14 @@ impl ShellState {
                     return false;
                 };
                 let control_id = node.id.clone();
-                let item = ChromeGroupItem { control_id: control_id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: self.anchor_open(anchor) && self.anchor_state(anchor).path.first() == Some(&node.id), disabled: false, kind: HitKind::Toggle };
+                let item = ChromeGroupItem {
+                    control_id: control_id.as_str(),
+                    icon_id: Some(node.icon_id.as_str()),
+                    label: Some(node.label.as_str()),
+                    active: self.anchor_open(anchor) && self.anchor_state(anchor).path.first() == Some(&node.id),
+                    disabled: false,
+                    kind: HitKind::Toggle,
+                };
                 if cursor.rect.is_none() {
                     cursor.rect = shell_chrome_clip_horizontal(chip, ShellChromeBandSpan { left: theme.padding_standard, right: width - theme.padding_standard });
                 }
@@ -24582,11 +24441,15 @@ impl ShellState {
                     };
                     cursor.window = Some(title);
                 }
-                let role_width = self.session.as_ref().map(|session| {
-                    let label = shell_surface_role_chip_text(session.app.role, self.locale_id == "de");
-                    let item = ChromeGroupItem { control_id: "", icon_id: None, label: Some(label), active: false, disabled: false, kind: HitKind::Button };
-                    retained_chrome_group_item_width(atlas, theme, &item).unwrap_or(0.0) + theme.gap_standard
-                }).unwrap_or(0.0);
+                let role_width = self
+                    .session
+                    .as_ref()
+                    .map(|session| {
+                        let label = shell_surface_role_chip_text(session.app.role, self.locale_id == "de");
+                        let item = ChromeGroupItem { control_id: "", icon_id: None, label: Some(label), active: false, disabled: false, kind: HitKind::Button };
+                        retained_chrome_group_item_width(atlas, theme, &item).unwrap_or(0.0) + theme.gap_standard
+                    })
+                    .unwrap_or(0.0);
                 let Some(title) = cursor.window.as_ref() else { return false };
                 if cursor.rect.is_none() {
                     let wanted = atlas.measure_text(title.as_str(), theme.font_size_body).0 + theme.padding_standard * 2.0;
@@ -24595,7 +24458,17 @@ impl ShellState {
                 }
                 let Some(rect) = cursor.rect else { return false };
                 if rect.w > theme.padding_standard * 2.0 {
-                    match chrome_text_complete_step(draw, atlas, title.as_str(), rect.x + theme.padding_standard, btn_y + (btn_h + theme.font_size_body) * 0.5 - 2.0, (rect.w - theme.padding_standard * 2.0).max(1.0), theme.font_size_body, theme.text, &mut cursor.glyph) {
+                    match chrome_text_complete_step(
+                        draw,
+                        atlas,
+                        title.as_str(),
+                        rect.x + theme.padding_standard,
+                        btn_y + (btn_h + theme.font_size_body) * 0.5 - 2.0,
+                        (rect.w - theme.padding_standard * 2.0).max(1.0),
+                        theme.font_size_body,
+                        theme.text,
+                        &mut cursor.glyph,
+                    ) {
                         Ok(false) => return false,
                         Ok(true) => {}
                         Err(()) => {
@@ -24662,7 +24535,9 @@ impl ShellState {
                 let controls = self
                     .session
                     .as_ref()
-                    .and_then(|session| self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).map(|entry| shell_role_controls(&entry.manifest.apps, &session.app, self.active_terminology(), self.active_locale(), &self.shortcut_table())))
+                    .and_then(|session| {
+                        self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).map(|entry| shell_role_controls(&entry.manifest.apps, &session.app, self.active_terminology(), self.active_locale(), &self.shortcut_table()))
+                    })
                     .unwrap_or_default();
                 if !self.render_navbar_cluster_step(cursor, draw, atlas, icons, input, theme, &controls, btn_y, btn_h) {
                     return false;
@@ -24681,7 +24556,14 @@ impl ShellState {
                     return false;
                 };
                 let control_id = node.id.clone();
-                let item = ChromeGroupItem { control_id: control_id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: self.anchor_open(anchor) && self.anchor_state(anchor).path.first() == Some(&node.id), disabled: false, kind: HitKind::Toggle };
+                let item = ChromeGroupItem {
+                    control_id: control_id.as_str(),
+                    icon_id: Some(node.icon_id.as_str()),
+                    label: Some(node.label.as_str()),
+                    active: self.anchor_open(anchor) && self.anchor_state(anchor).path.first() == Some(&node.id),
+                    disabled: false,
+                    kind: HitKind::Toggle,
+                };
                 if cursor.rect.is_none() {
                     let Some(item_width) = retained_panel_chrome_item_width(atlas, theme, &item) else {
                         cursor.item += 1;
@@ -24743,7 +24625,14 @@ impl ShellState {
                 }
                 let control_id = row.as_ref().map_or_else(|| "ui.mobilePanel.toggle".to_string(), |(_, node)| node.id.clone());
                 let item = match row.as_ref() {
-                    Some((anchor, node)) => ChromeGroupItem { control_id: control_id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: self.anchor_open(*anchor) && self.anchor_state(*anchor).path.first() == Some(&node.id), disabled: false, kind: HitKind::Toggle },
+                    Some((anchor, node)) => ChromeGroupItem {
+                        control_id: control_id.as_str(),
+                        icon_id: Some(node.icon_id.as_str()),
+                        label: Some(node.label.as_str()),
+                        active: self.anchor_open(*anchor) && self.anchor_state(*anchor).path.first() == Some(&node.id),
+                        disabled: false,
+                        kind: HitKind::Toggle,
+                    },
                     None => ChromeGroupItem { control_id: control_id.as_str(), icon_id: Some("panel-left"), label: None, active: self.mobile_panel_visible, disabled: false, kind: HitKind::Toggle },
                 };
                 if cursor.rect.is_none() {
@@ -24752,10 +24641,17 @@ impl ShellState {
                         width - theme.padding_standard - self.fullscreen_item_width(atlas, theme) - theme.gap_standard
                     } else {
                         self.navbar_chrome_layout(atlas, theme, width).trailing_right
-                            - self.dock_tabs.tabs(PanelAnchor::TopRight).iter().rev().take(cursor.item).map(|node| {
-                                let item = ChromeGroupItem { control_id: "", icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: false, disabled: false, kind: HitKind::Toggle };
-                                retained_panel_chrome_item_width(atlas, theme, &item).unwrap_or(0.0)
-                            }).sum::<f32>()
+                            - self
+                                .dock_tabs
+                                .tabs(PanelAnchor::TopRight)
+                                .iter()
+                                .rev()
+                                .take(cursor.item)
+                                .map(|node| {
+                                    let item = ChromeGroupItem { control_id: "", icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: false, disabled: false, kind: HitKind::Toggle };
+                                    retained_panel_chrome_item_width(atlas, theme, &item).unwrap_or(0.0)
+                                })
+                                .sum::<f32>()
                     };
                     cursor.rect = shell_chrome_clip_horizontal(Rect::new(right - item_w, btn_y, item_w, btn_h), ShellChromeBandSpan { left: theme.padding_standard, right: width - theme.padding_standard });
                 }
@@ -25073,7 +24969,14 @@ impl ShellState {
                     return false;
                 };
                 let control_id = node.id.clone();
-                let item = ChromeGroupItem { control_id: control_id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: self.anchor_open(anchor) && self.anchor_state(anchor).path.first() == Some(&node.id), disabled: false, kind: HitKind::Toggle };
+                let item = ChromeGroupItem {
+                    control_id: control_id.as_str(),
+                    icon_id: Some(node.icon_id.as_str()),
+                    label: Some(node.label.as_str()),
+                    active: self.anchor_open(anchor) && self.anchor_state(anchor).path.first() == Some(&node.id),
+                    disabled: false,
+                    kind: HitKind::Toggle,
+                };
                 if cursor.rect.is_none() {
                     cursor.rect = Some(band_rect);
                 }
@@ -25139,14 +25042,7 @@ impl ShellState {
                     open_chrome_overlay_glass_content(cursor, overlay, rect, theme.border_radius, theme.glass(Level::Dialog));
                     let title = shell_chrome_string(if plan.kind == ShellPaletteKind::Search { "search.title" } else { "find.title" }, self.locale_id == "de");
                     note_chrome_control_name(plan.kind.dialog_id(), Some(title));
-                    input.register_hit(HitTarget {
-                        rect,
-                        event: None,
-                        control_id: Some(plan.kind.dialog_id().to_string()),
-                        kind: HitKind::Generic,
-                        drag_axis: None,
-                        drag_data: None,
-                    });
+                    input.register_hit(HitTarget { rect, event: None, control_id: Some(plan.kind.dialog_id().to_string()), kind: HitKind::Generic, drag_axis: None, drag_data: None });
                     cursor.rect = Some(rect);
                 } else if matches!(self.overlay_state, OverlayState::Dropdown(_)) {
                     let rect = Rect::new(width * 0.5 - 200.0, theme.navbar_height + 8.0, 400.0, height * 0.55);
@@ -25329,14 +25225,7 @@ impl ShellState {
                             let icon_size = (rect.h - theme.gap_standard * 4.0).max(theme.font_size_small);
                             chrome_icon(overlay, icons, "close", rect.x + (rect.w - icon_size) * 0.5, rect.y + (rect.h - icon_size) * 0.5, icon_size, theme.text_muted);
                             note_chrome_control_name(plan.kind.close_id(), Some(label));
-                            input.register_hit(HitTarget {
-                                rect: *rect,
-                                event: None,
-                                control_id: Some(plan.kind.close_id().to_string()),
-                                kind: HitKind::Button,
-                                drag_axis: None,
-                                drag_data: None,
-                            });
+                            input.register_hit(HitTarget { rect: *rect, event: None, control_id: Some(plan.kind.close_id().to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
                             true
                         }
                     };
@@ -25758,11 +25647,8 @@ impl ShellState {
                 overlay.push_solid(edge, border);
             }
             5 | 6 => {
-                let (value, x, max_w, color) = if cursor.scalar == 5 {
-                    (notice.message.as_str(), banner.x + theme.padding_standard, (close.x - banner.x - theme.padding_standard * 2.0).max(1.0), text_color)
-                } else {
-                    (close_label, close.x, close.w.max(1.0), text_color)
-                };
+                let (value, x, max_w, color) =
+                    if cursor.scalar == 5 { (notice.message.as_str(), banner.x + theme.padding_standard, (close.x - banner.x - theme.padding_standard * 2.0).max(1.0), text_color) } else { (close_label, close.x, close.w.max(1.0), text_color) };
                 let baseline = banner.y + (banner.h + theme.font_size_small) * 0.5 - 1.0;
                 match chrome_text_complete_step(overlay, atlas, value, x, baseline, max_w, theme.font_size_small, color, &mut cursor.glyph) {
                     Ok(false) => return false,
@@ -25812,11 +25698,7 @@ impl ShellState {
                 overlay.push_solid(edge, border);
             }
             5 | 6 => {
-                let (value, x, max_w) = if cursor.scalar == 5 {
-                    (message.as_str(), band.x + theme.padding_standard, (action.x - band.x - theme.padding_standard * 2.0).max(1.0))
-                } else {
-                    (action_label, action.x, action.w.max(1.0))
-                };
+                let (value, x, max_w) = if cursor.scalar == 5 { (message.as_str(), band.x + theme.padding_standard, (action.x - band.x - theme.padding_standard * 2.0).max(1.0)) } else { (action_label, action.x, action.w.max(1.0)) };
                 let baseline = band.y + (band.h + theme.font_size_small) * 0.5 - 1.0;
                 match chrome_text_complete_step(overlay, atlas, value, x, baseline, max_w, theme.font_size_small, text_color, &mut cursor.glyph) {
                     Ok(false) => return false,
@@ -25903,14 +25785,7 @@ impl ShellState {
         match cursor.phase {
             0 => {
                 overlay.push_glass([0.0, 0.0, width, height], 0.0, theme.veil_glass(Level::Dialog));
-                input.register_hit(HitTarget {
-                    rect: Rect::new(0.0, 0.0, width, height),
-                    event: None,
-                    control_id: Some("framework.hub.scrim".into()),
-                    kind: HitKind::Button,
-                    drag_axis: None,
-                    drag_data: None,
-                });
+                input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, width, height), event: None, control_id: Some("framework.hub.scrim".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
                 let card_w = (width - theme.padding_standard * 4.0).clamp(320.0, 960.0);
                 let card_h = (height - theme.navbar_height - theme.footer_height - theme.padding_standard * 4.0).clamp(240.0, 760.0);
                 let rect = Rect::new((width - card_w) * 0.5, (height - card_h) * 0.5, card_w, card_h);
@@ -25923,12 +25798,7 @@ impl ShellState {
                     close_chrome_overlay_glass_content(cursor, overlay);
                     return true;
                 };
-                let content = Rect::new(
-                    rect.x + theme.padding_standard,
-                    rect.y + theme.padding_standard,
-                    (rect.w - theme.padding_standard * 2.0).max(1.0),
-                    (rect.h - theme.padding_standard * 2.0).max(1.0),
-                );
+                let content = Rect::new(rect.x + theme.padding_standard, rect.y + theme.padding_standard, (rect.w - theme.padding_standard * 2.0).max(1.0), (rect.h - theme.padding_standard * 2.0).max(1.0));
                 overlay.push_scissor(content);
                 cursor.phase = 2;
             }
@@ -25941,12 +25811,7 @@ impl ShellState {
                     cursor.phase = 3;
                     return false;
                 };
-                let content = Rect::new(
-                    rect.x + theme.padding_standard,
-                    rect.y + theme.padding_standard,
-                    (rect.w - theme.padding_standard * 2.0).max(1.0),
-                    (rect.h - theme.padding_standard * 2.0).max(1.0),
-                );
+                let content = Rect::new(rect.x + theme.padding_standard, rect.y + theme.padding_standard, (rect.w - theme.padding_standard * 2.0).max(1.0), (rect.h - theme.padding_standard * 2.0).max(1.0));
                 let controller = self.document_controller_id();
                 crate::interpreter::set_ui_document_flow(surface, ui_contract::UiFlow::DEFAULT);
                 let complete = {
@@ -26038,11 +25903,8 @@ impl ShellState {
         // advance is exactly the window the hub issued it for.
         if control_id == "os.space-administration.members.more" || control_id == "os.space-administration.invites.more" {
             let german = self.locale_id == "de";
-            let cursor = self
-                .space_administration
-                .as_ref()
-                .map(|operation| shell_space_administration_controls(operation, german))
-                .and_then(|controls| controls.into_iter().find(|control| control.control_id == control_id).map(|control| control.value));
+            let cursor =
+                self.space_administration.as_ref().map(|operation| shell_space_administration_controls(operation, german)).and_then(|controls| controls.into_iter().find(|control| control.control_id == control_id).map(|control| control.value));
             if let (Some(cursor), Some(operation)) = (cursor.filter(|cursor| !cursor.is_empty()), self.space_administration.as_mut()) {
                 operation.request_page(Some(cursor));
             }
@@ -26070,19 +25932,15 @@ impl ShellState {
             }
             AgentApprovalPaintOp::Modal(rect) => open_chrome_overlay_glass_content(cursor, overlay, *rect, theme.border_radius, theme.glass(Level::Dialog)),
             AgentApprovalPaintOp::Fill { rect, color } => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], *color, theme.border_radius),
-            AgentApprovalPaintOp::Text { value, x, y, max_w, size, color } => {
-                match chrome_text_complete_step(overlay, atlas, value, *x, *y, *max_w, *size, *color, &mut cursor.glyph) {
-                    Ok(false) => return false,
-                    Ok(true) => {}
-                    Err(()) => {
-                        self.error = Some("Shell agent-approval text exceeded the retained glyph boundary".to_string());
-                        cursor.glyph.reset();
-                    }
+            AgentApprovalPaintOp::Text { value, x, y, max_w, size, color } => match chrome_text_complete_step(overlay, atlas, value, *x, *y, *max_w, *size, *color, &mut cursor.glyph) {
+                Ok(false) => return false,
+                Ok(true) => {}
+                Err(()) => {
+                    self.error = Some("Shell agent-approval text exceeded the retained glyph boundary".to_string());
+                    cursor.glyph.reset();
                 }
-            }
-            AgentApprovalPaintOp::Hit { rect, control_id } => {
-                input.register_hit(HitTarget { rect: *rect, event: None, control_id: Some(control_id.clone()), kind: HitKind::Button, drag_axis: None, drag_data: None })
-            }
+            },
+            AgentApprovalPaintOp::Hit { rect, control_id } => input.register_hit(HitTarget { rect: *rect, event: None, control_id: Some(control_id.clone()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
             AgentApprovalPaintOp::Clicks => {
                 if self.chrome_build.clicked_this_frame {
                     let (x, y) = (input.pointer_x, input.pointer_y);
@@ -26120,8 +25978,7 @@ impl ShellState {
         let locale = self.active_locale();
         let pad = theme.padding_standard;
         let line_h = theme.font_size_small * 1.6;
-        let parsed: Vec<(String, approvals::ParsedApprovalSummary)> =
-            self.chrome_build.agent.pending_approvals.iter().map(|approval| (approval.approval_id.clone(), approvals::parse_approval_summary(&approval.summary))).collect();
+        let parsed: Vec<(String, approvals::ParsedApprovalSummary)> = self.chrome_build.agent.pending_approvals.iter().map(|approval| (approval.approval_id.clone(), approvals::parse_approval_summary(&approval.summary))).collect();
         let heights: Vec<f32> = parsed.iter().map(|(_, summary)| approvals::approval_row_height(summary, theme)).collect();
         let modal = approvals::approvals_modal_rect(width, height, &heights, theme);
         let list = approvals::approvals_list_rect(modal, theme);
@@ -26293,7 +26150,12 @@ impl ShellState {
         let text = match cursor.scalar {
             4 => Some((layout.title.clone(), (layout.title_rect.x, layout.title_rect.y + (layout.title_rect.h + theme.font_size_body) * 0.5 - 1.0, layout.title_rect.w), theme.font_size_body, theme.text)),
             8 => Some((layout.skip.label.to_string(), chrome_tour_chip_label_box(&layout.skip, atlas, theme), theme.font_size_small, theme.text)),
-            11 => Some((layout.counter_text.clone(), (layout.counter.x + theme.padding_standard * 2.0, layout.counter.y + (layout.counter.h + theme.font_size_small) * 0.5 - 1.0, (layout.counter.w - theme.padding_standard * 4.0).max(1.0)), theme.font_size_small, theme.text_muted)),
+            11 => Some((
+                layout.counter_text.clone(),
+                (layout.counter.x + theme.padding_standard * 2.0, layout.counter.y + (layout.counter.h + theme.font_size_small) * 0.5 - 1.0, (layout.counter.w - theme.padding_standard * 4.0).max(1.0)),
+                theme.font_size_small,
+                theme.text_muted,
+            )),
             13 => layout.next.as_ref().map(|chip| (chip.label.to_string(), chrome_tour_chip_label_box(chip, atlas, theme), theme.font_size_small, theme.active_foreground)),
             14 => layout.next.as_ref().and_then(|chip| chrome_tour_chip_hotkey_box(chip, atlas, theme)).map(|(badge, box_)| (badge, box_, theme.font_size_small, theme.active_foreground)),
             17 => layout.back.as_ref().map(|chip| (chip.label.to_string(), chrome_tour_chip_label_box(chip, atlas, theme), theme.font_size_small, theme.text)),
@@ -26407,7 +26269,9 @@ impl ShellState {
             }
             // 🧯️ The veil registers FIRST so the three card controls, registered after it, win
             // `InputState::hit_at`'s reverse-order resolution over the sheet they sit on.
-            22 if layout.veil_blocks_pointer => input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, width, height), event: None, control_id: Some(UI_INTRODUCTION_VEIL_CONTROL_ID.into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            22 if layout.veil_blocks_pointer => {
+                input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, width, height), event: None, control_id: Some(UI_INTRODUCTION_VEIL_CONTROL_ID.into()), kind: HitKind::Button, drag_axis: None, drag_data: None })
+            }
             23 => input.register_hit(HitTarget { rect: layout.skip.rect, event: None, control_id: Some(UI_INTRODUCTION_SKIP_CONTROL_ID.into()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
             24 => {
                 if let Some(chip) = layout.next.as_ref() {
@@ -26440,11 +26304,7 @@ impl ShellState {
         (x2 > x && y2 > y).then(|| Rect::new(x, y, x2 - x, y2 - y))
     }
 
-
-
     //#endregion SilhouetteContent
-
-
 
     /// 💬️ Paints the armed tooltip (item 1) — `AtPointer` placement/dismissal policy sourced from
     /// `ui_wgpu::wgpu::OverlayKind::Tooltip` via a scratch `UiTree` (empty; `Point` anchors never touch it).
@@ -26479,8 +26339,14 @@ impl ShellState {
         let content_w = text_w + padding * 2.0;
         let content_h = text_h + padding * 2.0;
         let scratch_tree = ui_wgpu::wgpu::UiTree::new();
-        let (x, y) =
-            ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y }, (content_w, content_h), (width, height), ui_wgpu::wgpu::OverlayKind::Tooltip.default_placement(), ui_contract::FlowInline::Ltr);
+        let (x, y) = ui_wgpu::wgpu::resolve_overlay_placement(
+            &scratch_tree,
+            ui_wgpu::wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y },
+            (content_w, content_h),
+            (width, height),
+            ui_wgpu::wgpu::OverlayKind::Tooltip.default_placement(),
+            ui_contract::FlowInline::Ltr,
+        );
         let region = overlay.push_glass([x, y, content_w, content_h], theme.border_radius, theme.glass(Level::Menu));
         overlay.begin_glass_content(region);
         chrome_text(overlay, atlas, input, theme, &text, x + padding, y + (content_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
@@ -26503,7 +26369,8 @@ impl ShellState {
         let dialog_w = 360.0_f32;
         let dialog_h = 168.0_f32;
         let scratch_tree = ui_wgpu::wgpu::UiTree::new();
-        let (x, y) = ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 }, (dialog_w, dialog_h), (width, height), ui_wgpu::wgpu::OverlayKind::Dialog.default_placement(), ui_contract::FlowInline::Ltr);
+        let (x, y) =
+            ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 }, (dialog_w, dialog_h), (width, height), ui_wgpu::wgpu::OverlayKind::Dialog.default_placement(), ui_contract::FlowInline::Ltr);
         let dialog_rect = Rect::new(x, y, dialog_w, dialog_h);
         let region = overlay.push_glass([x, y, dialog_w, dialog_h], theme.border_radius, theme.glass(Level::Dialog));
         overlay.begin_glass_content(region);
@@ -26531,12 +26398,6 @@ impl ShellState {
             }
         }
     }
-
-
-
-
-
-
 
     /// 🎓️ The currently active introduction step (if a tour is running and its index still resolves) —
     /// shared by every wgpu tour touchpoint beyond painting (reveal, advance-by-doing, keyboard) so they
@@ -26665,33 +26526,6 @@ impl ShellState {
         }
         self.chrome_build.advance_introduction(intro.steps.len());
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /// 📏️ Shared width pass for a menu level — also used to size a submenu BEFORE deciding which side of
     /// its parent row it opens on (see `render_context_menu_level`'s flip-left check).
@@ -26881,8 +26715,7 @@ const OS_SHELL_CONFIG_MAX_BYTES: usize = 64 * 1024;
 #[cfg(test)]
 const OS_SHELL_PREFS_FILE_MAX_BYTES: usize = OS_SHELL_CONFIG_MAX_BYTES + 4 * 1024;
 #[cfg(not(target_arch = "wasm32"))]
-static NATIVE_PREF_DOCUMENTS: std::sync::LazyLock<std::sync::Mutex<semio_framework_os_services::RetainedFixedFileDocuments>> =
-    std::sync::LazyLock::new(|| std::sync::Mutex::new(semio_framework_os_services::RetainedFixedFileDocuments::default()));
+static NATIVE_PREF_DOCUMENTS: std::sync::LazyLock<std::sync::Mutex<semio_framework_os_services::RetainedFixedFileDocuments>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(semio_framework_os_services::RetainedFixedFileDocuments::default()));
 #[cfg(not(target_arch = "wasm32"))]
 static NATIVE_PREF_DOCUMENT_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
@@ -26956,23 +26789,25 @@ impl FilePrefsStore {
         let flush_state = std::sync::Arc::clone(&self.flush_state);
         crate::renderer_worker_pool().submit(
             Lane::Io,
-            Box::new(move || loop {
-                let snapshot = {
-                    let mut state = flush_state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-                    match state.latest.take() {
-                        Some(snapshot) => snapshot,
-                        None => {
-                            state.running = false;
-                            break;
+            Box::new(move || {
+                loop {
+                    let snapshot = {
+                        let mut state = flush_state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                        match state.latest.take() {
+                            Some(snapshot) => snapshot,
+                            None => {
+                                state.running = false;
+                                break;
+                            }
                         }
+                    };
+                    use std::fs as system_fs;
+                    if let Some(parent) = path.parent() {
+                        let _ = system_fs::create_dir_all(parent);
                     }
-                };
-                use std::fs as system_fs;
-                if let Some(parent) = path.parent() {
-                    let _ = system_fs::create_dir_all(parent);
-                }
-                if let Ok(json) = serde_json::to_string_pretty(&snapshot) {
-                    let _ = system_fs::write(&path, json);
+                    if let Ok(json) = serde_json::to_string_pretty(&snapshot) {
+                        let _ = system_fs::write(&path, json);
+                    }
                 }
             }),
         );
@@ -27553,20 +27388,14 @@ fn default_compute_worker_count() -> u32 {
 fn project_chrome_prefs(preferences: UiPreferences, worker_count: u32) -> ChromePrefsState {
     let custom_themes = custom_themes_from(&preferences);
     let custom_drivers = preferences.custom_drivers;
-    let ui_layout = match preferences.layout { Some(OsUiChromeLayout::Tablet) => "tablet", _ => "desktop" }.to_string();
+    let ui_layout = match preferences.layout {
+        Some(OsUiChromeLayout::Tablet) => "tablet",
+        _ => "desktop",
+    }
+    .to_string();
     let theme_id = preferences.theme_id.unwrap_or_else(|| "semio".to_string());
     let keybinding_overrides = preferences.keybinding_overrides;
-    ChromePrefsState {
-        ui_layout,
-        theme_id,
-        custom_drivers,
-        custom_themes,
-        keybinding_overrides,
-        theme_document_draft: None,
-        theme_document_generation: 0,
-        theme_document_resolved: None,
-        worker_count,
-    }
+    ChromePrefsState { ui_layout, theme_id, custom_drivers, custom_themes, keybinding_overrides, theme_document_draft: None, theme_document_generation: 0, theme_document_resolved: None, worker_count }
 }
 
 fn load_chrome_prefs() -> ChromePrefsState {
@@ -27603,7 +27432,6 @@ pub(crate) fn set_active_ui_layout(layout: &str) {
     let value = if layout == "tablet" { "tablet" } else { "desktop" };
     with_chrome_prefs(|prefs| prefs.ui_layout = value.to_string());
 }
-
 
 #[cfg(test)]
 pub(crate) fn custom_theme_ids() -> Vec<String> {
@@ -28108,9 +27936,6 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
     }
 }
 
-
-
-
 //#endregion 🗣️ChromeI18n
 
 //#region 💾️PrefsSync
@@ -28156,13 +27981,7 @@ fn decode_ui_preferences_event_log(raw: &str) -> Option<UiPreferencesEventLog> {
     if value.get("version").and_then(Value::as_u64) != Some(1) {
         return None;
     }
-    let events = value
-        .get("events")?
-        .as_array()?
-        .iter()
-        .map(|event| decode_ui_preferences_config_mutation_json(&event.to_string()))
-        .collect::<Result<Vec<_>, _>>()
-        .ok()?;
+    let events = value.get("events")?.as_array()?.iter().map(|event| decode_ui_preferences_config_mutation_json(&event.to_string())).collect::<Result<Vec<_>, _>>().ok()?;
     Some(UiPreferencesEventLog { version: 1, events })
 }
 
@@ -28172,9 +27991,7 @@ fn encode_ui_preferences_event_log(log: &UiPreferencesEventLog) -> String {
 }
 
 fn read_ui_preferences_event_log() -> UiPreferencesEventLog {
-    prefs_get(UI_PREFERENCES_CONFIG_SCHEMA)
-        .and_then(|raw| decode_ui_preferences_event_log(&raw))
-        .unwrap_or_else(|| UiPreferencesEventLog { version: 1, events: Vec::new() })
+    prefs_get(UI_PREFERENCES_CONFIG_SCHEMA).and_then(|raw| decode_ui_preferences_event_log(&raw)).unwrap_or_else(|| UiPreferencesEventLog { version: 1, events: Vec::new() })
 }
 
 fn replay_ui_preferences(log: &UiPreferencesEventLog) -> UiPreferences {
@@ -28211,10 +28028,7 @@ fn appearance_id(value: Option<OsUiAppearance>) -> Option<String> {
 /// answers on the browser too — the host term survives for the embeddable door and for a realm whose
 /// snapshot was refused.
 fn resolve_appearance_id(preferences: &UiPreferences) -> String {
-    env_lock("SEMIO_LOCKED_APPEARANCE")
-        .or_else(|| appearance_id(preferences.appearance))
-        .or_else(|| crate::host_appearance_preference().map(ToOwned::to_owned))
-        .unwrap_or_else(|| "system".to_string())
+    env_lock("SEMIO_LOCKED_APPEARANCE").or_else(|| appearance_id(preferences.appearance)).or_else(|| crate::host_appearance_preference().map(ToOwned::to_owned)).unwrap_or_else(|| "system".to_string())
 }
 
 fn locale_id(value: Option<OsUiLocale>) -> String {
@@ -28259,7 +28073,11 @@ fn persist_ui_preferences(state: &ShellState, previous: Option<&UiPrefsSnapshot>
     let mut log = read_ui_preferences_event_log();
     let changed = |current: &str, prior: fn(&UiPrefsSnapshot) -> &str| previous.is_none_or(|snapshot| current != prior(snapshot));
     if env_lock("SEMIO_LOCKED_APPEARANCE").is_none() && changed(&state.appearance_id, |snapshot| &snapshot.appearance_id) {
-        log.events.push(set_appearance(Some(match state.appearance_id.as_str() { "light" => OsUiAppearance::Light, "dark" => OsUiAppearance::Dark, _ => OsUiAppearance::System })));
+        log.events.push(set_appearance(Some(match state.appearance_id.as_str() {
+            "light" => OsUiAppearance::Light,
+            "dark" => OsUiAppearance::Dark,
+            _ => OsUiAppearance::System,
+        })));
     }
     if changed(&state.chrome_build.preferences.ui_layout, |snapshot| &snapshot.ui_layout) {
         log.events.push(set_layout(Some(if state.chrome_build.preferences.ui_layout == "tablet" { OsUiChromeLayout::Tablet } else { OsUiChromeLayout::Desktop })));
@@ -28462,7 +28280,6 @@ async fn request_file_save(filename: &str) -> Option<std::path::PathBuf> {
     ui_host::select_native_paths(ui_host::NativeFileDialogRequest::save(filename, ["json"])).await.into_iter().next()
 }
 
-
 #[cfg(not(target_arch = "wasm32"))]
 async fn pick_folder() -> Option<String> {
     ui_host::select_native_paths(ui_host::NativeFileDialogRequest::folder()).await.into_iter().next().map(|path| path.display().to_string())
@@ -28488,7 +28305,6 @@ async fn pick_native_path_from_host(request: serde_json::Value) -> Option<String
     let answer = host_io_call(&request.to_string(), None).await.ok()?;
     serde_json::from_str::<Option<String>>(&answer).ok().flatten()
 }
-
 
 //#region 📤️FileOpenImport
 /// 📤️ One file a picker handed back. The NAME is half the payload, not decoration: every import leaf
@@ -28554,10 +28370,7 @@ async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) 
 pub(crate) async fn host_io_call(request_json: &str, bytes: Option<&[u8]>) -> Result<String, String> {
     use wasm_bindgen::JsCast;
     let global = js_sys::global();
-    let door = js_sys::Reflect::get(&global, &wasm_bindgen::JsValue::from_str("semioWgpuHostIo"))
-        .ok()
-        .and_then(|value| value.dyn_into::<js_sys::Function>().ok())
-        .ok_or_else(|| "this isolate installs no semioWgpuHostIo door".to_string())?;
+    let door = js_sys::Reflect::get(&global, &wasm_bindgen::JsValue::from_str("semioWgpuHostIo")).ok().and_then(|value| value.dyn_into::<js_sys::Function>().ok()).ok_or_else(|| "this isolate installs no semioWgpuHostIo door".to_string())?;
     let payload = match bytes {
         Some(bytes) => js_sys::Uint8Array::from(bytes).into(),
         None => wasm_bindgen::JsValue::NULL,
@@ -28928,13 +28741,9 @@ impl ThemeDocument {
         }
         let document: Self = serde_json::from_str(text).ok()?;
         let scalar_maps = document.radii.values().chain(document.opacities.values()).all(|value| matches!(value, ThemeNumber::Scalar(_)));
-        let palettes = ["light", "dark"].iter().all(|appearance| {
-            document.appearances.get(*appearance).is_some_and(|groups| {
-                GROUPS.iter().all(|group| {
-                    groups.get(*group).is_some_and(|paints| paints.values().all(|paint| theme_paint_ref_is_resolvable(&document.colors, paint)))
-                })
-            })
-        });
+        let palettes = ["light", "dark"]
+            .iter()
+            .all(|appearance| document.appearances.get(*appearance).is_some_and(|groups| GROUPS.iter().all(|group| groups.get(*group).is_some_and(|paints| paints.values().all(|paint| theme_paint_ref_is_resolvable(&document.colors, paint))))));
         (scalar_maps && palettes).then_some(document)
     }
 
@@ -29214,13 +29023,7 @@ impl ShellState {
         if let Some(draft) = self.theme_draft.as_ref() {
             return draft.clone();
         }
-        if let Some(document) = self
-            .chrome_build
-            .preferences
-            .custom_themes
-            .get(&self.chrome_build.preferences.theme_id)
-            .and_then(|raw| ThemeDocument::parse(raw))
-        {
+        if let Some(document) = self.chrome_build.preferences.custom_themes.get(&self.chrome_build.preferences.theme_id).and_then(|raw| ThemeDocument::parse(raw)) {
             return document;
         }
         shell_theme_document_base().clone()
@@ -29346,7 +29149,7 @@ impl ShellState {
         }
         sections.push(self.theme_metrics_section(document, is_de, &mut cursor, &visible));
         sections.push(self.theme_appearances_section(document, is_de, &mut cursor, &visible));
-        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
+        UiNode::Tree(UiTreeNode { presentation: Default::default(), sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
     }
 
     fn theme_metrics_section(&self, document: &ThemeDocument, is_de: bool, cursor: &mut usize, visible: &std::ops::Range<usize>) -> UiTreeSectionNode {
@@ -29388,11 +29191,24 @@ impl ShellState {
                         for (paint, reference) in document.appearances.get(appearance).and_then(|entries| entries.get(*group)).into_iter().flatten() {
                             let (hex, alpha) = theme_paint_editor_values(&document.colors, reference);
                             rows.push(theme_editor_input_item(&format!("{group_id}.{paint}"), paint, &hex, "setThemeAppearancePaint", crate::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "hex" })));
-                            rows.push(theme_editor_input_item(&format!("{group_id}.{paint}.alpha"), paint, &format!("{alpha:.2}"), "setThemeAppearancePaint", crate::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "alpha" })));
+                            rows.push(theme_editor_input_item(
+                                &format!("{group_id}.{paint}.alpha"),
+                                paint,
+                                &format!("{alpha:.2}"),
+                                "setThemeAppearancePaint",
+                                crate::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "alpha" }),
+                            ));
                         }
                         let total = rows.len();
                         let (children, window) = if group_open { self.theme_window_rows(rows, cursor, visible) } else { (Vec::new(), Some(UiTreeWindow { total: total as u32, offset: 0 })) };
-                        groups.push(UiTreeItemNode { id: group_id, label: Label::data(shell_chrome_string(*label_key, is_de)), default_open: Some(group_open), items: Some(children), window, ..UiTreeItemNode::base(String::new(), Label::data(String::new())) });
+                        groups.push(UiTreeItemNode {
+                            id: group_id,
+                            label: Label::data(shell_chrome_string(*label_key, is_de)),
+                            default_open: Some(group_open),
+                            items: Some(children),
+                            window,
+                            ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+                        });
                     }
                 }
                 let label = shell_chrome_string(if appearance == "light" { "settings.theme.appearance.light" } else { "settings.theme.appearance.dark" }, is_de);
@@ -29507,8 +29323,7 @@ fn merge_committed_args(authored: Option<&DslValue>, value: DslValue) -> Option<
 /// ⚖️ React's `MERGE_POLICY_OPTIONS` (`📌️ChromePanels/🟦️.tsx:339`) with each option's label key —
 /// the variant names `protocol::MergePolicy` serializes to, so the value a user picks here is the
 /// value an authority reads.
-const SHELL_MERGE_POLICY_OPTIONS: &[(&str, &str)] =
-    &[("LaissezFaire", "settings.mergePolicy.laissezFaire"), ("Normal", "settings.mergePolicy.normal"), ("Vigilant", "settings.mergePolicy.vigilant")];
+const SHELL_MERGE_POLICY_OPTIONS: &[(&str, &str)] = &[("LaissezFaire", "settings.mergePolicy.laissezFaire"), ("Normal", "settings.mergePolicy.normal"), ("Vigilant", "settings.mergePolicy.vigilant")];
 
 /// ⚖️ `protocol::MergePolicy::default()` — "the least-surprising choice for a fresh authority that
 /// has never been configured", and React's `DEFAULT_MERGE_POLICY`.
@@ -29693,18 +29508,8 @@ impl ShellState {
             ShellPaletteKind::Find => self.find_selected,
         };
         let rows: Vec<(usize, String, String, Option<String>, String)> = match kind {
-            ShellPaletteKind::Search => self
-                .filtered_search_items()
-                .into_iter()
-                .enumerate()
-                .map(|(index, item)| (index, item.id, item.label, item.description, item.group))
-                .collect(),
-            ShellPaletteKind::Find => self
-                .filtered_find_items()
-                .into_iter()
-                .enumerate()
-                .map(|(index, item)| (index, item.id, item.label, item.description, item.category.unwrap_or_default()))
-                .collect(),
+            ShellPaletteKind::Search => self.filtered_search_items().into_iter().enumerate().map(|(index, item)| (index, item.id, item.label, item.description, item.group)).collect(),
+            ShellPaletteKind::Find => self.filtered_find_items().into_iter().enumerate().map(|(index, item)| (index, item.id, item.label, item.description, item.category.unwrap_or_default())).collect(),
         };
         let rect_for = |id: &str| hits.iter().find(|hit| hit.control_id.as_deref() == Some(id)).map(|hit| hit.rect);
         let dialog_rect = rect_for(kind.dialog_id());
@@ -29768,14 +29573,7 @@ impl ShellState {
                 }
             }
             for (group_index, group) in groups.into_iter().enumerate() {
-                nodes.push(basic(
-                    format!("{}.group.{group_index}", kind.dialog_id()),
-                    "group",
-                    2,
-                    (!group.is_empty()).then_some(group.clone()),
-                    None,
-                    None,
-                ));
+                nodes.push(basic(format!("{}.group.{group_index}", kind.dialog_id()), "group", 2, (!group.is_empty()).then_some(group.clone()), None, None));
                 for (index, id, label, row_description, _) in rows.iter().filter(|(_, _, _, _, row_group)| row_group == &group) {
                     let mut option = basic(id.clone(), "option", 3, Some(label.clone()), row_description.clone(), rect_for(&kind.control_id(*index)));
                     option.actionable = true;

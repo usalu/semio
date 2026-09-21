@@ -27,7 +27,8 @@ fn accessibility_blur_wire_reaches_the_renderer_as_a_bounded_addressed_event() {
         "windowGeneration": 7,
         "nodeId": 21,
         "nodeKey": "framework.settings.driver.saveLabel"
-    })).expect("blur wire decodes");
+    }))
+    .expect("blur wire decodes");
     assert!(matches!(stateless_dispatch(&wire), Some(DispatchEvent::Accessibility { event: AccessibilityEvent::Blur, .. })));
 }
 
@@ -69,15 +70,15 @@ fn dispatch_json(event: &DispatchEvent) -> Value {
         }
         Value::Object(object)
     };
-    let key_json = |kind: &str, key: &str, modifiers: &ui_render::EventModifiers| {
-        serde_json::json!({ "kind": kind, "key": key, "shift": modifiers.shift, "ctrl": modifiers.ctrl, "alt": modifiers.alt, "meta": modifiers.meta })
-    };
+    let key_json = |kind: &str, key: &str, modifiers: &ui_render::EventModifiers| serde_json::json!({ "kind": kind, "key": key, "shift": modifiers.shift, "ctrl": modifiers.ctrl, "alt": modifiers.alt, "meta": modifiers.meta });
     match event {
         DispatchEvent::PointerCancel { pointer } => serde_json::json!({ "kind": "pointer-cancel", "pointerId": pointer.id.0, "pointerKind": pointer_kind_name(pointer.kind), "pressure": pointer.pressure, "tilt": pointer.tilt }),
         DispatchEvent::PointerMove { pointer, x, y, modifiers } => pointer_json(pointer, modifiers, Vec::new(), "pointer-move", *x, *y),
         DispatchEvent::PointerDown { pointer, x, y, button, modifiers } => pointer_json(pointer, modifiers, vec![("button", Value::from(pointer_button_name(*button)))], "pointer-down", *x, *y),
         DispatchEvent::PointerUp { pointer, x, y, button, modifiers } => pointer_json(pointer, modifiers, vec![("button", Value::from(pointer_button_name(*button)))], "pointer-up", *x, *y),
-        DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => serde_json::json!({ "kind": "scroll", "x": f64::from(*x), "y": f64::from(*y), "deltaX": f64::from(*delta_x), "deltaY": f64::from(*delta_y), "shift": modifiers.shift, "ctrl": modifiers.ctrl, "alt": modifiers.alt, "meta": modifiers.meta }),
+        DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => {
+            serde_json::json!({ "kind": "scroll", "x": f64::from(*x), "y": f64::from(*y), "deltaX": f64::from(*delta_x), "deltaY": f64::from(*delta_y), "shift": modifiers.shift, "ctrl": modifiers.ctrl, "alt": modifiers.alt, "meta": modifiers.meta })
+        }
         DispatchEvent::KeyDown { key, modifiers } => key_json("key-down", key, modifiers),
         DispatchEvent::KeyUp { key, modifiers } => key_json("key-up", key, modifiers),
         DispatchEvent::Ime(ImeEvent::Start) => serde_json::json!({ "kind": "ime-start" }),
@@ -150,7 +151,8 @@ fn the_wire_spelling_is_the_contract() {
     assert!(serde_json::from_str::<BrowserWireEvent>(r#"{"kind":"pointer-down","pointer_id":1,"pointer_kind":"mouse","x":1,"y":2,"button":"primary","shift":false,"ctrl":false,"alt":false,"meta":false}"#).is_err());
     assert!(serde_json::from_str::<BrowserWireEvent>(r#"{"kind":"pointerdown","pointerId":1,"pointerKind":"mouse","x":1,"y":2,"button":"primary","shift":false,"ctrl":false,"alt":false,"meta":false}"#).is_err());
     assert!(serde_json::from_str::<BrowserWireEvent>(r#"{"kind":"pointer-down","pointerId":1,"pointerKind":"mouse","x":1,"y":2,"button":"primary"}"#).is_err(), "pointer modifiers are required rather than legacy defaults");
-    let accepted: BrowserWireEvent = serde_json::from_str(r#"{"kind":"pointer-down","pointerId":1,"pointerKind":"mouse","x":1,"y":2,"button":"primary","shift":true,"ctrl":false,"alt":false,"meta":false}"#).expect("the camelCase spelling is accepted");
+    let accepted: BrowserWireEvent =
+        serde_json::from_str(r#"{"kind":"pointer-down","pointerId":1,"pointerKind":"mouse","x":1,"y":2,"button":"primary","shift":true,"ctrl":false,"alt":false,"meta":false}"#).expect("the camelCase spelling is accepted");
     assert!(matches!(stateless_dispatch(&accepted), Some(DispatchEvent::PointerDown { .. })));
 }
 

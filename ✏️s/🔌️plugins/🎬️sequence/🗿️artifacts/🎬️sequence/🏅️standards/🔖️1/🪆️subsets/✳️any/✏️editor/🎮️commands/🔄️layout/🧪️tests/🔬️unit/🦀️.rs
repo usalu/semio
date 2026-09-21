@@ -1,4 +1,4 @@
-use crate::editor::sequence::unit_tests::context::{dispatch, new_app};
+use crate::editor::sequence::unit_tests::context::{dispatch, live_host_snapshot, new_app};
 use crate::editor::sequence::SequenceCommand;
 
 use super::reorganize::Reorganize;
@@ -7,11 +7,11 @@ use move_step_helper::move_all_steps_to_origin;
 
 mod move_step_helper {
     use crate::editor::sequence::commands::step::move_step::MoveStep;
-    use crate::editor::sequence::unit_tests::context::{dispatch, SequenceApp};
+    use crate::editor::sequence::unit_tests::context::{dispatch, live_host_snapshot, SequenceApp};
     use crate::editor::sequence::SequenceCommand;
 
     pub async fn move_all_steps_to_origin(app: &mut SequenceApp) {
-        let ids: Vec<String> = app.snapshot().expect("projection").to_host_snapshot().steps.iter().map(|step| step.id.clone()).collect();
+        let ids: Vec<String> = live_host_snapshot(&app).await.steps.iter().map(|step| step.id.clone()).collect();
         for id in &ids {
             dispatch(app, SequenceCommand::MoveStep(MoveStep { node_id: id.clone(), x: 0.0, y: 0.0 })).await;
         }
@@ -24,7 +24,7 @@ async fn set_orientation_command_changes_reorganize_layout_axis() {
     dispatch(&mut app, SequenceCommand::SetOrientation(SetOrientation { value: "topBottom".into() })).await;
     move_all_steps_to_origin(&mut app).await;
     dispatch(&mut app, SequenceCommand::Reorganize(Reorganize {})).await;
-    let ys: Vec<f64> = app.snapshot().expect("projection").to_host_snapshot().steps.iter().map(|step| step.y).collect();
+    let ys: Vec<f64> = live_host_snapshot(&app).await.steps.iter().map(|step| step.y).collect();
     assert!(ys.iter().any(|y| *y != 0.0), "topBottom orientation should spread steps vertically, got {ys:?}");
 }
 
@@ -33,6 +33,6 @@ async fn reorganize_command_spreads_step_positions_apart() {
     let mut app = new_app().await;
     move_all_steps_to_origin(&mut app).await;
     dispatch(&mut app, SequenceCommand::Reorganize(Reorganize {})).await;
-    let xs: Vec<f64> = app.snapshot().expect("projection").to_host_snapshot().steps.iter().map(|step| step.x).collect();
+    let xs: Vec<f64> = live_host_snapshot(&app).await.steps.iter().map(|step| step.x).collect();
     assert!(xs.iter().any(|x| *x != 0.0), "reorganize should spread steps apart, got {xs:?}");
 }

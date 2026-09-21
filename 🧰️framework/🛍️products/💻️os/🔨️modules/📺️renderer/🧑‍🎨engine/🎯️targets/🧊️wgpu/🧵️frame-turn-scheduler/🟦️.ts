@@ -1,6 +1,7 @@
 export type FrameTurnSchedule = (callback: () => void) => void;
 export type FrameTurnStep = () => boolean;
 export type FrameTurnCloseStep = () => boolean;
+export type FrameTurnOwner = "frame" | "assetDecode";
 
 /** @emoji 🚏️ Owns one unthrottled Worker task. A MessagePort task is not subject to the nested and
  * background timer clamps that can strand a retained frame between phases. */
@@ -47,26 +48,38 @@ export function nextFrameSequence(current: number): number {
  * pending. */
 export class FrameTurnScheduler {
   private scheduled = false;
-  private pending = false;
+  private framePending = false;
+  private assetDecodePending = false;
+  private lastDispatched: FrameTurnOwner | undefined;
   private closing = false;
   private terminal = false;
 
   constructor(
     private readonly schedule: FrameTurnSchedule,
-    private readonly step: FrameTurnStep,
+    private readonly frameStep: FrameTurnStep,
     private readonly closeStep: FrameTurnCloseStep,
+    private readonly assetDecodeStep?: FrameTurnStep,
   ) {}
 
-  request(): void {
+  request(owner: FrameTurnOwner = "frame"): void {
     if (this.closing || this.terminal) return;
-    this.pending = true;
+    if (owner === "frame") this.framePending = true;
+    else this.assetDecodePending = true;
+    this.arm();
+  }
+
+  requestRuntimeWake(): void {
+    if (this.closing || this.terminal) return;
+    this.framePending = true;
+    this.assetDecodePending = true;
     this.arm();
   }
 
   beginClose(): void {
     if (this.closing || this.terminal) return;
     this.closing = true;
-    this.pending = false;
+    this.framePending = false;
+    this.assetDecodePending = false;
     this.arm();
   }
 
@@ -87,9 +100,23 @@ export class FrameTurnScheduler {
       if (!this.terminal) this.arm();
       return;
     }
-    if (!this.pending) return;
-    this.pending = false;
-    if (this.step()) this.pending = true;
-    if (this.pending) this.arm();
+    const owner = this.nextOwner();
+    if (!owner) return;
+    this.lastDispatched = owner;
+    if (owner === "frame") {
+      this.framePending = false;
+      if (this.frameStep()) this.framePending = true;
+    } else {
+      this.assetDecodePending = false;
+      if (this.assetDecodeStep?.()) this.assetDecodePending = true;
+    }
+    if (this.framePending || this.assetDecodePending) this.arm();
+  }
+
+  private nextOwner(): FrameTurnOwner | undefined {
+    if (this.framePending && this.assetDecodePending) return this.lastDispatched === "frame" ? "assetDecode" : "frame";
+    if (this.framePending) return "frame";
+    if (this.assetDecodePending) return "assetDecode";
+    return undefined;
   }
 }

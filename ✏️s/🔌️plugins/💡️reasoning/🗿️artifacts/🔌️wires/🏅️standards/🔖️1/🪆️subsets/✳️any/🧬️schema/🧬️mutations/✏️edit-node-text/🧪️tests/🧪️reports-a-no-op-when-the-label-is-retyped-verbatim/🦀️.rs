@@ -142,5 +142,5 @@ async fn the_old_body_is_recovered_from_the_board_not_from_the_payload() {
     assert_eq!((node_id.as_str(), new_text.as_str()), ("node-thesis", "Thesis"), "the inverse restores the body read off BASE");
     let semantics = <WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("edit", "node", "edit-node-text", "EditedNodeText"), "edit-node-text is the vocabulary's only `edit` verb");
-    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()), "Edit node \"node-thesis\" text to \"Thesis\"", "edit-node-text's undo label quotes the body it wrote");
+    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()).resolve(protocol::Terminology::Native, protocol::Locale::En), "Edit node \"node-thesis\" text to \"Thesis\"", "edit-node-text's undo label quotes the body it wrote");
 }

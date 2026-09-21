@@ -10,8 +10,12 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { createAccessibilityMirror, type AccessibilityProjectionWindow } from "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
+import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
+import { resolveWgpuBootDescriptor } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { PanelTabBar, type PanelTabNode } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/🟦️.tsx";
 import accessibilityVisibilityFixture from "../../🧫️fixtures/♿️wgpu-accessibility-visibility/🔣️.json";
 import accessibilityVisibilitySchema from "../../🧬️schema/♿️wgpu-accessibility-visibility/🔣️.json";
+import accessibilityInteractionSchema from "../../🧬️schema/♿️wgpu-accessibility-interaction/🔣️.json";
 
 type ProjectionNode = {
   readonly nodeId: number;
@@ -45,6 +49,8 @@ type Fixture = {
     readonly requiredControlId: string;
     readonly pointerRects: readonly { readonly id: string; readonly x: number; readonly y: number; readonly width: number; readonly height: number }[];
   };
+  readonly presentedChrome: { readonly firstEpoch: number; readonly successorEpoch: number; readonly controls: readonly { readonly id: string; readonly label: string }[] };
+  readonly settingsTabStrip: { readonly availableWidth: number; readonly activeId: string; readonly tabs: readonly { readonly id: string; readonly label: string }[]; readonly tailIds: readonly string[] };
   readonly events: readonly { readonly id: string; readonly dom: { readonly type: string; readonly value?: string }; readonly wire: WireEvent; readonly expected: { readonly accepted: boolean; readonly focusedNodeId: number; readonly actions: number; readonly value?: string } }[];
   readonly rejections: readonly { readonly id: string; readonly wire: WireEvent; readonly current: (Pick<Address, "windowGeneration" | "nodeId" | "nodeKey"> & Partial<Pick<Address, "windowId">>) | null; readonly reason: string }[];
   readonly hierarchy: readonly { readonly nodeKey: string; readonly children: readonly string[] }[];
@@ -56,6 +62,24 @@ type OracleTreeNode = { readonly node: ProjectionNode; readonly children: Oracle
 const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json"), "utf8")) as Fixture;
 const { computeAccessibleDescription, computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 const mounted: Root[] = [];
+
+class AccessibilityWorker implements BrowserFrameWorkerPort {
+  onmessage: ((event: MessageEvent<BrowserFrameWorkerMessage>) => void) | null = null;
+  onmessageerror: ((event: MessageEvent) => void) | null = null;
+  onerror: ((event: ErrorEvent) => void) | null = null;
+  readonly messages: BrowserFrameUiMessage[] = [];
+  postMessage(message: BrowserFrameUiMessage): void { this.messages.push(message); }
+  terminate(): void {}
+  reply(message: BrowserFrameWorkerMessage): void { this.onmessage?.({ data: message } as MessageEvent<BrowserFrameWorkerMessage>); }
+}
+
+const FixtureIcon: React.FC<{ readonly size?: number }> = () => <span aria-hidden />;
+
+function SettingsStripOracle(): React.JSX.Element {
+  const [activePath, setActivePath] = useState<readonly string[]>([fixture.settingsTabStrip.activeId]);
+  const tabs: readonly PanelTabNode[] = fixture.settingsTabStrip.tabs.map((tab, order) => ({ kind: "leaf", id: tab.id, name: tab.label, icon: FixtureIcon, order, trees: [] }));
+  return <div style={{ width: fixture.settingsTabStrip.availableWidth }}><PanelTabBar variant="chrome" tabs={tabs} activePath={activePath} onActivePathChange={setActivePath} maxRows={1} /></div>;
+}
 
 function projectionTree(nodes: readonly ProjectionNode[]): OracleTreeNode[] {
   const roots: OracleTreeNode[] = [];
@@ -140,6 +164,13 @@ afterEach(() => {
 });
 
 describe("wgpu accessibility interaction contract", () => {
+  it("validates the accepted chrome epoch and bounded Settings strip grammar", () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(accessibilityInteractionSchema);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(fixture.presentedChrome.successorEpoch).toBeGreaterThan(fixture.presentedChrome.firstEpoch);
+    expect(new Set(fixture.settingsTabStrip.tabs.map((tab) => tab.id)).size).toBe(fixture.settingsTabStrip.tabs.length);
+  });
+
   it("validates the visible-document publication grammar", () => {
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(accessibilityVisibilitySchema);
     expect(validate(accessibilityVisibilityFixture), JSON.stringify(validate.errors)).toBe(true);
@@ -157,6 +188,88 @@ describe("wgpu accessibility interaction contract", () => {
     expect(tab.getAttribute("aria-selected")).toBe("true");
     expect(container.querySelector("section")?.dataset.path).toBe(fixture.nestedPanelSelection.expectedPath.join("/"));
     expect(container.querySelector(`[data-node-key="${fixture.nestedPanelSelection.requiredControlId}"]`)).not.toBeNull();
+  });
+
+  it("keeps every constrained Settings child mounted and reveals a selected tail in the production React strip", () => {
+    const scrollIntoView = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = () => undefined;
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    mounted.push(root);
+    act(() => root.render(<SettingsStripOracle />));
+    const buttons = Array.from(container.querySelectorAll<HTMLButtonElement>('[data-slot="panel-tab-button"]'));
+    expect(buttons.map((button) => button.id)).toEqual(fixture.settingsTabStrip.tabs.map((tab) => tab.id));
+    const tail = buttons.find((button) => button.id === fixture.settingsTabStrip.tailIds[1])!;
+    act(() => tail.click());
+    expect(tail.getAttribute("aria-pressed")).toBe("true");
+    expect(container.querySelectorAll('[data-slot="panel-tab-button"]')).toHaveLength(6);
+    Element.prototype.scrollIntoView = scrollIntoView;
+  });
+
+  it("carries one mirror activation through the real transport and replaces it with the next accepted epoch", async () => {
+    vi.useFakeTimers();
+    const root = document.createElement("div");
+    document.body.append(root);
+    const worker = new AccessibilityWorker();
+    const frameTransport = new BrowserFrameTransport({
+      worker,
+      boot: {
+        bindingsModuleUrl: "renderer.js",
+        bindingsWasmUrl: "renderer_bg.wasm",
+        canvas: {} as OffscreenCanvas,
+        width: 800,
+        height: 600,
+        dpr: 1,
+        locale: "en",
+        descriptor: resolveWgpuBootDescriptor({ defaultVariant: "s" }),
+        appearance: { preference: "", systemDark: false },
+        platform: "MacIntel",
+        storage: {},
+      },
+      setTimer: () => 1,
+      clearTimer: () => {},
+    });
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    const chrome = fixture.presentedChrome;
+    let generation = chrome.firstEpoch;
+    let displayChecked = false;
+    const projection = (): AccessibilityProjectionWindow => ({
+      windowId: "shell.chrome",
+      windowGeneration: generation,
+      nodes: chrome.controls.map((control, index) => ({ nodeId: index + 1, key: control.id, role: "switch", depth: 0, label: control.label, live: "off", focusable: true, actionable: true, checked: control.id === "ui.panelToggle.display" && displayChecked })),
+    });
+    const mirror = createAccessibilityMirror(root, {
+      introspect: async () => JSON.stringify({ windows: [projection()] }),
+      enqueueLossless: (event) => frameTransport.enqueueLossless(event),
+    }, "en");
+    mirror.refresh();
+    await vi.advanceTimersByTimeAsync(400);
+    const staleDisplay = root.querySelector<HTMLButtonElement>('[data-node-key="ui.panelToggle.display"]')!;
+    staleDisplay.click();
+    expect(frameTransport.flush(1)).toBe(true);
+    const batch = worker.messages.at(-1);
+    if (batch?.kind !== "batch") throw new Error("accessibility activation batch");
+    expect(batch.lossless).toEqual([expect.objectContaining({ kind: "accessibility-activate", windowGeneration: chrome.firstEpoch, nodeKey: "ui.panelToggle.display" })]);
+    worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: batch.inputSequence, generation: batch.generation });
+    displayChecked = true;
+    generation = chrome.successorEpoch;
+    mirror.refresh();
+    await vi.advanceTimersByTimeAsync(400);
+    expect(root.querySelector('[data-node-key="ui.panelToggle.display"]')?.getAttribute("aria-checked")).toBe("true");
+    root.querySelector<HTMLButtonElement>('[data-node-key="ui.panelToggle.settings"]')!.click();
+    expect(frameTransport.flush(2)).toBe(true);
+    const successor = worker.messages.at(-1);
+    if (successor?.kind !== "batch") throw new Error("successor accessibility activation batch");
+    expect(successor.lossless).toEqual([expect.objectContaining({ kind: "accessibility-activate", windowGeneration: chrome.successorEpoch, nodeKey: "ui.panelToggle.settings" })]);
+    staleDisplay.click();
+    worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: successor.inputSequence, generation: successor.generation });
+    expect(frameTransport.flush(3)).toBe(true);
+    const stale = worker.messages.at(-1);
+    if (stale?.kind !== "batch") throw new Error("stale accessibility activation batch");
+    expect(stale.lossless).toEqual([expect.objectContaining({ kind: "accessibility-activate", windowGeneration: chrome.firstEpoch })]);
+    mirror.dispose();
+    frameTransport.close();
   });
 
   it("mounts the production mirror with sibling descriptions, semantic states, and paragraph text", async () => {

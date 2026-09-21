@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn index_fixture() -> serde_json::Value {

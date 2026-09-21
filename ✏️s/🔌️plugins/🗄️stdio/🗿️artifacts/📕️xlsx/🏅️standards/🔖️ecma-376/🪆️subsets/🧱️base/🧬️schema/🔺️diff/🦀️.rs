@@ -857,6 +857,18 @@ impl MutationDiff<XlsxSnapshot> for XlsxDiff {
         if let Some(d) = &self.workbook {
             apply_workbook_diff(&mut next.workbook, d).map_err(|error| error.under(["workbook"]))?;
         }
+        // 🔤️ Path-ascending is this format's part NORMAL FORM — `regenerate_workbook_parts` ends
+        // with exactly this sort, for exactly this reason (its own comment: the order it would
+        // otherwise produce depends on what it was handed). `parts` is a name-keyed collection, so
+        // the triple carries membership and content but NO order: `apply_named` keeps survivors
+        // where they were and appends the added ones, which means a `SetSnapshot` onto a package
+        // whose parts sit in a different order, undone by its own inverse, lands on the same
+        // MEMBERS in a different sequence and `OpcPackage`'s order-sensitive derived `PartialEq`
+        // calls that a difference (`inverse_law`'s two-hop `SetSnapshot` round trip, live). Landing
+        // every apply in the builder's normal form makes the two agree without inventing an
+        // ordering lane. `content_types.overrides` is deliberately NOT sorted here: its position is
+        // fixed writer policy owned by the OPC module (see `sweep_b`'s own note).
+        next.opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
         Ok(next)
     }
 

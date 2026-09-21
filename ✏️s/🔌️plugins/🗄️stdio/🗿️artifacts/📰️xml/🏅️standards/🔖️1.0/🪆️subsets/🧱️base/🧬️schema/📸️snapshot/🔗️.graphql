@@ -27,10 +27,14 @@ type XmlNode {
 }
 
 """ 🏳️ Typed `<?xml version="1.0" encoding="..." standalone="..."?>` declaration. """
+""" 🗣️ Delimiter the declaration's pseudo-attributes are written with (XML 1.0 §2.8). """
+enum XmlQuote { DOUBLE SINGLE }
+
 type XmlDeclaration {
   version: String!
   encoding: String
   standalone: Boolean
+  quote: XmlQuote
 }
 
 enum XmlExternalIdKind { SYSTEM PUBLIC }

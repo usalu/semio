@@ -8,6 +8,7 @@
 
 use crate::engine_canvas;
 use crate::interpreter::FrameworkWidgetContext;
+use crate::shell::{try_push_find_item, ShellFindItem};
 use base64::Engine;
 use semio_framework::IconName;
 use serde::Deserialize;
@@ -239,10 +240,14 @@ impl<T> AdmittedSurfaceMap<T> {
     pub fn take_exact_to_retirement(&mut self, token: AdmittedSurfaceToken) -> Option<AdmittedSurfaceCloseOwner<T>> {
         let slot = usize::from(token.slot);
         let entry = self.slots.get(slot)?.as_ref()?;
-        if entry.epoch != token.epoch { return None; }
+        if entry.epoch != token.epoch {
+            return None;
+        }
         let index = (0..self.order_len).find(|index| self.order[*index] == Some(token.slot))?;
         let entry = self.slots[slot].take()?;
-        for cursor in index..self.order_len - 1 { self.order[cursor] = self.order[cursor + 1]; }
+        for cursor in index..self.order_len - 1 {
+            self.order[cursor] = self.order[cursor + 1];
+        }
         self.order_len -= 1;
         self.order[self.order_len] = None;
         self.external_reservations += 1;
@@ -288,7 +293,7 @@ impl<T> AdmittedSurfaceMap<T> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.order_len == 0 && self.slots.iter().all(Option::is_none) && self.rejected.is_none() && self.retired.is_none()
+        self.order_len == 0 && self.external_reservations == 0 && self.slots.iter().all(Option::is_none) && self.rejected.is_none() && self.retired.is_none()
     }
 }
 
@@ -340,42 +345,14 @@ impl Viewport {
 #[derive(Clone, Debug)]
 enum SceneDragMode {
     PanViewport,
-    MapMarquee {
-        start_x: f32,
-        start_y: f32,
-        method: String,
-        merge_mode: String,
-    },
+    MapMarquee { start_x: f32, start_y: f32, method: String, merge_mode: String },
     MapPan,
-    InkPan {
-        start_x: f32,
-        start_y: f32,
-        camera_x: f64,
-        camera_y: f64,
-        zoom: f64,
-    },
-    InkMove {
-        origins: BTreeMap<String, (f64, f64)>,
-        start_x: f32,
-        start_y: f32,
-    },
-    InkResize {
-        handle: String,
-        from: InkBoundsF,
-        start_x: f32,
-        start_y: f32,
-        selected_ids: Vec<String>,
-    },
-    InkStroke {
-        block_id: String,
-    },
-    InkEraser {
-        mode: String,
-    },
-    InkMarqueeDrag {
-        start_x: f32,
-        start_y: f32,
-    },
+    InkPan { start_x: f32, start_y: f32, camera_x: f64, camera_y: f64, zoom: f64 },
+    InkMove { origins: BTreeMap<String, (f64, f64)>, start_x: f32, start_y: f32 },
+    InkResize { handle: String, from: InkBoundsF, start_x: f32, start_y: f32, selected_ids: Vec<String> },
+    InkStroke { block_id: String },
+    InkEraser { mode: String },
+    InkMarqueeDrag { start_x: f32, start_y: f32 },
 }
 
 #[derive(Clone, Debug)]
@@ -401,6 +378,7 @@ struct InkEditState {
 #[derive(Clone, Debug, Default)]
 struct SceneSurfaceState {
     mount_owner: Option<crate::interpreter::ScenePointerTarget>,
+    engine_token: Option<engine_canvas::EngineSurfaceToken>,
     scroll_offsets: BTreeMap<String, f32>,
     viewport: Viewport,
     canvas_camera_owner: Option<crate::interpreter::ScenePointerTarget>,
@@ -446,6 +424,9 @@ enum SceneValueRetirement {
 struct SceneSurfaceRetirement {
     host_id: Box<str>,
     owner: AdmittedSurfaceCloseOwner<SceneSurfaceState>,
+    external_target: Option<crate::interpreter::ScenePointerTarget>,
+    external_engine_token: Option<engine_canvas::EngineSurfaceToken>,
+    external_close: Option<crate::os_host::ComponentSurfaceCloseToken>,
     text: String,
     values: Vec<SceneValueRetirement>,
     gesture: Option<CanvasGesture>,
@@ -458,19 +439,28 @@ struct SceneSurfaceRetirement {
 fn retire_scene_text(text: &mut String) -> bool {
     if !text.is_empty() {
         let mut end = text.len().saturating_sub(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-        while !text.is_char_boundary(end) { end += 1; }
+        while !text.is_char_boundary(end) {
+            end += 1;
+        }
         text.truncate(end);
         return true;
     }
-    if text.capacity() != 0 { *text = String::new(); return true; }
+    if text.capacity() != 0 {
+        *text = String::new();
+        return true;
+    }
     false
 }
 
 fn retire_scene_target(target: &mut Option<crate::interpreter::ScenePointerTarget>) -> bool {
     let Some(owner) = target.as_mut() else { return false };
-    if retire_scene_text(&mut owner.host_id) || retire_scene_text(&mut owner.window_id) || retire_scene_text(&mut owner.surface_id) { return true; }
+    if retire_scene_text(&mut owner.host_id) || retire_scene_text(&mut owner.window_id) || retire_scene_text(&mut owner.surface_id) {
+        return true;
+    }
     if let ui_wgpu::wgpu::NodeKey::Explicit(key) = &mut owner.key {
-        if retire_scene_text(key) { return true; }
+        if retire_scene_text(key) {
+            return true;
+        }
     }
     *target = None;
     true
@@ -482,7 +472,9 @@ impl SceneSurfaceRetirement {
             let taken = PENDING_RASTER_STATE.with(|cell| {
                 let mut surfaces = cell.borrow_mut();
                 let Some(token) = surfaces.token(&self.host_id) else { return Some(None) };
-                if surfaces.get_token(token).is_some_and(|surface| surface.queue.checked_out.is_some()) { return None; }
+                if surfaces.get_token(token).is_some_and(|surface| surface.queue.checked_out.is_some()) {
+                    return None;
+                }
                 Some(surfaces.take_exact_to_retirement(token))
             });
             let Some(taken) = taken else { return false };
@@ -491,14 +483,37 @@ impl SceneSurfaceRetirement {
             return false;
         }
         if let Some(raster) = self.raster.as_mut() {
-            if !raster.close_step() { return false; }
+            if !raster.close_step() {
+                return false;
+            }
             assert!(raster.terminal_is_empty(), "component raster owner must be empty before releasing its grant");
             self.raster = None;
             PENDING_RASTER_STATE.with(|cell| cell.borrow_mut().acknowledge_retired_owner());
             return false;
         }
+        if let Some(target) = self.external_target.as_ref() {
+            let token = if let Some(token) = self.external_close {
+                token
+            } else {
+                let Ok(token) = crate::os_host::request_component_surface_close(target.clone(), self.external_engine_token) else { return false };
+                self.external_close = Some(token);
+                return false;
+            };
+            if !crate::os_host::component_surface_close_terminal(token) {
+                return false;
+            }
+            if !crate::os_host::acknowledge_component_surface_close(token) {
+                return false;
+            }
+            self.external_close = None;
+            self.external_engine_token = None;
+            self.external_target = None;
+            return false;
+        }
         if let Some(active) = self.gesture.as_mut() {
-            if retire_scene_text(&mut active.host_id) || retire_scene_text(&mut active.window_id) || retire_scene_text(&mut active.surface_id) || retire_scene_text(&mut active.controller_id) { return false; }
+            if retire_scene_text(&mut active.host_id) || retire_scene_text(&mut active.window_id) || retire_scene_text(&mut active.surface_id) || retire_scene_text(&mut active.controller_id) {
+                return false;
+            }
             self.gesture = None;
             return false;
         }
@@ -506,35 +521,57 @@ impl SceneSurfaceRetirement {
             let mut gestures = cell.borrow_mut();
             gestures.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|active| active.host_id == self.host_id.as_ref())).and_then(Option::take)
         });
-        if self.gesture.is_some() { return false; }
+        if self.gesture.is_some() {
+            return false;
+        }
         if let Some(active) = self.hover.as_mut() {
-            if retire_scene_text(&mut active.host_id) || retire_scene_text(&mut active.window_id) || retire_scene_text(&mut active.surface_id) || retire_scene_text(&mut active.controller_id) { return false; }
+            if retire_scene_text(&mut active.host_id) || retire_scene_text(&mut active.window_id) || retire_scene_text(&mut active.surface_id) || retire_scene_text(&mut active.controller_id) {
+                return false;
+            }
             self.hover = None;
             return false;
         }
         self.hover = CANVAS_CATALOGUE_HOVER.with(|cell| {
             let mut hover = cell.borrow_mut();
-            if hover.as_ref().is_some_and(|active| active.host_id == self.host_id.as_ref()) { hover.take() } else { None }
+            if hover.as_ref().is_some_and(|active| active.host_id == self.host_id.as_ref()) {
+                hover.take()
+            } else {
+                None
+            }
         });
-        if self.hover.is_some() { return false; }
+        if self.hover.is_some() {
+            return false;
+        }
         if let Some(active) = self.transfer.as_mut() {
-            if retire_scene_text(&mut active.source_window_id) || retire_scene_text(&mut active.source_host_id) { return false; }
+            if retire_scene_text(&mut active.source_window_id) || retire_scene_text(&mut active.source_host_id) {
+                return false;
+            }
             let pending = match &mut active.source {
                 SceneListTransferSource::TableRow { row_id, mime, payload } => retire_scene_text(row_id) || retire_scene_text(mime) || retire_scene_text(payload),
                 SceneListTransferSource::BlockListStep { step_id, .. } => retire_scene_text(step_id),
                 SceneListTransferSource::BlockListBlock { step_id, block_id, .. } => retire_scene_text(step_id) || retire_scene_text(block_id),
                 SceneListTransferSource::BlockListPalette { kind, mime, payload } => retire_scene_text(kind) || retire_scene_text(mime) || retire_scene_text(payload),
             };
-            if pending { return false; }
+            if pending {
+                return false;
+            }
             self.transfer = None;
             return false;
         }
         self.transfer = SCENE_LIST_TRANSFER.with(|cell| {
             let mut authority = cell.borrow_mut();
-            if authority.active.as_ref().is_some_and(|active| active.source_host_id == self.host_id.as_ref()) { authority.active.take() } else { None }
+            if authority.active.as_ref().is_some_and(|active| active.source_host_id == self.host_id.as_ref()) {
+                authority.active.take()
+            } else {
+                None
+            }
         });
-        if self.transfer.is_some() { return false; }
-        if retire_scene_text(&mut self.text) { return false; }
+        if self.transfer.is_some() {
+            return false;
+        }
+        if retire_scene_text(&mut self.text) {
+            return false;
+        }
         if let Some(value) = self.values.pop() {
             match value {
                 SceneValueRetirement::Value(Value::String(text)) => self.text = text,
@@ -558,17 +595,29 @@ impl SceneSurfaceRetirement {
             }
             return false;
         }
-        if self.values.capacity() != 0 { self.values = Vec::new(); return false; }
+        if self.values.capacity() != 0 {
+            self.values = Vec::new();
+            return false;
+        }
         let state = &mut self.owner.value;
         if let Some(draft) = state.text_editor_ui.rename.as_mut() {
-            if retire_scene_text(&mut draft.text) { return false; }
-            if draft.occurrences.pop().is_some() { return false; }
-            if draft.occurrences.capacity() != 0 { draft.occurrences = Vec::new(); return false; }
+            if retire_scene_text(&mut draft.text) {
+                return false;
+            }
+            if draft.occurrences.pop().is_some() {
+                return false;
+            }
+            if draft.occurrences.capacity() != 0 {
+                draft.occurrences = Vec::new();
+                return false;
+            }
             state.text_editor_ui.rename = None;
             return false;
         }
         if let Some((text, _, _)) = state.text_editor_ui.pending_menu_action.as_mut() {
-            if retire_scene_text(text) { return false; }
+            if retire_scene_text(text) {
+                return false;
+            }
             state.text_editor_ui.pending_menu_action = None;
             return false;
         }
@@ -576,40 +625,74 @@ impl SceneSurfaceRetirement {
             self.text = id;
             return false;
         }
-        if let Some((key, _)) = state.scroll_offsets.pop_first() { self.text = key; return false; }
+        if let Some((key, _)) = state.scroll_offsets.pop_first() {
+            self.text = key;
+            return false;
+        }
         #[cfg(test)]
-        if let Some((key, _)) = state.node_positions.pop_first() { self.text = key; return false; }
+        if let Some((key, _)) = state.node_positions.pop_first() {
+            self.text = key;
+            return false;
+        }
         if let Some((key, value)) = state.ink_overrides.pop_first() {
             self.text = key;
             self.values.push(SceneValueRetirement::Value(value));
             return false;
         }
         for points in [&mut state.map_marquee_points, &mut state.ink_marquee_points] {
-            if points.pop().is_some() { return false; }
-            if points.capacity() != 0 { *points = Vec::new(); return false; }
+            if points.pop().is_some() {
+                return false;
+            }
+            if points.capacity() != 0 {
+                *points = Vec::new();
+                return false;
+            }
         }
         if let Some(drag) = state.drag.as_mut() {
             match &mut drag.mode {
                 SceneDragMode::InkMove { origins, .. } => {
-                    if let Some((key, _)) = origins.pop_first() { self.text = key; return false; }
+                    if let Some((key, _)) = origins.pop_first() {
+                        self.text = key;
+                        return false;
+                    }
                 }
                 SceneDragMode::InkResize { handle, selected_ids, .. } => {
-                    if let Some(key) = selected_ids.pop() { self.text = key; return false; }
-                    if selected_ids.capacity() != 0 { *selected_ids = Vec::new(); return false; }
-                    if retire_scene_text(handle) { return false; }
+                    if let Some(key) = selected_ids.pop() {
+                        self.text = key;
+                        return false;
+                    }
+                    if selected_ids.capacity() != 0 {
+                        *selected_ids = Vec::new();
+                        return false;
+                    }
+                    if retire_scene_text(handle) {
+                        return false;
+                    }
                 }
                 SceneDragMode::MapMarquee { method, merge_mode, .. } => {
-                    if retire_scene_text(method) || retire_scene_text(merge_mode) { return false; }
+                    if retire_scene_text(method) || retire_scene_text(merge_mode) {
+                        return false;
+                    }
                 }
-                SceneDragMode::InkStroke { block_id } => { if retire_scene_text(block_id) { return false; } }
-                SceneDragMode::InkEraser { mode } => { if retire_scene_text(mode) { return false; } }
+                SceneDragMode::InkStroke { block_id } => {
+                    if retire_scene_text(block_id) {
+                        return false;
+                    }
+                }
+                SceneDragMode::InkEraser { mode } => {
+                    if retire_scene_text(mode) {
+                        return false;
+                    }
+                }
                 _ => {}
             }
             state.drag = None;
             return false;
         }
         if let Some(edit) = state.ink_edit.as_mut() {
-            if retire_scene_text(&mut edit.draft) { return false; }
+            if retire_scene_text(&mut edit.draft) {
+                return false;
+            }
             if !edit.block.is_null() {
                 self.values.push(SceneValueRetirement::Value(std::mem::take(&mut edit.block)));
                 return false;
@@ -619,13 +702,17 @@ impl SceneSurfaceRetirement {
         }
         for text in [&mut state.last_click_target, &mut state.hovered_control_id, &mut state.vfs_selection_anchor, &mut state.map_last_hover_json, &mut state.camera_dispatch_controller_id] {
             if let Some(value) = text.as_mut() {
-                if retire_scene_text(value) { return false; }
+                if retire_scene_text(value) {
+                    return false;
+                }
                 *text = None;
                 return false;
             }
         }
         for owner in [&mut state.mount_owner, &mut state.canvas_camera_owner, &mut state.map_interaction_owner, &mut state.map_hover_owner] {
-            if retire_scene_target(owner) { return false; }
+            if retire_scene_target(owner) {
+                return false;
+            }
         }
         !retire_scene_text(&mut self.owner.id)
     }
@@ -699,11 +786,7 @@ impl CanvasGestureSlots {
     }
 
     fn insert(&mut self, gesture: CanvasGesture) -> bool {
-        let index = self
-            .slots
-            .iter()
-            .position(|slot| slot.as_ref().is_some_and(|active| active.pointer_id == gesture.pointer_id))
-            .or_else(|| self.slots.iter().position(Option::is_none));
+        let index = self.slots.iter().position(|slot| slot.as_ref().is_some_and(|active| active.pointer_id == gesture.pointer_id)).or_else(|| self.slots.iter().position(Option::is_none));
         let Some(index) = index else { return false };
         self.slots[index] = Some(gesture);
         true
@@ -1221,15 +1304,43 @@ pub(crate) fn scene_host_retiring(host_id: &str) -> bool {
     SCENE_SURFACE_RETIREMENT.with(|cell| cell.borrow().as_ref().is_some_and(|retired| retired.host_id.as_ref() == host_id))
 }
 
+pub(crate) fn scene_surface_retirement_can_admit() -> bool {
+    SCENE_SURFACE_RETIREMENT.with(|cell| cell.borrow().is_none())
+}
+
 /// 🪪️ Admits one retained component host for its exact mounted identity.
 pub(crate) fn mount_scene_identity(owner: &crate::interpreter::ScenePointerTarget) -> bool {
-    if owner.host_id.is_empty() { return false; }
-    if SCENE_SURFACE_RETIREMENT.with(|cell| cell.borrow().as_ref().is_some_and(|retired| retired.host_id.as_ref() == owner.host_id)) { return false; }
+    if owner.host_id.is_empty() {
+        return false;
+    }
+    if SCENE_SURFACE_RETIREMENT.with(|cell| cell.borrow().as_ref().is_some_and(|retired| retired.host_id.as_ref() == owner.host_id)) {
+        return false;
+    }
     SCENE_STATE.with(|cell| {
         let mut states = cell.borrow_mut();
         let Some(state) = states.get_or_insert_with(owner.host_id.clone(), SceneSurfaceState::default) else { return false };
-        if state.mount_owner.as_ref().is_some_and(|current| !current.same_component_host(owner)) { return false; }
-        if state.mount_owner.is_none() { state.mount_owner = Some(owner.clone()); }
+        if state.mount_owner.as_ref().is_some_and(|current| !current.same_component_host(owner)) {
+            return false;
+        }
+        if state.mount_owner.is_none() {
+            state.mount_owner = Some(owner.clone());
+        }
+        true
+    })
+}
+
+/// 🎟️ Attaches an engine allocation to the component that admitted its paint.
+pub(crate) fn bind_scene_engine_token(host_id: &str, token: engine_canvas::EngineSurfaceToken) -> bool {
+    if scene_host_retiring(host_id) {
+        return false;
+    }
+    SCENE_STATE.with(|cell| {
+        let mut states = cell.borrow_mut();
+        let Some(state) = states.get_mut(host_id) else { return false };
+        if state.mount_owner.is_none() || state.engine_token.is_some_and(|current| current != token) {
+            return false;
+        }
+        state.engine_token = Some(token);
         true
     })
 }
@@ -1255,22 +1366,61 @@ pub(crate) fn mount_canvas_camera(scene: &UiComponentSceneNode, owner: crate::in
 
 /// 🧹️ Transfers an exact removed component into the bounded scene retirement owner.
 pub(crate) fn retire_scene_identity(owner: &crate::interpreter::ScenePointerTarget) -> bool {
+    if !scene_surface_retirement_can_admit() {
+        return false;
+    }
+    if owner.kind == ui_wgpu::wgpu::SurfaceKind::TiledMap {
+        #[cfg(test)]
+        let before = SCENE_STATE.with(|cell| {
+            cell.borrow().get(&owner.host_id).map(|state| {
+                (
+                    state.mount_owner.as_ref().is_some_and(|current| current.same_component_host(owner)),
+                    state.map_interaction_owner.as_ref().is_some_and(|current| current.same_component_host(owner)),
+                    state.drag.is_some(),
+                )
+            })
+        });
+        let _interaction = retire_tiled_map_scene_identity(owner);
+        #[cfg(test)]
+        eprintln!("[DEBUG] scene retirement map host={} before={before:?} exact-interaction={_interaction}", owner.host_id);
+    }
     let retired = SCENE_STATE.with(|cell| {
         let mut states = cell.borrow_mut();
         let state = states.get(&owner.host_id)?;
-        if !state.mount_owner.as_ref().is_some_and(|current| current.same_component_host(owner)) && !state.canvas_camera_owner.as_ref().is_some_and(|current| current.same_component_host(owner)) { return None; }
+        if !state.mount_owner.as_ref().is_some_and(|current| current.same_component_host(owner)) && !state.canvas_camera_owner.as_ref().is_some_and(|current| current.same_component_host(owner)) {
+            return None;
+        }
         let token = states.token(&owner.host_id)?;
         states.take_exact_to_retirement(token)
     });
     let retained = retired.is_some();
     if let Some(owner) = retired {
+        let external_engine_token = owner.value.engine_token;
+        let external_target = (external_engine_token.is_some() || matches!(owner.value.mount_owner.as_ref().map(|owner| owner.kind), Some(SurfaceKind::World3d | SurfaceKind::IconRender))).then(|| owner.value.mount_owner.clone()).flatten();
+        let mut values = Vec::new();
+        if let Some((key, value)) = crate::interpreter::take_world_camera_diagnostic(&owner.id) {
+            values.push(SceneValueRetirement::Text(key));
+            values.push(SceneValueRetirement::Value(value));
+        }
         SCENE_SURFACE_RETIREMENT.with(|cell| {
             let mut slot = cell.borrow_mut();
             assert!(slot.is_none(), "the previous component retirement must finish before admitting another");
-            *slot = Some(SceneSurfaceRetirement { host_id: owner.id.clone().into_boxed_str(), owner, text: String::new(), values: Vec::new(), gesture: None, hover: None, raster: None, raster_started: false, transfer: None });
+            *slot = Some(SceneSurfaceRetirement {
+                host_id: owner.id.clone().into_boxed_str(),
+                owner,
+                external_target,
+                external_engine_token,
+                external_close: None,
+                text: String::new(),
+                values,
+                gesture: None,
+                hover: None,
+                raster: None,
+                raster_started: false,
+                transfer: None,
+            });
         });
     }
-    if owner.kind == ui_wgpu::wgpu::SurfaceKind::TiledMap { engine_canvas::retire_map_interaction_owner(owner); }
     SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
         let mut deadlines = cell.borrow_mut();
         if deadlines.get(&owner.host_id).is_some_and(|deadline| deadline.owner.as_ref().is_some_and(|current| current.same_component_host(owner))) {
@@ -1314,14 +1464,11 @@ impl SceneCameraDeadline {
                 _ => false,
             }
         });
-        matches && self.owner.as_ref().is_none_or(|owner| !crate::interpreter::ui_document_close_pending_for(&owner.window_id) && !scene_host_retiring(&owner.host_id))
+        matches && self.owner.as_ref().is_none_or(|owner| !crate::interpreter::ui_document_close_pending_for(&owner.window_id) && !scene_host_retiring(&owner.host_id) && crate::interpreter::component_scene_is_presented(owner))
     }
 }
 
-/// 🕒️ Pushes a Canvas2d/Paint2d surface's settled `setCamera` deadline ~350ms out — called on every
-/// wheel/pan mutation (see `handle_scene_wheel`'s `Canvas2d`/`Paint2d` arms and
-/// `handle_scene_pointer_move`'s `PanViewport` arm), same 350ms settle window as
-/// `AppRuntime::world3d_camera_dispatch_deadlines_ms`.
+/// 🕒️ Settles each Canvas camera 120 ms after its latest wheel or pan mutation, matching Canvas2dHost.
 fn schedule_scene_camera_dispatch(host_id: &str, surface_id: &str) {
     let owner = SCENE_STATE.with(|cell| cell.borrow().get(host_id).and_then(|state| state.canvas_camera_owner.clone()));
     SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
@@ -1330,7 +1477,7 @@ fn schedule_scene_camera_dispatch(host_id: &str, surface_id: &str) {
             SCENE_CAMERA_DISPATCH_FAULT.with(|fault| *fault.borrow_mut() = Some("scene camera deadline credits exceeded"));
             return;
         }
-        deadlines.insert(host_id.to_string(), SceneCameraDeadline { at_ms: crate::app_now_ms() + 350.0, surface_id: surface_id.to_owned(), owner });
+        deadlines.insert(host_id.to_string(), SceneCameraDeadline { at_ms: crate::app_now_ms() + 120.0, surface_id: surface_id.to_owned(), owner });
     });
 }
 
@@ -1361,7 +1508,9 @@ impl SceneCameraDispatchCursor {
         SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
             let mut deadlines = cell.borrow_mut();
             match deadlines.entry(surface_id) {
-                std::collections::hash_map::Entry::Vacant(entry) => { entry.insert(deadline); }
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    entry.insert(deadline);
+                }
                 std::collections::hash_map::Entry::Occupied(mut entry) => {
                     if entry.get().owner == deadline.owner && entry.get().at_ms < deadline.at_ms {
                         entry.insert(deadline);
@@ -1515,16 +1664,10 @@ fn write_scene_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, d
 }
 
 fn scene_action_bytes(descriptor: &ActionDescriptor) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
-    ui_wgpu::wgpu::checked_action_string_bytes(&[descriptor.controller_id.as_str(), descriptor.action.as_str()])?
-        .checked_add(descriptor.args.as_ref().map_or(0, dsl_value_bytes))
-        .ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)
+    ui_wgpu::wgpu::checked_action_string_bytes(&[descriptor.controller_id.as_str(), descriptor.action.as_str()])?.checked_add(descriptor.args.as_ref().map_or(0, dsl_value_bytes)).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)
 }
 
-fn write_scene_action_to_batch(
-    batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>,
-    descriptor: &ActionDescriptor,
-    bytes: usize,
-) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn write_scene_action_to_batch(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, descriptor: &ActionDescriptor, bytes: usize) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     batch.action(&descriptor.controller_id, &descriptor.action, bytes, |builder| match descriptor.args.as_ref() {
         Some(args) => builder.value(None, args),
         None => {
@@ -1624,13 +1767,7 @@ fn write_canvas_pointer_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchRese
     write_canvas_pointer_action_address(batch, &scene.controller_id, &scene.surface_id, action, wire)
 }
 
-fn write_canvas_pointer_action_address(
-    batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>,
-    controller_id: &str,
-    surface_id: &str,
-    action: &str,
-    wire: &CanvasPointerWire,
-) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn write_canvas_pointer_action_address(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, surface_id: &str, action: &str, wire: &CanvasPointerWire) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let bytes = canvas_pointer_action_address_bytes(controller_id, surface_id, action)?;
     batch.action(controller_id, action, bytes, |builder| {
         builder.begin_object(None)?;
@@ -1672,14 +1809,7 @@ fn canvas_double_click_action_bytes(controller_id: &str, surface_id: &str) -> Re
     ui_wgpu::wgpu::checked_action_string_bytes(&parts)
 }
 
-fn write_canvas_double_click_action(
-    batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>,
-    controller_id: &str,
-    surface_id: &str,
-    inner: Rect,
-    x: f32,
-    y: f32,
-) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn write_canvas_double_click_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, surface_id: &str, inner: Rect, x: f32, y: f32) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let bytes = canvas_double_click_action_bytes(controller_id, surface_id)?;
     batch.action(controller_id, "canvasDoubleClick", bytes, |builder| {
         builder.begin_object(None)?;
@@ -1713,7 +1843,9 @@ fn cancel_canvas_pointer_gesture_into(pointer_id: Option<ui_render::PointerId>, 
             None => gestures.slots.iter().flatten().next(),
         }
         .cloned()
-    }) else { return Ok(false) };
+    }) else {
+        return Ok(false);
+    };
     if crate::interpreter::ui_document_close_pending_for(&active.window_id) || scene_host_retiring(&active.host_id) {
         CANVAS_GESTURE.with(|cell| cell.borrow_mut().take(active.pointer_id));
         return Ok(true);
@@ -1721,21 +1853,14 @@ fn cancel_canvas_pointer_gesture_into(pointer_id: Option<ui_render::PointerId>, 
     if active.kind == CanvasGestureKind::Pan {
         let (retired, pan_remains) = CANVAS_GESTURE.with(|cell| {
             let mut current = cell.borrow_mut();
-            let retired = current.get(active.pointer_id).is_some_and(|candidate| {
-                candidate.window_id == active.window_id
-                    && candidate.host_id == active.host_id
-                    && candidate.document_generation == active.document_generation
-                    && candidate.kind == CanvasGestureKind::Pan
-            });
+            let retired = current
+                .get(active.pointer_id)
+                .is_some_and(|candidate| candidate.window_id == active.window_id && candidate.host_id == active.host_id && candidate.document_generation == active.document_generation && candidate.kind == CanvasGestureKind::Pan);
             if retired {
                 current.take(active.pointer_id);
             }
-            let pan_remains = current.slots.iter().flatten().any(|candidate| {
-                candidate.window_id == active.window_id
-                    && candidate.host_id == active.host_id
-                    && candidate.document_generation == active.document_generation
-                    && candidate.kind == CanvasGestureKind::Pan
-            });
+            let pan_remains =
+                current.slots.iter().flatten().any(|candidate| candidate.window_id == active.window_id && candidate.host_id == active.host_id && candidate.document_generation == active.document_generation && candidate.kind == CanvasGestureKind::Pan);
             (retired, pan_remains)
         });
         if !retired {
@@ -1758,11 +1883,7 @@ fn cancel_canvas_pointer_gesture_into(pointer_id: Option<ui_render::PointerId>, 
     batch.publish_with(|| {
         CANVAS_GESTURE.with(|cell| {
             let mut current = cell.borrow_mut();
-            if current.get(active.pointer_id).is_some_and(|candidate| {
-                candidate.window_id == active.window_id
-                    && candidate.host_id == active.host_id
-                    && candidate.document_generation == active.document_generation
-            }) {
+            if current.get(active.pointer_id).is_some_and(|candidate| candidate.window_id == active.window_id && candidate.host_id == active.host_id && candidate.document_generation == active.document_generation) {
                 current.take(active.pointer_id);
             }
         });
@@ -1856,26 +1977,12 @@ pub(crate) fn canvas_pointer_terminal_step(input: &mut ui_wgpu::wgpu::InputState
     false
 }
 
-pub(crate) fn cancel_stale_canvas_authority(
-    window_id: &str,
-    host_id: &str,
-    document_generation: u64,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    let stale_gesture = CANVAS_GESTURE.with(|cell| {
-        cell.borrow()
-            .slots
-            .iter()
-            .flatten()
-            .find(|active| active.window_id == window_id && active.host_id == host_id && active.document_generation != document_generation)
-            .map(|active| active.pointer_id)
-    });
+pub(crate) fn cancel_stale_canvas_authority(window_id: &str, host_id: &str, document_generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let stale_gesture = CANVAS_GESTURE.with(|cell| cell.borrow().slots.iter().flatten().find(|active| active.window_id == window_id && active.host_id == host_id && active.document_generation != document_generation).map(|active| active.pointer_id));
     if let Some(pointer_id) = stale_gesture {
         cancel_canvas_pointer_gesture_into(Some(pointer_id), input)?;
     }
-    let stale_hover = CANVAS_CATALOGUE_HOVER.with(|cell| {
-        cell.borrow().as_ref().is_some_and(|active| active.window_id == window_id && active.host_id == host_id && active.document_generation != document_generation)
-    });
+    let stale_hover = CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().as_ref().is_some_and(|active| active.window_id == window_id && active.host_id == host_id && active.document_generation != document_generation));
     if stale_hover {
         cancel_canvas_catalogue_drag_into(input)?;
     }
@@ -1975,11 +2082,7 @@ pub fn canvas_pointer_button_into(
         return Ok(false);
     }
     let (viewport, _) = canvas_state_snapshot(&scene.host_id);
-    let pan = if down {
-        button == 1 || button == 0 && canvas_active_utility(scene).as_deref() == Some("transformMove")
-    } else {
-        active.as_ref().is_some_and(|active| active.kind == CanvasGestureKind::Pan)
-    };
+    let pan = if down { button == 1 || button == 0 && canvas_active_utility(scene).as_deref() == Some("transformMove") } else { active.as_ref().is_some_and(|active| active.kind == CanvasGestureKind::Pan) };
     if pan {
         mutate_scene_state(&scene.host_id, |state| {
             state.pointer_was_down = down;
@@ -2079,25 +2182,15 @@ fn canvas_addressed_action(controller_id: &str, surface_id: &str, action: &str, 
     if let Value::Object(fields) = fields {
         args.extend(fields);
     }
-    ActionDescriptor {
-        controller_id: controller_id.to_string(),
-        action: action.to_string(),
-        args: semio_framework::optional_json_to_dsl(Some(Value::Object(args))),
-    }
+    ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(Value::Object(args))) }
 }
 
 fn canvas_catalogue_leave_action(hover: &CanvasCatalogueHover) -> ActionDescriptor {
     canvas_addressed_action(&hover.controller_id, &hover.surface_id, "canvasDragLeave", json!({}))
 }
 
-fn write_scene_action_batch(
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-    actions: &[ActionDescriptor],
-    commit: impl FnOnce(),
-) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    let bytes = actions.iter().try_fold(0usize, |sum, action| {
-        sum.checked_add(scene_action_bytes(action)?).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)
-    })?;
+fn write_scene_action_batch(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, actions: &[ActionDescriptor], commit: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let bytes = actions.iter().try_fold(0usize, |sum, action| sum.checked_add(scene_action_bytes(action)?).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits))?;
     let mut batch = input.reserve_actions(actions.len(), bytes)?;
     for action in actions {
         write_scene_action_to_batch(&mut batch, action, scene_action_bytes(action)?)?;
@@ -2125,17 +2218,9 @@ pub(crate) fn canvas_catalogue_drag_over_into(
     ui_wgpu::wgpu::checked_action_string_bytes(&types.iter().map(String::as_str).collect::<Vec<_>>())?;
     let now_ms = semio_framework_job::default_now_ms().expect("Canvas input requires the installed monotonic host clock") as f64;
     let prior = CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().clone());
-    let same_target = prior.as_ref().is_some_and(|active| {
-        active.window_id == window_id
-            && active.document_generation == document_generation
-            && active.host_id == scene.host_id
-    });
+    let same_target = prior.as_ref().is_some_and(|active| active.window_id == window_id && active.document_generation == document_generation && active.host_id == scene.host_id);
     if same_target
-        && prior.as_ref().is_some_and(|active| {
-            now_ms - active.last_dispatch_ms < CANVAS_DRAG_OVER_THROTTLE_MS
-                && (x - active.last_x).abs() < CANVAS_DRAG_OVER_THROTTLE_DISTANCE
-                && (y - active.last_y).abs() < CANVAS_DRAG_OVER_THROTTLE_DISTANCE
-        })
+        && prior.as_ref().is_some_and(|active| now_ms - active.last_dispatch_ms < CANVAS_DRAG_OVER_THROTTLE_MS && (x - active.last_x).abs() < CANVAS_DRAG_OVER_THROTTLE_DISTANCE && (y - active.last_y).abs() < CANVAS_DRAG_OVER_THROTTLE_DISTANCE)
     {
         return Ok(true);
     }
@@ -2182,11 +2267,7 @@ fn cancel_canvas_catalogue_drag_into(input: &mut ui_wgpu::wgpu::InputState<Actio
     write_scene_action_batch(input, &[canvas_catalogue_leave_action(&active)], || {
         CANVAS_CATALOGUE_HOVER.with(|cell| {
             let mut current = cell.borrow_mut();
-            if current.as_ref().is_some_and(|candidate| {
-                candidate.window_id == active.window_id
-                    && candidate.host_id == active.host_id
-                    && candidate.document_generation == active.document_generation
-            }) {
+            if current.as_ref().is_some_and(|candidate| candidate.window_id == active.window_id && candidate.host_id == active.host_id && candidate.document_generation == active.document_generation) {
                 *current = None;
             }
         });
@@ -2219,11 +2300,7 @@ pub(crate) fn canvas_catalogue_drop_into(
         return Ok(false);
     }
     cancel_stale_canvas_authority(window_id, &scene.host_id, document_generation, input)?;
-    let leave = CANVAS_CATALOGUE_HOVER
-        .with(|cell| cell.borrow().clone())
-        .as_ref()
-        .map(canvas_catalogue_leave_action)
-        .unwrap_or_else(|| canvas_addressed_action(&scene.controller_id, &scene.surface_id, "canvasDragLeave", json!({})));
+    let leave = CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().clone()).as_ref().map(canvas_catalogue_leave_action).unwrap_or_else(|| canvas_addressed_action(&scene.controller_id, &scene.surface_id, "canvasDragLeave", json!({})));
     let drop = scene_action(
         scene,
         "canvasDrop",
@@ -2256,11 +2333,7 @@ pub fn canvas_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f
         let before = Viewport { zoom: if state.viewport.zoom == 0.0 || state.viewport.zoom.is_nan() { 1.0 } else { state.viewport.zoom }, ..state.viewport };
         let anchor = before.screen_to_world(x, y, inner);
         let zoom = (before.zoom * if delta < 0.0 { 1.1 } else { 0.9 }).clamp(0.05, 32.0);
-        state.viewport = Viewport {
-            x: anchor.0 - (x - inner.x - inner.w * 0.5) / zoom,
-            y: anchor.1 - (y - inner.y - inner.h * 0.5) / zoom,
-            zoom,
-        };
+        state.viewport = Viewport { x: anchor.0 - (x - inner.x - inner.w * 0.5) / zoom, y: anchor.1 - (y - inner.y - inner.h * 0.5) / zoom, zoom };
         state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
     });
     schedule_scene_camera_dispatch(&scene.host_id, &scene.surface_id);
@@ -2385,10 +2458,7 @@ pub(crate) fn cancel_scene_list_transfer_for_window(window_id: &str) -> bool {
 fn cancel_scene_list_transfer_if_stale(window_id: &str, surface_id: &str, document_generation: u64, driver_drag: UiDriverDrag) -> bool {
     let retired = SCENE_LIST_TRANSFER.with(|cell| {
         let mut authority = cell.borrow_mut();
-        let stale = authority.active.as_ref().is_some_and(|active| {
-            active.driver_drag != driver_drag
-                || (active.source_window_id == window_id && active.source_host_id == surface_id && active.source_document_generation != document_generation)
-        });
+        let stale = authority.active.as_ref().is_some_and(|active| active.driver_drag != driver_drag || (active.source_window_id == window_id && active.source_host_id == surface_id && active.source_document_generation != document_generation));
         if stale {
             authority.active.take()
         } else {
@@ -2900,10 +2970,7 @@ pub fn render_component_scene_step(
     driver_drag: UiDriverDrag,
     document_generation: u64,
 ) -> ui_wgpu::wgpu::ScenePaintStep {
-    if cursor.phase() == 0
-        && scene.component_kind == SurfaceKind::Canvas2d
-        && cancel_stale_canvas_authority(hosts.window_id, &scene.host_id, document_generation, ctx.input).is_err()
-    {
+    if cursor.phase() == 0 && scene.component_kind == SurfaceKind::Canvas2d && cancel_stale_canvas_authority(hosts.window_id, &scene.host_id, document_generation, ctx.input).is_err() {
         return ui_wgpu::wgpu::ScenePaintStep::Fault;
     }
     if cursor.phase() >= ENGINE_PHASE {
@@ -2969,6 +3036,12 @@ pub fn render_component_scene_step(
             if !engine_canvas::sync_engine_scene(scene, hosts.window_id, bounds, ctx.theme) {
                 return cursor.finish();
             }
+            let Some(token) = engine_canvas::engine_surface_token(&scene.host_id) else {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            };
+            if !bind_scene_engine_token(&scene.host_id, token) {
+                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+            }
             if cursor.advance_phase().is_err() {
                 return ui_wgpu::wgpu::ScenePaintStep::Fault;
             }
@@ -3033,6 +3106,22 @@ pub fn render_component_scene_step(
             ui_wgpu::wgpu::ScenePaintStep::Pending
         }
         9 => {
+            if scene.component_kind == SurfaceKind::NodeGraph {
+                let Some(graph) = scene.node_graph.as_ref() else { return cursor.finish() };
+                let Some(item) = graph.find_items.get(cursor.item()) else { return cursor.finish() };
+                let find = ShellFindItem {
+                    id: item.id.clone(),
+                    label: item.label.clone(),
+                    description: None,
+                    category: Some(item.category.clone()),
+                    surface_id: scene.surface_id.clone(),
+                    node_id: item.id.clone(),
+                };
+                if try_push_find_item(find).is_err() || cursor.advance_item().is_err() {
+                    return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                }
+                return ui_wgpu::wgpu::ScenePaintStep::Pending;
+            }
             if scene.component_kind != SurfaceKind::TextEditor {
                 return cursor.finish();
             }
@@ -3190,7 +3279,7 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
         state.tool_run_trace_window_id = Some(hosts.window_id.to_string());
     }
     infinite_world::world::render_world_3d(scene, bounds, ctx, state, hosts.world_resources, infinite_world::world::World3dShadowProfile::World);
-    engine_canvas::register_engine_surface(scene, hosts.window_id, bounds, engine_canvas::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created);
+    engine_canvas::register_engine_surface(scene, hosts.window_id, bounds, engine_canvas::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created, None);
     world3d_surface_debug_log(scene, bounds, ctx, state);
     // 🎥️ The one point per frame that holds both the surface id and its LIVE orbit — `dumpMeshStats`
     // reaches only the interpreter's `UI_ENGINE`, never the shell's `world3d_states`.
@@ -3847,13 +3936,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
             rect: step_rect,
             control_id: format!("{}.step.{}", scene.host_id, step.id),
             action: None,
-            paint: BlockListPaint::StepCard {
-                title: step.title.clone(),
-                description: step.description.clone(),
-                selected: selected_id == Some(step.id.as_str()),
-                leading_inset,
-                surface_grip: driver_drag == UiDriverDrag::Surface,
-            },
+            paint: BlockListPaint::StepCard { title: step.title.clone(), description: step.description.clone(), selected: selected_id == Some(step.id.as_str()), leading_inset, surface_grip: driver_drag == UiDriverDrag::Surface },
             role: BlockListRole::Step { step_id: step.id.clone(), index: step_index },
         });
         let btn_y = step_rect.y + (row_h - theme.control_height_small) * 0.5;
@@ -3882,13 +3965,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
                 rect: block_rect,
                 control_id: format!("{}.block.{}", scene.host_id, block.id),
                 action: None,
-                paint: BlockListPaint::BlockRow {
-                    label: block.label.clone(),
-                    kind: block.kind.clone(),
-                    selected: selected_id == Some(block.id.as_str()),
-                    leading_inset: block_leading_inset,
-                    surface_grip: driver_drag == UiDriverDrag::Surface,
-                },
+                paint: BlockListPaint::BlockRow { label: block.label.clone(), kind: block.kind.clone(), selected: selected_id == Some(block.id.as_str()), leading_inset: block_leading_inset, surface_grip: driver_drag == UiDriverDrag::Surface },
                 role: BlockListRole::Block { step_id: step.id.clone(), block_id: block.id.clone(), index: block_index },
             });
             let block_btn_y = block_rect.y + (row_h - theme.control_height_small) * 0.5;
@@ -3922,11 +3999,7 @@ fn block_list_plan(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme, dr
             rect: palette_row,
             control_id: format!("{}.palette.{}", scene.host_id, entry.block_kind),
             action: Some(block_list_action(scene, "addBlock", json!({ "kind": entry.block_kind }))),
-            paint: BlockListPaint::PaletteEntry {
-                icon_id: entry.icon_id.clone(),
-                label: entry.label.clone(),
-                leading_inset: if driver_drag == UiDriverDrag::Handle { palette_handle_rect.w + theme.gap_standard } else { 0.0 },
-            },
+            paint: BlockListPaint::PaletteEntry { icon_id: entry.icon_id.clone(), label: entry.label.clone(), leading_inset: if driver_drag == UiDriverDrag::Handle { palette_handle_rect.w + theme.gap_standard } else { 0.0 } },
             role: BlockListRole::Palette { kind: entry.block_kind.clone() },
         });
         if driver_drag == UiDriverDrag::Handle {
@@ -3950,11 +4023,7 @@ fn block_list_source_rect(plan: &BlockListPlan, role: &BlockListRole) -> Option<
             _ => None,
         }),
         BlockListRole::BlockHandle { step_id, block_id, index } => plan.targets.iter().find_map(|target| match &target.role {
-            BlockListRole::Block { step_id: candidate_step, block_id: candidate_block, index: candidate_index }
-                if candidate_step == step_id && candidate_block == block_id && candidate_index == index =>
-            {
-                Some(target.rect)
-            }
+            BlockListRole::Block { step_id: candidate_step, block_id: candidate_block, index: candidate_index } if candidate_step == step_id && candidate_block == block_id && candidate_index == index => Some(target.rect),
             _ => None,
         }),
         BlockListRole::PaletteHandle { kind } => plan.targets.iter().find_map(|target| match &target.role {
@@ -3977,17 +4046,13 @@ fn block_list_transfer_start(scene: &UiComponentSceneNode, bounds: Rect, x: f32,
         target.rect.contains(x, y).then_some(target)
     })?;
     let source = match (&target.role, driver_drag) {
-        (BlockListRole::StepHandle { step_id, index }, UiDriverDrag::Handle) | (BlockListRole::Step { step_id, index }, UiDriverDrag::Surface) => {
-            SceneListTransferSource::BlockListStep { step_id: step_id.clone(), index: *index }
-        }
+        (BlockListRole::StepHandle { step_id, index }, UiDriverDrag::Handle) | (BlockListRole::Step { step_id, index }, UiDriverDrag::Surface) => SceneListTransferSource::BlockListStep { step_id: step_id.clone(), index: *index },
         (BlockListRole::BlockHandle { step_id, block_id, index }, UiDriverDrag::Handle) | (BlockListRole::Block { step_id, block_id, index }, UiDriverDrag::Surface) => {
             SceneListTransferSource::BlockListBlock { step_id: step_id.clone(), block_id: block_id.clone(), index: *index }
         }
-        (BlockListRole::PaletteHandle { kind }, UiDriverDrag::Handle) | (BlockListRole::Palette { kind }, UiDriverDrag::Surface) => SceneListTransferSource::BlockListPalette {
-            kind: kind.clone(),
-            mime: BLOCK_LIST_PALETTE_DRAG_MIME.to_string(),
-            payload: kind.clone(),
-        },
+        (BlockListRole::PaletteHandle { kind }, UiDriverDrag::Handle) | (BlockListRole::Palette { kind }, UiDriverDrag::Surface) => {
+            SceneListTransferSource::BlockListPalette { kind: kind.clone(), mime: BLOCK_LIST_PALETTE_DRAG_MIME.to_string(), payload: kind.clone() }
+        }
         _ => return None,
     };
     Some(SceneListTransferStart { source, rect: block_list_source_rect(&plan, &target.role)? })
@@ -4005,11 +4070,7 @@ fn block_list_source_is_current(scene: &UiComponentSceneNode, source: &SceneList
         SceneListTransferSource::BlockListPalette { kind, mime, payload } => {
             mime == BLOCK_LIST_PALETTE_DRAG_MIME
                 && payload == kind
-                && scene
-            .block_list
-            .as_ref()
-            .and_then(|list| serde_json::from_str::<Vec<BlockListPaletteEntryJson>>(&list.palette_json).ok())
-            .is_some_and(|palette| palette.iter().any(|entry| &entry.block_kind == kind))
+                && scene.block_list.as_ref().and_then(|list| serde_json::from_str::<Vec<BlockListPaletteEntryJson>>(&list.palette_json).ok()).is_some_and(|palette| palette.iter().any(|entry| &entry.block_kind == kind))
         }
         SceneListTransferSource::TableRow { .. } => false,
     }
@@ -5464,7 +5525,9 @@ const CANVAS_2D_EMPTY_LABEL: &str = "Empty canvas";
 /// first-party code (`semio-framework-pixels`) and the retained paint keys its `KIND_RASTER` quad by
 /// the image `src` itself, so the key must survive unchanged or the quad finds no texture.
 pub(crate) fn queue_decoded_raster_upload(surface_id: &str, key: String, width: u32, height: u32, mut pixels: Vec<u8>) -> Option<String> {
-    if scene_host_retiring(surface_id) { return None; }
+    if scene_host_retiring(surface_id) {
+        return None;
+    }
     let expected = usize::try_from(width).ok()?.checked_mul(usize::try_from(height).ok()?)?.checked_mul(4)?;
     if expected == 0 || expected > RASTER_UPLOAD_BYTE_CAPACITY || pixels.len() != expected || key.len() > RASTER_UPLOAD_KEY_BYTE_CAPACITY {
         return None;
@@ -5539,7 +5602,9 @@ pub(crate) fn queue_decoded_raster_upload(surface_id: &str, key: String, width: 
 }
 
 pub(crate) fn queue_canvas_image_upload_with(surface_id: &str, layer_id: &str, source_identity: &[u8], dimensions: impl FnOnce() -> Result<(u32, u32, Vec<u8>), Vec<u8>>, decode: impl FnOnce(&[u8]) -> Option<Vec<u8>>) -> Option<String> {
-    if scene_host_retiring(surface_id) { return None; }
+    if scene_host_retiring(surface_id) {
+        return None;
+    }
     if surface_id.len().saturating_add(layer_id.len()).saturating_add(32) > RASTER_UPLOAD_KEY_BYTE_CAPACITY || source_identity.len() > RASTER_UPLOAD_BYTE_CAPACITY.saturating_mul(2) {
         return None;
     }
@@ -6156,18 +6221,12 @@ fn ink_edit_for_point(block: &Value, world_x: f64, world_y: f64) -> Option<(Stri
         return None;
     }
     match ink_item_kind(block) {
-        "text" => Some((
-            format!("text:{id}"),
-            InkEditState { block: block.clone(), kind: InkEditKind::Text, draft: ink_text_plain(block), replace_on_input: true, screen_rect: Rect::new(0.0, 0.0, 0.0, 0.0) },
-        )),
+        "text" => Some((format!("text:{id}"), InkEditState { block: block.clone(), kind: InkEditKind::Text, draft: ink_text_plain(block), replace_on_input: true, screen_rect: Rect::new(0.0, 0.0, 0.0, 0.0) })),
         "table" => {
             let bounds = ink_item_bounds(block);
             let (row, col) = ink_table_cell_at_point(block, world_x - bounds.x, world_y - bounds.y)?;
             let draft = block.get("rows")?.get(row)?.get(col)?.get("content").and_then(Value::as_str).unwrap_or_default().to_owned();
-            Some((
-                format!("table:{id}:{row}:{col}"),
-                InkEditState { block: block.clone(), kind: InkEditKind::Table { row, col }, draft, replace_on_input: true, screen_rect: Rect::new(0.0, 0.0, 0.0, 0.0) },
-            ))
+            Some((format!("table:{id}:{row}:{col}"), InkEditState { block: block.clone(), kind: InkEditKind::Table { row, col }, draft, replace_on_input: true, screen_rect: Rect::new(0.0, 0.0, 0.0, 0.0) }))
         }
         _ => None,
     }
@@ -6199,12 +6258,7 @@ fn ink_edit_screen_rect(edit: &InkEditState, camera: InkCameraF, inner: Rect) ->
             let rows = edit.block.get("rows").and_then(Value::as_array).map(Vec::len).unwrap_or_default();
             let col_width = bounds.w / columns as f64;
             let row_height = bounds.h / (rows + 1) as f64;
-            Rect::new(
-                x + (col as f64 * col_width * camera.zoom) as f32,
-                y + ((row + 1) as f64 * row_height * camera.zoom) as f32,
-                (col_width * camera.zoom) as f32,
-                (row_height * camera.zoom) as f32,
-            )
+            Rect::new(x + (col as f64 * col_width * camera.zoom) as f32, y + ((row + 1) as f64 * row_height * camera.zoom) as f32, (col_width * camera.zoom) as f32, (row_height * camera.zoom) as f32)
         }
     }
 }
@@ -6630,14 +6684,7 @@ fn ink_interaction_id(block: &Value) -> Option<&str> {
     block.get("interactionId").and_then(Value::as_str).filter(|id| !id.is_empty())
 }
 
-fn write_ink_interaction_selection(
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-    scene: &UiComponentSceneNode,
-    ids: &[String],
-    merge: &str,
-    method: &str,
-    mutate: impl FnOnce(),
-) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn write_ink_interaction_selection(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, ids: &[String], merge: &str, method: &str, mutate: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let Some((domain_id, granularity)) = ink_interaction_domain(scene) else {
         mutate();
         return Ok(());
@@ -6879,12 +6926,7 @@ fn reidentify_ink_clipboard_item(block: &Value) -> Result<Value, ui_wgpu::wgpu::
     Ok(clone)
 }
 
-fn write_ink_clipboard_events_action(
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-    scene: &UiComponentSceneNode,
-    events: &InkEventJsonPages,
-    selected_ids: &[String],
-) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn write_ink_clipboard_events_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, events: &InkEventJsonPages, selected_ids: &[String]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     if selected_ids.len() > INK_SELECTION_ITEM_CAPACITY {
         return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
     }
@@ -6935,13 +6977,7 @@ fn ink_clipboard_image_events(content: &str, target: (f64, f64)) -> Result<(InkE
     Ok((events, vec![id]))
 }
 
-pub(crate) fn ink_clipboard_paste_into(
-    scene: &UiComponentSceneNode,
-    target: (f64, f64),
-    kind: InkClipboardContentKind,
-    content: &str,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub(crate) fn ink_clipboard_paste_into(scene: &UiComponentSceneNode, target: (f64, f64), kind: InkClipboardContentKind, content: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     if content.is_empty() || content.len() >= INK_INTERACTION_DOCUMENT_BYTE_CAPACITY {
         return if content.is_empty() { Ok(false) } else { Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits) };
     }
@@ -6971,7 +7007,9 @@ pub(crate) fn ink_clipboard_paste_into(
             (events, selected_ids)
         } else {
             let trimmed = content.trim();
-            if trimmed.is_empty() { return Ok(false); }
+            if trimmed.is_empty() {
+                return Ok(false);
+            }
             let mut block = create_ink_item("text", target.0, target.1);
             let id = ink_item_id(&block).to_owned();
             let paragraphs = trimmed.lines().map(|line| json!({ "runs": [{ "text": line }] })).collect();
@@ -6982,7 +7020,9 @@ pub(crate) fn ink_clipboard_paste_into(
         }
     } else {
         let trimmed = content.trim();
-        if trimmed.is_empty() { return Ok(false); }
+        if trimmed.is_empty() {
+            return Ok(false);
+        }
         let mut block = create_ink_item("text", target.0, target.1);
         let id = ink_item_id(&block).to_owned();
         let paragraphs = trimmed.lines().map(|line| json!({ "runs": [{ "text": line }] })).collect();
@@ -7225,13 +7265,7 @@ fn checked_ink_drag(surface_id: &str) -> Result<Option<SceneDragMode>, ui_wgpu::
 }
 
 impl InkInteractionJob {
-    pub(crate) fn new(
-        generation: u64,
-        surface_generation: u64,
-        pointer_id: Option<ui_render::PointerId>,
-        scene: &UiComponentSceneNode,
-        event: InkInteractionEvent,
-    ) -> Result<Option<Self>, ui_wgpu::wgpu::BoundedActionFault> {
+    pub(crate) fn new(generation: u64, surface_generation: u64, pointer_id: Option<ui_render::PointerId>, scene: &UiComponentSceneNode, event: InkInteractionEvent) -> Result<Option<Self>, ui_wgpu::wgpu::BoundedActionFault> {
         if generation == 0 || surface_generation == 0 {
             return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
         }
@@ -8375,7 +8409,15 @@ fn clear_tiled_map_interaction(host_id: &str) {
     }
 }
 
-pub fn tiled_map_pointer_move_into(owner: &crate::interpreter::ScenePointerTarget, controller_id: &str, inner: Rect, x: f32, y: f32, down: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn tiled_map_pointer_move_into(
+    owner: &crate::interpreter::ScenePointerTarget,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    down: bool,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let host_id = owner.host_id.as_str();
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
     if down {

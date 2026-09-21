@@ -36,10 +36,10 @@
               "height": null,
               "fill": null,
               "stroke": [
-                0,
-                0,
-                0,
-                1
+                0.0,
+                0.0,
+                0.0,
+                1.0
               ],
               "wrap_mode": null,
               "columns": null

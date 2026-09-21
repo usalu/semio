@@ -114,7 +114,26 @@ fn chrome_chip_label_set() -> Vec<String> {
     .collect();
     for is_de in [false, true] {
         labels.extend(ShellState::framework_display_tabs(is_de).into_iter().map(|tab| tab.label));
-        for key in ["settings.tab.general", "settings.tab.theme", "settings.tab.keybindings", "settings.tab.defaultApps", "conflict.panel", "display.tab.windows", "display.tab.layout", "panelToggle.display", "panelToggle.sync", "panelToggle.tool", "panelToggle.command", "panelToggle.settings", "panelToggle.chat", "marketplace.tab", "fullscreen.toggle", "fullscreen.exit", "common.close", "common.cancel"] {
+        for key in [
+            "settings.tab.general",
+            "settings.tab.theme",
+            "settings.tab.keybindings",
+            "settings.tab.defaultApps",
+            "conflict.panel",
+            "display.tab.windows",
+            "display.tab.layout",
+            "panelToggle.display",
+            "panelToggle.sync",
+            "panelToggle.tool",
+            "panelToggle.command",
+            "panelToggle.settings",
+            "panelToggle.chat",
+            "marketplace.tab",
+            "fullscreen.toggle",
+            "fullscreen.exit",
+            "common.close",
+            "common.cancel",
+        ] {
             labels.push(shell_chrome_string(key, is_de).to_string());
         }
     }

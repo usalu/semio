@@ -206,16 +206,7 @@ mod wasm_program_exchange {
         if !saw_invocation {
             return Err(format!("plugin sent no Invocation for seq {seq}"));
         }
-        Ok(InvocationResult {
-            output,
-            mutations,
-            inverse_group,
-            diagnostics,
-            requested_effects: std::mem::take(&mut outcome.effects),
-            events,
-            ui_scope,
-            history_patch,
-        })
+        Ok(InvocationResult { output, mutations, inverse_group, diagnostics, requested_effects: std::mem::take(&mut outcome.effects), events, ui_scope, history_patch })
     }
 
     /// 🧾️ ticket §C5 — the native twin of the React shell's `plugin.readHistory(instanceId)`: sends a
@@ -396,9 +387,7 @@ mod wasm_program_exchange {
     async fn exchange_document_backbone_binding(client: &KernelClient, command: semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1) -> Result<Vec<Effect>, String> {
         let instance = command.instance_id;
         let payload = command.encode()?;
-        let mut outcome = client
-            .exchange_events(instance, vec![Event::Message { source: MessageEndpoint::Shell { instance: PluginInstanceId(instance.to_string()) }, payload }])
-            .await?;
+        let mut outcome = client.exchange_events(instance, vec![Event::Message { source: MessageEndpoint::Shell { instance: PluginInstanceId(instance.to_string()) }, payload }]).await?;
         let candidates = outcome
             .effects
             .iter()
@@ -472,16 +461,7 @@ mod wasm_program_exchange {
     /// closed rather than returning an empty tree.
     pub async fn render_with_document(client: &KernelClient, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, _document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
         let surface = SurfaceId::try_from(surface_id).map_err(|_| "program surface id exceeds the retained contract".to_string())?;
-        let mut outcome = client
-            .exchange_events(
-                instance_id,
-                vec![semio_framework::kernel::Event::SurfaceVisible {
-                    surface: surface_id.to_string(),
-                    body_key: body_key.to_string(),
-                    view_state: pack_view_state(view_state)?,
-                }],
-            )
-            .await?;
+        let mut outcome = client.exchange_events(instance_id, vec![semio_framework::kernel::Event::SurfaceVisible { surface: surface_id.to_string(), body_key: body_key.to_string(), view_state: pack_view_state(view_state)? }]).await?;
         if let Some(sink) = refresh_effects {
             sink.append(&mut outcome.effects);
         }
@@ -582,18 +562,12 @@ impl ProgramBridgeEntry {
     }
 
     #[cfg(test)]
-    pub(crate) fn install_fixture_render(
-        &mut self,
-        render: fn(u32, &str, &str, &ViewModel, Option<&str>, Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String>,
-    ) {
+    pub(crate) fn install_fixture_render(&mut self, render: fn(u32, &str, &str, &ViewModel, Option<&str>, Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String>) {
         self.fixture_render = Some(render);
     }
 
     #[cfg(test)]
-    pub(crate) fn install_fixture_action(
-        &mut self,
-        action: fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>,
-    ) {
+    pub(crate) fn install_fixture_action(&mut self, action: fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>) {
         self.fixture_action = Some(action);
     }
 
@@ -712,11 +686,7 @@ impl ProgramBridgeEntry {
     }
 
     pub async fn render_with_document(&self, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
-        let _latency = crate::frame_latency::FrameLatencyTimer::start(
-            crate::frame_latency::latest_frame_authority(),
-            crate::frame_latency::FrameLatencyStage::RetainedExchange,
-            1,
-        );
+        let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::latest_frame_authority(), crate::frame_latency::FrameLatencyStage::RetainedExchange, 1);
         #[cfg(test)]
         if let Some(render) = self.fixture_render {
             return render(instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects);
@@ -934,14 +904,8 @@ async fn handle_action_js(handle: &Rc<JsValue>, instance_id: u32, action_json: &
     })
     .to_string();
     let invocation_pack = invocation_pack_base64(action_json)?;
-    let result = action
-        .call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json))
-        .map_err(|error| format!("handle_action failed: {}", describe_js_rejection(&error)))?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
-        JsFuture::from(promise.clone()).await.map_err(|error| format!("handle_action promise failed: {}", describe_js_rejection(&error)))?
-    } else {
-        result
-    };
+    let result = action.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json)).map_err(|error| format!("handle_action failed: {}", describe_js_rejection(&error)))?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("handle_action promise failed: {}", describe_js_rejection(&error)))? } else { result };
     let text = resolved.as_string().ok_or_else(|| "handle_action result not string".to_string())?;
     dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handle_action result parse failed: {error}"))
 }
@@ -966,11 +930,7 @@ async fn dispatch_invoke_extension_js(handle: &Rc<JsValue>, instance_id: u32, ex
     args.push(&JsValue::from_str(request_json));
     args.push(&JsValue::from_f64(req as f64));
     let result = dispatch.apply(&JsValue::NULL, &args).map_err(|error| format!("dispatchInvokeExtension failed: {}", describe_js_rejection(&error)))?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
-        JsFuture::from(promise.clone()).await.map_err(|error| format!("dispatchInvokeExtension promise failed: {}", describe_js_rejection(&error)))?
-    } else {
-        result
-    };
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("dispatchInvokeExtension promise failed: {}", describe_js_rejection(&error)))? } else { result };
     let text = resolved.as_string().ok_or_else(|| "dispatchInvokeExtension result not string".to_string())?;
     dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("dispatchInvokeExtension result parse failed: {error}"))
 }
@@ -984,11 +944,7 @@ async fn push_scoped_contributions_js(handle: &Rc<JsValue>, instance_id: u32, ap
     args.push(&JsValue::from_str(reachability_json));
     args.push(&JsValue::from_str(view_state_json));
     let result = push.apply(&JsValue::NULL, &args).map_err(|error| format!("pushScopedContributions failed: {}", describe_js_rejection(&error)))?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
-        JsFuture::from(promise.clone()).await.map_err(|error| format!("pushScopedContributions promise failed: {}", describe_js_rejection(&error)))?
-    } else {
-        result
-    };
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("pushScopedContributions promise failed: {}", describe_js_rejection(&error)))? } else { result };
     let text = resolved.as_string().ok_or_else(|| "pushScopedContributions result not string".to_string())?;
     dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("pushScopedContributions result parse failed: {error}"))
 }
@@ -1001,14 +957,8 @@ async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json:
     // 🩺️ The cause, not the verb: a swallowed rejection here reported only `handleCommand promise
     // failed` for every guest fault, command-address mistake and host-side throw alike
     // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    let result = command
-        .call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json))
-        .map_err(|error| format!("handleCommand failed: {}", describe_js_rejection(&error)))?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
-        JsFuture::from(promise.clone()).await.map_err(|error| format!("handleCommand promise failed: {}", describe_js_rejection(&error)))?
-    } else {
-        result
-    };
+    let result = command.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&invocation_pack), &JsValue::from_str(&context_json)).map_err(|error| format!("handleCommand failed: {}", describe_js_rejection(&error)))?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("handleCommand promise failed: {}", describe_js_rejection(&error)))? } else { result };
     let text = resolved.as_string().ok_or_else(|| "handleCommand result not string".to_string())?;
     dsl::os_pack::json::from_json_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handleCommand result parse failed: {error}"))
 }
@@ -1061,11 +1011,7 @@ async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface
     let result = render
         .call4(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(surface_id), &JsValue::from_str(body_key), &JsValue::from_str(&view_json))
         .map_err(|error| format!("renderDocument failed: {}", describe_js_rejection(&error)))?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
-        JsFuture::from(promise.clone()).await.map_err(|error| format!("renderDocument promise failed: {}", describe_js_rejection(&error)))?
-    } else {
-        result
-    };
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|error| format!("renderDocument promise failed: {}", describe_js_rejection(&error)))? } else { result };
     let text = resolved.as_string().ok_or_else(|| "renderDocument result not string".to_string())?;
     #[derive(serde::Deserialize)]
     struct BrowserRenderEnvelope {
@@ -1073,7 +1019,10 @@ async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface
         #[serde(default)]
         effects: Vec<Effect>,
     }
-    let envelope: BrowserRenderEnvelope = serde_json::from_str(&text).map_err(|error| { let headroom = ui_contract::ui_value_headroom(); format!("renderDocument result parse failed: {error} headroom collections={} items={} near {}", headroom.collections, headroom.items, json_window_around(&text, error.column())) })?;
+    let envelope: BrowserRenderEnvelope = serde_json::from_str(&text).map_err(|error| {
+        let headroom = ui_contract::ui_value_headroom();
+        format!("renderDocument result parse failed: {error} headroom collections={} items={} near {}", headroom.collections, headroom.items, json_window_around(&text, error.column()))
+    })?;
     if let Some(sink) = refresh_effects {
         sink.extend(envelope.effects);
     }
@@ -1082,7 +1031,12 @@ async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, surface
     if published.nodes.is_empty() {
         return Err(format!("plugin published an empty retained document for surface '{surface_id}'"));
     }
-    let identity = ui_contract::UiDocumentAssemblyIdentity { generation: browser_document_generation(surface_id, published.revision), revision: ui_contract::UiRevision(published.revision), root: Some(ui_contract::UiNodeId(root)), layout_epoch: published.layout_epoch };
+    let identity = ui_contract::UiDocumentAssemblyIdentity {
+        generation: browser_document_generation(surface_id, published.revision),
+        revision: ui_contract::UiRevision(published.revision),
+        root: Some(ui_contract::UiNodeId(root)),
+        layout_epoch: published.layout_epoch,
+    };
     let surface = ui_contract::SurfaceId::try_from(surface_id).map_err(|_| "program surface id exceeds the retained contract".to_string())?;
     let outcome = UiDocumentLease::try_publish(surface, identity, published.nodes).map_err(|error| retained_publication_refusal(surface_id, error));
     retire_browser_ui_values();

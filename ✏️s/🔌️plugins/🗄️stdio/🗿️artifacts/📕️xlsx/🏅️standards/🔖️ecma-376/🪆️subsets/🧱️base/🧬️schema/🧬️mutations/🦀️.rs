@@ -572,6 +572,11 @@ pub(crate) fn sweep_a() -> XlsxSnapshot {
     // while still genuinely exercising `relationships.modified` here in `field_sweep`.
     opc.relationships.insert("xl/toModify.xml".into(), vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/old.xml".into(), target_mode: OpcTargetMode::Internal }]);
     opc.relationships.insert("xl/toRemove.xml".into(), vec![OpcRelationship { id: "rId8".into(), rel_type: "http://example/ownerToRemove".into(), target: "media/gone.png".into(), target_mode: OpcTargetMode::Internal }]);
+    // 🔤️ Both sweep fixtures carry their parts in this format's NORMAL FORM, the same
+    // path-ascending order `regenerate_workbook_parts` ends on and `XlsxDiff::apply` lands every
+    // applied package in. Hand-written `set_part` call order is not a third ordering policy.
+    // `content_types.overrides` stays in call order on purpose (see `sweep_b`'s own note).
+    opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
 
     XlsxSnapshot::from_parts(
         opc,
@@ -611,6 +616,8 @@ pub(crate) fn sweep_b() -> XlsxSnapshot {
     opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, "xl/workbook.xml");
     opc.relationships.insert("xl/toModify.xml".into(), vec![OpcRelationship { id: "rId2".into(), rel_type: "http://example/toModify".into(), target: "worksheets/new.xml".into(), target_mode: OpcTargetMode::Internal }]);
     opc.relationships.insert("xl/added.xml".into(), vec![OpcRelationship { id: "rId3".into(), rel_type: "http://example/added".into(), target: "media/added.png".into(), target_mode: OpcTargetMode::Internal }]);
+    // 🔤️ Parts in the format's normal form, as in `sweep_a` — see that fixture's own note.
+    opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
 
     XlsxSnapshot::from_parts(
         opc,

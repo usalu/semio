@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::layout::unit_tests::context::{layout_app, render as render_body};
+use crate::editor::layout::unit_tests::context::{layout_app, render as render_body, scene as body_scene};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_blueprint_canvas_scene() {
@@ -9,11 +9,11 @@ async fn renders_blueprint_canvas_scene() {
 
 #[semio_framework_async_macros::async_test]
 async fn blueprint_scene_has_page_background_and_guides() {
-    // 🧷️ `layers_json` is a `String` field (`Canvas2dScene.layers_json`), so the render's own JSON
-    // encoding escapes its embedded quotes — assert on the unquoted substrings that survive either
-    // way rather than on an exact `"key":"value"` shape.
+    // 🧷️ `layers_json` is read off the DECODED scene: the built surface carries its scene as a binary
+    // pack, so the projected tree's text holds none of these ids. Inside that field the layer list is
+    // still ordinary JSON, asserted on unquoted substrings rather than an exact `"key":"value"` shape.
     let mut app = layout_app().await;
-    let json = render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).await;
+    let json = body_scene(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).await.layers_json;
     assert!(json.contains("layout.page-bg"));
     assert!(json.contains("0.97"));
     assert!(json.contains("layout.guide.margin"));
@@ -26,7 +26,7 @@ async fn blueprint_scene_has_page_background_and_guides() {
 #[semio_framework_async_macros::async_test]
 async fn inherited_frame_gets_dashed_stroke_in_blueprint() {
     let mut app = layout_app().await;
-    let json = render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).await;
+    let json = body_scene(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).await.layers_json;
     assert!(json.contains("dash") && json.contains("4.0") && json.contains("3.0"));
 }
 

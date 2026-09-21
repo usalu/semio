@@ -38,13 +38,7 @@ fn runtime_single_enqueue_reader_cannot_observe_completion_without_its_scene_inv
     let source_revision = source["revision"].as_str().unwrap().parse().unwrap();
     let scalar = |field: &str| serde_json::from_value::<f32>(source[field].clone()).unwrap();
     let size = (scalar("width"), scalar("height"), scalar("dpr"));
-    let completion = RuntimeCompletion {
-        key: Some("window-metrics"),
-        revision: source_revision,
-        requires_interaction: true,
-        restores_interaction: false,
-        apply: RuntimeApply::Resize { width: size.0, height: size.1, dpr: size.2 },
-    };
+    let completion = RuntimeCompletion { key: Some("window-metrics"), revision: source_revision, requires_interaction: true, restores_interaction: false, apply: RuntimeApply::Resize { width: size.0, height: size.1, dpr: size.2 } };
     let (publication, observation, resumed, accepted, reader_joined) = std::thread::scope(|scope| {
         let (published, publication) = mpsc::channel();
         let (resume, resumed) = mpsc::channel();
@@ -54,7 +48,9 @@ fn runtime_single_enqueue_reader_cannot_observe_completion_without_its_scene_inv
         let writer = scope.spawn(move || {
             INTERLOCK.with(|slot| *slot.borrow_mut() = Some(PublicationInterlock { published, resume: resumed }));
             let accepted = enqueue_runtime_completion(queue, presentation, waker, completion);
-            INTERLOCK.with(|slot| { slot.borrow_mut().take(); });
+            INTERLOCK.with(|slot| {
+                slot.borrow_mut().take();
+            });
             accepted
         });
         let publication = publication.recv_timeout(Duration::from_secs(1));
@@ -78,10 +74,7 @@ fn runtime_single_enqueue_reader_cannot_observe_completion_without_its_scene_inv
     let published_count = queue.ready.len();
     let mut exact_source = false;
     while let Some(published) = queue.ready.pop_front() {
-        exact_source = published.key == Some("window-metrics")
-            && published.revision == source_revision
-            && published.requires_interaction
-            && matches!(&published.apply, RuntimeApply::Resize { width, height, dpr } if (*width, *height, *dpr) == size);
+        exact_source = published.key == Some("window-metrics") && published.revision == source_revision && published.requires_interaction && matches!(&published.apply, RuntimeApply::Resize { width, height, dpr } if (*width, *height, *dpr) == size);
         drop(published);
     }
     drop(queue);

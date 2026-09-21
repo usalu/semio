@@ -43,7 +43,7 @@ async fn sample_log() -> HistoryLog {
                 description: Some("first edit".to_string()),
                 ops: vec![OpPayload { text: Some("set foo=1".to_string()), binary: None }, OpPayload { text: Some("set bar=2".to_string()), binary: None }],
                 inverse: Vec::new(),
-                meta: None,
+                meta: None, lane: None,
             },
             HistoryEdit {
                 id: "edit-2".to_string(),
@@ -73,7 +73,7 @@ async fn sample_log() -> HistoryLog {
                     // not just the unit `Owner` case — survives a real `.spr` byte round trip.
                     origin: crate::os_spr::command::MutationOrigin::Contributed { plugin_id: "flow".to_string(), mutation_id: crate::os_spr::ids::SchemaId("widget.doc#recolor".to_string()), payload_hash: crate::os_spr::ids::PayloadHash([3u8; 32]) },
                     messages: Vec::new(),
-                }]),
+                }]), lane: None,
             },
         ],
         transitions: vec![
@@ -316,7 +316,7 @@ async fn op_meta_messages_round_trip_every_severity_and_target_shape() {
         description: None,
         ops: vec![OpPayload { text: Some("noop".to_string()), binary: None }],
         inverse: Vec::new(),
-        meta: Some(vec![meta.clone()]),
+        meta: Some(vec![meta.clone()]), lane: None,
     };
     let mut dict = DictBuilder::new();
     let payload = encode_edit(&edit, &mut dict, |_| None).await.unwrap();
@@ -499,7 +499,7 @@ async fn edit_payload_round_trips_with_all_optionals_and_meta() {
 
 #[semio_framework_async_macros::async_test]
 async fn edit_payload_round_trips_minimal_edit() {
-    let edit = HistoryEdit { id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, coalesce_key: None, description: None, ops: Vec::new(), inverse: Vec::new(), meta: None };
+    let edit = HistoryEdit { id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, coalesce_key: None, description: None, ops: Vec::new(), inverse: Vec::new(), meta: None, lane: None };
     let mut dict = DictBuilder::new();
     let payload = encode_edit(&edit, &mut dict, |_| None).await.unwrap();
     let mut reader = DictReader::new();
@@ -582,7 +582,7 @@ async fn edit_payload_round_trips_a_backwards_section_mixing_text_and_binary_pay
         description: None,
         ops: vec![OpPayload { text: Some("set n=1".to_string()), binary: Some(vec![1, 2, 3]) }, OpPayload { text: Some("set n=2".to_string()), binary: None }],
         inverse: vec![OpPayload { text: Some("set n=0".to_string()), binary: Some(vec![0]) }, OpPayload { text: Some("set n=1".to_string()), binary: None }],
-        meta: None,
+        meta: None, lane: None,
     };
     let mut dict = DictBuilder::new();
     let payload = encode_edit(&edit, &mut dict, |_| None).await.unwrap();
@@ -605,7 +605,7 @@ async fn edit_payload_with_empty_backwards_omits_the_section_and_decodes_empty()
         description: None,
         ops: vec![OpPayload { text: Some("noop".to_string()), binary: None }],
         inverse: Vec::new(),
-        meta: None,
+        meta: None, lane: None,
     };
     let mut dict = DictBuilder::new();
     let payload = encode_edit(&edit, &mut dict, |_| None).await.unwrap();
@@ -756,6 +756,7 @@ fn fold_edit(id: &str, op_id: &str, physical_ms: i64) -> HistoryEdit {
         ops: vec![OpPayload { text: Some(format!("set {id}=1")), binary: None }],
         inverse: Vec::new(),
         meta: Some(vec![HistoryOpMeta { op_id: Some(op_id.to_string()), hlt: Some((1, physical_ms, 0)), ..HistoryOpMeta::default() }]),
+        lane: None,
     }
 }
 

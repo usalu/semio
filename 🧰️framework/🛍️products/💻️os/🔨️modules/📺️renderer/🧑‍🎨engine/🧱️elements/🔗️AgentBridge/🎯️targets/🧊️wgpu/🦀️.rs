@@ -332,21 +332,53 @@ mod wire {
 /// 📤️ Gateway→Shell frames, tags `0..9` in SSOT declaration order.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GatewayToShell {
-    Welcome { bridge_version: u16, connection: String, principal: String },
-    ShellCommand { seq: u64, command: Vec<u8> },
-    AppCommand { seq: u64, instance_id: String, command: Vec<u8> },
-    ApprovalRequested { approval_id: String, summary: String },
-    ApprovalResolved { approval_id: String, decision: ApprovalDecision },
-    AgentPresence { active: bool, label: String, invocation_id: Option<String> },
+    Welcome {
+        bridge_version: u16,
+        connection: String,
+        principal: String,
+    },
+    ShellCommand {
+        seq: u64,
+        command: Vec<u8>,
+    },
+    AppCommand {
+        seq: u64,
+        instance_id: String,
+        command: Vec<u8>,
+    },
+    ApprovalRequested {
+        approval_id: String,
+        summary: String,
+    },
+    ApprovalResolved {
+        approval_id: String,
+        decision: ApprovalDecision,
+    },
+    AgentPresence {
+        active: bool,
+        label: String,
+        invocation_id: Option<String>,
+    },
     Pong,
-    Bye { reason: String },
+    Bye {
+        reason: String,
+    },
     /// 🛠️ One tool the connected agent is invoking right now, emitted by the gateway's own
     /// `tools/call` dispatch before the handler runs. `arguments` is the call's arguments rendered
     /// as JSON; the shell renders it, never re-executes it.
-    AgentToolCall { invocation_id: String, tool_name: String, arguments: String },
+    AgentToolCall {
+        invocation_id: String,
+        tool_name: String,
+        arguments: String,
+    },
     /// 🧾️ The terminal outcome of the [`GatewayToShell::AgentToolCall`] carrying the same
     /// `invocation_id` — `ok` is the inverse of the result's own `isError`.
-    AgentToolResult { invocation_id: String, tool_name: String, ok: bool, summary: String },
+    AgentToolResult {
+        invocation_id: String,
+        tool_name: String,
+        ok: bool,
+        summary: String,
+    },
 }
 
 impl GatewayToShell {
@@ -439,14 +471,33 @@ impl GatewayToShell {
 /// producer — their tags (`1`,`2`,`3`,`4`) stay reserved and unread.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ShellToGateway {
-    Hello { bridge_version: u16, shell_kind: ShellKind, shell_session_id: String, principal_actor: String, flags: BridgeFlags },
-    ShellCommandResult { in_reply_to: u64, ok: bool, fault: Option<String> },
-    Approval { approval_id: String, decision: ApprovalDecision, note: Option<String> },
+    Hello {
+        bridge_version: u16,
+        shell_kind: ShellKind,
+        shell_session_id: String,
+        principal_actor: String,
+        flags: BridgeFlags,
+    },
+    ShellCommandResult {
+        in_reply_to: u64,
+        ok: bool,
+        fault: Option<String>,
+    },
+    Approval {
+        approval_id: String,
+        decision: ApprovalDecision,
+        note: Option<String>,
+    },
     Ping,
     Bye,
     /// 💬️ One human turn typed into this shell and sent to the connected agent.
-    AgentMessage { message_id: String, text: String },
-    AgentCancel { invocation_id: String },
+    AgentMessage {
+        message_id: String,
+        text: String,
+    },
+    AgentCancel {
+        invocation_id: String,
+    },
 }
 
 impl ShellToGateway {
@@ -608,11 +659,19 @@ pub struct AgentBridgeState {
 /// believing the requested anchor (the React twin does the same through `findPanelTabInDock`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum InboundShellCommand {
-    FocusWindow { seq: u64, window_id: Option<String> },
-    RevealPanelTab { seq: u64, tab_id: String },
+    FocusWindow {
+        seq: u64,
+        window_id: Option<String>,
+    },
+    RevealPanelTab {
+        seq: u64,
+        tab_id: String,
+    },
     /// 👁️ `setPanelVisible` alone carries no tab, so it is acknowledged and applied as a no-op: the
     /// `setPanelPath` that always follows it is what actually opens the anchor.
-    Acknowledge { seq: u64 },
+    Acknowledge {
+        seq: u64,
+    },
 }
 
 impl InboundShellCommand {
@@ -649,13 +708,7 @@ impl AgentBridgeState {
 
     /// 👋️ The socket opened: queue the `Hello` frame the gateway answers with `Welcome`.
     pub fn note_socket_opened(&mut self, shell_session_id: impl Into<String>, principal_actor: impl Into<String>, flags: BridgeFlags) {
-        self.outbox.push(ShellToGateway::Hello {
-            bridge_version: BRIDGE_VERSION,
-            shell_kind: ShellKind::for_this_target(),
-            shell_session_id: shell_session_id.into(),
-            principal_actor: principal_actor.into(),
-            flags,
-        });
+        self.outbox.push(ShellToGateway::Hello { bridge_version: BRIDGE_VERSION, shell_kind: ShellKind::for_this_target(), shell_session_id: shell_session_id.into(), principal_actor: principal_actor.into(), flags });
     }
 
     /// 📤️ Takes every inbound chrome command the host has not applied yet. The host applies each

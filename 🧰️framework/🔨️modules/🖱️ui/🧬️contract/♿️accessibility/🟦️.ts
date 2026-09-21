@@ -87,7 +87,7 @@ export function uiAccessibilityRoleV1(component: Component, activatable: boolean
     case "select":
       return "combobox";
     case "toggle":
-      return "switch";
+      return component.appearance === "checkbox" ? "checkbox" : "switch";
     case "keyValueList":
       return "list";
     case "slider":
@@ -178,7 +178,7 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
     key: record.key,
     role: uiAccessibilityRoleV1(record.component, activatable),
     depth,
-    label: accessibility.label ?? null,
+    label: accessibility.label ?? (record.component.type === "treeItem" ? record.component.label : null),
     description: accessibility.description ?? null,
     live: accessibility.live ?? "off",
     shortcut: accessibility.shortcut ?? null,

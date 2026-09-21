@@ -213,7 +213,14 @@ pub fn create_en1999_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .mutation("setSnapshot", LocalizedLabel::native("Set En1999Snapshot", "Dokument setzen"))
+            // 📝️ `setSnapshot` replaces the whole compliance document, so the shells' `{action,args}`
+            // channel needs somewhere to put it: one staged text argument carrying the document's own
+            // camelCase JSON — the projection the Inputs window already renders. Without it the rail
+            // stages no form and the bridge refuses `norm.set-snapshot-arg-missing` (ticket 26/09/18 S10).
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new_catalog("setSnapshot", LocalizedLabel::native("Set En1999Snapshot", "Dokument setzen"), semio_framework_plugin::ActionKind::Mutation)
+                    .with_args(vec![semio_framework_plugin::ActionArgDef::text("snapshot", LocalizedLabel::native("Document JSON", "Dokument-JSON"))]),
+            )
             .action_destructive("setSnapshot")
             .action_with(semio_framework_plugin::ActionDefinition::new("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"), semio_framework_plugin::ActionKind::View, "hash"))
             .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "Ausgewählte Prüfung setzen"))

@@ -197,7 +197,8 @@ impl<'a> Executor<'a> {
                 }
                 if let Some(body) = step.bodies.get("body") {
                     for index in 0..capped {
-                        *scope = scope.clone().insert("index", Value::Atom(Atom::Integer(index as i64)));
+                        let next = scope.clone().insert("index", Value::Atom(Atom::Integer(index as i64)));
+                        replace_scope_cold(scope, next);
                         self.run_steps(&body.steps, scope, effects, depth + 1);
                     }
                 }
@@ -208,7 +209,8 @@ impl<'a> Executor<'a> {
         let input = scope.merge(&step.params);
         match self.registry.dispatch(&step.kind, &input) {
             Ok(output) => {
-                *scope = merge_output_into_scope(scope, &output);
+                let next = merge_output_into_scope(scope, &output);
+                replace_scope_cold(scope, next);
                 effects.push(EffectLogEntry { step_id: step.id.clone(), kind: step.kind.clone(), input, output: Some(output), error: None });
                 None
             }
@@ -234,6 +236,22 @@ fn read_scope_bool(scope: &Dictionary, key: &str) -> bool {
     scope.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()).unwrap_or(false)
 }
 
+/// 🧊️ Hands one dictionary owner over to its successor. `Dictionary::drop` panics `final Dictionary
+/// ownership must be explicitly retired or owned by a cold boundary` whenever the value being dropped
+/// is the LAST owner of a non-empty pair root, so every rebind of a scope — every `*scope = …`, every
+/// `merged = merged.merge(…)` — has to retire the displaced root instead of letting it fall out of
+/// scope. Measured: every `run`/`stop` verb of `🎬️sequence` and every imperative executor step that
+/// merged a non-empty operator output aborted the test binary here.
+fn replace_scope_cold(scope: &mut Dictionary, next: Dictionary) {
+    std::mem::replace(scope, next).retire_cold();
+}
+
+/// 🧊️ [`replace_scope_cold`] for a plain owner rebind.
+fn replaced_cold(previous: Dictionary, next: Dictionary) -> Dictionary {
+    previous.retire_cold();
+    next
+}
+
 fn merge_output_into_scope(scope: &Dictionary, output: &Dictionary) -> Dictionary {
     let mut merged = scope.clone();
     for key in output.keys() {
@@ -243,15 +261,18 @@ fn merge_output_into_scope(scope: &Dictionary, output: &Dictionary) -> Dictionar
         if let Some(value) = output.get(key) {
             if let Some(payload) = value.as_dictionary() {
                 if payload.len() == 1 && payload.get(SCHEMA_KEY).is_some() {
-                    merged = merged.merge(payload);
+                    let next = merged.merge(payload);
+                    merged = replaced_cold(merged, next);
                     continue;
                 }
                 if key == "message" || key == "delay" {
-                    merged = merged.merge(payload);
+                    let next = merged.merge(payload);
+                    merged = replaced_cold(merged, next);
                     continue;
                 }
             }
-            merged = merged.insert(key.clone(), value.clone());
+            let next = merged.insert(key.clone(), value.clone());
+            merged = replaced_cold(merged, next);
         }
     }
     merged

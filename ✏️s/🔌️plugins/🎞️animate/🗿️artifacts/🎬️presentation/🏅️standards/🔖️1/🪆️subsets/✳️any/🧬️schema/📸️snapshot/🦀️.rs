@@ -51,10 +51,16 @@ impl Default for PresentationSnapshot {
     }
 }
 
-/// 🌱 Canonical default document used by the play app and the `demo` example — the shared source
-/// figure already cropped into the same 3×5 tile grid `resetGrid` seeds, so a freshly booted pane shows
-/// a real deck instead of a sourceless, tile-less document.
+/// 🌱 Canonical default document used by the play app — the shared source figure with no tile crops
+/// yet. The `demo` EXAMPLE is [`demo_snapshot`], not this.
 pub fn default_snapshot() -> PresentationSnapshot {
+    crate::presentation_snapshot_with_tiles(&crate::default_figure_tile_source(), &[])
+}
+
+/// 🎬️ The `demo` example document — the shared source figure already cropped into the same 3×5 tile
+/// grid `resetGrid` seeds, so the booted pane shows a real deck instead of an empty tile editor. The
+/// committed `🖼️assets/🎬️demo` asset is this snapshot printed by this crate's own DSL printer.
+pub fn demo_snapshot() -> PresentationSnapshot {
     let source = crate::default_figure_tile_source();
     let tiles = crate::standards::v1::subsets::any::schema::populate_tile_drafts_from_grid(crate::standards::v1::subsets::any::schema::FigureTileGridSeedSpec { source: &source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
     crate::presentation_snapshot_with_tiles(&source, &tiles)

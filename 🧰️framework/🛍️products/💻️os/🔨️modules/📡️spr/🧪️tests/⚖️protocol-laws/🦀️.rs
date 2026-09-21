@@ -176,7 +176,7 @@ impl HistoryLogGen {
             for _ in 0..op_count {
                 ops.push(crate::os_spr::OpPayload { text: Some(next_text(&mut rng, profile.adversarial).await), binary: None });
             }
-            edits.push(crate::os_spr::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse: Vec::new(), meta: None });
+            edits.push(crate::os_spr::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse: Vec::new(), meta: None, lane: None });
         }
 
         let mut transitions: Vec<crate::os_spr::HistoryTransitionRecord> = Vec::new();
@@ -633,6 +633,15 @@ async fn fisher_yates_shuffle(rng: &mut SplitMix64, items: &mut [usize]) {
     }
 }
 
+/// 🧹️ Walks a law's own dag down to its exact terminal-empty witness. `take_next_applied` hands back
+/// applied ENVELOPES but leaves the applied and pending identity ledgers standing, and
+/// `MutationDag::drop` asserts all three are empty, so a law that builds a dag retires it the way a
+/// store's close cursor does — one owner per `take_one_close_owner` turn.
+fn retire_dag(mut dag: crate::os_spr::MutationDag) {
+    while dag.take_one_close_owner().is_some() {}
+    assert!(dag.terminal_is_empty(), "a law's causal dag must reach its exact terminal-empty witness");
+}
+
 /// 🧺️ Drains every applied envelope out of `dag` via [`crate::os_spr::MutationDag::take_next_applied`],
 /// mirroring the one-at-a-time cursor contract (`Envelope` collects, `SeededIdentity` is a no-op,
 /// `Complete` ends the loop).
@@ -662,6 +671,7 @@ pub async fn assert_op_dag_convergence(envelopes: &[crate::os_spr::MutationEnvel
             dag.insert(envelopes[index].clone()).expect("a closed dependency set inserted with unique ids must never duplicate");
         }
         let applied: std::collections::BTreeSet<String> = take_all_applied(&mut dag).iter().map(|envelope| envelope.mutation_id.0.clone()).collect();
+        retire_dag(dag);
         assert_eq!(applied, expected, "MutationDag must converge to the same fully-applied set regardless of insertion order");
     }
 }
@@ -840,6 +850,7 @@ pub async fn assert_merge_convergence<P: PartialEq + std::fmt::Debug>(seed: u64,
             dag.insert(envelopes[index].clone()).expect("assert_merge_convergence requires a closed dependency set with unique ids");
         }
         let batch = take_all_applied(&mut dag);
+        retire_dag(dag);
         let state = fold(&batch);
         match &expected {
             None => expected = Some(state),

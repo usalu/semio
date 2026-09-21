@@ -151,5 +151,5 @@ async fn the_guard_compares_the_nodekind_key_verbatim() {
     assert_eq!((node_id.as_str(), new_node_kind.as_str()), ("node-metabolism", "topic"), "the inverse restores BASE's own kind on BASE's own node");
     let semantics = <WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("change", "node", "change-node-kind", "ChangedNodeKind"), "the fixture must be bound to change-node-kind's own descriptor, not its change-node-shape sibling's");
-    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()), "Change node \"node-metabolism\" kind to \"topic\"", "change-node-kind's undo label quotes both the node and the kind");
+    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()).resolve(protocol::Terminology::Native, protocol::Locale::En), "Change node \"node-metabolism\" kind to \"topic\"", "change-node-kind's undo label quotes both the node and the kind");
 }

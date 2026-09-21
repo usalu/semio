@@ -9,10 +9,46 @@ pub(crate) mod context {
     /// live runtime instance `meta("local")` addresses — without the binding every `dispatch_typed`
     /// is refused with `interactive-job.live-instance` ("typed command … does not belong to the live
     /// instance").
-    pub async fn forms_app() -> FormsApp {
+    pub async fn forms_app() -> OwnedFormsApp {
         let mut app = new_app_with_registry::<EditorApp<FormsPlayApp>>(forms_manifest_for_tests).await;
         app.bind_instance_id(meta("local").instance_id).await;
-        app
+        OwnedFormsApp(app)
+    }
+
+    /// 🔚 A mounted forms app that RETIRES ITSELF. A live `ArtifactStore` asserts in `Drop`
+    /// (`artifact store reached Drop without its exact terminal-empty shallow-shell witness`) unless
+    /// it walked its bounded close loop first, so owning the close in the fixture — rather than
+    /// asking every law to remember a trailing `close(&mut app)` — is what makes a law that fails an
+    /// assertion report ITS failure instead of a close panic. Skipped while unwinding, where the
+    /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
+    pub struct OwnedFormsApp(FormsApp);
+
+    impl OwnedFormsApp {
+        /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
+        pub fn close(&mut self) {
+            close(&mut self.0);
+        }
+    }
+
+    impl std::ops::Deref for OwnedFormsApp {
+        type Target = FormsApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for OwnedFormsApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for OwnedFormsApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                self.close();
+            }
+        }
     }
     
     /// 🚧️ SDK GAP (w0-f-report Gap 3): `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
@@ -25,7 +61,7 @@ pub(crate) mod context {
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
     /// `kind` default declared on `addQuestion` materializes host-side.
-    pub async fn forms_app_with_registry() -> FormsApp {
+    pub async fn forms_app_with_registry() -> OwnedFormsApp {
         forms_app().await
     }
 

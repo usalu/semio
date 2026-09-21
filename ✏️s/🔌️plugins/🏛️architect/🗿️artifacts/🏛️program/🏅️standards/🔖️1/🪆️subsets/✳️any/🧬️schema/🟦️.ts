@@ -1705,7 +1705,7 @@ export interface Governance {
 //#endregion 🔖️Entities
 
 export const PROGRAM_ARTIFACT_FIELDS = [
-  "schema", "meta", "project", "stakeholders", "users", "activities", "functions", "elements", "quantities", "relationships", "adjacencies", "processes", "flows", "accessRules", "operations", "equipment", "resources", "storage", "environmental", "humanFactors", "accessibility", "privacy", "safety", "security", "regulatory", "siteContext", "organizational", "services", "infrastructure", "information", "communication", "wayfinding", "schedules", "flexibility", "growth", "sustainability", "resilience", "costs", "delivery", "risks", "conflicts", "requirements", "priorities", "scenarios", "options", "decisions", "validations", "performance", "quality", "artifacts", "assumptions", "constraints", "complianceRecords", "approvals", "meetings", "changes", "collaboration", "analyses", "reports", "searchFilters", "statusRecords", "workshops", "surveys", "issues", "auditEvents", "templates", "knowledge", "benchmarks", "traces", "governance",
+  "schema", "meta", "project", "stakeholders", "users", "activities", "functions", "elements", "quantities", "relationships", "adjacencies", "processes", "flows", "accessRules", "operations", "equipment", "resources", "storage", "environmental", "humanFactors", "accessibility", "privacy", "safety", "security", "regulatory", "siteContext", "organizational", "services", "infrastructure", "information", "communication", "wayfinding", "schedules", "flexibility", "growth", "sustainability", "resilience", "costs", "delivery", "risks", "conflicts", "requirements", "priorities", "scenarios", "options", "decisions", "validations", "performance", "quality", "artifacts", "assumptions", "constraints", "complianceRecords", "approvals", "meetings", "changes", "collaboration", "analyses", "reports", "searchFilters", "statusRecords", "workshops", "surveys", "issues", "auditEvents", "templates", "knowledgePayload", "knowledge", "benchmarksPayload", "benchmarks", "traces", "governance",
 ] as const;
 
 export interface ProgramArtifact {
@@ -1842,7 +1842,11 @@ export interface ProgramArtifact {
   /** @state artifact */
   templates: TemplateRecord[];
   /** @state artifact */
+  knowledgePayload: KnowledgeRecord[];
+  /** @state artifact */
   knowledge: ArtifactChild;
+  /** @state artifact */
+  benchmarksPayload: BenchmarkRecord[];
   /** @state artifact */
   benchmarks: ArtifactChild;
   /** @state artifact */
@@ -1972,7 +1976,9 @@ export function parseProgramArtifact(value: unknown, at = "$"): ProgramArtifact 
     issues: architectProgramArtifactGuardArray(row["issues"], `${at}.issues`).map((item, index) => parseIssue(item, `${at}.issues[${index}]`)),
     auditEvents: architectProgramArtifactGuardArray(row["auditEvents"], `${at}.auditEvents`).map((item, index) => parseAuditEvent(item, `${at}.auditEvents[${index}]`)),
     templates: architectProgramArtifactGuardArray(row["templates"], `${at}.templates`).map((item, index) => parseTemplateRecord(item, `${at}.templates[${index}]`)),
+    knowledgePayload: architectProgramArtifactGuardArray(row["knowledgePayload"], `${at}.knowledgePayload`).map((item, index) => parseKnowledgeRecord(item, `${at}.knowledgePayload[${index}]`)),
     knowledge: parseArtifactChild(row["knowledge"]),
+    benchmarksPayload: architectProgramArtifactGuardArray(row["benchmarksPayload"], `${at}.benchmarksPayload`).map((item, index) => parseBenchmarkRecord(item, `${at}.benchmarksPayload[${index}]`)),
     benchmarks: parseArtifactChild(row["benchmarks"]),
     traces: architectProgramArtifactGuardArray(row["traces"], `${at}.traces`).map((item, index) => parseTraceLink(item, `${at}.traces[${index}]`)),
     governance: parseGovernance(row["governance"], `${at}.governance`),

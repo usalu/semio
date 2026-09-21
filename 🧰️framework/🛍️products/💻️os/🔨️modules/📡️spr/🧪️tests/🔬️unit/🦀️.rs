@@ -15,7 +15,7 @@ async fn build_history_bytes(doc_id: &str, schema: &str, edit_count: usize) -> V
             description: None,
             ops: vec![OpPayload { text: Some(format!("op-{i}")), binary: None }],
             inverse: Vec::new(),
-            meta: None,
+            meta: None, lane: None,
         };
         appender.append_edit(&edit).await.unwrap();
         appender.commit().await.unwrap();
@@ -50,7 +50,7 @@ async fn compile_ops_decompile_ops_round_trip() {
             description: Some("first edit".to_string()),
             ops: vec![OpPayload { text: Some("set foo = 1".to_string()), binary: None }],
             inverse: Vec::new(),
-            meta: None,
+            meta: None, lane: None,
         }],
         transitions: vec![HistoryTransitionRecord { id: "transition-1".to_string(), actor: "actor-1".to_string(), hlt: (1, 1_700_000_000_000, 2), dependencies: vec!["e0".to_string()], payload: vec![0, 1, 3, 0xff] }],
         composition: None,

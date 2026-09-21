@@ -634,10 +634,11 @@ async fn attach_probe(app: &mut ToyApp, channel: &str) -> MemoryBackbone {
     probe
 }
 
-/// 📮️ Drains what the app sent: `(mutations batches, genesis announcements)`; acks are not document traffic.
+/// 📮️ Drains what the app sent: `(mutations batches, genesis announcements)`; a member lane's batch is
+/// a mutations batch of that document, and acks are not document traffic.
 async fn drain(probe: &mut MemoryBackbone) -> (usize, usize) {
     probe.receive().await.expect("probe receive").into_iter().fold((0, 0), |(mutations, genesis), message| match message {
-        BackboneMessage::Mutations { .. } => (mutations + 1, genesis),
+        BackboneMessage::Mutations { .. } | BackboneMessage::Member { .. } => (mutations + 1, genesis),
         BackboneMessage::Genesis { .. } => (mutations, genesis + 1),
         BackboneMessage::Ack { .. } => (mutations, genesis),
     })

@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn snapshot(revision: u64) -> RenderSnapshot {

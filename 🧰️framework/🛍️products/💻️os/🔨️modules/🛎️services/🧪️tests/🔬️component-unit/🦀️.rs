@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework_async::TraceId;
 use std::pin::Pin;
@@ -476,12 +475,7 @@ fn finish_fixed_file_document_write(documents: &mut RetainedFixedFileDocuments, 
 
 #[cfg(not(target_arch = "wasm32"))]
 fn fixed_file_document_temporary(directory: &std::path::Path, destination: &std::path::Path) -> std::path::PathBuf {
-    std::fs::read_dir(directory)
-        .expect("document directory")
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .find(|path| path != destination)
-        .expect("one inactive document")
+    std::fs::read_dir(directory).expect("document directory").filter_map(Result::ok).map(|entry| entry.path()).find(|path| path != destination).expect("one inactive document")
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -541,7 +535,12 @@ fn retained_fixed_file_document_preserves_exact_owner_cancellation_supersession_
         let hostile = documents.begin_write(&path, 7, generation, vec![0xf6u8; STORAGE_FIXED_FILE_PAGE_BYTES], STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("hostile owner admitted");
         documents.write_step(hostile).expect("hostile owner completes its page");
         let temporary = fixed_file_document_temporary(&directory, &path);
-        std::fs::OpenOptions::new().write(true).open(&temporary).expect("hostile temporary").set_len(if trailing_bytes == 0 { (STORAGE_FIXED_FILE_PAGE_BYTES - 1) as u64 } else { STORAGE_FIXED_FILE_PAGE_BYTES as u64 + trailing_bytes }).expect("mutate temporary length");
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(&temporary)
+            .expect("hostile temporary")
+            .set_len(if trailing_bytes == 0 { (STORAGE_FIXED_FILE_PAGE_BYTES - 1) as u64 } else { STORAGE_FIXED_FILE_PAGE_BYTES as u64 + trailing_bytes })
+            .expect("mutate temporary length");
         assert!(documents.publish(hostile).is_err(), "a truncated or trailing temporary refuses publication");
         documents.cancel(hostile).expect("hostile owner cancels");
         assert!(documents.cancel_step(hostile).expect("hostile temporary drains"));
@@ -842,6 +841,28 @@ impl HttpTransport for BlockingTransport {
     }
 }
 
+struct AbandonedStartTransport {
+    calls: AtomicU32,
+    started: Mutex<Option<std::sync::mpsc::Sender<()>>>,
+    release: Mutex<std::sync::mpsc::Receiver<()>>,
+    terminal: Mutex<Option<std::sync::mpsc::Sender<()>>>,
+}
+
+impl HttpTransport for AbandonedStartTransport {
+    fn call(&self, request: HttpRequest) -> Result<HttpResponse, std::io::Error> {
+        if self.calls.fetch_add(1, Ordering::SeqCst) == 0 {
+            if let Some(started) = self.started.lock().unwrap().take() {
+                let _ = started.send(());
+            }
+            let _ = self.release.lock().unwrap().recv();
+            if let Some(terminal) = self.terminal.lock().unwrap().take() {
+                let _ = terminal.send(());
+            }
+        }
+        Ok(HttpResponse { status: 200, headers: Vec::new(), body: request.body })
+    }
+}
+
 /// 🌐️ Runs a first request on a background OS thread (this crate no longer builds a tokio
 /// `Runtime`, so `tokio::spawn` is gone — a plain `std::thread::spawn` driving its own
 /// `runtime.block_on` call is the direct replacement), blocked on `unblock_rx` so it stays
@@ -873,6 +894,41 @@ async fn http_pool_rejects_past_the_per_actor_outstanding_cap() {
     let _ = unblock_tx.send(());
     let first_result = handle.join().expect("background request thread must not panic");
     assert!(first_result.is_ok(), "the first request must still complete once unblocked");
+}
+
+/// 🧷️ Dropping a checked-out response-head future after its worker reaches terminal must retire
+/// that future's exact actor credit, so a sibling can use the one-slot pool.
+#[semio_framework_async_macros::async_test]
+async fn http_pool_abandoned_response_head_retires_its_exact_outstanding_credit_after_worker_terminal() {
+    let runtime = Arc::new(TokioHostRuntime::with_pool(test_pool(4)));
+    let scope = runtime.open_scope(ScopeOwner::Service("http-abandoned-start"), None).await;
+    let compute = Arc::new(ComputePool::new(2).await);
+    let (started_tx, started_rx) = std::sync::mpsc::channel();
+    let (release_tx, release_rx) = std::sync::mpsc::channel();
+    let (terminal_tx, terminal_rx) = std::sync::mpsc::channel();
+    let transport = Arc::new(AbandonedStartTransport { calls: AtomicU32::new(0), started: Mutex::new(Some(started_tx)), release: Mutex::new(release_rx), terminal: Mutex::new(Some(terminal_tx)) });
+    let pool = HttpPool::new(transport, compute, 1_000_000, 1).await;
+    let actor = ActorId(19);
+    let package = PackageId("http-abandoned-start".into());
+    let observed_owner = Arc::new(Mutex::new(None));
+    let owner_slot = observed_owner.clone();
+    let abandoned_ctx = test_ctx(0, scope.cancel.clone()).await;
+    let abandoned_request = sample_request().await;
+    let mut abandoned = Box::pin(pool.fetch_started(runtime.as_ref(), &scope, abandoned_ctx, package.clone(), actor, abandoned_request, move |owner| {
+        *owner_slot.lock().unwrap() = Some(owner);
+    }));
+    let mut context = Context::from_waker(Waker::noop());
+    assert!(Future::poll(abandoned.as_mut(), &mut context).is_pending());
+    started_rx.recv_timeout(Duration::from_secs(2)).expect("first transport worker must start");
+    assert!(observed_owner.lock().unwrap().is_some(), "the cancellation owner must publish before the response-head future waits");
+    drop(abandoned);
+    let premature = pool.fetch(runtime.as_ref(), &scope, test_ctx(0, scope.cancel.clone()).await, package.clone(), actor, sample_request().await).await;
+    assert!(matches!(premature, Err(HttpPoolError::OutstandingCapReached { actor: rejected, limit: 1 }) if rejected == actor), "a dropped response-head future must retain its actor credit while the physical worker remains live");
+    release_tx.send(()).unwrap();
+    terminal_rx.recv_timeout(Duration::from_secs(2)).expect("abandoned transport worker must reach terminal before sibling admission");
+
+    let sibling = pool.fetch(runtime.as_ref(), &scope, test_ctx(0, scope.cancel.clone()).await, package, actor, sample_request().await).await;
+    assert!(sibling.is_ok(), "dropping an abandoned response-head future must return its exact outstanding credit after its worker terminates");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -937,12 +993,29 @@ async fn finite_timer_and_refill_drivers_do_not_starve_a_single_worker() {
     workers.shutdown();
 }
 
+#[test]
+fn http_body_cancellation_handles_report_each_exact_owner_outcome() {
+    let interrupted = Arc::new(AtomicBool::new(false));
+    let interrupted_witness = interrupted.clone();
+    let interrupt = HttpBodyCancellationHandle::interrupt(move || {
+        interrupted_witness.store(true, Ordering::SeqCst);
+        Ok(())
+    });
+    assert_eq!(HttpBodyCancellationHandle::idle().cancel_in_flight(), HttpBodyCancellationStep::Idle);
+    assert_eq!(interrupt.cancel_in_flight(), HttpBodyCancellationStep::Interrupted);
+    assert!(interrupted.load(Ordering::SeqCst));
+    assert_eq!(HttpBodyCancellationHandle::read_deadline(15_000).cancel_in_flight(), HttpBodyCancellationStep::AwaitingReadDeadline { maximum_ms: 15_000 });
+    assert_eq!(HttpBodyCancellationHandle::interrupt(|| Err(std::io::Error::other("transport cancellation probe failed"))).cancel_in_flight(), HttpBodyCancellationStep::Fault("transport cancellation probe failed".into()));
+    assert_eq!(BufferedHttpBody { remaining: Some(vec![1]) }.cancellation_handle().cancel_in_flight(), HttpBodyCancellationStep::Idle);
+}
+
 /// 🌐️ A test-only `AsyncHttpTransport`/`HttpBody` over a REAL local TCP socket — the harness the
 /// packet report's `## honest gaps` asks for if a raw listener inside a unit test is awkward.
 /// Every `next_chunk` call does one real blocking `read` through `ComputePool`, so bytes charged
 /// against the package bucket are genuinely read off the wire, not buffered/estimated upfront.
 struct LocalSocketBody {
     stream: Arc<Mutex<std::net::TcpStream>>,
+    cancellation: HttpBodyCancellationHandle,
     compute: Arc<ComputePool>,
     runtime: Arc<TokioHostRuntime>,
     scope: ScopeHandle,
@@ -951,26 +1024,56 @@ struct LocalSocketBody {
     /// really did drop the transport body (and therefore the socket) rather than merely
     /// stopping the caller from polling it further.
     dropped: Arc<AtomicBool>,
+    read_probe: Option<Arc<LocalSocketReadProbe>>,
 }
+
+struct LocalSocketReadProbe {
+    started: Mutex<Option<std::sync::mpsc::Sender<()>>>,
+    returned: Mutex<Option<std::sync::mpsc::Sender<()>>>,
+    release: Mutex<Option<std::sync::mpsc::Receiver<()>>>,
+    terminal: Mutex<Option<std::sync::mpsc::Sender<()>>>,
+}
+
 impl HttpBody for LocalSocketBody {
+    fn cancellation_handle(&self) -> HttpBodyCancellationHandle {
+        self.cancellation.clone()
+    }
+
     // 🚫️async: E6 dyn-compat — see the `HttpBody` trait's tag.
-    fn next_chunk(&mut self) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
+    fn next_chunk(&mut self, terminal: HttpTransportTerminalGuard) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
         let stream = self.stream.clone();
         let compute = self.compute.clone();
         let runtime = self.runtime.clone();
         let scope = self.scope.clone();
         let ctx = self.ctx.clone();
+        let read_probe = self.read_probe.clone();
         Box::pin(async move {
             let outcome = compute
                 .run_io(runtime.as_ref(), &scope, ctx, move || {
+                    let _terminal = terminal;
                     use std::io::Read;
+                    if let Some(started) = read_probe.as_ref().and_then(|probe| probe.started.lock().unwrap().take()) {
+                        let _ = started.send(());
+                    }
                     let mut buf = [0u8; 64];
                     let mut guard = stream.lock().expect("test socket mutex poisoned");
-                    match guard.read(&mut buf) {
+                    let result = match guard.read(&mut buf) {
                         Ok(0) => None,
                         Ok(n) => Some(buf[..n].to_vec()),
                         Err(_) => None,
+                    };
+                    if let Some(probe) = read_probe {
+                        if let Some(returned) = probe.returned.lock().unwrap().take() {
+                            let _ = returned.send(());
+                        }
+                        if let Some(release) = probe.release.lock().unwrap().take() {
+                            let _ = release.recv_timeout(Duration::from_secs(5));
+                        }
+                        if let Some(terminal) = probe.terminal.lock().unwrap().take() {
+                            let _ = terminal.send(());
+                        }
                     }
+                    result
                 })
                 .await;
             outcome.map_err(HttpPoolError::Compute)
@@ -989,10 +1092,11 @@ struct LocalSocketTransport {
     runtime: Arc<TokioHostRuntime>,
     scope: ScopeHandle,
     dropped: Arc<AtomicBool>,
+    read_probe: Option<Arc<LocalSocketReadProbe>>,
 }
 impl AsyncHttpTransport for LocalSocketTransport {
     // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
-    fn start(&self, ctx: &OperationContext, _request: HttpRequest) -> HostFuture<StartedTransport> {
+    fn begin(&self, ctx: &OperationContext, _request: HttpRequest) -> HttpTransportStart {
         let addr = self.addr;
         let compute = self.compute.clone();
         let runtime = self.runtime.clone();
@@ -1000,17 +1104,29 @@ impl AsyncHttpTransport for LocalSocketTransport {
         let ctx_for_connect = ctx.clone();
         let ctx_for_body = ctx.clone();
         let dropped = self.dropped.clone();
-        Box::pin(async move {
-            let connect_result = compute.run_io(runtime.as_ref(), &scope, ctx_for_connect, move || std::net::TcpStream::connect(addr)).await;
+        let read_probe = self.read_probe.clone();
+        let cancellation_owner = Arc::new(SocketHttpCancellation::new());
+        let cancellation = SocketHttpCancellation::handle(&cancellation_owner);
+        let body_cancellation = cancellation.clone();
+        let (terminal, terminal_guard) = HttpTransportTerminalHandle::pair();
+        let response = Box::pin(async move {
+            let connect_result = compute
+                .run_io(runtime.as_ref(), &scope, ctx_for_connect, move || {
+                    let _terminal = terminal_guard;
+                    std::net::TcpStream::connect(addr)
+                })
+                .await;
             let stream = match connect_result {
                 Ok(Ok(stream)) => stream,
                 Ok(Err(io_error)) => return Err(HttpPoolError::Transport(io_error.to_string())),
                 Err(compute_error) => return Err(HttpPoolError::Compute(compute_error)),
             };
             let head = HttpResponseHead { status: 200, headers: Vec::new() };
-            let body: Box<dyn HttpBody> = Box::new(LocalSocketBody { stream: Arc::new(Mutex::new(stream)), compute, runtime, scope, ctx: ctx_for_body, dropped });
+            cancellation_owner.bind(&stream).map_err(|error| HttpPoolError::Transport(error.to_string()))?;
+            let body: Box<dyn HttpBody> = Box::new(LocalSocketBody { stream: Arc::new(Mutex::new(stream)), cancellation, compute, runtime, scope, ctx: ctx_for_body, dropped, read_probe });
             Ok((head, body))
-        })
+        });
+        HttpTransportStart::new(body_cancellation, terminal, response)
     }
 }
 
@@ -1050,7 +1166,7 @@ async fn http_pool_fetch_charges_real_bytes_per_chunk_over_a_local_tcp_listener(
     let chunks = vec![vec![1u8; 10], vec![2u8; 15], vec![3u8; 7]];
     let addr = spawn_chunk_server(chunks.clone()).await;
     let dropped = Arc::new(AtomicBool::new(false));
-    let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped });
+    let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped, read_probe: None });
     let pool = HttpPool::new_with_async_transport(transport, 1_000_000, 4).await;
     let package = PackageId("pkg-stream".to_string());
     let actor = ActorId(11);
@@ -1085,7 +1201,7 @@ async fn http_pool_dropping_a_body_mid_stream_frees_the_outstanding_slot_and_dro
     let chunks: Vec<Vec<u8>> = (0..20).map(|_| vec![9u8; 8]).collect();
     let addr = spawn_chunk_server(chunks).await;
     let dropped = Arc::new(AtomicBool::new(false));
-    let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped: dropped.clone() });
+    let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped: dropped.clone(), read_probe: None });
     let pool = HttpPool::new_with_async_transport(transport, 1_000_000, 1).await;
     let package = PackageId("pkg-cancel".to_string());
     let actor = ActorId(12);
@@ -1104,6 +1220,102 @@ async fn http_pool_dropping_a_body_mid_stream_frees_the_outstanding_slot_and_dro
         let second = pool.fetch(runtime.as_ref(), &scope, ctx2, package.clone(), actor, sample_request().await).await;
         assert!(second.is_ok(), "the outstanding slot must have been freed by the drop, not held open until a full response finished");
     });
+}
+
+/// 🪢 An abandoned pending body read retains its actor credit until the physical reader terminates.
+#[semio_framework_async_macros::async_test]
+async fn http_pool_abandoned_pending_body_read_retires_its_actor_credit_after_reader_terminal() {
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../../../📺️renderer/🧑‍🎨engine/🧫️fixtures/📄️native-asset-response/🔣️.json")).expect("native asset response contract");
+    let expected = &contract["transportCancellation"]["abandonedBodyRead"];
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind abandoned body listener");
+    let addr = listener.local_addr().expect("abandoned body listener address");
+    listener.set_nonblocking(true).expect("nonblocking abandoned body listener");
+    let (release_socket_tx, release_socket_rx) = std::sync::mpsc::channel();
+    let (sibling_served_tx, sibling_served_rx) = std::sync::mpsc::channel();
+    let stop = Arc::new(AtomicBool::new(false));
+    let server_stop = stop.clone();
+    let server = std::thread::spawn(move || {
+        let deadline = std::time::Instant::now() + Duration::from_secs(5);
+        let mut first = loop {
+            match listener.accept() {
+                Ok((stream, _)) => break stream,
+                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock && std::time::Instant::now() < deadline => std::thread::yield_now(),
+                Err(error) => panic!("abandoned body first accept failed: {error}"),
+            }
+        };
+        let first = std::thread::spawn(move || {
+            let _ = release_socket_rx.recv_timeout(Duration::from_secs(5));
+            let _ = std::io::Write::write_all(&mut first, b"a");
+        });
+        while !server_stop.load(Ordering::Acquire) {
+            match listener.accept() {
+                Ok((mut sibling, _)) => {
+                    let _ = std::io::Write::write_all(&mut sibling, b"b");
+                    let _ = sibling_served_tx.send(());
+                }
+                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => std::thread::yield_now(),
+                Err(_) => break,
+            }
+        }
+        let _ = first.join();
+    });
+    let runtime = Arc::new(TokioHostRuntime::with_pool(test_pool(4)));
+    let scope = runtime.open_scope(ScopeOwner::Service("http-abandoned-body"), None).await;
+    let compute = Arc::new(ComputePool::new(4).await);
+    let (read_started_tx, read_started_rx) = std::sync::mpsc::channel();
+    let (read_returned_tx, read_returned_rx) = std::sync::mpsc::channel();
+    let (release_reader_tx, release_reader_rx) = std::sync::mpsc::channel();
+    let (read_terminal_tx, read_terminal_rx) = std::sync::mpsc::channel();
+    let probe = Arc::new(LocalSocketReadProbe { started: Mutex::new(Some(read_started_tx)), returned: Mutex::new(Some(read_returned_tx)), release: Mutex::new(Some(release_reader_rx)), terminal: Mutex::new(Some(read_terminal_tx)) });
+    let dropped = Arc::new(AtomicBool::new(false));
+    let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped: dropped.clone(), read_probe: Some(probe) });
+    let pool = HttpPool::new_with_async_transport(transport, 1_000_000, expected["outstandingCap"].as_u64().expect("outstanding cap") as u32).await;
+    let package = PackageId("http-abandoned-body".into());
+    let actor = ActorId(20);
+    let (_, mut body) = pool.fetch(runtime.as_ref(), &scope, test_ctx(0, scope.cancel.clone()).await, package.clone(), actor, sample_request().await).await.expect("first response head");
+    let mut read = Box::pin(body.next_chunk());
+    let mut context = Context::from_waker(Waker::noop());
+    let read_pending = Future::poll(read.as_mut(), &mut context).is_pending();
+    read_started_rx.recv_timeout(Duration::from_secs(2)).expect("physical body reader starts");
+    drop(read);
+    drop(body);
+    assert!(dropped.load(Ordering::SeqCst), "the abandoned pool body drops its transport body");
+    let _ = release_socket_tx.send(());
+    read_returned_rx.recv_timeout(Duration::from_secs(2)).expect("physical read returns into its terminal barrier");
+
+    let sibling_owner = Arc::new(AtomicBool::new(false));
+    let observed_sibling_owner = sibling_owner.clone();
+    let mut premature = Box::pin(pool.fetch_started(runtime.as_ref(), &scope, test_ctx(0, scope.cancel.clone()).await, package.clone(), actor, sample_request().await, move |_| {
+        observed_sibling_owner.store(true, Ordering::Release);
+    }));
+    let premature_poll = Future::poll(premature.as_mut(), &mut context);
+    let sibling_refused_before_reader_terminal = matches!(&premature_poll, std::task::Poll::Ready(Err(HttpPoolError::OutstandingCapReached { actor: rejected, limit: 1 })) if *rejected == actor);
+    let prematurely_admitted = sibling_owner.load(Ordering::Acquire);
+    drop(premature_poll);
+    drop(premature);
+    if prematurely_admitted {
+        sibling_served_rx.recv_timeout(Duration::from_secs(2)).expect("prematurely admitted sibling cleanup");
+    }
+    let _ = release_reader_tx.send(());
+    let reader_terminal_before_sibling = read_terminal_rx.recv_timeout(Duration::from_secs(2)).is_ok();
+    let terminal_deadline = std::time::Instant::now() + Duration::from_secs(2);
+    while pool.outstanding.lock().unwrap().get(&actor).copied().unwrap_or(0) != 0 && std::time::Instant::now() < terminal_deadline {
+        std::thread::yield_now();
+    }
+    let sibling = pool.fetch(runtime.as_ref(), &scope, test_ctx(0, scope.cancel.clone()).await, package, actor, sample_request().await).await;
+    let sibling_admitted = sibling.is_ok();
+    if let Ok((_, mut body)) = sibling {
+        let _ = body.next_chunk().await;
+        drop(body);
+        let _ = sibling_served_rx.recv_timeout(Duration::from_secs(2));
+    }
+    stop.store(true, Ordering::Release);
+    server.join().expect("abandoned body server cleanup");
+
+    assert_eq!(read_pending, expected["readPendingBeforeBodyDrop"].as_bool().expect("pending body read"));
+    assert_eq!(sibling_refused_before_reader_terminal, expected["siblingRefusedBeforeReaderTerminal"].as_bool().expect("pre-terminal sibling refusal"));
+    assert_eq!(reader_terminal_before_sibling, expected["readerTerminalBeforeSibling"].as_bool().expect("reader terminal ordering"));
+    assert_eq!(sibling_admitted, expected["siblingAdmitted"].as_bool().expect("post-terminal sibling admission"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1149,6 +1361,76 @@ async fn socket_http_transport_streams_chunked_and_content_length_bodies_without
     let (head, pages) = collect(runtime, scope, fixed).await;
     assert_eq!(head.status, 206);
     assert_eq!(pages.concat(), b"12345678");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn socket_http_body_cancellation_interrupts_a_blocked_read_and_releases_its_exact_pool_slot() {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let addr = listener.local_addr().unwrap();
+    listener.set_nonblocking(true).unwrap();
+    let (release_tx, release_rx) = std::sync::mpsc::channel();
+    let server = std::thread::spawn(move || {
+        use std::io::{Read, Write};
+        fn accept_before(listener: &std::net::TcpListener, deadline: std::time::Instant) -> Option<std::net::TcpStream> {
+            while std::time::Instant::now() < deadline {
+                match listener.accept() {
+                    Ok((stream, _)) => return Some(stream),
+                    Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => std::thread::yield_now(),
+                    Err(_) => return None,
+                }
+            }
+            None
+        }
+        let deadline = std::time::Instant::now() + Duration::from_secs(5);
+        let Some(mut stalled) = accept_before(&listener, deadline) else { return };
+        stalled.set_nonblocking(false).unwrap();
+        let mut request = [0; 1024];
+        let _ = stalled.read(&mut request);
+        stalled.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\n\r\n").unwrap();
+        stalled.flush().unwrap();
+        let _ = release_rx.recv_timeout(Duration::from_secs(5));
+        let _ = stalled.write_all(b"a");
+
+        let Some(mut sibling) = accept_before(&listener, deadline) else { return };
+        sibling.set_nonblocking(false).unwrap();
+        let _ = sibling.read(&mut request);
+        sibling.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\n\r\nb").unwrap();
+    });
+    let runtime = Arc::new(TokioHostRuntime::with_pool(test_pool(4)));
+    let scope = runtime.open_scope(ScopeOwner::Service("socket-http-cancel"), None).await;
+    let transport = Arc::new(SocketHttpTransport::new(Arc::new(ComputePool::with_pool(2, test_pool(2))), runtime.clone(), scope.clone()));
+    let pool = HttpPool::new_with_async_transport_now(transport, 1_000_000, 1);
+    let request = HttpRequest { method: "GET".into(), url: format!("http://{addr}/asset"), headers: Vec::new(), body: Vec::new() };
+    let ctx = test_ctx(0, scope.cancel.clone()).await;
+    let (_, mut body) = pool.fetch(runtime.as_ref(), &scope, ctx, PackageId("socket-http-cancel".into()), ActorId(18), request.clone()).await.unwrap();
+    let cancellation = body.cancellation_handle();
+    let (started_tx, started_rx) = std::sync::mpsc::channel();
+    let (result_tx, result_rx) = std::sync::mpsc::channel();
+    let reader_runtime = runtime.clone();
+    let reader = std::thread::spawn(move || {
+        started_tx.send(()).unwrap();
+        let result = reader_runtime.block_on(async move { body.next_chunk().await });
+        let _ = result_tx.send(result);
+    });
+    started_rx.recv_timeout(Duration::from_secs(1)).unwrap();
+    let cancellation_step = cancellation.cancel_in_flight();
+    let first_result = result_rx.recv_timeout(Duration::from_secs(2));
+    let _ = release_tx.send(());
+    let completed_before_release = first_result.is_ok();
+    let _result = first_result.unwrap_or_else(|_| result_rx.recv_timeout(Duration::from_secs(5)).expect("blocked body read cleanup"));
+    reader.join().unwrap();
+
+    let sibling_ctx = test_ctx(0, scope.cancel.clone()).await;
+    let (_, mut sibling) = pool.fetch(runtime.as_ref(), &scope, sibling_ctx, PackageId("socket-http-cancel".into()), ActorId(18), request).await.unwrap();
+    let sibling_page = sibling.next_chunk().await.unwrap().unwrap();
+    let sibling_eof = sibling.next_chunk().await.unwrap();
+    drop(sibling);
+    server.join().unwrap();
+
+    assert_eq!(cancellation_step, HttpBodyCancellationStep::Interrupted);
+    assert!(completed_before_release, "the exact socket cancellation handle must wake the blocked body read before server cleanup releases it");
+    assert_eq!(sibling_page, b"b");
+    assert!(sibling_eof.is_none());
 }
 
 #[test]

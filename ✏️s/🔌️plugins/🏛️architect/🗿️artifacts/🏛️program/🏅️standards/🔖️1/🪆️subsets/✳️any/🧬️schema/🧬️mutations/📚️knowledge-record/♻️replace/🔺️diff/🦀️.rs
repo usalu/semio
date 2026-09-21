@@ -17,5 +17,5 @@ pub fn diff(payload: &ReplaceKnowledgeRecord, base: &ProgramSnapshot) -> protoco
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This knowledge record already matches the requested value.").at([payload.knowledge_record.header.id.0.clone()])]);
     }
     *existing = payload.knowledge_record.clone();
-    protocol::MutationOutcome::new(ProgramDiff { knowledge: Some(crate::knowledge_child_from_records(&records)), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { knowledge_payload: Some(records.clone()), knowledge: Some(crate::knowledge_child_from_records(&records)), ..Default::default() })
 }

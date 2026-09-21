@@ -298,6 +298,7 @@ mod typed_command_full_operation_tests {
                 published_artifact: false,
                 published_config: false,
                 command_logged: false,
+                interaction_revalidated: false,
                 terminal_fault: None,
                 stage: MountedTypedCommandFullOperationStage::Publishing,
             };
@@ -498,6 +499,7 @@ mod typed_command_full_operation_tests {
                     published_artifact: false,
                     published_config: false,
                     command_logged: false,
+                interaction_revalidated: false,
                     terminal_fault: None,
                     stage: MountedTypedCommandFullOperationStage::Publishing,
                 };
@@ -887,6 +889,7 @@ mod typed_command_full_operation_tests {
                     published_artifact: false,
                     published_config: false,
                     command_logged: false,
+                interaction_revalidated: false,
                     terminal_fault: None,
                     stage: if id == 1 { MountedTypedCommandFullOperationStage::Worker } else { MountedTypedCommandFullOperationStage::Publishing },
                 },
@@ -941,6 +944,7 @@ mod typed_command_full_operation_tests {
                     published_artifact: false,
                     published_config: false,
                     command_logged: false,
+                interaction_revalidated: false,
                     terminal_fault: None,
                     stage: MountedTypedCommandFullOperationStage::AwaitingAck,
                 },
@@ -1245,10 +1249,15 @@ mod typed_command_full_operation_tests {
         let gate = source[route..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("fail-closed full-operation gate");
         let refresh = source[route..].find("self.refresh_cache().await").expect("deferred legacy preparation census");
         assert!(gate < refresh, "incomplete typed command must fail before legacy preparation");
+        // ⚖️ The generic command is constructed to be ENCODED: `admit_command_wire` admits the command's
+        // own wire, so the decoder necessarily precedes its admission. What the clause has always stood
+        // for — no generically constructed command reaches the reducer without the complete pipeline —
+        // is asserted directly, as the order decoder → gate → reducer entry.
         for decoder in ["let command = Box::new(A::command_from_action(action, args).await?)", "let command = A::command_from_action(command_id, Some(&args)).await"] {
             let decoder = source.find(decoder).expect("typed route decoder");
-            let gate = source[..decoder].rfind("self.require_complete_tool_operation_pipeline(&admission)?").expect("typed route pre-decoder gate");
-            assert!(gate < decoder, "generic command construction must remain behind full-operation admission");
+            let gate = source[decoder..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("typed route full-operation gate") + decoder;
+            let reducer = source[decoder..].find("self.dispatch_typed_command_inner(").expect("typed route reducer entry") + decoder;
+            assert!(gate < reducer, "generic command construction must not reach the reducer before full-operation admission");
         }
         let intent = source.find("async fn handle_intent_frame(&mut self, intent: &UiIntent").expect("intent route");
         let intent_end = source[intent..].find("async fn resume_task_emit").map(|offset| intent + offset).expect("intent route end");
@@ -1304,7 +1313,7 @@ mod typed_command_full_operation_tests {
         assert!(source.contains("take_typed_operation_event"));
         assert!(source.contains("take_typed_operation_ui_scope"));
 
-        let reactor = include_str!("../../⚛️reactor/🦀️.rs");
+        let reactor = [include_str!("../../⚛️reactor/🦀️.rs"), include_str!("../../⚛️reactor/🔄️turn/🦀️.rs")].concat();
         assert!(reactor.contains("output.typed_operation_results.iter()"));
         assert!(reactor.contains("page.renderer_exchange_bytes()"));
         assert!(reactor.contains("TypedOperationResultPage::renderer_ack_token"));
@@ -1353,7 +1362,7 @@ mod typed_command_full_operation_tests {
         assert!(hook < admission && admission < authority && authority < event && event < generic_gate);
 
         let command_start = end;
-        let command_end = source[command_start..].find("async fn dispatch_typed_command(").map(|offset| command_start + offset).expect("typed command route");
+        let command_end = source[command_start..].find("fn addressed_preview_view(").map(|offset| command_start + offset).expect("manifest command route end");
         let command_route = &source[command_start..command_end];
         let command_hook = command_route.find("A::host_configuration_mutation(command_id, Some(&args))?").expect("manifest command host configuration owner hook");
         let command_admission = command_route[command_hook..].find("self.admit_host_configuration_json(command_id, Some(&args)).await?").expect("manifest command bounded host admission") + command_hook;

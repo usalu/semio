@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::layout::unit_tests::context::{layout_app, render as render_body};
+use crate::editor::layout::unit_tests::context::{layout_app, render as render_body, render_localized};
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_sample_pages() {
@@ -32,7 +32,7 @@ async fn layout_labels_resolve_native_english_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn layout_labels_translate_document_tree_in_german() {
     let mut app = layout_app().await;
-    let json = render_body(&mut app, LAYOUT_PLAY_BODY_ARTIFACT).await;
+    let json = render_localized(&mut app, LAYOUT_PLAY_BODY_ARTIFACT, "de-DE").await;
     assert!(json.contains("\"Rahmen\""));
     assert!(json.contains("\"Ebenen\""));
     assert!(!json.contains("\"Frames\""));

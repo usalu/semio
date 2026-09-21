@@ -712,6 +712,9 @@ const journey = [
   { name: "settings-general", run: async (driver) => {
     const result = await driver.click("framework.settings.general");
     await driver.waitUntil(state => ["framework.settings.appearance", "framework.settings.language"].every(key => state.controls.some(control => control.id === key || control.id?.endsWith(`/${key}`))), "General settings did not publish its Appearance and Language controls");
+    for (const label of ["Appearance", "Layout", "Driver", "Language", "Terminology", "Merge policy"]) {
+      await driver.page.getByRole("treeitem", { name: label, exact: true }).first().waitFor({ state: "attached", timeout: 15000 });
+    }
     return result;
   } },
   { name: "settings-appearance-open", run: (driver) => driver.openSelect("framework.settings.appearance", settingsAppearanceProbeValue) },

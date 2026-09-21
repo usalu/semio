@@ -343,6 +343,7 @@ pub struct Node {
     pub last_child: Option<NodeId>,
     pub prev_sibling: Option<NodeId>,
     pub next_sibling: Option<NodeId>,
+    document_id: Option<UiNodeId>,
     pub key: NodeKey,
     pub spec: WidgetSpec,
     pub(crate) component_generation: u64,
@@ -378,6 +379,7 @@ impl Node {
             last_child: None,
             prev_sibling: None,
             next_sibling: None,
+            document_id: None,
             key,
             spec,
             component_generation,
@@ -668,15 +670,34 @@ impl UiTree {
         self.document_nodes.binary_search_by_key(&id, |(document, _)| *document).ok().and_then(|index| self.document_nodes.get(index)).map(|(_, node)| *node)
     }
 
+    pub(crate) fn document_id(&self, node: NodeId) -> Option<UiNodeId> {
+        self.node(node)?.document_id
+    }
+
     /// 🪪️ Binds `id` to `node`, replacing any previous binding for the same record.
     pub(crate) fn bind_document_node(&mut self, id: UiNodeId, node: NodeId) {
-        match self.document_nodes.binary_search_by_key(&id, |(document, _)| *document) {
+        let previous = match self.document_nodes.binary_search_by_key(&id, |(document, _)| *document) {
             Ok(index) => {
                 if let Some(entry) = self.document_nodes.get_mut(index) {
+                    let previous = entry.1;
                     entry.1 = node;
+                    Some(previous)
+                } else {
+                    None
                 }
             }
-            Err(index) => self.document_nodes.insert(index, (id, node)),
+            Err(index) => {
+                self.document_nodes.insert(index, (id, node));
+                None
+            }
+        };
+        if let Some(previous) = previous.filter(|previous| *previous != node) {
+            if let Some(retained) = self.node_mut(previous) {
+                retained.document_id = None;
+            }
+        }
+        if let Some(retained) = self.node_mut(node) {
+            retained.document_id = Some(id);
         }
     }
 
@@ -703,6 +724,37 @@ impl UiTree {
             return true;
         };
         let Some(source_id) = presented.document_node(document_id) else { return false };
+        let _ = self.transfer_interaction_node_from(presented, source_id, target_id);
+        false
+    }
+
+    pub(crate) fn transfer_composite_interaction_from(&mut self, presented: &UiTree) {
+        for (source_owner, source_row) in &presented.composite_rows {
+            let Some(document_id) = presented.document_id(*source_owner) else { continue };
+            let Some(target_owner) = self.document_node(document_id) else { continue };
+            let Some(source) = presented.node(*source_row) else { continue };
+            let NodeKey::Explicit(key) = &source.key else { continue };
+            let Some(target_row) = self.explicit_child(target_owner, key) else { continue };
+            let _ = self.transfer_interaction_node_from(presented, *source_row, target_row);
+        }
+    }
+
+    pub(crate) fn interaction_successor_from(&self, presented: &UiTree, source: NodeId) -> Option<NodeId> {
+        let source_node = presented.node(source)?;
+        let target = match presented.document_id(source) {
+            Some(document_id) => self.document_node(document_id)?,
+            None => {
+                let source_owner = presented.surviving_composite_owner(source)?;
+                let document_id = presented.document_id(source_owner)?;
+                let target_owner = self.document_node(document_id)?;
+                let NodeKey::Explicit(key) = &source_node.key else { return None };
+                self.explicit_child(target_owner, key)?
+            }
+        };
+        source_node.interaction_identity_matches(self.node(target)?).then_some(target)
+    }
+
+    fn transfer_interaction_node_from(&mut self, presented: &UiTree, source_id: NodeId, target_id: NodeId) -> bool {
         let Some(source) = presented.node(source_id) else { return false };
         let Some(target) = self.node_mut(target_id) else { return false };
         if !source.interaction_identity_matches(target) {
@@ -714,7 +766,7 @@ impl UiTree {
         }
         target.flags.set(NodeFlags::DIRTY_LAYOUT, true);
         target.flags.set(NodeFlags::DIRTY_PAINT, true);
-        false
+        true
     }
 
     /// 🧹️ Drops the binding at `index` and returns the arena node it named.
@@ -722,7 +774,11 @@ impl UiTree {
         if index >= self.document_nodes.len() {
             return None;
         }
-        Some(self.document_nodes.remove(index).1)
+        let node = self.document_nodes.remove(index).1;
+        if let Some(retained) = self.node_mut(node) {
+            retained.document_id = None;
+        }
+        Some(node)
     }
 
     /// 🔗️ Severs every tree link on `id` without touching the node itself — the first half of a
@@ -811,7 +867,7 @@ impl UiTree {
     /// `None`, so the reconcile retires the row and the gesture terminates without dispatch.
     pub(crate) fn surviving_composite_owner(&self, row: NodeId) -> Option<NodeId> {
         let owner = self.composite_rows.iter().find_map(|(owner, candidate)| (*candidate == row).then_some(*owner))?;
-        let document_id = self.document_nodes.iter().find_map(|(id, node)| (*node == owner).then_some(*id))?;
+        let document_id = self.document_id(owner)?;
         self.document
             .as_ref()
             .and_then(|document| document.record(document_id))
@@ -902,18 +958,18 @@ impl UiTree {
     /// 🧹️ Retires one document identity binding per call, freeing the arena slot it named — the
     /// retirement half of the ledger, driven by `Ui::close_document_step` so a surface that drops its
     /// document does not keep its records' arena nodes alive. `true` once the ledger is empty.
-    pub(crate) fn close_document_binding_step(&mut self, retire_scene: &mut impl FnMut(NodeId, &Node) -> bool) -> bool {
+    pub(crate) fn close_document_binding_step(&mut self, retire_scene: &mut impl FnMut(UiNodeId, NodeId, &Node) -> bool) -> bool {
         // 🔽️ Synthesized composite rows go FIRST: they hang off document-bound owners, so freeing the
         // owner before the row would leave the row pointing at a dead slot.
         if !self.retire_composite_row_step() {
             return false;
         }
-        let Some((_, node)) = self.document_nodes.last().copied() else { return true };
+        let Some((document_id, node)) = self.document_nodes.last().copied() else { return true };
         let Some(retained) = self.arena.get(node) else {
             self.document_nodes.pop();
             return false;
         };
-        if matches!(&retained.spec.0, UiNode::ComponentScene(_)) && !retire_scene(node, retained) {
+        if matches!(&retained.spec.0, UiNode::ComponentScene(_)) && !retire_scene(document_id, node, retained) {
             return false;
         }
         self.document_nodes.pop();

@@ -3,12 +3,18 @@
   "limits": {
     "documentNodes": 128,
     "retiredScenes": 64,
-    "retirementUnitsPerOpportunity": 1
+    "retiredScenesSharedAcrossQueues": true,
+    "retirementUnitsPerOpportunity": 1,
+    "sceneIntents": 256,
+    "sceneIntentUnitsPerOpportunity": 1
   },
   "identity": {
     "wireSurfaceCanRepeat": true,
     "hostScope": ["windowGeneration", "componentMountEpoch"],
-    "survivorMatch": ["documentNodeId", "key", "componentKind", "surfaceId"]
+    "survivorMatch": ["documentNodeId", "key", "componentKind", "surfaceId"],
+    "resourceLiveness": ["windowGeneration", "documentNodeId", "hostId", "key", "componentKind", "surfaceId", "componentGeneration"],
+    "pointerLiveness": "exactArenaNodeAfterAcknowledgeRebase",
+    "candidateFallback": "unacceptedCandidateOnly"
   },
   "rows": [
     {
@@ -39,6 +45,14 @@
       "expectedHostRelation": "different"
     },
     {
+      "id": "superseded-candidate-rechecks-deferred-retirement",
+      "presented": ["scene-a"],
+      "candidate": [],
+      "successorBeforeAcknowledge": ["scene-a"],
+      "beforeAcknowledge": { "live": ["scene-a"], "retiring": [] },
+      "afterAcknowledge": { "live": ["scene-a"], "retiring": [] }
+    },
+    {
       "id": "held-capture-transfers-to-the-accepted-survivor",
       "presented": ["slider-a"],
       "candidate": ["slider-a"],
@@ -53,6 +67,41 @@
       "capture": "slider-a",
       "beforeAcknowledge": { "dispatch": "presented", "candidateReady": false },
       "afterAcknowledge": { "dispatch": "presented", "terminalEvents": 1 }
+    },
+    {
+      "id": "same-host-sibling-rebase-keeps-camera-deadline-live",
+      "presented": ["scene-a", "scene-b"],
+      "candidate": ["scene-a", "scene-c", "scene-b"],
+      "cameraOwner": "scene-b",
+      "expectedHostRelation": "equal",
+      "afterAcknowledge": { "cameraDeadlineLive": true, "pointerNode": "candidate" }
+    },
+    {
+      "id": "multiple-removals-invalidate-every-camera-before-bounded-retirement-drains",
+      "presented": ["scene-a", "scene-b"],
+      "candidate": [],
+      "retirementSlots": 1,
+      "afterAcknowledge": { "cameraDeadlineLive": false, "retiring": ["scene-a", "scene-b"] },
+      "progress": "oneOwnerPerOpportunity"
+    },
+    {
+      "id": "same-host-map-owner-retires-after-sibling-arena-rebase",
+      "presented": ["map-a", "map-b"],
+      "candidate": ["map-a", "map-c", "map-b"],
+      "interactionOwner": "map-b",
+      "expectedHostRelation": "equal",
+      "expectedArenaRelation": "different",
+      "afterAcknowledge": { "retirementMatches": true, "interactionOwner": null }
+    },
+    {
+      "id": "same-host-authored-change-waits-for-the-presented-intent",
+      "presented": ["ink-a@document-a"],
+      "candidate": ["ink-a@document-b"],
+      "admittedIntent": { "host": "ink-a", "document": "document-a", "status": "pending" },
+      "beforeIntentTerminal": { "candidateSealable": false, "publishedDocument": null },
+      "afterIntentTerminal": { "candidateSealable": true, "publishedDocument": "document-a" },
+      "afterAcknowledge": { "presented": ["ink-a@document-b"] },
+      "progress": "oneIntentUnitPerOpportunity"
     }
   ]
 }

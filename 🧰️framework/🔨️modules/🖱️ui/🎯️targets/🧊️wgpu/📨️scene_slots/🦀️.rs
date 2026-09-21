@@ -29,6 +29,7 @@ pub enum SlotContent<'tree> {
 #[derive(Debug, PartialEq)]
 pub struct SceneSlot<'tree> {
     pub node: NodeId,
+    pub document_id: Option<ui_contract::UiNodeId>,
     pub key: &'tree crate::wgpu::tree::NodeKey,
     pub component_generation: u64,
     pub rect: Rect,
@@ -200,8 +201,8 @@ pub(crate) fn scene_slot_for_node<'tree>(tree: &'tree UiTree, id: NodeId, origin
     let layout = tree.accepted_layout(id)?;
     let rect = Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height);
     match &node.spec.0 {
-        UiNode::ComponentScene(scene) => Some(SceneSlot { node: id, key: &node.key, component_generation: node.component_generation(), rect, content: SlotContent::Scene(scene) }),
-        UiNode::Image(image) => Some(SceneSlot { node: id, key: &node.key, component_generation: 0, rect, content: SlotContent::Image(image) }),
+        UiNode::ComponentScene(scene) => Some(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: node.component_generation(), rect, content: SlotContent::Scene(scene) }),
+        UiNode::Image(image) => Some(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: 0, rect, content: SlotContent::Image(image) }),
         _ => None,
     }
 }
@@ -214,8 +215,8 @@ fn collect_scene_slots_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f3
     let abs_y = origin_y + layout.y;
     let rect = Rect::new(abs_x, abs_y, layout.width, layout.height);
     match &node.spec.0 {
-        UiNode::ComponentScene(scene) => out.push(SceneSlot { node: id, key: &node.key, component_generation: node.component_generation(), rect, content: SlotContent::Scene(scene) }),
-        UiNode::Image(image) => out.push(SceneSlot { node: id, key: &node.key, component_generation: 0, rect, content: SlotContent::Image(image) }),
+        UiNode::ComponentScene(scene) => out.push(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: node.component_generation(), rect, content: SlotContent::Scene(scene) }),
+        UiNode::Image(image) => out.push(SceneSlot { node: id, document_id: tree.document_id(id), key: &node.key, component_generation: 0, rect, content: SlotContent::Image(image) }),
         _ => {}
     }
     for child in tree.children(id) {

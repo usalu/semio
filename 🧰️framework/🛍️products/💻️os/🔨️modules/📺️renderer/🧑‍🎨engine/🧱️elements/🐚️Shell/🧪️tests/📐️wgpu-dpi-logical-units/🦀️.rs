@@ -34,10 +34,8 @@ fn metrics_for(scale_factor: f32) -> WindowMetrics {
 /// and one split resize handle.
 fn split_dock() -> DockState {
     let mut dock = DockState::default();
-    dock.root = DockNode::Row(vec![
-        (DockNode::Stack { windows: vec![DockStackTab::new("flow")], active: "flow".into() }, 0.6),
-        (DockNode::Stack { windows: vec![DockStackTab::new("preview"), DockStackTab::new("details")], active: "preview".into() }, 0.4),
-    ]);
+    dock.root =
+        DockNode::Row(vec![(DockNode::Stack { windows: vec![DockStackTab::new("flow")], active: "flow".into() }, 0.6), (DockNode::Stack { windows: vec![DockStackTab::new("preview"), DockStackTab::new("details")], active: "preview".into() }, 0.4)]);
     dock.active_window_id = Some("flow".into());
     dock
 }

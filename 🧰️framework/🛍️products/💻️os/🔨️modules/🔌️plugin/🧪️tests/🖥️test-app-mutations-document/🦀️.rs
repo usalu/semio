@@ -17,6 +17,16 @@ pub(crate) struct TestSnapshot {
     pub(crate) label: String,
 }
 
+/// ♻️ The fixture child is an openable member, so its snapshot needs the same bounded owned-value
+/// retirement a real member's does — `store::PackMemberSnapshotOpen` retires the decoded snapshot
+/// through it when an open is cancelled or rejected mid-flight.
+impl crate::store::retirement::RetireOwned for TestSnapshot {
+    fn retirement(self) -> Box<dyn crate::store::retirement::RetirementCursor> {
+        let Self { count, label } = self;
+        crate::store::retirement::sequence(vec![crate::store::retirement::RetireOwned::retirement(count), crate::store::retirement::RetireOwned::retirement(label)])
+    }
+}
+
 impl semio_framework_schema::ArtifactCompositionFields for TestSnapshot {
     fn visit_child_refs<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, _visitor: &mut V) -> Result<(), V::Error> {
         Ok(())

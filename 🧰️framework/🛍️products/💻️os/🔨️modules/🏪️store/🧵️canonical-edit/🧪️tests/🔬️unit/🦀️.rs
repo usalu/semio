@@ -366,6 +366,7 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
     let mut authority = authority();
     Arc::get_mut(&mut authority).unwrap().actor = "actor-🧵".into();
     Arc::get_mut(&mut authority).unwrap().group_id = Some("group-✓".into());
+    Arc::get_mut(&mut authority).unwrap().stamped_edit_id = Some("edit-🎟️".into());
     let mut retirement = authority.retire();
     let mut released = 0;
     assert!(matches!(retirement.close_step(1, 0).unwrap(), SnapshotRetirementStep::Blocked));
@@ -377,7 +378,7 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
             }
             SnapshotRetirementStep::Complete => {
                 assert!(retirement.terminal_is_empty());
-                assert_eq!(released, "actor-🧵".len() + "group-✓".len());
+                assert_eq!(released, "actor-🧵".len() + "group-✓".len() + "edit-🎟️".len());
                 return;
             }
             SnapshotRetirementStep::Blocked => panic!("positive retirement grant blocked"),

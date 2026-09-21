@@ -1,0 +1,102 @@
+{
+  "schema": "semio.window-measures-tree-parity/v1",
+  "windowId": "measure-parity",
+  "body": {
+    "x": 40,
+    "y": 60,
+    "width": 800,
+    "height": 720
+  },
+  "measures": [
+    {
+      "kind": "group",
+      "id": "grid",
+      "label": "Grid",
+      "defaultOpen": true,
+      "children": [
+        {
+          "kind": "toggle",
+          "id": "grid-visible",
+          "label": "Visible",
+          "iconId": "layout-grid",
+          "pressed": true,
+          "onChange": {
+            "controllerId": "fixture",
+            "action": "setVisible"
+          }
+        },
+        {
+          "kind": "select",
+          "id": "grid-mode",
+          "label": "Mode",
+          "value": "lines",
+          "items": [
+            {
+              "id": "lines",
+              "value": "lines",
+              "label": "Lines"
+            },
+            {
+              "id": "dots",
+              "value": "dots",
+              "label": "Dots"
+            }
+          ],
+          "onChange": {
+            "controllerId": "fixture",
+            "action": "setMode"
+          }
+        },
+        {
+          "kind": "slider",
+          "id": "grid-spacing",
+          "label": "Spacing",
+          "value": 10,
+          "min": 0,
+          "max": 20,
+          "step": 1,
+          "onChange": {
+            "controllerId": "fixture",
+            "action": "setSpacing"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "group",
+      "id": "sun",
+      "label": "Sun",
+      "defaultOpen": false,
+      "children": [
+        {
+          "kind": "slider",
+          "id": "sun-intensity",
+          "label": "Intensity",
+          "value": 0.85,
+          "min": 0,
+          "max": 2,
+          "step": 0.05,
+          "onChange": {
+            "controllerId": "fixture",
+            "action": "setIntensity"
+          }
+        }
+      ]
+    }
+  ],
+  "expected": {
+    "labels": [
+      "Grid",
+      "Visible",
+      "Mode",
+      "Spacing",
+      "Sun"
+    ],
+    "closedLabel": "Intensity",
+    "toggleRole": "checkbox",
+    "maximumRowHeight": 22.4,
+    "rowHeights": { "grid": 14.4, "grid-visible": 22.4, "grid-mode": 16, "grid-spacing": 22.4, "sun": 14.4 },
+    "minimumUnusedHeight": 450,
+    "controlColumnWidth": 104
+  }
+}

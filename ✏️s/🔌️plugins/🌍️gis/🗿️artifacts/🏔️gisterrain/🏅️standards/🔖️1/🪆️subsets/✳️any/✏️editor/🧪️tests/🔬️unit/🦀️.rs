@@ -50,6 +50,15 @@ pub(crate) mod context {
         settle_registered_typed_operation(app, action_meta.instance_id).await.expect("settle Terrain dispatch")
     }
     
+    /// ↩️ Drives a framework-reserved history verb (`undo`/`redo`) home. `handle_action` only ADMITS
+    /// such a verb and answers with the reserved job's `Effect::SpawnJob`; without settling that
+    /// admission the rewind never runs and the projection still shows the pre-undo document.
+    pub async fn history_verb(app: &mut Gis3dApp, action: &str) -> TypedOperationFixtureReceipt {
+        let admitted = app.handle_action(action, None, &meta("local")).await.expect("history verb");
+        semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("settle the framework-reserved history verb");
+        settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the history verb publication")
+    }
+    
     pub async fn render(app: &mut Gis3dApp, body_key: &str) -> String {
         render_at(app, body_key, &main_window_view()).await
     }

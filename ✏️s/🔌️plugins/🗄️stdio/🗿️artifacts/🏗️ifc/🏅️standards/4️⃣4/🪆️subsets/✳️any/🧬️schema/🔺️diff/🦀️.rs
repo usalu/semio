@@ -446,6 +446,17 @@ fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> 
         })
         .collect();
 
+    // 🧮️ `d1`'s adds carry positions in the INTERMEDIATE list `d2` was diffed against; `d2`'s own
+    // adds occupy their positions in the FINAL list. Transporting the former through the latter
+    // (the index-keyed sibling `absorb_indexed_collection` already does this via
+    // `unrank_excluding`) is what keeps two inserts at one position from collapsing onto the same
+    // final index — which `apply`'s own `invalid-add-target` guard rejects outright.
+    let mut added2_index_sorted: Vec<usize> = d2.added.iter().map(|entry| entry.index).collect();
+    added2_index_sorted.sort_unstable();
+    for entry in &mut merged_added {
+        entry.index = transport_forward(entry.index, &[], &added2_index_sorted);
+    }
+
     for dm in d2.modified {
         if added_ids.contains(&dm.id) {
             if annihilated.contains(&dm.id) {

@@ -14,8 +14,10 @@ answer is bigger than the document.
 | **why it is `None`** | **Not this document's data.** `Bootstrap::ArtifactBootstrap` is never constructed by any hub code path at all — §1.2. The socket's bootstrap plan is computed by the *database* replay (`🛢️db/🔄️sync/🦀️.rs:1293–1381`), whose only outcomes are `None` / `Tail` / `Snapshot`; the artifact canonical pair lives in a different subsystem the socket handler never asks. |
 | **consequence** | **No browser client can ever mount a hub document, on any hub, for any document** — genesis-only or edited. The variant that would seed it is dead code. §1.3 |
 | second, latent hub defect | the `Welcome`'s `server_frontier.document_id` is the **db composite key** `v1:36:41:<space><doc>`, not the document id. `validateArtifactBootstrapIdentity` (`🏪️store/👷️worker/🟦️.ts:3886`) throws `artifact bootstrap document mismatch` on exactly that, so an `ArtifactBootstrap` welcome would still be refused until the frontier is projected back to the scope's document id. §1.4 |
-| scenario steps green | (filling) |
-| gate wired | (filling) |
+| mount | **4 of the 5 blocking defects are fixed AND proven at runtime** (§2): the pair now fetches, verifies, installs, and the browser actor loads and activates on top of it. The 5th — the guest refusing the genesis frontier — is fixed in source, compiles and has a unit law, but needs the gis2d wasm actor rebuilt to take effect. |
+| document MOUNTS | **NO, not yet claimed.** The chain stops one predicate short, inside the guest, and the rebuild that would carry the fix was still queued behind a peer's `stdio` wasm build when this slice ended (§3). |
+| scenario steps green | **0 of 10 — not run, nothing claimed.** §3 |
+| gate wired | **No** — C5 §8 gates it on ≥ 8 green steps. |
 | infra reused, untouched | hub **7621** pid 48044 (`jc1-boot`, 03:42 `target-jc1` binary), serve `s` **6190**, serve `gis2d` **6191** pid 47392 |
 
 ## 1. The `Welcome` frame's `bootstrap` variant — decoded
@@ -139,9 +141,43 @@ at the root. The probe tag is the capture in `🗑️generated/`.
 Defect 5 is guest Rust compiled into the 63 MB browser actor, so it only takes effect after a
 `wasm32` rebuild and re-activation of the gis2d component.
 
-## 3. The ten-step scenario
+## 3. The ten-step scenario — NOT RUN, and why
 
-(filling)
+Not one step is claimed. The mount chain stops at defect 5, which lives in guest Rust compiled into
+the 63 MB browser actor bundle, so it only takes effect after a `wasm32` rebuild and re-activation of
+the gis2d component.
+
+That re-activation was launched at **14:29:15** (`📜️c7-activate-gis2d.sh`, pid **33061**, capture
+`🗑️generated/c7-activate-gis2d.txt`) through the fleet wasm mutex, exactly as preamble rule 27
+requires. It never acquired the lock inside this slice: `/tmp/semio-wasm-build.lock/owner` reads
+`tc3c 13:44:44` throughout, and its holder (pid 67331) is genuinely working — a live
+`cargo rustc -p semio-s-plugin-stdio --target wasm32-wasip2` with a busy `rustc` child, i.e. rule
+27(b)'s deadlock test does NOT fire and the lock must not be taken. `stdio` is the known-slow plugin
+(the 1M-function linker ceiling). After ~35 minutes of waiting the slice stopped waiting rather than
+burn the account window on a queue (preamble rules 17, 23b); the activation stays queued and will
+run when the mutex frees.
+
+**The exact resume, in order:**
+
+```sh
+T=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END"
+# 1. the queued re-activation (pid 33061) must finish with exit 0
+tail -5 "$T/🗑️generated/c7-activate-gis2d.txt"
+# 2. restart the gis2d serve so the new component is served (SEMIO_VITE_HMR=0)
+kill <pid in 🗑️generated/c7-serve-gis2d-pid.txt>
+nohup zsh "$T/📜️c2-serve.sh" gis2d 6191 http://127.0.0.1:7621 > /dev/null 2>&1 & disown
+# 3. the single-context gate: PASS is the line `ACTIVE true`
+C4_TAG=c7e C4_WAIT_MS=200000 bun "$T/🐍️c4-actor-reason-probe.mjs" user1 http://127.0.0.1:6191 \
+  127.0.0.1:7621 01a0c314-e41f-780d-a980-3adda40ca9f7 artifact-0954e2d10d8fff9605f101b0dba34f3b
+# 4. the ten-step scenario (C5 §5)
+C3_TAG=c7 C3_HUB_RESTART="$T/📜️c5-hub-restart.sh" \
+  bun "$T/🐍️c3-collab-scenario.mjs" http://127.0.0.1:6191 127.0.0.1:7621 \
+      01a0c314-e41f-780d-a980-3adda40ca9f7 artifact-0954e2d10d8fff9605f101b0dba34f3b
+```
+
+Recording a step without its capture is what preamble rule 6 forbids, so this section stays empty.
+What is *new and measured* is that the failure is no longer "the mount silently never happens": it is
+one named predicate, in one file, with a fix that compiles and is pinned by a unit law.
 
 ## 4. Files changed
 
@@ -178,8 +214,50 @@ checkpoint pair")`), **3 passed**:
 Suite state (`bunx vitest run --config ../../🧪️tests/🎚️config/🟦️.ts`): **359 passed, 4 failed**. The
 four are in `backbone-worker offline resilience` and are **pre-existing** — running the same pattern
 with this slice's seed call disabled and re-enabled gives the identical `3 failed | 28 passed`, so
-they are not this slice's (`🗑️generated/` captures of both runs).
+they are not this slice's. The full run is captured (`🗑️generated/c7-vitest-os.txt`); the
+disabled-seed comparison was run in-session and is quoted here, not captured to a file.
 
 ## 5. Honest gaps
 
-(filling)
+- **No scenario step was run and none is claimed** (§3). No screenshots of two attached humans, no
+  live edit crossing, no undo, no connection loss, no convergence, no reload re-attach, no presence,
+  no hub restart.
+- **The gate was not wired.** C5 §8's shape is unchanged and still correct: a `LiveCollaborationScript`
+  beside `HubLiveSignInScript` (`🌎️hub/🔐️auth/🧪️tests/🤝️live-sign-in/🏃️execution/🟦️.ts`), registered
+  as `os-hub:live-collaboration-check` in `🌎️hub/📦️packages/🦀️rust/📋️project.json`, and a launch row
+  `⚖️gate🤝️hub-collaboration👥️two-users` at `presentation.order` 411.107585. It is gated on ≥ 8 green
+  steps and zero are green; adding it now would pin a red path as a gate.
+- **Defect 5 is verified by compilation and by a unit law, NOT at runtime.** Its runtime proof is
+  exactly one probe away and that probe is written (§3 step 3). Until the rebuild lands, the honest
+  statement is: the host now delivers a verified genesis cold pair to the guest, and the guest
+  refuses it for a reason that is fixed in source.
+- **Defects 1–4 are proven at runtime**, each by the next refusal appearing in a live browser against
+  the live hub (`c7a` → `c7b` → `c7c` → `c7d`). None of them is proven by a mounted document.
+- **`Tail` is handled but not measured.** The seed runs for `None` and `Tail` alike and re-arms the
+  tail frontier afterwards, but this document is genesis-only, so every capture here is the `None`
+  path. A document with edits will exercise the tail, and §1.4's frontier-identity defect is most
+  likely to bite there first.
+- **§1.4 (the hub stamping its internal db key into every wire frontier) is diagnosed, not fixed.**
+  This slice deliberately routes around it — the synthetic bootstrap's `required_tail_frontier` is
+  the pair's own baseline, never the welcome's frontier — rather than teaching the client to accept
+  a hub's internal key. Fixing it is hub Rust and belongs with the coordinator.
+- **The hub was not changed, rebuilt, restarted or swapped.** Every measurement here ran on hub
+  **7621** pid 48044, the 03:42 `target-jc1` binary, exactly as C5 and C6 left it. PR1's hub-side
+  presence fixes are still not in it; no step reached presence, so the one permitted binary swap was
+  not taken — swapping it would have changed a variable with nothing to measure.
+- **The `gis2d` serve on 6191 was restarted four times by this slice** (`SEMIO_VITE_HMR=0` means
+  source edits need a restart). The live pid is in `🗑️generated/c7-serve-gis2d-pid.txt`. The `s`
+  serve on 6190 and hub 7621 were not touched.
+- **Four pre-existing vitest failures** in `backbone-worker offline resilience` are not this slice's:
+  the same three fail with the seed call disabled (§4), and the fourth is an order-dependent timeout.
+  They were not investigated — they are outside this slice.
+- **C6's proposed CDP capture does not work** and `🐍️c7-welcome-frame-probe.mjs` is kept as the
+  record of why (§1.1), so the next worker does not spend the hour again.
+
+## 6. Captures
+
+`🗑️generated/`: `c7-welcome-socket.{txt,json}` (§1.1, the decisive reading), `c7-welcome-probe.txt`
+and `c7-welcome-user1{.json,-console.txt,.png}` (the CDP attempt), `c7a-actor-probe.txt`,
+`c7b-actor-probe.txt`, `c7c-actor-probe.txt`, `c7d-actor-probe.txt` plus their
+`c7{a,b,c,d}-actor-reason-user1{.json,-console.txt,.png}`, `c7-activate-gis2d.txt`,
+`c7-activate-pid.txt`, `c7-serve-gis2d-pid.txt`, `c7-vitest-os.txt`.

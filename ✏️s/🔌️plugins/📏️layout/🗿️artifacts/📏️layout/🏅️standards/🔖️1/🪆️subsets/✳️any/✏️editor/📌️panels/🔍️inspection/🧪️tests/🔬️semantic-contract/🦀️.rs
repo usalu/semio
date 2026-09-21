@@ -12,8 +12,21 @@ fn layout_inspection_summary_matches_the_json_oracle() {
         let node = render(&snapshot, &config, &crate::editor::layout::LayoutInteractionSnapshot::default(), crate::editor::layout::terminology::layout_labels(&view_state)).expect("semantic inspector");
         let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project and retire inspector");
         let actual: serde_json::Value = serde_json::from_str(&projection).expect("independent semantic JSON oracle");
-        assert_eq!(actual["component"]["label"], row["heading"]);
-        let lines: Vec<_> = actual["children"].as_array().expect("summary lines").iter().map(|child| child["component"]["value"].clone()).collect();
+        // 🌳️ The inspector root is the panel TREE; its heading and rows live on the one summary
+        // SECTION below it (`Component::TreeSection`/`TreeItem`, `label` + `description`), never on
+        // the root and never as a single `value` string.
+        let section = &actual["children"][0];
+        assert_eq!(section["component"]["label"], row["heading"]);
+        let lines: Vec<_> = section["children"]
+            .as_array()
+            .expect("summary lines")
+            .iter()
+            .map(|child| {
+                let label = child["component"]["label"].as_str().expect("summary row label");
+                let description = child["component"]["description"].as_str().expect("summary row description");
+                serde_json::Value::String(format!("{label}: {description}"))
+            })
+            .collect();
         assert_eq!(lines, *row["lines"].as_array().expect("expected lines"));
     }
 }

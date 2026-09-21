@@ -27,6 +27,7 @@ fn chrome_geometry_fixture() -> Value {
 fn world_pane_shell() -> ShellState {
     let mut shell = super::window_pane_chrome_tests::split_pane_shell();
     let _ = shell.world3d_states.try_insert("pane-top".into(), World3dState::new("pane-top".into(), "pane.controller".into()));
+    shell.world3d_window_ids.insert("pane-top".into(), "pane-top".into());
     shell
 }
 
@@ -450,7 +451,8 @@ fn the_puzzle3d_app_carries_the_introduction_the_tour_arms_on() {
     let editor = apps.iter().find(|app| app["id"].as_str() == Some("s.puzzle.puzzle3d@1/*#editor")).expect("🎓️ the puzzle descriptor declares the puzzle3d editor");
     let authored = editor.get("introduction").cloned().unwrap_or(Value::Null);
     assert!(!authored.is_null(), "🎓️ the puzzle3d editor authors an introduction");
-    let introduction: semio_framework::IntroductionDefinition = serde_json::from_value(authored).expect("🎓️ it deserialises through the very `IntroductionDefinition` `AppDefinition::introduction` carries, so a schema drift that dropped the field fails here");
+    let introduction: semio_framework::IntroductionDefinition =
+        serde_json::from_value(authored).expect("🎓️ it deserialises through the very `IntroductionDefinition` `AppDefinition::introduction` carries, so a schema drift that dropped the field fails here");
     assert!(!introduction.steps.is_empty(), "🎓️ the tour has steps to walk");
 
     let mut app = super::command_registry_tests::test_app(Vec::new(), Vec::new());
@@ -471,13 +473,7 @@ fn chrome_metrics_fixture() -> Value {
 }
 
 fn bounded_example_control(label: String, minimum_rem: u16, maximum_rem: u16) -> ShellNavbarControl {
-    ShellNavbarControl {
-        control_id: "playground.navbar.fixture".into(),
-        icon_id: Some("file"),
-        label,
-        active: false,
-        width_policy: Some(ShellNavbarWidthPolicy::RootRemClamp { minimum_rem, maximum_rem }),
-    }
+    ShellNavbarControl { control_id: "playground.navbar.fixture".into(), icon_id: Some("file"), label, active: false, width_policy: Some(ShellNavbarWidthPolicy::RootRemClamp { minimum_rem, maximum_rem }) }
 }
 
 fn painted_example_hit_width(shell: &mut ShellState, theme: &Theme, control: ShellNavbarControl, available_width: f32) -> f32 {
@@ -491,13 +487,7 @@ fn painted_example_hit_width(shell: &mut ShellState, theme: &Theme, control: She
             break;
         }
     }
-    input
-        .staged_hits()
-        .iter()
-        .find(|hit| hit.control_id.as_deref() == Some("playground.navbar.fixture"))
-        .expect("the painted example control registers its real hit rectangle")
-        .rect
-        .w
+    input.staged_hits().iter().find(|hit| hit.control_id.as_deref() == Some("playground.navbar.fixture")).expect("the painted example control registers its real hit rectangle").rect.w
 }
 
 /// 📐️ Exact browser rows first prove the resolver. Short and long real labels then exercise both
@@ -545,12 +535,7 @@ fn task_manager_footer_identity_order_icon_and_localized_label_match_react() {
     for label in expected["labels"].as_array().expect("task manager labels") {
         let mut shell = ShellState::new(Vec::new(), "task-manager-footer-law".into());
         shell.locale_id = label["locale"].as_str().expect("locale").to_string();
-        shell.session = Some(ActiveSession {
-            plugin_id: "test".into(),
-            instance_id: 1,
-            app: super::command_registry_tests::test_app(Vec::new(), Vec::new()),
-            view_state: ViewModel::default(),
-        });
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::default() });
         let dock = shell.default_dock();
         let rows = dock.tabs(PanelAnchor::BottomRight);
         let index = rows.iter().position(|row| row.id == expected["id"].as_str().expect("task manager id")).expect("task manager footer row");

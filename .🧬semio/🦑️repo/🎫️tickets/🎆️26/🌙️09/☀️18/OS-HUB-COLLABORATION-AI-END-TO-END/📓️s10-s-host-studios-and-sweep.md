@@ -295,7 +295,22 @@ fault lines.
 | 4 | `space` | `createStudio` refused by the store fold contract (§1.2) and `set-cell` is not a Home action at all | **fixed in source by this slice** (§1.2), needs the guest rebuild |
 | 5 | `energy` | `rename-zone` still stages nothing the probe can fill; the row that "mutates" is `set-surface-property`, whose applied rows are the shell's own | **open** — a probe gap, §7 |
 | 6 | `sourcing` | its best verb `stockFromCatalogue` is declared `HostOnly` — it publishes no store lane at all, so no `#s-checkin` count can ever move for it | **open, and not a defect of the oracle**: the verb is host-only by declaration |
-| 7 | `stdio`, `trinity`, `writer` | `mutated: true` on a parent-`Artifact`-lane verb (`patchNodes` is `Artifact`) with `edits [0,0,0,0]` — a DIFFERENT shape from group 1, not cured by §4 | **open**, named with evidence, §7 |
+| 7 | `stdio`, `trinity`, `writer` | `mutated: true` on a parent-`Artifact`-lane verb (`patchNodes` is `Artifact`) with `edits [0,0,0,0]` — a DIFFERENT shape from group 1, not cured by §4 | **open**, named with evidence below and in §7 |
+
+**Group 7, read one level deeper** (`lastLedgerRow` and `applied`, which the table above does not
+show):
+
+```
+trinity  patchNodes  applied [3,4,4,4]  lastLedgerRow "framework.history.entry.4:"   ← EMPTY LABEL
+stdio    paste       applied [0,0,0,0]  lastLedgerRow null                            ← no rows at all
+writer   paste       applied [0,0,0,0]  lastLedgerRow null
+```
+
+`trinity`'s row exists and its label is **empty** — the §2.8 signature of a guest sending the
+pre-`LocalizedLabel` shape. So group 7 may not be a third root at all but more of the same staging
+skew, in which case the rebuild lifts it too. **Stated as a hypothesis with its evidence, not as a
+finding**: it is testable in one sweep chunk after the re-activation, and it is why the 24 → 31
+projection in this section is a floor rather than a ceiling.
 
 Groups 1–4 are seven kinds whose root is fixed in source and whose guest has not been rebuilt, so the
 honest projection is **24 → up to 31/35** once the rebuild lands; that number is not claimed until it
@@ -308,7 +323,72 @@ is measured. Groups 5–7 are four kinds this slice did not fix.
 | `norm` could not be spawned at all | `no spawn.norm palette entry` **while the registry offered thirty norm programs** — the probe only ever looked for the bare `spawn.<pluginId>` id | fall back to `spawn.<pluginId>.…`, and a new `DEFAULT_APPS` map naming the exact app a kind must spawn as |
 | the wrong norm standard was spawned | with the fallback alone it opened `norm-en1990`, not the `din16798` the acceptance names | `DEFAULT_APPS.norm = "s.norm.din16798@1/*#editor"`, and the palette query is narrowed to the app id's own kind token (`din16798`) so its row is rendered before the exact-id locator runs. Measured: `windows = ['norm-4::norm-din16798-inputs','norm-4::norm-din16798-results']` |
 
-### 2.7 After the rebuild — **NOT MEASURED**, blocked on the mutex (§7.1, §7.9)
+### 2.7 After the rebuild — **27/35 confirmed**, and the three named roots all cured at runtime
+
+The six guests were rebuilt (13 × `rc=0`, `🗑️generated/s10-restage.txt`) and serve `6071` restarted
+on the fresh tree (pid `84086`). Re-measured, `🗑️generated/s6-sweep-s10{f,g,h}.txt`:
+
+| kind | before | after | witness |
+|---|---|---|---|
+| 🌊️flow `addWidget` | `edits [0,0,0,0]` | **PASS `edits [0,1,0,1]`** | `lastLedgerRow: framework.history.entry.3:Add Widget↶`, 0 faults |
+| 🎬️sequence `addStep` | `edits [0,0,0,0]` | **PASS `edits [0,1,0,1]`** | `…entry.4:Add Step↶`, 0 faults |
+| 🌀️procedural | `generate` → `[0,0,0,0]` | **PASS `edits [0,1,0,1]`** with `addWidget` | `…entry.3:Add Widget↶`, 0 faults |
+
+**§4's `applied` fix is proven at runtime**: `flow` and `sequence` publish only on the `Child` lane
+and now move `#s-checkin`, which they never did in any previous slice.
+
+**🌀️procedural was the oracle being RIGHT and the verb being wrong.** `generate` still reads
+`edits [0,0,0,0]` on the rebuilt guest with a live `Generate↶` row — because it is declared
+`ActionKind::View` (`🌀️generation2d/…/✏️editor/🦀️.rs:1846`) even though it publishes on the `Config`
+lane, and `#s-checkin` counts uncommitted **mutations**. The artifact's real document verb is
+`addWidget` (`ActionKind::Mutation`), and with it procedural passes. S7 drove `nodeGraphEdit`
+(🧮️mathematical's), S9 corrected it to `generate`; the probe's map now names `addWidget`, the third
+verb-id correction of this ticket.
+
+**Running total: 27/35** — chunks A (7) + B (6) + C (7) + D (3) + `flow`/`sequence`/`procedural` (3)
++ `playbook` (1). The three still open are `norm`, `playbook-module-procedural` and `space`, each
+behind one more guest build queued at 20:47 / 21:00 (§7.1).
+
+**The five other FAILs are unchanged and this is now confirmed, not assumed**
+(`🗑️generated/s6-sweep-s10h.txt`): `energy`, `sourcing`, `stdio`, `trinity`, `writer` all still read
+`edits [0,0,0,0]`. Their guests were NOT in the six rebuilt, so the framework `applied` fix does not
+reach them — but it would not help them anyway: `sourcing`'s `stockFromCatalogue` is `HostOnly` and
+`trinity`'s `patchNodes` is `Artifact`, neither of which §4 touches. Their ledger rows now read
+`Activate Window` rather than empty, which retires the §2.5 group-7 hypothesis: the empty labels were
+the staging skew, the `edits 0` is a separate, still-undiagnosed shape.
+
+### 2.9 Three more roots found behind the ones this slice fixed
+
+Each appeared only once the fix in front of it stopped refusing first — the honest sign that the
+earlier fix landed.
+
+| # | kind | the refusal that replaced the old one | root, fixed |
+|---|---|---|---|
+| a | `space` `createStudio` | `batched item candidate failed its exact fixed fold contract` → **`presence local read requires a live exact local retirement owner`** | Home declared no presence retirement factory at all, so `PresenceStore::local_read` fails closed — and `createStudio` reads its own presence to name the studio's owner. New `HomePresenceRetirementFactory` in Home's presence module + `build_presence_local_root_retirement_factory` / `…peer…` / `build_presence_store_disposer`. The same class S4 cured for Home's config, draft and transient lanes, on the one lane it missed |
+| b | `playbook-module-procedural` | `UI dispatch rejected action:importSolidGeometry` → **`wasm trap: unreachable`** from `tool proof catalog must exactly join migrated generated declarations to live concrete factories` | §3's proof rows are joined against `<A::Command as OpBinary>::TOOL_JOB_IDS`. `app_commands!` fills that constant; this module **hand-writes** its `OpBinary`, so it silently kept the trait's `&["typed-command"]` fallback and the join matched nothing — a `panic!` in app construction, i.e. a guest trap, i.e. the app no longer spawned at all. Fixed by declaring `const TOOL_JOB_IDS = MODULE_RETAINED_TOOL_IDS` on that impl |
+| c | `norm` `setSnapshot` | `action 'setSnapshot' is not a framework-reserved action` → **`setSnapshot needs a 'snapshot' argument carrying the document's camelCase JSON`** | the second sentence is **this slice's own macro speaking**, so S9's bridge is live in the guest. The rail stages no form because only `🧱️din4108` declares the argument; the other fourteen use the bare `.mutation("setSnapshot", …)` row. `🐍️s10-norm-snapshot-arg.py` (new codemod, anchored per file, asserted to match exactly once, idempotent) rewrites it into din4108's proven `ActionDefinition::new_catalog(...).with_args(...)` shape — **14 declared, 1 skipped**, `14 files changed, 112 insertions(+), 14 deletions(-)`; all 15 norm crates check green |
+
+### 2.10 U3b's locale gap — **CLOSED**, German History rows captured
+
+With the rebuilt guests speaking `LocalizedLabel`, `🐍️s10-locale-history.mjs` drives
+`framework.settings.language` on the Settings surface and photographs the same panel twice
+(`🗑️generated/s10-history-en-de2.png`, `s10-history-de-de2.png`):
+
+```
+EN rows  ["Activate Window","Activate Window","Toggle Panel","Switch Panel Tab"]
+DE rows  [… ,"Switch Panel Tab","Set Locale","Panel-Tab wechseln"]   ← GERMAN
+```
+
+Non-empty in both locales — the §2.8 all-empty reading is gone. Two findings for U3b:
+
+1. **The palette's `os.setLocale` is not a usable lane headlessly** — it is an arg-bearing shell
+   command whose chooser rendered nothing (`locale chooser offers []`). The Settings surface's
+   `framework.settings.language` control is the working lane, and the probe now uses it.
+2. **A locale switch does NOT re-render rows already in the ledger.** `HistoryEntry.label`'s own
+   docstring promises it does (*"a locale switch re-renders the whole ledger instead of leaving
+   logged rows in their dispatch locale"*), but after the switch the older rows stay
+   `"Switch Panel Tab"` while the newly journalled one is `"Panel-Tab wechseln"`. **Named, not
+   fixed** — it is U3b's surface, and it is one row's evidence, not a diagnosis.
 
 ### 2.8 U3b's locale gap: the stale guests carry NO terminology axis at all (measured)
 
@@ -494,13 +574,39 @@ Written into `📓️s9-home-studios-and-sweep-forms.md` and marked **"S10 fills
 
 ## 7. Honest gaps
 
-1. **The guest rebuild did not land inside this slice.** `📜️s10-restage.sh` (corrected, see below)
-   has been queued on the fleet wasm mutex since 12:04; at 13:04 the holder was `rb1` (since 11:56,
-   1 h 07 m) and the queue was `rb1, tc3c, pz1, s10` — **fourth**. So every runtime clause that
-   depends on a guest — `createStudio` (§1.4), `importSolidGeometry` (§3), the `applied` lanes
-   (§4.5), `setSnapshot` (§5.3) and the sweep's 24 → 31 projection (§2.7) — is **fixed in source and
-   unproven at runtime**. Nothing in this report claims otherwise.
-2. **The first `📜️s10-restage.sh` was wrong and wasted its hold.** `bun ./📜️script.ts activate s
+1. **The guest rebuild did not land inside this slice — twice.** Run 1 was granted the mutex at
+   ~13:39 and **every one of its six component builds failed**; run 2 has been queued since 13:49 and
+   at 15:40 was still **third** behind `tc3c` (holding since 13:44, 1 h 56 m, legitimately building
+   `stdio,gis,note` — alive, with a live child and 4 rustc on the machine, so not rule 27(b)'s
+   deadlock and not to be touched). So every runtime clause that depends on a guest —
+   `createStudio` (§1.4), `importSolidGeometry` (§3), the `applied` lanes (§4.5), `setSnapshot`
+   (§5.3), the German History screenshot (§2.8) and the sweep's 24 → 31 projection (§2.7) — is
+   **fixed in source and unproven at runtime**. Nothing in this report claims otherwise.
+
+   **Run 1's failure was a PEER's transient, and it has already reverted.** All six builds died in
+   `semio-framework-ui-contract`:
+
+   ```
+   error[E0277]: the trait bound `document::UiNodeRecord: Clone` is not satisfied
+      --> 🧰️framework/🔨️modules/🖱️ui/🧬️contract/📃️document/🦀️.rs:310
+       |
+   308 | #[derive(Clone, Debug, Default, PartialEq)]     ← as the compiler saw it at 13:39
+   ```
+
+   That line reads `#[derive(Debug, Default, PartialEq)]` today and the file is **committed-clean**,
+   so a peer added `Clone` to `UiNodeTable` over a `UiFixedList<UiNodeRecord, 128>` whose element
+   deliberately does not derive `Clone`, and removed it again. `cargo check -p
+   semio-framework-ui-contract` is green natively both before and after — the requirement is reached
+   only through the wasm32 component build, which is exactly the class
+   `feedback-native-cargo-misses-wasm-gated-code` names. **While it stood, no guest in the repo could
+   be built by anyone.**
+2. **A `rc=0` from the activate verb is NOT a rebuild, and it misled this slice's own hand-off.**
+   Run 1's log ended `[s10-restage] activate rc=0 … DONE 2026-09-21 13:42:36` and was read as six
+   guests rebuilt — while the six lines above it read `component rc=1` and `materialize rc=130`. The
+   activate verb publishes a receipt over whatever is on disk and cannot fail on a missing build, so
+   it prints success over a total failure. `📜️s10-restage.sh` now **aborts on the first non-zero
+   component or materialize step** and its last line is `FAILED <time>`, so this cannot be misread
+   again. **The original defect this guards:** `bun ./📜️script.ts activate s
    react dev` only PUBLISHES staged components — it computes a receipt over what is on disk and never
    builds — so it answered `60 completed components (unchanged)` in seconds, and a sweep immediately
    afterwards read the identical `edits [0,0,0,0]`. Its staleness view is keyed on `✏️s/🔌️plugins/**`,
@@ -516,10 +622,13 @@ Written into `📓️s9-home-studios-and-sweep-forms.md` and marked **"S10 fills
    `#s-checkin` count can move; not an oracle defect), and `stdio` / `trinity` / `writer`, which
    report `mutated: true` on a parent-`Artifact`-lane verb with `edits [0,0,0,0]` — a **different**
    shape from §4's, not cured by it and not diagnosed here.
-5. **The German History screenshot the coordinator asked for is blocked on the same rebuild.** With
-   the stale guests the labels carry no terminology axis at all, so after §2.1's fix they render
-   correctly as EMPTY; a locale toggle would photograph empty rows, which proves nothing. It must be
-   taken after the re-activation.
+5. **The German History screenshot is blocked on the same rebuild, and this is now measured, not
+   predicted** (§2.8): on the live shell the History panel renders **four rows with four empty
+   labels** and zero pageerrors. A locale toggle would photograph four empty rows. Two further
+   findings for whoever takes it: the palette's `os.setLocale` row opens no option list headlessly
+   (`de option count=0`), so the toggle needs another lane; and `trinity`'s one ledger row is
+   `"framework.history.entry.4:"` — also an empty label — which is why §2.5 group 7 may be the same
+   staging skew rather than a third root.
 6. **`semio-s-plugin-flow`'s test red is a peer's, not this slice's** (coordinator item 2).
    `cargo check -p semio-s-plugin-flow --all-targets` is **green**. The red is in
    `semio-s-artifact-flow-flow` (lib test): `cannot find module or crate semio_framework_async` at

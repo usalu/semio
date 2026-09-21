@@ -701,7 +701,6 @@ const FLOW_DIRECT_STORE_TOOL_IDS: &[&str] = &[
     "removeWidget",
     "deleteSelection",
     "disconnect",
-    "moveMediaNode",
     "patchFlowWidgets",
     "duplicateWidget",
     "focusSelection",
@@ -892,7 +891,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                 Some(payload.ids.len().saturating_mul(FLOW_STORE_MAX_SCENE_ITEMS.max(1)).max(1))
             }
             FlowCommand::SetPreviewOff(_) => None,
-            FlowCommand::RemoveWidget(_) | FlowCommand::MoveMediaNode(_) => snapshot.content.local_owner::<FlowWorkingScene>().filter(|scene| scene.widgets.len() <= FLOW_STORE_MAX_SCENE_ITEMS).map(|scene| scene.widgets.len().max(1)),
+            FlowCommand::RemoveWidget(_) => snapshot.content.local_owner::<FlowWorkingScene>().filter(|scene| scene.widgets.len() <= FLOW_STORE_MAX_SCENE_ITEMS).map(|scene| scene.widgets.len().max(1)),
             FlowCommand::Disconnect(_) => snapshot.content.local_owner::<FlowWorkingScene>().filter(|scene| scene.synapses.len() <= FLOW_STORE_MAX_SCENE_ITEMS).map(|scene| scene.synapses.len().max(1)),
             FlowCommand::DeleteSelection(_) => match interaction.selection.get(FLOW_INTERACTION_GRAPH) {
                 Some(selection) if selection.ids.len() <= FLOW_STORE_MAX_MUTATION_ITEMS && selection.ids.iter().map(String::len).fold(0, usize::saturating_add) <= FLOW_STORE_MAX_TEXT_BYTES => {
@@ -1058,7 +1057,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             let ephemeral = semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: mutation.into_iter().collect() };
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral });
         }
-        if matches!(command, FlowCommand::RemoveWidget(_) | FlowCommand::Disconnect(_) | FlowCommand::MoveMediaNode(_)) {
+        if matches!(command, FlowCommand::RemoveWidget(_) | FlowCommand::Disconnect(_)) {
             let scene = snapshot.content.local_owner::<FlowWorkingScene>().ok_or_else(|| Fault::from("flow-retained-scene-owner-missing"))?;
             if scene.widgets.len() > FLOW_STORE_MAX_SCENE_ITEMS || scene.synapses.len() > FLOW_STORE_MAX_SCENE_ITEMS {
                 return Err(Fault::from("flow-retained-scene-capacity"));
@@ -1067,7 +1066,6 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             let (length, matched) = match command {
                 FlowCommand::RemoveWidget(payload) => (scene.widgets.len(), scene.widgets.get(self.cursor).is_some_and(|widget| flow_widget_id(widget) == payload.widget_id)),
                 FlowCommand::Disconnect(payload) => (scene.synapses.len(), scene.synapses.get(self.cursor).is_some_and(|synapse| synapse.id == payload.synapse_id)),
-                FlowCommand::MoveMediaNode(payload) => (scene.widgets.len(), scene.widgets.get(self.cursor).is_some_and(|widget| flow_widget_id(widget) == payload.node_id)),
                 _ => unreachable!(),
             };
             if self.cursor < length {
@@ -1075,12 +1073,6 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                     let mutation = match command {
                         FlowCommand::RemoveWidget(payload) => Some(FlowMutation::DeleteWidget(DeleteWidget { id: payload.widget_id.clone() })),
                         FlowCommand::Disconnect(payload) => Some(FlowMutation::DisconnectWidgets(DisconnectWidgets { id: payload.synapse_id.clone() })),
-                        FlowCommand::MoveMediaNode(payload) if payload.x.is_finite() && payload.y.is_finite() => {
-                            let requested = semio_framework_artifact_flow_flow::WidgetLayout { x: payload.x, y: payload.y };
-                            (scene.layout.get(&payload.node_id) != Some(&requested))
-                                .then(|| FlowMutation::MoveWidgets(MoveWidgets { entries: vec![semio_framework_artifact_flow_flow::FlowLayoutEntry { id: payload.node_id.clone(), layout: Some(requested) }] }))
-                        }
-                        FlowCommand::MoveMediaNode(_) => None,
                         _ => unreachable!(),
                     };
                     if let Some(mutation) = mutation {
@@ -1098,13 +1090,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             }
             let mutations = self.artifact_mutations.take().ok_or_else(|| Fault::from("flow-retained-direct-artifact-owner"))?;
             self.completed = true;
-            return Ok(ArtifactCommandWorkStep::Complete(if mutations.is_empty() {
-                Emit::default()
-            } else if let FlowCommand::MoveMediaNode(payload) = command {
-                Emit::amend(mutations, format!("move-{}", payload.node_id))
-            } else {
-                Emit::mutations(mutations)
-            }));
+            return Ok(ArtifactCommandWorkStep::Complete(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) }));
         }
         if matches!(command, FlowCommand::DeleteSelection(_)) {
             let selected = interaction.selection.get(FLOW_INTERACTION_GRAPH).map_or(&[][..], |selection| selection.ids.as_slice());
@@ -1397,7 +1383,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobF
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "disconnect", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchFlowWidgets", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "duplicateWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child, semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "focusSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
@@ -1420,40 +1405,55 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowDirectStoreJobF
 //#endregion 🧵️DirectStoreLaneRoutes
 
 //#region 🧵️ChildGroupRetainedRoute
-const FLOW_CHILD_GROUP_TOOL_IDS: &[&str] = &["addWidget"];
+const FLOW_CHILD_GROUP_TOOL_IDS: &[&str] = &["addWidget", "moveMediaNode", "nodeGraphEdit", "spotlightCommit"];
 const FLOW_CHILD_GROUP_RAW_BYTES: usize = 16_384;
 
 struct FlowChildGroupWork {
+    tool_id: &'static str,
     instance_owner: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
     completed: bool,
     closing: bool,
 }
 
 impl FlowChildGroupWork {
-    fn new(instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
-        Self { instance_owner: Some(instance_owner), completed: false, closing: false }
+    fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+        Self { tool_id, instance_owner: Some(instance_owner), completed: false, closing: false }
     }
 
     fn admitted_child<'a>(
-        command: &'a FlowCommand,
+        command: &FlowCommand,
         snapshot: &'a FlowSnapshot,
         context: Option<&'a semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
-    ) -> Option<(&'a add_widget::AddWidget, store::SnapshotReadRef<'a, semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot>)> {
-        let FlowCommand::AddWidget(payload) = command else { return None };
+    ) -> Option<store::SnapshotReadRef<'a, SemioFlowSnapshot>> {
+        if !matches!(command, FlowCommand::AddWidget(_) | FlowCommand::MoveMediaNode(_) | FlowCommand::NodeGraphEdit(_) | FlowCommand::SpotlightCommit(_)) {
+            return None;
+        }
         let context = context?;
         let child_id = &snapshot.content.child_id;
         let dialect = context.children.dialect("content", child_id)?;
         if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
             return None;
         }
-        let child = context.children.typed_read::<semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot>("content", child_id).ok()?;
-        Some((payload, child))
+        context.children.typed_read::<SemioFlowSnapshot>("content", child_id).ok()
+    }
+
+    fn payload_admitted(command: &FlowCommand) -> bool {
+        match command {
+            FlowCommand::AddWidget(payload) => {
+                let text_bytes = payload.kind.len().checked_add(payload.neuron_kind.as_ref().map_or(0, String::len));
+                text_bytes.is_some_and(|bytes| bytes <= FLOW_CHILD_GROUP_RAW_BYTES) && payload.x.unwrap_or(120.0).is_finite() && payload.y.unwrap_or(120.0).is_finite()
+            }
+            FlowCommand::MoveMediaNode(payload) => !payload.node_id.is_empty() && payload.node_id.len() <= FLOW_STORE_MAX_TEXT_BYTES && payload.x.is_finite() && payload.y.is_finite(),
+            FlowCommand::NodeGraphEdit(payload) => payload.operations.len() <= FLOW_STORE_MAX_MUTATION_ITEMS,
+            FlowCommand::SpotlightCommit(payload) => payload.operations.len() <= FLOW_STORE_MAX_MUTATION_ITEMS,
+            _ => false,
+        }
     }
 }
 
 impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for FlowChildGroupWork {
     fn tool_id(&self) -> &'static str {
-        "addWidget"
+        self.tool_id
     }
 
     fn extent(
@@ -1463,38 +1463,57 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         _interaction: &protocol::InteractionState,
         context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
     ) -> Option<usize> {
-        if self.closing || self.completed || command.command_id() != "addWidget" {
+        if self.closing || self.completed || command.command_id() != self.tool_id || !FLOW_CHILD_GROUP_TOOL_IDS.contains(&self.tool_id) || !Self::payload_admitted(command) {
             return None;
         }
-        let (payload, child) = Self::admitted_child(command, snapshot, context)?;
-        let text_bytes = payload.kind.len().checked_add(payload.neuron_kind.as_ref().map_or(0, String::len))?;
-        let x = payload.x.unwrap_or(120.0);
-        let y = payload.y.unwrap_or(120.0);
-        (text_bytes <= FLOW_CHILD_GROUP_RAW_BYTES && x.is_finite() && y.is_finite() && child.nodes.len() <= FLOW_STORE_MAX_MUTATION_ITEMS && child.edges.len() <= FLOW_STORE_MAX_MUTATION_ITEMS).then_some(1)
+        let child = Self::admitted_child(command, snapshot, context)?;
+        (child.nodes.len() <= FLOW_STORE_MAX_MUTATION_ITEMS && child.edges.len() <= FLOW_STORE_MAX_MUTATION_ITEMS).then_some(1)
     }
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, Fault> {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction: _interaction, hover: _hover, context, operation: _operation } = *input;
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, history, interaction, hover: _hover, context, operation: _operation } = *input;
         if self.closing || self.completed {
-            return Err(Fault::from("flow-retained-add-widget-terminal"));
+            return Err(Fault::from("flow-retained-child-group-terminal"));
         }
-        let (payload, _) = Self::admitted_child(command, snapshot, context).ok_or_else(|| Fault::from("flow-retained-add-widget-child-authority"))?;
-        let context = context.ok_or_else(|| Fault::from("flow-retained-add-widget-context"))?;
+        if command.command_id() != self.tool_id || !Self::payload_admitted(command) {
+            return Err(Fault::from("flow-retained-child-group-payload-capacity"));
+        }
+        let _child = Self::admitted_child(command, snapshot, context).ok_or_else(|| Fault::from("flow-retained-child-group-authority"))?;
+        let context = context.ok_or_else(|| Fault::from("flow-retained-child-group-context"))?;
         let view = ArtifactView::with_children(snapshot, history, (*context.children).clone());
-        let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-retained-add-widget-instance-owner"))?;
-        let emit = instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| owner.with_session(|session| add_widget::handle(payload, &view, &ConfigView { snapshot: config, window: None }, session))?)?;
+        let window_config = main::config::from_snapshot(context.window_config.as_ref());
+        let (nodes, _edges) = flow_graph_selection_domains(interaction.selection.get(FLOW_INTERACTION_GRAPH).map_or(&[][..], |selection| selection.ids.as_slice()));
+        let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-retained-child-group-instance-owner"))?;
+        let emit = instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
+            owner.with_session(|session| match command {
+                FlowCommand::AddWidget(payload) => add_widget::handle(payload, &view, &ConfigView { snapshot: config, window: context.window_config.as_ref() }, session),
+                FlowCommand::MoveMediaNode(payload) => {
+                    let operations = [node_graph_edit::FlowNodeGraphEditOp::Move { node_id: payload.node_id.clone(), x: payload.x, y: payload.y }];
+                    let mut emit = node_graph_edit::node_graph_edit_result(&view, &window_config, session, &operations, &[])?;
+                    emit.coalesce_key = (!emit.child_emits.is_empty()).then(|| format!("move-{}", payload.node_id));
+                    Ok(emit)
+                }
+                FlowCommand::NodeGraphEdit(payload) => node_graph_edit::node_graph_edit_result(&view, &window_config, session, &payload.operations, &nodes),
+                FlowCommand::SpotlightCommit(payload) => spotlight_commit::node_graph_edit_result(&view, &window_config, session, &payload.operations, &nodes),
+                _ => Err(Fault::from("flow-retained-child-group-route-mismatch")),
+            })?
+        })?;
         let exact_child = emit.child_emits.first().filter(|child| child.slot == "content" && child.child_id == snapshot.content.child_id && child.ops.len() == 1 && child.labels.len() == 1);
-        if exact_child.is_none()
-            || emit.child_emits.len() != 1
+        let expected_coalesce = match command {
+            FlowCommand::MoveMediaNode(payload) if exact_child.is_some() => Some(format!("move-{}", payload.node_id)),
+            _ => None,
+        };
+        if emit.child_emits.len() > 1
+            || (!emit.child_emits.is_empty() && exact_child.is_none())
             || !emit.artifact_mutations.is_empty()
             || !emit.config_mutations.is_empty()
             || !emit.draft_mutations.is_empty()
             || emit.description.is_some()
-            || emit.coalesce_key.is_some()
+            || emit.coalesce_key != expected_coalesce
             || !emit.effects.is_empty()
             || !emit.events.is_empty()
         {
-            return Err(Fault::from("flow-retained-add-widget-output-contract"));
+            return Err(Fault::from("flow-retained-child-group-output-contract"));
         }
         self.completed = true;
         Ok(ArtifactCommandWorkStep::Complete(emit))
@@ -1561,7 +1580,7 @@ impl semio_framework::ToolJobFactory for FlowChildGroupJobFactory {
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
         if input.declared_bytes() > FLOW_CHILD_GROUP_RAW_BYTES || checkpoint.as_ref().is_some_and(|checkpoint| checkpoint.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
-            return Err((semio_framework::ToolJobFactoryError::new("Flow addWidget job rejects oversized wire or checkpoint owner"), input, checkpoint));
+            return Err((semio_framework::ToolJobFactoryError::new("Flow child-group job rejects oversized wire or checkpoint owner"), input, checkpoint));
         }
         Ok(match checkpoint {
             Some(checkpoint) => ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
@@ -1574,8 +1593,12 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowChildGroupJobFa
     type Owner = semio_framework_plugin::EditorApp<FlowPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FLOW_CHILD_GROUP_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = FLOW_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] =
-        &[semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] }];
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "spotlightCommit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Child] },
+    ];
 }
 //#endregion 🧵️ChildGroupRetainedRoute
 
@@ -1803,7 +1826,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFa
 /// than batch-dispatched, because a `BatchOnlyPendingRewrite` classification on these six is what
 /// faulted the entire app at construction with `interactive-job.catalog-authority` on every host
 /// that instantiates the flow editor (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-const FLOW_GRAPH_OPERATION_TOOL_IDS: &[&str] = &["connectMediaPorts", "reorganize", "renameFlowWidget", "nodeGraphEdit", "spotlightCommit", "runExtensionAction"];
+const FLOW_GRAPH_OPERATION_TOOL_IDS: &[&str] = &["connectMediaPorts", "reorganize", "renameFlowWidget", "runExtensionAction"];
 pub(crate) const FLOW_GRAPH_OPERATION_RAW_BYTES: usize = 16_384;
 /// 🧮️ The ONE capacity this route declares — its survey walks at most every widget of an admitted
 /// scene, plus the single apply step (`📓️work-capacity-2026-09-10.md`).
@@ -1829,8 +1852,6 @@ fn flow_graph_operation_payload_admitted(command: &FlowCommand) -> bool {
         return false;
     }
     match command {
-        FlowCommand::NodeGraphEdit(payload) => payload.operations.len() <= FLOW_STORE_MAX_MUTATION_ITEMS,
-        FlowCommand::SpotlightCommit(payload) => payload.operations.len() <= FLOW_STORE_MAX_MUTATION_ITEMS,
         FlowCommand::RunExtensionAction(payload) => payload.action_id.len() <= FLOW_STORE_MAX_TEXT_BYTES,
         FlowCommand::ConnectMediaPorts(payload) => payload.source_port_id.len().saturating_add(payload.target_port_id.len()) <= FLOW_STORE_MAX_TEXT_BYTES,
         FlowCommand::Reorganize(_) | FlowCommand::RenameFlowWidget(_) => true,
@@ -1857,9 +1878,8 @@ impl FlowGraphOperationWork {
         self.cursor < self.replay_target
     }
 
-    fn apply(&self, command: &FlowCommand, snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, interaction: &protocol::InteractionState) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    fn apply(&self, command: &FlowCommand, snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, _interaction: &protocol::InteractionState) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
         let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-retained-graph-instance-owner"))?;
-        let (nodes, _edges) = flow_graph_selection_domains(interaction.selection.get(FLOW_INTERACTION_GRAPH).map_or(&[][..], |selection| selection.ids.as_slice()));
         let resolved = self.resolved;
         instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
             owner.with_session(|session| match command {
@@ -1868,8 +1888,6 @@ impl FlowGraphOperationWork {
                 FlowCommand::Reorganize(_) => Ok(Emit::mutations(reorganize::reorganize_operations(snapshot, config, session))),
                 FlowCommand::RenameFlowWidget(payload) if resolved[0] && !resolved[1] => Ok(Emit::mutations(rename_flow_widget::rename_operations(payload, snapshot))),
                 FlowCommand::RenameFlowWidget(_) => Ok(Emit::default()),
-                FlowCommand::NodeGraphEdit(payload) => node_graph_edit::node_graph_edit_result(snapshot, config, session, &payload.operations, &nodes),
-                FlowCommand::SpotlightCommit(payload) => spotlight_commit::node_graph_edit_result(snapshot, config, session, &payload.operations, &nodes),
                 FlowCommand::RunExtensionAction(payload) => Ok(run_extension_action::extension_action_result(payload, snapshot, config, session)),
                 _ => Err(Fault::from("flow-retained-graph-route-mismatch")),
             })?
@@ -2033,8 +2051,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowGraphOperationJ
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "connectMediaPorts", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "renameFlowWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "spotlightCommit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "runExtensionAction", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     ];
 }
@@ -2050,7 +2066,7 @@ impl FlowGraphOperationJobFactoryProofs {
         factory: "FlowGraphOperationJobFactory",
         factory_type: FlowGraphOperationJobFactory,
         contract: flow_graph_operation_contract(),
-        tools: ["connectMediaPorts", "reorganize", "renameFlowWidget", "nodeGraphEdit", "spotlightCommit", "runExtensionAction"]
+        tools: ["connectMediaPorts", "reorganize", "renameFlowWidget", "runExtensionAction"]
     }
 }
 //#endregion 🧵️GraphOperationRetainedRoute
@@ -2070,7 +2086,6 @@ impl FlowDirectStoreJobFactoryProofs {
             "removeWidget",
             "deleteSelection",
             "disconnect",
-            "moveMediaNode",
             "patchFlowWidgets",
             "duplicateWidget",
             "focusSelection",
@@ -2125,6 +2140,9 @@ impl FlowChildGroupJobFactoryProofs {
         factory_type: FlowChildGroupJobFactory,
         tools: {
             "addWidget" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 1, 16_384, 7_500, 1, 1),
+            "moveMediaNode" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 1, 16_384, 7_500, 1, 1),
+            "nodeGraphEdit" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 1, 16_384, 7_500, 1, 1),
+            "spotlightCommit" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 1, 16_384, 7_500, 1, 1),
         }
     }
 }
@@ -2306,7 +2324,7 @@ impl ArtifactEditor for FlowPlayApp {
         if FLOW_CHILD_GROUP_TOOL_IDS.contains(&request.tool_id.as_str()) || FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&request.tool_id.as_str()) || FLOW_DIRECT_STORE_TOOL_IDS.contains(&request.tool_id.as_str()) {
             let tool_id = request.command.command_id();
             let work: Box<dyn ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> = if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
-                Box::new(FlowChildGroupWork::new(request.instance_operation_owner))
+                Box::new(FlowChildGroupWork::new(tool_id, request.instance_operation_owner))
             } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
                 Box::new(FlowGraphOperationWork::new(tool_id, request.instance_operation_owner))
             } else {

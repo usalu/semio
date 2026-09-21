@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "semio.frame-turn-scheduling.v1",
+  "$id": "semio.frame-turn-scheduling.v3",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "input", "turnOwners", "requests", "runtimeTurns", "nonRunnableTurns", "textIngressTurns", "expected"],
+  "required": ["schema", "input", "turnOwners", "requests", "runtimeTurns", "assetDecodeTurns", "cancelledDecode", "runtimeWakeRetry", "nonRunnableTurns", "textIngressTurns", "expected"],
   "properties": {
-    "schema": { "const": "semio.frame-turn-scheduling.v1" },
+    "$schema": { "const": "./📐️schema.json" },
+    "schema": { "const": "semio.frame-turn-scheduling.v3" },
     "input": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["lifecycle", "inputSequence", "generation"],
       "properties": {
         "lifecycle": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
@@ -17,46 +17,54 @@
       }
     },
     "turnOwners": {
-      "type": "array",
-      "minItems": 1,
-      "maxItems": 1,
-      "uniqueItems": true,
-      "prefixItems": [{ "const": "frame" }],
-      "items": false
+      "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true,
+      "prefixItems": [{ "const": "frame" }, { "const": "assetDecode" }], "items": false
     },
     "requests": {
-      "type": "array",
-      "minItems": 1,
-      "maxItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["owner", "remainingTurns"],
-        "properties": {
-          "owner": { "const": "frame" },
-          "remainingTurns": { "type": "integer", "minimum": 1, "maximum": 16 }
-        }
-      }
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "prefixItems": [
+        { "$ref": "#/$defs/frameRequest" },
+        { "$ref": "#/$defs/assetRequest" }
+      ],
+      "items": false
     },
     "runtimeTurns": {
-      "type": "array",
-      "minItems": 2,
-      "maxItems": 16,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["phase", "requestFrame", "continueFrame"],
-        "properties": {
-          "phase": { "enum": ["uploads", "finish", "terminal"] },
-          "requestFrame": { "type": "boolean" },
-          "continueFrame": { "type": "boolean" }
-        }
+      "type": "array", "minItems": 3, "maxItems": 16,
+      "items": { "$ref": "#/$defs/runtimeTurn" }
+    },
+    "assetDecodeTurns": {
+      "type": "array", "minItems": 3, "maxItems": 16,
+      "prefixItems": [
+        { "$ref": "#/$defs/pendingAssetTurn" },
+        { "$ref": "#/$defs/pendingAssetTurn" },
+        { "$ref": "#/$defs/publishedAssetTurn" }
+      ],
+      "items": false
+    },
+    "cancelledDecode": {
+      "type": "object", "additionalProperties": false,
+      "required": ["retiredToken", "successorToken", "beforeClose", "afterClose", "publishedTokens"],
+      "properties": {
+        "retiredToken": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "successorToken": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "beforeClose": { "const": "pending" },
+        "afterClose": { "const": "cancelled" },
+        "publishedTokens": { "type": "array", "maxItems": 0 }
+      }
+    },
+    "runtimeWakeRetry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["beforeHandback", "wakeOwners", "afterHandback", "publicMessages", "frameMessages"],
+      "properties": {
+        "beforeHandback": { "const": "idle" },
+        "wakeOwners": { "type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{ "const": "frame" }, { "const": "assetDecode" }], "items": false },
+        "afterHandback": { "const": "published" },
+        "publicMessages": { "type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{ "const": "wake" }], "items": false },
+        "frameMessages": { "const": 0 }
       }
     },
     "nonRunnableTurns": {
-      "type": "array",
-      "minItems": 2,
-      "maxItems": 2,
+      "type": "array", "minItems": 2, "maxItems": 2,
       "prefixItems": [
         { "type": "object", "additionalProperties": false, "required": ["owner", "requestFrame", "continueFrame"], "properties": { "owner": { "const": "future-deadline" }, "requestFrame": { "const": true }, "continueFrame": { "const": false } } },
         { "type": "object", "additionalProperties": false, "required": ["owner", "requestFrame", "continueFrame"], "properties": { "owner": { "const": "hub-status-external" }, "requestFrame": { "const": false }, "continueFrame": { "const": false } } }
@@ -64,31 +72,40 @@
       "items": false
     },
     "textIngressTurns": {
-      "type": "array",
-      "minItems": 4,
-      "maxItems": 4,
+      "type": "array", "minItems": 4, "maxItems": 4,
       "prefixItems": [
-        { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "start" }, "committed": { "const": false }, "retiring": { "const": false }, "continueFrame": { "const": false } } },
-        { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "partial" }, "committed": { "const": false }, "retiring": { "const": false }, "continueFrame": { "const": false } } },
-        { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "commit" }, "committed": { "const": true }, "retiring": { "const": false }, "continueFrame": { "const": true } } },
-        { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "cancel" }, "committed": { "const": false }, "retiring": { "const": true }, "continueFrame": { "const": true } } }
+        { "$ref": "#/$defs/textStart" }, { "$ref": "#/$defs/textPartial" }, { "$ref": "#/$defs/textCommit" }, { "$ref": "#/$defs/textCancel" }
       ],
       "items": false
     },
     "expected": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["ingressTrace", "callbackOwners", "frameSequences", "runtimePhases", "nonRunnableCallbacks", "runnableTextPhases", "closeOwners", "exhaustion"],
+      "type": "object", "additionalProperties": false,
+      "required": ["ingressTrace", "callbackOwners", "frameSequences", "runtimePhases", "assetDecodePhases", "assetPublicMessages", "assetFrameMessages", "frameDecodeUnits", "nonRunnableCallbacks", "runnableTextPhases", "closeOwners", "exhaustion"],
       "properties": {
-        "ingressTrace": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 },
-        "callbackOwners": { "type": "array", "items": { "const": "frame" }, "minItems": 1, "maxItems": 16 },
-        "frameSequences": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }, "minItems": 1, "maxItems": 16 },
-        "runtimePhases": { "type": "array", "prefixItems": [{ "const": "uploads" }, { "const": "finish" }, { "const": "terminal" }], "items": false },
-        "nonRunnableCallbacks": { "type": "array", "prefixItems": [{ "const": "future-deadline" }, { "const": "hub-status-external" }], "items": false },
-        "runnableTextPhases": { "type": "array", "prefixItems": [{ "const": "commit" }, { "const": "cancel" }], "items": false },
-        "closeOwners": { "type": "array", "items": { "const": "frame" }, "minItems": 1, "maxItems": 1 },
+        "ingressTrace": { "type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{ "const": "enqueue:41" }, { "const": "batch-accepted:41" }], "items": false },
+        "callbackOwners": { "type": "array", "minItems": 5, "maxItems": 5, "prefixItems": [{ "const": "frame" }, { "const": "assetDecode" }, { "const": "frame" }, { "const": "assetDecode" }, { "const": "assetDecode" }], "items": false },
+        "frameSequences": { "type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{ "const": 1 }, { "const": 2 }], "items": false },
+        "runtimePhases": { "type": "array", "minItems": 3, "maxItems": 3, "prefixItems": [{ "const": "uploads" }, { "const": "finish" }, { "const": "terminal" }], "items": false },
+        "assetDecodePhases": { "type": "array", "minItems": 3, "maxItems": 3, "prefixItems": [{ "const": "acquire" }, { "const": "parse" }, { "const": "publish" }], "items": false },
+        "assetPublicMessages": { "type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{ "const": "wake" }], "items": false },
+        "assetFrameMessages": { "const": 0 },
+        "frameDecodeUnits": { "const": 0 },
+        "nonRunnableCallbacks": { "type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{ "const": "future-deadline" }, { "const": "hub-status-external" }], "items": false },
+        "runnableTextPhases": { "type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{ "const": "commit" }, { "const": "cancel" }], "items": false },
+        "closeOwners": { "type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{ "const": "arbiter" }], "items": false },
         "exhaustion": { "const": "fault" }
       }
     }
+  },
+  "$defs": {
+    "frameRequest": { "type": "object", "additionalProperties": false, "required": ["owner", "remainingTurns"], "properties": { "owner": { "const": "frame" }, "remainingTurns": { "type": "integer", "minimum": 1, "maximum": 16 } } },
+    "assetRequest": { "type": "object", "additionalProperties": false, "required": ["owner", "remainingTurns"], "properties": { "owner": { "const": "assetDecode" }, "remainingTurns": { "type": "integer", "minimum": 1, "maximum": 16 } } },
+    "runtimeTurn": { "type": "object", "additionalProperties": false, "required": ["phase", "requestFrame", "continueFrame"], "properties": { "phase": { "enum": ["uploads", "finish", "terminal"] }, "requestFrame": { "type": "boolean" }, "continueFrame": { "type": "boolean" } } },
+    "pendingAssetTurn": { "type": "object", "additionalProperties": false, "required": ["phase", "outcome", "pending", "presentationChanged"], "properties": { "phase": { "enum": ["acquire", "parse", "close"] }, "outcome": { "const": "pending" }, "pending": { "const": true }, "presentationChanged": { "const": false } } },
+    "publishedAssetTurn": { "type": "object", "additionalProperties": false, "required": ["phase", "outcome", "pending", "presentationChanged"], "properties": { "phase": { "const": "publish" }, "outcome": { "const": "published" }, "pending": { "const": false }, "presentationChanged": { "const": true } } },
+    "textStart": { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "start" }, "committed": { "const": false }, "retiring": { "const": false }, "continueFrame": { "const": false } } },
+    "textPartial": { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "partial" }, "committed": { "const": false }, "retiring": { "const": false }, "continueFrame": { "const": false } } },
+    "textCommit": { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "commit" }, "committed": { "const": true }, "retiring": { "const": false }, "continueFrame": { "const": true } } },
+    "textCancel": { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "cancel" }, "committed": { "const": false }, "retiring": { "const": true }, "continueFrame": { "const": true } } }
   }
 }

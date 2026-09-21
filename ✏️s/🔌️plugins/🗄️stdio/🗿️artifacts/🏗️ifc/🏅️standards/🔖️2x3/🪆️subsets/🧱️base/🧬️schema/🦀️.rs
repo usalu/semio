@@ -261,7 +261,7 @@ pub fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
     use semio_s_artifact_stdio_step::engine::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
     let document = Part21Document {
         header: Part21Header {
-            file_description: vec![Part21Value::List(vec![]), Part21Value::Str("2;1".into())],
+            file_description: vec![Part21Value::List(vec![Part21Value::Str(String::new())]), Part21Value::Str("2;1".into())],
             file_name: vec![
                 Part21Value::Str("semio.ifc".into()),
                 Part21Value::Str("2026-08-11T00:00:00".into()),

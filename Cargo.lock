@@ -5797,6 +5797,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-job",
+ "serde_json",
  "tokio",
 ]
 
@@ -6304,6 +6305,7 @@ dependencies = [
  "serde_json",
  "swash",
  "taffy",
+ "tiny-skia",
  "wasm-bindgen",
  "web-sys",
  "wgpu",
@@ -7925,6 +7927,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -8056,6 +8059,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
@@ -8105,6 +8109,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
@@ -8138,6 +8143,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
@@ -8393,6 +8399,7 @@ name = "semio-s-artifact-stdio-tsv"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -8409,6 +8416,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
@@ -8459,6 +8467,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
@@ -9921,7 +9930,6 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-s-artifact-trinity-jack",
- "semio-s-plugin-trinity",
 ]
 
 [[package]]

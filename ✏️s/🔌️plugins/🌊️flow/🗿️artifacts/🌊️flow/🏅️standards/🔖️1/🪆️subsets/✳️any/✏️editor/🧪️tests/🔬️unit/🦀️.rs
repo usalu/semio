@@ -1,5 +1,6 @@
 pub(crate) mod context {
     use super::super::*;
+    use flow::neural::ColdRetire;
     use semio_framework_plugin::artifact_app_laws::meta;
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     use semio_s_artifact_stdio_semio::SemioMembers;
@@ -134,7 +135,31 @@ pub(crate) mod context {
         semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("retained Flow command publication");
     }
     
+    /// 🔒️ The built-node page pool `semio_framework_ui_contract` hands every UI build is
+    /// PROCESS-GLOBAL, not per app instance. A law that deliberately SATURATES it and then asserts
+    /// terminal emptiness is therefore only true while no sibling test is building a tree: under
+    /// `--test-threads=4` the saturating probe made three catalogue renders and two document-panel
+    /// builds fail with `ui.fixed-capacity` and read foreign pages back into its own terminal probe
+    /// (proven: the same binary is green at `--test-threads=1`, and green at 4 threads with the probe
+    /// skipped — ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). Ordinary builds share the
+    /// arena with each other, so they take it SHARED; the probe takes it exclusively.
+    fn ui_arena() -> &'static std::sync::RwLock<()> {
+        static ARENA: std::sync::OnceLock<std::sync::RwLock<()>> = std::sync::OnceLock::new();
+        ARENA.get_or_init(|| std::sync::RwLock::new(()))
+    }
+
+    /// 🧵️ One ordinary UI build's share of the process-global built-node arena.
+    pub(crate) fn ui_arena_shared() -> std::sync::RwLockReadGuard<'static, ()> {
+        ui_arena().read().unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    /// 🛑️ Exclusive use of the arena, for the one law that saturates and drains it whole.
+    fn ui_arena_exclusive() -> std::sync::RwLockWriteGuard<'static, ()> {
+        ui_arena().write().unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
     pub async fn render_with_view(app: &mut FlowApp, body_key: &str, view: &ViewModel) -> String {
+        let _arena = ui_arena_shared();
         let tree = app.render(body_key, None, view).await.expect("render");
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("rendered fixture observation and retirement")
     }
@@ -182,6 +207,7 @@ pub(crate) mod context {
     #[test]
     fn flow_render_fixture_projection_retires_populated_and_rejected_pages() {
         use semio_framework_plugin::artifact_app_laws::{project_and_retire_fixture_tree, FIXTURE_TREE_MAX_DEPTH, FIXTURE_TREE_MAX_NODES, FIXTURE_TREE_RETIRE_STEPS};
+        let _arena = ui_arena_exclusive();
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖼️tree-projection/🔣️.json")).unwrap();
         assert_eq!(fixture["contractId"], "semio.fixture.tree-projection/v1");
         assert_eq!(fixture["maximumDepth"], FIXTURE_TREE_MAX_DEPTH);
@@ -239,22 +265,28 @@ use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{EditorApp, PluginApp};
 
 #[test]
-fn retained_add_widget_factory_is_exact_child_only_and_legacy_closed() {
+fn retained_content_child_factory_is_exact_and_legacy_closed() {
     let factory = FlowChildGroupJobFactory::new("s.flow.flow@1/*#editor");
+    let expected = ["addWidget", "moveMediaNode", "nodeGraphEdit", "spotlightCommit"];
     let keys = semio_framework::ToolJobFactory::keys(&factory);
-    assert_eq!(keys, &[semio_framework::ToolFactoryKey::new("s.flow.flow@1/*#editor", "addWidget")]);
+    assert_eq!(
+        keys,
+        expected.map(|tool_id| semio_framework::ToolFactoryKey::new("s.flow.flow@1/*#editor", tool_id)).as_slice()
+    );
     assert_eq!(semio_framework::ToolJobFactory::payload_schema_id(&factory), FLOW_DOCUMENT_SCHEMA);
     assert_eq!(semio_framework::ToolJobFactory::classification(&factory), semio_framework_plugin::InteractiveJobClassification::Migrated);
     assert_eq!(semio_framework::ToolJobFactory::execution_contract(&factory), semio_framework::ToolExecutionContract::resumable(16_384, 256, 1, 16_384, 7_500, 1, 1),);
-    assert_eq!(<FlowChildGroupJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS, &["addWidget"]);
+    assert_eq!(<FlowChildGroupJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS, &expected);
     let publication = <FlowChildGroupJobFactory as semio_framework_plugin::ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
-    assert_eq!(publication.len(), 1);
-    assert_eq!(publication[0].tool_id, "addWidget");
-    assert_eq!(publication[0].lanes, &[semio_framework_plugin::ArtifactToolPublicationLane::Child]);
+    assert_eq!(publication.len(), expected.len());
+    for (contract, tool_id) in publication.iter().zip(expected) {
+        assert_eq!(contract.tool_id, tool_id);
+        assert_eq!(contract.lanes, &[semio_framework_plugin::ArtifactToolPublicationLane::Child]);
+    }
     let proofs = <FlowPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs();
     assert_eq!(proofs.len(), FLOW_DIRECT_STORE_TOOL_IDS.len() + FLOW_HOST_ONLY_TOOL_IDS.len() + FLOW_CHILD_GROUP_TOOL_IDS.len() + FLOW_GRAPH_OPERATION_TOOL_IDS.len());
-    assert!(FLOW_CHILD_GROUP_TOOL_IDS.contains(&"addWidget"));
-    eprintln!("[DEBUG] retained addWidget factory owns one key, one exact proof and one Child-only publication lane");
+    assert_eq!(FLOW_CHILD_GROUP_TOOL_IDS, &expected);
+    eprintln!("[DEBUG] retained content-child factory owns four exact keys, proofs and Child-only publication lanes");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -582,6 +614,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 
 #[semio_framework_async_macros::async_test]
 async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
+    context::install_first_party_light_flow_extensions_for_tests();
     let config = FlowMainWindowConfig::default();
     let fixture = FlowSnapshot::default();
     let mut session = FlowEvalSession::new();
@@ -623,23 +656,26 @@ async fn two_instances_converge_on_disjoint_edits() {
     }
     let mut instance_a = flow_app_with_registry().await;
     let mut instance_b = flow_app_with_registry().await;
+    let metadata_a = semio_framework_plugin::ActionMeta { instance_id: 71, ..meta("actor-a") };
+    let metadata_b = semio_framework_plugin::ActionMeta { instance_id: 72, ..meta("actor-b") };
+    instance_a.bind_instance_id(metadata_a.instance_id).await;
+    instance_b.bind_instance_id(metadata_b.instance_id).await;
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://flow-convergence", "mem://flow-convergence").await;
     instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
-    let receiver = meta("actor-a").instance_id;
-    instance_a.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0) }), &meta("actor-a")).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut *instance_a, receiver).await.expect("a's edit publishes");
-    instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0) }), &meta("actor-b")).await.expect("b applies its disjoint edit");
-    settle_registered_typed_operation(&mut *instance_b, receiver).await.expect("b's edit publishes");
+    instance_a.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0) }), &metadata_a).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut *instance_a, metadata_a.instance_id).await.expect("a's edit publishes");
+    instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0) }), &metadata_b).await.expect("b applies its disjoint edit");
+    settle_registered_typed_operation(&mut *instance_b, metadata_b.instance_id).await.expect("b's edit publishes");
     instance_a.tick_backbone().await.expect("a folds b's events");
     instance_b.tick_backbone().await.expect("b folds a's events");
     let converged = probe(&instance_a).await;
     assert_eq!(converged, probe(&instance_b).await, "both instances must converge on the same content child");
     assert_eq!(converged.len(), genesis.len() + 2, "each instance holds both disjoint notes");
-    let admitted = instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("a commits a checkpoint");
+    let admitted = instance_a.handle_action("commitCheckpoint", None, &metadata_a).await.expect("a commits a checkpoint");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut *instance_a, admitted).await.expect("a's checkpoint commit settles");
-    settle_registered_typed_operation(&mut *instance_a, receiver).await.expect("a's checkpoint publication settles");
+    settle_registered_typed_operation(&mut *instance_a, metadata_a.instance_id).await.expect("a's checkpoint publication settles");
     instance_b.tick_backbone().await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");
     instance_a.detach_backbone().await.expect("a releases its backbone");

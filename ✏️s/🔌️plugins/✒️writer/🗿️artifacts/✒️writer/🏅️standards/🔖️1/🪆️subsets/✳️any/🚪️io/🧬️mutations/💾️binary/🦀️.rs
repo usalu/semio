@@ -32,6 +32,17 @@ pub fn decode_op(bytes: &[u8]) -> Result<WriterMutation, protocol::ProtocolError
 //#region 🔖️OwnedEnvelopeCatalog
 const WRITER_ENVELOPE_FIELD_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
+/// ✂️ The largest `index <= limit` that is a UTF-8 char boundary of `text` — a writer body is
+/// authored prose, so a fixed byte page will land mid-codepoint sooner or later and `String::truncate`
+/// panics there. Pages are therefore at most `limit` bytes, never exactly.
+fn writer_page_boundary(text: &str, limit: usize) -> usize {
+    let mut index = limit.min(text.len());
+    while index > 0 && !text.is_char_boundary(index) {
+        index -= 1;
+    }
+    index
+}
+
 struct WriterSnapshotRetirement {
     value: std::mem::ManuallyDrop<Option<WriterSnapshot>>,
     phase: u8,
@@ -44,11 +55,12 @@ impl WriterSnapshotRetirement {
             1 => &mut value.id,
             2 => &mut value.language_id,
             3 => &mut value.uri,
-            4 => &mut value.document.child_id,
-            5 => &mut value.document.target.artifact_id,
-            6 => &mut value.document.target.dialect.artifact_kind,
-            7 => &mut value.document.target.dialect.standard,
-            8 => &mut value.document.target.dialect.subset,
+            4 => &mut value.text,
+            5 => &mut value.document.child_id,
+            6 => &mut value.document.target.artifact_id,
+            7 => &mut value.document.target.dialect.artifact_kind,
+            8 => &mut value.document.target.dialect.standard,
+            9 => &mut value.document.target.dialect.subset,
             _ => unreachable!("Writer snapshot retirement phase is validated"),
         }
     }
@@ -57,13 +69,20 @@ impl WriterSnapshotRetirement {
 impl store::ErasedSnapshotRetirement for WriterSnapshotRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
         let Some(value) = self.value.as_mut() else { return Ok(store::SnapshotRetirementStep::Complete) };
-        if self.phase < 9 {
-            if maximum_items == 0 {
+        if self.phase < 10 {
+            if maximum_items == 0 || maximum_bytes == 0 {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
             let field = Self::take_field(value, self.phase);
+            // ✂️ A field longer than one grant is released a PAGE at a time instead of refusing forever:
+            // `WriterSnapshot::text` is an authored body with no length ceiling, and the old
+            // "too long ⇒ Pending {0, 0}" arm made every close loop spin until its deadline.
+            // Mirrors the framework's own `Bytes` retirement cursor (`♻️retirement/🦀️.rs`).
             if field.len() > maximum_bytes {
-                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                let keep = writer_page_boundary(field, field.len() - maximum_bytes);
+                let released_bytes = field.len() - keep;
+                field.truncate(keep);
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes });
             }
             let released_bytes = field.len();
             drop(std::mem::take(field));
@@ -1121,7 +1140,7 @@ pub fn writer_document_store_owners() -> store::DocumentStoreOwners<WriterSnapsh
 enum WriterStoreInitializationPhase {
     ValidateEnvelope,
     ValidateEditPair { left: usize, right: usize },
-    CloneInitial { field: u8 },
+    CloneInitial { field: u8, offset: usize },
     SeedHistory { edit: usize, lane: u8, index: usize },
     FindApplied { position: usize, scan: usize },
     ApplyForward { position: usize, edit: usize, mutation: usize },
@@ -1183,11 +1202,12 @@ impl WriterStoreInitializationAuthority {
             1 => &value.id,
             2 => &value.language_id,
             3 => &value.uri,
-            4 => &value.document.child_id,
-            5 => &value.document.target.artifact_id,
-            6 => &value.document.target.dialect.artifact_kind,
-            7 => &value.document.target.dialect.standard,
-            8 => &value.document.target.dialect.subset,
+            4 => &value.text,
+            5 => &value.document.child_id,
+            6 => &value.document.target.artifact_id,
+            7 => &value.document.target.dialect.artifact_kind,
+            8 => &value.document.target.dialect.standard,
+            9 => &value.document.target.dialect.subset,
             _ => unreachable!("Writer initial field cursor is validated"),
         }
     }
@@ -1198,11 +1218,12 @@ impl WriterStoreInitializationAuthority {
             1 => &mut value.id,
             2 => &mut value.language_id,
             3 => &mut value.uri,
-            4 => &mut value.document.child_id,
-            5 => &mut value.document.target.artifact_id,
-            6 => &mut value.document.target.dialect.artifact_kind,
-            7 => &mut value.document.target.dialect.standard,
-            8 => &mut value.document.target.dialect.subset,
+            4 => &mut value.text,
+            5 => &mut value.document.child_id,
+            6 => &mut value.document.target.artifact_id,
+            7 => &mut value.document.target.dialect.artifact_kind,
+            8 => &mut value.document.target.dialect.standard,
+            9 => &mut value.document.target.dialect.subset,
             _ => unreachable!("Writer initial field cursor is validated"),
         }
     }
@@ -1319,7 +1340,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
             WriterStoreInitializationPhase::ValidateEditPair { left, right } => {
                 let envelope = self.envelope.as_ref().expect("validated Writer envelope remains retained");
                 if left >= envelope.vcs.edits.len() {
-                    self.phase = WriterStoreInitializationPhase::CloneInitial { field: 0 };
+                    self.phase = WriterStoreInitializationPhase::CloneInitial { field: 0, offset: 0 };
                 } else if right >= envelope.vcs.edits.len() {
                     self.phase = WriterStoreInitializationPhase::ValidateEditPair { left: left + 1, right: left + 2 };
                 } else if envelope.vcs.edits[left].id == envelope.vcs.edits[right].id || envelope.vcs.edits[left].id.len() > WRITER_ENVELOPE_FIELD_BYTES {
@@ -1330,8 +1351,8 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
                 cx.consume_fuel(1);
                 semio_framework_job::StepOutcome::Yield
             }
-            WriterStoreInitializationPhase::CloneInitial { field } => {
-                if field == 9 {
+            WriterStoreInitializationPhase::CloneInitial { field, offset } => {
+                if field == 10 {
                     let initial = self.initial.take().expect("Writer initial snapshot was built one field at a time");
                     let initial_digest = self.initial_digest.take().expect("Writer initial digest remains retained").finish();
                     let envelope = self.envelope.as_ref().expect("Writer envelope remains retained during runtime construction");
@@ -1341,14 +1362,25 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
                 }
                 let envelope = self.envelope.as_ref().expect("Writer envelope remains retained during initial clone");
                 let value = Self::initial_field(&envelope.vcs.initial_snapshot, field);
-                if value.len() > WRITER_ENVELOPE_FIELD_BYTES {
-                    self.fail(b"writer-store.initializer-initial-field-too-large");
+                // ✂️ One PAGE of one field per step. `WriterSnapshot::text` is the document's authored body
+                // and has no length ceiling, so a fixed per-field ceiling would refuse every writer
+                // document over one page (`writer-store.initializer-initial-field-too-large`) instead of
+                // copying it — the initial target starts empty, so the pages simply accumulate.
+                let page = writer_page_boundary(&value[offset..], WRITER_ENVELOPE_FIELD_BYTES);
+                if page == 0 {
+                    if offset < value.len() {
+                        self.fail(b"writer-store.initializer-initial-field-unpageable");
+                        return semio_framework_job::StepOutcome::Yield;
+                    }
+                    self.phase = WriterStoreInitializationPhase::CloneInitial { field: field + 1, offset: 0 };
+                    cx.consume_fuel(1);
                     return semio_framework_job::StepOutcome::Yield;
                 }
-                self.initial_digest.as_mut().expect("Writer initial digest remains retained").observe(value.as_bytes());
-                *Self::initial_field_mut(self.initial.as_mut().expect("Writer initial target remains retained"), field) = value.to_string();
-                self.phase = WriterStoreInitializationPhase::CloneInitial { field: field + 1 };
-                cx.consume_fuel(value.len().max(1) as u64);
+                let chunk = &value[offset..offset + page];
+                self.initial_digest.as_mut().expect("Writer initial digest remains retained").observe(chunk.as_bytes());
+                Self::initial_field_mut(self.initial.as_mut().expect("Writer initial target remains retained"), field).push_str(chunk);
+                self.phase = WriterStoreInitializationPhase::CloneInitial { field, offset: offset + page };
+                cx.consume_fuel(page as u64);
                 semio_framework_job::StepOutcome::Yield
             }
             WriterStoreInitializationPhase::SeedHistory { edit, lane, index } => {

@@ -770,16 +770,29 @@ fn presenter_ack_is_exact_one_shot_and_preserves_old_until_acknowledged() {
 }
 
 #[test]
-fn missing_ack_and_abort_return_the_exact_candidate_without_replacing_last_valid() {
+fn accepted_a_stale_b_abort_and_accepted_c_preserve_exact_presenter_owners() {
     let _guard = prepared_process_guard();
     let mut gate = PreparedRenderGate::default();
     let first = gate.stage_presented(packet(7, 3)).ok().expect("first presenter witness");
     let _ = gate.acknowledge_presented(first).expect("first acknowledgement");
     let _missing = gate.stage_presented(packet(8, 4)).ok().expect("pending presenter witness");
     assert_eq!(gate.last_valid_identity(), Some((7, 3)));
-    let candidate = gate.abort_pending().expect("exact pending packet handback");
-    assert_eq!((candidate.scene_revision, candidate.preview_generation), (8, 4));
-    assert_eq!(gate.last_valid_identity(), Some((7, 3)));
+    let mut stale = gate.abort_pending().expect("exact stale B packet handback");
+    assert_eq!((stale.scene_revision, stale.preview_generation), (8, 4));
+    assert_eq!(gate.last_valid_identity(), Some((7, 3)), "aborting B preserves accepted A");
+
+    let third = gate.stage_presented(packet(9, 5)).ok().expect("successor C presenter witness");
+    assert_eq!(gate.last_valid_identity(), Some((7, 3)), "C remains private before acknowledgement");
+    let mut replacement = gate.acknowledge_presented(third).expect("successor C acknowledgement");
+    assert_eq!(gate.last_valid_identity(), Some((9, 5)), "C alone replaces A after exact acknowledgement");
+    let mut first = replacement.take_previous().expect("accepted A owner handback");
+    assert_eq!((first.scene_revision, first.preview_generation), (7, 3));
+    while !stale.retire_step() {}
+    while !first.retire_step() {}
+    let mut third = gate.take_last_valid().expect("accepted C owner handback");
+    while !third.retire_step() {}
+    while !gate.close_step() {}
+    assert!(gate.terminal_is_empty());
 }
 
 #[test]
@@ -1023,4 +1036,210 @@ fn prepared_packet_publishes_main_overlay_and_top_overlay_raster_owners() {
     }
     assert_eq!(keys, ["main-image", "inline-overlay-image", "top-overlay-image"]);
     while !packet.retire_step() {}
+}
+
+#[test]
+fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
+    let _guard = prepared_process_guard();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌌️prepared-scene-ui-stacking/🔣️.json")).expect("neutral scene/UI stacking fixture");
+    let steps = fixture["steps"].as_array().expect("authored stacking steps");
+    let mut draw = DrawList::default();
+    for step in steps {
+        let rect = std::array::from_fn(|index| step["rect"][index].as_f64().expect("rect scalar") as f32);
+        let rgba = std::array::from_fn::<_, 4, _>(|index| step["rgba"][index].as_u64().expect("color scalar") as f32 / 255.0);
+        match step["op"].as_str().expect("operation") {
+            "solid" => draw.push_solid(rect, crate::wgpu::theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3])),
+            "scene" => draw.push_scene_pass(crate::wgpu::kernel_3d_scene::ScenePass3d { viewport: rect, ..Default::default() }),
+            op => panic!("unknown fixture operation {op}"),
+        }
+    }
+
+    let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
+    assert!(matches!(drive_preparation_until_terminal(&mut job), StepOutcome::Complete(_)));
+    let mut packet = job.take_packet().expect("accepted packet");
+    let mut order = Vec::new();
+    for index in 0..packet.command_pages().len() {
+        let Some(command) = packet.command_pages().get(index) else { continue };
+        let authored = match command.draw_cursor() {
+            Some(DrawMeasureCursor::LayerUi { layer, item, overlay: false }) => {
+                let value = &packet.draw.layers[layer].ui_instances[item];
+                steps.iter().find(|step| step["op"] == "solid" && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == value.rect[index]) && (0..4).all(|index| step["rgba"][index].as_u64().unwrap() as f32 / 255.0 == value.color[index]))
+            }
+            Some(DrawMeasureCursor::PassHeader(pass)) if pass < packet.draw.scene_passes.len() => {
+                let value = &packet.draw.scene_passes[pass];
+                steps.iter().find(|step| step["op"] == "scene" && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == value.viewport[index]))
+            }
+            _ => None,
+        };
+        if let Some(step) = authored {
+            order.push(step["id"].as_str().expect("step id").to_string());
+        }
+    }
+
+    let width = fixture["size"][0].as_u64().expect("width") as u32;
+    let height = fixture["size"][1].as_u64().expect("height") as u32;
+    let mut reference = tiny_skia::Pixmap::new(width, height).expect("independent raster oracle");
+    for step in steps {
+        let mut paint = tiny_skia::Paint::default();
+        paint.anti_alias = false;
+        paint.set_color_rgba8(step["rgba"][0].as_u64().unwrap() as u8, step["rgba"][1].as_u64().unwrap() as u8, step["rgba"][2].as_u64().unwrap() as u8, step["rgba"][3].as_u64().unwrap() as u8);
+        let rect =
+            tiny_skia::Rect::from_xywh(step["rect"][0].as_f64().unwrap() as f32, step["rect"][1].as_f64().unwrap() as f32, step["rect"][2].as_f64().unwrap() as f32, step["rect"][3].as_f64().unwrap() as f32).expect("nondegenerate fixture rect");
+        reference.fill_rect(rect, &paint, tiny_skia::Transform::identity(), None);
+    }
+    for sample in fixture["samples"].as_array().expect("pixel samples") {
+        let color = reference.pixel(sample["at"][0].as_u64().unwrap() as u32, sample["at"][1].as_u64().unwrap() as u32).expect("sample in bounds");
+        assert_eq!(serde_json::json!([color.red(), color.green(), color.blue(), color.alpha()]), sample["rgba"], "independent tiny-skia authored-order sample");
+    }
+    let expected = fixture["expectedOrder"].as_array().expect("expected order").iter().map(|id| id.as_str().expect("expected id").to_string()).collect::<Vec<_>>();
+    while !packet.retire_step() {}
+    while !job.close_step() {}
+    assert_eq!(order, expected, "an opaque pane authored after World must remain after that exact scene pass in prepared commands");
+}
+
+#[test]
+fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() {
+    let _guard = prepared_process_guard();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️prepared-scene-overlay-stacking/🔣️.json")).expect("neutral scene/overlay stacking fixture");
+    let steps = fixture["steps"].as_array().expect("source stacking steps");
+    let mut draw = DrawList::default();
+    for step in steps {
+        let rect = std::array::from_fn(|index| step["rect"][index].as_f64().expect("rect scalar") as f32);
+        let rgba = std::array::from_fn::<_, 4, _>(|index| step["rgba"][index].as_u64().expect("color scalar") as f32 / 255.0);
+        match (step["op"].as_str().expect("operation"), step["route"].as_str().expect("route")) {
+            ("solid", "normal") => draw.push_solid(rect, crate::wgpu::theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3])),
+            ("solid", "overlay") => {
+                draw.begin_overlay_route();
+                draw.push_solid(rect, crate::wgpu::theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3]));
+                draw.end_overlay_route();
+            }
+            ("raster", "normal") => draw.push_raster_quad(step["rasterKey"].as_str().expect("raster key"), rect, [0.0, 0.0, 1.0, 1.0], 1.0),
+            ("scene", "scene") => draw.push_scene_pass(crate::wgpu::kernel_3d_scene::ScenePass3d { viewport: rect, ..Default::default() }),
+            (op, route) => panic!("unknown fixture operation {op}/{route}"),
+        }
+    }
+
+    let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
+    assert!(matches!(drive_preparation_until_terminal(&mut job), StepOutcome::Complete(_)));
+    let mut packet = job.take_packet().expect("accepted packet");
+    let mut order = Vec::new();
+    for index in 0..packet.command_pages().len() {
+        let Some(command) = packet.command_pages().get(index) else { continue };
+        let authored = match command.draw_cursor() {
+            Some(DrawMeasureCursor::LayerUi { layer, item, overlay }) => {
+                let values = if overlay { &packet.draw.layers[layer].overlay_ui_instances } else { &packet.draw.layers[layer].ui_instances };
+                let value = &values[item];
+                steps.iter().find(|step| {
+                    step["op"] == "solid"
+                        && (step["route"] == "overlay") == overlay
+                        && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == value.rect[index])
+                        && (0..4).all(|index| step["rgba"][index].as_u64().unwrap() as f32 / 255.0 == value.color[index])
+                })
+            }
+            Some(DrawMeasureCursor::LayerRaster { layer, raster, overlay: false }) => {
+                let (key, value) = &packet.draw.layers[layer].raster_instances[raster];
+                steps.iter().find(|step| step["op"] == "raster" && step["rasterKey"] == key.as_str() && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == value.rect[index]))
+            }
+            Some(DrawMeasureCursor::PassHeader(pass)) if pass < packet.draw.scene_passes.len() => {
+                let value = &packet.draw.scene_passes[pass];
+                steps.iter().find(|step| step["op"] == "scene" && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == value.viewport[index]))
+            }
+            _ => None,
+        };
+        if let Some(step) = authored {
+            order.push(step["id"].as_str().expect("step id").to_string());
+        }
+    }
+
+    let width = fixture["size"][0].as_u64().expect("width") as u32;
+    let height = fixture["size"][1].as_u64().expect("height") as u32;
+    let expected = fixture["expectedOrder"].as_array().expect("expected order");
+    let mut reference = tiny_skia::Pixmap::new(width, height).expect("independent raster oracle");
+    for id in expected {
+        let step = steps.iter().find(|step| step["id"] == *id).expect("expected step exists");
+        let mut paint = tiny_skia::Paint::default();
+        paint.anti_alias = false;
+        paint.set_color_rgba8(step["rgba"][0].as_u64().unwrap() as u8, step["rgba"][1].as_u64().unwrap() as u8, step["rgba"][2].as_u64().unwrap() as u8, step["rgba"][3].as_u64().unwrap() as u8);
+        let rect =
+            tiny_skia::Rect::from_xywh(step["rect"][0].as_f64().unwrap() as f32, step["rect"][1].as_f64().unwrap() as f32, step["rect"][2].as_f64().unwrap() as f32, step["rect"][3].as_f64().unwrap() as f32).expect("nondegenerate fixture rect");
+        reference.fill_rect(rect, &paint, tiny_skia::Transform::identity(), None);
+    }
+    for sample in fixture["samples"].as_array().expect("pixel samples") {
+        let color = reference.pixel(sample["at"][0].as_u64().unwrap() as u32, sample["at"][1].as_u64().unwrap() as u32).expect("sample in bounds");
+        assert_eq!(serde_json::json!([color.red(), color.green(), color.blue(), color.alpha()]), sample["rgba"], "independent tiny-skia route-order sample");
+    }
+    let expected = expected.iter().map(|id| id.as_str().expect("expected id").to_string()).collect::<Vec<_>>();
+    while !packet.retire_step() {}
+    while !job.close_step() {}
+    assert_eq!(order, expected, "an inline overlay follows its own layer's scene but stays behind a later covering layer");
+}
+
+#[test]
+fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
+    let _guard = prepared_process_guard();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️prepared-glass-stacking/🔣️.json")).expect("neutral glass stacking fixture");
+    let steps = fixture["steps"].as_array().expect("authored steps");
+    let mut draw = DrawList::default();
+    let mut current_glass = None;
+    for step in steps {
+        let rect = || std::array::from_fn(|index| step["rect"][index].as_f64().expect("rect scalar") as f32);
+        let rgba = || std::array::from_fn::<_, 4, _>(|index| step["rgba"][index].as_u64().expect("color scalar") as f32 / 255.0);
+        match step["op"].as_str().expect("operation") {
+            "solid" => {
+                let color = rgba();
+                draw.push_solid(rect(), crate::wgpu::theme::Rgba::new(color[0], color[1], color[2], color[3]));
+            }
+            "glass" => {
+                let color = rgba();
+                current_glass = Some(draw.push_glass(rect(), 0.0, crate::wgpu::theme::GlassStyle { tint: crate::wgpu::theme::Rgba::new(color[0], color[1], color[2], color[3]), alpha: color[3], blur_px: 0.0, saturate: 1.0 }));
+            }
+            "begin" => draw.begin_glass_content(current_glass.expect("preceding glass")),
+            "end" => draw.end_glass_content(),
+            op => panic!("unknown fixture operation {op}"),
+        }
+    }
+    let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
+    assert!(matches!(drive_preparation_until_terminal(&mut job), StepOutcome::Complete(_)));
+    let mut packet = job.take_packet().expect("accepted packet");
+    let mut order = Vec::new();
+    for index in 0..packet.command_pages().len() {
+        let Some(command) = packet.command_pages().get(index) else { continue };
+        let item = match command.draw_cursor() {
+            Some(DrawMeasureCursor::LayerUi { layer, item, overlay: false }) => {
+                let value = &packet.draw.layers[layer].ui_instances[item];
+                Some((value.rect, value.color))
+            }
+            Some(DrawMeasureCursor::Glass(region)) if region < packet.draw.glass_regions.len() => {
+                let value = &packet.draw.glass_regions[region];
+                Some((value.rect, [value.tint.r, value.tint.g, value.tint.b, value.alpha]))
+            }
+            _ => None,
+        };
+        if let Some((rect, color)) = item {
+            let step = steps.iter().find(|step| {
+                step.get("id").is_some()
+                    && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == rect[index])
+                    && (0..4).all(|index| step["rgba"][index].as_u64().unwrap() as f32 / 255.0 == color[index])
+            }).expect("every emitted draw has an authored identity");
+            order.push(step["id"].as_str().unwrap().to_string());
+        }
+    }
+    let width = fixture["size"][0].as_u64().unwrap() as u32;
+    let height = fixture["size"][1].as_u64().unwrap() as u32;
+    let mut reference = tiny_skia::Pixmap::new(width, height).expect("independent raster oracle");
+    for step in steps.iter().filter(|step| step.get("rect").is_some()) {
+        let mut paint = tiny_skia::Paint::default();
+        paint.anti_alias = false;
+        paint.set_color_rgba8(step["rgba"][0].as_u64().unwrap() as u8, step["rgba"][1].as_u64().unwrap() as u8, step["rgba"][2].as_u64().unwrap() as u8, step["rgba"][3].as_u64().unwrap() as u8);
+        let rect = tiny_skia::Rect::from_xywh(step["rect"][0].as_f64().unwrap() as f32, step["rect"][1].as_f64().unwrap() as f32, step["rect"][2].as_f64().unwrap() as f32, step["rect"][3].as_f64().unwrap() as f32).unwrap();
+        reference.fill_rect(rect, &paint, tiny_skia::Transform::identity(), None);
+    }
+    for sample in fixture["samples"].as_array().unwrap() {
+        let color = reference.pixel(sample["at"][0].as_u64().unwrap() as u32, sample["at"][1].as_u64().unwrap() as u32).unwrap();
+        assert_eq!(serde_json::json!([color.red(), color.green(), color.blue(), color.alpha()]), sample["rgba"], "independent tiny-skia stacking sample");
+    }
+    let expected = fixture["expectedOrder"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_string()).collect::<Vec<_>>();
+    while !packet.retire_step() {}
+    while !job.close_step() {}
+    assert_eq!(order, expected, "a partial popup covers earlier panel text, and resumed parent content follows nested content");
 }

@@ -5,7 +5,8 @@
   "draftGeneration": 11,
   "transientGeneration": 13,
   "childrenDigestHex": "cbf29ce484222325",
-  "expectedIdentityDigestHex": "f8576d057f24de86",
+  "domainTag": "ARC-CONTEXT-4",
+  "expectedIdentityDigestHex": "a916ac27433fd714",
   "mismatchCases": [
     "appInstanceId",
     "canonicalBaseRevision",

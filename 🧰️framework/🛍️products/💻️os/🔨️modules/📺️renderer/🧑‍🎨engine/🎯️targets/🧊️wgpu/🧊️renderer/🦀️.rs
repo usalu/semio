@@ -32,10 +32,10 @@ extern crate semio_framework_os_kernel as store_sync;
 // 🥽️ Target-neutral: the catalog is `include_str!`-embedded, and `scenes::render_icon_render` needs
 // `mesh_asset_transport_url` on the browser build too — the same public-id → transport-path rewrite
 // React's `IconRenderHost` applies before handing a `/mesh/…` id to its loader.
-#[path = "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🦀️.rs"]
-pub mod mesh_assets;
 #[path = "../../../🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod dock;
+#[path = "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🦀️.rs"]
+pub mod mesh_assets;
 
 //#region 🤖️AgentBridgeElements
 // 🌉️ WGPU-RENDERER-REACT-PARITY packet W1j — the four `os.agent.*` elements React's `🏛️ShellHost`
@@ -183,18 +183,19 @@ mod winit_app;
 #[path = "../🎠️runtime/🦀️.rs"]
 pub mod parallel_runtime;
 
-use infinite_world::world::{
-    begin_world3d_dynamic_retirement, close_world3d_draw_rebuild_step, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset,
-    seal_world3d_asset_response, step_world3d_camera_fit, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, take_next_completed_world3d_asset_step,
-    take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSceneBridgeStep, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken,
-    WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
-};
+use crate::scenes::AdmittedSurfaceToken;
 use infinite_world::world::world3d_asset_cancellation_requested;
 #[cfg(not(target_arch = "wasm32"))]
 use infinite_world::world::WORLD_ASSET_RESPONSE_BYTE_CAPACITY;
-use infinite_world::world::{apply_world3d_terrain_tile_bytes, collect_world3d_asset_bytes, mark_world3d_asset_miss};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use infinite_world::world::{apply_decoded_reference_raster, world3d_reference_url_is_current, DecodedReferenceImage};
+use infinite_world::world::{apply_world3d_terrain_tile_bytes, collect_world3d_asset_bytes, mark_world3d_asset_miss};
+use infinite_world::world::{
+    begin_world3d_dynamic_retirement, close_world3d_draw_rebuild_step, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset,
+    seal_world3d_asset_response, step_world3d_camera_fit, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, take_next_completed_world3d_asset_step,
+    take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSceneBridgeStep, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId,
+    WorldAssetRequestKind, WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
+};
 use infinite_world::world::{world3d_hover_clear_is_owed, world3d_hover_is_published};
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
@@ -202,7 +203,6 @@ use program_bridge::load_wasm_plugins;
 #[cfg(target_arch = "wasm32")]
 use program_bridge::parse_plugin_entries;
 use shell::{PointerCapture, PointerHitOwner, ShellState};
-use crate::scenes::AdmittedSurfaceToken;
 use std::cell::RefCell;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -215,8 +215,8 @@ use ui_wgpu::wgpu::{ActionDescriptor, SceneRasterBegin, SceneRasterDescriptor, S
 use semio_framework_async::browser::spawn_local;
 use ui_wgpu::wgpu::{
     apply_window_cursor, fetch_font_bytes, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32,
-    mesh3d_write_vec2, mesh3d_write_vec3, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers,
-    SemioCursor, Theme,
+    mesh3d_write_vec2, mesh3d_write_vec3, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers, SemioCursor,
+    Theme,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -2865,6 +2865,309 @@ impl RendererAssetProbe {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RendererAssetDecodeResult {
+    Ready,
+    Rejected(&'static str),
+    Cancelled,
+    Fault(&'static str),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum RendererAssetDecodeTurnKind {
+    Idle,
+    Pending,
+    Published,
+    Cancelled,
+    Fault,
+}
+
+#[derive(serde::Serialize)]
+pub(crate) struct RendererAssetDecodeTurn {
+    kind: RendererAssetDecodeTurnKind,
+    pending: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    detail: Option<&'static str>,
+}
+
+/// 🧵️ Owns one response across bounded decoder turns without borrowing the application runtime.
+struct RendererAssetDecodeJob {
+    probe: RefCell<Option<RendererAssetProbe>>,
+    handback: Arc<Mutex<Option<RendererAssetProbe>>>,
+    cancelled: Arc<AtomicBool>,
+    result: Option<RendererAssetDecodeResult>,
+    steps: u64,
+    closing: bool,
+}
+
+impl RendererAssetDecodeJob {
+    fn new(probe: RendererAssetProbe, cancelled: Arc<AtomicBool>) -> Self {
+        Self { probe: RefCell::new(Some(probe)), handback: Arc::new(Mutex::new(None)), cancelled, result: None, steps: 0, closing: false }
+    }
+
+    fn take_probe(&self) -> Option<RendererAssetProbe> {
+        self.probe.try_borrow_mut().ok()?.take()
+    }
+
+    fn complete(&mut self, result: RendererAssetDecodeResult) -> semio_framework_job::StepOutcome {
+        use semio_framework_job::{CommitCandidate, JobPayloadStream, RetainedJobPayload, StepOutcome};
+        self.result = Some(result);
+        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
+    }
+}
+
+impl semio_framework_job::InteractiveJob for RendererAssetDecodeJob {
+    fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        use semio_framework_job::StepOutcome;
+        if self.cancelled.load(Ordering::Acquire) || context.is_cancelled() {
+            return self.complete(RendererAssetDecodeResult::Cancelled);
+        }
+        if context.should_yield() {
+            return StepOutcome::Yield;
+        }
+        let Some(steps) = self.steps.checked_add(1) else {
+            return self.complete(RendererAssetDecodeResult::Fault("asset decode step sequence exhausted"));
+        };
+        let Some(probe) = self.probe.get_mut().as_mut() else {
+            return self.complete(RendererAssetDecodeResult::Fault("asset decode lost its exact response owner"));
+        };
+        let result = probe.step();
+        self.steps = steps;
+        context.consume_fuel(1);
+        match result {
+            RendererAssetProbeStep::Pending => StepOutcome::Yield,
+            RendererAssetProbeStep::Ready => self.complete(RendererAssetDecodeResult::Ready),
+            RendererAssetProbeStep::Reject(detail) => self.complete(RendererAssetDecodeResult::Rejected(detail)),
+            RendererAssetProbeStep::Fault(detail) => self.complete(RendererAssetDecodeResult::Fault(detail)),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+        self.result = None;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        use semio_framework_job::InteractiveJobCloseStep;
+        self.begin_close();
+        if self.probe.get_mut().is_none() {
+            return InteractiveJobCloseStep::Complete;
+        }
+        if maximum_items == 0 {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        let Ok(mut handback) = self.handback.try_lock() else {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        };
+        if handback.is_some() {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        *handback = self.probe.get_mut().take();
+        InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.result.is_none() && self.probe.borrow().is_none()
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct RendererAssetDecodeWake(RuntimeHostWaker);
+
+#[cfg(not(target_arch = "wasm32"))]
+impl std::task::Wake for RendererAssetDecodeWake {
+    fn wake(self: Arc<Self>) {
+        (self.0)();
+    }
+    fn wake_by_ref(self: &Arc<Self>) {
+        (self.0)();
+    }
+}
+
+/// 📬️ Retains the exact decoder ticket and all rejected or terminal response handbacks.
+struct RendererAssetDecodeSession {
+    session: Option<semio_framework_job::WorkerJobSession<RendererAssetDecodeJob>>,
+    rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<RendererAssetDecodeJob>>,
+    ticket: Option<semio_framework_job::WorkerJobTicket>,
+    handback: Arc<Mutex<Option<RendererAssetProbe>>>,
+    boundary: Option<(RendererAssetProbe, Option<RendererAssetDecodeResult>)>,
+    cancelled: Arc<AtomicBool>,
+    surface_token: Option<AdmittedSurfaceToken>,
+    request_token: WorldAssetRequestToken,
+    fault: Option<&'static str>,
+    #[cfg(not(target_arch = "wasm32"))]
+    waker: Option<std::task::Waker>,
+}
+
+impl RendererAssetDecodeSession {
+    fn new(probe: RendererAssetProbe, wake: Option<RuntimeHostWaker>) -> Self {
+        use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, WorkerJobSession};
+        let surface_token = match probe.owner() {
+            RendererAssetFetchOwner::World { surface_token, .. } => Some(*surface_token),
+            RendererAssetFetchOwner::Shared(_) => None,
+        };
+        let request_token = probe.owner().owner().token();
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let job = RendererAssetDecodeJob::new(probe, cancelled.clone());
+        let handback = job.handback.clone();
+        let params = BatchJobParams {
+            operation: allocate_operation_id(),
+            generation: Generation(1),
+            cancel: root_cancel_token(),
+            config: BatchDriveConfig { site: "renderer_asset_decode", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US },
+            now_us: semio_framework_job::default_now_us,
+        };
+        let (session, rejected, boundary) = match WorkerJobSession::try_new(job, params) {
+            Ok(session) => (Some(session), None, None),
+            Err(mut rejected) => {
+                let boundary = rejected.job().take_probe().map(|probe| (probe, None));
+                rejected.begin_close();
+                (None, Some(rejected), boundary)
+            }
+        };
+        #[cfg(target_arch = "wasm32")]
+        let _ = wake;
+        Self {
+            session,
+            rejected,
+            ticket: None,
+            handback,
+            boundary,
+            cancelled,
+            surface_token,
+            request_token,
+            fault: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            waker: wake.map(|wake| std::task::Waker::from(Arc::new(RendererAssetDecodeWake(wake)))),
+        }
+    }
+
+    fn cancel(&self) {
+        if !self.cancelled.swap(true, Ordering::AcqRel) {
+            self.wake();
+        }
+    }
+
+    fn wake(&self) {
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(waker) = self.waker.as_ref() {
+            waker.wake_by_ref();
+        }
+    }
+
+    fn pump_one(&mut self) -> bool {
+        use semio_framework_job::{StepOutcome, WorkerJobPoll};
+        if self.boundary.is_none() {
+            if let Ok(mut handback) = self.handback.try_lock() {
+                self.boundary = handback.take().map(|probe| (probe, Some(self.fault.map_or(RendererAssetDecodeResult::Cancelled, RendererAssetDecodeResult::Fault))));
+            }
+        }
+        if let Some(rejected) = self.rejected.as_mut() {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                self.rejected = None;
+            }
+            return true;
+        }
+        let Some(session) = self.session.as_ref() else { return false };
+        let _ = session.take_wake();
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.waker.as_ref().is_some_and(|waker| session.register_wake(waker).is_err()) {
+            return true;
+        }
+        match session.poll() {
+            WorkerJobPoll::Idle => {
+                #[cfg(not(target_arch = "wasm32"))]
+                match session.try_submit_step(&renderer_worker_pool(), semio_framework_async::Lane::Maintenance) {
+                    Ok(ticket) => {
+                        self.ticket = Some(ticket);
+                        return false;
+                    }
+                    Err(semio_framework_job::WorkerJobSubmitFault::SequenceExhausted) => {
+                        self.fault = Some("asset decoder session sequence exhausted");
+                        let _ = session.begin_close();
+                    }
+                    Err(_) => {}
+                }
+                #[cfg(target_arch = "wasm32")]
+                match session.try_step_on_worker() {
+                    Ok((ticket, _)) => self.ticket = Some(ticket),
+                    Err(semio_framework_job::WorkerJobContention::WakeExhausted(_)) => {
+                        self.fault = Some("asset decoder session wake sequence exhausted");
+                        let _ = session.begin_close();
+                    }
+                    Err(_) => {}
+                }
+            }
+            WorkerJobPoll::Outcome => {
+                let Some(ticket) = self.ticket else {
+                    self.fault = Some("asset decoder outcome lost its exact ticket");
+                    let _ = session.begin_close();
+                    return true;
+                };
+                if let Ok(mut owner) = session.take_outcome(ticket) {
+                    self.ticket = None;
+                    if matches!(owner.outcome(), StepOutcome::Yield) {
+                        let _ = owner.take_outcome();
+                        if let Err(owner) = owner.resume() {
+                            self.fault = Some("asset decoder yield could not resume its exact owner");
+                            owner.begin_close();
+                        }
+                    } else {
+                        self.fault = Some("asset decoder exposed a nonterminal payload");
+                        owner.begin_close();
+                    }
+                }
+            }
+            WorkerJobPoll::Terminal => {
+                if let Ok(owner) = session.take_terminal() {
+                    let result = match owner.outcome() {
+                        StepOutcome::Complete(_) => owner.job().result.unwrap_or(RendererAssetDecodeResult::Fault("asset decoder completed without its typed result")),
+                        StepOutcome::Cancelled => RendererAssetDecodeResult::Cancelled,
+                        _ => RendererAssetDecodeResult::Fault("asset decoder worker terminated with a fault"),
+                    };
+                    self.boundary = owner.job().take_probe().map(|probe| (probe, Some(result)));
+                    self.ticket = None;
+                    owner.begin_close();
+                }
+            }
+            WorkerJobPoll::Rejected => {
+                if let Ok(rejected) = session.take_rejected() {
+                    match rejected.kind() {
+                        semio_framework_async::WorkerSubmitErrorKind::Saturated | semio_framework_async::WorkerSubmitErrorKind::Contended => rejected.resume(),
+                        _ => {
+                            self.fault = Some("asset decoder worker pool refused the exact submission");
+                            self.boundary = rejected.job().take_probe().map(|probe| (probe, Some(RendererAssetDecodeResult::Fault("asset decoder worker pool refused the exact submission"))));
+                            rejected.begin_close();
+                        }
+                    }
+                }
+            }
+            WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty => {
+                let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if session.terminal_is_empty() {
+                    self.session = None;
+                }
+            }
+            WorkerJobPoll::Submitted | WorkerJobPoll::CheckedOut => return false,
+        }
+        true
+    }
+
+    fn take_boundary(&mut self) -> Option<(RendererAssetProbe, Option<RendererAssetDecodeResult>)> {
+        if self.session.is_some() || self.rejected.is_some() {
+            return None;
+        }
+        let (probe, result) = self.boundary.take()?;
+        Some((probe, if self.cancelled.load(Ordering::Acquire) && !matches!(result, Some(RendererAssetDecodeResult::Fault(_))) { Some(RendererAssetDecodeResult::Cancelled) } else { result }))
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.session.is_none() && self.rejected.is_none() && self.boundary.is_none() && self.handback.try_lock().is_ok_and(|owner| owner.is_none())
+    }
+}
+
 fn renderer_asset_svg_prefix_is_valid(prefix: &[u8]) -> bool {
     std::str::from_utf8(prefix).ok().is_some_and(|text| {
         let text = text.trim_start_matches(|character: char| character.is_ascii_whitespace());
@@ -2941,8 +3244,12 @@ impl Future for RendererIoHandle {
             }
         })
         .is_some();
-        if registered || renderer_io_generation_live(self.slot, self.generation) {
+        if registered {
             RENDERER_IO_WAKE.store(true, Ordering::Release);
+            std::task::Poll::Pending
+        } else if renderer_io_generation_live(self.slot, self.generation) {
+            RENDERER_IO_WAKE.store(true, Ordering::Release);
+            cx.waker().wake_by_ref();
             std::task::Poll::Pending
         } else {
             self.completed = true;
@@ -3159,11 +3466,7 @@ fn renderer_io_with_node<R>(index: usize, generation: u64, use_node: impl FnOnce
 
 #[cfg(not(target_arch = "wasm32"))]
 fn renderer_io_generation_live(index: usize, generation: u64) -> bool {
-    RENDERER_IO_SLOTS.get(index).is_some_and(|slot| {
-        slot.generation.load(Ordering::Acquire) == generation
-            && matches!(slot.state.load(Ordering::Acquire), RENDERER_IO_LIVE | RENDERER_IO_CHECKED_OUT)
-            && !slot.node.load(Ordering::Acquire).is_null()
-    })
+    RENDERER_IO_SLOTS.get(index).is_some_and(|slot| slot.generation.load(Ordering::Acquire) == generation && matches!(slot.state.load(Ordering::Acquire), RENDERER_IO_LIVE | RENDERER_IO_CHECKED_OUT) && !slot.node.load(Ordering::Acquire).is_null())
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -3755,38 +4058,14 @@ pub(crate) mod kernel_runtime {
                 return Err(RejectedKernelEvents { events });
             }
             match events.pop_front().expect("one queued event is present") {
-                Event::SurfaceVisible { surface, body_key, view_state } => Ok(Self {
-                    kind: Some(QueuedKernelEventKind::SurfaceVisible),
-                    surface_visible: Some(surface),
-                    surface_body_key: Some(body_key),
-                    surface_view_state: Some(view_state),
-                    message_endpoint: None,
-                    message_payload: None,
-                }),
-                Event::Message { source: MessageEndpoint::Shell { instance }, payload }
-                    if !payload.is_empty()
-                        && payload.len() <= semio_framework_plugin::document_backbone_binding::DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES =>
-                {
-                    Ok(Self {
-                        kind: Some(QueuedKernelEventKind::MessageShell),
-                        surface_visible: None,
-                        surface_body_key: None,
-                        surface_view_state: None,
-                        message_endpoint: Some(instance.0),
-                        message_payload: Some(payload),
-                    })
+                Event::SurfaceVisible { surface, body_key, view_state } => {
+                    Ok(Self { kind: Some(QueuedKernelEventKind::SurfaceVisible), surface_visible: Some(surface), surface_body_key: Some(body_key), surface_view_state: Some(view_state), message_endpoint: None, message_payload: None })
                 }
-                Event::Message { source: MessageEndpoint::Backbone { uri }, payload }
-                    if !payload.is_empty() && payload.len() <= store_sync::os_store::BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES =>
-                {
-                    Ok(Self {
-                        kind: Some(QueuedKernelEventKind::MessageBackbone),
-                        surface_visible: None,
-                        surface_body_key: None,
-                        surface_view_state: None,
-                        message_endpoint: Some(uri),
-                        message_payload: Some(payload),
-                    })
+                Event::Message { source: MessageEndpoint::Shell { instance }, payload } if !payload.is_empty() && payload.len() <= semio_framework_plugin::document_backbone_binding::DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES => {
+                    Ok(Self { kind: Some(QueuedKernelEventKind::MessageShell), surface_visible: None, surface_body_key: None, surface_view_state: None, message_endpoint: Some(instance.0), message_payload: Some(payload) })
+                }
+                Event::Message { source: MessageEndpoint::Backbone { uri }, payload } if !payload.is_empty() && payload.len() <= store_sync::os_store::BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES => {
+                    Ok(Self { kind: Some(QueuedKernelEventKind::MessageBackbone), surface_visible: None, surface_body_key: None, surface_view_state: None, message_endpoint: Some(uri), message_payload: Some(payload) })
                 }
                 rejected => {
                     events.push_front(rejected);
@@ -3803,15 +4082,12 @@ pub(crate) mod kernel_runtime {
                     view_state: self.surface_view_state.take().expect("queued surface-visible view state is present"),
                 },
                 QueuedKernelEventKind::MessageShell => Event::Message {
-                    source: MessageEndpoint::Shell {
-                        instance: semio_framework::kernel::PluginInstanceId(self.message_endpoint.take().expect("queued shell-message instance is present")),
-                    },
+                    source: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(self.message_endpoint.take().expect("queued shell-message instance is present")) },
                     payload: self.message_payload.take().expect("queued shell-message payload is present"),
                 },
-                QueuedKernelEventKind::MessageBackbone => Event::Message {
-                    source: MessageEndpoint::Backbone { uri: self.message_endpoint.take().expect("queued backbone-message uri is present") },
-                    payload: self.message_payload.take().expect("queued backbone-message payload is present"),
-                },
+                QueuedKernelEventKind::MessageBackbone => {
+                    Event::Message { source: MessageEndpoint::Backbone { uri: self.message_endpoint.take().expect("queued backbone-message uri is present") }, payload: self.message_payload.take().expect("queued backbone-message payload is present") }
+                }
             }
         }
 
@@ -4140,7 +4416,6 @@ pub(crate) mod kernel_runtime {
             let _ = self.owner.try_schedule();
             KernelCloseStatus::Pending
         }
-
     }
 
     const PRODUCT_REPLAY_KIND_BYTES: usize = 256;
@@ -4671,7 +4946,12 @@ pub(crate) mod kernel_runtime {
 
     impl MountedProductReplayRefusalRegistry {
         fn new() -> Self {
-            Self { slots: semio_framework_async::boxed_fixed_slots(|| MountedProductReplayRefusalSlot { generation: 0, instance: None, reserved: false, owner: None }), abandoned: semio_framework_async::boxed_fixed_slots(|| None), cursor: 0, abandoned_cursor: 0 }
+            Self {
+                slots: semio_framework_async::boxed_fixed_slots(|| MountedProductReplayRefusalSlot { generation: 0, instance: None, reserved: false, owner: None }),
+                abandoned: semio_framework_async::boxed_fixed_slots(|| None),
+                cursor: 0,
+                abandoned_cursor: 0,
+            }
         }
 
         fn reserve(&mut self, instance: u32) -> Option<MountedProductReplayRefusalToken> {
@@ -5257,8 +5537,6 @@ pub(crate) mod kernel_runtime {
     }
 
     impl ExchangeOutcome {
-
-
         pub(crate) fn acknowledge_typed_operation_result(&self, token: TypedOperationResultToken) -> bool {
             typed_operation_result_exchange().get().is_some_and(|exchange| exchange.acknowledge(token))
         }
@@ -5403,8 +5681,6 @@ pub(crate) mod kernel_runtime {
         fn try_acknowledge_job_progress(&self, token: JobProgressPresentationToken) -> bool {
             self.queue.try_push(KernelRequest::AcknowledgeJobProgress { token }, Arc::new(ResponseSlot::default()), None).is_ok()
         }
-
-
 
         pub(crate) fn acknowledge_typed_operation_result(&self, token: TypedOperationResultToken) -> bool {
             typed_operation_result_exchange().get().is_some_and(|exchange| exchange.acknowledge(token))
@@ -7856,7 +8132,8 @@ pub(crate) mod kernel_runtime {
                         return Err(patch);
                     };
                     let generation = reservation.generation();
-                    let rejection = PendingSurfaceRejection { generation, instance, surface, revision: UiRevision::default(), reason: ui_contract::UiText::try_from_str("retained surface capacity exhausted").unwrap_or_default(), patch: Some(patch), receipt };
+                    let rejection =
+                        PendingSurfaceRejection { generation, instance, surface, revision: UiRevision::default(), reason: ui_contract::UiText::try_from_str("retained surface capacity exhausted").unwrap_or_default(), patch: Some(patch), receipt };
                     match self.pending_rejections.try_admit(rejection) {
                         Ok(()) => {
                             let _ = reservation.commit();
@@ -9640,11 +9917,7 @@ impl FrameActionOwners {
     }
 
     fn begin_batch(&mut self, expected: usize) -> bool {
-        if self.batch.is_some()
-            || expected == 0
-            || expected > ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY
-            || self.len.checked_add(expected).is_none_or(|len| len > self.slots.len())
-        {
+        if self.batch.is_some() || expected == 0 || expected > ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY || self.len.checked_add(expected).is_none_or(|len| len > self.slots.len()) {
             return false;
         }
         self.batch = Some(FrameActionBatchOwner::new(expected));
@@ -9873,12 +10146,7 @@ impl FrameDeferredCursor {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        !self.closing
-            && self.actions.is_empty()
-            && (self.phase > 0 || !self.shell_maintenance)
-            && (self.phase > 1 || !self.pump_sync)
-            && (self.phase > 2 || !self.flush_tutorial)
-            && (self.phase > 3 || !self.settle)
+        !self.closing && self.actions.is_empty() && (self.phase > 0 || !self.shell_maintenance) && (self.phase > 1 || !self.pump_sync) && (self.phase > 2 || !self.flush_tutorial) && (self.phase > 3 || !self.settle)
     }
 
     fn close_step(&mut self) -> bool {
@@ -10177,6 +10445,28 @@ impl RuntimeApply {
         }
     }
 
+    fn restore_interaction_only(&mut self, runtime: &mut AppRuntime) -> bool {
+        match self {
+            Self::ResumeDispatch { interaction, cursor } => {
+                let Some(returned) = interaction.take() else { return cursor.is_none() };
+                runtime.return_interaction(returned);
+                cursor.is_none()
+            }
+            Self::ResumeFrameDeferred { interaction, cursor } => {
+                let Some(returned) = interaction.take() else { return cursor.is_none() };
+                runtime.return_interaction(returned);
+                cursor.is_none()
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::RestoreInteraction(interaction) => {
+                let Some(returned) = interaction.take() else { return true };
+                runtime.return_interaction(returned);
+                true
+            }
+            _ => false,
+        }
+    }
+
     fn start_dispatch(cursor: &mut Option<RuntimeDispatchCursor>, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
         log_debug("[DEBUG] start_dispatch enter");
         let Some(cursor_value) = cursor.as_mut() else { return true };
@@ -10202,11 +10492,7 @@ impl RuntimeApply {
         let mut cursor_value = cursor.take().expect("dispatch cursor admitted above");
         let event = cursor_value.take_next().expect("non-empty dispatch cursor");
         mailbox.spawn_dispatch_reserved(async move {
-            let _latency = frame_latency::FrameLatencyTimer::start(
-                frame_latency::FrameLatencyAuthority::renderer_frame(cursor_value.generation),
-                frame_latency::FrameLatencyStage::DispatchApply,
-                1,
-            );
+            let _latency = frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(cursor_value.generation), frame_latency::FrameLatencyStage::DispatchApply, 1);
             winit_app::dispatch_normalized_event(&mut interaction, event).await;
             (interaction, cursor_value)
         });
@@ -10410,7 +10696,13 @@ struct RuntimePresentationAuthority(Arc<RuntimePresentationAuthorityInner>);
 
 impl RuntimePresentationAuthority {
     fn new() -> Self {
-        Self(Arc::new(RuntimePresentationAuthorityInner { scene_revision: AtomicU64::new(1), input_generation: AtomicU64::new(0), admitted_scene_revision: AtomicU64::new(0), admitted_input_generation: AtomicU64::new(0), admitted: AtomicBool::new(false) }))
+        Self(Arc::new(RuntimePresentationAuthorityInner {
+            scene_revision: AtomicU64::new(1),
+            input_generation: AtomicU64::new(0),
+            admitted_scene_revision: AtomicU64::new(0),
+            admitted_input_generation: AtomicU64::new(0),
+            admitted: AtomicBool::new(false),
+        }))
     }
 
     /// 🎟️ The witness ONE frame build was admitted under, written by that build when it mints its
@@ -10655,7 +10947,9 @@ impl StagedReferenceImageAuthority {
     fn discard(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken) {
         let Some(index) = self.entries.iter().position(|entry| match entry {
             StagedReferenceImage::Writing { token: candidate, .. } | StagedReferenceImage::Ready { token: candidate, .. } => *candidate == token,
-        }) else { return };
+        }) else {
+            return;
+        };
         if let Some(StagedReferenceImage::Writing { writer, .. }) = self.entries.remove(index) {
             let _ = pool.cancel(writer);
         }
@@ -10670,6 +10964,14 @@ enum NativeReferenceDecodeOutput {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum NativeReferenceDecodeCloseStep {
+    Busy,
+    Pending { released_items: usize, released_bytes: usize },
+    Complete,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 struct NativeReferenceDecodeJob {
     token: WorldAssetRequestToken,
     url: String,
@@ -10678,12 +10980,24 @@ struct NativeReferenceDecodeJob {
     output: Mutex<Option<NativeReferenceDecodeOutput>>,
     phase: std::sync::atomic::AtomicU8,
     cancelled: AtomicBool,
+    #[cfg(test)]
+    worker_barriers: Mutex<Option<(Arc<std::sync::Barrier>, Arc<std::sync::Barrier>)>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl NativeReferenceDecodeJob {
     fn new(token: WorldAssetRequestToken, url: String, bytes: Vec<u8>) -> Self {
-        Self { token, url, input: Mutex::new(Some(bytes)), decoded: Mutex::new(None), output: Mutex::new(None), phase: std::sync::atomic::AtomicU8::new(0), cancelled: AtomicBool::new(false) }
+        Self {
+            token,
+            url,
+            input: Mutex::new(Some(bytes)),
+            decoded: Mutex::new(None),
+            output: Mutex::new(None),
+            phase: std::sync::atomic::AtomicU8::new(0),
+            cancelled: AtomicBool::new(false),
+            #[cfg(test)]
+            worker_barriers: Mutex::new(None),
+        }
     }
 
     fn try_schedule(self: &Arc<Self>, mailbox: RuntimeMailbox) -> bool {
@@ -10692,42 +11006,74 @@ impl NativeReferenceDecodeJob {
         }
         let scheduled = self.clone();
         let pool = mailbox.0.scene_raster_pool.clone();
-        let job: semio_framework_async::Job = Box::new(move || {
-            let bytes = scheduled.input.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take();
-            let decoded = scheduled.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take().or_else(|| {
-                if scheduled.cancelled.load(Ordering::Acquire) { None } else { bytes.as_deref().and_then(infinite_world::world::decode_reference_image_bytes) }
-            });
-            let output = if scheduled.cancelled.load(Ordering::Acquire) {
-                NativeReferenceDecodeOutput::Failed
-            } else if let Some(decoded) = decoded {
-                let descriptor = SceneRasterDescriptor { width: decoded.width, height: decoded.height, source_digest: decoded.source_digest, source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
-                let owner = decoded.source_digest[0].wrapping_add(decoded.source_digest[1]).max(1);
-                match pool.begin(descriptor, owner, SceneRasterWriteMode::Moved) {
-                    SceneRasterBegin::Reused(lease) => NativeReferenceDecodeOutput::Ready(lease),
-                    SceneRasterBegin::Writer(writer) => match pool.prepare_moved(writer, decoded.pixels).and_then(|prepared| pool.seal_prepared_moved(prepared)) {
-                        Ok(lease) => NativeReferenceDecodeOutput::Ready(lease),
-                        Err((_pixels, _fault)) => {
-                            let _ = pool.cancel(writer);
+        let job: semio_framework_async::Job =
+            Box::new(move || {
+                let bytes = scheduled.input.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take();
+                let decoded = scheduled.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take().or_else(|| {
+                    if scheduled.cancelled.load(Ordering::Acquire) {
+                        None
+                    } else {
+                        bytes.as_deref().and_then(infinite_world::world::decode_reference_image_bytes)
+                    }
+                });
+                #[cfg(test)]
+                if let Some((entered, release)) = scheduled.worker_barriers.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).as_ref().cloned() {
+                    entered.wait();
+                    release.wait();
+                }
+                let mut retained_decoded = None;
+                let output = if scheduled.cancelled.load(Ordering::Acquire) {
+                    retained_decoded = decoded;
+                    NativeReferenceDecodeOutput::Failed
+                } else if let Some(decoded) = decoded {
+                    let descriptor = SceneRasterDescriptor { width: decoded.width, height: decoded.height, source_digest: decoded.source_digest, source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
+                    let owner = decoded.source_digest[0].wrapping_add(decoded.source_digest[1]).max(1);
+                    match pool.begin(descriptor, owner, SceneRasterWriteMode::Moved) {
+                        SceneRasterBegin::Reused(lease) => {
+                            retained_decoded = Some(decoded);
+                            NativeReferenceDecodeOutput::Ready(lease)
+                        }
+                        SceneRasterBegin::Writer(writer) => {
+                            let DecodedReferenceImage { width, height, source_digest, pixels } = decoded;
+                            match pool.prepare_moved(writer, pixels).and_then(|prepared| pool.seal_prepared_moved(prepared)) {
+                                Ok(lease) => NativeReferenceDecodeOutput::Ready(lease),
+                                Err((pixels, _fault)) => {
+                                    let _ = pool.cancel(writer);
+                                    retained_decoded = Some(DecodedReferenceImage { width, height, source_digest, pixels });
+                                    NativeReferenceDecodeOutput::Failed
+                                }
+                            }
+                        }
+                        SceneRasterBegin::Backpressure(_) => NativeReferenceDecodeOutput::Waiting(decoded),
+                        SceneRasterBegin::Refused(_) => {
+                            retained_decoded = Some(decoded);
                             NativeReferenceDecodeOutput::Failed
                         }
-                    },
-                    SceneRasterBegin::Backpressure(_) => NativeReferenceDecodeOutput::Waiting(decoded),
-                    SceneRasterBegin::Refused(_) => NativeReferenceDecodeOutput::Failed,
+                    }
+                } else {
+                    NativeReferenceDecodeOutput::Failed
+                };
+                if let Some(bytes) = bytes {
+                    let mut retained = scheduled.input.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                    assert!(retained.is_none(), "the native reference worker returns one exact encoded owner");
+                    *retained = Some(bytes);
                 }
-            } else {
-                NativeReferenceDecodeOutput::Failed
-            };
-            *scheduled.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(output);
-            scheduled.phase.store(2, Ordering::Release);
-            if let Some(waker) = mailbox.0.waker.lock().expect("runtime completion waker lock").as_ref() {
-                waker();
-            }
-        });
+                if let Some(decoded) = retained_decoded {
+                    let mut retained = scheduled.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                    assert!(retained.is_none(), "the native reference worker returns one exact decoded owner");
+                    *retained = Some(decoded);
+                }
+                *scheduled.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(output);
+                scheduled.phase.store(if scheduled.cancelled.load(Ordering::Acquire) { 3 } else { 6 }, Ordering::Release);
+                if let Some(waker) = mailbox.0.waker.lock().expect("runtime completion waker lock").as_ref() {
+                    waker();
+                }
+            });
         match renderer_worker_pool().try_submit(semio_framework_async::Lane::Maintenance, job) {
             Ok(()) => true,
             Err(error) => {
                 drop(error.into_job());
-                self.phase.store(0, Ordering::Release);
+                self.phase.store(if self.cancelled.load(Ordering::Acquire) { 3 } else { 0 }, Ordering::Release);
                 false
             }
         }
@@ -10735,27 +11081,183 @@ impl NativeReferenceDecodeJob {
 
     fn cancel(&self) {
         self.cancelled.store(true, Ordering::Release);
-        if self.phase.compare_exchange(0, 2, Ordering::AcqRel, Ordering::Acquire).is_ok() {
-            self.input.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take();
-            self.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take();
-            *self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(NativeReferenceDecodeOutput::Failed);
+        loop {
+            let phase = self.phase.load(Ordering::Acquire);
+            if !matches!(phase, 0 | 2 | 6) {
+                break;
+            }
+            if self.phase.compare_exchange(phase, 3, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                break;
+            }
         }
     }
 
     fn take_output(&self) -> Option<NativeReferenceDecodeOutput> {
-        if self.phase.load(Ordering::Acquire) != 2 {
+        if self.phase.compare_exchange(2, 5, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return None;
         }
         self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take()
     }
 
-    fn rearm(&self, decoded: DecodedReferenceImage) {
+    fn rearm(&self, decoded: DecodedReferenceImage) -> bool {
         *self.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(decoded);
-        self.phase.store(0, Ordering::Release);
+        let ready = !self.cancelled.load(Ordering::Acquire);
+        self.phase.store(if ready { 0 } else { 3 }, Ordering::Release);
+        ready
     }
 
     fn restore_output(&self, output: NativeReferenceDecodeOutput) {
         *self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(output);
+        self.phase.store(if self.cancelled.load(Ordering::Acquire) { 3 } else { 2 }, Ordering::Release);
+    }
+
+    fn retire_payload_step(&self, maximum_items: usize, maximum_bytes: usize) -> NativeReferenceDecodeCloseStep {
+        if maximum_items == 0 {
+            return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        {
+            let mut decoded = self.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            if let Some(image) = decoded.as_mut() {
+                if !image.pixels.is_empty() {
+                    let released_bytes = image.pixels.len().min(maximum_bytes);
+                    if released_bytes == 0 {
+                        return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    }
+                    image.pixels.truncate(image.pixels.len() - released_bytes);
+                    return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes };
+                }
+                *decoded = None;
+                return NativeReferenceDecodeCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+        }
+        {
+            let mut input = self.input.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            if let Some(bytes) = input.as_mut() {
+                if !bytes.is_empty() {
+                    let released_bytes = bytes.len().min(maximum_bytes);
+                    if released_bytes == 0 {
+                        return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    }
+                    bytes.truncate(bytes.len() - released_bytes);
+                    return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes };
+                }
+                *input = None;
+                return NativeReferenceDecodeCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+        }
+        NativeReferenceDecodeCloseStep::Complete
+    }
+
+    fn close_step(&self, maximum_items: usize, maximum_bytes: usize) -> NativeReferenceDecodeCloseStep {
+        self.cancel();
+        match self.phase.load(Ordering::Acquire) {
+            1 | 5 => return NativeReferenceDecodeCloseStep::Busy,
+            4 => return NativeReferenceDecodeCloseStep::Complete,
+            0 | 2 => return NativeReferenceDecodeCloseStep::Busy,
+            3 => {}
+            _ => return NativeReferenceDecodeCloseStep::Busy,
+        }
+        if maximum_items == 0 {
+            return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if let Some(output) = self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take() {
+            match output {
+                NativeReferenceDecodeOutput::Waiting(decoded) => {
+                    let mut retained = self.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                    assert!(retained.is_none(), "one native reference decode owns at most one decoded image");
+                    *retained = Some(decoded);
+                    return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                }
+                NativeReferenceDecodeOutput::Ready(lease) => {
+                    let _ = lease.release();
+                }
+                NativeReferenceDecodeOutput::Failed => {}
+            }
+            return NativeReferenceDecodeCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        let step = self.retire_payload_step(maximum_items, maximum_bytes);
+        if !matches!(step, NativeReferenceDecodeCloseStep::Complete) {
+            return step;
+        }
+        self.phase.store(4, Ordering::Release);
+        NativeReferenceDecodeCloseStep::Complete
+    }
+}
+
+struct NativeAssetHandoff {
+    fetch: Option<RendererAssetFetchOwner>,
+    payload: Option<semio_framework_job::RetainedJobPayload>,
+    seal: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct NativeAssetTransportLease {
+    surface_token: Option<AdmittedSurfaceToken>,
+    request_token: WorldAssetRequestToken,
+    cancel: semio_framework_async::CancelToken,
+    cancellation: semio_framework_os_services::HttpBodyCancellationHandle,
+    cancellation_step: Option<semio_framework_os_services::HttpBodyCancellationStep>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum NativeAssetTransportCloseStep {
+    Busy,
+    Pending(semio_framework_os_services::HttpBodyCancellationStep),
+    Terminal,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct NativeAssetTransportGuard {
+    mailbox: RuntimeMailbox,
+    surface_token: Option<AdmittedSurfaceToken>,
+    request_token: WorldAssetRequestToken,
+    armed: bool,
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+struct NativeAssetPageTestBarrier {
+    surface_token: AdmittedSurfaceToken,
+    entered: AtomicBool,
+    release: AtomicBool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for NativeAssetTransportGuard {
+    fn drop(&mut self) {
+        if !self.armed {
+            return;
+        }
+        let mut slot = self.mailbox.0.native_asset_transport.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        if slot.as_ref().is_some_and(|lease| lease.surface_token == self.surface_token && lease.request_token == self.request_token) {
+            *slot = None;
+        }
+        drop(slot);
+        if let Some(waker) = self.mailbox.0.waker.lock().expect("runtime completion waker lock").as_ref() {
+            waker();
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+enum NativeAssetStreamFailure {
+    Cancelled,
+    CancelledPage { payload: semio_framework_job::RetainedJobPayload },
+    Fault(String),
+    Page { detail: &'static str, payload: semio_framework_job::RetainedJobPayload },
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl From<String> for NativeAssetStreamFailure {
+    fn from(detail: String) -> Self {
+        Self::Fault(detail)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl From<&str> for NativeAssetStreamFailure {
+    fn from(detail: &str) -> Self {
+        Self::Fault(detail.to_string())
     }
 }
 
@@ -10779,14 +11281,19 @@ struct RuntimeMailboxInner {
     world3d_asset_cursor: Mutex<usize>,
     world3d_asset_decode_cursor: Mutex<usize>,
     asset_probe: Mutex<Option<RendererAssetProbe>>,
+    asset_decode_session: Mutex<Option<RendererAssetDecodeSession>>,
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     staged_reference_images: Mutex<StagedReferenceImageAuthority>,
     #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     scene_raster_pool: SceneRasterPool,
     #[cfg(not(target_arch = "wasm32"))]
     native_reference_decode: Mutex<Option<Arc<NativeReferenceDecodeJob>>>,
+    #[cfg(not(target_arch = "wasm32"))]
+    native_asset_transport: Mutex<Option<NativeAssetTransportLease>>,
+    #[cfg(all(test, not(target_arch = "wasm32")))]
+    native_asset_page_barrier: Mutex<Option<Arc<NativeAssetPageTestBarrier>>>,
     native_asset_fetching: AtomicBool,
-    native_asset_blocked: Mutex<Option<RendererAssetFetchOwner>>,
+    native_asset_handoff: Mutex<Option<NativeAssetHandoff>>,
     #[cfg(not(target_arch = "wasm32"))]
     native_asset_http: Arc<semio_framework_os_services::HttpPool>,
     #[cfg(not(target_arch = "wasm32"))]
@@ -10905,13 +11412,21 @@ impl Drop for FrameMaintenanceExecutionGuard {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PresenterInteractionStep {
+    Ready,
+    Restored,
+    Waiting,
+    RuntimeLock,
+    Abandoned,
+}
+
 impl RuntimeMailbox {
     fn new(runtime: AppRuntime) -> Self {
         let presentation_authority = RuntimePresentationAuthority::new();
         let raster_operation_authority = RuntimeRasterOperationAuthority::new();
         #[cfg(not(target_arch = "wasm32"))]
         let (native_asset_http, native_asset_https, native_asset_http_runtime, native_asset_http_scope, native_asset_http_cancel) = {
-            
             let pool = renderer_worker_pool();
             let runtime = Arc::new(semio_framework_os_services::TokioHostRuntime::with_pool(pool.clone()));
             let scope = runtime.open_scope_now(semio_framework_async::ScopeOwner::Service("renderer_asset_http"), None);
@@ -10942,14 +11457,19 @@ impl RuntimeMailbox {
             world3d_asset_cursor: Mutex::new(0),
             world3d_asset_decode_cursor: Mutex::new(0),
             asset_probe: Mutex::new(None),
+            asset_decode_session: Mutex::new(None),
             #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
             staged_reference_images: Mutex::new(StagedReferenceImageAuthority::new()),
             #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
             scene_raster_pool: infinite_world::world::world_scene_raster_pool(),
             #[cfg(not(target_arch = "wasm32"))]
             native_reference_decode: Mutex::new(None),
+            #[cfg(not(target_arch = "wasm32"))]
+            native_asset_transport: Mutex::new(None),
+            #[cfg(all(test, not(target_arch = "wasm32")))]
+            native_asset_page_barrier: Mutex::new(None),
             native_asset_fetching: AtomicBool::new(false),
-            native_asset_blocked: Mutex::new(None),
+            native_asset_handoff: Mutex::new(None),
             #[cfg(not(target_arch = "wasm32"))]
             native_asset_http,
             #[cfg(not(target_arch = "wasm32"))]
@@ -11071,6 +11591,12 @@ impl RuntimeMailbox {
         false
     }
 
+    pub(crate) fn close_component_world_step(&self, target: &crate::interpreter::ScenePointerTarget, operation: semio_framework_trace::OperationId, sequence: &mut u64) -> Result<bool, ()> {
+        let Ok(mut runtime) = self.try_lock() else { return Ok(false) };
+        let Some(interaction) = runtime.interaction.as_mut() else { return Ok(true) };
+        interaction.shell.close_component_world_step(target, operation, sequence)
+    }
+
     pub(crate) fn begin_engine_surface_close(&self, token: engine_canvas::EngineSurfaceToken) -> Result<bool, ()> {
         engine_canvas::begin_engine_surface_close_token(token)
     }
@@ -11176,8 +11702,8 @@ impl RuntimeMailbox {
             RendererAssetFetchOwner::World { surface, surface_token, owner } => {
                 let Ok(mut runtime) = self.try_lock() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
                 let Some(interaction) = runtime.interaction.as_mut() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
-                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else { return Ok(()) };
-                if let Some((_, kind, url)) = rejection {
+                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
+                if let Some((_, kind, url)) = rejection.filter(|_| !world3d_asset_cancellation_requested(state, owner.token())) {
                     match kind {
                         WorldAssetRequestKind::Terrain { z, x, y } => {
                             apply_world3d_terrain_tile_bytes(state, z, x, y, &[]);
@@ -11220,23 +11746,131 @@ impl RuntimeMailbox {
         Some(collect_world3d_asset_bytes(owner).unwrap_or_default())
     }
 
-    fn pump_renderer_asset_decode_step(&self) -> bool {
-        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return false };
+    fn restore_asset_decode_boundary(&self, boundary: (RendererAssetProbe, Option<RendererAssetDecodeResult>)) -> Result<RendererAssetDecodeTurnKind, (RendererAssetProbe, Option<RendererAssetDecodeResult>)> {
+        let Ok(mut slot) = self.0.asset_probe.try_lock() else { return Err(boundary) };
+        if slot.is_some() {
+            return Err(boundary);
+        }
+        let (mut probe, mut result) = boundary;
+        if !matches!(result, Some(RendererAssetDecodeResult::Cancelled | RendererAssetDecodeResult::Fault(_))) {
+            match self.renderer_asset_current(probe.owner()) {
+                None => return Err((probe, result)),
+                Some(false) => result = Some(RendererAssetDecodeResult::Cancelled),
+                Some(true) => {}
+            }
+        }
+        let kind = match result {
+            Some(RendererAssetDecodeResult::Cancelled) => {
+                probe.begin_close();
+                RendererAssetDecodeTurnKind::Cancelled
+            }
+            Some(RendererAssetDecodeResult::Fault(_)) => {
+                probe.begin_close();
+                RendererAssetDecodeTurnKind::Fault
+            }
+            _ => RendererAssetDecodeTurnKind::Pending,
+        };
+        let rejection = matches!(result, Some(RendererAssetDecodeResult::Rejected(_))).then(|| probe.rejection.clone()).flatten();
+        *slot = Some(probe);
+        drop(slot);
+        if let Some(rejection) = rejection {
+            Self::record_rejected_asset(&rejection);
+        }
+        if let Some(RendererAssetDecodeResult::Fault(detail)) = result {
+            self.record_frame_fault(detail);
+        }
+        Ok(kind)
+    }
+
+    fn pump_asset_decode_session_step(&self, closing: bool) -> Option<RendererAssetDecodeTurnKind> {
+        let Ok(mut slot) = self.0.asset_decode_session.try_lock() else { return Some(RendererAssetDecodeTurnKind::Pending) };
+        if let Some(active) = slot.as_mut() {
+            let cancelled = if let Some(surface_token) = active.surface_token {
+                self.try_lock()
+                    .ok()
+                    .and_then(|runtime| runtime.interaction.as_ref().map(|interaction| interaction.shell.world3d_states.get_token(surface_token).is_none_or(|state| world3d_asset_cancellation_requested(state, active.request_token))))
+                    .unwrap_or(false)
+            } else {
+                renderer_asset_io().try_lock().is_ok_and(|authority| authority.cancellation_requested(active.request_token))
+            };
+            if closing || cancelled {
+                active.cancel();
+            }
+            let wake = active.pump_one();
+            let mut kind = RendererAssetDecodeTurnKind::Pending;
+            if let Some(boundary) = active.take_boundary() {
+                match self.restore_asset_decode_boundary(boundary) {
+                    Ok(restored) => kind = restored,
+                    Err(boundary) => active.boundary = Some(boundary),
+                }
+            }
+            if wake {
+                active.wake();
+            }
+            if active.terminal_is_empty() {
+                *slot = None;
+            }
+            return Some(kind);
+        }
+        if closing {
+            return None;
+        }
+        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return Some(RendererAssetDecodeTurnKind::Pending) };
+        let probe = probe_slot.as_ref()?;
+        if matches!(probe.phase, RendererAssetProbePhase::Ready | RendererAssetProbePhase::Closing) {
+            return None;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        let wake = match self.0.waker.try_lock() {
+            Ok(wake) => wake.clone(),
+            Err(_) => return Some(RendererAssetDecodeTurnKind::Pending),
+        };
+        #[cfg(target_arch = "wasm32")]
+        let wake = None;
+        let Some(probe) = probe_slot.take() else { return Some(RendererAssetDecodeTurnKind::Pending) };
+        let active = RendererAssetDecodeSession::new(probe, wake);
+        active.wake();
+        *slot = Some(active);
+        Some(RendererAssetDecodeTurnKind::Pending)
+    }
+
+    /// 🧵️ Advances the private asset owner independently of frame construction and presentation.
+    pub(crate) fn asset_decode_step(&self) -> RendererAssetDecodeTurn {
+        let session = self.pump_asset_decode_session_step(false);
+        let kind = session.unwrap_or_else(|| if retire_cancelled_renderer_asset_step() { RendererAssetDecodeTurnKind::Pending } else { self.pump_renderer_asset_decode_step() });
+        #[cfg(not(target_arch = "wasm32"))]
+        if session.is_none() && !matches!(kind, RendererAssetDecodeTurnKind::Idle | RendererAssetDecodeTurnKind::Fault) {
+            if let Ok(wake) = self.0.waker.try_lock() {
+                if let Some(wake) = wake.as_ref() {
+                    wake();
+                }
+            }
+        }
+        RendererAssetDecodeTurn {
+            kind,
+            pending: kind != RendererAssetDecodeTurnKind::Fault && (kind == RendererAssetDecodeTurnKind::Pending || self.has_pending_asset_decode()),
+            detail: (kind == RendererAssetDecodeTurnKind::Fault).then_some("asset decoder failed; see the retained runtime fault"),
+        }
+    }
+
+    fn pump_renderer_asset_decode_step(&self) -> RendererAssetDecodeTurnKind {
+        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return RendererAssetDecodeTurnKind::Pending };
         if probe_slot.is_none() {
-            let Some(owner) = self.take_completed_renderer_asset_step() else { return false };
+            let Some(owner) = self.take_completed_renderer_asset_step() else { return RendererAssetDecodeTurnKind::Idle };
             *probe_slot = Some(RendererAssetProbe::new(owner));
-            return true;
+            return RendererAssetDecodeTurnKind::Pending;
         }
         let probe = probe_slot.as_mut().expect("asset probe initialized above");
         if matches!(probe.phase, RendererAssetProbePhase::Ready) {
+            match self.renderer_asset_current(probe.owner()) {
+                None => return RendererAssetDecodeTurnKind::Pending,
+                Some(false) => {
+                    probe.begin_close();
+                    return RendererAssetDecodeTurnKind::Cancelled;
+                }
+                Some(true) => {}
+            }
             log_debug_diagnostic(&format!("[DEBUG] asset ready kind={:?} url={} bytes={}", probe.owner().kind(), probe.owner().url(), probe.owner().received_bytes()));
-            // 🖼️🗺️ The two SHARED-lane kinds land nowhere near a `World3dState`: a `UiImage` goes into
-            // the Interpreter's raster table keyed by the image node's own id, a `MapTile` into the
-            // engine surface's `MapHost` keyed by the surface id the request carries. They are
-            // resolved BEFORE the surface lookup below — that lookup used to `return false` for
-            // every `Shared` owner, which parked the whole shared lane forever: the probe stayed
-            // `Ready`, nothing closed it, and no later request was ever admitted. `Component::Image`
-            // URLs and every map tile were dead on both browser and native because of that one line.
             if let Some(bytes) = Self::take_shared_asset_bytes(probe) {
                 match probe.owner().kind() {
                     WorldAssetRequestKind::UiImage { id } => interpreter::apply_ui_image_bytes(id.as_str(), probe.owner().url(), &bytes),
@@ -11244,23 +11878,21 @@ impl RuntimeMailbox {
                     _ => {}
                 }
                 probe.begin_close();
-                return true;
+                return RendererAssetDecodeTurnKind::Published;
             }
             let surface_token = match probe.owner() {
                 RendererAssetFetchOwner::World { surface_token, .. } => *surface_token,
-                RendererAssetFetchOwner::Shared(_) => return false,
+                RendererAssetFetchOwner::Shared(_) => return RendererAssetDecodeTurnKind::Pending,
             };
             let generation_is_live = {
-                let Ok(runtime) = self.try_lock() else { return false };
-                let Some(interaction) = runtime.interaction.as_ref() else { return false };
+                let Ok(runtime) = self.try_lock() else { return RendererAssetDecodeTurnKind::Pending };
+                let Some(interaction) = runtime.interaction.as_ref() else { return RendererAssetDecodeTurnKind::Pending };
                 interaction.shell.world3d_states.get_token(surface_token).is_some()
             };
             if !generation_is_live {
                 probe.begin_close();
-                return true;
+                return RendererAssetDecodeTurnKind::Pending;
             }
-            // 🏔️ DEM tiles land in the terrain session, not the mesh table: the banded tile meshes
-            // are built by the next `sync_terrain_state` pass over the now-decodable tile.
             if let WorldAssetRequestKind::Terrain { z, x, y } = probe.owner().kind() {
                 let bytes = match collect_world3d_asset_bytes(match probe.owner_mut() {
                     RendererAssetFetchOwner::World { owner, .. } | RendererAssetFetchOwner::Shared(owner) => owner,
@@ -11268,19 +11900,26 @@ impl RuntimeMailbox {
                     Ok(bytes) => bytes,
                     Err(_) => {
                         probe.begin_close();
-                        return true;
+                        return RendererAssetDecodeTurnKind::Pending;
                     }
                 };
                 let Ok(mut runtime) = self.try_lock() else {
-                    return false;
+                    return RendererAssetDecodeTurnKind::Pending;
                 };
                 let Some(interaction) = runtime.interaction.as_mut() else {
-                    return false;
+                    return RendererAssetDecodeTurnKind::Pending;
                 };
-                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else { probe.begin_close(); return true };
+                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
+                    probe.begin_close();
+                    return RendererAssetDecodeTurnKind::Pending;
+                };
+                if world3d_asset_cancellation_requested(state, probe.owner().owner().token()) {
+                    probe.begin_close();
+                    return RendererAssetDecodeTurnKind::Cancelled;
+                }
                 apply_world3d_terrain_tile_bytes(state, z, x, y, &bytes);
                 probe.begin_close();
-                return true;
+                return RendererAssetDecodeTurnKind::Published;
             }
             #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
             if matches!(probe.owner().kind(), WorldAssetRequestKind::ReferenceImage) {
@@ -11290,56 +11929,69 @@ impl RuntimeMailbox {
                 if let Some(lease) = staged {
                     let Ok(mut runtime) = self.try_lock() else {
                         self.restore_staged_reference_image(token, url, lease);
-                        return false;
+                        return RendererAssetDecodeTurnKind::Pending;
                     };
                     let Some(interaction) = runtime.interaction.as_mut() else {
                         self.restore_staged_reference_image(token, url, lease);
-                        return false;
+                        return RendererAssetDecodeTurnKind::Pending;
                     };
                     let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
                         probe.begin_close();
-                        return true;
+                        return RendererAssetDecodeTurnKind::Pending;
                     };
+                    if world3d_asset_cancellation_requested(state, probe.owner().owner().token()) {
+                        probe.begin_close();
+                        return RendererAssetDecodeTurnKind::Cancelled;
+                    }
                     let _ = apply_decoded_reference_raster(state, &url, lease);
                     probe.begin_close();
-                    return true;
+                    return RendererAssetDecodeTurnKind::Published;
                 }
                 #[cfg(target_arch = "wasm32")]
                 {
-                    let Ok(mut runtime) = self.try_lock() else { return false };
-                    let Some(interaction) = runtime.interaction.as_mut() else { return false };
+                    let Ok(mut runtime) = self.try_lock() else { return RendererAssetDecodeTurnKind::Pending };
+                    let Some(interaction) = runtime.interaction.as_mut() else { return RendererAssetDecodeTurnKind::Pending };
                     let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
                         probe.begin_close();
-                        return true;
+                        return RendererAssetDecodeTurnKind::Pending;
                     };
+                    if world3d_asset_cancellation_requested(state, probe.owner().owner().token()) {
+                        probe.begin_close();
+                        return RendererAssetDecodeTurnKind::Cancelled;
+                    }
                     mark_world3d_asset_miss(state, &url);
                     probe.begin_close();
-                    return true;
+                    return RendererAssetDecodeTurnKind::Published;
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     return self.pump_native_reference_decode(probe, surface_token, token, url);
                 }
             }
-            let Some(lease) = probe.take_ready_mesh_lease() else { return false };
+            let Some(lease) = probe.take_ready_mesh_lease() else { return RendererAssetDecodeTurnKind::Pending };
             let Ok(mut runtime) = self.try_lock() else {
                 probe.restore_ready_mesh_lease(lease);
-                return false;
+                return RendererAssetDecodeTurnKind::Pending;
             };
             let Some(interaction) = runtime.interaction.as_mut() else {
                 probe.restore_ready_mesh_lease(lease);
-                return false;
+                return RendererAssetDecodeTurnKind::Pending;
             };
             let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
                 probe.restore_ready_mesh_lease(lease);
                 probe.begin_close();
-                return true;
+                return RendererAssetDecodeTurnKind::Pending;
             };
+            if world3d_asset_cancellation_requested(state, probe.owner().owner().token()) {
+                probe.restore_ready_mesh_lease(lease);
+                probe.begin_close();
+                return RendererAssetDecodeTurnKind::Cancelled;
+            }
             match publish_world3d_asset_mesh_lease(state, probe.owner().url(), lease) {
                 Ok(()) => {
                     log_debug_diagnostic(&format!("[DEBUG] asset mesh published url={}", probe.owner().url()));
                     probe.finish_ready_mesh();
-                    return true;
+                    return RendererAssetDecodeTurnKind::Published;
                 }
                 Err(rejected) => {
                     let stale = rejected.fault == WorldDynamicFault::StaleToken;
@@ -11349,44 +12001,29 @@ impl RuntimeMailbox {
                         drop(runtime);
                         drop(probe_slot);
                         self.record_frame_fault("asset mesh publication generation/revision witness was stale");
-                        return true;
+                        return RendererAssetDecodeTurnKind::Fault;
                     }
-                    return false;
+                    return RendererAssetDecodeTurnKind::Pending;
                 }
             }
         }
         if matches!(probe.phase, RendererAssetProbePhase::Closing) {
             if !probe.close_step() {
-                return true;
+                return RendererAssetDecodeTurnKind::Pending;
             }
-            let owner = probe.take_terminal_owner().expect("completed close owns terminal response");
-            let rejection = probe.take_rejection();
-            *probe_slot = None;
-            drop(probe_slot);
-            if let Err(owner) = self.finish_renderer_asset_owner(owner, rejection.clone()) {
-                let mut probe_slot = self.0.asset_probe.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-                *probe_slot = Some(RendererAssetProbe::new(owner));
-                let restored = probe_slot.as_mut().expect("restored asset probe");
-                restored.rejection = rejection;
-                restored.begin_close();
-            }
-            return true;
-        }
-        match probe.step() {
-            RendererAssetProbeStep::Pending => true,
-            RendererAssetProbeStep::Ready => true,
-            RendererAssetProbeStep::Reject(_) => {
-                let rejection = probe.rejection.clone().expect("rejected probe owns its refusal witness");
-                drop(probe_slot);
-                Self::record_rejected_asset(&rejection);
-                true
-            }
-            RendererAssetProbeStep::Fault(detail) => {
-                drop(probe_slot);
-                self.record_frame_fault(detail);
-                true
+            let Some(owner) = probe.take_terminal_owner() else { return RendererAssetDecodeTurnKind::Pending };
+            match self.finish_renderer_asset_owner(owner, probe.rejection.clone()) {
+                Ok(()) => {
+                    *probe_slot = None;
+                    return RendererAssetDecodeTurnKind::Cancelled;
+                }
+                Err(owner) => {
+                    probe.owner = Some(owner);
+                    return RendererAssetDecodeTurnKind::Pending;
+                }
             }
         }
+        RendererAssetDecodeTurnKind::Pending
     }
 
     fn close_renderer_asset_probe_step(&self) -> bool {
@@ -11395,21 +12032,12 @@ impl RuntimeMailbox {
         if !probe.close_step() {
             return false;
         }
-        let owner = probe.take_terminal_owner().expect("asset probe terminal close witness");
-        let rejection = probe.take_rejection();
-        *probe_slot = None;
-        drop(probe_slot);
-        match self.finish_renderer_asset_owner(owner, rejection.clone()) {
-            Ok(()) => false,
-            Err(owner) => {
-                let mut probe_slot = self.0.asset_probe.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-                *probe_slot = Some(RendererAssetProbe::new(owner));
-                let restored = probe_slot.as_mut().expect("restored asset probe");
-                restored.rejection = rejection;
-                restored.begin_close();
-                false
-            }
+        let Some(owner) = probe.take_terminal_owner() else { return false };
+        match self.finish_renderer_asset_owner(owner, probe.rejection.clone()) {
+            Ok(()) => *probe_slot = None,
+            Err(owner) => probe.owner = Some(owner),
         }
+        false
     }
 
     pub(crate) fn return_renderer_asset_owner(&self, fetch: RendererAssetFetchOwner) -> Result<(), RendererAssetFetchOwner> {
@@ -11458,19 +12086,87 @@ impl RuntimeMailbox {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    fn close_native_reference_decode_step(&self, token: Option<WorldAssetRequestToken>) -> bool {
+        let Ok(mut slot) = self.0.native_reference_decode.try_lock() else { return false };
+        let Some(job) = slot.as_ref() else { return true };
+        if token.is_some_and(|token| token != job.token) {
+            return true;
+        }
+        if !matches!(job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), NativeReferenceDecodeCloseStep::Complete) {
+            return false;
+        }
+        *slot = None;
+        true
+    }
+
+    /// 🧹️ Keeps one closing component's asset authority reachable until its exact borrowers return.
+    pub(crate) fn close_component_asset_step(&self, target: &crate::interpreter::ScenePointerTarget) -> bool {
+        if !matches!(target.kind, ui_wgpu::wgpu::SurfaceKind::World3d | ui_wgpu::wgpu::SurfaceKind::IconRender) {
+            return true;
+        }
+        let surface_token = {
+            let Ok(mut runtime) = self.try_lock() else { return false };
+            let Some(interaction) = runtime.interaction.as_mut() else { return false };
+            let Some(token) = interaction.shell.world3d_states.token(&target.host_id) else { return true };
+            let Some(state) = interaction.shell.world3d_states.get_token_mut(token) else { return false };
+            infinite_world::world::begin_world3d_asset_close(state);
+            token
+        };
+        #[cfg(not(target_arch = "wasm32"))]
+        if !matches!(self.cancel_native_asset_transport_step(Some(surface_token), None), NativeAssetTransportCloseStep::Terminal) {
+            return false;
+        }
+        {
+            let Ok(session) = self.0.asset_decode_session.try_lock() else { return false };
+            if let Some(session) = session.as_ref().filter(|session| session.surface_token == Some(surface_token)) {
+                session.cancel();
+                return false;
+            }
+        }
+        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return false };
+        if let Some(probe) = probe_slot.as_mut().filter(|probe| matches!(probe.owner(), RendererAssetFetchOwner::World { surface_token: token, .. } if *token == surface_token)) {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                if !self.close_native_reference_decode_step(Some(probe.owner().owner().token())) {
+                    return false;
+                }
+            }
+            #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+            self.discard_staged_reference_image(probe.owner().owner().token());
+            if !probe.close_step() {
+                return false;
+            }
+            let Some(owner) = probe.take_terminal_owner() else { return false };
+            match self.finish_renderer_asset_owner(owner, probe.rejection.clone()) {
+                Ok(()) => *probe_slot = None,
+                Err(owner) => {
+                    probe.owner = Some(owner);
+                    return false;
+                }
+            }
+            return false;
+        }
+        drop(probe_slot);
+        let Ok(mut runtime) = self.try_lock() else { return false };
+        let Some(interaction) = runtime.interaction.as_mut() else { return false };
+        let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else { return false };
+        infinite_world::world::close_world3d_asset_step(state)
+    }
+
     pub(crate) fn close_renderer_asset_step(&self) -> bool {
+        if self.pump_asset_decode_session_step(true).is_some() {
+            return false;
+        }
         #[cfg(not(target_arch = "wasm32"))]
         self.0.native_asset_http_cancel.cancel_now();
         #[cfg(not(target_arch = "wasm32"))]
-        {
-            let mut decode = self.0.native_reference_decode.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-            if let Some(job) = decode.as_ref() {
-                job.cancel();
-                if job.phase.load(Ordering::Acquire) != 2 {
-                    return false;
-                }
-                *decode = None;
-            }
+        if !matches!(self.cancel_native_asset_transport_step(None, None), NativeAssetTransportCloseStep::Terminal) {
+            return false;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if !self.close_native_reference_decode_step(None) {
+            return false;
         }
         if !self.close_renderer_asset_probe_step() {
             return false;
@@ -11479,23 +12175,15 @@ impl RuntimeMailbox {
             let _ = close_renderer_asset_step();
             return false;
         }
-        if let Ok(mut blocked) = self.0.native_asset_blocked.try_lock() {
-            if let Some(owner) = blocked.as_mut() {
-                if !owner.close_step() {
-                    return false;
-                }
-                *blocked = None;
-                return false;
-            }
-        } else {
+        if self.pump_native_asset_handoff_step(true).is_some() {
             return false;
         }
         close_renderer_asset_step()
     }
 
-    fn renderer_asset_current(&self, fetch: &RendererAssetFetchOwner) -> Option<bool> {
+    pub(crate) fn renderer_asset_current(&self, fetch: &RendererAssetFetchOwner) -> Option<bool> {
         match fetch {
-            RendererAssetFetchOwner::Shared(owner) => renderer_asset_io().lock().ok().map(|authority| !authority.cancellation_requested(owner.token())),
+            RendererAssetFetchOwner::Shared(owner) => renderer_asset_io().try_lock().ok().map(|authority| !authority.cancellation_requested(owner.token())),
             RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
                 let Ok(runtime) = self.try_lock() else { return None };
                 let interaction = runtime.interaction.as_ref()?;
@@ -11505,7 +12193,7 @@ impl RuntimeMailbox {
     }
 
     pub(crate) fn renderer_asset_cancelled(&self, fetch: &RendererAssetFetchOwner) -> bool {
-        self.renderer_asset_current(fetch) != Some(true)
+        self.renderer_asset_current(fetch) == Some(false)
     }
 
     pub(crate) fn browser_renderer_asset_current(&self, fetch: &RendererAssetFetchOwner) -> bool {
@@ -11578,13 +12266,13 @@ impl RuntimeMailbox {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn pump_native_reference_decode(&self, probe: &mut RendererAssetProbe, surface_token: AdmittedSurfaceToken, token: WorldAssetRequestToken, url: String) -> bool {
+    fn pump_native_reference_decode(&self, probe: &mut RendererAssetProbe, surface_token: AdmittedSurfaceToken, token: WorldAssetRequestToken, url: String) -> RendererAssetDecodeTurnKind {
         let job = {
             let mut slot = self.0.native_reference_decode.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
             if let Some(job) = slot.as_ref() {
                 if job.token != token || job.url != url {
                     self.record_frame_fault("native reference decode owner changed before terminal handback");
-                    return false;
+                    return RendererAssetDecodeTurnKind::Pending;
                 }
                 job.clone()
             } else {
@@ -11594,7 +12282,7 @@ impl RuntimeMailbox {
                     Ok(bytes) => bytes,
                     Err(_) => {
                         probe.begin_close();
-                        return true;
+                        return RendererAssetDecodeTurnKind::Pending;
                     }
                 };
                 let job = Arc::new(NativeReferenceDecodeJob::new(token, url.clone(), bytes));
@@ -11613,74 +12301,220 @@ impl RuntimeMailbox {
                         waker();
                     }
                 }
-                true
+                RendererAssetDecodeTurnKind::Pending
             }
-            1 => false,
+            1 => RendererAssetDecodeTurnKind::Pending,
             2 => {
-                let output = match job.take_output().unwrap_or(NativeReferenceDecodeOutput::Failed) {
+                let Some(output) = job.take_output() else { return RendererAssetDecodeTurnKind::Pending };
+                let output = match output {
                     NativeReferenceDecodeOutput::Waiting(decoded) => {
                         let _ = self.0.scene_raster_pool.maintenance_step();
-                        job.rearm(decoded);
-                        if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
-                            waker();
+                        if job.rearm(decoded) {
+                            if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
+                                waker();
+                            }
+                            return RendererAssetDecodeTurnKind::Pending;
                         }
-                        return true;
+                        if self.close_native_reference_decode_step(Some(token)) {
+                            probe.begin_close();
+                            return RendererAssetDecodeTurnKind::Cancelled;
+                        }
+                        return RendererAssetDecodeTurnKind::Pending;
                     }
                     output => output,
                 };
                 let Ok(mut runtime) = self.try_lock() else {
                     job.restore_output(output);
-                    return false;
+                    return RendererAssetDecodeTurnKind::Pending;
                 };
                 let Some(interaction) = runtime.interaction.as_mut() else {
                     job.restore_output(output);
-                    return false;
+                    return RendererAssetDecodeTurnKind::Pending;
                 };
                 let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
-                    probe.begin_close();
-                    *self.0.native_reference_decode.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
-                    return true;
-                };
-                if job.cancelled.load(Ordering::Acquire) || !world3d_reference_url_is_current(state, &url) {
-                    mark_world3d_asset_miss(state, &url);
-                } else {
-                    match output {
-                        NativeReferenceDecodeOutput::Ready(lease) => {
-                            let _ = apply_decoded_reference_raster(state, &url, lease);
-                        }
-                        NativeReferenceDecodeOutput::Failed => mark_world3d_asset_miss(state, &url),
-                        NativeReferenceDecodeOutput::Waiting(_) => unreachable!("waiting decode was rearmed above"),
+                    drop(runtime);
+                    job.restore_output(output);
+                    job.cancel();
+                    if self.close_native_reference_decode_step(Some(token)) {
+                        probe.begin_close();
+                        return RendererAssetDecodeTurnKind::Cancelled;
                     }
+                    return RendererAssetDecodeTurnKind::Pending;
+                };
+                let cancelled = job.cancelled.load(Ordering::Acquire);
+                let stale = !world3d_reference_url_is_current(state, &url);
+                if cancelled || stale {
+                    if stale && !cancelled {
+                        mark_world3d_asset_miss(state, &url);
+                    }
+                    drop(runtime);
+                    job.restore_output(output);
+                    job.cancel();
+                    if self.close_native_reference_decode_step(Some(token)) {
+                        probe.begin_close();
+                        return RendererAssetDecodeTurnKind::Cancelled;
+                    }
+                    return RendererAssetDecodeTurnKind::Pending;
                 }
-                *self.0.native_reference_decode.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
+                match output {
+                    NativeReferenceDecodeOutput::Ready(lease) => {
+                        let _ = apply_decoded_reference_raster(state, &url, lease);
+                    }
+                    NativeReferenceDecodeOutput::Failed => mark_world3d_asset_miss(state, &url),
+                    NativeReferenceDecodeOutput::Waiting(_) => unreachable!("waiting decode was rearmed above"),
+                }
+                drop(runtime);
+                job.phase.store(4, Ordering::Release);
+                let mut slot = self.0.native_reference_decode.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+                if !slot.as_ref().is_some_and(|candidate| Arc::ptr_eq(candidate, &job)) {
+                    drop(slot);
+                    self.record_frame_fault("native reference decode owner changed before publication handback");
+                    return RendererAssetDecodeTurnKind::Fault;
+                }
+                *slot = None;
                 probe.begin_close();
-                true
+                RendererAssetDecodeTurnKind::Published
+            }
+            3 | 4 => {
+                if self.close_native_reference_decode_step(Some(token)) {
+                    probe.begin_close();
+                    RendererAssetDecodeTurnKind::Cancelled
+                } else {
+                    RendererAssetDecodeTurnKind::Pending
+                }
+            }
+            5 => RendererAssetDecodeTurnKind::Pending,
+            6 => {
+                if matches!(job.retire_payload_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), NativeReferenceDecodeCloseStep::Complete) {
+                    let next = if job.cancelled.load(Ordering::Acquire) { 3 } else { 2 };
+                    let _ = job.phase.compare_exchange(6, next, Ordering::AcqRel, Ordering::Acquire);
+                }
+                if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
+                    waker();
+                }
+                RendererAssetDecodeTurnKind::Pending
             }
             _ => {
                 self.record_frame_fault("native reference decode entered an invalid phase");
-                false
+                RendererAssetDecodeTurnKind::Fault
+            }
+        }
+    }
+
+    fn pump_native_asset_handoff_step(&self, closing: bool) -> Option<bool> {
+        let Ok(mut slot) = self.0.native_asset_handoff.try_lock() else { return Some(false) };
+        let handoff = slot.as_mut()?;
+        if closing {
+            handoff.fetch.as_mut().expect("native handoff owns its request").begin_close();
+            handoff.seal = false;
+        }
+        if let Some(payload) = handoff.payload.as_mut() {
+            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if payload.terminal_is_empty() {
+                handoff.payload = None;
+            }
+            return Some(true);
+        }
+        if handoff.seal {
+            let fetch = handoff.fetch.as_mut().expect("native handoff owns its request");
+            match self.renderer_asset_current(fetch) {
+                None => return Some(false),
+                Some(false) => {
+                    fetch.begin_close();
+                    handoff.seal = false;
+                }
+                Some(true) => match self.seal_renderer_asset_response(fetch) {
+                    RendererAssetSealStep::Busy => return Some(false),
+                    RendererAssetSealStep::Granted => handoff.seal = false,
+                    RendererAssetSealStep::Refused(_) => {
+                        fetch.begin_close();
+                        handoff.seal = false;
+                    }
+                },
+            }
+            return Some(true);
+        }
+        let fetch = handoff.fetch.take().expect("native handoff owns its request");
+        match self.return_renderer_asset_owner(fetch) {
+            Ok(()) => {
+                *slot = None;
+                Some(true)
+            }
+            Err(fetch) => {
+                handoff.fetch = Some(fetch);
+                Some(false)
             }
         }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn retain_native_asset_blocked(&self, mut fetch: RendererAssetFetchOwner) {
-        fetch.begin_close();
-        let mut blocked = self.0.native_asset_blocked.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        assert!(blocked.is_none(), "one native asset fetch is admitted at a time");
-        *blocked = Some(fetch);
+    fn retain_native_asset_handoff(&self, fetch: RendererAssetFetchOwner, payload: Option<semio_framework_job::RetainedJobPayload>, seal: bool) {
+        let mut slot = self.0.native_asset_handoff.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        assert!(slot.is_none(), "one native asset fetch is admitted at a time");
+        *slot = Some(NativeAssetHandoff { fetch: Some(fetch), payload, seal });
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn retain_native_asset_transport(&self, fetch: &RendererAssetFetchOwner, cancel: semio_framework_async::CancelToken, cancellation: semio_framework_os_services::HttpBodyCancellationHandle) -> NativeAssetTransportGuard {
+        let surface_token = match fetch {
+            RendererAssetFetchOwner::World { surface: _, surface_token, owner: _ } => Some(*surface_token),
+            RendererAssetFetchOwner::Shared(_) => None,
+        };
+        let request_token = fetch.owner().token();
+        let mut slot = self.0.native_asset_transport.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        assert!(slot.is_none(), "one native asset transport is admitted at a time");
+        *slot = Some(NativeAssetTransportLease { surface_token, request_token, cancel, cancellation, cancellation_step: None });
+        NativeAssetTransportGuard { mailbox: self.clone(), surface_token, request_token, armed: true }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn cancel_native_asset_transport_step(&self, surface_token: Option<AdmittedSurfaceToken>, request_token: Option<WorldAssetRequestToken>) -> NativeAssetTransportCloseStep {
+        let cancellation = {
+            let Ok(mut slot) = self.0.native_asset_transport.try_lock() else { return NativeAssetTransportCloseStep::Busy };
+            let Some(lease) = slot.as_mut() else { return NativeAssetTransportCloseStep::Terminal };
+            if surface_token.is_some_and(|expected| lease.surface_token != Some(expected)) || request_token.is_some_and(|expected| lease.request_token != expected) {
+                return NativeAssetTransportCloseStep::Terminal;
+            }
+            lease.cancel.cancel_now();
+            if let Some(step) = lease.cancellation_step.as_ref() {
+                return NativeAssetTransportCloseStep::Pending(step.clone());
+            }
+            lease.cancellation_step = Some(semio_framework_os_services::HttpBodyCancellationStep::Idle);
+            lease.cancellation.clone()
+        };
+        let step = cancellation.cancel_in_flight();
+        let mut slot = self.0.native_asset_transport.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some(lease) = slot.as_mut().filter(|lease| !surface_token.is_some_and(|expected| lease.surface_token != Some(expected)) && !request_token.is_some_and(|expected| lease.request_token != expected)) {
+            lease.cancellation_step = Some(step.clone());
+        }
+        NativeAssetTransportCloseStep::Pending(step)
+    }
+
+    #[cfg(all(test, not(target_arch = "wasm32")))]
+    fn native_asset_transport_live_count(&self) -> usize {
+        usize::from(self.0.native_asset_transport.lock().expect("native asset transport slot").is_some())
+    }
+
+    #[cfg(all(test, not(target_arch = "wasm32")))]
+    fn wait_native_asset_page_test_barrier(&self, fetch: &RendererAssetFetchOwner) {
+        let RendererAssetFetchOwner::World { surface_token, .. } = fetch else { return };
+        let barrier = self.0.native_asset_page_barrier.lock().expect("native asset page test barrier").as_ref().filter(|barrier| barrier.surface_token == *surface_token).cloned();
+        let Some(barrier) = barrier else { return };
+        barrier.entered.store(true, Ordering::Release);
+        while !barrier.release.load(Ordering::Acquire) {
+            std::thread::yield_now();
+        }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     fn pump_native_asset(&self) -> bool {
-        {
-            let mut blocked = self.0.native_asset_blocked.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-            if let Some(owner) = blocked.as_mut() {
-                if owner.close_step() {
-                    *blocked = None;
+        if let Some(progressed) = self.pump_native_asset_handoff_step(false) {
+            if progressed {
+                if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
+                    waker();
                 }
-                return true;
             }
+            return progressed;
         }
         if self.0.native_asset_fetching.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return false;
@@ -11689,29 +12523,45 @@ impl RuntimeMailbox {
             self.0.native_asset_fetching.store(false, Ordering::Release);
             return false;
         };
-        if !matches!(self.reserve_renderer_asset_response(&mut fetch, WORLD_ASSET_RESPONSE_BYTE_CAPACITY), RendererAssetSealStep::Granted) {
-            fetch.begin_close();
-            match self.return_renderer_asset_owner(fetch) {
-                Ok(()) => {}
-                Err(fetch) => self.retain_native_asset_blocked(fetch),
+        match self.reserve_renderer_asset_response(&mut fetch, WORLD_ASSET_RESPONSE_BYTE_CAPACITY) {
+            RendererAssetSealStep::Granted => {}
+            admission => {
+                if matches!(admission, RendererAssetSealStep::Refused(_)) {
+                    fetch.begin_close();
+                }
+                self.retain_native_asset_handoff(fetch, None, false);
+                self.0.native_asset_fetching.store(false, Ordering::Release);
+                if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
+                    waker();
+                }
+                return true;
             }
-            self.0.native_asset_fetching.store(false, Ordering::Release);
-            return true;
         }
         let mailbox = self.clone();
         spawn_app_task(async move {
-            let result = stream_native_renderer_asset(&mailbox, &mut fetch).await;
-            if result.is_err() {
-                fetch.begin_close();
-            }
-            match mailbox.return_renderer_asset_owner(fetch) {
-                Ok(()) => {}
-                Err(fetch) => mailbox.retain_native_asset_blocked(fetch),
-            }
-            if let Err(error) = result {
-                log_debug(&format!("native renderer asset fetch failed: {error}"));
-                mailbox.record_frame_fault("native renderer asset fetch failed");
-            }
+            let (payload, seal) = match stream_native_renderer_asset(&mailbox, &mut fetch).await {
+                Ok(()) => (None, true),
+                Err(NativeAssetStreamFailure::Cancelled) => {
+                    fetch.begin_close();
+                    (None, false)
+                }
+                Err(NativeAssetStreamFailure::CancelledPage { payload }) => {
+                    fetch.begin_close();
+                    (Some(payload), false)
+                }
+                Err(NativeAssetStreamFailure::Fault(detail)) => {
+                    fetch.begin_close();
+                    log_debug(&format!("native renderer asset fetch failed: {detail}"));
+                    mailbox.record_frame_fault("native renderer asset fetch failed");
+                    (None, false)
+                }
+                Err(NativeAssetStreamFailure::Page { detail, payload }) => {
+                    fetch.begin_close();
+                    mailbox.record_frame_fault(detail);
+                    (Some(payload), false)
+                }
+            };
+            mailbox.retain_native_asset_handoff(fetch, payload, seal);
             mailbox.0.native_asset_fetching.store(false, Ordering::Release);
             if let Some(waker) = mailbox.0.waker.lock().expect("runtime completion waker lock").as_ref() {
                 waker();
@@ -11760,47 +12610,24 @@ impl RuntimeMailbox {
     fn has_pending_world3d_work(&self) -> bool {
         self.try_lock()
             .ok()
-            .and_then(|runtime| runtime.interaction.as_ref().map(|interaction| interaction.shell.world3d_states.values().any(infinite_world::world::world3d_cursor_work_pending)))
+            .and_then(|runtime| {
+                runtime.interaction.as_ref().map(|interaction| interaction.shell.world3d_states.values().any(|state| infinite_world::world::world3d_cursor_work_pending(state) || infinite_world::world::world3d_brush_mesh_announce_pending(state)))
+            })
             .unwrap_or(false)
     }
 
-    /// 📡️ Whether the asset lane still owes decode turns — a probe mid-flight, or a fetched response
-    /// nothing has picked up yet, on the shared authority or on any World3d surface.
-    ///
-    /// ⚖️ `pump_renderer_asset_decode_step` runs INSIDE the frame transaction, so on an event-driven
-    /// shell it advances only while frames happen — and a fetch completes long after the document
-    /// that named it has settled. Measured on the puzzle3d playground: the wire's
-    /// `/mesh/🧊️hexagonal-cut-concrete-forest-left.glb` is requested at t=11 757 ms and answered
-    /// `200`, 86 112 bytes at t=11 761 ms — 26 ms AFTER the boot's last frame — and then sat sealed
-    /// and undecoded for the remaining 33 s of the probe, mesh table empty, `draws=0`
-    /// (🗑️generated/w3d-fetch-1). The seal's `wake` buys exactly one frame; a real mesh needs tens of
-    /// thousands of bounded decode steps. Same shape as [`Self::has_pending_world3d_work`]: the
-    /// browser tick turns this into `request_frame`, so the work the frame transaction drives keeps
-    /// its own frames coming (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-    /// `📓️w3d-world3d-glb-url-lane.md`).
-    #[cfg(target_arch = "wasm32")]
+    /// 📡️ Reports only work owned by the private decoder continuation.
     fn has_pending_asset_decode(&self) -> bool {
-        if self.0.asset_probe.try_lock().is_ok_and(|probe| probe.is_some()) {
+        if self.0.asset_decode_session.try_lock().map_or(true, |owner| owner.is_some()) {
             return true;
         }
-        if renderer_asset_io().lock().is_ok_and(|authority| authority.has_completed_step()) {
+        if self.0.asset_probe.try_lock().map_or(true, |owner| owner.is_some()) {
             return true;
         }
-        self.try_lock()
-            .ok()
-            .and_then(|runtime| {
-                runtime.interaction.as_ref().map(|interaction| {
-                    // 🥽️ A brush-mesh page run is the same shape of work: one page leaves per frame,
-                    // so a surface mid-announcement has to keep its own frames coming or the guest
-                    // never receives the collision geometry its brush utilities test against.
-                    interaction
-                        .shell
-                        .world3d_states
-                        .values()
-                        .any(|state| infinite_world::world::world3d_asset_decode_pending(state) || infinite_world::world::world3d_brush_mesh_announce_pending(state))
-                })
-            })
-            .unwrap_or(false)
+        if renderer_asset_io().try_lock().map_or(true, |authority| authority.has_completed_step()) {
+            return true;
+        }
+        self.try_lock().map_or(true, |runtime| runtime.interaction.as_ref().is_some_and(|interaction| interaction.shell.world3d_states.values().any(infinite_world::world::world3d_asset_decode_pending)))
     }
 
     /// 🫀️ Whether the shell's settle lane still owes a step — the per-frame predicate that keeps an
@@ -11891,8 +12718,6 @@ impl RuntimeMailbox {
             mailbox.0.finish(returned_completion(revision, RuntimeApply::RestoreInteraction(Some(interaction))));
         });
     }
-
-
 
     #[cfg(not(target_arch = "wasm32"))]
     fn spawn_dispatch_reserved<F>(&self, future: F)
@@ -12049,6 +12874,65 @@ impl RuntimeMailbox {
             applied += 1;
         }
         applied
+    }
+
+    fn restore_presenter_interaction_step(&self) -> PresenterInteractionStep {
+        let Ok(mut runtime) = self.try_lock() else { return PresenterInteractionStep::RuntimeLock };
+        if runtime.interaction_available() {
+            return PresenterInteractionStep::Ready;
+        }
+        let (index, owner_outstanding) = {
+            let queue = self.0.completions.lock().expect("runtime completion mailbox lock");
+            (queue.first_interaction_restoration(), queue.interaction_owner_outstanding())
+        };
+        if let Some(index) = index {
+            let Some(mut completion) = self.0.completions.lock().expect("runtime completion mailbox lock").take_at(index) else { return PresenterInteractionStep::Waiting };
+            let complete = completion.apply.restore_interaction_only(&mut runtime);
+            completion.restores_interaction = false;
+            if !complete {
+                self.0.completions.lock().expect("runtime completion mailbox lock").restore_at(index, completion);
+            }
+            return PresenterInteractionStep::Restored;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(mut refusal) = runtime.pending_frame_maintenance_refusal.take() {
+            if refusal.reservation_live {
+                let cancelled = self.0.completions.lock().expect("runtime completion mailbox lock").cancel_interaction_reservation();
+                if !cancelled {
+                    runtime.pending_frame_maintenance_refusal = Some(refusal);
+                    return PresenterInteractionStep::RuntimeLock;
+                }
+                refusal.reservation_live = false;
+            }
+            let Some(mut owner) = refusal.try_take() else {
+                runtime.pending_frame_maintenance_refusal = Some(refusal);
+                return PresenterInteractionStep::RuntimeLock;
+            };
+            let Some((interaction, cursor)) = owner.take_pair() else {
+                if let Err(owner) = refusal.owner.try_restore(owner) {
+                    refusal.owner = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+                }
+                runtime.pending_frame_maintenance_refusal = Some(refusal);
+                return PresenterInteractionStep::RuntimeLock;
+            };
+            if runtime.pending_frame_deferred.is_some() {
+                owner.interaction = Some(interaction);
+                owner.cursor = Some(cursor);
+                if let Err(owner) = refusal.owner.try_restore(owner) {
+                    refusal.owner = Arc::new(FrameMaintenanceOwnerCell::new(owner));
+                }
+                runtime.pending_frame_maintenance_refusal = Some(refusal);
+                return PresenterInteractionStep::RuntimeLock;
+            }
+            runtime.return_interaction(interaction);
+            runtime.pending_frame_deferred = Some(cursor);
+            return PresenterInteractionStep::Restored;
+        }
+        if owner_outstanding {
+            PresenterInteractionStep::Waiting
+        } else {
+            PresenterInteractionStep::Abandoned
+        }
     }
 
     fn apply_pending_step(&self) -> bool {
@@ -12295,8 +13179,6 @@ impl AppRuntime {
         mailbox.spawn_interaction_reserved(key, work(interaction));
         true
     }
-
-
 }
 
 //#endregion 🎮️AppInteractionState
@@ -12594,6 +13476,7 @@ impl FrameBuildCursor {
             && self.icon_pages.is_none()
             && self.retirement.is_none()
             && self.cursor_wake.is_none()
+            && self.input_candidate.is_none()
     }
 }
 
@@ -12728,24 +13611,6 @@ pub(crate) struct FrameTransaction {
     raster_rejected: Option<ui_wgpu::wgpu::PreparedRasterProducer>,
 }
 
-/// ⏱️ The share of ONE frame-transaction step the renderer asset decode lane may spend before the
-/// transaction's own phases get the rest of the slice.
-///
-/// 🩸️ The lane used to take the WHOLE slice and `return Pending`, so while any asset decoded
-/// `FrameTransaction::step` never reached its first phase: measured on the puzzle3d boot as
-/// `asset-decode-pump units=306 deadline=true` over and over from t≈6 s, four GLB decodes plus two
-/// reference images deep, with no frame built in between. React presents continuously while a GLB
-/// streams because its loader is not on the render path at all; the mirror of that here is a bounded
-/// SHARE, not the whole step (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-/// `📓️w7b-presenter-one-frame-per-boot.md` §2).
-pub(crate) const RENDERER_ASSET_DECODE_SLICE_US: u64 = semio_framework_job::INTERACTIVE_LANE_WALL_US / 2;
-
-/// ⏱️ The wall instant the decode lane must hand the rest of its step back at — `None` when the clock
-/// is unusable, which spends no units at all rather than an unbounded number.
-pub(crate) fn renderer_asset_decode_slice_deadline_us(now_us: Option<u64>) -> Option<u64> {
-    now_us.map(|now| now.saturating_add(RENDERER_ASSET_DECODE_SLICE_US))
-}
-
 pub(crate) enum AppFrameTransactionStep {
     Pending,
     Complete(AppFrameBuild),
@@ -12846,26 +13711,6 @@ impl FrameTransaction {
         }
         let Some(directives) = self.directives.as_ref() else { return AppFrameTransactionStep::Pending };
         if context.should_yield() {
-            return AppFrameTransactionStep::Pending;
-        }
-        if retire_cancelled_renderer_asset_step() {
-            context.consume_fuel(1);
-            return AppFrameTransactionStep::Pending;
-        }
-        if runtime.pump_renderer_asset_decode_step() {
-            context.consume_fuel(1);
-            // 🐌️ ONE asset unit per frame is not a budget, it is a stall: this transaction's fuel is
-            // 1, so a single `Pending` used to buy exactly one 256-byte structure block, one response
-            // page, or one GLB vertex — measured at ~55 units/s on the puzzle3d playground, where the
-            // reference underlay alone is 1 889 blocks and each mesh ~7 000 vertices. Nothing in the
-            // scene would have appeared for minutes. Each unit is a bounded byte-wise scan, so the
-            // clock is the real bound and the deadline check dominates the work it guards.
-            let decode_deadline_us = renderer_asset_decode_slice_deadline_us(semio_framework_job::default_now_us());
-            while decode_deadline_us.is_some_and(|deadline| semio_framework_job::default_now_us().is_some_and(|now| now < deadline)) && !context.deadline_exceeded() && runtime.pump_renderer_asset_decode_step() {}
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        if runtime.pump_native_asset() {
-            context.consume_fuel(1);
             return AppFrameTransactionStep::Pending;
         }
         let Ok(mut app) = runtime.try_lock() else { return AppFrameTransactionStep::Pending };
@@ -13427,7 +14272,6 @@ impl FrameTransaction {
         true
     }
 
-
     fn stage_label(&self) -> &'static str {
         match self.stage {
             FrameTransactionStage::DrainProjectionDeltas => "DrainProjectionDeltas",
@@ -13441,13 +14285,21 @@ impl FrameTransaction {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.directives.is_none()
-            && self.build_cursor.is_none()
-            && self.finish_cursor.is_none()
-            && self.after_chrome.is_none()
-            && self.raster_uploads.is_none()
-            && self.raster_rejected.is_none()
-            && self.scene_camera_cursor.terminal_is_empty()
+        self.directives.is_none() && self.build_cursor.is_none() && self.finish_cursor.is_none() && self.after_chrome.is_none() && self.raster_uploads.is_none() && self.raster_rejected.is_none() && self.scene_camera_cursor.terminal_is_empty()
+    }
+
+    pub(crate) fn discard_presented_input_candidate(&mut self, runtime: &RuntimeMailbox) -> bool {
+        if let Some(cursor) = self.build_cursor.as_mut() {
+            if !discard_frame_input_candidate(runtime, &mut cursor.input_candidate) {
+                return false;
+            }
+        }
+        if let Some(partial) = self.after_chrome.as_mut() {
+            if !discard_frame_input_candidate(runtime, &mut partial.input_candidate) {
+                return false;
+            }
+        }
+        true
     }
 }
 
@@ -13462,6 +14314,17 @@ pub(crate) struct AppFramePresentation {
     cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
     #[cfg(not(target_arch = "wasm32"))]
     job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
+}
+
+pub(crate) fn discard_frame_input_candidate(runtime: &RuntimeMailbox, candidate: &mut Option<shell::PresentedInputCandidateWitness>) -> bool {
+    let Some(witness) = *candidate else { return true };
+    let Ok(mut runtime) = runtime.try_lock() else { return false };
+    let Some(interaction) = runtime.interaction.as_mut() else { return false };
+    if !interaction.shell.discard_presented_input_candidate(witness) {
+        return false;
+    }
+    *candidate = None;
+    true
 }
 
 impl AppFrameBuild {
@@ -13627,6 +14490,10 @@ impl AppFramePreparation {
         })
     }
 
+    pub(crate) fn discard_presented_input_candidate(&mut self, runtime: &RuntimeMailbox) -> bool {
+        discard_frame_input_candidate(runtime, &mut self.input_candidate)
+    }
+
     pub(crate) fn close_step(&mut self) -> bool {
         if let Some(rejected) = self.job_rejected.as_mut() {
             if !rejected.close_step() {
@@ -13681,7 +14548,7 @@ impl AppFramePreparation {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.job.is_none() && self.job_rejected.is_none() && self.session.is_none() && self.rejected.is_none() && self.engine_packets.is_none() && self.cursor_wake.is_none() && {
+        self.job.is_none() && self.job_rejected.is_none() && self.session.is_none() && self.rejected.is_none() && self.engine_packets.is_none() && self.input_candidate.is_none() && self.cursor_wake.is_none() && {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 self.job_progress.is_none()
@@ -13734,12 +14601,21 @@ struct AppPresentStallWatch {
 
 /// 🐕️ Every index a healthy presentation step moves: the ladder phase, the engine packet, the upload
 /// page, and — because `AppPresentPhase::Render` holds ONE `gpu_cursor` for a whole composite pass —
-/// that cursor's own `(phase, command, glass command, glass-foreground command, blur mip)`. Without the inner five the outer
+/// that cursor's own `(phase, command, clip piece, blur mip)`. Without the inner four the outer
 /// shape is frozen for as many steps as the scene has commands, and a watchdog reading the outer
 /// shape alone aborts a healthy present: measured on 6118 as
 /// `os_host present stalled phase=Render engine=1 upload=1 gpu-cursor=true` at t≈4.4 s on EVERY
 /// example boot (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, usize, u32)>, (u32, u32, usize), usize);
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+enum AppPresentInputWait {
+    #[default]
+    None,
+    RuntimeLock,
+    InteractionCheckout,
+    SceneIntent,
+}
+
+type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, u32)>, (u32, u32, usize), usize, AppPresentInputWait, u64);
 
 /// 🐕️ Consecutive non-advancing `Pending` answers after which a pending presentation is aborted
 /// rather than waited on. `present_step` is driven several times per frame transaction turn, so this
@@ -13761,7 +14637,11 @@ fn note_present_stall_signature(watch: &mut AppPresentStallWatch, signature: App
     if watch.steps != APP_PRESENT_STALL_STEPS {
         return None;
     }
-    Some(format!("phase={:?} engine={} upload={} gpu-cursor={:?} upload-progress={:?}", signature.0, signature.1, signature.2, signature.3, signature.4))
+    let mut shape = format!("phase={:?} engine={} upload={} gpu-cursor={:?} upload-progress={:?}", signature.0, signature.1, signature.2, signature.3, signature.4);
+    if signature.6 != AppPresentInputWait::None {
+        shape.push_str(&format!(" input-wait={:?}", signature.6));
+    }
+    Some(shape)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -13822,6 +14702,8 @@ struct AppPresentCursor {
     raster_witness: Option<ui_wgpu::wgpu::RasterTextureWitness>,
     raster_keep: ui_wgpu::wgpu::PreparedRasterKeepCursorV1,
     raster_keep_steps: usize,
+    input_wait: AppPresentInputWait,
+    input_progress: u64,
     gpu_cursor: Option<ui_wgpu::wgpu::PreparedGpuPresentCursor>,
 }
 
@@ -13848,10 +14730,16 @@ enum RasterCandidateRetirement {
 pub(crate) enum AppPresentStep {
     Idle,
     Pending,
+    AwaitingRuntime,
+    RetryRuntime,
     Complete { generation: semio_framework_trace::Generation, cursor: SemioCursor, fullscreen: Option<bool>, cursor_wake: Option<infinite_world::world::WorldCursorWakeToken> },
 }
 
 impl AppFramePresentation {
+    pub(crate) fn discard_presented_input_candidate(&mut self, runtime: &RuntimeMailbox) -> bool {
+        discard_frame_input_candidate(runtime, &mut self.input_candidate)
+    }
+
     fn close_step(&mut self) -> bool {
         if let Some(packet) = self.packet.as_mut() {
             if !packet.retire_step() {
@@ -13878,7 +14766,7 @@ impl AppFramePresentation {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.packet.is_none() && self.engine_packets.is_empty() && self.cursor_wake.is_none() && {
+        self.packet.is_none() && self.input_candidate.is_none() && self.engine_packets.is_empty() && self.cursor_wake.is_none() && {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 self.job_progress.is_none()
@@ -14017,11 +14905,7 @@ impl AppPresentedRetirement {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.raster == RasterCandidateRetirement::Complete
-            && self.previous.is_none()
-            && !self.release_previous_raster_ownership
-            && self.unowned_rasters_retired
-            && self.completed_frame.as_ref().is_none_or(AppFramePresentation::terminal_is_empty)
+        self.raster == RasterCandidateRetirement::Complete && self.previous.is_none() && !self.release_previous_raster_ownership && self.unowned_rasters_retired && self.completed_frame.as_ref().is_none_or(AppFramePresentation::terminal_is_empty)
     }
 }
 
@@ -14099,6 +14983,10 @@ impl AppPresenter {
         self.pending.is_some() || self.retirement.is_some() || self.retained_fault.is_some() || self.gate.has_pending_acknowledgement()
     }
 
+    pub(crate) fn holds_presented_input_publication(&self) -> bool {
+        self.pending.as_ref().is_some_and(|cursor| matches!(cursor.phase, AppPresentPhase::Render | AppPresentPhase::CloseGpu | AppPresentPhase::Acknowledge))
+    }
+
     /// 🩺️ Which of the four owners is holding the presentation gate shut — the gate that decides
     /// whether `admit_next_frame` runs a frame build at all, and therefore whether the runtime mailbox
     /// is pumped this tick.
@@ -14120,7 +15008,16 @@ impl AppPresenter {
     fn note_present_stall(watch: &mut AppPresentStallWatch, cursor: &AppPresentCursor, upload_progress: (u32, u32, usize)) -> Option<String> {
         note_present_stall_signature(
             watch,
-            (cursor.phase, cursor.engine, cursor.upload, cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress), upload_progress, cursor.raster_keep_steps),
+            (
+                cursor.phase,
+                cursor.engine,
+                cursor.upload,
+                cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress),
+                upload_progress,
+                cursor.raster_keep_steps,
+                cursor.input_wait,
+                cursor.input_progress,
+            ),
         )
     }
 
@@ -14260,6 +15157,8 @@ impl AppPresenter {
             raster_witness: None,
             raster_keep: ui_wgpu::wgpu::PreparedRasterKeepCursorV1::default(),
             raster_keep_steps: 0,
+            input_wait: AppPresentInputWait::None,
+            input_progress: 0,
             gpu_cursor: None,
         });
         Some(cursor)
@@ -14284,24 +15183,13 @@ impl AppPresenter {
     /// acknowledgement`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END): a superseded frame must be
     /// acknowledged and replaced by the next one, never turned into a surface fault.
     pub(crate) fn present_step(&mut self) -> Result<AppPresentStep, String> {
-        let owner = self
-            .pending
-            .as_ref()
-            .map(|cursor| (cursor.frame.generation.0, cursor.phase.latency_stage()))
-            .or_else(|| {
-                self.has_pending_presentation().then(|| {
-                    let generation = self
-                        .retirement
-                        .as_ref()
-                        .and_then(|retirement| retirement.completed_frame.as_ref())
-                        .map(|frame| frame.generation.0)
-                        .unwrap_or_else(frame_latency::latest_frame_generation);
-                    (generation, frame_latency::FrameLatencyStage::PresenterRetirement)
-                })
-            });
-        let _latency = owner.map(|(generation, stage)| {
-            frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(generation), stage, 1)
+        let owner = self.pending.as_ref().map(|cursor| (cursor.frame.generation.0, cursor.phase.latency_stage())).or_else(|| {
+            self.has_pending_presentation().then(|| {
+                let generation = self.retirement.as_ref().and_then(|retirement| retirement.completed_frame.as_ref()).map(|frame| frame.generation.0).unwrap_or_else(frame_latency::latest_frame_generation);
+                (generation, frame_latency::FrameLatencyStage::PresenterRetirement)
+            })
         });
+        let _latency = owner.map(|(generation, stage)| frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(generation), stage, 1));
         self.present_step_inner()
     }
 
@@ -14533,13 +15421,59 @@ impl AppPresenter {
                     return Err("prepared frame input candidate witness was missing before submit".to_string());
                 };
                 let runtime = self.runtime.clone();
-                let Ok(runtime) = runtime.try_lock() else { return Ok(AppPresentStep::Pending) };
-                let Some(interaction) = runtime.interaction.as_ref() else { return Ok(AppPresentStep::Pending) };
-                if !interaction.shell.presented_input_candidate_matches(input_candidate) {
+                let Ok(mut runtime) = runtime.try_lock() else {
+                    cursor.input_wait = AppPresentInputWait::RuntimeLock;
+                    return Ok(AppPresentStep::RetryRuntime);
+                };
+                if runtime.interaction.is_none() {
+                    drop(runtime);
+                    match self.runtime.restore_presenter_interaction_step() {
+                        PresenterInteractionStep::Ready | PresenterInteractionStep::Restored => {
+                            cursor.input_wait = AppPresentInputWait::None;
+                            cursor.input_progress = cursor.input_progress.saturating_add(1);
+                            return Ok(AppPresentStep::Pending);
+                        }
+                        PresenterInteractionStep::Waiting => {
+                            cursor.input_wait = AppPresentInputWait::InteractionCheckout;
+                            return Ok(AppPresentStep::AwaitingRuntime);
+                        }
+                        PresenterInteractionStep::RuntimeLock => {
+                            cursor.input_wait = AppPresentInputWait::RuntimeLock;
+                            return Ok(AppPresentStep::RetryRuntime);
+                        }
+                        PresenterInteractionStep::Abandoned => {
+                            cursor.frame.packet = self.gate.abort_pending();
+                            cursor.witness = None;
+                            cursor.phase = AppPresentPhase::Aborted;
+                            return Err("presenter interaction checkout had no return owner before submit".to_string());
+                        }
+                    }
+                }
+                let Some(interaction) = runtime.interaction.as_mut() else { return Ok(AppPresentStep::AwaitingRuntime) };
+                let AppInteractionState { shell, input, .. } = interaction;
+                match shell.progress_presented_input_candidate(input, input_candidate) {
+                    interpreter::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
+                    interpreter::PresentedInputCandidateProgress::Pending { advanced } => {
+                        cursor.input_wait = AppPresentInputWait::SceneIntent;
+                        if advanced {
+                            cursor.input_progress = cursor.input_progress.saturating_add(1);
+                        }
+                        return Ok(AppPresentStep::Pending);
+                    }
+                    interpreter::PresentedInputCandidateProgress::Stale => {
+                        drop(runtime);
+                        cursor.frame.packet = self.gate.abort_pending();
+                        cursor.witness = None;
+                        cursor.phase = AppPresentPhase::Aborted;
+                        return Ok(AppPresentStep::Pending);
+                    }
+                }
+                if !shell.presented_input_candidate_matches(input_candidate) {
                     drop(runtime);
                     cursor.frame.packet = self.gate.abort_pending();
+                    cursor.witness = None;
                     cursor.phase = AppPresentPhase::Aborted;
-                    return Err("prepared frame input authority was stale before submit".to_string());
+                    return Ok(AppPresentStep::Pending);
                 }
                 drop(runtime);
                 let Some(witness) = cursor.witness.as_ref() else {
@@ -14626,8 +15560,34 @@ impl AppPresenter {
                     return Err("raster operation authority was stale before acknowledgement".to_string());
                 }
                 let runtime = self.runtime.clone();
-                let Ok(mut runtime) = runtime.try_lock() else { return Ok(AppPresentStep::Pending) };
-                let Some(interaction) = runtime.interaction.as_mut() else { return Ok(AppPresentStep::Pending) };
+                let Ok(mut runtime) = runtime.try_lock() else {
+                    cursor.input_wait = AppPresentInputWait::RuntimeLock;
+                    return Ok(AppPresentStep::RetryRuntime);
+                };
+                if runtime.interaction.is_none() {
+                    drop(runtime);
+                    match self.runtime.restore_presenter_interaction_step() {
+                        PresenterInteractionStep::Ready | PresenterInteractionStep::Restored => {
+                            cursor.input_wait = AppPresentInputWait::None;
+                            cursor.input_progress = cursor.input_progress.saturating_add(1);
+                            return Ok(AppPresentStep::Pending);
+                        }
+                        PresenterInteractionStep::Waiting => {
+                            cursor.input_wait = AppPresentInputWait::InteractionCheckout;
+                            return Ok(AppPresentStep::AwaitingRuntime);
+                        }
+                        PresenterInteractionStep::RuntimeLock => {
+                            cursor.input_wait = AppPresentInputWait::RuntimeLock;
+                            return Ok(AppPresentStep::RetryRuntime);
+                        }
+                        PresenterInteractionStep::Abandoned => {
+                            cursor.frame.packet = self.gate.abort_pending();
+                            cursor.phase = AppPresentPhase::Aborted;
+                            return Err("presenter interaction checkout had no return owner before acknowledgement".to_string());
+                        }
+                    }
+                }
+                let Some(interaction) = runtime.interaction.as_mut() else { return Ok(AppPresentStep::AwaitingRuntime) };
                 let Some(input_candidate) = cursor.frame.input_candidate else {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.phase = AppPresentPhase::Aborted;
@@ -14638,20 +15598,34 @@ impl AppPresenter {
                     cursor.phase = AppPresentPhase::Aborted;
                     return Err("prepared frame input authority was stale before acknowledgement".to_string());
                 }
+                let AppInteractionState { shell, input, .. } = interaction;
+                match shell.progress_presented_input_candidate(input, input_candidate) {
+                    interpreter::PresentedInputCandidateProgress::Ready => cursor.input_wait = AppPresentInputWait::None,
+                    interpreter::PresentedInputCandidateProgress::Pending { advanced } => {
+                        cursor.input_wait = AppPresentInputWait::SceneIntent;
+                        if advanced {
+                            cursor.input_progress = cursor.input_progress.saturating_add(1);
+                        }
+                        return Ok(AppPresentStep::Pending);
+                    }
+                    interpreter::PresentedInputCandidateProgress::Stale => {
+                        cursor.frame.packet = self.gate.abort_pending();
+                        cursor.phase = AppPresentPhase::Aborted;
+                        return Err("prepared frame input authority was stale before acknowledgement".to_string());
+                    }
+                }
+                if !shell.acknowledge_presented_input(input, input_candidate) {
+                    return Ok(AppPresentStep::Pending);
+                }
+                cursor.frame.input_candidate = None;
                 let Some(witness) = cursor.witness.take() else { return Err("prepared frame presenter witness was lost during acknowledgement".to_string()) };
                 let mut replacement = match self.gate.acknowledge_presented(witness) {
                     Ok(replacement) => replacement,
                     Err(_) => {
-                        cursor.frame.packet = self.gate.abort_pending();
                         cursor.phase = AppPresentPhase::Aborted;
                         return Err("prepared frame presenter witness was stale or duplicated".to_string());
                     }
                 };
-                let AppInteractionState { shell, input, .. } = interaction;
-                if !shell.acknowledge_presented_input(input, input_candidate) {
-                    return Err("prepared frame input authority could not be acknowledged".to_string());
-                }
-                cursor.frame.input_candidate = None;
                 drop(runtime);
                 self.raster_operation_authority.release(raster_witness).map_err(str::to_owned)?;
                 cursor.raster_witness = None;
@@ -14706,12 +15680,24 @@ impl AppPresenter {
         self.engine.surface_terminal_is_empty(token)
     }
 
+    pub(crate) fn begin_engine_raster_close(&mut self, host_id: &str) -> Result<bool, String> {
+        let key = engine_canvas::engine_raster_key(host_id).ok_or_else(|| "engine raster host identifier exceeded fixed credits".to_string())?;
+        self.gpu.begin_exact_raster_close(&key)
+    }
+
+    pub(crate) fn close_engine_raster_step(&mut self, host_id: &str) -> Result<bool, String> {
+        let key = engine_canvas::engine_raster_key(host_id).ok_or_else(|| "engine raster host identifier exceeded fixed credits".to_string())?;
+        self.gpu.close_exact_raster_step(&key)
+    }
+
+    pub(crate) fn engine_raster_terminal_is_empty(&self, host_id: &str) -> bool {
+        engine_canvas::engine_raster_key(host_id).is_some_and(|key| self.gpu.exact_raster_terminal_is_empty(&key))
+    }
+
     pub(crate) fn engine_surfaces_terminal_is_empty(&self) -> bool {
         self.engine.terminal_is_empty()
     }
 }
-
-
 
 /// 🧪️ P3c: `self_weak` was the only field that made `AppRuntime` definitionally `Rc<RefCell<_>>`-owned
 /// (see `AppHandle`'s own doc comment above). With it gone, this assertion lets the compiler — not a
@@ -14743,7 +15729,7 @@ fn native_renderer_asset_path(url: &str) -> Result<std::path::PathBuf, String> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-async fn stream_native_renderer_asset(mailbox: &RuntimeMailbox, fetch: &mut RendererAssetFetchOwner) -> Result<(), String> {
+async fn stream_native_renderer_asset(mailbox: &RuntimeMailbox, fetch: &mut RendererAssetFetchOwner) -> Result<(), NativeAssetStreamFailure> {
     if fetch.url().starts_with("http://") || fetch.url().starts_with("https://") {
         return stream_native_renderer_http_asset(mailbox, fetch).await;
     }
@@ -14751,84 +15737,102 @@ async fn stream_native_renderer_asset(mailbox: &RuntimeMailbox, fetch: &mut Rend
     let mut offset = 0u64;
     loop {
         if mailbox.renderer_asset_cancelled(fetch) {
-            return Err("native renderer asset cancelled or stale".into());
+            return Err(NativeAssetStreamFailure::Cancelled);
         }
         let value = run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadPage { path: path.clone(), offset, max_bytes: WORLD_ASSET_RESPONSE_PAGE_BYTES }).await?;
-        let semio_framework_os_services::NativeIoValue::Page { bytes, eof } = value else { return Err("native renderer asset I/O returned the wrong value".into()) };
+        #[cfg(test)]
+        mailbox.wait_native_asset_page_test_barrier(fetch);
+        let semio_framework_os_services::NativeIoValue::Page { mut bytes, eof } = value else { return Err("native renderer asset I/O returned the wrong value".into()) };
+        if mailbox.renderer_asset_cancelled(fetch) {
+            return Err(NativeAssetStreamFailure::CancelledPage { payload: bytes });
+        }
         if bytes.is_empty() && !eof {
             return Err("native renderer asset produced an empty nonterminal page".into());
         }
         let count = bytes.len();
         if count != 0 {
-            push_renderer_asset_page(fetch, bytes)?;
+            if let Err(detail) = push_renderer_asset_page(fetch, &mut bytes) {
+                return Err(NativeAssetStreamFailure::Page { detail, payload: bytes });
+            }
             offset = offset.checked_add(count as u64).ok_or_else(|| "native renderer asset offset overflow".to_string())?;
         }
         if eof {
             break;
         }
     }
-    match mailbox.seal_renderer_asset_response(fetch) {
-        RendererAssetSealStep::Granted => {}
-        RendererAssetSealStep::Busy => return Err("native renderer asset could not seal its exact byte claim: the renderer was busy".into()),
-        RendererAssetSealStep::Refused(detail) => return Err(format!("native renderer asset could not seal its exact byte claim: {detail}")),
-    }
     Ok(())
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn push_renderer_asset_page(_fetch: &mut RendererAssetFetchOwner, mut bytes: semio_framework_job::RetainedJobPayload) -> Result<(), String> {
-    let populated = !bytes.is_empty();
-    let _ = bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-    if populated {
-        Err("native renderer asset page requires a zero-copy retained-page handoff that is not mounted".into())
-    } else {
-        Ok(())
+fn push_renderer_asset_page(fetch: &mut RendererAssetFetchOwner, bytes: &mut semio_framework_job::RetainedJobPayload) -> Result<(), &'static str> {
+    let source = bytes.single_page().ok_or("native renderer asset I/O must return one retained page")?;
+    if !source.is_empty() {
+        let page = WorldAssetResponsePage::try_from_owned(source.to_vec()).map_err(|_| "native renderer asset page exceeded fixed credits")?;
+        fetch.owner_mut().push_page(page).map_err(|_| "native renderer asset response exceeded its reserved credits")?;
     }
+    let _ = bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    Ok(())
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-async fn stream_native_renderer_http_asset(mailbox: &RuntimeMailbox, fetch: &mut RendererAssetFetchOwner) -> Result<(), String> {
+async fn stream_native_renderer_http_asset(mailbox: &RuntimeMailbox, fetch: &mut RendererAssetFetchOwner) -> Result<(), NativeAssetStreamFailure> {
+    let cancel = mailbox.0.native_asset_http_cancel.child_now();
     let context = semio_framework_async::OperationContext {
         actor: 0,
         generation: 0,
         trace: semio_framework_async::TraceId(0),
         lane: semio_framework_async::Lane::Io as u8,
         deadline_ms: Some(semio_framework_job::default_now_ms().and_then(|now| now.checked_add(15_000)).ok_or_else(|| "native asset deadline requires a real clock and checked range".to_string())?),
-        cancel: mailbox.0.native_asset_http_cancel.child_now(),
+        cancel: cancel.clone(),
         capability: None,
     };
     let request = semio_framework_os_services::HttpRequest { method: "GET".into(), url: fetch.url().to_owned(), headers: Vec::new(), body: Vec::new() };
     let pool = if fetch.url().starts_with("https://") { &mailbox.0.native_asset_https } else { &mailbox.0.native_asset_http };
-    let (head, mut body) = pool
-        .fetch(mailbox.0.native_asset_http_runtime.as_ref(), &mailbox.0.native_asset_http_scope, context, semio_framework_actor::PackageId("os.renderer.asset".into()), semio_framework_actor::ActorId(0), request)
+    let mut transport = None;
+    let response = pool
+        .fetch_started(mailbox.0.native_asset_http_runtime.as_ref(), &mailbox.0.native_asset_http_scope, context, semio_framework_actor::PackageId("os.renderer.asset".into()), semio_framework_actor::ActorId(0), request, |cancellation| {
+            transport = Some(mailbox.retain_native_asset_transport(fetch, cancel.clone(), cancellation))
+        })
         .await
-        .map_err(|error| error.to_string())?;
+        .map_err(|error| if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) { NativeAssetStreamFailure::Cancelled } else { NativeAssetStreamFailure::Fault(error.to_string()) });
+    let _transport = transport;
+    let (head, mut body) = response?;
+    if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) {
+        return Err(NativeAssetStreamFailure::Cancelled);
+    }
     if !(200..300).contains(&head.status) {
-        return Err(format!("native renderer asset HTTP status {}", head.status));
+        return Err(format!("native renderer asset HTTP status {}", head.status).into());
     }
     if let Some(length) = head.headers.iter().find(|(name, _)| name.eq_ignore_ascii_case("content-length")).and_then(|(_, value)| value.parse::<usize>().ok()) {
         if length > WORLD_ASSET_RESPONSE_BYTE_CAPACITY {
             return Err("native renderer asset Content-Length exceeded fixed credits".into());
         }
     }
-    while let Some(bytes) = body.next_chunk().await.map_err(|error| error.to_string())? {
-        if mailbox.renderer_asset_cancelled(fetch) {
-            return Err("native renderer asset cancelled or stale".into());
+    loop {
+        if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) {
+            return Err(NativeAssetStreamFailure::Cancelled);
         }
+        let page = body.next_chunk().await;
+        if cancel.is_cancelled_now() || mailbox.renderer_asset_cancelled(fetch) {
+            return Err(NativeAssetStreamFailure::Cancelled);
+        }
+        let Some(bytes) = page.map_err(|error| NativeAssetStreamFailure::Fault(error.to_string()))? else { break };
         if bytes.is_empty() || bytes.len() > WORLD_ASSET_RESPONSE_PAGE_BYTES {
             return Err("native renderer HTTP asset returned an invalid response page".into());
         }
-        // 📄️ `push_renderer_asset_page` admits the zero-copy `RetainedJobPayload` the native I/O
-        // path produces. An HTTP body chunk is a plain `Vec<u8>` with no retained-page source
-        // mounted behind it, so this fails closed with that helper's own verdict instead of
-        // fabricating a payload the transport never owned — the same rejection the helper already
-        // returns for every populated page.
-        return Err("native renderer HTTP asset page requires a zero-copy retained-page handoff that is not mounted".into());
-    }
-    match mailbox.seal_renderer_asset_response(fetch) {
-        RendererAssetSealStep::Granted => {}
-        RendererAssetSealStep::Busy => return Err("native renderer HTTP asset could not seal its exact byte claim: the renderer was busy".into()),
-        RendererAssetSealStep::Refused(detail) => return Err(format!("native renderer HTTP asset could not seal its exact byte claim: {detail}")),
+        let page = WorldAssetResponsePage::try_from_owned(bytes).map_err(|_| "native renderer HTTP asset page exceeded fixed credits")?;
+        fetch.owner_mut().push_page(page).map_err(|_| "native renderer HTTP asset response exceeded its reserved credits")?;
+        let mut yielded = false;
+        std::future::poll_fn(|context| {
+            if yielded {
+                std::task::Poll::Ready(())
+            } else {
+                yielded = true;
+                context.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+        })
+        .await;
     }
     Ok(())
 }
@@ -15088,15 +16092,19 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::Chrome;
             }
             FrameBuildPhase::Chrome => {
-                if cursor.engine_resources.is_none() { return FrameBuildBoundaryStep::Fault("frame chrome lost engine resources") }
-                if cursor.world_resources.is_none() { return FrameBuildBoundaryStep::Fault("frame chrome lost world resources") }
+                if cursor.engine_resources.is_none() {
+                    return FrameBuildBoundaryStep::Fault("frame chrome lost engine resources");
+                }
+                if cursor.world_resources.is_none() {
+                    return FrameBuildBoundaryStep::Fault("frame chrome lost world resources");
+                }
                 let AppRuntime { atlas, icons, interaction, draw, overlay, .. } = self;
                 let Some(interaction) = interaction.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost interaction state") };
                 let Some(world_resources) = cursor.world_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost world resources") };
                 if interaction.shell.render_chrome_step(&mut cursor.chrome, draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme, world_resources) {
                     let input_candidate = match interaction.shell.seal_presented_input_candidate(&interaction.theme) {
                         Ok(witness) => witness,
-                        Err(_) => return FrameBuildBoundaryStep::Fault("presented input candidate generation exhausted"),
+                        Err(fault) => return FrameBuildBoundaryStep::Fault(fault),
                     };
                     cursor.input_candidate = Some(input_candidate);
                     interaction.shell.sync_engine_surface_states();
@@ -15543,10 +16551,7 @@ impl AppInteractionState {
         self.modifiers = modifiers.clone();
         self.input.modifiers = modifiers.clone();
         let target = self.shell.scene_pointer_target_at(x, y, &self.input, &self.theme);
-        let fault = self.shell.world3d_states.take_fault()
-            .or_else(|| self.shell.node_graph_states.take_fault())
-            .or_else(|| self.shell.tiled_map_states.take_fault())
-            .or_else(|| self.shell.board2d_states.take_fault());
+        let fault = self.shell.world3d_states.take_fault().or_else(|| self.shell.node_graph_states.take_fault()).or_else(|| self.shell.tiled_map_states.take_fault()).or_else(|| self.shell.board2d_states.take_fault());
         if let Some(fault) = fault {
             self.frame_fault = Some(fault.to_owned());
             return;
@@ -15563,27 +16568,41 @@ impl AppInteractionState {
     /// 🎡️ Applies one notch to the captured published scene, never to overlapping peers.
     fn apply_scene_wheel(&mut self, target: &interpreter::ScenePointerTarget, x: f32, y: f32, delta: f32, modifiers: &PointerModifiers) -> Result<(), &'static str> {
         use ui_wgpu::wgpu::SurfaceKind;
-        if !self.shell.scene_pointer_target_is_published(target) { return Ok(()); }
+        if !self.shell.scene_pointer_target_is_published(target) {
+            return Ok(());
+        }
         let surface_id = &target.surface_id;
         let host_id = &target.host_id;
-        if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES { return Err("scene wheel identifier exceeded fixed credits"); }
+        if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+            return Err("scene wheel identifier exceeded fixed credits");
+        }
         let outcome = match target.kind {
             SurfaceKind::World3d => self.shell.world3d_states.get_mut(host_id).map(|state| {
-                if state.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES { return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits); }
+                if state.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                }
                 enqueue_world3d_event(state, WorldInteractionIntent::wheel(x, y, delta, modifiers)).map(|_| ()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits)
             }),
             SurfaceKind::NodeGraph => self.shell.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES { return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits); }
+                if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                }
                 let outcome = engine_canvas::node_graph_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, modifiers.ctrl, &mut self.input).map(|_| ());
-                if outcome.is_ok() { self.wheel_zoom_deadline_ms = app_now_ms() + 120.0; }
+                if outcome.is_ok() {
+                    self.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
+                }
                 outcome
             }),
             SurfaceKind::TiledMap => self.shell.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES { return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits); }
+                if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                }
                 engine_canvas::tiled_map_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, modifiers.ctrl, &mut self.input).map(|_| ())
             }),
             SurfaceKind::Board2d => self.shell.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES { return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits); }
+                if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                }
                 scenes::puzzle_board_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, &mut self.input).map(|_| ())
             }),
             _ => None,
@@ -15643,9 +16662,9 @@ impl AppInteractionState {
         }
         let host_id = &target.host_id;
         let outcome = match target.kind {
-            SurfaceKind::World3d => self.shell.world3d_states.get_mut(host_id).map(|state| {
-                enqueue_world3d_event(state, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits)
-            }),
+            SurfaceKind::World3d => {
+                self.shell.world3d_states.get_mut(host_id).map(|state| enqueue_world3d_event(state, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits))
+            }
             SurfaceKind::NodeGraph => self.shell.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 if down {
                     engine_canvas::node_graph_pointer_down_into(host_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed, &mut self.input).map(|_| ())
@@ -15691,7 +16710,8 @@ impl AppInteractionState {
             Some(PointerHitOwner::Surface) => interpreter::captured_scene_pointer(pointer_id),
             Some(PointerHitOwner::Chrome) => None,
             None => self.shell.scene_pointer_target_at(x, y, &self.input, &self.theme),
-        }.filter(|target| self.shell.scene_pointer_target_is_published(target));
+        }
+        .filter(|target| self.shell.scene_pointer_target_is_published(target));
         if target.is_none() && self.pointer_capture.holder(pointer_id) != Some(PointerHitOwner::Surface) {
             self.shell.handle_pointer_move_for(pointer_id, x, y, down, &mut self.input, &self.theme);
         }
@@ -15710,14 +16730,18 @@ impl AppInteractionState {
             }
         }
         for (host_id, surface) in &self.shell.board2d_states {
-            if target.as_ref().is_some_and(|target| target.kind == SurfaceKind::Board2d && target.host_id == *host_id) { continue; }
+            if target.as_ref().is_some_and(|target| target.kind == SurfaceKind::Board2d && target.host_id == *host_id) {
+                continue;
+            }
             if let Err(fault) = scenes::puzzle_board_pointer_leave_into(host_id, &surface.controller_id, modifiers.alt, &mut self.input) {
                 self.input.record_action_fault(fault);
                 return;
             }
         }
         for (host_id, surface) in &self.shell.tiled_map_states {
-            if target.as_ref().is_some_and(|target| target.kind == SurfaceKind::TiledMap && target.host_id == *host_id && target.window_id == surface.window_id) { continue; }
+            if target.as_ref().is_some_and(|target| target.kind == SurfaceKind::TiledMap && target.host_id == *host_id && target.window_id == surface.window_id) {
+                continue;
+            }
             if let Err(fault) = scenes::tiled_map_pointer_leave_into(host_id, &surface.surface_id, &surface.controller_id, &mut self.input) {
                 self.input.record_action_fault(fault);
                 return;
@@ -15726,22 +16750,30 @@ impl AppInteractionState {
         let Some(target) = target else { return };
         let host_id = &target.host_id;
         let outcome = match target.kind {
-            SurfaceKind::NodeGraph => self.shell.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                engine_canvas::node_graph_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
-            }),
-            SurfaceKind::TiledMap => self.shell.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                scenes::tiled_map_pointer_move_into(&target, &surface.controller_id, surface.bounds, x, y, down, &mut self.input).map(|_| ())
-            }),
-            SurfaceKind::Board2d => self.shell.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
-                scenes::puzzle_board_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
-            }),
+            SurfaceKind::NodeGraph => self
+                .shell
+                .node_graph_states
+                .get(host_id)
+                .filter(|surface| surface.window_id == target.window_id)
+                .map(|surface| engine_canvas::node_graph_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())),
+            SurfaceKind::TiledMap => self
+                .shell
+                .tiled_map_states
+                .get(host_id)
+                .filter(|surface| surface.window_id == target.window_id)
+                .map(|surface| scenes::tiled_map_pointer_move_into(&target, &surface.controller_id, surface.bounds, x, y, down, &mut self.input).map(|_| ())),
+            SurfaceKind::Board2d => self
+                .shell
+                .board2d_states
+                .get(host_id)
+                .filter(|surface| surface.window_id == target.window_id)
+                .map(|surface| scenes::puzzle_board_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())),
             _ => None,
         };
         if let Some(Err(fault)) = outcome {
             self.input.record_action_fault(fault);
         }
     }
-
 }
 
 //#region 🔖️OsHostDecomposition — SemioApp deletion
@@ -15759,7 +16791,6 @@ impl AppInteractionState {
 // `📓️terra-os-host-report.md`'s redraw audit for the full
 // before/after per site.
 //#endregion 🔖️OsHostDecomposition — SemioApp deletion
-
 
 /// 🎥️ Advances camera residency after snapshot sealing. Frame construction precedes this phase, so
 /// the pending witness deliberately schedules one more build when this step applies a new orbit.
@@ -15999,11 +17030,7 @@ impl store::os_store::ArtifactPack for NativeSocketProbeSnapshot {
     }
 
     fn record_spec() -> Option<store::os_dsl::RecordSpec> {
-        Some(store::os_dsl::RecordSpec::new(
-            Some("native-socket-probe"),
-            store::os_dsl::RecordLayout::Inline,
-            vec![store::os_dsl::FieldSpec::new(0, "value", store::os_dsl::Shape::Value)],
-        ))
+        Some(store::os_dsl::RecordSpec::new(Some("native-socket-probe"), store::os_dsl::RecordLayout::Inline, vec![store::os_dsl::FieldSpec::new(0, "value", store::os_dsl::Shape::Value)]))
     }
 }
 
@@ -16141,7 +17168,6 @@ impl store::FromValue for NativeSocketProbeMutation {
 /// so the cure cannot silently change the encoding. `serde_json` is the independent third-party
 /// oracle — the first-party `ToValue` tree must equal what it serializes for the same values.
 
-
 #[cfg(not(target_arch = "wasm32"))]
 impl store::os_spr::command::OpText for NativeSocketProbeMutation {
     fn print_op(&self) -> String {
@@ -16204,11 +17230,7 @@ pub async fn run_socket_grant_probe() -> i32 {
         .open(ArtifactActorConfig {
             document_id: document_id.into(),
             schema: PROBE_SCHEMA.into(),
-            bindings: vec![PersistenceBinding::Hub {
-                base_url: credential.hub_origin().into(),
-                space_id: "probe-space".into(),
-                surface: Some("native.socket-grant.probe.editor".into()),
-            }],
+            bindings: vec![PersistenceBinding::Hub { base_url: credential.hub_origin().into(), space_id: "probe-space".into(), surface: Some("native.socket-grant.probe.editor".into()) }],
             watch_external: false,
             actor: "untrusted-local-probe".into(),
         })
@@ -16502,11 +17524,7 @@ fn resolve_environment_boot_descriptor() -> WgpuBootDescriptor {
         brand_id: read("SEMIO_BRAND"),
         // 🏷️ The resolved brand ROW, under the same `SEMIO_*` names the serve injects as
         // `<meta semio-brand-*>` for the browser door — one vocabulary, three doors.
-        brand: WgpuBootBrand {
-            window_title: read("SEMIO_BRAND_WINDOW_TITLE"),
-            ephemeral: read("SEMIO_BRAND_EPHEMERAL") == "true",
-            replay_introduction_on_load: read("SEMIO_BRAND_REPLAY_INTRODUCTION") == "true",
-        },
+        brand: WgpuBootBrand { window_title: read("SEMIO_BRAND_WINDOW_TITLE"), ephemeral: read("SEMIO_BRAND_EPHEMERAL") == "true", replay_introduction_on_load: read("SEMIO_BRAND_REPLAY_INTRODUCTION") == "true" },
         app_example: read("SEMIO_DEFAULT_EXAMPLE"),
         defaults: WgpuBootDefaults { example_id: read("SEMIO_DEFAULT_EXAMPLE") },
         locks: WgpuBootLocks { example_id: read("SEMIO_LOCKED_EXAMPLE"), locale: read("SEMIO_LOCKED_LOCALE"), terminology: read("SEMIO_LOCKED_TERMINOLOGY"), theme_id: read("SEMIO_LOCKED_THEME"), appearance: read("SEMIO_LOCKED_APPEARANCE") },

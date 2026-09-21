@@ -22,8 +22,8 @@ async fn engagement_submit_add_clear_and_copy_keywords() {
     dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "clear".into() })).await;
     assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
 
-    app.dispatch_typed(PresentationCommand::AddTile(crate::editor::animate::commands::add_tile::AddTile { crop: None }), &meta("local")).await.expect("seed for copy");
-    let copy_result = app.dispatch_typed(PresentationCommand::EngagementSubmit(EngagementSubmit { value: "copy prompt".into() }), &meta("local")).await.expect("copy keyword");
+    crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::AddTile(crate::editor::animate::commands::add_tile::AddTile { crop: None })).await;
+    let copy_result = crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "copy prompt".into() })).await;
     assert!(matches!(copy_result.requested_effects.as_slice(), [Effect::DownloadMediaExport { .. }]));
 }
 
@@ -31,7 +31,7 @@ async fn engagement_submit_add_clear_and_copy_keywords() {
 async fn engagement_submit_unrecognized_input_is_a_no_op() {
     use semio_framework_plugin::artifact_app_laws::meta;
     let mut app = presentation_app().await;
-    let result = app.dispatch_typed(PresentationCommand::EngagementSubmit(EngagementSubmit { value: "gibberish".into() }), &meta("local")).await.expect("unrecognized");
+    let result = crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "gibberish".into() })).await;
     assert!(result.mutations.is_empty());
     assert!(result.requested_effects.is_empty());
 }

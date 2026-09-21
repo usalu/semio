@@ -21,20 +21,56 @@ pub(crate) mod context {
     /// `interactive-job.catalog-authority` … `generated_migrated=false`. A registry-less wrapper could
     /// not dispatch anything anyway (`admit_command_wire_with_proof` refuses every verb with no
     /// manifest declaration), so this delegates to the manifest-backed constructor.
-    pub async fn note_app() -> NoteApp {
+    pub async fn note_app() -> OwnedNoteApp {
         note_app_with_registry_id(1).await
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn note_app_with_registry() -> NoteApp {
+    pub async fn note_app_with_registry() -> OwnedNoteApp {
         note_app_with_registry_id(1).await
     }
 
     /// 🪪️ A registry-backed app with an exact runtime identity for parallel ownership laws.
-    pub async fn note_app_with_registry_id(instance_id: u32) -> NoteApp {
+    pub async fn note_app_with_registry_id(instance_id: u32) -> OwnedNoteApp {
         let mut app = new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_tests).await;
         app.bind_instance_id(instance_id).await;
-        app
+        OwnedNoteApp(app)
+    }
+
+    /// 🔚 A mounted app that RETIRES ITSELF. A live `ArtifactStore` asserts in `Drop`
+    /// (`artifact store reached Drop without its exact terminal-empty shallow-shell witness`) unless
+    /// it walked its bounded close loop first, so the fixture owns the close instead of asking every
+    /// law to remember a trailing `close(&mut app)` — which is what makes a law that fails an
+    /// assertion report ITS failure instead of a close panic. Skipped while unwinding, where the
+    /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
+    pub struct OwnedNoteApp(NoteApp);
+
+    impl OwnedNoteApp {
+        /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
+        pub fn close(&mut self) {
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+        }
+    }
+
+    impl std::ops::Deref for OwnedNoteApp {
+        type Target = NoteApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for OwnedNoteApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for OwnedNoteApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                self.close();
+            }
+        }
     }
 
     pub fn composite_view(id: &str) -> ViewModel {

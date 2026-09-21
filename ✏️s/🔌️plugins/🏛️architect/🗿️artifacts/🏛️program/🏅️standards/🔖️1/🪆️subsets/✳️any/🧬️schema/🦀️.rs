@@ -143,9 +143,15 @@ pub struct ProgramArtifact {
     pub audit_events: Vec<AuditEvent>,
     #[state(artifact)]
     pub templates: Vec<TemplateRecord>,
+    /// 📚️ See `ProgramSnapshot::knowledge_payload`.
+    #[state(artifact)]
+    pub knowledge_payload: Vec<KnowledgeRecord>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub knowledge: crate::ProgramKnowledgeChild,
+    /// 🏁️ See `ProgramSnapshot::benchmarks_payload`.
+    #[state(artifact)]
+    pub benchmarks_payload: Vec<BenchmarkRecord>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub benchmarks: crate::ProgramBenchmarksChild,
@@ -233,7 +239,9 @@ impl ProgramArtifact {
             issues: self.issues.clone(),
             audit_events: self.audit_events.clone(),
             templates: self.templates.clone(),
+            knowledge_payload: self.knowledge_payload.clone(),
             knowledge: self.knowledge.clone(),
+            benchmarks_payload: self.benchmarks_payload.clone(),
             benchmarks: self.benchmarks.clone(),
             traces: self.traces.clone(),
             governance: self.governance.clone(),
@@ -309,7 +317,9 @@ impl ProgramArtifact {
             issues: snapshot.issues,
             audit_events: snapshot.audit_events,
             templates: snapshot.templates,
+            knowledge_payload: snapshot.knowledge_payload,
             knowledge: snapshot.knowledge,
+            benchmarks_payload: snapshot.benchmarks_payload,
             benchmarks: snapshot.benchmarks,
             traces: snapshot.traces,
             governance: snapshot.governance,
@@ -384,7 +394,9 @@ impl ProgramArtifact {
         self.issues = snapshot.issues;
         self.audit_events = snapshot.audit_events;
         self.templates = snapshot.templates;
+        self.knowledge_payload = snapshot.knowledge_payload;
         self.knowledge = snapshot.knowledge;
+        self.benchmarks_payload = snapshot.benchmarks_payload;
         self.benchmarks = snapshot.benchmarks;
         self.traces = snapshot.traces;
         self.governance = snapshot.governance;

@@ -4941,8 +4941,8 @@
         "mediaOutputs": [],
         "artifactKinds": [
           {
-            "id": "2d.note",
-            "name": "2D Note",
+            "id": "s.note.note",
+            "name": "Note",
             "sourceFormat": "note.document",
             "componentKind": "note",
             "dimension": "2d",
@@ -6144,7 +6144,7 @@
   "activationEvents": [
     {
       "onArtifactKind": {
-        "kind": "2d.note"
+        "kind": "s.note.note"
       }
     }
   ],
@@ -6261,8 +6261,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "7cc1e0ed112598b9ffd8dc52c635e05ed296bc2390ca72cae1c201c3ef953b5b",
-    "coreWasmSha256": "ee43e5075038434612d87ea04fdf46c0e98559836a3ffddbcfe15b1986545df6",
-    "descriptorSha256": "18902869e41678e003073dbdb1581e8dbf1d09d173b4cdc64317443385c11eff"
+    "wasmSha256": "e6dc23fc54a20e14a07a19db2ab097d7e2b75f2fefa3a678baf1653ef3ec3759",
+    "coreWasmSha256": "79b21658976846b4d7118a7cf8d048c889ab84ed2449c8a0af7648ebd5f02cde",
+    "descriptorSha256": "515b25f6aa3248b10210cae34c3ff5d1d0bdf689ebca1e98204a939b57f4a45a"
   }
 }

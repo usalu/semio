@@ -65,6 +65,6 @@ fn samples_apply_and_invert_on_a_real_document() {
         for inverse in inverse_pdf_mutation(&mutation, &base) {
             apply_pdf_mutation(&mut restored, &inverse);
         }
-        assert_eq!(restored, base, "inverse of {} lands back on the base", mutation.label());
+        assert_eq!(restored, base, "inverse of {} lands back on the base", mutation.label().resolve(protocol::Terminology::Native, protocol::Locale::En));
     }
 }

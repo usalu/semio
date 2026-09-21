@@ -334,7 +334,7 @@ pub mod app {
 
     pub use super::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
     pub use super::window_config::{
-        bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack, WindowConfigPackLoad,
+        bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack, WindowConfigPackLoad,
         WindowConfigPackLoadDiagnostic, WindowConfigPackLoadGrant, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigSnapshot,
     };
     pub use super::window_transient::{WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
@@ -7283,7 +7283,10 @@ pub mod app {
                 // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
                 while let Some(page) = app.take_typed_operation_result_page(receiver) {
                     let lane = page.lane;
-                    let fault = (lane == TypedOperationResultLane::Fault).then(|| super::Fault::from(format!("registered fixture typed operation fault: {}", String::from_utf8_lossy(page.bytes()))));
+                    let fault = (lane == TypedOperationResultLane::Fault).then(|| {
+                        let (code, detail) = crate::app::decode_typed_operation_fault_page(page.bytes());
+                        super::Fault::new(super::FaultOrigin::Plugin, code, format!("registered fixture typed operation fault: {detail}"))
+                    });
                     if !app.acknowledge_typed_operation_result(page.token)? {
                         return Err(super::Fault::from("registered fixture typed operation rejected its exact result ACK"));
                     }
@@ -7674,6 +7677,7 @@ pub mod app {
             let generation_before = app.store.generation();
             let edits_before = app.store.envelope().vcs.edits.len();
             app.dispatch_typed(command, &meta("local")).await.expect("dispatch a command whose mutations carry foreign steps");
+            settle_registered_typed_operation(app, meta("local").instance_id).await.expect("a proposing dispatch settles its own operation");
             assert_eq!(app.store.generation(), generation_before, "a proposed transaction must not bump the document store's generation");
             assert_eq!(app.store.envelope().vcs.edits.len(), edits_before, "a proposed transaction must not add an Edit");
             app.take_pending_transaction_proposal().await.expect("dispatch_emit must stash a TransactionProposalDraft when foreign steps are present")
@@ -8574,7 +8578,7 @@ pub mod app {
             self.entry_mut(index)
         }
 
-        fn entries(&self) -> impl Iterator<Item = &ChildMemberEntry<M>> {
+        pub(crate) fn entries(&self) -> impl Iterator<Item = &ChildMemberEntry<M>> {
             self.dense_slots[..self.len].iter().map(|index| self.entry(*index).expect("dense child-member slot remains occupied"))
         }
 
@@ -8622,11 +8626,11 @@ pub mod app {
             true
         }
 
-        fn len(&self) -> usize {
+        pub(crate) fn len(&self) -> usize {
             self.len
         }
 
-        fn is_empty(&self) -> bool {
+        pub(crate) fn is_empty(&self) -> bool {
             self.len == 0
         }
     }
@@ -8779,7 +8783,6 @@ pub mod app {
         generation: u64,
         sealed: bool,
         close_cursor: usize,
-        close_active: std::mem::ManuallyDrop<Option<OwnedDocumentMemberIngress>>,
     }
 
     impl OwnedDocumentMemberIngressRegistry {
@@ -8798,7 +8801,6 @@ pub mod app {
                 generation: 0,
                 sealed: false,
                 close_cursor: 0,
-                close_active: std::mem::ManuallyDrop::new(None),
             })
         }
 
@@ -8835,31 +8837,38 @@ pub mod app {
             Some(unsafe { self.slots[ordinal].assume_init_read() })
         }
 
+        /// @emoji ♻️ Closes the occupied slots in place, ordinal by ordinal, under the caller's
+        /// grant. The ingress being retired is never lifted into a field of this registry: one
+        /// `MemberOpenRequest` inline would put the whole registry shell past a kilobyte of stack,
+        /// while the 1,024 request slots themselves are already behind the single `slots` heap
+        /// owner. The slot is detached only once its own `close_step` answers `Complete` with a
+        /// truthful terminal witness, so a refusal leaves the request exactly where it was.
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-            if let Some(active) = self.close_active.as_mut() {
-                let step = active.close_step(maximum_items, maximum_bytes)?;
-                if step == PluginCloseStep::Complete {
-                    if !active.terminal_is_empty() {
-                        return Err(plugin_sdk_fault("member ingress close returned false terminal"));
-                    }
-                    drop(self.close_active.take());
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
-                }
-                return Ok(step);
-            }
             while self.close_cursor < self.expected {
                 let ordinal = self.close_cursor;
-                self.close_cursor += 1;
-                if let Some(ingress) = self.take(ordinal) {
-                    *self.close_active = Some(ingress);
-                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                if self.occupied[ordinal / 64] & (1 << (ordinal % 64)) == 0 {
+                    self.close_cursor += 1;
+                    continue;
                 }
+                // SAFETY: the occupancy bit is set only after `write` and cleared before `assume_init_read`.
+                let active = unsafe { self.slots[ordinal].assume_init_mut() };
+                let step = active.close_step(maximum_items, maximum_bytes)?;
+                if step != PluginCloseStep::Complete {
+                    return Ok(step);
+                }
+                if !active.terminal_is_empty() {
+                    return Err(plugin_sdk_fault("member ingress close returned false terminal"));
+                }
+                let retired = self.take(ordinal).ok_or_else(|| plugin_sdk_fault("member ingress close lost its exact occupied ordinal"))?;
+                drop(retired);
+                self.close_cursor += 1;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             Ok(PluginCloseStep::Complete)
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.len == 0 && self.close_active.is_none()
+            self.len == 0
         }
     }
 
@@ -9050,7 +9059,7 @@ pub mod app {
             self.find(&entry.slot, &entry.child_id).ok().flatten().is_some_and(|candidate| std::ptr::eq(candidate, entry.as_ref()))
         }
 
-        fn take_one(&mut self, current: &ChildContentView) -> ChildContentTake {
+        fn take_one(&mut self, current: &ChildContentView, owners: &ChildContentOwners) -> ChildContentTake {
             let Some(root) = self.root.take() else { return ChildContentTake::Complete };
             let mut root = match std::sync::Arc::try_unwrap(root) {
                 Ok(root) => root,
@@ -9064,8 +9073,8 @@ pub mod app {
                 let mut page = match std::sync::Arc::try_unwrap(page) {
                     Ok(page) => page,
                     Err(shared) => {
-                        let retained_by_current = current.root.as_deref().and_then(|current| current.pages[page_index].as_ref()).is_some_and(|candidate| std::sync::Arc::ptr_eq(candidate, &shared));
-                        if !retained_by_current {
+                        let retained_by_owner = ChildContentOwners::view_retains_page(current, page_index, &shared) || owners.retains_page(page_index, &shared);
+                        if !retained_by_owner {
                             root.pages[page_index] = Some(shared);
                             self.root = Some(std::sync::Arc::new(root));
                             return ChildContentTake::Blocked;
@@ -9089,7 +9098,7 @@ pub mod app {
                             ChildContentTake::Snapshot(entry)
                         }
                         Err(shared) => {
-                            if current.contains_entry_owner(&shared) {
+                            if current.contains_entry_owner(&shared) || owners.retains_entry(&shared) {
                                 drop(shared);
                                 root.len = root.len.saturating_sub(1);
                                 if page.entries.iter().any(Option::is_some) {
@@ -9164,6 +9173,57 @@ pub mod app {
         Complete,
     }
 
+    /// 👑️ Every OTHER bounded owner of a retained child-content page during one disposal step: the
+    /// pending sibling retirements of the same registry. The live root is passed separately. A page or
+    /// entry alias held by an owner is handed over — the owner that ends up exclusive retires it — while
+    /// an alias held by a mere borrower (an operation view a job still holds) blocks, because a borrower
+    /// drops without a bounded disposer. Copy-on-write publication makes two consecutive retirements
+    /// share every untouched page, so without this set both wait on each other forever.
+    pub(crate) struct ChildContentOwners {
+        views: [ChildContentView; ARTIFACT_LIVE_OUTPUT_SLOTS],
+        len: usize,
+    }
+
+    impl ChildContentOwners {
+        /// 🈳️ The owner set of a retirement with no live sibling.
+        fn none() -> Self {
+            Self { views: std::array::from_fn(|_| ChildContentView::EMPTY), len: 0 }
+        }
+
+        fn push(&mut self, view: ChildContentView) {
+            assert!(self.len < ARTIFACT_LIVE_OUTPUT_SLOTS, "child-content owner set exceeds the fixed retirement registry");
+            self.views[self.len] = view;
+            self.len += 1;
+        }
+
+        fn view_retains_page(view: &ChildContentView, page_index: usize, page: &std::sync::Arc<ChildContentPage>) -> bool {
+            view.root.as_deref().and_then(|root| root.pages[page_index].as_ref()).is_some_and(|candidate| std::sync::Arc::ptr_eq(candidate, page))
+        }
+
+        fn retains_page(&self, page_index: usize, page: &std::sync::Arc<ChildContentPage>) -> bool {
+            self.views[..self.len].iter().any(|view| Self::view_retains_page(view, page_index, page))
+        }
+
+        fn retains_entry(&self, entry: &std::sync::Arc<ChildContentEntry>) -> bool {
+            self.views[..self.len].iter().any(|view| view.contains_entry_owner(entry))
+        }
+    }
+
+    impl ArtifactFixedRegistry<ChildContentRetirement> {
+        /// 👥️ The views of every pending child-root retirement except the one about to take a step.
+        fn sibling_content_owners(&self, stepping: u64) -> ChildContentOwners {
+            let mut owners = ChildContentOwners::none();
+            for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+                if let Some((id, retirement)) = self.entry(index) {
+                    if *id != stepping {
+                        owners.push(ChildContentView::clone(&retirement.view));
+                    }
+                }
+            }
+            owners
+        }
+    }
+
     pub(crate) struct ChildContentRetirement {
         view: std::mem::ManuallyDrop<ChildContentView>,
         pub(crate) pending: std::mem::ManuallyDrop<Option<ChildContentEntry>>,
@@ -9177,7 +9237,7 @@ pub mod app {
             Self { view: std::mem::ManuallyDrop::new(view), pending: std::mem::ManuallyDrop::new(None), active: std::mem::ManuallyDrop::new(None), active_member: std::mem::ManuallyDrop::new(None), require_member_terminal }
         }
 
-        fn close_step<M: SpaceMember>(&mut self, children: &mut ChildMemberRegistry<M>, current: &ChildContentView, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        fn close_step<M: SpaceMember>(&mut self, children: &mut ChildMemberRegistry<M>, current: &ChildContentView, owners: &ChildContentOwners, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             if maximum_items == 0 {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
@@ -9214,7 +9274,7 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if self.pending.is_none() {
-                match self.view.take_one(current) {
+                match self.view.take_one(current, owners) {
                     ChildContentTake::Blocked => return Ok(PluginCloseStep::Blocked { reason: "retired child root remains borrowed by an exact operation view" }),
                     ChildContentTake::ReleasedShared => return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
                     ChildContentTake::Snapshot(entry) => *self.pending = Some(entry),
@@ -13147,6 +13207,13 @@ pub mod app {
             self.mode_commands.get(mode_id)?.get(id)
         }
 
+        /// 🫙️ Whether this registry declares NOTHING — the registry-less path `AppActionRegistry::default()`
+        /// builds (see `controller_id`'s doc). It has no controller, no action and no command, so it joins no
+        /// tool to any factory and every dispatch through it fails closed at its own key lookup.
+        fn is_registry_less(&self) -> bool {
+            self.controller_id.is_empty() && self.actions.is_empty() && self.window_actions.is_empty() && self.app_commands.is_empty() && self.mode_commands.is_empty()
+        }
+
         fn migrated_tool_ids(&self) -> BTreeSet<String> {
             let mut ids = BTreeSet::new();
             ids.extend(self.actions.iter().filter(|(_, definition)| definition.semantics.execution.interactive_job == semio_framework::InteractiveJobClassification::Migrated).map(|(id, _)| id.clone()));
@@ -13181,6 +13248,9 @@ pub mod app {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.catalog-controller"), "tool proof catalog controller does not match the live registry controller"));
             }
             let controller_id = runtime_controller_id.to_string();
+            if self.is_registry_less() {
+                return Ok((controller_id, Vec::new()));
+            }
             let migrated = self.migrated_tool_ids();
             let expected = generated_ids.iter().filter(|id| **id != "typed-command" && migrated.contains(**id)).copied().collect::<BTreeSet<_>>();
             let owner = ToolOwnerWitness::of::<A>();
@@ -14271,17 +14341,37 @@ pub mod app {
     const TYPED_OPERATION_STALL_PUBLISHING_STAGE: u8 = 1;
     const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
     const TYPED_OPERATION_FAULT_BYTES: usize = 256;
+    /// 🧾️ Frames a bounded publication fault as `<code>\u{1f}<message>`. The `FaultCode` values the
+    /// contract freezes (`transaction.instance-busy`, `toolRun.busy`, `app.read-only`, …) are the whole
+    /// point of a refusal: erasing them at the publication boundary — which is what happened until this
+    /// framing landed — left every migrated dispatch answering `app.message` and no caller able to
+    /// branch on why it was refused. `0x1f` is the one byte a `FaultCode` can never contain.
+    const TYPED_OPERATION_FAULT_SEPARATOR: u8 = 0x1f;
+    const TYPED_OPERATION_FAULT_CODE_BYTES: usize = 64;
+    const TYPED_OPERATION_FAULT_PAGE_BYTES: usize = TYPED_OPERATION_FAULT_CODE_BYTES + 1 + TYPED_OPERATION_FAULT_BYTES;
+
+    /// 🧾️ Splits a Fault-lane page back into its exact frozen code and its detail. A page with no
+    /// separator predates the framing's producer and keeps the generic app-owned-output code.
+    pub(crate) fn decode_typed_operation_fault_page(bytes: &[u8]) -> (FaultCode, String) {
+        match bytes.iter().position(|byte| *byte == TYPED_OPERATION_FAULT_SEPARATOR) {
+            Some(index) if index != 0 => (FaultCode::new(String::from_utf8_lossy(&bytes[..index]).into_owned()), String::from_utf8_lossy(&bytes[index + 1..]).into_owned()),
+            Some(index) => (FaultCode::new("interactive-job.app-owned-output"), String::from_utf8_lossy(&bytes[index + 1..]).into_owned()),
+            None => (FaultCode::new("interactive-job.app-owned-output"), String::from_utf8_lossy(bytes).into_owned()),
+        }
+    }
 
     struct ArtifactBoundedToolFault {
         bytes: [u8; TYPED_OPERATION_FAULT_BYTES],
         len: usize,
+        code: [u8; TYPED_OPERATION_FAULT_CODE_BYTES],
+        code_len: usize,
     }
 
     impl ArtifactBoundedToolFault {
         /// 🧾️ Retains a terminal job fault's detail bytes (bounded) so the publication that follows
         /// a cancelled lease reports the real cause instead of a generic cancellation.
         fn from_payload(detail: &semio_framework_job::RetainedJobPayload) -> Self {
-            let mut bounded = Self { bytes: [0; TYPED_OPERATION_FAULT_BYTES], len: 0 };
+            let mut bounded = Self { bytes: [0; TYPED_OPERATION_FAULT_BYTES], len: 0, code: [0; TYPED_OPERATION_FAULT_CODE_BYTES], code_len: 0 };
             for page in 0..detail.page_count() {
                 let Some(bytes) = detail.page(page) else { break };
                 for byte in bytes {
@@ -14296,7 +14386,7 @@ pub mod app {
         }
 
         fn from_fault(fault: &Fault) -> Self {
-            let mut bounded = Self { bytes: [0; TYPED_OPERATION_FAULT_BYTES], len: 0 };
+            let mut bounded = Self { bytes: [0; TYPED_OPERATION_FAULT_BYTES], len: 0, code: [0; TYPED_OPERATION_FAULT_CODE_BYTES], code_len: 0 };
             for scalar in fault.message.chars() {
                 let width = scalar.len_utf8();
                 if bounded.len.saturating_add(width) > bounded.bytes.len() {
@@ -14305,12 +14395,36 @@ pub mod app {
                 scalar.encode_utf8(&mut bounded.bytes[bounded.len..bounded.len + width]);
                 bounded.len += width;
             }
+            for scalar in fault.code.0.chars() {
+                let width = scalar.len_utf8();
+                if scalar == TYPED_OPERATION_FAULT_SEPARATOR as char || bounded.code_len.saturating_add(width) > bounded.code.len() {
+                    bounded.code_len = 0;
+                    break;
+                }
+                scalar.encode_utf8(&mut bounded.code[bounded.code_len..bounded.code_len + width]);
+                bounded.code_len += width;
+            }
             bounded
         }
 
         fn into_fault(self) -> Fault {
             let detail = String::from_utf8_lossy(&self.bytes[..self.len]).into_owned();
-            Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.app-owned-output"), detail)
+            let code = (self.code_len != 0).then(|| FaultCode::new(String::from_utf8_lossy(&self.code[..self.code_len]).into_owned())).unwrap_or_else(|| FaultCode::new("interactive-job.app-owned-output"));
+            Fault::new(FaultOrigin::Framework, code, detail)
+        }
+
+        /// 🧾️ The Fault-lane page's own framing, `<code>\u{1f}<message>` — see
+        /// [`TYPED_OPERATION_FAULT_SEPARATOR`]. `as_bytes` stays the message alone, because it is the
+        /// bounded retained detail the language-neutral fault-bound oracle prices.
+        fn framed_page_bytes(&self, buffer: &mut [u8; TYPED_OPERATION_FAULT_PAGE_BYTES]) -> usize {
+            if self.code_len == 0 {
+                buffer[..self.len].copy_from_slice(&self.bytes[..self.len]);
+                return self.len;
+            }
+            buffer[..self.code_len].copy_from_slice(&self.code[..self.code_len]);
+            buffer[self.code_len] = TYPED_OPERATION_FAULT_SEPARATOR;
+            buffer[self.code_len + 1..self.code_len + 1 + self.len].copy_from_slice(&self.bytes[..self.len]);
+            self.code_len + 1 + self.len
         }
 
         fn as_bytes(&self) -> &[u8] {
@@ -17728,7 +17842,7 @@ pub mod app {
         input
     }
 
-    fn framework_reserved_job_factory(_job: u64, input: &[u8]) -> Result<Box<dyn crate::reactor::jobs::BoundedJob>, Vec<u8>> {
+    fn framework_reserved_job_factory(_job: u64, input: &[u8], _restored: Option<&[u8]>) -> Result<Box<dyn crate::reactor::jobs::BoundedJob>, Vec<u8>> {
         Ok(Box::new(FrameworkReservedBoundedJob::admit(input)))
     }
 
@@ -18084,7 +18198,7 @@ pub mod app {
         }
 
         fn fault(&self) -> Option<Fault> {
-            self.fault.as_ref().map(|fault| ArtifactBoundedToolFault { bytes: fault.bytes, len: fault.len }.into_fault())
+            self.fault.as_ref().map(|fault| ArtifactBoundedToolFault { bytes: fault.bytes, len: fault.len, code: fault.code, code_len: fault.code_len }.into_fault())
         }
 
         fn acknowledge(&mut self) -> bool {
@@ -18301,6 +18415,7 @@ pub mod app {
         published_artifact: bool,
         published_config: bool,
         command_logged: bool,
+        interaction_revalidated: bool,
         terminal_fault: Option<ArtifactBoundedToolFault>,
         stage: MountedTypedCommandFullOperationStage,
     }
@@ -18428,7 +18543,11 @@ pub mod app {
             }
             self.ui_pending = false;
             let page = match self.terminal_fault.take() {
-                Some(fault) => TypedOperationResultPage::try_new(self.next_token(), TypedOperationResultLane::Fault, fault.as_bytes())?,
+                Some(fault) => {
+                    let mut framed = [0; TYPED_OPERATION_FAULT_PAGE_BYTES];
+                    let len = fault.framed_page_bytes(&mut framed);
+                    TypedOperationResultPage::try_new(self.next_token(), TypedOperationResultLane::Fault, &framed[..len])?
+                }
                 None => TypedOperationResultPage::try_new(self.next_token(), TypedOperationResultLane::Fault, b"typed-operation cancelled before its next publication unit")?,
             };
             self.queue_page(page)?;
@@ -20264,6 +20383,13 @@ pub mod app {
             }
         }
 
+        /// 🔎️ The first leg's refusal as its typed fault, for a caller that must name why a stalled
+        /// replacement never reached its target state.
+        #[cfg(test)]
+        pub(crate) fn refusal_fault(&self) -> Option<Fault> {
+            self.refusal.map(ArtifactStoreReplacementRefusal::into_fault)
+        }
+
         /// 🧭️ Records the FIRST leg that refused and moves the replacement onto its retirement path.
         /// The first one is kept because every later state transition is a consequence of it.
         fn refuse(&mut self, refusal: ArtifactStoreReplacementRefusal) {
@@ -20596,10 +20722,11 @@ pub mod app {
                 };
                 let children = self.candidate_children.as_mut().ok_or_else(|| plugin_sdk_fault("displaced content retirement lost its exact member registry"))?;
                 let current = self.candidate_content.as_ref().ok_or_else(|| plugin_sdk_fault("displaced content retirement lost its exact current root"))?;
+                let owners = retirements.sibling_content_owners(generation);
                 let step = retirements
                     .get_mut(generation)
                     .ok_or_else(|| plugin_sdk_fault("displaced content retirement changed before one bounded step"))?
-                    .close_step(children, current, maximum_items.min(1), maximum_bytes)?;
+                    .close_step(children, current, &owners, maximum_items.min(1), maximum_bytes)?;
                 if step != PluginCloseStep::Complete {
                     self.displaced_content_retirement_cursor = index;
                     return Ok(step);
@@ -20614,7 +20741,7 @@ pub mod app {
             }
             if let Some(retirement) = self.candidate_content_retirement.as_mut() {
                 let children = self.candidate_children.as_mut().ok_or_else(|| plugin_sdk_fault("candidate content retirement lost its exact member registry"))?;
-                let step = retirement.close_step(children, current_content, maximum_items.min(1), maximum_bytes)?;
+                let step = retirement.close_step(children, current_content, &ChildContentOwners::none(), maximum_items.min(1), maximum_bytes)?;
                 if step == PluginCloseStep::Complete {
                     if !retirement.terminal_is_empty() {
                         return Err(plugin_sdk_fault("candidate content retirement returned false terminal"));
@@ -22259,8 +22386,13 @@ pub mod app {
             Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-factory"), format!("host configuration command '{verb}' has no exact controller/owner/factory/tool/schema proof")))
         }
 
-        async fn admit_command_wire_with_proof(&self, proof: QualifiedToolProof, verb: &str, payload: &[u8], decoded_items: usize) -> Result<AdmittedToolCommand, Fault> {
-            let definition = match self.registry.get(verb) {
+        /// 🚦️ The UI-safety backstop, read from the app's own manifest declaration: a verb that is not
+        /// `Migrated` is refused by NAME here, before any factory, proof or wire admission is resolved.
+        /// Resolving the proof first answered `interactive-job.missing-factory` for a verb whose real
+        /// refusal is `interactive-job.not-ui-safe` — a non-migrated verb has no factory precisely
+        /// BECAUSE it is not migrated, so the proof lookup reported the consequence, not the cause.
+        fn require_ui_safe_declaration(&self, verb: &str) -> Result<(), Fault> {
+            let declaration = match self.registry.get(verb) {
                 Some(definition) => definition.semantics.execution.interactive_job,
                 None => self
                     .registry
@@ -22268,7 +22400,11 @@ pub mod app {
                     .map(|definition| definition.semantics.execution.interactive_job)
                     .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-key"), format!("typed command '{verb}' has no exact manifest declaration")))?,
             };
-            validate_ui_dispatch_classification("owner", verb, definition)?;
+            validate_ui_dispatch_classification("owner", verb, declaration)
+        }
+
+        async fn admit_command_wire_with_proof(&self, proof: QualifiedToolProof, verb: &str, payload: &[u8], decoded_items: usize) -> Result<AdmittedToolCommand, Fault> {
+            self.require_ui_safe_declaration(verb)?;
             let key = proof.key();
             let (admission, input) =
                 self.tool_jobs.begin_exact_wire(key.controller_id, key.tool_id, proof.schema_id(), payload.len()).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
@@ -22285,20 +22421,13 @@ pub mod app {
         }
 
         async fn admit_command_wire(&self, verb: &str, payload: &[u8], decoded_items: usize) -> Result<AdmittedToolCommand, Fault> {
+            self.require_ui_safe_declaration(verb)?;
             let proof = self.qualified_tool_proof(verb)?;
             self.admit_command_wire_with_proof(proof, verb, payload, decoded_items).await
         }
 
         async fn admit_command_json_with_proof(&self, proof: QualifiedToolProof, verb: &str, args: Option<&DslValue>) -> Result<AdmittedToolCommand, Fault> {
-            let definition = match self.registry.get(verb) {
-                Some(definition) => definition.semantics.execution.interactive_job,
-                None => self
-                    .registry
-                    .get_command(verb)
-                    .map(|definition| definition.semantics.execution.interactive_job)
-                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-key"), format!("typed command '{verb}' has no exact manifest declaration")))?,
-            };
-            validate_ui_dispatch_classification("owner", verb, definition)?;
+            self.require_ui_safe_declaration(verb)?;
             let key = proof.key();
             let (admission, input) = self
                 .tool_jobs
@@ -22316,6 +22445,7 @@ pub mod app {
         }
 
         async fn admit_host_configuration_json(&self, verb: &str, args: Option<&DslValue>) -> Result<AdmittedToolCommand, Fault> {
+            self.require_ui_safe_declaration(verb)?;
             let proof = self.qualified_host_configuration_tool_proof(verb)?;
             self.admit_command_json_with_proof(proof, verb, args).await
         }
@@ -23822,7 +23952,7 @@ pub mod app {
                     active.generation
                 })
                 .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed during one fixed maintenance step"))?;
-            let step = self.envelope_decode_jobs.get_mut(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed before worker advancement"))?.drive(
+            let mut step = self.envelope_decode_jobs.get_mut(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.maintenance-owner"), "live envelope operation changed before worker advancement"))?.drive(
                 &pool,
                 live_generation,
                 &self.envelope_completed_records,
@@ -23845,6 +23975,15 @@ pub mod app {
                     PluginCloseStep::Complete => break,
                     PluginCloseStep::Pending { .. } => {}
                     step => return Ok(step),
+                }
+            }
+            // 🧾️ `drive`'s answer was computed BEFORE the two drain pumps above it, and the only thing
+            // a `ClosingCancelled` envelope is waiting for IS the completed-record pump: returning the
+            // pre-pump `Blocked` made a caller that treats `Blocked` as terminal (every bounded close
+            // loop does) abort on a ladder that had already unblocked itself in the same step.
+            if matches!(step, PluginCloseStep::Blocked { .. }) {
+                if let Some(active) = self.envelope_decode_jobs.get_mut(operation_id) {
+                    step = active.drive(&pool, live_generation, &self.envelope_completed_records, maximum_items, maximum_bytes)?;
                 }
             }
             if self.envelope_decode_jobs.get(operation_id).is_some_and(|active| active.terminal_is_empty(&self.envelope_completed_records)) {
@@ -23895,6 +24034,24 @@ pub mod app {
 
         fn peer_roster_slot(generation: u64) -> usize {
             generation as usize % ARTIFACT_LIVE_OUTPUT_SLOTS
+        }
+
+        /// 🧭️ The lowest mounted peer roster publication the ordered cursor has already passed. A
+        /// publication whose generation is not ahead of `peer_roster_processed_generation` can never be the
+        /// rotation's next exact generation again, so without this the maintenance stage answers
+        /// `Pending { 0, 0 }` for it forever: it never reaches its outcome slot, `take_presence_outcome`
+        /// never answers, and the app's close conjunction — which demands an empty publication registry —
+        /// is unreachable. Walking it through the very same validate/outcome ladder lets
+        /// `validate_peer_roster_publication` refuse its generation and hand the refusal to its caller.
+        fn orphaned_peer_roster_generation(&self) -> Option<u64> {
+            let processed = self.peer_roster_processed_generation;
+            let mut orphaned: Option<u64> = None;
+            self.peer_roster_publications.each_id(|generation| {
+                if generation <= processed && orphaned.is_none_or(|lowest| generation < lowest) {
+                    orphaned = Some(generation);
+                }
+            });
+            orphaned
         }
 
         fn validate_peer_roster_publication(&self, seq: u64, generation: u64, cancel: &semio_framework_job::CancelToken) -> Result<ValidatedPeerRosterCommit, Fault> {
@@ -24299,6 +24456,64 @@ pub mod app {
         /// `open_child`/`register_child`.
         pub async fn child_store(&self, slot: &str, child_id: &str) -> Option<&M> {
             self.children.get(&(slot.to_string(), child_id.to_string())).map(|entry| &entry.member)
+        }
+
+        /// @emoji 📣️ Announces every live composed member's whole event log on the PARENT's backbone
+        /// under that member's own `(slot, child_id)` lane. A composed document owns exactly one
+        /// replica endpoint — `ArtifactStore::announce_history` covers the parent lane alone, so
+        /// without this a joining replica never learns a single child-lane edit and the two replicas
+        /// diverge on the very content a composing plugin keeps in its children (measured on
+        /// `🌊️flow`'s `content` child, ticket 26/09/19 `📓️flow.md` §5.3).
+        async fn announce_member_event_logs(&mut self) -> Result<(), Fault> {
+            if self.children.is_empty() {
+                return Ok(());
+            }
+            let mut lanes: Vec<(String, String)> = Vec::with_capacity(self.children.len());
+            for entry in self.children.entries() {
+                lanes.push((entry.owner.slot.clone(), entry.reference.artifact_id.clone()));
+            }
+            for (slot, child_id) in lanes {
+                let Some(entry) = self.children.get_mut(&(slot.clone(), child_id.clone())) else { continue };
+                let payload = store::SpaceMember::event_log_payload(&entry.member).await.map_err(|error| error.into_fault())?;
+                self.store.send_member_mutations(&slot, &child_id, payload).await.map_err(|error| error.into_fault())?;
+            }
+            Ok(())
+        }
+
+        /// @emoji 📤️ Announces the tail edit of every member a composite gesture just touched, under
+        /// that member's own lane. Called from the ONE choke point child edits land at
+        /// (`dispatch_emit_group`), so a child-lane edit travels exactly like a parent-lane one.
+        async fn announce_member_tail_edits(&mut self, lanes: &[(String, String)]) -> Result<(), Fault> {
+            if self.store.backbone_ref().is_none() {
+                return Ok(());
+            }
+            for (slot, child_id) in lanes {
+                let Some(entry) = self.children.get_mut(&(slot.clone(), child_id.clone())) else { continue };
+                let payload = store::SpaceMember::announce_tail_edit_payload(&mut entry.member).await.map_err(|error| error.into_fault())?;
+                self.store.send_member_mutations(slot, child_id, payload).await.map_err(|error| error.into_fault())?;
+            }
+            Ok(())
+        }
+
+        /// @emoji 📥️ Routes every member-addressed backbone message the parent store pumped into the
+        /// live member that owns that exact lane, and answers how many lanes folded something. A lane
+        /// naming a member this replica does not hold is a fault, never a silent drop: the two
+        /// replicas would otherwise disagree about the document's own composition.
+        async fn fold_member_inbound(&mut self) -> Result<usize, Fault> {
+            let inbound = self.store.take_member_inbound();
+            if inbound.is_empty() {
+                return Ok(0);
+            }
+            let mut folded = 0usize;
+            for (slot, child_id, envelopes) in inbound {
+                let Some(entry) = self.children.get_mut(&(slot.clone(), child_id.clone())) else {
+                    return Err(plugin_sdk_fault(format!("backbone member lane {slot}/{child_id} names no live composed member of this replica")));
+                };
+                store::SpaceMember::ingest_remote_payload(&mut entry.member, &envelopes).await.map_err(|error| error.into_fault())?;
+                folded += 1;
+            }
+            self.cache = None;
+            Ok(folded)
         }
 
         /// 🌱️ Adopts an already-live `M` member into the child-store map directly — the
@@ -25499,6 +25714,13 @@ pub mod app {
             // call today — a `ChildEmit` only ever targets an ALREADY-live child).
             self.absorb_created_children(receipt.created_children).await?;
 
+            // 🪆️ Child-lane replication: a composed member's edit is a real event of a real document,
+            // and the parent's backbone is the only endpoint it can cross. Announced here, at the one
+            // choke point every child edit lands at, so a replica folds it into ITS member of the
+            // same lane instead of diverging (ticket 26/09/19 `📓️flow.md` §5.3).
+            let announced_lanes: Vec<(String, String)> = child_emits.iter().filter(|child_emit| !child_emit.ops.is_empty()).map(|child_emit| (child_emit.slot.clone(), child_emit.child_id.clone())).collect();
+            self.announce_member_tail_edits(&announced_lanes).await?;
+
             let invocation_id = InvocationId(receipt.invocation_id.clone());
             // 🪪️ The PARENT's handle must be the same value its own `KernelMutation.document` carries
             // (`ArtifactHandle(meta.instance_id)`), not `artifact_handle_of(parent_id)` — otherwise one
@@ -25824,7 +26046,7 @@ pub mod app {
         /// dispatch — `Flat` genuinely has no structure to check staleness against, by declaration; an app
         /// wanting deleted-node pruning for a nominally-flat domain declares `HierarchyProvider::Topology`
         /// with one root `TopologyNode` per valid id instead.
-        async fn build_full_interaction_topology(&mut self, state: &protocol::InteractionState) -> Result<protocol::InteractionTopology, Fault> {
+        async fn build_full_interaction_topology(&mut self, state: &protocol::InteractionState, origin: InteractionRevalidateOrigin) -> Result<protocol::InteractionTopology, Fault> {
             let defs: Vec<InteractionDefinition> = self.registry.interactions().await.cloned().collect();
             let mut domains = BTreeMap::new();
             for def in &defs {
@@ -25833,8 +26055,15 @@ pub mod app {
                 }
                 let selected_ids = state.selection.get(&def.id).map(|selection| selection.ids.clone()).unwrap_or_default();
                 let hovered_ids = state.hover.get(&def.id).map(|hover| hover.ids.clone()).unwrap_or_default();
+                let checkable = origin == InteractionRevalidateOrigin::DocumentChange && !selected_ids.is_empty();
                 let topology = self.resolve_domain_topology(def, selected_ids.into_iter().chain(hovered_ids)).await?;
-                if topology.ordered.is_empty() {
+                // 🧹️ On the DOCUMENT-CHANGE pass, an EMPTY topology for a domain that still carries a
+                // selection is not "no information": it is the app answering that none of those ids
+                // exist any more — the exact case this prune exists for (every id deleted). Skipping it
+                // left `validate_state` with no existence set to check against, so the stale ids
+                // survived. A `Pick` pass keeps the old rule: an app that publishes no topology at all
+                // has not made a statement about existence, and its hover must not be pruned.
+                if topology.ordered.is_empty() && !checkable {
                     continue;
                 }
                 domains.insert(def.id.clone(), topology);
@@ -25857,7 +26086,7 @@ pub mod app {
             for def in self.registry.interactions().await {
                 outlines.push(def.outline().await);
             }
-            let topology = self.build_full_interaction_topology(&combined).await?;
+            let topology = self.build_full_interaction_topology(&combined, origin).await?;
             let validated = protocol::validate_state(&outlines, &topology, &combined).await;
             let validated = if origin == InteractionRevalidateOrigin::DocumentChange {
                 let declared: Vec<String> = self.registry.interactions().await.map(|def| def.id.clone()).collect();
@@ -27463,7 +27692,9 @@ pub mod app {
             if let Some(lease) = mounted.cancellation_lease.as_ref() {
                 lease.cancel();
             }
-            let page = TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, fault.as_bytes())?;
+            let mut framed = [0; TYPED_OPERATION_FAULT_PAGE_BYTES];
+            let framed_len = fault.framed_page_bytes(&mut framed);
+            let page = TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, &framed[..framed_len])?;
             mounted.terminal_fault = Some(fault);
             mounted.queue_page(page)
         }
@@ -27501,7 +27732,9 @@ pub mod app {
                 crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] typed-operation {} publication attempt {} faulted: {}: {}", mounted.verb, mounted.publication_attempt, fault.code.0, fault.message));
                 if mounted.publication_attempt > TYPED_OPERATION_MAXIMUM_RETRIES {
                     let bounded = ArtifactBoundedToolFault::from_fault(&fault);
-                    let page = TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, bounded.as_bytes())?;
+                    let mut framed = [0; TYPED_OPERATION_FAULT_PAGE_BYTES];
+                    let framed_len = bounded.framed_page_bytes(&mut framed);
+                    let page = TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, &framed[..framed_len])?;
                     mounted.result_page = None;
                     mounted.stage = MountedTypedCommandFullOperationStage::Publishing;
                     mounted.queue_page(page)?;
@@ -27510,6 +27743,17 @@ pub mod app {
                 }
             } else {
                 mounted.publication_attempt = 0;
+            }
+            // 🕹️ "After EVERY artifact (document) dispatch, re-derive fresh topology and prune any
+            // selection/hover id no longer present" — the clause `dispatch_emit_inner` carries, which
+            // the migrated publication ladder never reaches (see the emit backstops above it). A
+            // migrated dispatch's document change lands on the Artifact lane, so this is where the
+            // revalidation belongs; `mounted` is out of the registry here, so the async pass is free
+            // to borrow the app, and the flag makes it exactly one pass per operation.
+            if mounted.published_artifact && !mounted.interaction_revalidated {
+                mounted.interaction_revalidated = true;
+                let meta = mounted.meta.clone();
+                self.revalidate_interaction_state_after_document_change(&meta).await?;
             }
             self.tool_operations.insert_admitted(operation_id, mounted);
             Ok(())
@@ -27751,6 +27995,7 @@ pub mod app {
                     published_artifact: false,
                     published_config: false,
                     command_logged: false,
+                    interaction_revalidated: false,
                     terminal_fault: None,
                     stage: MountedTypedCommandFullOperationStage::Publishing,
                 };
@@ -28152,6 +28397,46 @@ pub mod app {
                     }
                     if !emit.artifact_mutations.is_empty() {
                         self.require_operation_emitting_kind(&mounted.verb, self.declared_dispatch_kind(&mounted.verb))?;
+                        // 🔒️ The three emit-time backstops of contract §2.3 clause 2, §5.10 and the tool-run
+                        // freeze live in `dispatch_emit_inner`, which the migrated publication ladder never
+                        // calls for the single-store artifact lane (FP5 §3.4 measured the same thing for the
+                        // kind guard above). A migrated dispatch answers with an admission receipt and its
+                        // mutations only exist HERE, so this is the only point at which they can be refused.
+                        if A::ROLE == AppRole::Viewer {
+                            return Err(viewer_read_only_fault(&mounted.verb));
+                        }
+                        if self.tool_runs.freezes_local_emits() {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.busy"), format!("verb {:?} would emit artifact mutations while a freezing tool run is non-terminal on this instance", mounted.verb)));
+                        }
+                        if let Some(pending_txn_id) = self.pending_transaction.as_ref().map(|pending| pending.txn_id.clone()) {
+                            return Err(Self::transaction_fault(FaultOrigin::Plugin, "transaction.instance-busy", format!("verb {:?} would emit artifact mutations while transaction {pending_txn_id:?} is pending on this instance", mounted.verb)));
+                        }
+                        // 🔀️ Composite-mutation proposal (contract §5.1): apply NOTHING and stash a
+                        // `TransactionProposalDraft` instead, drained once by `plugin_exchange`.
+                        if emit.artifact_mutations.iter().any(Mutation::may_emit_foreign_steps) {
+                            let mut running = self.store.snapshot().map_err(|error| error.into_fault())?;
+                            let mut foreign = Vec::new();
+                            for op in emit.artifact_mutations.iter() {
+                                foreign.extend(op.foreign_steps(&running));
+                                let outcome = op.diff(&running);
+                                if !outcome.is_applicable(protocol::MergePolicy::default()) {
+                                    return Err(Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())));
+                                }
+                                running = outcome.diff().apply(&running).map_err(|error| Self::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
+                            }
+                            if !foreign.is_empty() {
+                                let mut local_ops = Vec::with_capacity(emit.artifact_mutations.len());
+                                for op in emit.artifact_mutations.iter() {
+                                    local_ops.push(::protocol::OpBinary::encode_op(op).unwrap_or_default());
+                                }
+                                self.pending_transaction_proposal =
+                                    Some(TransactionProposalDraft { local_ops, description: emit.description.clone().unwrap_or_default(), coalesce_key: emit.coalesce_key.clone().unwrap_or_default(), foreign });
+                                emit.artifact_mutations.clear();
+                                emit.description = None;
+                                emit.coalesce_key = None;
+                                return Ok(());
+                            }
+                        }
                     }
                     if emit.child_emits.is_empty() && !emit.artifact_mutations.is_empty() {
                         // 🧺️ ONE gesture is ONE batched publication: the whole artifact lane is drained
@@ -28224,11 +28509,32 @@ pub mod app {
                             }
                         }
                     } else if let Some(mutation) = emit.window_config_mutations.pop() {
-                        let authority = mounted.window_config_authority.as_ref().ok_or_else(|| plugin_sdk_fault("window config emission requires one exact captured ViewModel window authority"))?;
-                        {
-                            let publication = self.window_config_store.begin(mounted.operation.operation, mounted.meta.actor.clone(), authority, mutation, emit.coalesce_key.as_deref())?;
-                            mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowConfig(publication));
-                            return Ok(());
+                        let authority = mounted.window_config_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window config emission requires one exact captured ViewModel window authority"))?;
+                        // 🎚️ The authority was captured when this command was DISPATCHED, and a window's
+                        // config partition is its OWN exact-base document: any earlier command that
+                        // settled against the same window has already moved that partition's generation
+                        // and revision on, so a second window-config command dispatched in the same turn
+                        // carries a stale base by the time its batch begins. `begin_apply_batch` then
+                        // refuses it — and because the mutation was already POPPED out of `emit`, the
+                        // retry `advance_typed_operation_publication_unit` grants on a publication fault
+                        // found nothing left to publish and the operation completed clean: no page, no
+                        // fault, the amend lost (measured on flow as one window-config page for two
+                        // commands, ticket 26/09/19 `📓️flow.md` §5.2). Two repairs, both of which every
+                        // sibling lane of this ladder already had: re-read the authority before beginning
+                        // (the window-TRANSIENT arm below always did), and hand the mutation BACK to
+                        // `emit` when admission refuses it, so a retry is a real retry and an exhausted
+                        // one refuses by name on the Fault lane instead of vanishing.
+                        self.window_config_store.refresh(authority)?;
+                        let authority = mounted.window_config_authority.as_ref().expect("refreshed window config authority remains captured");
+                        match self.window_config_store.begin(mounted.operation.operation, mounted.meta.actor.clone(), authority, mutation, emit.coalesce_key.as_deref()) {
+                            Ok(publication) => {
+                                mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowConfig(publication));
+                                return Ok(());
+                            }
+                            Err(RejectedWindowConfigEmission { mutation, fault }) => {
+                                emit.window_config_mutations.push(mutation);
+                                return Err(fault);
+                            }
                         }
                     } else if !emit.draft_mutations.is_empty() {
                         let revision = self.draft_store.content_revision_now();
@@ -28690,6 +28996,7 @@ pub mod app {
                     published_artifact: false,
                     published_config: false,
                     command_logged: false,
+                    interaction_revalidated: false,
                     terminal_fault: None,
                     stage: MountedTypedCommandFullOperationStage::Worker,
                 },
@@ -29341,6 +29648,83 @@ pub mod app {
             })
         }
 
+        /// 🪜️ One bounded unit of ONE stage of the fixed round robin. The caller owns the cursor.
+        fn maintenance_stage_step(&mut self, stage: u8, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            match stage {
+                0..=7 => self.maintenance_early_stage_step(stage, maximum_items, maximum_bytes),
+                8 => {
+                    let pump = &mut self.document_snapshot_read_returns;
+                    let store = &mut self.store;
+                    pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes)
+                }
+                MAINTENANCE_DOCUMENT_DISPLACED_STAGE => self.maintenance_document_displaced_step(maximum_items, maximum_bytes),
+                10 => match self.drive_envelope_ingress(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
+                11 => {
+                    self.drive_artifact_envelope_decode_worker()?;
+                    Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
+                }
+                12 => match self.drive_envelope_field_decoder_returns(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
+                13 => match self.drive_envelope_completed_record_returns(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
+                14 => match self.drive_store_replacement_jobs(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
+                15 => match self.live_runtime_instance_id {
+                    Some(instance_id) => A::mounted_job_maintenance_step(instance_id, maximum_items.min(1), maximum_bytes),
+                    None => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                },
+                16 => self.instance_operation_owner.maintenance_step(maximum_items.min(1), maximum_bytes),
+                17 => Ok(self.latest_wins_keys.advance(maximum_items.min(1), maximum_bytes)),
+                18 => {
+                    if self.tool_cancellations.cleanup_finished_slot(self.maintenance_cancellation_cursor)?.is_none() {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    self.maintenance_cancellation_cursor = (self.maintenance_cancellation_cursor + 1) % (TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS);
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                19 => self.presence_store.maintenance_local_reads_step(maximum_items.min(1), maximum_bytes).map_err(Fault::from).map(|step| match step {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
+                    store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "presence local returned owner is held" },
+                    store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
+                }),
+                20 => self.child_admission_abort_step(maximum_items.min(1), maximum_bytes),
+                21 => match self.retire_document_windows_step(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
+                22 => match self.window_transient_store.maintenance_step(maximum_items.min(1), maximum_bytes)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
+                // 🧹️ The process-wide worker-job retirement array. A session dropped before it reached
+                // terminal-empty (a cancelled command, a closed document, an app torn down mid-flight)
+                // parks its node in one of the fixed [`semio_framework_job::WORKER_JOB_SESSION_SLOTS`]
+                // admissions, and ONLY this pump gives that slot back. Without a host that pumps it, the
+                // array fills up for the life of the process and every later `MountedWorkerJobSession`
+                // admission is refused — which is not a slow app but a dead one: the refused operation can
+                // never publish, because its job never ran.
+                23 => {
+                    let advanced = semio_framework_job::pump_worker_job_retirements(1, maximum_items.min(1), maximum_bytes.min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES));
+                    Ok(PluginCloseStep::Pending { released_items: advanced, released_bytes: 0 })
+                }
+                24 => match self.drive_document_archive_load_retirements(maximum_items, maximum_bytes, false)? {
+                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
+                    step => Ok(step),
+                },
+                MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE => self.maintenance_config_lane_displaced_step(maximum_items, maximum_bytes),
+                _ => unreachable!("fixed maintenance stage"),
+            }
+        }
+
         fn maintenance_early_stage_step(&mut self, stage: u8, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             match stage {
                 0 => {
@@ -29491,10 +29875,11 @@ pub mod app {
                         let retirements = &mut self.child_content_retirements;
                         let children = &mut self.children;
                         let current = &*self.child_content_root;
+                        let owners = retirements.sibling_content_owners(generation);
                         retirements
                             .get_mut(generation)
                             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-child-root-authority"), "live child root retirement authority changed during one fixed step"))?
-                            .close_step(children, current, maximum_items, maximum_bytes)?
+                            .close_step(children, current, &owners, maximum_items, maximum_bytes)?
                     };
                     if step != PluginCloseStep::Complete {
                         self.maintenance_child_root_cursor = index;
@@ -29574,10 +29959,15 @@ pub mod app {
                     let Some(generation) = self.peer_roster_processed_generation.checked_add(1) else {
                         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-generation"), "peer roster maintenance generation exhausted"));
                     };
+                    let generation = if self.peer_roster_publications.get(generation).is_some() {
+                        generation
+                    } else {
+                        let Some(orphaned) = self.orphaned_peer_roster_generation() else {
+                            return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                        };
+                        orphaned
+                    };
                     let index = Self::peer_roster_slot(generation);
-                    if self.peer_roster_publications.get(generation).is_none() {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                    }
                     let faulted = self.peer_roster_publications.get(generation).is_some_and(|publication| publication.faulted);
                     let step = if faulted {
                         self.peer_roster_publications
@@ -29676,7 +30066,7 @@ pub mod app {
                         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-reservation"), "terminal peer roster lost its exact ingress reservation"));
                     }
                     self.peer_roster_reservations[reservation_slot] = None;
-                    self.peer_roster_processed_generation = generation;
+                    self.peer_roster_processed_generation = self.peer_roster_processed_generation.max(generation);
                     self.maintenance_peer_roster_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
@@ -29943,10 +30333,11 @@ pub mod app {
                         let retirements = &mut self.child_content_retirements;
                         let children = &mut self.children;
                         let current = &*self.child_content_root;
+                        let owners = retirements.sibling_content_owners(generation);
                         retirements
                             .get_mut(generation)
                             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-child-root-authority"), "child root retirement authority changed during one fixed close step"))?
-                            .close_step(children, current, maximum_items, maximum_bytes)?
+                            .close_step(children, current, &owners, maximum_items, maximum_bytes)?
                     };
                 if step != PluginCloseStep::Complete {
                     self.close_child_root_cursor = index;
@@ -30310,83 +30701,31 @@ pub mod app {
                 LAST_MAINTENANCE_STAGE.store(u64::from(MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE), std::sync::atomic::Ordering::Relaxed);
                 return self.maintenance_config_lane_displaced_step(maximum_items, maximum_bytes);
             }
-            let stage = self.maintenance_stage;
-            LAST_MAINTENANCE_STAGE.store(stage as u64, std::sync::atomic::Ordering::Relaxed);
-            self.maintenance_stage = (self.maintenance_stage + 1) % MAINTENANCE_STAGES;
-            match stage {
-                0..=7 => self.maintenance_early_stage_step(stage, maximum_items, maximum_bytes),
-                8 => {
-                    let pump = &mut self.document_snapshot_read_returns;
-                    let store = &mut self.store;
-                    pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes)
+            // 🎡️ The rotation is FAIR, not lazy. Every stage still runs at most one bounded unit, but an
+            // EMPTY stage must not consume the whole call: it answers `Pending { 0, 0 }`, releases
+            // nothing, and the cursor moves on to the next stage inside the same call. Until this loop
+            // existed a caller that drove `maintenance_step` once per turn released about one owner per
+            // [`MAINTENANCE_STAGES`] turns, because 25 of every 26 turns landed on an idle stage —
+            // measured on the assembled `s.flow.flow@1/*#editor` surface as 2_051 items released in
+            // 100_000 close turns, 96_588 of which released nothing, so a real editor could not finish
+            // closing inside any committed turn budget. The grant is still respected exactly: the scan
+            // only continues past a stage that released NOTHING, so at most one stage in a call spends
+            // it. A `Blocked` stage no longer hides a later stage that can still progress — it is
+            // remembered and reported only if the whole rotation had nothing else to give.
+            let mut unproductive = PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            for _ in 0..MAINTENANCE_STAGES {
+                let stage = self.maintenance_stage;
+                LAST_MAINTENANCE_STAGE.store(stage as u64, std::sync::atomic::Ordering::Relaxed);
+                self.maintenance_stage = (self.maintenance_stage + 1) % MAINTENANCE_STAGES;
+                match self.maintenance_stage_step(stage, maximum_items, maximum_bytes)? {
+                    PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } => {}
+                    PluginCloseStep::Complete => unproductive = PluginCloseStep::Complete,
+                    answer => return Ok(answer),
                 }
-                MAINTENANCE_DOCUMENT_DISPLACED_STAGE => self.maintenance_document_displaced_step(maximum_items, maximum_bytes),
-                10 => match self.drive_envelope_ingress(maximum_items, maximum_bytes, false)? {
-                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-                    step => Ok(step),
-                },
-                11 => {
-                    self.drive_artifact_envelope_decode_worker()?;
-                    Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 })
-                }
-                12 => match self.drive_envelope_field_decoder_returns(maximum_items, maximum_bytes, false)? {
-                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-                    step => Ok(step),
-                },
-                13 => match self.drive_envelope_completed_record_returns(maximum_items, maximum_bytes, false)? {
-                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-                    step => Ok(step),
-                },
-                14 => match self.drive_store_replacement_jobs(maximum_items, maximum_bytes, false)? {
-                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-                    step => Ok(step),
-                },
-                15 => match self.live_runtime_instance_id {
-                    Some(instance_id) => A::mounted_job_maintenance_step(instance_id, maximum_items.min(1), maximum_bytes),
-                    None => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-                },
-                16 => self.instance_operation_owner.maintenance_step(maximum_items.min(1), maximum_bytes),
-                17 => Ok(self.latest_wins_keys.advance(maximum_items.min(1), maximum_bytes)),
-                18 => {
-                    if self.tool_cancellations.cleanup_finished_slot(self.maintenance_cancellation_cursor)?.is_none() {
-                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                    }
-                    self.maintenance_cancellation_cursor = (self.maintenance_cancellation_cursor + 1) % (TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS);
-                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                19 => self.presence_store.maintenance_local_reads_step(maximum_items.min(1), maximum_bytes).map_err(Fault::from).map(|step| match step {
-                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
-                    store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "presence local returned owner is held" },
-                    store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
-                }),
-                20 => self.child_admission_abort_step(maximum_items.min(1), maximum_bytes),
-                21 => match self.retire_document_windows_step(maximum_items, maximum_bytes, false)? {
-                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-                    step => Ok(step),
-                },
-                22 => match self.window_transient_store.maintenance_step(maximum_items.min(1), maximum_bytes)? {
-                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-                    step => Ok(step),
-                },
-                // 🧹️ The process-wide worker-job retirement array. A session dropped before it reached
-                // terminal-empty (a cancelled command, a closed document, an app torn down mid-flight)
-                // parks its node in one of the fixed [`semio_framework_job::WORKER_JOB_SESSION_SLOTS`]
-                // admissions, and ONLY this pump gives that slot back. Without a host that pumps it, the
-                // array fills up for the life of the process and every later `MountedWorkerJobSession`
-                // admission is refused — which is not a slow app but a dead one: the refused operation can
-                // never publish, because its job never ran.
-                23 => {
-                    let advanced = semio_framework_job::pump_worker_job_retirements(1, maximum_items.min(1), maximum_bytes.min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES));
-                    Ok(PluginCloseStep::Pending { released_items: advanced, released_bytes: 0 })
-                }
-                24 => match self.drive_document_archive_load_retirements(maximum_items, maximum_bytes, false)? {
-                    PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
-                    step => Ok(step),
-                },
-                MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE => self.maintenance_config_lane_displaced_step(maximum_items, maximum_bytes),
-                _ => unreachable!("fixed maintenance stage"),
             }
+            Ok(unproductive)
         }
+
 
         fn maintenance_under_pressure(&self) -> bool {
             self.store.maintenance_retirements_under_pressure()
@@ -30917,9 +31256,13 @@ pub mod app {
                 protocol::encode_presence_interaction(&interaction, &mut bytes).await;
                 bytes
             };
+            // 👤️ Generation 0 ⇒ empty bytes, the presence twin of the interaction short-circuit above: a
+            // local presence root that was never published has nothing to say, and `encode_pack` always
+            // writes a record header, so an untouched lane would otherwise ship a pack on every frame.
+            let presence_generation = self.presence_store.generation().await;
             EphemeralSnapshot {
-                presence: self.presence_store.local().encode_pack(),
-                presence_generation: self.presence_store.generation().await,
+                presence: if presence_generation == 0 { Vec::new() } else { self.presence_store.local().encode_pack() },
+                presence_generation,
                 transient_generation: self.transient_store.generation().await,
                 interaction: interaction_bytes,
                 tool_run: self.tool_runs.presence(),
@@ -31236,6 +31579,7 @@ pub mod app {
 
         async fn attach_backbone(&mut self, backbone: store::Backbones) -> Result<(), Fault> {
             self.store.attach_backbone(backbone).await.map_err(|error| error.into_fault())?;
+            self.announce_member_event_logs().await?;
             self.cache = None;
             Ok(())
         }
@@ -31248,7 +31592,8 @@ pub mod app {
 
         async fn tick_backbone(&mut self) -> Result<Vec<protocol::MergeReport>, Fault> {
             let reports = self.store.tick_backbone_reports().await.map_err(|error| error.into_fault())?;
-            if !reports.is_empty() {
+            let folded_member_lanes = self.fold_member_inbound().await?;
+            if !reports.is_empty() || folded_member_lanes != 0 {
                 self.cache = None;
             }
             Ok(reports)
@@ -32967,7 +33312,36 @@ pub mod app {
         }
         let mut owner = store::ArtifactStore::<A::Snapshot, A::Mutation>::new(envelope).await?;
         owner.dispatch(store::ArtifactCommand::Apply { mutations, description: None }).await?;
-        store::print_document_pack(owner.envelope()).await
+        let printed = store::print_document_pack(owner.envelope()).await;
+        // 🧺️ The same witness `store::ArtifactCodec`'s own `apply_ops_binary` thunk pays (ticket
+        // 26/09/18 slice TC3c §2): this is the guest-side twin that builds a store, prints from it
+        // and lets it fall out of scope, so it drains through the identical close cursor rather than
+        // aborting the guest in `ArtifactStore`'s `Drop`.
+        let mut closed = Err(store::VcsError::ValidationFailed("artifact app apply-ops store did not reach terminal emptiness within its bounded close budget".into()));
+        for _ in 0..store::ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS {
+            match owner.close_owned_step(1, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES) {
+                Ok(store::SnapshotRetirementStep::Complete) => {
+                    closed = if owner.close_owned_terminal_is_empty() {
+                        Ok(())
+                    } else {
+                        Err(store::VcsError::ValidationFailed("artifact app apply-ops store reported close completion without terminal emptiness".into()))
+                    };
+                    break;
+                }
+                Ok(store::SnapshotRetirementStep::Pending { .. }) => continue,
+                Ok(store::SnapshotRetirementStep::Blocked) => {
+                    closed = Err(store::VcsError::ValidationFailed("artifact app apply-ops store close is blocked by an outstanding snapshot read lease".into()));
+                    break;
+                }
+                Err(error) => {
+                    closed = Err(store::VcsError::ValidationFailed(error));
+                    break;
+                }
+            }
+        }
+        drop(owner);
+        closed?;
+        printed
     }
     //#endregion 🔖️ArtifactEditor
 
@@ -34889,13 +35263,31 @@ pub mod plugin_runtime {
     }
 
     impl<T> RuntimeInstanceRegistry<T> {
+        /// @emoji 🈳️ Constructs the registry EMPTY — no slot backing at all. Allocator success is
+        /// not an admission: a runtime carries four of these, and the actor one alone is
+        /// `PLUGIN_RUNTIME_INSTANCE_SLOTS` × `RuntimeActorAuthority` ≈ 4 MiB, which an actor that
+        /// never opens an instance would otherwise reserve contiguously up front — the exact shape
+        /// a guest's `dlmalloc` never gives back. Backing is taken by {@link admit_backing}, on the
+        /// first admission that actually needs a slot.
         fn new() -> Self {
-            let mut slots = Vec::new();
-            let allocation_admitted = slots.try_reserve_exact(PLUGIN_RUNTIME_INSTANCE_SLOTS).is_ok();
-            if allocation_admitted {
-                slots.resize_with(PLUGIN_RUNTIME_INSTANCE_SLOTS, std::mem::MaybeUninit::uninit);
+            Self { slots: Vec::new().into_boxed_slice(), occupied: [0; PLUGIN_RUNTIME_INSTANCE_WORDS], allocation_admitted: false }
+        }
+
+        /// @emoji 🛂️ Takes the one fixed slot allocation, once, and reports whether this registry
+        /// now has backing. Idempotent; a refused reservation leaves the registry exactly as empty
+        /// as it was, so every admission gate answers "cannot insert" instead of panicking.
+        fn admit_backing(&mut self) -> bool {
+            if self.allocation_admitted {
+                return true;
             }
-            Self { slots: slots.into_boxed_slice(), occupied: [0; PLUGIN_RUNTIME_INSTANCE_WORDS], allocation_admitted }
+            let mut slots = Vec::new();
+            if slots.try_reserve_exact(PLUGIN_RUNTIME_INSTANCE_SLOTS).is_err() {
+                return false;
+            }
+            slots.resize_with(PLUGIN_RUNTIME_INSTANCE_SLOTS, std::mem::MaybeUninit::uninit);
+            self.slots = slots.into_boxed_slice();
+            self.allocation_admitted = true;
+            true
         }
 
         fn index(instance_id: u32) -> usize {
@@ -34928,7 +35320,7 @@ pub mod plugin_runtime {
 
         #[cfg(test)]
         fn insert(&mut self, instance_id: u32, value: T) -> Result<(), T> {
-            if !self.allocation_admitted {
+            if !self.admit_backing() {
                 return Err(value);
             }
             let index = Self::index(instance_id);
@@ -34942,7 +35334,8 @@ pub mod plugin_runtime {
 
         fn insert_admitted(&mut self, instance_id: u32, value: T) {
             let index = Self::index(instance_id);
-            debug_assert!(self.can_insert(instance_id));
+            let admitted = self.admit_backing();
+            debug_assert!(admitted && !self.occupied(index));
             self.slots[index].write((instance_id, value));
             self.set_occupied(index, true);
         }
@@ -34959,8 +35352,11 @@ pub mod plugin_runtime {
             Some(unsafe { &mut self.slots[index].assume_init_mut().1 })
         }
 
-        fn can_insert(&self, instance_id: u32) -> bool {
-            self.allocation_admitted && !self.occupied(Self::index(instance_id))
+        /// @emoji 🚦️ The admission gate. It takes the backing itself (see {@link admit_backing}) so
+        /// a preflight that answers `true` is a promise the following {@link insert_admitted} can
+        /// keep, and a refused reservation is an ordinary "cannot insert" instead of a panic.
+        fn can_insert(&mut self, instance_id: u32) -> bool {
+            self.admit_backing() && !self.occupied(Self::index(instance_id))
         }
 
         fn take(&mut self, instance_id: u32) -> Option<T> {
@@ -35403,9 +35799,9 @@ pub mod plugin_runtime {
             return Err(plugin_internal_fault("native opening already captured"));
         }
         let mut instances = runtime.instances.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime instance authority busy"))?;
-        let quarantine = runtime.close_quarantine.try_borrow().map_err(|_| plugin_internal_fault("runtime quarantine authority busy"))?;
+        let mut quarantine = runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime quarantine authority busy"))?;
         let mut actors = runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority busy"))?;
-        let document_backbones = runtime.document_backbones.try_borrow().map_err(|_| plugin_internal_fault("document backbone binding authority busy"))?;
+        let mut document_backbones = runtime.document_backbones.try_borrow_mut().map_err(|_| plugin_internal_fault("document backbone binding authority busy"))?;
         if !instances.can_insert(request.instance_id) || !quarantine.can_insert(request.instance_id) || !actors.can_insert(request.instance_id) || !document_backbones.can_insert(request.instance_id) {
             return Err(plugin_internal_fault("native opening slot collided"));
         }
@@ -35440,8 +35836,8 @@ pub mod plugin_runtime {
         if let Some(fault) = runtime.plugin_assembly_error.borrow().clone() {
             return Err(fault);
         }
-        if !runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?.can_insert(id)
-            || !runtime.close_quarantine.try_borrow().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.can_insert(id)
+        if !runtime.instances.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?.can_insert(id)
+            || !runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.can_insert(id)
         {
             return Err(plugin_internal_fault(format!("fixed instance authority is saturated, collided, or quarantined: {id}")));
         }
@@ -36923,7 +37319,11 @@ pub mod plugin_runtime {
         let program = program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?;
         let mut editor = None;
         let mut viewer = None;
+        let mut failure: Option<Fault> = None;
         for definition in &program.manifest.apps {
+            if failure.is_some() {
+                break;
+            }
             let Some(app) = program.create_app(&definition.id) else { continue };
             // 🪪️ The document schema is the primary key — it is what `store::ArtifactCodec` and the
             // hub's trusted catalog are keyed by. The dialect's ARTIFACT KIND is admitted as a second
@@ -36934,40 +37334,127 @@ pub mod plugin_runtime {
             // schema never collide by construction: a kind is `s.<plugin>.<artifact>` and a schema is
             // the artifact's own `DOCUMENT_SCHEMA` spelling.
             let schema_matches = app.artifact_schema().await == artifact_schema;
-            if !schema_matches && definition.dialect.artifact_kind != artifact_schema {
+            let owned = schema_matches || definition.dialect.artifact_kind == artifact_schema;
+            let slot = if definition.role == semio_framework::AppRole::Editor { &mut editor } else { &mut viewer };
+            if owned && slot.is_none() {
+                *slot = Some(app);
                 continue;
             }
-            let slot = if definition.role == semio_framework::AppRole::Editor { &mut editor } else { &mut viewer };
-            if slot.is_some() {
-                return Err(plugin_internal_fault("artifact codec schema resolves more than one app of the same role"));
+            if owned {
+                failure = Some(plugin_internal_fault("artifact codec schema resolves more than one app of the same role"));
             }
-            *slot = Some(app);
+            // 🪦️ Reading a candidate's schema costs a whole constructed app, and a constructed app
+            // owns an `ArtifactStore` whose `Drop` asserts an exact terminal-empty shallow-shell
+            // witness. Every app this resolution builds and does not return therefore leaves through
+            // the same bounded close cursor the runtime's own instance-close job runs.
+            if let Err(error) = close_artifact_codec_app(app) {
+                failure.get_or_insert(error);
+            }
         }
-        editor.or(viewer).ok_or_else(|| plugin_internal_fault("artifact codec schema is owned by no app of this bundle"))
+        let (selected, rejected) = match (editor, viewer) {
+            (Some(editor), viewer) => (Some(editor), viewer),
+            (None, viewer) => (viewer, None),
+        };
+        if let Some(rejected) = rejected {
+            if let Err(error) = close_artifact_codec_app(rejected) {
+                failure.get_or_insert(error);
+            }
+        }
+        if let Some(failure) = failure {
+            if let Some(selected) = selected {
+                close_artifact_codec_app(selected)?;
+            }
+            return Err(failure);
+        }
+        selected.ok_or_else(|| plugin_internal_fault("artifact codec schema is owned by no app of this bundle"))
     }
+
+    /// 🧹️ Drains one THROWAWAY codec app to its exact terminal-empty shell before releasing it —
+    /// the same `close_step`-until-`Complete` plus `close_terminal_is_empty` contract the runtime's
+    /// own instance-close job enforces, reduced to a synchronous drain because a codec app was never
+    /// opened, never bound an instance id and never attached a backbone, so nothing in it can block.
+    ///
+    /// 🪤️ This is the root of ticket 26/09/18 slice TC3c §5f. `plugin_artifact_codec_app` used to
+    /// construct every app of the installed bundle, keep one and DROP the rest, and each of the four
+    /// `codec` entry points then dropped the one it kept. `VcsArtifactApp` owns an `ArtifactStore`
+    /// whose `Drop` asserts that witness, and in a `panic = "abort"` wasm32 guest that assert IS the
+    /// `unreachable` the host reported: every `codec.genesis`, `codec.pack-schema-hash`,
+    /// `codec.print-mirror` and `codec.apply-ops` call trapped, for EVERY plugin whose bundle holds
+    /// more than one app — which is every plugin, since an artifact declares an editor and a viewer.
+    fn close_artifact_codec_app<PA: PluginApp>(mut app: PA) -> Result<(), Fault> {
+        for _ in 0..ARTIFACT_CODEC_APP_CLOSE_MAXIMUM_STEPS {
+            if app.close_terminal_is_empty() {
+                return Ok(());
+            }
+            // 🪦️ `?` is deliberately NOT used on this call: it would return while `app` is still
+            // owned here, dropping a live `ArtifactStore` and aborting the guest with exactly the
+            // `unreachable` this cursor exists to prevent. Every exit retains the app instead.
+            let step = match app.close_step(ARTIFACT_CODEC_APP_CLOSE_ITEMS_PER_STEP, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES) {
+                Ok(step) => step,
+                Err(error) => return Err(retain_unclosed_artifact_codec_app(app, format!("throwaway artifact codec app close faulted: {error:?}"))),
+            };
+            match step {
+                crate::PluginCloseStep::Pending { .. } => {}
+                crate::PluginCloseStep::AwaitingInput { reason } | crate::PluginCloseStep::Blocked { reason } => {
+                    return Err(retain_unclosed_artifact_codec_app(app, format!("throwaway artifact codec app cannot close: {reason}")));
+                }
+                crate::PluginCloseStep::Complete => break,
+            }
+        }
+        if !app.close_terminal_is_empty() {
+            return Err(retain_unclosed_artifact_codec_app(app, "throwaway artifact codec app did not reach its terminal-empty witness".to_string()));
+        }
+        Ok(())
+    }
+
+    /// 🪦️ An app that could not be closed must not be DROPPED either: its `ArtifactStore`'s `Drop`
+    /// would abort the whole guest, turning a reportable fault into the very `unreachable` this
+    /// close cursor exists to prevent. The allocation is retained instead and the fault is returned.
+    /// A codec instance is created and thrown away per call, so the guest's whole linear memory goes
+    /// with it — leaking one app inside it costs nothing, while aborting costs the caller's answer.
+    fn retain_unclosed_artifact_codec_app<PA: PluginApp>(app: PA, detail: String) -> Fault {
+        std::mem::forget(app);
+        plugin_internal_fault(detail)
+    }
+
+    /// 🧹️ How many close units one throwaway codec app may spend. A never-opened app closes in a
+    /// handful of steps; the ceiling is what turns a close cursor that stops making progress into a
+    /// returned fault rather than an unbounded loop inside a guest call.
+    const ARTIFACT_CODEC_APP_CLOSE_MAXIMUM_STEPS: usize = 1 << 20;
+
+    /// 🧹️ Items per close unit, matching the runtime's own instance-close grant shape.
+    const ARTIFACT_CODEC_APP_CLOSE_ITEMS_PER_STEP: usize = 1_024;
 
     /// 🧬️ `codec.pack-schema-hash` — the kind's own 32-byte snapshot-record fingerprint.
     pub async fn plugin_artifact_pack_schema_hash<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str) -> Result<[u8; 32], Fault> {
         let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
-        app.artifact_pack_schema_hash().await.ok_or_else(|| plugin_internal_fault("artifact codec schema has no structural record specification"))
+        let answered = app.artifact_pack_schema_hash().await;
+        close_artifact_codec_app(app)?;
+        answered.ok_or_else(|| plugin_internal_fault("artifact codec schema has no structural record specification"))
     }
 
     /// 🌱️ `codec.genesis` — the canonical empty document of `artifact_schema` at `document_id`.
     pub async fn plugin_artifact_genesis<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, document_id: &str) -> Result<store::ArtifactPackFiles, Fault> {
         let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
-        app.artifact_genesis_pair(document_id).await
+        let produced = app.artifact_genesis_pair(document_id).await;
+        close_artifact_codec_app(app)?;
+        produced
     }
 
     /// 📥️ `codec.print-mirror` — the host's pair-validation fence for an unlinked package.
     pub async fn plugin_artifact_print_mirror<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, pack: &[u8], spr: &[u8]) -> Result<store::ArtifactTextFiles, Fault> {
         let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
-        app.artifact_print_mirror(pack, spr).await
+        let mirrored = app.artifact_print_mirror(pack, spr).await;
+        close_artifact_codec_app(app)?;
+        mirrored
     }
 
     /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for an unlinked package.
     pub async fn plugin_artifact_apply_ops<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<store::ArtifactPackFiles, Fault> {
         let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
-        app.artifact_apply_ops(pack, spr, ops).await
+        let applied = app.artifact_apply_ops(pack, spr, ops).await;
+        close_artifact_codec_app(app)?;
+        applied
     }
 
     /// @emoji 📦️ Serializes the instance's full persistent document as pack+spr bytes

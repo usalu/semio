@@ -190,7 +190,7 @@ async fn export_pdf_publishes_a_segmented_download_the_host_can_drain_into_a_who
     let pdf = decode_base64(std::str::from_utf8(&assembled).expect("base64 is ASCII")).expect("base64 payload");
     assert_eq!(assert_pdf_structure(&pdf), 3, "font stream + two page streams");
     assert!(String::from_utf8_lossy(&pdf).contains("/Count 2 >>"));
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 //#endregion 📕️PdfDocument
 

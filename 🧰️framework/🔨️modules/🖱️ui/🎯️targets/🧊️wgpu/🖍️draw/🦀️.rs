@@ -985,6 +985,13 @@ impl RasterKeepSetV1 {
         self.slots.iter().flatten().any(|retained| *retained == key)
     }
 
+    fn remove(&mut self, key: RasterTextureKey) {
+        if let Some(slot) = self.slots.iter_mut().find(|slot| slot.is_some_and(|retained| retained == key)) {
+            *slot = None;
+            self.len = self.len.saturating_sub(1);
+        }
+    }
+
     pub fn len(&self) -> usize {
         self.len
     }
@@ -1065,6 +1072,12 @@ impl RasterResidencyLedger {
 
     pub fn release_previous(&mut self) {
         self.previous = RasterKeepSetV1::default();
+    }
+
+    fn remove_key(&mut self, key: RasterTextureKey) {
+        self.committed.remove(key);
+        self.candidate.remove(key);
+        self.previous.remove(key);
     }
 
     pub fn counts(&self) -> (usize, usize, usize) {
@@ -1931,6 +1944,7 @@ enum RasterTextureRetirementMode {
     Abort(RasterTextureWitness),
     Commit(RasterTextureWitness),
     Unowned,
+    Exact(RasterTextureKey),
     Close,
 }
 
@@ -1950,6 +1964,7 @@ pub struct RasterTextureTable {
     reservation_retirement: Option<RasterTextureReservationCloseCursor>,
     witnesses: RasterOperationWitnessLedger,
     residency: RasterResidencyLedger,
+    exact_close: Option<RasterTextureKey>,
     next_reservation_nonce: u64,
     layout: wgpu::BindGroupLayout,
     sampler: wgpu::Sampler,
@@ -1969,6 +1984,7 @@ impl RasterTextureTable {
             reservation_retirement: None,
             witnesses: RasterOperationWitnessLedger::default(),
             residency: RasterResidencyLedger::default(),
+            exact_close: None,
             next_reservation_nonce: 1,
             layout: layout.clone(),
             sampler,
@@ -2425,7 +2441,7 @@ impl RasterTextureTable {
             };
         }
         if cursor.scan >= RASTER_TEXTURE_TABLE_CAPACITY {
-            if cursor.mode != RasterTextureRetirementMode::Unowned && !self.witnesses.retire_step() {
+            if !matches!(cursor.mode, RasterTextureRetirementMode::Unowned | RasterTextureRetirementMode::Exact(_)) && !self.witnesses.retire_step() {
                 return Ok(false);
             }
             self.retirement = None;
@@ -2470,6 +2486,16 @@ impl RasterTextureTable {
             }
             RasterTextureRetirementMode::Unowned => {
                 if let Some(entry) = take_unowned_live_entry(&mut self.live, &self.staged, &self.residency, index) {
+                    cursor.owner = Some(RasterTextureRetirementOwner::new(entry));
+                }
+            }
+            RasterTextureRetirementMode::Exact(key) => {
+                let staged = self.staged.slots[index].as_ref().is_some_and(|entry| entry.key == key).then(|| self.staged.take(index)).flatten();
+                if staged.is_some() && self.live.slots[index].as_ref().is_some_and(|entry| entry.key == key) {
+                    cursor.scan = index;
+                }
+                let live = if staged.is_none() && self.live.slots[index].as_ref().is_some_and(|entry| entry.key == key) { self.live.take(index) } else { None };
+                if let Some(entry) = staged.or(live) {
                     cursor.owner = Some(RasterTextureRetirementOwner::new(entry));
                 }
             }
@@ -2532,6 +2558,43 @@ impl RasterTextureTable {
         self.retirement_step()
     }
 
+    pub fn begin_exact_close(&mut self, key: &str) -> Result<bool, &'static str> {
+        let key = RasterTextureKey::new(key)?;
+        if self.exact_close == Some(key) {
+            return Ok(true);
+        }
+        if self.exact_close.is_some() {
+            return Err("raster exact-close authority was occupied");
+        }
+        if self.closing || self.retirement.is_some() || self.upload.is_some() || self.upload_close.is_some() || self.reservation.is_some() || self.reservation_retirement.is_some() || !self.witnesses.is_empty() {
+            return Ok(false);
+        }
+        self.residency.remove_key(key);
+        self.exact_close = Some(key);
+        Ok(true)
+    }
+
+    pub fn close_exact_step(&mut self, key: &str) -> Result<bool, &'static str> {
+        let key = RasterTextureKey::new(key)?;
+        if self.exact_close != Some(key) {
+            return Err("raster exact-close token was stale");
+        }
+        if self.retirement.is_none() {
+            let retained = self.live.get(key.as_str()).is_some() || self.staged.get(key.as_str()).is_some();
+            if !retained {
+                self.exact_close = None;
+                return Ok(true);
+            }
+            self.begin_retirement(RasterTextureRetirementMode::Exact(key))?;
+        }
+        Ok(self.retirement_step()? && self.live.get(key.as_str()).is_none() && self.staged.get(key.as_str()).is_none())
+    }
+
+    pub fn exact_close_terminal_is_empty(&self, key: &str) -> bool {
+        let Ok(key) = RasterTextureKey::new(key) else { return false };
+        self.exact_close.is_none() && self.live.get(key.as_str()).is_none() && self.staged.get(key.as_str()).is_none() && !self.residency.protects(key)
+    }
+
     pub fn close_upload_step(&mut self) -> RasterTextureCleanupStep {
         if let Some(retirement) = self.reservation_retirement.as_mut() {
             let step = retirement.step();
@@ -2592,6 +2655,7 @@ impl RasterTextureTable {
             && self.reservation_retirement.is_none()
             && self.witnesses.is_empty()
             && self.residency.is_empty()
+            && self.exact_close.is_none()
     }
 }
 
@@ -4187,6 +4251,7 @@ impl UiPipelines {
         instance: &crate::wgpu::kernel_3d_scene::Instance3d,
         receives_shadow: bool,
         translucent: bool,
+        scissor: ScissorRect,
         width: f32,
         height: f32,
     ) -> Result<bool, &'static str> {
@@ -4201,7 +4266,7 @@ impl UiPipelines {
         };
         let scale = self.surface_scale;
         let viewport = pass_owner.viewport;
-        let scene_scissor = self.physical_scissor(ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 });
+        let scene_scissor = self.physical_scissor(scissor);
         if scene_scissor.w == 0 || scene_scissor.h == 0 {
             return Ok(true);
         }
@@ -4240,6 +4305,7 @@ impl UiPipelines {
         pass_owner: &ScenePass3d,
         draw_owner: &crate::wgpu::kernel_3d_scene::SceneMaterialDraw3d,
         instance: &crate::wgpu::kernel_3d_scene::Instance3d,
+        scissor: ScissorRect,
         width: f32,
         height: f32,
     ) -> Result<bool, &'static str> {
@@ -4297,7 +4363,7 @@ impl UiPipelines {
         };
         let scale = self.surface_scale;
         let viewport = pass_owner.viewport;
-        let scene_scissor = self.physical_scissor(ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 });
+        let scene_scissor = self.physical_scissor(scissor);
         if scene_scissor.w == 0 || scene_scissor.h == 0 {
             return Ok(true);
         }
@@ -4362,6 +4428,7 @@ impl UiPipelines {
         raster_store: &'a RasterTextureTable,
         pass_owner: &ScenePass3d,
         instance: &crate::wgpu::kernel_3d_scene::TexturedInstance3d,
+        scissor: ScissorRect,
     ) -> Result<(), &'static str> {
         let Some(raster) = raster_store.get(&instance.texture_key) else { return Ok(()) };
         let globals = World3dGlobals::from_pass(pass_owner);
@@ -4378,7 +4445,7 @@ impl UiPipelines {
         });
         let scale = self.surface_scale;
         let viewport = pass_owner.viewport;
-        let scene_scissor = self.physical_scissor(ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 });
+        let scene_scissor = self.physical_scissor(scissor);
         if scene_scissor.w == 0 || scene_scissor.h == 0 {
             return Ok(());
         }
@@ -4409,6 +4476,7 @@ impl UiPipelines {
         color_view: &'a wgpu::TextureView,
         depth_view: &'a wgpu::TextureView,
         pass_owner: &ScenePass3d,
+        scissor: ScissorRect,
     ) -> Result<(), &'static str> {
         let grid = pass_owner.procedural_grid.as_ref().ok_or("prepared world grid cursor was stale")?;
         let globals = World3dGlobals::from_pass(pass_owner);
@@ -4416,7 +4484,7 @@ impl UiPipelines {
         self.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
         queue.write_buffer(&self.world_grid_uniform_buffer, 0, bytemuck::bytes_of(&World3dGridUniforms::from_grid(grid)));
         let viewport = physical_viewport_rect(pass_owner.viewport, self.surface_scale);
-        let scene_scissor = self.physical_scissor(ScissorRect { x: pass_owner.viewport[0] as u32, y: pass_owner.viewport[1] as u32, w: pass_owner.viewport[2] as u32, h: pass_owner.viewport[3] as u32 });
+        let scene_scissor = self.physical_scissor(scissor);
         if scene_scissor.w == 0 || scene_scissor.h == 0 {
             return Ok(());
         }
@@ -4450,6 +4518,7 @@ impl UiPipelines {
         frame_buffers: &'a mut FrameBuffers,
         pass_owner: &ScenePass3d,
         vertices: &[crate::wgpu::kernel_3d_scene::LineVertex3d],
+        scissor: ScissorRect,
     ) -> Result<(), &'static str> {
         if vertices.len() != 2 {
             return Err("prepared world line scalar was not one segment");
@@ -4463,7 +4532,7 @@ impl UiPipelines {
         };
         let scale = self.surface_scale;
         let viewport = pass_owner.viewport;
-        let scene_scissor = self.physical_scissor(ScissorRect { x: viewport[0] as u32, y: viewport[1] as u32, w: viewport[2] as u32, h: viewport[3] as u32 });
+        let scene_scissor = self.physical_scissor(scissor);
         if scene_scissor.w == 0 || scene_scissor.h == 0 {
             return Ok(());
         }
@@ -4536,6 +4605,9 @@ impl UiPipelines {
         scene: &'a SceneColorTarget,
         frame_buffers: &'a mut FrameBuffers,
         region: &GlassRegion,
+        scissor: ScissorRect,
+        width: f32,
+        height: f32,
     ) -> Result<(), &'static str> {
         let instance = GlassInstance { rect: region.rect, tint: [region.tint.r, region.tint.g, region.tint.b, region.tint.a], params: [region.radius, region.alpha, Theme::glass_mip_level(region.blur_px, SCENE_MIP_LEVELS - 1), region.saturate] };
         let Some(buffer) = frame_buffers.glass_instances.upload(device, queue, std::slice::from_ref(&instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_glass_scalar") else {
@@ -4554,6 +4626,7 @@ impl UiPipelines {
             occlusion_query_set: None,
             multiview_mask: None,
         });
+        set_pass_scissor(&mut pass, Some(scissor), self.surface_scale, width, height);
         pass.set_pipeline(&self.glass_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
         pass.set_bind_group(1, &scene_bind_group, &[]);
@@ -4568,8 +4641,7 @@ impl UiPipelines {
         self.blit_sampled_color(device, encoder, view, scene.sample_view(), scene.sampler());
     }
 
-    /// 🖼️ The terminal copy of a finished composite onto the acquired surface texture — see
-    /// [`PreparedCompositeTarget`] for why nothing else may touch the swapchain.
+    /// 🖼️ Copies the accumulated composite into a backdrop snapshot or the terminal surface.
     pub fn blit_prepared_composite<'a>(&'a self, device: &wgpu::Device, encoder: &mut wgpu::CommandEncoder, view: &'a wgpu::TextureView, composite: &'a PreparedCompositeTarget) {
         self.blit_sampled_color(device, encoder, view, &composite.view, &composite.sampler);
     }

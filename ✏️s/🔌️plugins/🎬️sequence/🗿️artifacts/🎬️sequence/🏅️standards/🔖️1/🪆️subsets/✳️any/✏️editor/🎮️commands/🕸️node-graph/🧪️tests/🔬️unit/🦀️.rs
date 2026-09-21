@@ -1,7 +1,7 @@
-use crate::editor::sequence::unit_tests::context::{dispatch, new_app, new_app_with_registry_wired, select_steps};
+use crate::editor::sequence::unit_tests::context::{dispatch, live_host_snapshot, main_window_meta, new_app, new_app_with_registry_wired, select_steps};
 use crate::editor::sequence::SequenceCommand;
 use crate::SequenceCamera;
-use semio_framework_plugin::{PluginApp, ViewModel};
+use semio_framework_plugin::PluginApp;
 
 use super::set_viewport::SetViewport;
 
@@ -10,9 +10,16 @@ use super::set_viewport::SetViewport;
 #[semio_framework_async_macros::async_test]
 async fn set_viewport_writes_config_not_operations() {
     let mut app = new_app().await;
-    let result = app.dispatch_typed(SequenceCommand::SetViewport(SetViewport { camera: SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } }), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("viewport pan/zoom");
+    // 🔁️ A mounted app publishes AFTER it answers, so the config write is only visible once the
+    // retained operation has settled — `context::dispatch` drives that continuation the way the host
+    // does. `result.mutations` is always empty on a mounted app; the no-VCS-edit claim is proven by
+    // the settled receipt carrying no `Artifact` lane.
+    let result = dispatch(&mut app, SequenceCommand::SetViewport(SetViewport { camera: SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } })).await;
     assert!(result.mutations.is_empty(), "setViewport must not emit a VCS operation");
-    let node = app.render(crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, None, &ViewModel::default()).await.expect("render");
+    // 🪟️ The camera lives in the MAIN window's own config, so the read has to come through the same
+    // window instance the write was addressed at — an unaddressed render sees the default camera.
+    let view = main_window_meta().view_state.expect("main window view");
+    let node = app.render(crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, None, &view).await.expect("render");
     let semio_framework_plugin::Component::Surface(props) = &node.root.component else { panic!("semantic graph") };
     let scene: semio_framework_plugin::NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed graph");
     assert_eq!(scene.viewport.expect("camera viewport").zoom, 2.0);
@@ -28,5 +35,5 @@ async fn node_graph_edit_delete_selection_clears_selection() {
     let mut app = new_app_with_registry_wired().await;
     select_steps(&mut app, &["step-1"]).await;
     dispatch(&mut app, SequenceCommand::NodeGraphEdit(super::node_graph_edit::NodeGraphEdit { operations_json: "[{\"operation\":\"deleteSelection\"}]".into() })).await;
-    assert!(!app.snapshot().expect("projection").to_host_snapshot().steps.iter().any(|step| step.id == "step-1"));
+    assert!(!live_host_snapshot(&app).await.steps.iter().any(|step| step.id == "step-1"));
 }

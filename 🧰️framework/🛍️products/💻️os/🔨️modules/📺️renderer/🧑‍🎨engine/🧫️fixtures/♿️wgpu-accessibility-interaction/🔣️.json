@@ -328,5 +328,26 @@
         "height": 24.0
       }
     ]
+  },
+  "presentedChrome": {
+    "firstEpoch": 41,
+    "successorEpoch": 42,
+    "controls": [
+      { "id": "ui.panelToggle.display", "label": "Display" },
+      { "id": "ui.panelToggle.settings", "label": "Settings" }
+    ]
+  },
+  "settingsTabStrip": {
+    "availableWidth": 300,
+    "activeId": "framework.settings.general",
+    "tabs": [
+      { "id": "fixture.settings.app", "label": "App" },
+      { "id": "framework.settings.general", "label": "General" },
+      { "id": "framework.settings.theme", "label": "Theme" },
+      { "id": "framework.settings.keybindings", "label": "Keybindings" },
+      { "id": "framework.settings.default-apps", "label": "Default Apps" },
+      { "id": "framework.settings.conflicts", "label": "Conflicts" }
+    ],
+    "tailIds": ["framework.settings.default-apps", "framework.settings.conflicts"]
   }
 }

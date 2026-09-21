@@ -306,6 +306,18 @@ pub fn process3d_take_publication_hostile_observed(operation: semio_framework_jo
     slot.take()?.observed
 }
 
+/// 🛣️ The ONE lane every test that admits into the process-global publication registry takes first.
+/// The lease table is a four-slot DIRECT-MAPPED registry shared by the whole test binary, so two
+/// laws admitting concurrently (the suite runs multi-threaded) collide on a slot and report
+/// `process3d-publication.saturated` — a scheduling artifact of the fixture, never the property under
+/// test. Poisoning is absorbed: a lane is a scheduling device, and the panic that poisoned it is
+/// already the failure being reported.
+#[cfg(test)]
+pub fn process3d_publication_authority_lane() -> std::sync::MutexGuard<'static, ()> {
+    static LANE: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    LANE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 /// 🧮️ Domain item, output page, and control limits admitted for one publication.
 #[derive(Clone, Copy)]
 pub struct Process3dPublicationLimits {

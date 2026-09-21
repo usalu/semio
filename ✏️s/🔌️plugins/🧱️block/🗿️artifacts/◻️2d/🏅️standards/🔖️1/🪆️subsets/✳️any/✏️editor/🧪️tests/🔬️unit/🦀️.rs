@@ -99,8 +99,13 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     let definition = create_block2d_app();
     let migrated: Vec<&str> = every_command().iter().map(Block2dCommand::command_id).collect();
     assert_eq!(migrated.iter().copied().collect::<std::collections::BTreeSet<_>>(), BLOCK2D_RETAINED_TOOL_IDS.iter().copied().collect::<std::collections::BTreeSet<_>>());
+    // 🪟️ App-level actions are no longer CLONED onto every window kind; `window_kind_actions`
+    // resolves a window's own roster plus every unclaimed app-level action at read time, and that
+    // resolved roster — not the raw `WindowKindDefinition::actions` field — is what a window can
+    // dispatch.
+    let resolved: Vec<&semio_framework_plugin::ActionDefinition> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
     for tool_id in BLOCK2D_RETAINED_TOOL_IDS {
-        let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} declared"));
+        let action = resolved.iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is dispatchable from a window"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id} must be UI-dispatchable");
     }
 }

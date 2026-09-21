@@ -927,7 +927,7 @@ fn tree_window_law_document(offset: usize, rows_per_section: usize) -> crate::Co
         let node = crate::TreeNode::try_new(format!("section-{section}"), ui_contract::Component::TreeSection(props)).expect("bounded fixture section");
         sections.push(node.try_with_children(rows).unwrap_or_else(|_| panic!("bounded fixture section children")));
     }
-    let root = crate::TreeNode::try_new("artifact-tree", ui_contract::Component::Tree(ui_contract::TreeProps { interaction_domain: Some(ui_text("object")) })).expect("bounded fixture tree");
+    let root = crate::TreeNode::try_new("artifact-tree", ui_contract::Component::Tree(ui_contract::TreeProps { presentation: Default::default(), interaction_domain: Some(ui_text("object")) })).expect("bounded fixture tree");
     tree(root.try_with_children(sections).unwrap_or_else(|_| panic!("bounded fixture tree children")))
 }
 

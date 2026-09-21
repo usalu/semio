@@ -50,7 +50,8 @@ fn every_component_variant_round_trips() {
     component_round_trips(Component::Separator(SeparatorProps {}));
     component_round_trips(Component::Input(InputProps { kind: InputKind::Number, value: ui_text("3"), placeholder: None, commit: Some(ui_text("blur")), min: Some(0.0), max: Some(10.0), step: Some(1.0), accept: None }));
     component_round_trips(Component::Select(SelectProps { value: ui_text("a"), items: crate::UiFixedList::default(), placeholder: None }));
-    component_round_trips(Component::Toggle(ToggleProps { on: true, icon: ui_text("toggle-left"), text: Some(label("Enabled")) }));
+    component_round_trips(Component::Toggle(ToggleProps { appearance: ToggleAppearance::Button, on: true, icon: ui_text("toggle-left"), text: Some(label("Enabled")) }));
+    component_round_trips(Component::Toggle(ToggleProps { appearance: ToggleAppearance::Checkbox, on: true, icon: ui_text("check"), text: Some(label("Enabled")) }));
     component_round_trips(Component::KeyValueList(KeyValueListProps { entries: crate::UiFixedList::default() }));
     component_round_trips(Component::Slider(SliderProps { value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: Some(ui_text("m")) }));
     component_round_trips(Component::NumberStepper(NumberStepperProps { value: 2.0, step: 1.0, uniform: false }));
@@ -58,7 +59,7 @@ fn every_component_variant_round_trips() {
     component_round_trips(Component::IconSelect(IconSelectProps { value: ui_text("circle"), uniform: true, classifier_kind: ui_text("shape") }));
     component_round_trips(Component::Progress(ProgressProps { completed: 12.0, total: Some(100.0), value_text: label("12 of 100") }));
     component_round_trips(Component::Progress(ProgressProps { completed: 3.0, total: None, value_text: label("Preparing") }));
-    component_round_trips(Component::Tree(TreeProps { interaction_domain: Some(ui_text("selection")) }));
+    component_round_trips(Component::Tree(TreeProps { presentation: Default::default(), interaction_domain: Some(ui_text("selection")) }));
     component_round_trips(Component::TreeSection(TreeSectionProps { label: Some(label("Section")), default_open: Some(true), window: Some(TreeWindow { total: 512, offset: 128 }) }));
     component_round_trips(Component::TreeItem(TreeItemProps {
         label: label("Item"),

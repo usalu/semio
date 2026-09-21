@@ -12,7 +12,8 @@
     "finish": "Return one reserved completion at the FRONT and release its reservation.",
     "checkOut": "Lend the single interaction state to one bounded step. `admitted` is false while another step already holds it.",
     "checkIn": "Return the interaction state and clear its ledger.",
-    "apply": "One apply opportunity. `admission` is the ledger's verdict for the queue HEAD, `appliedRevision` the completion the turn removed (null when none is applicable), `opportunities` the ledger's age of the live checkout."
+    "apply": "One apply opportunity. `admission` is the ledger's verdict for the queue HEAD, `appliedRevision` the completion the turn removed (null when none is applicable), `opportunities` the ledger's age of the live checkout.",
+    "presenterRestore": "Return only the checked-out interaction from the first typed restoring completion, clear its restoring flag, and retain that completion in the same slot for post-presentation cursor work."
   },
   "rows": [
     {
@@ -150,6 +151,21 @@
         { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 }
       ],
       "expect": { "length": 0, "readyRevisions": [], "abandonedNotices": [{ "site": "frame-deferred", "opportunities": 2 }] }
+    },
+    {
+      "id": "presenter-return-restores-state-without-running-the-deferred-cursor",
+      "why": "A sealed presentation cannot run queued dispatch or deferred mutation, but it must recover the checked-out state carried by the typed completion. The presenter-only step clears the return owner, checks the state in, and leaves the same cursor completion in the same slot until ordinary apply resumes after presentation.",
+      "capacity": 8,
+      "steps": [
+        { "op": "checkOut", "site": "frame-deferred", "admitted": true },
+        { "op": "reserveInteraction", "admitted": true },
+        { "op": "finish", "key": null, "revision": 9, "requiresInteraction": false, "restoresInteraction": true },
+        { "op": "enqueue", "key": null, "revision": 1, "requiresInteraction": true, "restoresInteraction": false, "admitted": true },
+        { "op": "presenterRestore", "restoredRevision": 9 },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 9, "opportunities": 0 },
+        { "op": "apply", "admission": "admitted", "appliedRevision": 1, "opportunities": 0 }
+      ],
+      "expect": { "length": 0, "readyRevisions": [], "abandonedNotices": [] }
     },
     {
       "id": "the-fixed-bound-always-keeps-one-interaction-reserve",

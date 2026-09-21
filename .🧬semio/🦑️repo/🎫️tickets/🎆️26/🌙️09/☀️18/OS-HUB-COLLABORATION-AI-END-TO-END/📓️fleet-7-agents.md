@@ -25,6 +25,14 @@ Resume a cut worker with `SendMessage` to its id from THIS session (ids do not r
 | FP5 | opus | ac00297852f7948fe | 📓️fp5-plugin-lib-zero-red.md |
 | C7 | opus | a41716b4d2f6370df | 📓️c7-hub-document-mount-and-scenario.md |
 | FP6 | opus | a6750f626500942f7 | 📓️fp6-plugin-lib-zero-red.md |
+| JB1 | opus | a13b72604a1197a2d | 📓️jb1-builtin-jobs-in-production.md |
+| FP7 | opus | a2deeefc34e45e908 | 📓️fp7-plugin-lib-zero-red.md |
+| TC3d | opus | a770b58260db77123 | 📓️tc3d-guest-genesis-and-note-creation.md |
+| FL2 | opus | abcf668a81cec2e91 | 📓️fl2-child-lane-replication-and-window-config.md |
+| FP8 | opus | ab41e6c4672c1833c | 📓️fp8-plugin-lib-zero-red.md |
+| KN1 | opus | a3b961a69c6588545 | 📓️kn1-kernel-lib-gate.md |
+| FP9 | opus | ae9b7df07959ba13c | 📓️fp9-plugin-lib-zero-red.md |
+| KN2 | opus | a3c7eb02ceb56d115 | 📓️kn2-kernel-lib-zero-red.md |
 | G14 | sonnet | aecbba2d7d4a548d8 | 📋️g14-acceptance-ledger.md |
 | G15 | sonnet | a449aa9e65495824d | 📓️g15-production-readiness-reaudit.md |
 | G16 | sonnet | aed4d623e8b6b9f7f | 📓️g16-hub-backend-reaudit.md |

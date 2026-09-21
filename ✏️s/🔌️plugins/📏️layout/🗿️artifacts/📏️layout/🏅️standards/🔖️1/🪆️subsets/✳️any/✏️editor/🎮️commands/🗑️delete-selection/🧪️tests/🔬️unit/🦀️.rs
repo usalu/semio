@@ -19,11 +19,11 @@ async fn delete_selection_removes_the_live_selected_frame() {
     let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
     app.bind_instance_id(meta.instance_id).await;
     app.dispatch_typed(LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: Some(frame_id.clone()), page_id: Some("page-1".into()) }), &meta).await.expect("select frame via preflight focus");
-    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.expect("focus settles");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id).await.expect("focus settles");
     assert_eq!(selected_frames(&app).await, vec![frame_id.clone()]);
     app.dispatch_typed(LayoutCommand::DeleteSelection(DeleteSelection {}), &meta).await.expect("deleteSelection");
-    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.expect("delete settles");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id).await.expect("delete settles");
     let snapshot = app.snapshot().expect("projection");
     assert!(!snapshot.pages[0].frames.iter().any(|frame| frame.id() == frame_id), "deleteSelection must remove the selected frame");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }

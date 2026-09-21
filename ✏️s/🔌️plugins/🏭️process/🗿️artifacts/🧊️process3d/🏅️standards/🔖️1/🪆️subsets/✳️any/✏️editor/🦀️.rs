@@ -751,7 +751,10 @@ fn admit_process3d_config_mutation(mutation: &Process3dConfigMutation) -> Result
     if retained_bytes > envelope {
         return Err("Process3d config mutation exceeds its fixed retained preparation envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    // 🧺️ `work_items` counts staged edit ROWS, not mutations: `prepare_process3d_config` always yields
+    // exactly one inverse row beside the forward one, so every config gesture folds TWO rows. Declaring
+    // 1 fail-closes each of them with `batched item candidate failed its exact fixed fold contract`.
+    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
 }
 
 fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMutation) -> Result<(Process3dConfig, Vec<Process3dConfigMutation>, Process3dConfigMutation), String> {

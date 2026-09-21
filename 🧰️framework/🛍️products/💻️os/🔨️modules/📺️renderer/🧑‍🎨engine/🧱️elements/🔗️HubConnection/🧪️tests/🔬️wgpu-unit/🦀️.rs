@@ -136,11 +136,7 @@ fn one_live_document_means_the_hub_is_reachable_however_many_others_are_detached
 #[test]
 fn the_peer_count_is_the_max_over_live_documents_and_never_a_sum() {
     let statuses = [HubDocumentRemote::Live { peer_count: 3 }, HubDocumentRemote::Live { peer_count: 1 }, HubDocumentRemote::Live { peer_count: 2 }];
-    assert_eq!(
-        hub_connection_summary(&statuses, HubSessionPresence::SignedIn).state,
-        HubConnectionState::Live { peer_count: 3 },
-        "a sum would double-count a peer with two documents open, which no reader could interpret"
-    );
+    assert_eq!(hub_connection_summary(&statuses, HubSessionPresence::SignedIn).state, HubConnectionState::Live { peer_count: 3 }, "a sum would double-count a peer with two documents open, which no reader could interpret");
 }
 
 #[test]
@@ -164,13 +160,7 @@ fn a_shell_with_no_sign_in_surface_at_all_offers_no_button() {
 
 #[test]
 fn every_pill_state_carries_its_own_icon_and_its_own_wire_spelling() {
-    let states = [
-        HubConnectionState::SignedOut,
-        HubConnectionState::Live { peer_count: 1 },
-        HubConnectionState::Connecting,
-        HubConnectionState::Reconnecting,
-        HubConnectionState::Offline,
-    ];
+    let states = [HubConnectionState::SignedOut, HubConnectionState::Live { peer_count: 1 }, HubConnectionState::Connecting, HubConnectionState::Reconnecting, HubConnectionState::Offline];
     let mut icons: Vec<&str> = states.iter().map(|state| state.icon_id()).collect();
     let mut spellings: Vec<&str> = states.iter().map(|state| state.as_str()).collect();
     icons.sort_unstable();
@@ -213,17 +203,9 @@ fn every_workspace_draft_is_live_and_the_secret_field_keeps_password_semantics()
 #[test]
 fn a_selected_remote_hub_has_a_targetable_forget_control() {
     let mut state = workspace();
-    let connection = crate::hub_sign_in::HubConnection {
-        id: "remote-hub".into(),
-        kind: crate::hub_sign_in::HubConnectionKind::Remote,
-        label: "Remote hub".into(),
-        origin: "https://hub.example.org".into(),
-        last_user_id: None,
-    };
+    let connection = crate::hub_sign_in::HubConnection { id: "remote-hub".into(), kind: crate::hub_sign_in::HubConnectionKind::Remote, label: "Remote hub".into(), origin: "https://hub.example.org".into(), last_user_id: None };
     state.book = crate::hub_sign_in::select_hub_connection(&crate::hub_sign_in::upsert_hub_connection(&state.book, connection), "remote-hub");
-    assert!(collected(&build_hub_workspace_ui(&state, Locale::En), control_ids)
-        .iter()
-        .any(|id| id == &format!("{HUB_SIGN_IN_FORM_ID}.forget")));
+    assert!(collected(&build_hub_workspace_ui(&state, Locale::En), control_ids).iter().any(|id| id == &format!("{HUB_SIGN_IN_FORM_ID}.forget")));
 }
 
 #[test]
@@ -470,11 +452,7 @@ fn a_signed_out_workspace_that_never_loaded_a_row_shows_only_the_sign_in_section
 // the control it governs — no second verb, no nudge.
 
 fn control_enabled(state: &HubWorkspaceState, id: &str) -> bool {
-    collected(&build_hub_workspace_ui(state, Locale::En), enabled_buttons)
-        .into_iter()
-        .find(|(button, _)| button == id)
-        .map(|(_, enabled)| enabled)
-        .unwrap_or_else(|| panic!("{id} is not painted at all"))
+    collected(&build_hub_workspace_ui(state, Locale::En), enabled_buttons).into_iter().find(|(button, _)| button == id).map(|(_, enabled)| enabled).unwrap_or_else(|| panic!("{id} is not painted at all"))
 }
 
 #[test]
@@ -524,12 +502,7 @@ fn every_draft_field_is_read_by_the_tree_so_a_republish_is_never_wasted() {
 
 #[test]
 fn the_browser_door_carries_the_same_mint_route_au3_proved_live() {
-    let credential = HubSignInCredential {
-        email: "user1@semio.dev".into(),
-        password: "collab e2e first human phrase".into(),
-        device_instance_id: "wgr-probe".into(),
-        client_class: crate::hub_sign_in::HubSignInClientClass::Browser,
-    };
+    let credential = HubSignInCredential { email: "user1@semio.dev".into(), password: "collab e2e first human phrase".into(), device_instance_id: "wgr-probe".into(), client_class: crate::hub_sign_in::HubSignInClientClass::Browser };
     let body = crate::hub_sign_in::hub_session_mint_request_json(&credential).expect("a well-formed credential seals");
     let url = format!("http://127.0.0.1:7501{}", crate::hub_sign_in::HUB_SESSION_MINT_PATH_V1);
     let request = crate::directory_door::encode_directory_door_request(semio_framework_os_kernel::os_directory::client::HttpMethod::Post, &url, None, Some(body.as_bytes())).expect("the door encodes a POST");
@@ -556,22 +529,13 @@ fn a_door_answer_becomes_a_response_and_a_door_error_becomes_a_transport_error()
 
 #[test]
 fn every_sign_in_refusal_is_a_readable_row_in_both_tongues() {
-    for code in [
-        HubSignInErrorCode::Unreachable,
-        HubSignInErrorCode::InvalidCredentials,
-        HubSignInErrorCode::InvalidResponse,
-        HubSignInErrorCode::MalformedRequest,
-        HubSignInErrorCode::Cancelled,
-    ] {
+    for code in [HubSignInErrorCode::Unreachable, HubSignInErrorCode::InvalidCredentials, HubSignInErrorCode::InvalidResponse, HubSignInErrorCode::MalformedRequest, HubSignInErrorCode::Cancelled] {
         let mut state = workspace();
         state.session.error = Some(code);
         for locale in [Locale::En, Locale::De] {
             let tree = build_hub_workspace_ui(&state, locale);
             let tagged = collected(&tree, attributes);
-            assert!(
-                tagged.iter().any(|(key, value)| key == "data-semio-hub-error" && value == code.as_str()),
-                "{code:?} must reach the surface as a row an assistive technology can announce, not only as shell state",
-            );
+            assert!(tagged.iter().any(|(key, value)| key == "data-semio-hub-error" && value == code.as_str()), "{code:?} must reach the surface as a row an assistive technology can announce, not only as shell state",);
         }
         let english = crate::hub_sign_in::hub_sign_in_error_text(Locale::En, code, None);
         let german = crate::hub_sign_in::hub_sign_in_error_text(Locale::De, code, None);

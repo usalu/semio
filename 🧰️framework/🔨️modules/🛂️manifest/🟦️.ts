@@ -180,6 +180,7 @@ import type {
   InputProps as GeneratedInputProps,
   SelectProps as GeneratedSelectProps,
   ToggleProps as GeneratedToggleProps,
+  ToggleAppearance as GeneratedToggleAppearance,
   KeyValueListProps as GeneratedKeyValueListProps,
   SliderProps as GeneratedSliderProps,
   NumberStepperProps as GeneratedNumberStepperProps,
@@ -187,6 +188,7 @@ import type {
   IconSelectProps as GeneratedIconSelectProps,
   ProgressProps as GeneratedProgressProps,
   TreeProps as GeneratedTreeProps,
+  TreePresentation as GeneratedTreePresentation,
   TreeWindow as GeneratedTreeWindow,
   TreeSectionProps as GeneratedTreeSectionProps,
   TreeItemProps as GeneratedTreeItemProps,
@@ -263,6 +265,7 @@ export type SeparatorProps = GeneratedSeparatorProps;
 export type InputProps = GeneratedInputProps;
 export type SelectProps = GeneratedSelectProps;
 export type ToggleProps = GeneratedToggleProps;
+export type ToggleAppearance = GeneratedToggleAppearance;
 export type KeyValueListProps = GeneratedKeyValueListProps;
 export type SliderProps = GeneratedSliderProps;
 export type NumberStepperProps = GeneratedNumberStepperProps;
@@ -270,6 +273,7 @@ export type RingProps = GeneratedRingProps;
 export type IconSelectProps = GeneratedIconSelectProps;
 export type ProgressProps = GeneratedProgressProps;
 export type TreeProps = GeneratedTreeProps;
+export type TreePresentation = GeneratedTreePresentation;
 export type TreeWindow = GeneratedTreeWindow;
 export type TreeSectionProps = GeneratedTreeSectionProps;
 export type TreeItemProps = GeneratedTreeItemProps;

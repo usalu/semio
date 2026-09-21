@@ -99,6 +99,15 @@ impl<const CAPACITY: usize> Replay<CAPACITY> {
                     self.ledger.check_in();
                     self.available = true;
                 }
+                "presenterRestore" => {
+                    let at = self.queue.first_interaction_restoration().expect("presenter restoration owner");
+                    let mut completion = self.queue.take_at(at).expect("typed restoration completion");
+                    assert_eq!(completion.revision, step["restoredRevision"].as_u64().expect("presenter restore names its revision"), "{row} step {index}: exact return owner");
+                    completion.restores_interaction = false;
+                    self.queue.restore_at(at, completion);
+                    self.ledger.check_in();
+                    self.available = true;
+                }
                 "apply" => {
                     let head_requires = self.queue.head_requires_interaction();
                     let owner_outstanding = self.queue.interaction_owner_outstanding();

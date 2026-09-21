@@ -35,11 +35,18 @@ async fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_block3d_mutation(&mut snapshot, &mutation()).expect("rename-vortex-kind applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "rename-vortex-kind/renames-door-to-portal: applied state differs from committed after-snapshot");
+    // 🪪️ `vortex_kinds_of_parts` reassembles a vortex kind from the BLOCK-OWNED overflow row (the
+    // composed kit child carries the shared identity, not the authored name), so a rename writes
+    // `name` there — the committed after-snapshot says exactly that. What the law still pins is the
+    // NARROWNESS of the write: `name` moves, every other field of that row and every sibling row come
+    // through byte-identical.
+    let before_row = before().vortex_kind_extra[0].clone();
     assert_eq!(
         snapshot.vortex_kind_extra[0],
-        crate::Block3dVortexKindExtra { id: "door".into(), name: "Door".into(), label: "Door".into(), color: "hsl(206 52% 48%)".into(), default_cable_kind: "cable.link".into() },
-        "rename-vortex-kind touches the kit half only: the block-owned overflow row must come through byte-identical"
+        crate::Block3dVortexKindExtra { name: "portal".into(), ..before_row.clone() },
+        "rename-vortex-kind writes the new name into the block-owned overflow row and touches nothing else on it"
     );
+    assert_eq!(snapshot.vortex_kind_extra[1..], before().vortex_kind_extra[1..], "rename-vortex-kind never touches a sibling vortex kind");
 }
 
 /// ↩️ Applying the mutation then its inverse restores `before` exactly.

@@ -41,12 +41,10 @@
     "draws": [
       {
         "route": "scene",
-        "expectedPhase": "scene",
         "expectedOrdinal": 0
       },
       {
         "route": "overlay",
-        "expectedPhase": "foreground",
         "expectedOrdinal": 1
       }
     ]

@@ -512,7 +512,8 @@ impl GuestInstance {
     pub fn guest_diagnostics_text(&self) -> Option<String> {
         match &self.state {
             GuestInstanceState::Wasmtime(state) => state.store.data().diagnostics.as_ref().map(|pipe| String::from_utf8_lossy(&pipe.contents()).into_owned()),
-            GuestInstanceState::Mock(_) | GuestInstanceState::Owned(_) => None,
+            GuestInstanceState::Owned(state) => Some(String::from_utf8_lossy(&state.diagnostics).into_owned()),
+            GuestInstanceState::Mock(_) => None,
         }
     }
 }
@@ -1139,6 +1140,11 @@ struct OwnedInstanceState {
     /// stack pointer and traps again 112 bytes further down — ticket 26/09/18 slice A1 read that
     /// drift as the defect itself. There is no recovery short of re-instantiation, so this refuses.
     poisoned: bool,
+    /// 🩺️ Everything this guest has written to `wasi:cli/stdout`/`stderr`, bounded by
+    /// [`GUEST_DIAGNOSTICS_CAPACITY_BYTES`] — see [`retain_owned_guest_diagnostics`]. Unlike the
+    /// wasmtime path this is ALWAYS armed: the owned interpreter serves the stream shim itself at
+    /// no cost, and a guest panic message that is thrown away is a whole investigation.
+    diagnostics: Vec<u8>,
     context: i32,
     next_resource: i32,
     instance_id: u32,
@@ -1237,7 +1243,7 @@ impl OwnedRuntime {
             return Err(PluginHostError::Plugin("owned actor has an undriven start function".to_string()));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        Ok(GuestInstance { actor, state: GuestInstanceState::Owned(OwnedInstanceState { artifact: Arc::clone(artifact), actor: owned, pending: None, poisoned: false, context: 0, next_resource: 1, instance_id }) })
+        Ok(GuestInstance { actor, state: GuestInstanceState::Owned(OwnedInstanceState { artifact: Arc::clone(artifact), actor: owned, pending: None, poisoned: false, diagnostics: Vec::new(), context: 0, next_resource: 1, instance_id }) })
     }
 
     /// 🔁️ True while a `poll` this runtime started has not completed — the guest yielded on its fuel
@@ -1539,7 +1545,7 @@ fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: Ow
             CoreStepOutcome::Fault { fuel_used, error } => {
                 progress(pending.fuel_used.saturating_add(fuel_used), started.elapsed());
                 state.poisoned = true;
-                return Err(TurnFault::Trapped(error.to_string()));
+                return Err(TurnFault::Trapped(owned_fault_text(state, &error.to_string())));
             }
         }
         let elapsed = started.elapsed();
@@ -1550,6 +1556,24 @@ fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: Ow
         }
     }
 }
+
+/// 🩺️ A guest fault, spoken in the guest's own words. `unreachable executed` from a
+/// `panic = "abort"` component IS a Rust panic, and the panic message it printed a moment earlier is
+/// the only thing that names the failing frame — so the retained tail of guest stderr travels with
+/// the trap instead of being thrown away with the instance.
+fn owned_fault_text(state: &OwnedInstanceState, error: &str) -> String {
+    let printed = String::from_utf8_lossy(&state.diagnostics);
+    let printed = printed.trim();
+    if printed.is_empty() {
+        return error.to_string();
+    }
+    let tail = printed.char_indices().rev().nth(OWNED_FAULT_DIAGNOSTICS_TAIL_CHARS).map_or(printed, |(index, _)| &printed[index..]);
+    format!("{error} — the guest printed: {tail}")
+}
+
+/// 🩺️ How much of the guest's own output a trap carries. A panic line plus its location is well
+/// under this; the cap keeps a guest that logged a megabyte from burying the fault it ends with.
+const OWNED_FAULT_DIAGNOSTICS_TAIL_CHARS: usize = 4_000;
 
 fn cancel_owned_operation(state: &mut OwnedInstanceState) -> Result<(), TurnFault> {
     match state.actor.step(1, StepControl { cancelled: true }) {
@@ -1633,6 +1657,9 @@ fn reply_owned_host(state: &mut OwnedInstanceState, call: &HostCall) -> Result<V
             Vec::new()
         }
         ("wasi:io/streams@0.2.0", "[method]output-stream.write") => {
+            let pointer = owned_argument_i32(call, 1)?;
+            let length = owned_argument_i32(call, 2)?;
+            retain_owned_guest_diagnostics(state, pointer, length)?;
             write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 3)?, 16)?;
             Vec::new()
         }
@@ -1657,6 +1684,24 @@ fn owned_argument_i32(call: &HostCall, index: usize) -> Result<i32, PluginHostEr
 
 fn write_owned_zeroes(actor: &mut OwnedSemioInstance, pointer: i32, length: usize) -> Result<(), PluginHostError> {
     write_owned_memory(actor, pointer, &vec![0; length]).map_err(turn_fault_host)
+}
+
+/// 🩺️ Retains what the owned guest writes to `wasi:cli/stdout`/`stderr`, bounded by
+/// [`GUEST_DIAGNOSTICS_CAPACITY_BYTES`]. The owned shim used to answer `output-stream.write` with a
+/// zeroed result and DISCARD the bytes, so a guest panic — which `panic = "abort"` prints to stderr
+/// immediately before its `unreachable` — reached the host as the bare text `wasm trap: unreachable
+/// executed` and nothing else. That is what made ticket 26/09/18 slice TC3c's `codec.genesis` trap
+/// undiagnosable from the outside: the guest had already said exactly what was wrong. The wasmtime
+/// path has kept this since [`guest_wasi_ctx`]; this is the owned interpreter's half of it.
+fn retain_owned_guest_diagnostics(state: &mut OwnedInstanceState, pointer: i32, length: i32) -> Result<(), PluginHostError> {
+    let start = pointer as u32 as usize;
+    let length = length as u32 as usize;
+    let memory = state.actor.memory_mut().ok_or_else(|| PluginHostError::Plugin("owned actor memory is unavailable".to_string()))?;
+    let end = start.checked_add(length).filter(|end| *end <= memory.len()).ok_or_else(|| PluginHostError::Plugin("owned guest diagnostics are outside guest memory".to_string()))?;
+    let budget = GUEST_DIAGNOSTICS_CAPACITY_BYTES.saturating_sub(state.diagnostics.len());
+    let bytes = &memory[start..end.min(start.saturating_add(budget))];
+    state.diagnostics.extend_from_slice(bytes);
+    Ok(())
 }
 
 fn write_owned_memory(actor: &mut OwnedSemioInstance, pointer: i32, bytes: &[u8]) -> Result<(), TurnFault> {
@@ -2027,6 +2072,53 @@ impl WasmtimeRuntime {
         wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let engine_config_hash = shared_engine_config_hash(&cfg, pooling_active).await;
         Ok(Self { engine, _epoch_ticker: epoch_ticker, linker, cache_root: default_compiled_cache_root().await, engine_config_hash, next_instance_id: std::sync::atomic::AtomicU32::new(1) })
+    }
+}
+
+impl WasmtimeRuntime {
+    /// 🌱️ The JIT half of [`OwnedRuntime::codec_call`]: one of the component's four pure `codec`
+    /// functions on a throwaway instance. The hub itself runs these under the owned interpreter, so
+    /// this exists as the A/B oracle — the two runtimes share nothing but the component bytes, and a
+    /// fault that reproduces in both is in the GUEST rather than in an interpreter. That is exactly
+    /// the bisect ticket 26/09/18 slice A1 used to clear the owned interpreter of the shadow-stack
+    /// trap, and what slice TC3d used to place the `codec.genesis` trap in the guest's own resolver.
+    async fn codec_instance(&self, compiled: &CompiledHandle, budget: &Budget) -> Result<GuestInstance, TurnFault> {
+        self.instantiate(compiled, RuntimeActorId(0), &[], budget).await.map_err(TurnFault::Host)
+    }
+
+    /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
+    pub async fn codec_pack_schema_hash(&self, compiled: &CompiledHandle, artifact_schema: &str, budget: &Budget) -> Result<[u8; 32], TurnFault> {
+        let mut instance = self.codec_instance(compiled, budget).await?;
+        let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
+            return Err(TurnFault::Trapped("codec.pack-schema-hash called on a non-wasmtime GuestInstance".to_string()));
+        };
+        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let artifact_schema = artifact_schema.to_string();
+        let bytes = store
+            .run_concurrent(async |accessor| bindings.semio_framework_codec().call_pack_schema_hash(accessor, artifact_schema).await)
+            .await
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+        <[u8; 32]>::try_from(bytes.as_slice()).map_err(|_| TurnFault::Trapped("guest pack schema hash is not 32 bytes".to_string()))
+    }
+
+    /// 🌱️ `codec.genesis` — the canonical empty document of `artifact_schema` at `document_id`.
+    pub async fn codec_genesis(&self, compiled: &CompiledHandle, artifact_schema: &str, document_id: &str, budget: &Budget) -> Result<GuestDocumentPair, TurnFault> {
+        let mut instance = self.codec_instance(compiled, budget).await?;
+        let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
+            return Err(TurnFault::Trapped("codec.genesis called on a non-wasmtime GuestInstance".to_string()));
+        };
+        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let artifact_schema = artifact_schema.to_string();
+        let document_id = document_id.to_string();
+        let pair = store
+            .run_concurrent(async |accessor| bindings.semio_framework_codec().call_genesis(accessor, artifact_schema, document_id).await)
+            .await
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+        Ok(GuestDocumentPair { pack: pair.pack, spr: pair.spr })
     }
 }
 
@@ -4846,7 +4938,7 @@ impl PluginInstanceHandle {
     /// `semio.compose` cold job — design-abi.md §2: "`artifact-compose` ... become well-known cold
     /// job kinds ... driven by `start-job` + `step-job`". The guest body is owned by the live
     /// `compose-await` packet (`ComposeStepper`/`ComposeState`, deliberately NOT defined here or
-    /// anywhere in this file) — until it registers `"semio.compose"` via `register_job_kind`, this
+    /// anywhere in this file) — until it registers `"semio.compose"` via `register_bounded_job_kind`, this
     /// fails with the ordinary `job.unknown-kind` fault `step_job` already produces for any
     /// unregistered kind, not a hand-written host refusal. `key_bytes` is the JSON `IoKey`
     /// `IoRouter::compose` already resolved ownership from; `sources_bytes` passes through

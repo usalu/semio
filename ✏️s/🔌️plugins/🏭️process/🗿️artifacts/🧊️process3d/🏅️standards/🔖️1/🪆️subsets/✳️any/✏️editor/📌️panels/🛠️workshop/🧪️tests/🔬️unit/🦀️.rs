@@ -17,8 +17,8 @@ async fn definition_binds_a_workshop_panel_tab_to_this_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn add_workshop_machine_action_installs() {
     let mut app = context::app();
-    let result = context::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
-    assert!(!result.mutations.is_empty(), "adding an uninstalled catalog machine must emit an operation");
+    let (_, receipt) = context::settled_dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
+    assert!(context::published_a_document_mutation(&receipt), "adding an uninstalled catalog machine must emit an operation");
     let document = app.snapshot().expect("snapshot");
     assert!(document.workshop.machines.iter().any(|machine| machine.id == "chopSaw"), "chopSaw should now be in the workshop");
     let rendered = context::render(&mut app, PROCESS_3D_PLAY_BODY_WORKSHOP);
@@ -30,8 +30,8 @@ async fn add_workshop_machine_action_is_idempotent_when_already_installed() {
     let mut app = context::app();
     context::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
     let count_after_first = app.snapshot().expect("snapshot").workshop.machines.len();
-    let result = context::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
-    assert!(result.mutations.is_empty(), "adding an already-installed machine must be a no-op");
+    let (_, receipt) = context::settled_dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
+    assert!(!context::published_a_document_mutation(&receipt), "adding an already-installed machine must be a no-op");
     assert_eq!(app.snapshot().expect("snapshot").workshop.machines.len(), count_after_first);
 }
 
@@ -39,8 +39,8 @@ async fn add_workshop_machine_action_is_idempotent_when_already_installed() {
 async fn remove_workshop_machine_action_removes_the_machine() {
     let mut app = context::app();
     context::dispatch(&mut app, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }));
-    let result = context::dispatch(&mut app, Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: "chopSaw".into() }));
-    assert!(!result.mutations.is_empty());
+    let (_, receipt) = context::settled_dispatch(&mut app, Process3dCommand::RemoveWorkshopMachine(remove_workshop_machine::RemoveWorkshopMachine { id: "chopSaw".into() }));
+    assert!(context::published_a_document_mutation(&receipt), "removing an installed machine must reach the document lane");
     let document = app.snapshot().expect("snapshot");
     assert!(!document.workshop.machines.iter().any(|machine| machine.id == "chopSaw"));
     let rendered = context::render(&mut app, PROCESS_3D_PLAY_BODY_WORKSHOP);

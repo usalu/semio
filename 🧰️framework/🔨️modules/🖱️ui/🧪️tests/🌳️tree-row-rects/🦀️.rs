@@ -68,7 +68,7 @@ fn section(value: &Value) -> UiTreeSectionNode {
 }
 
 fn tree_node(value: &Value) -> UiNode {
-    UiNode::Tree(UiTreeNode { sections: value["sections"].as_array().expect("sections").iter().map(section).collect(), presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
+    UiNode::Tree(UiTreeNode { presentation: Default::default(), sections: value["sections"].as_array().expect("sections").iter().map(section).collect(), presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
 }
 
 /// 📐️ Mounts the case's authored tree and runs the REAL retained layout end to end — admit, shape,
@@ -80,7 +80,7 @@ fn laid_out_with_flow(case: &Value, block_reversed: bool) -> (UiTree, NodeId) {
     tree.apply_tree(&tree_node(&case["tree"]));
     let root = tree.root.unwrap_or_else(|| panic!("tree row law root"));
     let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(1, 1), generation: 5, revision: 7, theme_revision: 11, viewport_revision: 13 };
-    let mut job = MountedLayoutJob::try_new(&tree, root, identity, Theme::default(), width, height, block_reversed).unwrap_or_else(|fault| panic!("tree row law job: {fault:?}"));
+    let mut job = MountedLayoutJob::try_new(&tree, root, identity, Theme::default(), width, height, block_reversed, ui_contract::FlowInline::Ltr).unwrap_or_else(|fault| panic!("tree row law job: {fault:?}"));
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview = 0;
     while !job.is_admitted() {

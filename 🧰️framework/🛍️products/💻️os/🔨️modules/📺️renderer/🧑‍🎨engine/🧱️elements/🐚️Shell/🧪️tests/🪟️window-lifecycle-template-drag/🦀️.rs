@@ -121,6 +121,7 @@ fn closed_world3d_retires_every_input_and_scene_owner_before_id_reuse() {
         let mut state = World3dState::new(id.into(), "controller".into());
         state.bounds = if id == "world" { Rect::new(0.0, 0.0, 100.0, 100.0) } else { Rect::new(100.0, 0.0, 100.0, 100.0) };
         let token = shell.world3d_states.try_insert(id.into(), state).unwrap_or_else(|_| panic!("world admitted"));
+        shell.world3d_window_ids.insert(id.into(), id.into());
         if id == "world" {
             retired_token = Some(token);
         }
@@ -142,7 +143,17 @@ fn closed_world3d_retires_every_input_and_scene_owner_before_id_reuse() {
     assert!(shell.world3d_states.get_token(retired_token.unwrap()).is_none(), "late work cannot recover the retired generation");
     assert!(!shell.scene_surface_contains(50.0, 50.0));
     assert!(shell.scene_surface_contains(150.0, 50.0));
-    for absent in [shell.world3d_status.contains_key("world"), shell.world3d_status_pill_trace.contains_key("world"), shell.active_utility_by_window.contains_key("world"), shell.action_panel_folded.contains_key("world"), shell.utility_bar_folded.contains_key("world"), shell.projection_pane_folded.contains_key("world"), shell.world_projection_template.contains_key("world"), shell.search_possibles_open.contains_key("world"), shell.settle_pump.watches.contains_key("world")] {
+    for absent in [
+        shell.world3d_status.contains_key("world"),
+        shell.world3d_status_pill_trace.contains_key("world"),
+        shell.active_utility_by_window.contains_key("world"),
+        shell.action_panel_folded.contains_key("world"),
+        shell.utility_bar_folded.contains_key("world"),
+        shell.projection_pane_folded.contains_key("world"),
+        shell.world_projection_template.contains_key("world"),
+        shell.search_possibles_open.contains_key("world"),
+        shell.settle_pump.watches.contains_key("world"),
+    ] {
         assert!(!absent, "retired window state survived");
     }
     let reopened = World3dState::new("world".into(), "controller-new".into());

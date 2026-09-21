@@ -33,7 +33,12 @@ semio-s-artifact-stdio-gif = { workspace = true }
 semio-s-artifact-stdio-jpg = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
+# 🖼️ `conversion-image` carries the `s.stdio.semio/v1/image` <-> png/bmp/gif/jpg/tiff composers this
+# plugin's asset bridge funnels EVERY pixel through (`mint_raster_asset_child`, `raster_asset`), and
+# `conversion-drawing` the `s.stdio.semio/v1/drawing` <-> svg/dwg pair the export/import ports dispatch.
+# Without them `register()` installs no composer, every asset resolves to a content-less handle and the
+# composite surface renders nothing (play pane measured blank on :6033, 2026-09-21).
+semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-image", "conversion-drawing"] }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-tiff = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }

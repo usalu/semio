@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn completion(key: Option<&'static str>, revision: u64) -> Completion<()> {

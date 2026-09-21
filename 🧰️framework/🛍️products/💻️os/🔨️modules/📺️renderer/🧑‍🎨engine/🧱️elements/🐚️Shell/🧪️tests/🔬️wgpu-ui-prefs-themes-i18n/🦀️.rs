@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🧪️ A `FilePrefsStore` constructed against a scratch path (never through the thread-local
@@ -8,7 +7,8 @@ use super::*;
 fn file_prefs_store_round_trips_through_disk() {
     use std::fs as system_fs;
     use std::process as system_process;
-    let dir = std::env::temp_dir().join(format!("semio-wp14-prefs-test-{}-{:?}", system_process::id(), std::thread::current().id()));
+    let root = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
+    let dir = root.join(format!("prefs-test-{}-{:?}", system_process::id(), std::thread::current().id()));
     let _ = system_fs::create_dir_all(&dir);
     let path = dir.join("ui-prefs.json");
     let _ = system_fs::remove_file(&path);
@@ -31,10 +31,12 @@ fn file_prefs_store_round_trips_through_disk() {
     assert_eq!(prefs_get_from(&store, UI_PREFERENCES_CONFIG_SCHEMA), Some(events.clone()));
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(1);
     let raw = loop {
-        if let Ok(raw) = system_fs::read_to_string(&path) {
-            if raw.contains("dark") {
-                break raw;
-            }
+        let terminal = {
+            let state = store.flush_state.lock().expect("fixture flush state");
+            !state.running && state.latest.is_none()
+        };
+        if terminal {
+            break system_fs::read_to_string(&path).expect("terminal flush publishes the prefs file");
         }
         assert!(std::time::Instant::now() < deadline, "flush worker must write the latest prefs snapshot");
         std::thread::yield_now();
@@ -45,7 +47,7 @@ fn file_prefs_store_round_trips_through_disk() {
     assert_eq!(config["dockLayouts"]["apps"], serde_json::json!({}));
     assert_eq!(config["namedLayouts"]["draw"][0]["id"], "wide", "preference writes must preserve sibling projections");
     assert_eq!(reloaded.len(), 1, "wgpu preferences use the shared OS config authority");
-    let _ = system_fs::remove_file(&path);
+    system_fs::remove_dir_all(&dir).expect("terminal fixture output retires");
 }
 
 #[test]
@@ -57,11 +59,7 @@ fn canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript(
         expected: UiPreferences,
     }
     let fixture: Fixture = serde_json::from_str(include_str!("../../../../🎚️UiPreferences/🧫️fixtures/🎚️canonical-os-ui-preferences/🔁️event-replay.json")).expect("shared event fixture");
-    let events = fixture
-        .events
-        .iter()
-        .map(|event| decode_ui_preferences_config_mutation_json(&event.to_string()).expect("canonical mutation JSON"))
-        .collect();
+    let events = fixture.events.iter().map(|event| decode_ui_preferences_config_mutation_json(&event.to_string()).expect("canonical mutation JSON")).collect();
     let encoded = encode_ui_preferences_event_log(&UiPreferencesEventLog { version: fixture.version, events });
     let retained = decode_ui_preferences_event_log(&encoded).expect("native event-store boundary round trip");
     let projection = replay_ui_preferences(&retained);

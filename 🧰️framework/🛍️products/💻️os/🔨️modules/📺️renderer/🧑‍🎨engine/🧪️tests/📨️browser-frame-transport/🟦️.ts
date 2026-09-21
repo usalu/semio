@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
+import Ajv2020 from "ajv/dist/2020";
 import {
   BrowserFrameTransport,
   FRAME_WORKER_ACCESSIBILITY_ID_BYTES,
@@ -27,6 +28,7 @@ import {
 import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "../../🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts";
 import { resolveWgpuBootDescriptor, resolveWgpuHostPlatform, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
+import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-cancellation/🟦️.ts";
 
 /** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
@@ -482,6 +484,107 @@ describe("browser frame worker transport", () => {
       vi.unstubAllGlobals();
       vi.restoreAllMocks();
     }
+  });
+
+  it("aborts a retired component response, retries its exact handback, then admits the next asset", async () => {
+    const fixtureDirectory = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🛑️browser-component-asset-cancellation");
+    const fixture = JSON.parse(readFileSync(join(fixtureDirectory, "🔣️.json"), "utf8")) as {
+      readonly owners: readonly { readonly id: string; readonly responseToken: number; readonly bytes: readonly number[] }[];
+      readonly handback: readonly ["busy", "returned"];
+      readonly expected: { readonly aborted: string; readonly decodeCancellationOwner: string; readonly publishedOwners: readonly string[]; readonly pollOrder: readonly string[] };
+    };
+    const schema = JSON.parse(readFileSync(join(fixtureDirectory, "📐️schema.json"), "utf8"));
+    expect(new Ajv2020({ allErrors: true, strict: true }).compile(schema)(fixture)).toBe(true);
+    const cursor = new BrowserAssetCancellationCursor();
+    const controller = new AbortController();
+    const polled: string[] = [fixture.owners[0]!.id];
+    const decodeCancelled: string[] = [];
+    const published: string[] = [];
+    const returns = [...fixture.handback];
+    let current = false;
+    let decodeOwner: string | undefined = fixture.owners[0]!.id;
+    const port = {
+      hasFetch: () => !controller.signal.aborted,
+      hasPageImageDecode: () => decodeOwner !== undefined,
+      responseCurrent: () => current,
+      abortFetch: () => controller.abort(),
+      cancelPageImageDecode: () => {
+        if (decodeOwner) decodeCancelled.push(decodeOwner);
+        decodeOwner = undefined;
+      },
+      returnResponseOwner: () => returns.shift() === "returned",
+    };
+    expect(cursor.step(port)).toBe("waiting");
+    expect(controller.signal.aborted).toBe(true);
+    expect(decodeCancelled).toEqual([fixture.expected.decodeCancellationOwner]);
+    expect(polled).toEqual([fixture.owners[0]!.id]);
+    expect(cursor.step(port)).toBe("returned");
+    polled.push(fixture.owners[1]!.id);
+    current = true;
+    published.push(fixture.owners[1]!.id);
+    expect(polled).toEqual(fixture.expected.pollOrder);
+    expect(published).toEqual(fixture.expected.publishedOwners);
+    expect(fixture.expected.aborted).toBe(fixture.owners[0]!.id);
+  });
+
+  it("refuses an aborted stream continuation before mutating its returned response owner", async () => {
+    const controller = new AbortController();
+    const cursor = new BrowserAssetCancellationCursor();
+    const ownerCalls: string[] = [];
+    const faults: string[] = [];
+    let current = true;
+    const mutate = (name: string): void => {
+      assertBrowserAssetResponseContinuation(controller, () => current);
+      ownerCalls.push(name);
+    };
+    mutate("reserve-busy");
+    await Promise.resolve();
+    current = false;
+    expect(cursor.step({
+      hasFetch: () => true,
+      hasPageImageDecode: () => false,
+      responseCurrent: () => current,
+      abortFetch: () => controller.abort(),
+      cancelPageImageDecode: () => undefined,
+      returnResponseOwner: () => true,
+    })).toBe("returned");
+    try {
+      mutate("push-after-return");
+    } catch (error) {
+      if (!(error instanceof DOMException) || error.name !== "AbortError") faults.push(String(error));
+    }
+    expect(ownerCalls).toEqual(["reserve-busy"]);
+    expect(faults).toEqual([]);
+  });
+
+  it("keeps asset polling closed while the exact retired response handback remains busy", () => {
+    const root = dirname(fileURLToPath(import.meta.url));
+    const workerSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
+    const frameTurn = workerSource.slice(workerSource.indexOf("function runFrameTurn"), workerSource.indexOf("function runAssetDecodeTurn"));
+    expect(frameTurn).toContain('if (assetCancellationStep === "idle") scheduleAssetPump()');
+    expect(frameTurn).toContain('assetCancellationStep === "returned" && !assetPumping');
+    expect(frameTurn).not.toMatch(/assetCancellationStep === "waiting"[\s\S]*scheduleAssetPump/);
+    const schedule = workerSource.slice(workerSource.indexOf("function scheduleAssetPump"), workerSource.indexOf("async function pumpAsset"));
+    expect(schedule).toContain("!assetCancellation.pollAdmitted()");
+    const cursor = new BrowserAssetCancellationCursor();
+    let handbackAttempts = 0;
+    const port = {
+      hasFetch: () => true,
+      hasPageImageDecode: () => false,
+      responseCurrent: () => false,
+      abortFetch: () => undefined,
+      cancelPageImageDecode: () => undefined,
+      returnResponseOwner: () => ++handbackAttempts === 3,
+    };
+    expect(cursor.step(port)).toBe("waiting");
+    expect(cursor.pollAdmitted()).toBe(false);
+    expect(cursor.step(port)).toBe("waiting");
+    expect(cursor.pollAdmitted()).toBe(false);
+    expect(cursor.step(port)).toBe("returned");
+    expect(cursor.pollAdmitted()).toBe(false);
+    expect(handbackAttempts).toBe(3);
+    expect(cursor.releaseReturned()).toBe(true);
+    expect(cursor.pollAdmitted()).toBe(true);
   });
 
   /** ♿️ LAW: the two host channels are not interchangeable. `onDirectives` is the FRAME channel and

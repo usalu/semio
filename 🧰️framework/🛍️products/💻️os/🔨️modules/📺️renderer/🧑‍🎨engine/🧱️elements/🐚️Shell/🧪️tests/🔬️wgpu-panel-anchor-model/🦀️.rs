@@ -1,4 +1,3 @@
-
 use super::*;
 // 🩹️ `PanelTabKind` stopped being reachable through the shell module's own `use` list, and the
 // `📌️panel-state` fixture moved from `🧑‍🎨engine/🧫️fixtures/` into this element's own `🧫️fixtures/`
@@ -90,7 +89,8 @@ fn host_panel_json_codec_matches_the_neutral_fixture_and_rejects_invalid_carriag
 fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_and_home_projection() {
     let mut shell = host_test_shell();
     let before = ShellState::panel_state_from_view(&shell.session.as_ref().unwrap().view_state).unwrap().unwrap();
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) })).expect("configured leaf is host-owned");
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) }))
+        .expect("configured leaf is host-owned");
     let after = ShellState::panel_state_from_view(&shell.session.as_ref().unwrap().view_state).unwrap().unwrap();
     assert_eq!(after.active_panel_tab, "s-play-inspector");
     assert_eq!(after.spawned_apps, before.spawned_apps);
@@ -99,7 +99,8 @@ fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_an
     assert_eq!(shell.anchor_state(PanelAnchor::TopRight).active_tab(), Some("s-play-inspector"));
 
     let accepted_json = shell.session.as_ref().unwrap().view_state.panel_json.clone();
-    let container_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "studio-settings" }) })).unwrap_err();
+    let container_error =
+        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "studio-settings" }) })).unwrap_err();
     assert_eq!(container_error, "host-panel.tab-is-not-configured-leaf");
     assert_eq!(shell.session.as_ref().unwrap().view_state.panel_json, accepted_json);
     let stale_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "missing" }) })).unwrap_err();
@@ -107,7 +108,8 @@ fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_an
     let missing_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.studio".into(), action: "setActivePanelTab".into(), args: None })).unwrap_err();
     assert_eq!(missing_error, "host-panel.invalid-tab-id");
 
-    let guest_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "foreign.controller".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) })).expect_err("unclaimed controller reaches the missing guest fixture");
+    let guest_error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "foreign.controller".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "s-play-inspector" }) }))
+        .expect_err("unclaimed controller reaches the missing guest fixture");
     assert!(!guest_error.starts_with("host-panel."), "unclaimed route must expose the actual missing guest failure: {guest_error}");
 
     let (home, _) = host_test_apps();
@@ -118,7 +120,8 @@ fn host_panel_action_is_claimed_before_guest_and_preserves_the_session_roster_an
     home_view.panel_json = Some(ShellState::panel_json(&home_panel).unwrap());
     shell.directory_home = Some(DirectoryHomeProjection::new("space".into(), 88, home.clone(), home_view.clone()).expect("directory home projection"));
     shell.session = Some(ActiveSession { plugin_id: "space".into(), instance_id: 88, app: home, view_state: home_view });
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.home".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "home-library" }) })).expect("active host session owns its configured leaf");
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "space.home".into(), action: "setActivePanelTab".into(), args: crate::action_args_json!({ "tabId": "home-library" }) }))
+        .expect("active host session owns its configured leaf");
     let restored = shell.directory_home.as_ref().unwrap().active_session();
     let restored_panel = ShellState::panel_state_from_view(&restored.view_state).unwrap().unwrap();
     assert_eq!(restored_panel.active_panel_tab, "home-library");
@@ -258,13 +261,7 @@ fn fixture_dock_shell() -> ShellState {
             children: vec![],
         })
         .collect();
-    app.panel_tabs.push(PanelTabDefinition {
-        kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_HISTORY_ID.into()),
-        label: LocalizedLabel::data("History"),
-        group: PanelGroup::Settings,
-        body_key: Some("framework/history".into()),
-        children: vec![],
-    });
+    app.panel_tabs.push(PanelTabDefinition { kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_HISTORY_ID.into()), label: LocalizedLabel::data("History"), group: PanelGroup::Settings, body_key: Some("framework/history".into()), children: vec![] });
     let mut shell = ShellState::new(Vec::new(), String::new());
     shell.session = Some(ActiveSession { plugin_id: "fixture".into(), instance_id: 1, app, view_state: ViewModel::default() });
     shell.sync_backbone_uri = Some("folder:///tmp/fixture".into());
@@ -447,7 +444,11 @@ fn the_chrome_surface_census_separates_panes_from_docked_panels() {
     );
     shell.toggle_anchor_tab(PanelAnchor::TopLeft, "fixture.workbench");
     let census = shell.chrome_surface_census();
-    assert_eq!(census.iter().filter(|(_, level, _)| *level == "panel").map(|(id, _, element)| (id.as_str(), element.as_str())).collect::<Vec<_>>(), vec![("fixture.workbench", "framework.panelTab.fixture.workbench")], "🪟️ the open anchor's ACTIVE TAB is the panel, named the way React names it");
+    assert_eq!(
+        census.iter().filter(|(_, level, _)| *level == "panel").map(|(id, _, element)| (id.as_str(), element.as_str())).collect::<Vec<_>>(),
+        vec![("fixture.workbench", "framework.panelTab.fixture.workbench")],
+        "🪟️ the open anchor's ACTIVE TAB is the panel, named the way React names it"
+    );
     assert_eq!(census.iter().filter(|(_, level, _)| *level == "window").count(), 2, "🪟️ and opening a panel adds no window");
 }
 
@@ -516,11 +517,7 @@ fn apply_dock_skeleton_moves_mentioned_tabs_and_appends_unmentioned_defaults() {
     let rearranged = apply_dock_skeleton(&default_dock, Some(&skeleton));
     assert_eq!(rearranged.locate("fixture.workbench").map(|(anchor, _)| anchor), Some(PanelAnchor::LeftMiddle));
     assert!(rearranged.tabs(PanelAnchor::TopLeft).is_empty());
-    assert_eq!(
-        rearranged.tabs(PanelAnchor::TopRight).iter().map(|tab| tab.id.as_str()).collect::<Vec<_>>(),
-        default_dock.tabs(PanelAnchor::TopRight).iter().map(|tab| tab.id.as_str()).collect::<Vec<_>>(),
-        "an untouched anchor keeps its default row"
-    );
+    assert_eq!(rearranged.tabs(PanelAnchor::TopRight).iter().map(|tab| tab.id.as_str()).collect::<Vec<_>>(), default_dock.tabs(PanelAnchor::TopRight).iter().map(|tab| tab.id.as_str()).collect::<Vec<_>>(), "an untouched anchor keeps its default row");
 }
 
 /// 🗄️ A skeleton that mentions nothing is the identity, and an id the default no longer declares is
@@ -906,7 +903,11 @@ fn the_command_dock_opens_the_expanded_commands_staged_form() {
 #[test]
 fn execute_is_disabled_until_every_required_argument_is_staged() {
     let mut shell = fresh_state();
-    let entry = shell.resolved_commands().into_iter().find(|entry| entry.definition.in_palette && entry.definition.args.iter().any(|arg| arg.required)).map(|entry| (command_address_stable_key(&entry.address), entry.definition.category.clone(), entry.definition.args.iter().find(|arg| arg.required).expect("a required arg").id.clone()));
+    let entry = shell
+        .resolved_commands()
+        .into_iter()
+        .find(|entry| entry.definition.in_palette && entry.definition.args.iter().any(|arg| arg.required))
+        .map(|entry| (command_address_stable_key(&entry.address), entry.definition.category.clone(), entry.definition.args.iter().find(|arg| arg.required).expect("a required arg").id.clone()));
     let Some((key, category, arg_id)) = entry else {
         eprintln!("[DEBUG] no os command declares a required argument — gate exercised by the assembler only");
         return;
@@ -1021,16 +1022,17 @@ fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
     chat_panel_lines(&cancelling, &mut cancelling_lines);
     assert!(cancelling_lines.contains(&"Cancelling…".to_string()), "optimistic state is visible: {cancelling_lines:?}");
 
-    shell.apply_agent_bridge_frame(
-        &crate::agent_bridge::GatewayToShell::AgentToolResult {
-            invocation_id: invocation_id.into(),
-            tool_name: tool_name.into(),
-            ok: fixture["terminalResult"]["ok"].as_bool().expect("terminal ok"),
-            summary: fixture["terminalResult"]["summary"].as_str().expect("terminal summary").into(),
-        }
-        .encode(),
-    )
-    .expect("terminal result frame");
+    shell
+        .apply_agent_bridge_frame(
+            &crate::agent_bridge::GatewayToShell::AgentToolResult {
+                invocation_id: invocation_id.into(),
+                tool_name: tool_name.into(),
+                ok: fixture["terminalResult"]["ok"].as_bool().expect("terminal ok"),
+                summary: fixture["terminalResult"]["summary"].as_str().expect("terminal summary").into(),
+            }
+            .encode(),
+        )
+        .expect("terminal result frame");
     let settled = shell.build_agent_chat_ui();
     assert!(chat_button_action(&settled, &control_id).is_none());
     let mut settled_lines = Vec::new();

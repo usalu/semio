@@ -110,3 +110,164 @@ fn cancellation_retires_empty_preparation_to_terminal_empty() {
     }
     assert!(retire_active_phase(&mut phase));
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+fn runtime_with_presented_input_candidate() -> (crate::RuntimeMailbox, crate::shell::PresentedInputCandidateWitness) {
+    crate::interpreter::begin_accessibility_visible_documents();
+    let mut interaction = crate::AppInteractionState {
+        shell: crate::shell::ShellState::new(Vec::new(), "frame-candidate-retirement".to_string()),
+        input: ui_wgpu::wgpu::InputState::default(),
+        theme: ui_wgpu::wgpu::Theme::default(),
+        theme_dark: false,
+        last_pointer_x: 0.0,
+        last_pointer_y: 0.0,
+        pointer_down: false,
+        pointer_button: 0,
+        pointer_capture: crate::shell::PointerCapture::default(),
+        modifiers: ui_wgpu::wgpu::PointerModifiers::default(),
+        space_pressed: false,
+        wheel_zoom_deadline_ms: 0.0,
+        caret_blink_at_ms: 0.0,
+        caret_blink_visible: true,
+        text_streams: std::array::from_fn(|_| None),
+        text_fault: None,
+        frame_fault: None,
+        text_cancel_pending: false,
+        last_sync_pump_ms: 0.0,
+    };
+    let accepted = interaction.shell.seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("accepted A presented input candidate");
+    assert!(interaction.shell.acknowledge_presented_input(&mut interaction.input, accepted), "baseline A is accepted before B is staged");
+    let witness = interaction.shell.seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("stale B presented input candidate");
+    let runtime = crate::RuntimeMailbox::new(crate::AppRuntime {
+        atlas: ui_wgpu::wgpu::FontAtlas::builtin(),
+        icons: ui_wgpu::wgpu::IconAtlas::default(),
+        icon_rebuild: None,
+        icon_raster_scale: 1.0,
+        interaction: Some(interaction),
+        checkout: Default::default(),
+        draw: ui_wgpu::wgpu::DrawList::default(),
+        overlay: ui_wgpu::wgpu::DrawList::default(),
+        pending_frame_deferred: None,
+        frame_actions: crate::FrameActionOwners::default(),
+        pending_frame_maintenance_refusal: None,
+        plugin_modules_root: Default::default(),
+        native_plugin_mtimes: Default::default(),
+        native_hot_swap_scan: None,
+        native_hot_swap_modified: None,
+        native_hot_swap_cursor: 0,
+        native_reload_pending: false,
+    });
+    (runtime, witness)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn close_active_frame(mut active: ActiveFrameBuild) -> crate::RuntimeMailbox {
+    let runtime = active.runtime.clone();
+    active.begin_close();
+    for _ in 0..262_144 {
+        if matches!(InteractiveJob::close_step(&mut active, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
+            break;
+        }
+    }
+    assert!(active.terminal_is_empty(), "the abandoned frame owner reaches terminal empty");
+    runtime
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn assert_candidate_returned(runtime: &crate::RuntimeMailbox, witness: crate::shell::PresentedInputCandidateWitness) {
+    let mut runtime = runtime.try_lock().expect("test runtime lock");
+    let interaction = runtime.interaction.as_mut().expect("test interaction owner");
+    assert!(!interaction.shell.presented_input_candidate_matches(witness), "the abandoned frame returns its exact sealed input candidate");
+    let successor = interaction.shell.seal_presented_input_candidate(&ui_wgpu::wgpu::Theme::default()).expect("successor presented input candidate");
+    assert_ne!(successor, witness, "the successor receives a fresh presentation witness");
+    assert!(interaction.shell.presented_input_candidate_matches(successor), "the successor owns the one retained candidate slot");
+    assert!(interaction.shell.acknowledge_presented_input(&mut interaction.input, successor), "the successor candidate remains publishable after abandonment");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn superseded_frame_build_returns_its_exact_presented_input_candidate() {
+    let (runtime, witness) = runtime_with_presented_input_candidate();
+    let operation = OperationId(91);
+    let generation = Generation(91);
+    let presentation = crate::RuntimePresentationWitness { scene_revision: 1, input_generation: generation.0 };
+    let mut transaction = crate::FrameTransaction::new(FrameDirectives::default(), operation, generation);
+    let mut cursor = crate::FrameBuildCursor::new(presentation);
+    cursor.input_candidate = Some(witness);
+    transaction.build_cursor = Some(cursor);
+    let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, root_cancel_token());
+    active.phase = ActiveFramePhase::Build(transaction);
+    let runtime = close_active_frame(active);
+    assert_candidate_returned(&runtime, witness);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn cancelled_frame_preparation_returns_its_exact_presented_input_candidate() {
+    let (runtime, witness) = runtime_with_presented_input_candidate();
+    let operation = OperationId(92);
+    let generation = Generation(92);
+    let build = crate::AppFrameBuild {
+        input: ui_wgpu::wgpu::PreparedRenderInput::try_new(1, generation.0, ui_wgpu::wgpu::DrawList::default(), None, 0.0).unwrap_or_else(|_| panic!("empty prepared input")),
+        input_candidate: Some(witness),
+        engine_packets: crate::FrameEnginePackets::default(),
+        generation,
+        cursor: ui_wgpu::wgpu::SemioCursor::Default,
+        theme_dark: false,
+        fullscreen: None,
+        cursor_wake: None,
+        job_progress: None,
+    };
+    let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, root_cancel_token());
+    active.phase = ActiveFramePhase::Prepare(build.into_preparation());
+    let runtime = close_active_frame(active);
+    assert_candidate_returned(&runtime, witness);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn stale_completed_frame_returns_its_exact_presented_input_candidate() {
+    let (runtime, witness) = runtime_with_presented_input_candidate();
+    let operation = OperationId(93);
+    let generation = Generation(93);
+    let frame = crate::AppFramePresentation {
+        packet: None,
+        input_candidate: Some(witness),
+        engine_packets: crate::FrameEnginePackets::default(),
+        generation,
+        cursor: ui_wgpu::wgpu::SemioCursor::Default,
+        theme_dark: false,
+        fullscreen: None,
+        cursor_wake: None,
+        job_progress: None,
+    };
+    let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, root_cancel_token());
+    active.phase = ActiveFramePhase::Terminal;
+    active.completed = Some(frame);
+    let runtime = close_active_frame(active);
+    assert_candidate_returned(&runtime, witness);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn cancelled_after_chrome_frame_returns_its_exact_presented_input_candidate() {
+    let (runtime, witness) = runtime_with_presented_input_candidate();
+    let operation = OperationId(94);
+    let generation = Generation(94);
+    let mut transaction = crate::FrameTransaction::new(FrameDirectives::default(), operation, generation);
+    transaction.after_chrome = Some(crate::AppFrameAfterChrome {
+        resource_input: None,
+        input_candidate: Some(witness),
+        upload_rejected: None,
+        draw_rejected: None,
+        engine_packets: None,
+        fullscreen: None,
+        cursor_wake: None,
+        job_progress: None,
+        retirement: None,
+    });
+    let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, root_cancel_token());
+    active.phase = ActiveFramePhase::Build(transaction);
+    let runtime = close_active_frame(active);
+    assert_candidate_returned(&runtime, witness);
+}

@@ -84,6 +84,10 @@ fn document_backbone_mailbox_and_retention_are_exact_bounded_and_terminal() {
     assert!(matches!(receiver.try_recv(), Some(ArtifactActorMsg::DocumentBackbone { message: actual }) if actual == message));
     let ack = BackboneMessage::Ack { op_ids: Vec::new() }.encode_op().expect("ack encodes");
     assert!(matches!(sender.send(ArtifactActorMsg::DocumentBackbone { message: ack }), Err(ArtifactMailboxSendError::Bytes { .. })), "host ingress refuses a Store acknowledgment");
+    let member = BackboneMessage::Member { slot: "content".into(), child_id: "child-a".into(), envelopes: encode_envelopes(std::slice::from_ref(&envelope)) }.encode_op().expect("member message encodes");
+    let rejected = sender.send(ArtifactActorMsg::DocumentBackbone { message: member.clone() }).expect_err("a root document actor cannot flatten a member lane");
+    assert!(matches!(rejected.into_message(), ArtifactActorMsg::DocumentBackbone { message: returned } if returned == member), "member refusal returns the exact encoded message to its caller");
+    assert!(receiver.try_recv().is_none(), "member refusal leaves root document ingress empty");
 
     let mut retention = DocumentBackboneRetentionV1::default();
     retention.retain(message.len(), std::slice::from_ref(&envelope)).expect("first exact owner is retained");
@@ -1188,7 +1192,7 @@ async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
         description: None,
         ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
         inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().expect("encode")) }],
-        meta: None,
+        meta: None, lane: None,
     };
     let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1").await.expect("envelopes from history edit");
     assert_eq!(envelopes.len(), 1, "single-op edit yields one envelope");
@@ -1318,7 +1322,7 @@ mod actor_tests {
             description: None,
             ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
             inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
-            meta: None,
+            meta: None, lane: None,
         };
         archive.parent_spr = crate::os_store::append_history_events_to_spr(&archive.parent_spr, &[external_edit], &[]).await.expect("append external edit");
         let bytes = crate::os_spr::encode_document_archive_bytes(&archive).expect("encode externally changed archive");

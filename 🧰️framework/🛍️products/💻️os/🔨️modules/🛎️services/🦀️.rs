@@ -35,7 +35,7 @@ use std::cmp::Reverse;
 use std::collections::{BTreeMap, BinaryHeap, HashMap, VecDeque};
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::task::{Context, Poll, Wake, Waker};
 
 use semio_framework_actor::{ActorId, PackageId};
@@ -44,8 +44,8 @@ use semio_framework_async::{
     WorkerPoolConfig, WorkerSubmitErrorKind,
 };
 use semio_framework_job::{
-    default_now_us, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, StepOutcome, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_US, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US,
-    MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_US, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_US,
+    default_now_us, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, StepOutcome, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_US, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US, MAINTENANCE_LANE_FUEL,
+    MAINTENANCE_LANE_WALL_US, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_US,
 };
 
 //#region 🧵️GlobalWorkerPool
@@ -802,51 +802,49 @@ fn schedule_compute_job_step<J: InteractiveJob + 'static>(pool: &WorkerPool, sta
     let lane = state.lock().expect("ComputeJobDriveState mutex poisoned").lane;
     let retry_state = state.clone();
     let job = Box::new(move || {
-            let (terminal, finished) = {
-                let mut state = state.lock().expect("ComputeJobDriveState mutex poisoned");
-                if state.closing {
-                    let step = state.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                    (None, matches!(step, semio_framework_job::WorkerJobCloseStep::Complete) && state.session.terminal_is_empty())
-                } else if let Some(outcome) = state.retained_outcome.as_mut() {
-                    let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
-                    if outcome.terminal_is_empty() {
-                        state.retained_outcome = None;
-                        let _ = state.session.resume();
-                    }
-                    (None, false)
-                } else {
-                    let lane = state.lane;
-                    match state.session.pump_one(&next_pool, lane) {
-                        Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
-                            let outcome = state.session.take_checked_out_outcome().expect("mounted compute session checked out one exact outcome");
-                            if outcome.is_terminal() {
-                                state.session.begin_close();
-                                state.closing = true;
-                                (Some((state.sender.take().expect("terminal compute job has a result sender"), Ok(outcome))), false)
-                            } else {
-                                state.retained_outcome = Some(outcome);
-                                (None, false)
-                            }
-                        }
-                        Ok(_) => (None, false),
-                        Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(
-                            WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated,
-                        ))) => (None, false),
-                        Err(_) => {
+        let (terminal, finished) = {
+            let mut state = state.lock().expect("ComputeJobDriveState mutex poisoned");
+            if state.closing {
+                let step = state.session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                (None, matches!(step, semio_framework_job::WorkerJobCloseStep::Complete) && state.session.terminal_is_empty())
+            } else if let Some(outcome) = state.retained_outcome.as_mut() {
+                let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                if outcome.terminal_is_empty() {
+                    state.retained_outcome = None;
+                    let _ = state.session.resume();
+                }
+                (None, false)
+            } else {
+                let lane = state.lane;
+                match state.session.pump_one(&next_pool, lane) {
+                    Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
+                        let outcome = state.session.take_checked_out_outcome().expect("mounted compute session checked out one exact outcome");
+                        if outcome.is_terminal() {
                             state.session.begin_close();
                             state.closing = true;
-                            (state.sender.take().map(|sender| (sender, Err(ComputeError::WorkerLost))), false)
+                            (Some((state.sender.take().expect("terminal compute job has a result sender"), Ok(outcome))), false)
+                        } else {
+                            state.retained_outcome = Some(outcome);
+                            (None, false)
                         }
                     }
+                    Ok(_) => (None, false),
+                    Err(semio_framework_job::MountedWorkerJobPumpFault::Submit(semio_framework_job::WorkerJobSubmitFault::Pool(WorkerSubmitErrorKind::Contended | WorkerSubmitErrorKind::Saturated))) => (None, false),
+                    Err(_) => {
+                        state.session.begin_close();
+                        state.closing = true;
+                        (state.sender.take().map(|sender| (sender, Err(ComputeError::WorkerLost))), false)
+                    }
                 }
-            };
-            if let Some((sender, outcome)) = terminal {
-                let _ = sender.send(outcome);
             }
-            if !finished {
-                schedule_compute_job_step(&next_pool, state);
-            }
-        });
+        };
+        if let Some((sender, outcome)) = terminal {
+            let _ = sender.send(outcome);
+        }
+        if !finished {
+            schedule_compute_job_step(&next_pool, state);
+        }
+    });
     match pool.try_submit(lane, job) {
         Ok(()) => {}
         Err(error) => match error.kind() {
@@ -942,17 +940,59 @@ impl std::fmt::Display for HttpPoolError {
 }
 impl std::error::Error for HttpPoolError {}
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum HttpBodyCancellationStep {
+    Idle,
+    Interrupted,
+    AwaitingReadDeadline { maximum_ms: u64 },
+    Fault(String),
+}
+
+enum HttpBodyCancellationKind {
+    Idle,
+    Interrupt(Arc<dyn Fn() -> Result<(), String> + Send + Sync>),
+    ReadDeadline { maximum_ms: u64 },
+}
+
+#[derive(Clone)]
+pub struct HttpBodyCancellationHandle(Arc<HttpBodyCancellationKind>);
+
+impl HttpBodyCancellationHandle {
+    pub fn idle() -> Self {
+        Self(Arc::new(HttpBodyCancellationKind::Idle))
+    }
+
+    pub fn interrupt(operation: impl Fn() -> std::io::Result<()> + Send + Sync + 'static) -> Self {
+        Self(Arc::new(HttpBodyCancellationKind::Interrupt(Arc::new(move || operation().map_err(|error| error.to_string())))))
+    }
+
+    pub fn read_deadline(maximum_ms: u64) -> Self {
+        Self(Arc::new(HttpBodyCancellationKind::ReadDeadline { maximum_ms }))
+    }
+
+    pub fn cancel_in_flight(&self) -> HttpBodyCancellationStep {
+        match self.0.as_ref() {
+            HttpBodyCancellationKind::Idle => HttpBodyCancellationStep::Idle,
+            HttpBodyCancellationKind::Interrupt(operation) => match operation() {
+                Ok(()) => HttpBodyCancellationStep::Interrupted,
+                Err(detail) => HttpBodyCancellationStep::Fault(detail),
+            },
+            HttpBodyCancellationKind::ReadDeadline { maximum_ms } => HttpBodyCancellationStep::AwaitingReadDeadline { maximum_ms: *maximum_ms },
+        }
+    }
+}
+
 /// 🌊️ One streamed HTTP response body, pulled chunk by chunk. `next_chunk` returns `Ok(None)` at
 /// EOF. Implementations reach `&mut self` synchronously (to extract whatever owned state the next
 /// read needs) and return a `'static` [`HostFuture`] that owns that state — never a future borrowing
-/// `self` — the same shape [`AsyncHttpTransport::start`] itself uses. This is the ONE body type fed
+/// `self` — the same shape [`AsyncHttpTransport::begin`] itself uses. This is the ONE body type fed
 /// to [`HttpPool::fetch`]'s [`HttpPoolBody`] wrapper; a later packet reuses it verbatim for the WASI
 /// `stream<u8>` writer and the poll world's chunked events — see the crate report's `## seam design`.
 // 🔀️ dedyn-fw-os-misc: DELIBERATELY left `dyn` — a reasoned exception, not an oversight.
 // `next_chunk` is plain sync (returns a `HostFuture`, doesn't take the `async` keyword), so `dyn
 // HttpBody` is not an E0038 violation and stays R1-legal. Neither de-dyn mechanism fits: (a) closed
 // set — the real production set is exactly ONE impl (`BufferedHttpBody`, R11 case 3 would apply),
-// but `AsyncHttpTransport::start` (a sibling trait, out of this packet's family list) returns
+// but `AsyncHttpTransport::begin` (a sibling trait, out of this packet's family list) returns
 // `Box<dyn HttpBody>` from its OWN trait-level signature, and a `#[cfg(test)]`-only second
 // implementor (`LocalSocketBody`, this file's own tests) implements that SAME trait method with a
 // genuinely different concrete body type — collapsing to one concrete type would break the test
@@ -964,27 +1004,116 @@ impl std::error::Error for HttpPoolError {}
 // 🚫️async: E6 dyn-compat — machine-readable form of the `dedyn-fw-os-misc` reasoning above, added
 // so `asyncify-universal.py` stops re-breaking this trait (it does not yet recognise that tag).
 pub trait HttpBody: Send {
-    fn next_chunk(&mut self) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>>;
+    fn cancellation_handle(&self) -> HttpBodyCancellationHandle;
+    fn next_chunk(&mut self, terminal: HttpTransportTerminalGuard) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>>;
 }
 
-/// 🌐️ The seam a real HTTP client plugs into: `start` returns the head as soon as it is known plus
-/// a [`HttpBody`] the caller streams at its own pace — no whole-body buffering happens below this
-/// trait. [`BlockingHttpTransport`] is the ONLY implementation this packet ships (today's
+/// 🌐️ The seam a real HTTP client plugs into: `begin` returns the cancellation owner alongside an
+/// unpolled future that yields the head plus a [`HttpBody`] the caller streams at its own pace — no
+/// whole-body buffering happens below this trait. [`BlockingHttpTransport`] is one implementation (today's
 /// synchronous-`HttpTransport`-on-`ComputePool` behaviour, unchanged); a sibling packet adds a real
 /// async client behind this same trait, adding no new dependency to THIS crate — see the crate
 /// report's `## honest gaps`.
-// 🚫️async: E6 dyn-compat — same class as `HttpTransport` above. `start` already returns a
+// 🚫️async: E6 dyn-compat — same class as `HttpTransport` above. `begin` already returns a
 // `HostFuture` (R1-legal argument/return erasure per `dyn_enum_close!`'s sibling exceptions); an
 // `async fn` wrapping THAT would be the literal double-future shape R1 bans, on top of breaking
 // `Arc<dyn AsyncHttpTransport>`'s object safety (E0038). `asyncify-universal.py` doesn't yet
 // recognise this class — see the `HttpTransport` tag above for the coordinator note.
-/// 🌐️ [`AsyncHttpTransport::start`]'s result — factored into its own alias to keep that trait
+/// 🌐️ [`AsyncHttpTransport::begin`]'s result — factored into its own alias to keep that trait
 /// method's signature under clippy's `type_complexity` threshold; not otherwise meaningful on its
 /// own.
-type StartedTransport = Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>;
+pub type StartedTransport = Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>;
+
+struct HttpTransportTerminalState {
+    owners: usize,
+    release: Option<Box<dyn FnOnce() + Send>>,
+}
+
+/// 🏁️ Exact terminal group for response-head and body-reader platform work that can outlive its awaiting future.
+#[derive(Clone)]
+pub struct HttpTransportTerminalHandle(Arc<Mutex<HttpTransportTerminalState>>);
+
+/// 🧵️ Worker-owned member of [`HttpTransportTerminalHandle`], completed only when its physical
+/// work closure returns or is discarded before admission.
+pub struct HttpTransportTerminalGuard(Option<HttpTransportTerminalHandle>);
+
+impl HttpTransportTerminalHandle {
+    pub fn pair() -> (Self, HttpTransportTerminalGuard) {
+        let handle = Self(Arc::new(Mutex::new(HttpTransportTerminalState { owners: 1, release: None })));
+        (handle.clone(), HttpTransportTerminalGuard(Some(handle)))
+    }
+
+    fn worker_guard(&self) -> HttpTransportTerminalGuard {
+        let mut state = self.0.lock().expect("HTTP transport terminal mutex poisoned");
+        assert!(state.release.is_none(), "HTTP transport work cannot start after its exact pool credit was retired");
+        state.owners = state.owners.checked_add(1).expect("HTTP transport terminal owner count overflow");
+        HttpTransportTerminalGuard(Some(self.clone()))
+    }
+
+    fn retain_release(&self, release: Box<dyn FnOnce() + Send>) {
+        let ready = {
+            let mut state = self.0.lock().expect("HTTP transport terminal mutex poisoned");
+            if state.owners == 0 {
+                Some(release)
+            } else {
+                assert!(state.release.replace(release).is_none(), "one HTTP transport terminal retains one exact pool credit");
+                None
+            }
+        };
+        if let Some(release) = ready {
+            release();
+        }
+    }
+
+    fn complete(&self) {
+        let release = {
+            let mut state = self.0.lock().expect("HTTP transport terminal mutex poisoned");
+            assert!(state.owners > 0, "HTTP transport terminal owner completed twice");
+            state.owners -= 1;
+            (state.owners == 0).then(|| state.release.take()).flatten()
+        };
+        if let Some(release) = release {
+            release();
+        }
+    }
+}
+
+impl Drop for HttpTransportTerminalGuard {
+    fn drop(&mut self) {
+        if let Some(handle) = self.0.take() {
+            handle.complete();
+        }
+    }
+}
+
+/// 🛫️ Owns cancellation before the response-head future is polled, so callers can publish the
+/// exact transport owner before connect, request, or response-head work starts.
+pub struct HttpTransportStart {
+    cancellation: HttpBodyCancellationHandle,
+    terminal: HttpTransportTerminalHandle,
+    response: HostFuture<StartedTransport>,
+}
+
+impl HttpTransportStart {
+    pub fn new(cancellation: HttpBodyCancellationHandle, terminal: HttpTransportTerminalHandle, response: HostFuture<StartedTransport>) -> Self {
+        Self { cancellation, terminal, response }
+    }
+
+    pub fn cancellation_handle(&self) -> HttpBodyCancellationHandle {
+        self.cancellation.clone()
+    }
+
+    fn terminal_handle(&self) -> HttpTransportTerminalHandle {
+        self.terminal.clone()
+    }
+
+    async fn finish(self) -> StartedTransport {
+        self.response.await
+    }
+}
 
 pub trait AsyncHttpTransport: Send + Sync {
-    fn start(&self, ctx: &OperationContext, request: HttpRequest) -> HostFuture<StartedTransport>;
+    fn begin(&self, ctx: &OperationContext, request: HttpRequest) -> HttpTransportStart;
 }
 
 /// 🌐️ Blocking HTTP transport [`BlockingHttpTransport`] drives through [`ComputePool`] — the same
@@ -1032,10 +1161,17 @@ struct BufferedHttpBody {
     remaining: Option<Vec<u8>>,
 }
 impl HttpBody for BufferedHttpBody {
+    fn cancellation_handle(&self) -> HttpBodyCancellationHandle {
+        HttpBodyCancellationHandle::idle()
+    }
+
     // 🚫️async: E6 dyn-compat — see the `HttpBody` trait's `dedyn-fw-os-misc` tag above.
-    fn next_chunk(&mut self) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
+    fn next_chunk(&mut self, terminal: HttpTransportTerminalGuard) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
         let chunk = self.remaining.take();
-        Box::pin(async move { Ok(chunk) })
+        Box::pin(async move {
+            let _terminal = terminal;
+            Ok(chunk)
+        })
     }
 }
 
@@ -1043,7 +1179,7 @@ impl HttpBody for BufferedHttpBody {
 /// by running the whole blocking call through [`ComputePool::run_io`] and replaying the
 /// buffered result as one [`BufferedHttpBody`] chunk. `runtime`/`scope` are captured at
 /// CONSTRUCTION time (unlike `HttpPool::fetch`'s own `runtime`/`scope` parameters) because
-/// [`AsyncHttpTransport::start`] itself takes neither — a transport that needs to reach
+/// [`AsyncHttpTransport::begin`] itself takes neither — a transport that needs to reach
 /// `ComputePool::run_io` must own that context itself.
 // 🔀️ dedyn-fw-os-misc: `TokioHostRuntime`, not `<R: HostAsyncRuntime>` — this is the ONE production
 // spawn site for HTTP transport work, and R3 requires Send-ness be obtained STRUCTURALLY (a known
@@ -1066,14 +1202,20 @@ impl BlockingHttpTransport {
 
 impl AsyncHttpTransport for BlockingHttpTransport {
     // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
-    fn start(&self, ctx: &OperationContext, request: HttpRequest) -> HostFuture<StartedTransport> {
+    fn begin(&self, ctx: &OperationContext, request: HttpRequest) -> HttpTransportStart {
         let transport = self.transport.clone();
         let compute = self.compute.clone();
         let runtime = self.runtime.clone();
         let scope = self.scope.clone();
         let ctx = ctx.clone();
-        Box::pin(async move {
-            let result = compute.run_io(runtime.as_ref(), &scope, ctx, move || transport.call(request)).await;
+        let (terminal, terminal_guard) = HttpTransportTerminalHandle::pair();
+        let response = Box::pin(async move {
+            let result = compute
+                .run_io(runtime.as_ref(), &scope, ctx, move || {
+                    let _terminal = terminal_guard;
+                    transport.call(request)
+                })
+                .await;
             match result {
                 Ok(Ok(response)) => {
                     let head = HttpResponseHead { status: response.status, headers: response.headers };
@@ -1083,7 +1225,8 @@ impl AsyncHttpTransport for BlockingHttpTransport {
                 Ok(Err(io_error)) => Err(HttpPoolError::Transport(io_error.to_string())),
                 Err(compute_error) => Err(HttpPoolError::Compute(compute_error)),
             }
-        })
+        });
+        HttpTransportStart::new(HttpBodyCancellationHandle::idle(), terminal, response)
     }
 }
 
@@ -1108,6 +1251,7 @@ struct SocketHttpBodyState {
 
 pub struct SocketHttpBody {
     state: Arc<Mutex<Option<SocketHttpBodyState>>>,
+    cancellation: HttpBodyCancellationHandle,
     compute: Arc<ComputePool>,
     runtime: Arc<TokioHostRuntime>,
     scope: ScopeHandle,
@@ -1115,7 +1259,11 @@ pub struct SocketHttpBody {
 }
 
 impl HttpBody for SocketHttpBody {
-    fn next_chunk(&mut self) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
+    fn cancellation_handle(&self) -> HttpBodyCancellationHandle {
+        self.cancellation.clone()
+    }
+
+    fn next_chunk(&mut self, terminal: HttpTransportTerminalGuard) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
         let state = self.state.clone();
         let compute = self.compute.clone();
         let runtime = self.runtime.clone();
@@ -1124,6 +1272,7 @@ impl HttpBody for SocketHttpBody {
         Box::pin(async move {
             compute
                 .run_io(runtime.as_ref(), &scope, ctx, move || {
+                    let _terminal = terminal;
                     let mut slot = state.lock().map_err(|_| HttpPoolError::Transport("socket HTTP body lock poisoned".into()))?;
                     let body = slot.as_mut().ok_or_else(|| HttpPoolError::Transport("socket HTTP body reached terminal ownership".into()))?;
                     socket_http_read_page(body)
@@ -1140,6 +1289,43 @@ pub struct SocketHttpTransport {
     scope: ScopeHandle,
 }
 
+struct SocketHttpCancellation {
+    requested: AtomicBool,
+    stream: OnceLock<std::net::TcpStream>,
+}
+
+impl SocketHttpCancellation {
+    fn new() -> Self {
+        Self { requested: AtomicBool::new(false), stream: OnceLock::new() }
+    }
+
+    fn handle(owner: &Arc<Self>) -> HttpBodyCancellationHandle {
+        let owner = owner.clone();
+        HttpBodyCancellationHandle::interrupt(move || owner.interrupt())
+    }
+
+    fn bind(&self, stream: &std::net::TcpStream) -> std::io::Result<()> {
+        let clone = stream.try_clone()?;
+        let _ = self.stream.set(clone);
+        if self.requested.load(Ordering::Acquire) {
+            self.interrupt()?;
+        }
+        Ok(())
+    }
+
+    fn interrupt(&self) -> std::io::Result<()> {
+        self.requested.store(true, Ordering::Release);
+        if let Some(stream) = self.stream.get() {
+            match stream.shutdown(std::net::Shutdown::Both) {
+                Ok(()) => {}
+                Err(error) if matches!(error.kind(), std::io::ErrorKind::NotConnected) => {}
+                Err(error) => return Err(error),
+            }
+        }
+        Ok(())
+    }
+}
+
 impl SocketHttpTransport {
     pub fn new(compute: Arc<ComputePool>, runtime: Arc<TokioHostRuntime>, scope: ScopeHandle) -> Self {
         Self { compute, runtime, scope }
@@ -1147,7 +1333,7 @@ impl SocketHttpTransport {
 }
 
 impl AsyncHttpTransport for SocketHttpTransport {
-    fn start(&self, ctx: &OperationContext, request: HttpRequest) -> HostFuture<StartedTransport> {
+    fn begin(&self, ctx: &OperationContext, request: HttpRequest) -> HttpTransportStart {
         let compute = self.compute.clone();
         let runtime = self.runtime.clone();
         let scope = self.scope.clone();
@@ -1156,16 +1342,27 @@ impl AsyncHttpTransport for SocketHttpTransport {
         let connect_scope = scope.clone();
         let connect_ctx = ctx.clone();
         let body_ctx = ctx.clone();
-        Box::pin(async move {
-            let connected = connect_compute.run_io(connect_runtime.as_ref(), &connect_scope, connect_ctx, move || socket_http_connect(request)).await.map_err(HttpPoolError::Compute)??;
+        let cancellation_owner = Arc::new(SocketHttpCancellation::new());
+        let cancellation = SocketHttpCancellation::handle(&cancellation_owner);
+        let body_cancellation = cancellation.clone();
+        let (terminal, terminal_guard) = HttpTransportTerminalHandle::pair();
+        let response = Box::pin(async move {
+            let connected = connect_compute
+                .run_io(connect_runtime.as_ref(), &connect_scope, connect_ctx, move || {
+                    let _terminal = terminal_guard;
+                    socket_http_connect(request, cancellation_owner)
+                })
+                .await
+                .map_err(HttpPoolError::Compute)??;
             let (head, state) = connected;
-            let body: Box<dyn HttpBody> = Box::new(SocketHttpBody { state: Arc::new(Mutex::new(Some(state))), compute, runtime, scope, ctx: body_ctx });
+            let body: Box<dyn HttpBody> = Box::new(SocketHttpBody { state: Arc::new(Mutex::new(Some(state))), cancellation, compute, runtime, scope, ctx: body_ctx });
             Ok((head, body))
-        })
+        });
+        HttpTransportStart::new(body_cancellation, terminal, response)
     }
 }
 
-fn socket_http_connect(request: HttpRequest) -> Result<(HttpResponseHead, SocketHttpBodyState), HttpPoolError> {
+fn socket_http_connect(request: HttpRequest, cancellation: Arc<SocketHttpCancellation>) -> Result<(HttpResponseHead, SocketHttpBodyState), HttpPoolError> {
     use std::io::Write;
     if request.method != "GET" || !request.body.is_empty() {
         return Err(HttpPoolError::Transport("socket HTTP transport admits GET with an empty body only".into()));
@@ -1187,6 +1384,7 @@ fn socket_http_connect(request: HttpRequest) -> Result<(HttpResponseHead, Socket
     })?;
     let _ = header_bytes;
     let mut stream = std::net::TcpStream::connect((host.as_str(), port)).map_err(|error| HttpPoolError::Transport(error.to_string()))?;
+    cancellation.bind(&stream).map_err(|error| HttpPoolError::Transport(error.to_string()))?;
     stream.set_nodelay(true).map_err(|error| HttpPoolError::Transport(error.to_string()))?;
     let mut head = Vec::with_capacity(request.url.len().min(SOCKET_HTTP_URL_BYTES));
     head.extend_from_slice(b"GET ");
@@ -1395,15 +1593,42 @@ impl TokenBucket {
 #[allow(dead_code)]
 const HTTP_BUCKET_REFILL_INTERVAL_MS: u64 = 60_000;
 
-/// 🔓️ Releases one outstanding-request slot for `actor`, shared between [`HttpPool::fetch`]'s
-/// own early-return paths (no [`HttpPoolBody`] was ever created to own the release) and
-/// [`HttpPoolBody::finish`] (the body's own EOF/drop path) — ONE decrement implementation either way.
+/// 🔓️ Releases one outstanding-request slot for `actor` when its exact
+/// [`HttpOutstandingCredit`] reaches terminal ownership.
 // 🚫️async: E1 pure in-memory decrement whose consumer chain reaches `Drop::drop` (external trait,
 // cannot be async) via `HttpPoolBody::finish` — see R9.
 fn release_outstanding_slot(outstanding: &Mutex<HashMap<ActorId, u32>>, actor: ActorId) {
     let mut outstanding = outstanding.lock().expect("HttpPool outstanding mutex poisoned");
     if let Some(count) = outstanding.get_mut(&actor) {
         *count = count.saturating_sub(1);
+    }
+}
+
+struct HttpOutstandingCredit {
+    outstanding: Arc<Mutex<HashMap<ActorId, u32>>>,
+    actor: ActorId,
+    terminal: Option<HttpTransportTerminalHandle>,
+}
+
+impl HttpOutstandingCredit {
+    fn new(outstanding: Arc<Mutex<HashMap<ActorId, u32>>>, actor: ActorId) -> Self {
+        Self { outstanding, actor, terminal: None }
+    }
+
+    fn bind_terminal(&mut self, terminal: HttpTransportTerminalHandle) {
+        assert!(self.terminal.replace(terminal).is_none(), "one HTTP pool credit binds one exact transport terminal");
+    }
+}
+
+impl Drop for HttpOutstandingCredit {
+    fn drop(&mut self) {
+        let outstanding = self.outstanding.clone();
+        let actor = self.actor;
+        if let Some(terminal) = self.terminal.take() {
+            terminal.retain_release(Box::new(move || release_outstanding_slot(&outstanding, actor)));
+        } else {
+            release_outstanding_slot(&outstanding, actor);
+        }
     }
 }
 
@@ -1430,10 +1655,10 @@ pub struct HttpPool {
 impl HttpPool {
     /// 🌐️ Today's only shipped shape: stores `transport`/`compute` directly, dispatched inline by
     /// [`HttpPool::fetch`] with the runtime/scope IT receives per call — the same dispatch
-    /// [`BlockingHttpTransport::start`] performs, just not routed through that type here, because
+    /// [`BlockingHttpTransport::begin`] performs, just not routed through that type here, because
     /// `fetch`/`request` keep their runtime/scope as borrowed PER-CALL parameters (so existing
     /// callers built against today's `HttpPool::new`/`request` keep compiling unchanged) while
-    /// [`AsyncHttpTransport::start`] needs a transport that OWNS them — see the crate report's
+    /// [`AsyncHttpTransport::begin`] needs a transport that OWNS them — see the crate report's
     /// `## honest gaps` for this one acknowledged duplication.
     pub async fn new(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32) -> HttpPool {
         Self::new_now(transport, compute, bytes_per_minute_cap, outstanding_cap)
@@ -1507,6 +1732,21 @@ impl HttpPool {
     /// per chunk, as [`HttpPoolBody::next_chunk`] pulls them — this is the fix for the estimate-only
     /// accounting this packet was measured against.
     pub async fn fetch<R: HostAsyncRuntime>(&self, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, package: PackageId, actor: ActorId, request: HttpRequest) -> Result<(HttpResponseHead, HttpPoolBody), HttpPoolError> {
+        self.fetch_started(runtime, scope, ctx, package, actor, request, |_| {}).await
+    }
+
+    /// 🧷 Publishes the transport's exact cancellation owner through `on_started` before the
+    /// response-head future is polled, while retaining the same pool credits as [`Self::fetch`].
+    pub async fn fetch_started<R: HostAsyncRuntime, F: FnOnce(HttpBodyCancellationHandle)>(
+        &self,
+        runtime: &R,
+        scope: &ScopeHandle,
+        ctx: OperationContext,
+        package: PackageId,
+        actor: ActorId,
+        request: HttpRequest,
+        on_started: F,
+    ) -> Result<(HttpResponseHead, HttpPoolBody), HttpPoolError> {
         {
             let mut outstanding = self.outstanding.lock().expect("HttpPool outstanding mutex poisoned");
             let count = outstanding.entry(actor).or_insert(0);
@@ -1515,6 +1755,7 @@ impl HttpPool {
             }
             *count += 1;
         }
+        let mut credit = HttpOutstandingCredit::new(self.outstanding.clone(), actor);
         let outbound_bytes = (request.body.len() + request.url.len()) as u64;
         let admitted = {
             let refill_epoch = self.refill_epoch.load(Ordering::SeqCst);
@@ -1524,35 +1765,43 @@ impl HttpPool {
             bucket.try_consume(outbound_bytes)
         };
         if !admitted {
-            release_outstanding_slot(&self.outstanding, actor);
             return Err(HttpPoolError::ByteBudgetExhausted { package });
         }
         let start_result = match &self.transport {
             HttpPoolTransport::Blocking { transport, compute } => {
+                on_started(HttpBodyCancellationHandle::idle());
                 let transport = transport.clone();
                 let compute = compute.clone();
                 let ctx_for_run = ctx.clone();
-                let result = compute.run_io(runtime, scope, ctx_for_run, move || transport.call(request)).await;
+                let (terminal, terminal_guard) = HttpTransportTerminalHandle::pair();
+                credit.bind_terminal(terminal.clone());
+                let result = compute
+                    .run_io(runtime, scope, ctx_for_run, move || {
+                        let _terminal = terminal_guard;
+                        transport.call(request)
+                    })
+                    .await;
                 match result {
                     Ok(Ok(response)) => {
                         let head = HttpResponseHead { status: response.status, headers: response.headers };
                         let body: Box<dyn HttpBody> = Box::new(BufferedHttpBody { remaining: Some(response.body) });
-                        Ok((head, body))
+                        Ok((head, body, terminal))
                     }
                     Ok(Err(io_error)) => Err(HttpPoolError::Transport(io_error.to_string())),
                     Err(compute_error) => Err(HttpPoolError::Compute(compute_error)),
                 }
             }
-            HttpPoolTransport::Async(async_transport) => async_transport.start(&ctx, request).await,
+            HttpPoolTransport::Async(async_transport) => {
+                let start = async_transport.begin(&ctx, request);
+                let terminal = start.terminal_handle();
+                credit.bind_terminal(terminal.clone());
+                on_started(start.cancellation_handle());
+                start.finish().await.map(|(head, body)| (head, body, terminal))
+            }
         };
         match start_result {
-            Ok((head, body)) => {
-                Ok((head, HttpPoolBody { inner: body, package, actor, buckets: self.buckets.clone(), bytes_per_minute_cap: self.bytes_per_minute_cap, refill_epoch: self.refill_epoch.clone(), outstanding: self.outstanding.clone(), finished: false }))
-            }
-            Err(error) => {
-                release_outstanding_slot(&self.outstanding, actor);
-                Err(error)
-            }
+            Ok((head, body, terminal)) => Ok((head, HttpPoolBody { inner: body, package, buckets: self.buckets.clone(), bytes_per_minute_cap: self.bytes_per_minute_cap, refill_epoch: self.refill_epoch.clone(), terminal, credit: Some(credit) })),
+            Err(error) => Err(error),
         }
     }
 
@@ -1584,30 +1833,32 @@ fn schedule_http_refill_turn(pool: &WorkerPool, refill_epoch: Arc<AtomicU64>, in
 
 /// 🌊️ A [`HttpPool::fetch`]'d body: wraps the transport's own [`HttpBody`], charging the
 /// per-package byte bucket for the REAL length of every chunk actually pulled (never an estimate),
-/// and releasing the actor's outstanding slot exactly once — on EOF, on a mid-body budget abort, or
-/// on the caller dropping this value early (`Drop` calls the SAME [`HttpPoolBody::finish`] the
-/// success paths do, guarded by `finished` so a drop after EOF never double-releases). Dropping this
-/// value also drops `inner`, so whatever connection the transport's [`HttpBody`] owns closes with
-/// it — an aborted or cancelled stream is not left dangling.
+/// and releasing the actor's outstanding slot exactly once after EOF or cancellation and every
+/// physical body reader has reached terminal ownership. Dropping this value interrupts the exact
+/// body owner and parks its actor credit behind any reader closure that outlives the awaiting
+/// future.
 pub struct HttpPoolBody {
     inner: Box<dyn HttpBody>,
     package: PackageId,
-    actor: ActorId,
     buckets: Arc<Mutex<HashMap<PackageId, TokenBucket>>>,
     bytes_per_minute_cap: u64,
     refill_epoch: Arc<AtomicU64>,
-    outstanding: Arc<Mutex<HashMap<ActorId, u32>>>,
-    finished: bool,
+    terminal: HttpTransportTerminalHandle,
+    credit: Option<HttpOutstandingCredit>,
 }
 
 impl HttpPoolBody {
+    pub fn cancellation_handle(&self) -> HttpBodyCancellationHandle {
+        self.inner.cancellation_handle()
+    }
+
     // 🚫️async: E1 pure bookkeeping consumed by `Drop::drop` below (external trait, cannot be
     // async) — see R9.
-    fn finish(&mut self) {
-        if !self.finished {
-            self.finished = true;
-            release_outstanding_slot(&self.outstanding, self.actor);
+    fn finish(&mut self, cancel_in_flight: bool) {
+        if cancel_in_flight && self.credit.is_some() {
+            let _ = self.inner.cancellation_handle().cancel_in_flight();
         }
+        self.credit.take();
     }
 
     /// 🌊️ Pulls the next real chunk, charging the per-package bucket for its EXACT length before
@@ -1616,10 +1867,11 @@ impl HttpPoolBody {
     /// expected to drop this value on error, which closes the underlying connection (see this
     /// type's own doc).
     pub async fn next_chunk(&mut self) -> Result<Option<Vec<u8>>, HttpPoolError> {
-        if self.finished {
+        if self.credit.is_none() {
             return Ok(None);
         }
-        match self.inner.next_chunk().await {
+        let terminal = self.terminal.worker_guard();
+        match self.inner.next_chunk(terminal).await {
             Ok(Some(chunk)) => {
                 let admitted = {
                     let refill_epoch = self.refill_epoch.load(Ordering::SeqCst);
@@ -1629,17 +1881,17 @@ impl HttpPoolBody {
                     bucket.try_consume(chunk.len() as u64)
                 };
                 if !admitted {
-                    self.finish();
+                    self.finish(true);
                     return Err(HttpPoolError::ByteBudgetExhausted { package: self.package.clone() });
                 }
                 Ok(Some(chunk))
             }
             Ok(None) => {
-                self.finish();
+                self.finish(false);
                 Ok(None)
             }
             Err(error) => {
-                self.finish();
+                self.finish(true);
                 Err(error)
             }
         }
@@ -1648,7 +1900,7 @@ impl HttpPoolBody {
 
 impl Drop for HttpPoolBody {
     fn drop(&mut self) {
-        self.finish();
+        self.finish(true);
     }
 }
 //#endregion 🌐️HttpPool

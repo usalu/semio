@@ -235,6 +235,7 @@
   "issues": [],
   "auditEvents": [],
   "templates": [],
+  "knowledgePayload": [],
   "knowledge": {
     "childId": "architect-knowledge-7904dd65836c8ff4",
     "target": {
@@ -246,6 +247,7 @@
       }
     }
   },
+  "benchmarksPayload": [],
   "benchmarks": {
     "childId": "architect-benchmarks-7904dd65836c8ff4",
     "target": {

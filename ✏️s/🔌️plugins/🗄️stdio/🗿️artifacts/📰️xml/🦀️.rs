@@ -377,6 +377,12 @@ pub mod standards {
                 #[path = "."]
                 pub mod examples {
                     #[path = "."]
+                    pub mod demo {
+                        #[path = "🏅️standards/🔖️1.0/🪆️subsets/✅️valid/📚️examples/🎬️demo/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                    #[path = "."]
                     pub mod no_doctype {
                         #[path = "🏅️standards/🔖️1.0/🪆️subsets/✅️valid/📚️examples/🚫️no-doctype/🦀️.rs"]
                         mod component;

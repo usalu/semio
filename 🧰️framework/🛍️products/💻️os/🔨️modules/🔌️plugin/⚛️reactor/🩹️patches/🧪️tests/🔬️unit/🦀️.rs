@@ -496,6 +496,11 @@ fn mounted_document_tree_publishes_nested_interactive_rows() {
     assert_eq!(semio_framework_ui_runtime::SurfaceReconcileLimits::default().max_bytes as u64, fixture["limits"]["surfaceBytes"].as_u64().unwrap());
     assert_eq!(semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES as u64, fixture["limits"]["pageBytes"].as_u64().unwrap());
     assert_eq!(semio_framework_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES as u64, fixture["limits"]["aggregateBytes"].as_u64().unwrap());
+    assert_eq!(
+        semio_framework_ui_runtime::SURFACE_RECONCILE_AGGREGATE_BYTES,
+        ui_contract::UI_RESIDENT_SLOTS * ui_contract::UI_DOCUMENT_NODES * size_of::<ui_contract::UiNodeRecord>(),
+        "the aggregate budget is exactly sixty-four full-document record baselines — a drift in either factor moves the recorded literal above"
+    );
     let sections = fixture["sections"].as_array().unwrap().iter().map(|section| {
         ui_contract::tree_section(ui_contract::Label(ui_contract::UiText::try_from_str(section["id"].as_str().unwrap()).unwrap()))
             .try_id(section["id"].as_str().unwrap())

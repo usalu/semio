@@ -80,7 +80,7 @@ fn control_node(case: &Value) -> UiNode {
         "toggle" => {
             let mut presence = presence;
             presence.selected = node["on"].as_bool().unwrap_or(false);
-            UiNode::Toggle(UiToggleNode { id: node["id"].as_str().unwrap_or_default().to_string(), icon_id: IconName::CircleDot, text: None, on_change, presence, menu: None })
+            UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: node["id"].as_str().unwrap_or_default().to_string(), icon_id: IconName::CircleDot, text: None, on_change, presence, menu: None })
         }
         "slider" => UiNode::Slider(UiSliderNode {
             id: node["id"].as_str().unwrap_or_default().to_string(),

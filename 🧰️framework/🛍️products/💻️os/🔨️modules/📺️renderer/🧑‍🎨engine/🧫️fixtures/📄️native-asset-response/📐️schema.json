@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.native-asset-response.v8",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "pageBytes", "patternPeriod", "cases", "referenceDecodeRetirement", "transportCancellation", "localPageCancellation", "rendererIoContention"],
+  "properties": {
+    "$schema": { "const": "./📐️schema.json" },
+    "schema": { "const": "semio.native-asset-response.v8" },
+    "pageBytes": { "const": 16384 },
+    "patternPeriod": { "const": 251 },
+    "cases": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "prefixItems": [
+        { "type": "object", "additionalProperties": false, "required": ["bytes", "accepted", "transferredBytes"], "properties": { "bytes": { "const": 1 }, "accepted": { "const": true }, "transferredBytes": { "const": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["bytes", "accepted", "transferredBytes"], "properties": { "bytes": { "const": 16384 }, "accepted": { "const": true }, "transferredBytes": { "const": 16384 } } },
+        { "type": "object", "additionalProperties": false, "required": ["bytes", "accepted", "transferredBytes"], "properties": { "bytes": { "const": 16385 }, "accepted": { "const": false }, "transferredBytes": { "const": 0 } } }
+      ],
+      "items": false
+    },
+    "referenceDecodeRetirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumItems", "zeroGrantReleasedBytes", "phaseZero", "phaseTwoWaiting", "terminalOwners"],
+      "properties": {
+        "maximumItems": { "const": 1 },
+        "zeroGrantReleasedBytes": { "const": 0 },
+        "phaseZero": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["encodedBytes", "decodedPixelBytes", "decodedPageReleases", "encodedPageReleases", "releasedBytes"],
+          "properties": {
+            "encodedBytes": { "const": 32785 },
+            "decodedPixelBytes": { "const": 32800 },
+            "decodedPageReleases": { "const": [16384, 16384, 32] },
+            "encodedPageReleases": { "const": [16384, 16384, 17] },
+            "releasedBytes": { "const": 65585 }
+          }
+        },
+        "phaseTwoWaiting": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["encodedBytes", "decodedPixelBytes", "retainedAfterOneTurn", "closeTurns"],
+          "properties": {
+            "encodedBytes": { "const": 16385 },
+            "decodedPixelBytes": { "const": 32800 },
+            "retainedAfterOneTurn": { "const": true },
+            "closeTurns": { "const": 9 }
+          }
+        },
+        "terminalOwners": { "const": 0 }
+      }
+    },
+    "transportCancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stalledHostId", "siblingHostId", "responseBytes", "observationDeadlineMs", "cleanupDeadlineMs", "serviceOutcomes", "abandonedStart", "abandonedBodyRead", "publishedStalledResponses", "terminalTransportLeases", "frameFaults"],
+      "properties": {
+        "stalledHostId": { "const": "component-world-a" },
+        "siblingHostId": { "const": "component-world-b" },
+        "responseBytes": { "const": 1 },
+        "observationDeadlineMs": { "const": 2000 },
+        "cleanupDeadlineMs": { "const": 5000 },
+        "serviceOutcomes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["idle", "socket", "httpsReadDeadlineMs", "faultDetail"],
+          "properties": {
+            "idle": { "const": "idle" },
+            "socket": { "const": "interrupted" },
+            "httpsReadDeadlineMs": { "const": 15000 },
+            "faultDetail": { "const": "transport cancellation probe failed" }
+          }
+        },
+        "abandonedStart": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["outstandingCap", "siblingRefusedBeforeWorkerTerminal", "workerTerminalBeforeSibling", "siblingAdmitted"],
+          "properties": {
+            "outstandingCap": { "const": 1 },
+            "siblingRefusedBeforeWorkerTerminal": { "const": true },
+            "workerTerminalBeforeSibling": { "const": true },
+            "siblingAdmitted": { "const": true }
+          }
+        },
+        "abandonedBodyRead": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["outstandingCap", "readPendingBeforeBodyDrop", "siblingRefusedBeforeReaderTerminal", "readerTerminalBeforeSibling", "siblingAdmitted"],
+          "properties": {
+            "outstandingCap": { "const": 1 },
+            "readPendingBeforeBodyDrop": { "const": true },
+            "siblingRefusedBeforeReaderTerminal": { "const": true },
+            "readerTerminalBeforeSibling": { "const": true },
+            "siblingAdmitted": { "const": true }
+          }
+        },
+        "publishedStalledResponses": { "const": 0 },
+        "terminalTransportLeases": { "const": 0 },
+        "frameFaults": { "const": 0 }
+      }
+    },
+    "localPageCancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pageBytes", "publishedCancelledBytes", "retainedPageBytesBeforeClose", "pageRetirementTurns", "terminalNativeOwners", "frameFaults"],
+      "properties": {
+        "pageBytes": { "const": 16384 },
+        "publishedCancelledBytes": { "const": 0 },
+        "retainedPageBytesBeforeClose": { "const": 16384 },
+        "pageRetirementTurns": { "const": 1 },
+        "terminalNativeOwners": { "const": 0 },
+        "frameFaults": { "const": 0 }
+      }
+    },
+    "rendererIoContention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["registrationState", "exactGenerationLive", "poll", "wakeCount", "terminalOwners"],
+      "properties": {
+        "registrationState": { "const": "checkedOut" },
+        "exactGenerationLive": { "const": true },
+        "poll": { "const": "pending" },
+        "wakeCount": { "const": 1 },
+        "terminalOwners": { "const": 0 }
+      }
+    }
+  }
+}

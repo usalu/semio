@@ -377,7 +377,10 @@ fn every_page_door_hands_the_census_across() {
 
     let worker = wgpu_target_source("🎞️frame-worker/🟦️.ts");
     let environment = worker.split("ownedStep(\"runtime-environment\"").nth(1).expect("the owned boot step");
-    assert!(environment[..environment.find("progress(\"plugin-graph\"").expect("the step ends before the plugin graph")].contains("semioWgpuSetHostStorage?.(JSON.stringify(message.storage))"), "the snapshot is applied in the boot step, before any shell reads it");
+    assert!(
+        environment[..environment.find("progress(\"plugin-graph\"").expect("the step ends before the plugin graph")].contains("semioWgpuSetHostStorage?.(JSON.stringify(message.storage))"),
+        "the snapshot is applied in the boot step, before any shell reads it"
+    );
     assert!(worker.contains("message.kind === \"host-storage\""), "and re-applied when another tab rewrites a key");
 
     let boot = wgpu_target_source("🚀️browser-boot/🟦️.ts");

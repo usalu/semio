@@ -1,0 +1,37 @@
+{
+  "contractVersion": 1,
+  "cases": [
+    {
+      "locale": "en",
+      "bridge": "open",
+      "accessibleName": "Message to the agent",
+      "placeholder": "Tell the agent what to do…",
+      "enabled": true,
+      "enterAction": "sendChatDraft"
+    },
+    {
+      "locale": "en",
+      "bridge": "closed",
+      "accessibleName": "Message to the agent",
+      "placeholder": "Tell the agent what to do…",
+      "enabled": false,
+      "enterAction": null
+    },
+    {
+      "locale": "de",
+      "bridge": "open",
+      "accessibleName": "Nachricht an den Agent",
+      "placeholder": "Sag dem Agent, was zu tun ist…",
+      "enabled": true,
+      "enterAction": "sendChatDraft"
+    },
+    {
+      "locale": "de",
+      "bridge": "closed",
+      "accessibleName": "Nachricht an den Agent",
+      "placeholder": "Sag dem Agent, was zu tun ist…",
+      "enabled": false,
+      "enterAction": null
+    }
+  ]
+}

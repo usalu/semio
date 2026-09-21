@@ -1,0 +1,163 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://renderer/window-measures-tree-parity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "windowId",
+    "body",
+    "measures",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.window-measures-tree-parity/v1"
+    },
+    "windowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
+    },
+    "measures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/measure"
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "labels",
+        "closedLabel",
+        "toggleRole",
+        "maximumRowHeight",
+        "rowHeights",
+        "minimumUnusedHeight",
+        "controlColumnWidth"
+      ],
+      "properties": {
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "closedLabel": {
+          "type": "string"
+        },
+        "toggleRole": {
+          "const": "checkbox"
+        },
+        "maximumRowHeight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rowHeights": { "type": "object", "additionalProperties": { "type": "number", "exclusiveMinimum": 0 } },
+        "minimumUnusedHeight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "controlColumnWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "measure": {
+      "type": "object",
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "group",
+            "number",
+            "slider",
+            "select",
+            "toggle"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "defaultOpen": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "step": {
+          "type": "number"
+        },
+        "pressed": {
+          "type": "boolean"
+        },
+        "iconId": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/measure"
+          }
+        },
+        "onChange": {
+          "type": "object",
+          "required": [
+            "controllerId",
+            "action"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -7,7 +7,7 @@ async fn the_inspector_always_shows_the_document_summary() {
     let mut app = forms_app().await;
     let json = render_body(&mut app, BODY_INSPECTION).await;
     assert!(json.contains("forms-play-inspector.summary"));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    app.close();
 }
 
 #[semio_framework_async_macros::async_test]

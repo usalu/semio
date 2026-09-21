@@ -7,19 +7,22 @@
       },
       {
         "cameraJson": ""
+      },
+      {
+        "cameraJson": "{}"
       }
     ],
     "invalid": [
       {},
       {
-        "cameraJson": "{}"
+        "cameraJson": {}
       },
       {},
       {
         "cameraJson": null
       },
       {
-        "cameraJson": "{}"
+        "cameraJson": {}
       },
       {
         "cameraJson": 7
@@ -52,7 +55,7 @@
       },
       {
         "operation": "setCamera",
-        "cameraJson": "{}"
+        "cameraJson": {}
       }
     ]
   },
@@ -138,11 +141,6 @@
           {
             "cameraJson": 9
           }
-        ]
-      },
-      {
-        "steps": [
-          {}
         ]
       },
       {

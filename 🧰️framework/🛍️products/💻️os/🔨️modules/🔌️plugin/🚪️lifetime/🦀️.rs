@@ -21,7 +21,7 @@ impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
         let instances = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
         let current = instances.get(self.instance_id).ok_or_else(|| plugin_internal_fault("captured app lifetime is absent"))?;
         if !std::sync::Weak::ptr_eq(&self.cell, &std::sync::Arc::downgrade(current)) { return Err(plugin_internal_fault("captured app lifetime changed")); }
-        if !runtime.close_quarantine.try_borrow().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.can_insert(self.instance_id) { return Err(plugin_internal_fault("runtime close quarantine collided")); }
+        if !runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.can_insert(self.instance_id) { return Err(plugin_internal_fault("runtime close quarantine collided")); }
         let _actors = runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority is busy"))?;
         checked_runtime_close_generation(runtime.close_generation.get())?;
         Ok(())

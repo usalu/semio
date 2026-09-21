@@ -13,7 +13,7 @@ async fn every_shipped_grammar_semio_parses_and_compiles() {
             let path = entry.path();
             if path.is_dir() {
                 collect(&path, out);
-            } else if path.file_name().and_then(|n| n.to_str()) == Some("\u{1f4d6}\u{fe0f}component.grammar.semio") {
+            } else if path.file_name().and_then(|n| n.to_str()).is_some_and(|name| name.ends_with(".grammar.semio")) {
                 out.push(path);
             }
         }
@@ -22,7 +22,7 @@ async fn every_shipped_grammar_semio_parses_and_compiles() {
     let plugins = root.join("\u{270f}\u{fe0f}s/\u{1f50c}\u{fe0f}plugins");
     let mut files = Vec::new();
     collect(&plugins, &mut files);
-    assert!(!files.is_empty(), "found zero component.grammar.semio under {}", plugins.display());
+    assert!(!files.is_empty(), "found zero *.grammar.semio under {}", plugins.display());
 
     let mut failures: Vec<String> = Vec::new();
     for file in &files {

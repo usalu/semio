@@ -99,6 +99,12 @@ describe("InkCanvas clipboard", () => {
   it("validates the shared bounded clipboard grammar", () => {
     const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(fixture.ownership).toMatchObject({
+      address: ["windowId", "windowGeneration", "nodeId", "hostId"],
+      retirement: "matchingOnly",
+      progress: "oneOwnerPerOpportunity",
+      slotReuse: "generationToken",
+    });
   });
 
   it("copies selected blocks in selection order and omits document assets", () => {

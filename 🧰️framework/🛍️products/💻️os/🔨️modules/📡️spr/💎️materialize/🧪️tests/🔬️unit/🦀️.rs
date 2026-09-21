@@ -48,7 +48,7 @@ async fn snapshot_rejects_unknown_format() {
 
 //#region 🔖️Plan
 fn sample_edit(id: &str, op_text: &str) -> HistoryEdit {
-    HistoryEdit { id: id.to_string(), actor: None, started_at: format!("t-{id}"), finished_at: None, coalesce_key: None, description: None, ops: vec![OpPayload { text: Some(op_text.to_string()), binary: None }], inverse: Vec::new(), meta: None }
+    HistoryEdit { id: id.to_string(), actor: None, started_at: format!("t-{id}"), finished_at: None, coalesce_key: None, description: None, ops: vec![OpPayload { text: Some(op_text.to_string()), binary: None }], inverse: Vec::new(), meta: None, lane: None }
 }
 
 async fn flush_dict_delta<S: crate::os_pack::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) {

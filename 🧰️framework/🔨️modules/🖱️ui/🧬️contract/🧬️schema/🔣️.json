@@ -3,6 +3,18 @@
   "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/schema.json",
   "title": "Ui Contract Schema Module",
   "definitions": {
+    "treePresentation": {
+      "description": "The inherited row presentation of a tree; a nested tree establishes its own scope.",
+      "type": "string",
+      "enum": ["standard", "compact"],
+      "default": "standard"
+    },
+    "toggleAppearance": {
+      "description": "The visual and accessibility presentation of a binary control.",
+      "type": "string",
+      "enum": ["button", "checkbox"],
+      "default": "button"
+    },
     "presenceOwnMarks": {
       "$comment": "OwnPresence (📦️packages/🦀️rust/👥️presence.rs): this session's own marks on the node; every flag defaults to false and is omitted from the wire when false.",
       "type": "object",

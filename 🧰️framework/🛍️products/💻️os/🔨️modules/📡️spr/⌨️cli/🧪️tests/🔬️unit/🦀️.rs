@@ -20,6 +20,7 @@ async fn sample_edit(id: &str, actor: Option<&str>, description: Option<&str>, c
         ops: vec![crate::os_spr::OpPayload { text: Some(format!("set {id} = 1")), binary: None }],
         inverse: Vec::new(),
         meta: None,
+        lane: None,
     }
 }
 

@@ -78,7 +78,7 @@ async fn the_missing_endpoint_node_is_reported_rather_than_the_edge() {
     assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::target(&mutation()), vec!["edge-alpha-beta".to_string()], "while the mutation's own target stays the edge — the two deliberately disagree here");
     let semantics = <WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("connect", "relationship", "connect-nodes", "ConnectedNodes"), "the fixture must be bound to connect-nodes' own descriptor — entity `relationship`, not `node`");
-    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()), "Connect nodes via edge \"edge-alpha-beta\"", "connect-nodes' undo label quotes the edge, matching its target() rather than its diagnostic");
+    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()).resolve(protocol::Terminology::Native, protocol::Locale::En), "Connect nodes via edge \"edge-alpha-beta\"", "connect-nodes' undo label quotes the edge, matching its target() rather than its diagnostic");
 }
 
 /// ↩️ `connect-nodes`' inverse is PAYLOAD-derived — a `disconnect-nodes` of the edge id carried on

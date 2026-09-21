@@ -30,8 +30,8 @@
           "frame_patched": {
             "frame_id": "frame-rect",
             "patch": {
-              "x": 55,
-              "y": 65,
+              "x": 55.0,
+              "y": 65.0,
               "width": null,
               "height": null,
               "fill": null,

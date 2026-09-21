@@ -225,22 +225,18 @@ pub(crate) fn stateless_dispatch(event: &BrowserWireEvent) -> Option<DispatchEve
         BrowserWireEvent::KeyUp { key, shift, ctrl, alt, meta } => DispatchEvent::KeyUp { key: key.clone(), modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } },
         BrowserWireEvent::ImeStart => DispatchEvent::Ime(ImeEvent::Start),
         BrowserWireEvent::ImeCancel => DispatchEvent::Ime(ImeEvent::Cancel),
-        BrowserWireEvent::AccessibilityFocus { window_id, window_generation, node_id, node_key } => DispatchEvent::Accessibility {
-            target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() },
-            event: AccessibilityEvent::Focus,
-        },
-        BrowserWireEvent::AccessibilityBlur { window_id, window_generation, node_id, node_key } => DispatchEvent::Accessibility {
-            target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() },
-            event: AccessibilityEvent::Blur,
-        },
-        BrowserWireEvent::AccessibilityActivate { window_id, window_generation, node_id, node_key } => DispatchEvent::Accessibility {
-            target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() },
-            event: AccessibilityEvent::Activate,
-        },
-        BrowserWireEvent::AccessibilityValue { window_id, window_generation, node_id, node_key, value } => DispatchEvent::Accessibility {
-            target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() },
-            event: AccessibilityEvent::Value(value.clone()),
-        },
+        BrowserWireEvent::AccessibilityFocus { window_id, window_generation, node_id, node_key } => {
+            DispatchEvent::Accessibility { target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() }, event: AccessibilityEvent::Focus }
+        }
+        BrowserWireEvent::AccessibilityBlur { window_id, window_generation, node_id, node_key } => {
+            DispatchEvent::Accessibility { target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() }, event: AccessibilityEvent::Blur }
+        }
+        BrowserWireEvent::AccessibilityActivate { window_id, window_generation, node_id, node_key } => {
+            DispatchEvent::Accessibility { target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() }, event: AccessibilityEvent::Activate }
+        }
+        BrowserWireEvent::AccessibilityValue { window_id, window_generation, node_id, node_key, value } => {
+            DispatchEvent::Accessibility { target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() }, event: AccessibilityEvent::Value(value.clone()) }
+        }
         BrowserWireEvent::Resize { .. } | BrowserWireEvent::HubDocumentStatus { .. } | BrowserWireEvent::HubDocumentClose { .. } | BrowserWireEvent::TextChunk { .. } => return None,
     })
 }

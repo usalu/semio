@@ -365,13 +365,7 @@ pub fn hub_session_mint_request_json(credential: &HubSignInCredential) -> Result
     if !valid_hub_sign_in_email(email) || !valid_hub_sign_in_password(&credential.password) || !valid_hub_device_instance_id(&credential.device_instance_id) {
         return Err(HubSignInErrorCode::MalformedRequest);
     }
-    let body = HubSessionMintRequestBody {
-        schema: HUB_SIGN_IN_REQUEST_SCHEMA_V1,
-        email: email.to_lowercase(),
-        password: &credential.password,
-        device_instance_id: &credential.device_instance_id,
-        client_class: credential.client_class.as_str(),
-    };
+    let body = HubSessionMintRequestBody { schema: HUB_SIGN_IN_REQUEST_SCHEMA_V1, email: email.to_lowercase(), password: &credential.password, device_instance_id: &credential.device_instance_id, client_class: credential.client_class.as_str() };
     let json = serde_json::to_string(&body).map_err(|_| HubSignInErrorCode::MalformedRequest)?;
     if json.len() > HUB_SESSION_MINT_REQUEST_MAX_BYTES {
         return Err(HubSignInErrorCode::MalformedRequest);
@@ -443,14 +437,7 @@ pub fn parse_hub_session_authority(source: &str) -> Option<HubSessionAuthority> 
     if !bounded_opaque_id(user_id, 256) || !bounded_opaque_id(email, 320) || !bounded_opaque_id(display_name, 128) || expires_at_ms < 1 || authorization_generation < 1 {
         return None;
     }
-    Some(HubSessionAuthority {
-        user_id: user_id.to_string(),
-        email: email.to_string(),
-        display_name: display_name.to_string(),
-        expires_at_ms,
-        session_kind,
-        authorization_generation,
-    })
+    Some(HubSessionAuthority { user_id: user_id.to_string(), email: email.to_string(), display_name: display_name.to_string(), expires_at_ms, session_kind, authorization_generation })
 }
 //#endregion 🎫️MintWire
 
@@ -500,13 +487,7 @@ struct HubConnectionBookWire<'a> {
 /// 🏠️ The always-present local bootstrap entry. Kept first, so an offline device still has a usable
 /// selection and a corrupt store can never leave the book empty.
 pub fn local_bootstrap_hub_connection(origin: &str, locale: Locale) -> HubConnection {
-    HubConnection {
-        id: LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1.to_string(),
-        kind: HubConnectionKind::LocalBootstrap,
-        label: hub_sign_in_label(HubSignInLabel::ThisDevice, locale).to_string(),
-        last_user_id: None,
-        origin: origin.to_string(),
-    }
+    HubConnection { id: LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1.to_string(), kind: HubConnectionKind::LocalBootstrap, label: hub_sign_in_label(HubSignInLabel::ThisDevice, locale).to_string(), last_user_id: None, origin: origin.to_string() }
 }
 
 /// 🌐️ Normalizes typed hub text to a bare origin: `https://` is added when no scheme is typed, and
@@ -588,10 +569,7 @@ fn valid_hub_connection(value: &serde_json::Value) -> Option<HubConnection> {
 /// 📖️ Reads the book, repairing rather than failing: unreadable or tampered storage yields the
 /// bootstrap-only book, so a corrupt profile never blocks the app from starting locally.
 pub fn parse_hub_connection_book(source: Option<&str>, bootstrap_origin: &str, locale: Locale) -> HubConnectionBook {
-    let fallback = HubConnectionBook {
-        connections: vec![local_bootstrap_hub_connection(bootstrap_origin, locale)],
-        selected_id: LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1.to_string(),
-    };
+    let fallback = HubConnectionBook { connections: vec![local_bootstrap_hub_connection(bootstrap_origin, locale)], selected_id: LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1.to_string() };
     let Some(source) = source else { return fallback };
     let Ok(value) = serde_json::from_str::<serde_json::Value>(source) else { return fallback };
     let Some(object) = value.as_object() else { return fallback };
@@ -618,11 +596,7 @@ pub fn parse_hub_connection_book(source: Option<&str>, bootstrap_origin: &str, l
 /// and a diff over the profile store means a real change. The bootstrap entry is derived, never
 /// written: persisting it would pin a stale origin across a relocated dev hub.
 pub fn serialize_hub_connection_book(book: &HubConnectionBook) -> String {
-    let wire = HubConnectionBookWire {
-        schema: HUB_CONNECTION_BOOK_SCHEMA_V1,
-        connections: book.connections.iter().filter(|entry| entry.kind == HubConnectionKind::Remote).collect(),
-        selected_id: &book.selected_id,
-    };
+    let wire = HubConnectionBookWire { schema: HUB_CONNECTION_BOOK_SCHEMA_V1, connections: book.connections.iter().filter(|entry| entry.kind == HubConnectionKind::Remote).collect(), selected_id: &book.selected_id };
     serde_json::to_string(&wire).unwrap_or_else(|_| format!("{{\"schema\":\"{HUB_CONNECTION_BOOK_SCHEMA_V1}\",\"connections\":[],\"selectedId\":\"{LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1}\"}}"))
 }
 
@@ -723,15 +697,7 @@ pub enum HubSessionEvent {
 
 /// 🪪️ A fresh session state for one hub.
 pub fn hub_session_initial_state(connection_id: &str) -> HubSessionState {
-    HubSessionState {
-        phase: HubSessionPhase::SignedOut,
-        connection_id: connection_id.to_string(),
-        user_id: None,
-        expires_at_ms: None,
-        error: None,
-        retry_after_seconds: None,
-        offline: false,
-    }
+    HubSessionState { phase: HubSessionPhase::SignedOut, connection_id: connection_id.to_string(), user_id: None, expires_at_ms: None, error: None, retry_after_seconds: None, offline: false }
 }
 
 /// 🧮️ Pure `state × event → state`. A `Connectivity` event never changes the phase; a `Failed` event
@@ -747,14 +713,7 @@ pub fn reduce_hub_session(state: &HubSessionState, event: &HubSessionEvent) -> H
             HubSessionState { offline: state.offline, ..hub_session_initial_state(connection_id) }
         }
         HubSessionEvent::Submit => HubSessionState { phase: HubSessionPhase::SigningIn, error: None, retry_after_seconds: None, ..state.clone() },
-        HubSessionEvent::Minted { user_id, expires_at_ms } => HubSessionState {
-            phase: HubSessionPhase::SignedIn,
-            user_id: Some(user_id.clone()),
-            expires_at_ms: *expires_at_ms,
-            error: None,
-            retry_after_seconds: None,
-            ..state.clone()
-        },
+        HubSessionEvent::Minted { user_id, expires_at_ms } => HubSessionState { phase: HubSessionPhase::SignedIn, user_id: Some(user_id.clone()), expires_at_ms: *expires_at_ms, error: None, retry_after_seconds: None, ..state.clone() },
         HubSessionEvent::Failed { code, retry_after_seconds } => {
             if state.phase == HubSessionPhase::SignedIn {
                 return HubSessionState { error: Some(*code), retry_after_seconds: *retry_after_seconds, ..state.clone() };

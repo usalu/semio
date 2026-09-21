@@ -28,11 +28,7 @@ pub fn agent_chat_panel_title(locale: Locale) -> String {
 
 /// 💬️ Shown while the conversation has nothing in it — React's `os.agent.chat.empty`, word for word.
 pub fn agent_chat_empty_text(locale: Locale) -> String {
-    agent_label(
-        "No agent activity yet. Messages you send appear here, along with every tool the agent runs.",
-        "Noch keine Agent-Aktivität. Gesendete Nachrichten erscheinen hier, ebenso jedes vom Agent ausgeführte Werkzeug.",
-        locale,
-    )
+    agent_label("No agent activity yet. Messages you send appear here, along with every tool the agent runs.", "Noch keine Agent-Aktivität. Gesendete Nachrichten erscheinen hier, ebenso jedes vom Agent ausgeführte Werkzeug.", locale)
 }
 
 /// 📐️ The header band at the top of the chat panel — `border-b px-single py-single` on the React

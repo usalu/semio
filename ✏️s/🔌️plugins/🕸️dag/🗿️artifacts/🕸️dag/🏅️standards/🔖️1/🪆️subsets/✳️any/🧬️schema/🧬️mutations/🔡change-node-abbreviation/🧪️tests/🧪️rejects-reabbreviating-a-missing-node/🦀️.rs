@@ -52,6 +52,7 @@ async fn a_missing_node_is_reported_as_target_missing() {
     let semantics = <DagMutation as protocol::SemanticMutation<DagSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.kind, semantics.record), ("change", "change-node-abbreviation", "ChangedNodeAbbreviation"), "the fixture must be bound to change-node-abbreviation's own descriptor");
     let label = <DagMutation as protocol::SemanticMutation<DagSnapshot>>::label(&mutation());
+    let label = label.resolve(protocol::Terminology::Native, protocol::Locale::En);
     assert_eq!(label, "Change node \"node-a\" abbreviation to \"AL\"", "the undo label names the abbreviation, not the display name");
 }
 

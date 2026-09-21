@@ -45,6 +45,6 @@
       }
     },
     "maxPanelsPerStep": { "const": 1 },
-    "requiresGuestRefresh": { "const": false }
+    "requiresGuestRefresh": { "const": true }
   }
 }

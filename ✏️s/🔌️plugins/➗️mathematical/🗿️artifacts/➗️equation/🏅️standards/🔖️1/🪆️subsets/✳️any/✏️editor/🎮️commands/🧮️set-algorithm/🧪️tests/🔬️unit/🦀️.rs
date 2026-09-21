@@ -27,7 +27,7 @@ async fn set_directed_toggles_the_graph() {
 
 #[semio_framework_async_macros::async_test]
 async fn node_graph_viewport_writes_config_not_mutations() {
-    let mut app: MathApp = math_app().await;
+    let mut app = math_app().await;
     let camera = EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 };
     let view = semio_framework_plugin::ViewModel {
         window_id: Some("equation-graph-test".into()),

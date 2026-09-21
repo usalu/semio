@@ -420,8 +420,47 @@ impl ArtifactOwnedValueRetirementFactory<DagMutation> for DagMutationRetirementF
     }
 }
 
+/// ♻️ One owned `DagSnapshot` as the framework's own incremental owner cursor, so a DAG document can
+/// be opened as an owned MEMBER of a composed document. It drives this module's own
+/// [`DagRetirement`] frontier one owner per turn under the caller's byte grant; a zero grant is
+/// reported as budget exhaustion rather than as progress, so a caller can never mistake a refused
+/// turn for a released one.
+struct DagOwnedSnapshotCursor {
+    retirement: DagRetirement,
+}
+
+impl crate::os_store::retirement::RetirementCursor for DagOwnedSnapshotCursor {
+    fn close_step(&mut self, maximum_bytes: usize) -> crate::os_store::retirement::RetirementStep {
+        if self.retirement.terminal_is_empty() {
+            return crate::os_store::retirement::RetirementStep::Complete;
+        }
+        if maximum_bytes == 0 {
+            return crate::os_store::retirement::RetirementStep::BudgetExhausted;
+        }
+        match ErasedSnapshotRetirement::close_step(&mut self.retirement, 1, maximum_bytes) {
+            Ok(SnapshotRetirementStep::Complete) => crate::os_store::retirement::RetirementStep::Complete,
+            Ok(SnapshotRetirementStep::Pending { released_bytes, .. }) => crate::os_store::retirement::RetirementStep::Bytes(released_bytes.min(maximum_bytes)),
+            Ok(SnapshotRetirementStep::Blocked) | Err(_) => crate::os_store::retirement::RetirementStep::BudgetExhausted,
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        ErasedSnapshotRetirement::terminal_is_empty(&self.retirement)
+    }
+}
+
+impl crate::os_store::retirement::RetireOwned for DagSnapshot {
+    fn retirement(self) -> Box<dyn crate::os_store::retirement::RetirementCursor> {
+        Box::new(DagOwnedSnapshotCursor { retirement: DagRetirement::from_snapshot(self) })
+    }
+}
+
 impl MemberStoreOwner<DagMutation> for DagSnapshot {
-    type SnapshotOpen = crate::os_store::UnsupportedMemberSnapshotOpen<Self>;
+    /// 📦️ A DAG document opens as an owned member through its OWN `ArtifactPack` codec. It declared
+    /// `UnsupportedMemberSnapshotOpen` until 2026-09-21, whose `step` has exactly one answer —
+    /// `Rejected(MemberOpenDiagnostic::Decode)` at step 0 — so every composed replacement and every
+    /// document archive carrying a real DAG member was refused before it began.
+    type SnapshotOpen = crate::os_store::PackMemberSnapshotOpen<Self>;
 
     fn member_store_owners() -> DocumentStoreOwners<Self, DagMutation> {
         DocumentStoreOwners::new(Arc::new(DagSnapshotRetirementFactory), Arc::new(DagOwnedSnapshotRetirementFactory), Arc::new(DagMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DagSnapshot, DagMutation>::new()))

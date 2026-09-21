@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/browser-component-asset-cancellation.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "owners", "handback", "expected"],
+  "properties": {
+    "version": { "const": 1 },
+    "owners": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        { "$ref": "#/$defs/owner" },
+        { "$ref": "#/$defs/owner" }
+      ],
+      "items": false
+    },
+    "handback": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [{ "const": "busy" }, { "const": "returned" }],
+      "items": false
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aborted", "decodeCancellationOwner", "publishedOwners", "pollOrder"],
+      "properties": {
+        "aborted": { "const": "asset-a" },
+        "decodeCancellationOwner": { "const": "asset-a" },
+        "publishedOwners": { "type": "array", "minItems": 1, "maxItems": 1, "prefixItems": [{ "const": "asset-b" }], "items": false },
+        "pollOrder": { "type": "array", "minItems": 2, "maxItems": 2, "prefixItems": [{ "const": "asset-a" }, { "const": "asset-b" }], "items": false }
+      }
+    }
+  },
+  "$defs": {
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "responseToken", "bytes"],
+      "properties": {
+        "id": { "enum": ["asset-a", "asset-b"] },
+        "responseToken": { "type": "integer", "minimum": 1 },
+        "bytes": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+      }
+    }
+  }
+}

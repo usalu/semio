@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "limits", "cases", "reactOracle"],
+  "properties": {
+    "version": { "const": 1 },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intentSlots", "unitsPerOpportunity"],
+      "properties": {
+        "intentSlots": { "const": 256 },
+        "unitsPerOpportunity": { "const": 1 }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "presented", "candidate", "intent", "beforeTerminal", "afterTerminal", "afterAcknowledge"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "presented": { "$ref": "#/$defs/documentOwner" },
+          "candidate": { "$ref": "#/$defs/documentOwner" },
+          "intent": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["event", "document", "status"],
+            "properties": {
+              "event": { "const": "pointerdown" },
+              "document": { "type": "string", "minLength": 1 },
+              "status": { "const": "pending" }
+            }
+          },
+          "beforeTerminal": { "$ref": "#/$defs/publicationState" },
+          "afterTerminal": { "$ref": "#/$defs/publicationState" },
+          "afterAcknowledge": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["presentedDocument"],
+            "properties": { "presentedDocument": { "type": "string", "minLength": 1 } }
+          }
+        }
+      }
+    },
+    "reactOracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event", "handlerCompletion", "renderCommit", "expectedHandlerDocument", "expectedCommittedDocument"],
+      "properties": {
+        "event": { "const": "pointerdown" },
+        "handlerCompletion": { "const": "synchronous" },
+        "renderCommit": { "const": "after-handler" },
+        "expectedHandlerDocument": { "type": "string", "minLength": 1 },
+        "expectedCommittedDocument": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "documentOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "document"],
+      "properties": {
+        "host": { "type": "string", "minLength": 1 },
+        "document": { "type": "string", "minLength": 1 }
+      }
+    },
+    "publicationState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidateSealable", "publishedDocument"],
+      "properties": {
+        "candidateSealable": { "type": "boolean" },
+        "publishedDocument": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

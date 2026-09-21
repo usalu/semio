@@ -452,6 +452,21 @@ impl ArtifactEditor for HomeApp {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
+    /// 👤️ Home reads its OWN presence root on the `createStudio` path (the studio it mints names the
+    /// signed-in human as its owner), and `PresenceStore::local_read` fails closed with
+    /// `presence local read requires a live exact local retirement owner` unless this factory is
+    /// installed. Home declared none, so `createStudio` was refused the moment the store fold
+    /// contract above stopped refusing it first — the same class S4 cured for Home's config, draft
+    /// and transient disposers, on the one lane it missed (ticket 26/09/18 S10 §1.5).
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(crate::editor::home::presence::HomePresenceRetirementFactory))
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(crate::editor::home::presence::HomePresenceRetirementFactory))
+    }
+
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         crate::space_retained_store_preparation::<Self::Snapshot, Self::Mutation>("space-home-artifact-retained", HOME_RETAINED_RAW_BYTES)
     }

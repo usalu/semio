@@ -240,8 +240,8 @@ pub(crate) fn agg_diff(this: &XmlValidMutation, base: &XmlSnapshot) -> protocol:
         XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone }) => {
             let next = match (&base.doc.declaration, standalone) {
                 (None, None) => None,
-                (None, Some(value)) => Some(XmlDeclaration { version: "1.0".to_string(), encoding: None, standalone: Some(*value) }),
-                (Some(declaration), value) => Some(XmlDeclaration { version: declaration.version.clone(), encoding: declaration.encoding.clone(), standalone: *value }),
+                (None, Some(value)) => Some(XmlDeclaration { version: "1.0".to_string(), encoding: None, standalone: Some(*value), ..Default::default() }),
+                (Some(declaration), value) => Some(XmlDeclaration { version: declaration.version.clone(), encoding: declaration.encoding.clone(), standalone: *value, quote: declaration.quote }),
             };
             protocol::MutationOutcome::new(XmlDiff { prolog: None, declaration: Some(next), doctype: None, root: None })
         }

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.component-close-frame-turn.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schema", "closeHost", "liveHost", "maxCloseUnitsPerTurn", "turns", "expected"],
+  "properties": {
+    "$schema": { "const": "./📐️schema.json" },
+    "schema": { "const": "semio.component-close-frame-turn.v1" },
+    "closeHost": { "type": "string", "minLength": 1 },
+    "liveHost": { "type": "string", "minLength": 1 },
+    "maxCloseUnitsPerTurn": { "const": 1 },
+    "turns": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["closeOutcome", "inputSequence", "snapshotRevision"],
+        "properties": {
+          "closeOutcome": { "const": "externalWait" },
+          "inputSequence": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+          "snapshotRevision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["closeTerminal", "liveInputSequences", "publishedSnapshotRevisions", "closingHostPublications"],
+      "properties": {
+        "closeTerminal": { "const": false },
+        "liveInputSequences": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [{ "const": 41 }, { "const": 42 }],
+          "items": false
+        },
+        "publishedSnapshotRevisions": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [{ "const": 8 }, { "const": 9 }],
+          "items": false
+        },
+        "closingHostPublications": { "type": "array", "maxItems": 0 }
+      }
+    }
+  }
+}

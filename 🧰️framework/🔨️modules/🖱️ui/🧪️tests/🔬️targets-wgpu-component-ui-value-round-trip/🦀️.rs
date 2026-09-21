@@ -51,7 +51,7 @@ mod value_round_trip_tests {
                 presence: UiPresence::default(),
                 menu: None,
             }),
-            UiControlNode::Toggle(UiToggleNode { id: "tog1".into(), icon_id: IconName::Save, text: None, on_change: act("toggle"), presence: UiPresence::default(), menu: None }),
+            UiControlNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog1".into(), icon_id: IconName::Save, text: None, on_change: act("toggle"), presence: UiPresence::default(), menu: None }),
             UiControlNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: Label::data("K"), value: "v".into() }], presence: UiPresence::default(), menu: None }),
             UiControlNode::Slider(UiSliderNode { id: "sld1".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("slide"), presence: UiPresence::default(), menu: None }),
             UiControlNode::NumberStepper(UiNumberStepperNode { id: "stp1".into(), value: 3.0, step: 1.0, uniform: false, on_absolute: act("abs"), on_delta: act("delta"), presence: UiPresence::default(), menu: None }),
@@ -77,7 +77,7 @@ mod value_round_trip_tests {
             draggable: Some(true),
             drag_data: None,
             items: None,
-            control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog1".into(), icon_id: IconName::Save, text: None, on_change: act("toggle"), presence: UiPresence::default(), menu: None })),
+            control: Some(UiControlNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog1".into(), icon_id: IconName::Save, text: None, on_change: act("toggle"), presence: UiPresence::default(), menu: None })),
             dimmed: Some(false),
             menu: Some(UiMenuRef { id: "menu-1".into(), args: None }),
         };
@@ -89,7 +89,7 @@ mod value_round_trip_tests {
         let section = UiTreeSectionNode { window: None, id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("item1", Label::data("Item"))] };
         assert_eq!(UiTreeSectionNode::from_value(section.clone().to_value()).expect("valid DslValue decodes"), section);
 
-        let tree = UiTreeNode { sections: vec![section], presence: UiPresence::default(), drop_action: Some(act("drop")), menu: None, interaction_domain: Some("domain-1".into()) };
+        let tree = UiTreeNode { presentation: Default::default(), sections: vec![section], presence: UiPresence::default(), drop_action: Some(act("drop")), menu: None, interaction_domain: Some("domain-1".into()) };
         assert_eq!(UiTreeNode::from_value(tree.to_value()).expect("valid DslValue decodes"), tree);
     }
 

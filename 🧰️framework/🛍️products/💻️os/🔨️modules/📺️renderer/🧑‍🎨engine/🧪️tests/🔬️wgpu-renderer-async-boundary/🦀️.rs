@@ -35,23 +35,32 @@ fn a_refused_frame_preparation_names_its_fault_before_the_build_cancels() {
     assert!(LIBRARY_SOURCE.contains("session.checked_out_job_mut().and_then(|job| job.fault())"), "and a refusal from inside the prepared job carries that job's own fault string");
 }
 
-/// ⏱️ LAW: the renderer asset decode lane takes a bounded SHARE of one frame-transaction step and
-/// hands the rest back, so the shell keeps building and presenting frames while a GLB streams — which
-/// is what React does by keeping its loader off the render path entirely
-/// (`📓️w7b-presenter-one-frame-per-boot.md` §2).
 #[test]
-fn the_renderer_asset_decode_lane_spends_a_share_of_the_step_and_never_the_whole_one() {
-    assert_eq!(crate::RENDERER_ASSET_DECODE_SLICE_US.saturating_mul(2), semio_framework_job::INTERACTIVE_LANE_WALL_US, "the lane's share is exactly half the interactive wall slice");
-    assert_eq!(crate::renderer_asset_decode_slice_deadline_us(Some(1_000)), Some(1_000 + crate::RENDERER_ASSET_DECODE_SLICE_US));
-    assert_eq!(crate::renderer_asset_decode_slice_deadline_us(Some(u64::MAX)), Some(u64::MAX), "an about-to-wrap clock saturates instead of wrapping into the past");
-    assert_eq!(crate::renderer_asset_decode_slice_deadline_us(None), None, "no clock spends no units at all");
+fn a_presented_input_seal_refusal_keeps_its_exact_fault_name() {
+    assert!(LIBRARY_SOURCE.contains("Err(fault) => return FrameBuildBoundaryStep::Fault(fault)"));
+    assert!(!LIBRARY_SOURCE.contains("Err(_) => return FrameBuildBoundaryStep::Fault(\"presented input candidate generation exhausted\")"));
+}
 
-    let transaction = LIBRARY_SOURCE.split("fn step(&mut self, runtime: &RuntimeMailbox").nth(1).expect("the frame transaction step");
-    let start = transaction.find("if runtime.pump_renderer_asset_decode_step() {").expect("the decode branch");
-    let end = start + transaction[start..].find("if runtime.pump_native_asset()").expect("the decode branch ends before the native asset lane");
-    let pump = &transaction[start..end];
-    assert!(pump.contains("renderer_asset_decode_slice_deadline_us"), "the decode loop is bounded by the lane's own share");
-    assert!(!pump.contains("return AppFrameTransactionStep::Pending"), "and never returns before the transaction's own phases run");
+#[test]
+fn a_pre_submit_input_epoch_change_retires_and_reschedules_without_faulting_the_surface() {
+    let render = LIBRARY_SOURCE.split("AppPresentPhase::Render => {").nth(1).expect("the render phase");
+    let render = &render[..render.find("AppPresentPhase::CloseGpu =>").expect("the close-GPU phase")];
+    assert!(render.contains("PresentedInputCandidateProgress::Stale"), "the pre-submit phase names an input epoch supersession");
+    assert!(!render.contains("prepared frame input authority was stale before submit"), "normal pre-submit input supersession is not a surface fault");
+    let stale_progress = render.split("PresentedInputCandidateProgress::Stale => {").nth(1).expect("the stale progress arm");
+    let stale_progress = &stale_progress[..stale_progress.find("}\n                }").expect("the stale progress arm end")];
+    let stale_match = render.split("if !shell.presented_input_candidate_matches(input_candidate) {").nth(1).expect("the final exact witness check");
+    let stale_match = &stale_match[..stale_match.find("}\n                drop(runtime);").expect("the exact witness check end")];
+    for stale in [stale_progress, stale_match] {
+        assert!(stale.contains("cursor.frame.packet = self.gate.abort_pending();"), "the stale observation returns the unsubmitted packet");
+        assert!(stale.contains("cursor.witness = None;"), "the stale observation retires the presenter witness");
+        assert!(stale.contains("cursor.phase = AppPresentPhase::Aborted;"), "the stale observation enters bounded retirement");
+        assert!(stale.contains("return Ok(AppPresentStep::Pending);"), "the stale observation keeps the presenter live without a surface fault");
+    }
+
+    let aborted = LIBRARY_SOURCE.split("AppPresentPhase::Aborted => {").nth(1).expect("the abort phase");
+    let aborted = &aborted[..aborted.find("AppPresentPhase::Fullscreen =>").expect("the next presenter phase")];
+    assert!(aborted.contains("discard_presented_input_candidate(input_candidate)"), "the next bounded abort turn returns the exact Shell/UI witness before rescheduling");
 }
 
 #[test]
@@ -490,6 +499,339 @@ fn renderer_asset_probe_keeps_pages_owned_across_chunk_boundaries_and_rejects_ma
     assert!(authority.terminal_is_empty());
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+fn owned_decoder_fixture() -> (WorldAssetIoAuthority, RendererAssetProbe) {
+    let bytes = include_bytes!("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
+    let mut authority = WorldAssetIoAuthority::default();
+    authority.reserve(1, 1, WorldAssetRequestKind::Glb, "catalogue-decode-owner.glb", bytes.len()).unwrap();
+    let mut owner = authority.take_next().unwrap();
+    for page in bytes.chunks(16 * 1024) {
+        owner.push_page(WorldAssetResponsePage::try_from_owned(page.to_vec()).unwrap()).unwrap();
+    }
+    owner.seal().unwrap();
+    authority.return_owner(owner).unwrap();
+    let owner = (0..infinite_world::world::WORLD_ASSET_REQUEST_CAPACITY).find_map(|_| authority.take_next_completed_step()).unwrap();
+    (authority, RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner)))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn close_owned_decoder_fixture(mut authority: WorldAssetIoAuthority, mut probe: RendererAssetProbe) {
+    probe.begin_close();
+    for _ in 0..262_144 {
+        if probe.close_step() {
+            break;
+        }
+    }
+    let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().expect("the exact decoder response closes") else {
+        panic!("fixture owner changed");
+    };
+    authority.finish(owner).unwrap();
+    authority.begin_close();
+    for _ in 0..4096 {
+        if authority.close_step() {
+            break;
+        }
+    }
+    assert!(authority.terminal_is_empty());
+}
+
+/// 🛑️ One worker grant decodes one page, and cancellation returns that exact owner before disposal.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn an_independent_decoder_job_preserves_its_exact_response_through_cancellation() {
+    use semio_framework_job::{InteractiveJob, StepOutcome};
+    fn assert_send<T: Send>() {}
+    assert_send::<RendererAssetDecodeJob>();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
+    let (authority, probe) = owned_decoder_fixture();
+    let token = probe.owner().owner().token();
+    let cancelled = Arc::new(AtomicBool::new(false));
+    let mut job = RendererAssetDecodeJob::new(probe, cancelled.clone());
+    let mut sequence = 0;
+    let mut context =
+        semio_framework_job::StepContext::new(semio_framework_job::OperationId(72), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+    assert!(matches!(job.step(&mut context), StepOutcome::Yield));
+    let observed = job.probe.borrow().as_ref().unwrap().observed_bytes;
+    assert_eq!(observed, 16 * 1024);
+    assert_eq!(context.fuel_remaining(), 0);
+    cancelled.store(true, Ordering::Release);
+    let mut outcome = job.step(&mut context);
+    assert!(matches!(outcome, StepOutcome::Complete(_)));
+    assert_eq!(job.result, Some(RendererAssetDecodeResult::Cancelled));
+    assert_eq!(law["cancelledDecode"]["afterClose"], "cancelled");
+    assert_eq!(job.steps, 1);
+    let recovered = job.take_probe().expect("host takes the response from its exact terminal job");
+    assert_eq!(recovered.owner().owner().token(), token);
+    assert_eq!(recovered.observed_bytes, observed);
+    job.begin_close();
+    assert_eq!(job.close_step(1, 1), semio_framework_job::InteractiveJobCloseStep::Complete);
+    assert!(job.terminal_is_empty());
+    let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    assert!(outcome.terminal_is_empty());
+    close_owned_decoder_fixture(authority, recovered);
+    println!("[DEBUG] independent decoder cancelled after one page and returned token {token:?}");
+}
+
+/// 🎟️ Session saturation returns the unchanged decoder response while rejected metadata closes separately.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn an_independent_decoder_job_recovers_its_response_from_an_exact_rejected_session() {
+    use semio_framework_job::*;
+    struct Occupied;
+    impl InteractiveJob for Occupied {
+        fn step(&mut self, _: &mut StepContext<'_>) -> StepOutcome {
+            StepOutcome::Yield
+        }
+        fn begin_close(&mut self) {}
+        fn close_step(&mut self, _: usize, _: usize) -> InteractiveJobCloseStep {
+            InteractiveJobCloseStep::Complete
+        }
+        fn terminal_is_empty(&self) -> bool {
+            true
+        }
+    }
+    fn params() -> BatchJobParams {
+        BatchJobParams {
+            operation: allocate_operation_id(),
+            generation: Generation(1),
+            cancel: root_cancel_token(),
+            config: BatchDriveConfig { site: "decoder_admission_law", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: INTERACTIVE_LANE_WALL_US },
+            now_us: default_now_us,
+        }
+    }
+    let mut occupied = Vec::with_capacity(WORKER_JOB_SESSION_SLOTS);
+    for _ in 0..WORKER_JOB_SESSION_SLOTS {
+        occupied.push(WorkerJobSession::try_new(Occupied, params()).unwrap_or_else(|_| panic!("fixed session admits its owner")));
+    }
+    let (authority, probe) = owned_decoder_fixture();
+    let token = probe.owner().owner().token();
+    let bytes = probe.owner().owner().received_bytes();
+    let job = RendererAssetDecodeJob::new(probe, Arc::new(AtomicBool::new(false)));
+    let mut rejected = match WorkerJobSession::try_new(job, params()) {
+        Ok(_) => panic!("maximum plus one must retain rejection"),
+        Err(rejected) => rejected,
+    };
+    let recovered = rejected.job().take_probe().expect("the sole rejected guard returns its exact response");
+    assert_eq!(recovered.owner().owner().token(), token);
+    assert_eq!(recovered.owner().owner().received_bytes(), bytes);
+    assert_eq!(recovered.observed_bytes, 0);
+    assert!(rejected.job().take_probe().is_none());
+    rejected.begin_close();
+    for _ in 0..64 {
+        let _ = rejected.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+        if rejected.terminal_is_empty() {
+            break;
+        }
+    }
+    assert!(rejected.terminal_is_empty());
+    for session in occupied {
+        let _ = session.begin_close();
+        for _ in 0..64 {
+            let _ = session.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
+            if session.terminal_is_empty() {
+                break;
+            }
+        }
+        assert!(session.terminal_is_empty());
+    }
+    close_owned_decoder_fixture(authority, recovered);
+    println!("[DEBUG] saturated decoder session returned the same {bytes}-byte response token {token:?}");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn decoder_worker_boundary(cancel_after_ready: bool) {
+    use std::time::{Duration, Instant};
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
+    let bytes = b"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1\" height=\"1\"></svg>";
+    let mut authority = WorldAssetIoAuthority::default();
+    authority.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "ready-cancel.svg", bytes.len()).unwrap();
+    let mut owner = authority.take_next().unwrap();
+    owner.push_page(WorldAssetResponsePage::try_from_owned(bytes.to_vec()).unwrap()).unwrap();
+    owner.seal().unwrap();
+    authority.return_owner(owner).unwrap();
+    let owner = (0..infinite_world::world::WORLD_ASSET_REQUEST_CAPACITY).find_map(|_| authority.take_next_completed_step()).unwrap();
+    let token = owner.token();
+    let wakes = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let observed_wakes = wakes.clone();
+    let wake: RuntimeHostWaker = Arc::new(move || {
+        observed_wakes.fetch_add(1, Ordering::AcqRel);
+    });
+    let mut decoder = RendererAssetDecodeSession::new(RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner)), Some(wake));
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while decoder.boundary.is_none() && Instant::now() < deadline {
+        decoder.pump_one();
+        std::thread::yield_now();
+    }
+    let completed = decoder.boundary.as_ref().map(|(_, result)| *result);
+    if cancel_after_ready {
+        decoder.cancel();
+    }
+    while (decoder.session.is_some() || decoder.rejected.is_some()) && Instant::now() < deadline {
+        decoder.pump_one();
+        std::thread::yield_now();
+    }
+    let (probe, outcome) = decoder.take_boundary().expect("the exact completed worker returns its response");
+    let observed_token = probe.owner().owner().token();
+    let observed_bytes = probe.observed_bytes;
+    assert!(decoder.terminal_is_empty());
+    close_owned_decoder_fixture(authority, probe);
+    println!("[DEBUG] real decoder returned {outcome:?} with ready cancellation {cancel_after_ready}, token {observed_token:?}, bytes {observed_bytes}, wakes {}", wakes.load(Ordering::Acquire));
+    assert_eq!(completed, Some(Some(RendererAssetDecodeResult::Ready)));
+    assert_eq!(observed_token, token);
+    assert_eq!(observed_bytes, bytes.len());
+    assert!(wakes.load(Ordering::Acquire) > 0);
+    assert_eq!(law["cancelledDecode"]["afterClose"], "cancelled");
+    assert_eq!(outcome, Some(if cancel_after_ready { RendererAssetDecodeResult::Cancelled } else { RendererAssetDecodeResult::Ready }));
+}
+
+/// 🛑️ A real worker completion remains cancellable until its response crosses the host boundary.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn an_independent_decoder_job_cancels_a_ready_response_before_host_handback() {
+    decoder_worker_boundary(true);
+}
+
+/// 📬️ Session metadata retirement preserves a successful worker result when no cancellation occurred.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn an_independent_decoder_job_returns_a_ready_response_after_session_retirement() {
+    decoder_worker_boundary(false);
+}
+
+/// 📄️ Native transport transfers a complete credited response page into its exact request.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn native_asset_response_transfers_each_credited_page_without_losing_its_bytes() {
+    use semio_framework_job::{JobPayloadStream, RetainedJobPayloadWriter};
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
+    assert_eq!(law["pageBytes"].as_u64().unwrap() as usize, WORLD_ASSET_RESPONSE_PAGE_BYTES);
+    for case in law["cases"].as_array().unwrap() {
+        let length = case["bytes"].as_u64().unwrap() as usize;
+        let bytes: Vec<u8> = (0..length).map(|index| (index % law["patternPeriod"].as_u64().unwrap() as usize) as u8).collect();
+        let mut authority = WorldAssetIoAuthority::default();
+        authority.reserve(1, 1, WorldAssetRequestKind::Glb, "native-page.glb", length).unwrap();
+        let mut fetch = RendererAssetFetchOwner::Shared(authority.take_next().unwrap());
+        let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput);
+        let mut sequence = 0;
+        for source in bytes.chunks(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+            let mut context =
+                semio_framework_job::StepContext::new(semio_framework_job::OperationId(74), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            let mut page = writer.admit_page(&mut context).unwrap();
+            page.write(source).unwrap();
+            page.commit();
+        }
+        let mut payload = writer.finish().unwrap_or_else(|_| panic!("the fixture owns complete native pages"));
+        let result = push_renderer_asset_page(&mut fetch, &mut payload);
+        let source_released = payload.terminal_is_empty();
+        let retained_source = payload.len();
+        while !payload.terminal_is_empty() {
+            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        }
+        let observed = fetch.owner().received_bytes();
+        let decoded = if result.is_ok() {
+            let RendererAssetFetchOwner::Shared(owner) = &mut fetch else { unreachable!() };
+            owner.seal().unwrap();
+            owner.decode_page().unwrap().unwrap().bytes().to_vec()
+        } else {
+            Vec::new()
+        };
+        fetch.begin_close();
+        let RendererAssetFetchOwner::Shared(owner) = fetch else { unreachable!() };
+        assert!(authority.return_owner(owner).is_ok());
+        authority.begin_close();
+        for _ in 0..4096 {
+            if authority.close_step() {
+                break;
+            }
+        }
+        assert!(authority.terminal_is_empty());
+        println!("[DEBUG] native response transferred {observed}/{length} bytes with result {result:?}");
+        assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap());
+        assert_eq!(observed as u64, case["transferredBytes"].as_u64().unwrap());
+        if result.is_ok() {
+            assert_eq!(decoded, bytes);
+        }
+        assert_eq!(source_released, case["accepted"].as_bool().unwrap());
+        assert_eq!(retained_source, if result.is_ok() { 0 } else { length });
+    }
+}
+
+/// 🧵️ A retained catalogue response belongs to the decoder even while a frame candidate advances.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn a_frame_candidate_never_advances_the_independently_owned_asset_decoder() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
+    let bytes = include_bytes!("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
+    let mut authority = WorldAssetIoAuthority::default();
+    authority.reserve(1, 1, WorldAssetRequestKind::Glb, "catalogue-frame-isolation.glb", bytes.len()).unwrap();
+    let mut owner = authority.take_next().unwrap();
+    for page in bytes.chunks(16 * 1024) {
+        owner.push_page(WorldAssetResponsePage::try_from_owned(page.to_vec()).unwrap()).unwrap();
+    }
+    owner.seal().unwrap();
+    authority.return_owner(owner).unwrap();
+    let owner = (0..infinite_world::world::WORLD_ASSET_REQUEST_CAPACITY).find_map(|_| authority.take_next_completed_step()).unwrap();
+    let runtime = RuntimeMailbox::new(AppRuntime {
+        atlas: FontAtlas::builtin(),
+        icons: IconAtlas::default(),
+        icon_rebuild: None,
+        icon_raster_scale: 1.0,
+        interaction: None,
+        checkout: Default::default(),
+        draw: DrawList::default(),
+        overlay: DrawList::default(),
+        pending_frame_deferred: None,
+        frame_actions: FrameActionOwners::default(),
+        pending_frame_maintenance_refusal: None,
+        plugin_modules_root: Default::default(),
+        native_plugin_mtimes: Default::default(),
+        native_hot_swap_scan: None,
+        native_hot_swap_modified: None,
+        native_hot_swap_cursor: 0,
+        native_reload_pending: false,
+    });
+    *runtime.0.asset_probe.lock().unwrap() = Some(RendererAssetProbe::new(RendererAssetFetchOwner::Shared(owner)));
+    let operation = semio_framework_job::OperationId(71);
+    let generation = semio_framework_job::Generation(0);
+    let mut candidate = FrameTransaction::new(Default::default(), operation, generation);
+    let mut sequence = 0;
+    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+    let result = candidate.step(&runtime, &Arc::downgrade(&runtime.0), &mut context);
+    let mut probe = runtime.0.asset_probe.lock().unwrap().take().expect("the decoder retains its exact response");
+    let observed = probe.observed_bytes;
+    for _ in 0..4096 {
+        if candidate.close_step() {
+            break;
+        }
+    }
+    assert!(candidate.terminal_is_empty());
+    probe.begin_close();
+    for _ in 0..262_144 {
+        if probe.close_step() {
+            break;
+        }
+    }
+    let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().expect("the response retires before observation assertions") else {
+        panic!("fixture response owner changed");
+    };
+    authority.finish(owner).unwrap();
+    authority.begin_close();
+    for _ in 0..4096 {
+        if authority.close_step() {
+            break;
+        }
+    }
+    assert!(authority.terminal_is_empty());
+    for _ in 0..4096 {
+        if runtime.close_renderer_asset_step() {
+            break;
+        }
+    }
+    println!("[DEBUG] frame candidate decoded {observed} asset bytes before returning without a mounted interaction");
+    assert!(matches!(result, AppFrameTransactionStep::Superseded));
+    assert_eq!(observed as u64, law["expected"]["frameDecodeUnits"].as_u64().unwrap());
+}
+
 /// 🖼️ The reference underlay the puzzle3d playground ships
 /// (`/infinite-assets/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg`, 2275×2560 = 23 296 000
 /// straight-RGBA bytes) must DECODE — React's `WorldReferenceLayer` paints it — and a genuine pixel
@@ -577,9 +919,7 @@ fn retained_image_decoder_admits_a_reference_plan_and_rejects_a_pixel_bomb_witho
 #[test]
 fn reference_decode_staging_refuses_a_fifth_live_token_without_evicting_the_first() {
     let mut io = WorldAssetIoAuthority::default();
-    let tokens = (0..5)
-        .map(|index| io.reserve(1, index + 1, WorldAssetRequestKind::ReferenceImage, &format!("reference-{index}.png"), 4).expect("bounded reference token"))
-        .collect::<Vec<_>>();
+    let tokens = (0..5).map(|index| io.reserve(1, index + 1, WorldAssetRequestKind::ReferenceImage, &format!("reference-{index}.png"), 4).expect("bounded reference token")).collect::<Vec<_>>();
     let mut staged = StagedReferenceImageAuthority::new();
     let pool = SceneRasterPool::new();
     for (index, token) in tokens.iter().copied().take(4).enumerate() {
@@ -649,19 +989,137 @@ fn reference_decode_staging_reports_exact_pool_reuse_before_browser_decode() {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+fn native_reference_runtime() -> RuntimeMailbox {
+    RuntimeMailbox::new(AppRuntime {
+        atlas: FontAtlas::builtin(),
+        icons: IconAtlas::default(),
+        icon_rebuild: None,
+        icon_raster_scale: 1.0,
+        interaction: None,
+        checkout: Default::default(),
+        draw: DrawList::default(),
+        overlay: DrawList::default(),
+        pending_frame_deferred: None,
+        frame_actions: FrameActionOwners::default(),
+        pending_frame_maintenance_refusal: None,
+        plugin_modules_root: Default::default(),
+        native_plugin_mtimes: Default::default(),
+        native_hot_swap_scan: None,
+        native_hot_swap_modified: None,
+        native_hot_swap_cursor: 0,
+        native_reload_pending: false,
+    })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
-fn native_reference_decode_cancellation_retires_an_unsubmitted_exact_owner() {
+fn native_reference_decode_cancellation_keeps_encoded_and_decoded_owners_until_bounded_close() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
+    let retirement = &law["referenceDecodeRetirement"];
     let mut io = WorldAssetIoAuthority::default();
     let token = io.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "reference.png", 4).expect("reference token");
-    let job = NativeReferenceDecodeJob::new(token, "reference.png".into(), vec![1, 2, 3, 4]);
+    let input_bytes = retirement["phaseZero"]["encodedBytes"].as_u64().unwrap() as usize;
+    let pixel_bytes = retirement["phaseZero"]["decodedPixelBytes"].as_u64().unwrap() as usize;
+    let job = NativeReferenceDecodeJob::new(token, "reference.png".into(), vec![7; input_bytes]);
+    job.rearm(DecodedReferenceImage { width: u32::try_from(pixel_bytes / 4).unwrap(), height: 1, source_digest: [71, 73], pixels: vec![11; pixel_bytes] });
     job.cancel();
-    assert_eq!(job.phase.load(Ordering::Acquire), 2);
-    assert!(job.input.lock().expect("decode input").is_none());
-    assert!(matches!(job.take_output(), Some(NativeReferenceDecodeOutput::Failed)));
+    let retained_input = job.input.lock().expect("decode input").as_ref().map(Vec::len);
+    let retained_pixels = job.decoded.lock().expect("decoded reference image").as_ref().map(|decoded| decoded.pixels.len());
+    let cancelled = job.cancelled.load(Ordering::Acquire);
+    assert_eq!(job.close_step(1, 0), NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes: retirement["zeroGrantReleasedBytes"].as_u64().unwrap() as usize });
+    let mut released = Vec::new();
+    let mut terminal = false;
+    for _ in 0..32 {
+        match job.close_step(retirement["maximumItems"].as_u64().unwrap() as usize, law["pageBytes"].as_u64().unwrap() as usize) {
+            NativeReferenceDecodeCloseStep::Pending { released_bytes, .. } if released_bytes > 0 => released.push(released_bytes),
+            NativeReferenceDecodeCloseStep::Pending { .. } | NativeReferenceDecodeCloseStep::Busy => {}
+            NativeReferenceDecodeCloseStep::Complete => {
+                terminal = true;
+                break;
+            }
+        }
+    }
     assert!(LIBRARY_SOURCE.contains("renderer_worker_pool().try_submit(semio_framework_async::Lane::Maintenance, job)"), "native reference decode submits only to the bounded maintenance lane");
     io.begin_close();
     while !io.close_step() {}
     assert!(io.terminal_is_empty(), "the token fixture returns its request owner after proving job cancellation");
+    assert!(cancelled, "cancellation must fence worker publication before retirement starts");
+    assert_eq!(retained_input, Some(input_bytes), "cancellation cannot destroy the encoded owner before an explicit bounded close grant");
+    assert_eq!(retained_pixels, Some(pixel_bytes), "cancellation cannot destroy the decoded pixel owner before an explicit bounded close grant");
+    let expected = retirement["phaseZero"]["decodedPageReleases"].as_array().unwrap().iter().chain(retirement["phaseZero"]["encodedPageReleases"].as_array().unwrap()).map(|value| value.as_u64().unwrap() as usize).collect::<Vec<_>>();
+    assert_eq!(released, expected, "every close turn releases at most the neutral one-page grant, decoded before encoded");
+    assert_eq!(released.iter().sum::<usize>(), retirement["phaseZero"]["releasedBytes"].as_u64().unwrap() as usize);
+    assert!(terminal);
+    assert!(job.input.lock().expect("terminal decode input").is_none());
+    assert!(job.decoded.lock().expect("terminal decoded reference image").is_none());
+    assert!(job.output.lock().expect("terminal decode output").is_none());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn native_reference_decode_phase_two_waiting_output_stays_in_the_mailbox_after_one_close_turn() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
+    let retirement = &law["referenceDecodeRetirement"]["phaseTwoWaiting"];
+    let mut io = WorldAssetIoAuthority::default();
+    let token = io.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "waiting-reference.png", 4).expect("reference token");
+    let job = Arc::new(NativeReferenceDecodeJob::new(token, "waiting-reference.png".into(), vec![13; retirement["encodedBytes"].as_u64().unwrap() as usize]));
+    let pixel_bytes = retirement["decodedPixelBytes"].as_u64().unwrap() as usize;
+    *job.output.lock().expect("decode output") = Some(NativeReferenceDecodeOutput::Waiting(DecodedReferenceImage { width: u32::try_from(pixel_bytes / 4).unwrap(), height: 1, source_digest: [79, 83], pixels: vec![17; pixel_bytes] }));
+    job.phase.store(2, Ordering::Release);
+    let runtime = native_reference_runtime();
+    *runtime.0.native_reference_decode.lock().expect("native reference decode slot") = Some(job);
+    let _ = runtime.close_renderer_asset_step();
+    let retained_after_one_turn = runtime.0.native_reference_decode.lock().expect("native reference decode slot after one close turn").is_some();
+    let mut close_turns = 1;
+    while runtime.0.native_reference_decode.lock().expect("native reference decode terminal probe").is_some() && close_turns < 32 {
+        let _ = runtime.close_renderer_asset_step();
+        close_turns += 1;
+    }
+    io.begin_close();
+    while !io.close_step() {}
+    assert!(io.terminal_is_empty(), "the token fixture returns its request owner after observing mailbox retention");
+    assert_eq!(retained_after_one_turn, retirement["retainedAfterOneTurn"].as_bool().unwrap(), "one close turn cannot clear a phase-two waiting decode whose pixels exceed one page");
+    assert_eq!(close_turns, retirement["closeTurns"].as_u64().unwrap() as usize, "the mailbox retains the exact owner through output handback, decoded pages, metadata, encoded pages, metadata, and terminal acknowledgement");
+    assert!(runtime.0.native_reference_decode.lock().expect("native reference decode terminal").is_none());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn native_reference_decode_running_worker_returns_its_encoded_and_decoded_owners_before_bounded_close() {
+    use std::time::{Duration, Instant};
+
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️native-asset-response/🔣️.json")).unwrap();
+    let retirement = &law["referenceDecodeRetirement"]["phaseZero"];
+    let input_bytes = retirement["encodedBytes"].as_u64().unwrap() as usize;
+    let pixel_bytes = retirement["decodedPixelBytes"].as_u64().unwrap() as usize;
+    let mut io = WorldAssetIoAuthority::default();
+    let token = io.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "worker-reference.png", 4).expect("reference token");
+    let job = Arc::new(NativeReferenceDecodeJob::new(token, "worker-reference.png".into(), vec![19; input_bytes]));
+    job.rearm(DecodedReferenceImage { width: u32::try_from(pixel_bytes / 4).unwrap(), height: 1, source_digest: [89, 97], pixels: vec![23; pixel_bytes] });
+    let entered = Arc::new(std::sync::Barrier::new(2));
+    let release = Arc::new(std::sync::Barrier::new(2));
+    *job.worker_barriers.lock().expect("native reference worker barrier") = Some((entered.clone(), release.clone()));
+    assert!(job.try_schedule(native_reference_runtime()), "the real maintenance worker accepts the retained decode owner");
+    entered.wait();
+    job.cancel();
+    assert_eq!(job.close_step(1, law["pageBytes"].as_u64().unwrap() as usize), NativeReferenceDecodeCloseStep::Busy, "a checked-out worker owner cannot be stolen by close");
+    release.wait();
+    let deadline = Instant::now() + Duration::from_secs(10);
+    while job.phase.load(Ordering::Acquire) == 1 && Instant::now() < deadline {
+        std::thread::yield_now();
+    }
+    let retained_input = job.input.lock().expect("worker-returned input").as_ref().map(Vec::len);
+    let retained_pixels = job.decoded.lock().expect("worker-returned decoded image").as_ref().map(|decoded| decoded.pixels.len());
+    for _ in 0..32 {
+        if matches!(job.close_step(1, law["pageBytes"].as_u64().unwrap() as usize), NativeReferenceDecodeCloseStep::Complete) {
+            break;
+        }
+    }
+    io.begin_close();
+    while !io.close_step() {}
+    assert!(io.terminal_is_empty());
+    assert_eq!(retained_input, Some(input_bytes), "the worker must hand the encoded owner back before bounded close");
+    assert_eq!(retained_pixels, Some(pixel_bytes), "the worker must hand the decoded pixel owner back before bounded close");
 }
 
 #[test]
@@ -727,6 +1185,33 @@ fn runtime_mailbox_reserves_completion_capacity_and_coalesces_only_matching_keys
     assert_eq!(queue.len(), RUNTIME_COMPLETION_CAPACITY);
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn presenter_restores_only_the_checked_out_interaction_and_retains_its_deferred_cursor() {
+    let runtime = native_reference_runtime();
+    let interaction = frame_maintenance_test_owner(121, 0).interaction.take().expect("interaction fixture");
+    {
+        let mut owner = runtime.try_lock().expect("runtime owner");
+        owner.interaction = Some(interaction);
+        let checked_out = owner.check_out_interaction("presenter-return-law").expect("exact checkout owner");
+        let cursor = FrameDeferredCursor::new(FrameActionOwners::default(), false, false, false, false, 121, semio_framework_job::root_cancel_token());
+        let mut queue = runtime.0.completions.lock().expect("runtime completion mailbox lock");
+        assert!(queue.reserve_interaction());
+        queue.finish(returned_completion(121, RuntimeApply::ResumeFrameDeferred { interaction: Some(checked_out), cursor: Some(cursor) }));
+    }
+
+    assert_eq!(runtime.restore_presenter_interaction_step(), PresenterInteractionStep::Restored);
+    assert!(runtime.try_lock().expect("restored runtime").interaction_available(), "the presenter-only step returns the exact checked-out state");
+    let mut completion = runtime.0.completions.lock().expect("runtime completion mailbox lock").take_at(0).expect("deferred cursor remains queued");
+    assert!(!completion.restores_interaction);
+    let RuntimeApply::ResumeFrameDeferred { interaction, cursor } = &mut completion.apply else { panic!("exact deferred continuation") };
+    assert!(interaction.is_none(), "the returned state cannot be applied twice");
+    let mut cursor = cursor.take().expect("the deferred cursor remains owned for post-presentation apply");
+    cursor.begin_close();
+    while !cursor.close_step() {}
+    assert!(cursor.terminal_is_empty());
+}
+
 #[test]
 fn native_binary_owns_exactly_one_entrypoint_driver() {
     assert_eq!(BINARY_SOURCE.matches(concat!("block", "_on(")).count(), 1);
@@ -744,11 +1229,14 @@ fn manifest_has_no_retired_direct_edges() {
 
 #[test]
 fn runtime_dispatch_cursor_merges_retained_pointer_by_input_generation() {
-    let pointer = ui_host::PointerMoveSample { pointer: ui_render::PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None }, x: 1.0, y: 2.0, modifiers: ui_render::EventModifiers { shift: true, ..Default::default() }, generation: ui_host::InputGeneration(2) };
-    let scroll = ui_host::DiscreteEvent {
-        event: ui_render::DispatchEvent::Scroll { x: 3.0, y: 4.0, delta_x: 5.0, delta_y: 6.0, modifiers: ui_render::EventModifiers { ctrl: true, ..Default::default() } },
-        generation: ui_host::InputGeneration(1),
+    let pointer = ui_host::PointerMoveSample {
+        pointer: ui_render::PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None },
+        x: 1.0,
+        y: 2.0,
+        modifiers: ui_render::EventModifiers { shift: true, ..Default::default() },
+        generation: ui_host::InputGeneration(2),
     };
+    let scroll = ui_host::DiscreteEvent { event: ui_render::DispatchEvent::Scroll { x: 3.0, y: 4.0, delta_x: 5.0, delta_y: 6.0, modifiers: ui_render::EventModifiers { ctrl: true, ..Default::default() } }, generation: ui_host::InputGeneration(1) };
     let key = ui_host::DiscreteEvent { event: ui_render::DispatchEvent::KeyDown { key: "A".to_string(), modifiers: ui_render::EventModifiers::default() }, generation: ui_host::InputGeneration(3) };
     let mut events = ui_host::DrainedEvents { pointer_move: Some(pointer), ..Default::default() };
     events.discrete[0] = Some(scroll);
@@ -808,11 +1296,7 @@ fn frame_deferred_cancel_retires_one_action_per_step() {
 
 #[test]
 fn catalogue_terminal_pair_never_partially_enters_the_frame_action_owner() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🛒️canvas-catalogue-terminal/🔣️.json"
-    )))
-    .unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🛒️canvas-catalogue-terminal/🔣️.json"))).unwrap();
     let frame = &fixture["frameOwner"];
     assert_eq!(WORLD3D_DEADLINE_CAPACITY, frame["capacity"].as_u64().unwrap() as usize);
     let mut actions = FrameActionOwners::default();
@@ -1507,43 +1991,31 @@ fn the_swapchain_is_acquired_written_and_presented_in_one_prepared_opportunity()
     let present_call = present.find("frame.present()").expect("the present");
     assert!(acquire < blit && blit < submit && submit < present_call, "acquire, write, submit and present are one straight line inside one opportunity");
 
-    let composite = ladder.split("PreparedGpuPresentPhase::EncodeComposite =>").nth(1).expect("the composite phase");
-    assert!(composite[..composite.find("PreparedGpuPresentPhase::GlassCommands =>").unwrap_or(composite.len())].contains("composite.view()"), "the scene blit lands offscreen");
-    let glass = ladder.split("PreparedGpuPresentPhase::GlassCommands =>").nth(1).expect("the glass phase");
-    assert!(glass[..glass.find("PreparedGpuPresentPhase::ForegroundCommands =>").unwrap_or(glass.len())].contains("composite.view()"), "and so does every glass region");
+    let composite = ladder.split("PreparedGpuPresentPhase::InitializeComposite =>").nth(1).expect("the composite phase");
+    assert!(composite[..composite.find("PreparedGpuPresentPhase::Commands =>").unwrap_or(composite.len())].contains("composite.view()"), "the scene blit lands offscreen");
+    let glass = ladder.split("PreparedGpuPresentPhase::CompositeGlass =>").nth(1).expect("the glass phase");
+    assert!(glass[..glass.find("PreparedGpuPresentPhase::Present =>").unwrap_or(glass.len())].contains("composite.view()"), "and so does every glass region");
 }
 
-/// 🫧 LAW: the content a glass region carries on its face is encoded AFTER the glass pass, never
-/// into the scene the glass pass samples.
-///
-/// 🩸️ The scalar ladder encoded every layer into the scene and then composited the glass regions
-/// over it, so the window cap's own `Puzzle 3D` title and its Focus/Close controls were painted and
-/// then blurred away by the very region that labels them — the batch renderer has always split the
-/// two with `LayerBatchFilter` (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
-///
-/// 🪟️ …EXCEPT a glass-content layer a LATER glass region fully encloses: that one is encoded into
-/// the scene so the covering region frosts it, which is how React's introduction veil blurs the whole
-/// shell except the card it spotlights (`useIntroductionElevation`). Containment, not overlap, is the
-/// predicate, so a context menu clipping a panel's corner never pushes that panel into the backdrop.
+/// 🫧 Every glass samples the accumulated authored stream before later content is encoded.
 #[test]
-fn glass_foreground_scalars_are_encoded_after_the_glass_pass_and_never_into_the_scene() {
-    assert!(GPU_SOURCE.contains("fn prepared_draw_scalar_is_glass_foreground"), "the ladder classifies a scalar by its layer's glass ownership");
-    assert!(GPU_SOURCE.contains("draw.layers.get(layer)?.foreground_of"), "using the draw list's own glass-content marker");
-    assert!(GPU_SOURCE.contains("fn prepared_foreground_scalar_is_enclosed"), "and a layer a LATER region encloses goes back into the scene, so the veil frosts it");
-    assert!(GPU_SOURCE.contains("fn prepared_glass_region_covers"), "containment, never overlap, decides that");
+fn glass_snapshots_the_accumulated_composite_at_its_authored_command() {
     let ladder = GPU_SOURCE.split("pub fn prepared_present_step").nth(1).expect("the prepared present ladder");
-    let commands = ladder.split("PreparedGpuPresentPhase::Commands =>").nth(1).expect("the scene command phase");
-    let commands = &commands[..commands.find("PreparedGpuPresentPhase::BlurScene =>").unwrap_or(commands.len())];
-    assert!(
-        commands.contains("if !owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor) && !prepared_foreground_scalar_is_enclosed(draw, overlay_after, draw_cursor))"),
-        "the scene phase skips glass-foreground scalars no later region encloses"
-    );
-    assert!(commands.contains("PreparedDrawTarget::Scene"), "and everything else goes to the scene");
-    let foreground = ladder.split("PreparedGpuPresentPhase::ForegroundCommands =>").nth(1).expect("the glass-foreground phase");
-    let foreground = &foreground[..foreground.find("PreparedGpuPresentPhase::Present =>").unwrap_or(foreground.len())];
-    assert!(foreground.contains("if owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor) && !prepared_foreground_scalar_is_enclosed(draw, overlay_after, draw_cursor))"), "and only they are re-encoded later");
-    assert!(foreground.contains("PreparedDrawTarget::Composite"), "onto the composite the glass pass already wrote");
-    assert!(GPU_SOURCE.contains("self.foreground_command"), "and its own index is part of the watchdog signature");
+    let commands = ladder.split("PreparedGpuPresentPhase::Commands =>").nth(1).expect("the command phase");
+    let commands = &commands[..commands.find("PreparedGpuPresentPhase::SnapshotBackdrop =>").expect("the snapshot phase")];
+    assert!(commands.contains("DrawMeasureCursor::Glass(_)"));
+    assert!(commands.contains("self.encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay())?"));
+    let backdrop = ladder.split("PreparedGpuPresentPhase::SnapshotBackdrop =>").nth(1).unwrap();
+    let backdrop = &backdrop[..backdrop.find("PreparedGpuPresentPhase::BlurScene =>").unwrap()];
+    assert!(backdrop.contains("prepared_glass_command(packet, cursor.command)?"), "the snapshot validates its exact command owner");
+    assert!(backdrop.contains("blit_prepared_composite(&self.device, &mut encoder, scene.mip_view(0), composite)"), "earlier content forms the backdrop");
+    assert!(!backdrop.contains("cursor.command ="), "snapshotting retains the current glass command");
+    let glass = ladder.split("PreparedGpuPresentPhase::CompositeGlass =>").nth(1).unwrap();
+    let glass = &glass[..glass.find("PreparedGpuPresentPhase::Present =>").unwrap()];
+    assert!(glass.contains("encode_prepared_glass_scalar"));
+    assert!(glass.contains("cursor.command.checked_add(1)"), "one completed glass advances exactly one command");
+    assert!(glass.contains("cursor.phase = PreparedGpuPresentPhase::Commands"), "later content resumes after its glass");
+    assert!(!GPU_SOURCE.contains("ForegroundCommands"), "no foreground replay can overprint a later popup");
 }
 
 /// 🧷️ LAW: a prepared world draw whose mesh is not resident at SUBMIT is skipped and reported, never
@@ -1567,6 +2039,50 @@ fn a_non_resident_prepared_world_mesh_is_skipped_and_reported_not_faulted() {
     assert!(render[..render.find("AppPresentPhase::CloseGpu =>").unwrap_or(render.len())].contains("take_missing_world_mesh()"), "from the phase that submits the frame");
 }
 
+#[test]
+fn presented_ink_intent_barrier_progresses_before_gpu_submit_and_holds_runtime_ingress_until_acknowledgement() {
+    let render = LIBRARY_SOURCE.split("AppPresentPhase::Render => {").nth(1).expect("the render phase");
+    let render = &render[..render.find("AppPresentPhase::CloseGpu =>").expect("the close-GPU phase")];
+    let progress = render.find("progress_presented_input_candidate").expect("the presenter-owned input barrier progress seam");
+    let submit = render.find("begin_prepared_present").expect("the first GPU submit operation");
+    assert!(progress < submit, "the old presented interaction reaches a terminal state before candidate pixels can submit");
+
+    let acknowledge = LIBRARY_SOURCE.split("AppPresentPhase::Acknowledge => {").nth(1).expect("the acknowledgement phase");
+    let acknowledge = &acknowledge[..acknowledge.find("AppPresentPhase::ProgressAcknowledge =>").expect("the next presenter phase")];
+    let input_ack = acknowledge.find("shell.acknowledge_presented_input").expect("the exact input witness acknowledgement");
+    let packet_ack = acknowledge.find("gate.acknowledge_presented").expect("the prepared packet acknowledgement");
+    assert!(input_ack < packet_ack, "a refused input witness keeps the packet witness live for a Pending retry");
+
+    let host_build = WINT_APP_SOURCE.split("fn build_and_publish_snapshot(&mut self) {").nth(1).expect("the host build pump");
+    let host_build = &host_build[..host_build.find("fn present_snapshot").expect("the host presentation half")];
+    let ingress_gate = host_build.find("holds_presented_input_publication").expect("the input-publication critical section");
+    let runtime_pump = host_build.find("pump_pending_applies").expect("the runtime apply pump");
+    assert!(ingress_gate < runtime_pump, "runtime input cannot enter between the last preflight and acknowledgement");
+}
+
+#[test]
+fn component_close_external_wait_does_not_stop_unrelated_frame_publication() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️component-close-frame-turn/🔣️.json")).expect("component-close frame-turn fixture");
+    assert_ne!(law["closeHost"], law["liveHost"]);
+    assert_eq!(law["maxCloseUnitsPerTurn"], 1);
+    assert_eq!(law["expected"]["closeTerminal"], false);
+    assert_eq!(law["expected"]["closingHostPublications"].as_array().map(Vec::len), Some(0));
+
+    let host_build = WINT_APP_SOURCE.split("fn build_and_publish_snapshot(&mut self) {").nth(1).expect("the host build pump");
+    let host_build = &host_build[..host_build.find("fn present_snapshot").expect("the host presentation half")];
+    let close_step = host_build.find("self.advance_component_surface_close()").expect("one bounded component-close step");
+    let event_drain = host_build.find("if !self.events.is_empty()").expect("the unrelated input drain");
+    let frame_admission = host_build.find("self.presenter.admit_next_frame").expect("the unrelated frame admission");
+    let snapshot_publication = host_build.find("self.snapshot_sink.publish").expect("the immutable snapshot publication");
+    assert!(close_step < event_drain && event_drain < frame_admission && frame_admission < snapshot_publication, "close progress precedes, but does not replace, the live sibling frame turn");
+    assert!(!host_build[close_step..event_drain].contains("return;"), "a component-local external close wait must not return before unrelated input and frame work");
+    assert!(host_build[close_step..event_drain].contains("InvalidationReason::RESOURCE_READY"), "the nonterminal close retains its bounded progress wake while the sibling advances");
+
+    let close_owner = OS_HOST_SOURCE.split("pub(crate) fn advance_component_surface_close(&mut self) -> bool {").nth(1).expect("the component-close owner");
+    let admission = &close_owner[..close_owner.find("let Some(owner)").expect("the active exact close owner")];
+    assert!(admission.contains("self.presenter.has_pending_presentation()") && admission.contains("self.frame_build.has_live_session()"), "the one-time admission fence drains both pre-close presentation and frame-build packet owners before detaching the closing surface");
+}
+
 /// 🐕️ LAW: the presentation watchdog sees WITHIN-item upload progress, so a healthy mesh upload can
 /// never look like a frozen cursor and a frozen one is still named.
 ///
@@ -1579,5 +2095,6 @@ fn the_present_watchdog_signature_carries_within_item_upload_progress() {
     assert!(DRAW_SOURCE.contains("pub fn upload_progress(&self) -> (u32, u32)"), "the mesh table exposes its own cursor's walk");
     assert!(GPU_SOURCE.contains("pub fn prepared_upload_progress(&self) -> (u32, u32, usize)"), "the GPU context joins it with the atlas page cursor");
     assert!(LIBRARY_SOURCE.contains("let upload_progress = self.gpu.prepared_upload_progress();"), "and the presenter reads it every step");
-    assert!(LIBRARY_SOURCE.contains("cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress), upload_progress, cursor.raster_keep_steps)"), "as the fifth term of the progress signature");
+    assert!(LIBRARY_SOURCE.contains("cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress)"), "the signature retains exact GPU cursor progress");
+    assert!(LIBRARY_SOURCE.contains("upload_progress,") && LIBRARY_SOURCE.contains("cursor.raster_keep_steps,") && LIBRARY_SOURCE.contains("cursor.input_progress,"), "upload, raster-ownership, and bounded input progress are independent signature terms");
 }

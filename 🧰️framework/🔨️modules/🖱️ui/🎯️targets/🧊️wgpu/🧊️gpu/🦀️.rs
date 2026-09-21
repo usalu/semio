@@ -24,11 +24,11 @@ struct PreparedAtlasUploadCursor {
 enum PreparedGpuPresentPhase {
     EnsureTarget,
     ClearScene,
+    InitializeComposite,
     Commands,
+    SnapshotBackdrop,
     BlurScene,
-    EncodeComposite,
-    GlassCommands,
-    ForegroundCommands,
+    CompositeGlass,
     Present,
     Complete,
     Closing,
@@ -39,24 +39,17 @@ enum PreparedGpuPresentPhase {
 /// banner alone (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 const PREPARED_GPU_OPPORTUNITY_CEILING_US: u64 = 2_000;
 
-/// 🫧 Resolves one `DrawMeasureCursor::Glass` command page against the draw list it was measured
-/// on. `advance_pipeline` emits one command page per MEASURED step, and the step that retires the
-/// glass section is measured too: `Glass(index)` with `index == glass_regions.len()` sets the cursor
-/// `Complete` and reports zero usage (`📦️prepared.rs`'s own boundary rule). That terminal page
-/// therefore addresses no region by construction — a document with no glass at all publishes exactly
-/// one `Glass(0)` page against an empty list — so `Ok(None)` is "nothing to encode", and only an
-/// index PAST the terminal one is a genuinely stale cursor (`Err` carrying the length it measured).
-/// Treating the terminal page as stale failed every first present of the wgpu browser shell
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-fn address_prepared_glass_region(region: usize, len: usize) -> Result<Option<usize>, usize> {
-    if region < len {
-        return Ok(Some(region));
-    }
-    if region == len {
-        Ok(None)
-    } else {
-        Err(len)
-    }
+/// 🫧 Resolves an authored glass command to one exact region.
+fn address_prepared_glass_region(region: usize, len: usize) -> Result<usize, usize> {
+    if region < len { Ok(region) } else { Err(len) }
+}
+
+fn prepared_glass_command(packet: &PreparedRenderPacket, command: usize) -> Result<&crate::wgpu::draw::GlassRegion, String> {
+    let command = packet.command_pages().get(command).ok_or_else(|| "prepared glass command was missing".to_string())?;
+    let Some(DrawMeasureCursor::Glass(region)) = command.draw_cursor() else { return Err("prepared command did not address glass".to_string()) };
+    let draw = if command.packet_overlay() { packet.overlay.as_ref().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { &packet.draw };
+    let index = address_prepared_glass_region(region, draw.glass_regions.len()).map_err(|len| format!("prepared glass region cursor was stale: region {region} of {len}"))?;
+    draw.glass_regions.get(index).ok_or_else(|| "prepared glass region was missing".to_string())
 }
 
 /// ⚖️ Admits ONE measured opportunity against [`PREPARED_GPU_OPPORTUNITY_CEILING_US`]. `Ok` carries
@@ -79,71 +72,72 @@ const PREPARED_GPU_ABANDONMENT_SLOTS: usize = 64;
 static PREPARED_GPU_ABANDONMENT_STATE: [AtomicU8; PREPARED_GPU_ABANDONMENT_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_GPU_ABANDONMENT_SLOTS];
 static PREPARED_GPU_ABANDONMENT_OWNER: [AtomicPtr<PreparedGpuPresentCursor>; PREPARED_GPU_ABANDONMENT_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_GPU_ABANDONMENT_SLOTS];
 
-/// 🎯 Which surface-sized colour target one prepared draw scalar is encoded into. Everything a glass
-/// region may blur is `Scene`; the content a glass region carries on its face is `Composite`, so it
-/// survives the glass pass that would otherwise sample it away.
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum PreparedDrawTarget {
-    Scene,
-    Composite,
-}
-
-/// 🫧 Whether one measured draw scalar belongs to a layer opened by `begin_glass_content` — the
-/// content that sits ON a glass region rather than under it.
-///
-/// 🩸️ The prepared ladder used to encode every layer into the scene and then composite the glass
-/// regions over it, which sampled the blurred backdrop straight over the window cap's own chips: a
-/// `Puzzle 3D` title and its Focus/Close controls were painted, then blurred away by the very region
-/// they label (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY). The batch renderer has always split the
-/// two with `LayerBatchFilter`; the scalar ladder now honours the same split.
-fn prepared_draw_scalar_glass_region(draw: &crate::wgpu::draw::DrawList, cursor: DrawMeasureCursor) -> Option<usize> {
-    let layer = match cursor {
-        DrawMeasureCursor::LayerUi { layer, .. } | DrawMeasureCursor::LayerVector { layer, .. } | DrawMeasureCursor::LayerRaster { layer, .. } => layer,
-        DrawMeasureCursor::PassInstance { pass, .. }
-        | DrawMeasureCursor::PassMaterialInstance { pass, .. }
-        | DrawMeasureCursor::PassLineVertex { pass, .. }
-        | DrawMeasureCursor::PassTexturedInstance { pass, .. }
-        | DrawMeasureCursor::PassGrid { pass } => draw.scene_passes.get(pass)?.layer_index,
-        _ => return None,
-    };
-    draw.layers.get(layer)?.foreground_of
-}
-
-fn prepared_draw_scalar_is_glass_foreground(draw: &crate::wgpu::draw::DrawList, cursor: DrawMeasureCursor) -> bool {
-    let overlay = matches!(cursor, DrawMeasureCursor::LayerUi { overlay: true, .. } | DrawMeasureCursor::LayerVector { overlay: true, .. } | DrawMeasureCursor::LayerRaster { overlay: true, .. });
-    overlay || prepared_draw_scalar_glass_region(draw, cursor).is_some()
-}
-
 fn prepared_draw_scalar_uses_world_encoded_attachment(cursor: DrawMeasureCursor) -> bool {
     matches!(cursor, DrawMeasureCursor::PassInstance { .. } | DrawMeasureCursor::PassMaterialInstance { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassGrid { .. } | DrawMeasureCursor::PassLineVertex { .. })
 }
 
-/// 🫧 Whether `outer` fully covers `inner` — the containment CSS stacking gives a later
-/// `backdrop-filter` element over an earlier one it encloses.
-fn prepared_glass_region_covers(outer: [f32; 4], inner: [f32; 4]) -> bool {
-    outer[2] > 0.0 && outer[3] > 0.0 && inner[0] >= outer[0] && inner[1] >= outer[1] && inner[0] + inner[2] <= outer[0] + outer[2] && inner[1] + inner[3] <= outer[1] + outer[3]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PreparedCommandClipPiece {
+    Unclipped,
+    Empty,
+    Scissor(crate::wgpu::draw_types::ScissorRect),
+    Complete,
 }
 
-/// 🫧 Whether a glass-content scalar sits under a LATER glass region that encloses its own — the
-/// veil over a window cap, a dialog over a floating panel.
-///
-/// 🩸️ `ForegroundCommands` re-encodes EVERY glass-content layer after the glass pass, with no notion
-/// of which region a later region should cover, so a window cap's chips stayed CRISP over the
-/// introduction veil while React blurs the whole shell except the card
-/// (`📓️w8a-tour-crispness-and-symbol-glyphs.md` §5, hand-off 1). An enclosed layer is therefore
-/// encoded into the SCENE instead: it is mipped by the blur chain, its own region re-frosts it, and
-/// the covering region then frosts it again — which is what "the caps are under the veil" means on a
-/// renderer whose blur chain reads one scene texture. Containment (not mere overlap) is the
-/// predicate, so a context menu that clips the corner of a panel never pushes that panel's whole
-/// content into the backdrop, and a step that spotlights an element — whose veil is BANDS around the
-/// cutout, enclosing nothing that straddles them — leaves it crisp exactly as React's
-/// `useIntroductionElevation` does. `overlay_after` is the OVERLAY draw list when `draw` is the main
-/// one — the overlay is encoded after it, so every overlay region is later than every region of the
-/// main list, which is the veil-over-cap case itself.
-fn prepared_foreground_scalar_is_enclosed(draw: &crate::wgpu::draw::DrawList, overlay_after: Option<&crate::wgpu::draw::DrawList>, cursor: DrawMeasureCursor) -> bool {
-    let Some(region) = prepared_draw_scalar_glass_region(draw, cursor) else { return false };
-    let Some(own) = draw.glass_regions.get(region).map(|glass| glass.rect) else { return false };
-    draw.glass_regions.iter().skip(region.saturating_add(1)).chain(overlay_after.into_iter().flat_map(|overlay| overlay.glass_regions.iter())).any(|glass| prepared_glass_region_covers(glass.rect, own))
+fn prepared_command_color_layer(draw: &crate::wgpu::draw_types::DrawList, cursor: DrawMeasureCursor) -> Result<Option<(usize, Option<[f32; 4]>)>, String> {
+    let layer = match cursor {
+        DrawMeasureCursor::LayerUi { layer, .. } | DrawMeasureCursor::LayerRaster { layer, .. } => Some((layer, None)),
+        DrawMeasureCursor::LayerVector { layer, item, .. } if item % 3 == 2 => Some((layer, None)),
+        DrawMeasureCursor::PassInstance { pass, .. }
+        | DrawMeasureCursor::PassMaterialInstance { pass, .. }
+        | DrawMeasureCursor::PassTexturedInstance { pass, .. }
+        | DrawMeasureCursor::PassGrid { pass } => {
+            let pass = draw.scene_passes.get(pass).ok_or_else(|| "prepared scene pass clip owner was stale".to_string())?;
+            Some((pass.layer_index, Some(pass.viewport)))
+        }
+        DrawMeasureCursor::PassLineVertex { pass, vertex, .. } if vertex % 2 == 1 => {
+            let pass = draw.scene_passes.get(pass).ok_or_else(|| "prepared scene pass clip owner was stale".to_string())?;
+            Some((pass.layer_index, Some(pass.viewport)))
+        }
+        DrawMeasureCursor::Glass(region) => {
+            let region = draw.glass_regions.get(region).ok_or_else(|| "prepared glass clip owner was stale".to_string())?;
+            Some((region.layer_index, None))
+        }
+        _ => None,
+    };
+    Ok(layer)
+}
+
+fn prepared_command_clip_piece(
+    draw: &crate::wgpu::draw_types::DrawList,
+    cursor: DrawMeasureCursor,
+    piece: usize,
+    width: f32,
+    height: f32,
+) -> Result<PreparedCommandClipPiece, String> {
+    let Some((layer, viewport)) = prepared_command_color_layer(draw, cursor)? else { return Ok(PreparedCommandClipPiece::Unclipped) };
+    let layer = draw.layers.get(layer).ok_or_else(|| "prepared command clip layer was stale".to_string())?;
+    let surface = crate::wgpu::draw_types::ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
+    let mut resolved = match layer.clip.as_ref() {
+        Some(clip) => match clip.scissors.get(piece).copied() {
+            Some(piece) => piece.intersect(&surface),
+            None => return Ok(PreparedCommandClipPiece::Complete),
+        },
+        None if piece == 0 => surface,
+        None => return Ok(PreparedCommandClipPiece::Complete),
+    };
+    if let Some(scissor) = layer.scissor {
+        resolved = resolved.intersect(&scissor);
+    }
+    if let Some(viewport) = viewport {
+        resolved = resolved.intersect(&crate::wgpu::draw_types::ScissorRect {
+            x: viewport[0].max(0.0) as u32,
+            y: viewport[1].max(0.0) as u32,
+            w: viewport[2].max(0.0) as u32,
+            h: viewport[3].max(0.0) as u32,
+        });
+    }
+    Ok(if resolved.w == 0 || resolved.h == 0 { PreparedCommandClipPiece::Empty } else { PreparedCommandClipPiece::Scissor(resolved) })
 }
 
 /// 🎟️ Generation-qualified retained surface and command submission cursor.
@@ -151,8 +145,7 @@ pub struct PreparedGpuPresentCursor {
     scene_revision: u64,
     preview_generation: u64,
     command: usize,
-    glass_command: usize,
-    foreground_command: usize,
+    clip_piece: usize,
     blur_mip: u32,
     frame: Option<wgpu::SurfaceTexture>,
     view: Option<wgpu::TextureView>,
@@ -167,7 +160,7 @@ impl PreparedGpuPresentCursor {
             return None;
         }
         let slot = PREPARED_GPU_ABANDONMENT_STATE.iter().position(|state| state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_ok())?;
-        Some(Self { scene_revision, preview_generation, command: 0, glass_command: 0, foreground_command: 0, blur_mip: 1, frame: None, view: None, phase: PreparedGpuPresentPhase::EnsureTarget, abandonment_slot: slot as u8, overrun_run: 0 })
+        Some(Self { scene_revision, preview_generation, command: 0, clip_piece: 0, blur_mip: 1, frame: None, view: None, phase: PreparedGpuPresentPhase::EnsureTarget, abandonment_slot: slot as u8, overrun_run: 0 })
     }
 
     fn matches(&self, packet: &PreparedRenderPacket) -> bool {
@@ -178,19 +171,9 @@ impl PreparedGpuPresentCursor {
         self.phase = PreparedGpuPresentPhase::Closing;
     }
 
-    /// 🐕️ Every index a healthy [`GpuContext::prepared_present_step`] moves — the ladder phase, the
-    /// draw command, the glass command, the glass-foreground command and the blur mip. EVERY cursor
-    /// the ladder walks belongs here: `ForegroundCommands` was added without its index and the
-    /// watchdog quarantined the surface `13 770` pages into a perfectly healthy walk.
-    ///
-    /// ⚖️ A host watchdog over the OUTER presentation cursor cannot see any of them: from outside,
-    /// `AppPresentPhase::Render` holds one `gpu_cursor` for the whole submit and looks frozen for as
-    /// many steps as the scene has commands. A ceiling read against the outer shape alone therefore
-    /// aborts a perfectly healthy present — measured on 6118, where a boot's own composite pass held
-    /// `phase=Render engine=1 upload=1 gpu-cursor=true` past 4 096 outer steps on every example
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-regressions-sweep-2026-09-15.md`). */
-    pub fn progress(&self) -> (u8, usize, usize, usize, u32) {
-        (self.phase as u8, self.command, self.glass_command, self.foreground_command, self.blur_mip)
+    /// 🐕️ Exposes every phase, authored command, and blur mip to the presentation watchdog.
+    pub fn progress(&self) -> (u8, usize, usize, u32) {
+        (self.phase as u8, self.command, self.clip_piece, self.blur_mip)
     }
 
     pub fn close_step(&mut self) -> bool {
@@ -201,8 +184,7 @@ impl PreparedGpuPresentCursor {
             return false;
         }
         self.command = 0;
-        self.glass_command = 0;
-        self.foreground_command = 0;
+        self.clip_piece = 0;
         self.blur_mip = 0;
         self.scene_revision = 0;
         self.preview_generation = 0;
@@ -224,8 +206,7 @@ impl PreparedGpuPresentCursor {
         self.frame.is_none()
             && self.view.is_none()
             && self.command == 0
-            && self.glass_command == 0
-            && self.foreground_command == 0
+            && self.clip_piece == 0
             && self.blur_mip == 0
             && self.scene_revision == 0
             && self.preview_generation == 0
@@ -266,8 +247,7 @@ impl Drop for PreparedGpuPresentCursor {
             scene_revision: self.scene_revision,
             preview_generation: self.preview_generation,
             command: self.command,
-            glass_command: self.glass_command,
-            foreground_command: self.foreground_command,
+            clip_piece: self.clip_piece,
             blur_mip: self.blur_mip,
             frame: self.frame.take(),
             view: self.view.take(),
@@ -278,8 +258,7 @@ impl Drop for PreparedGpuPresentCursor {
         self.scene_revision = 0;
         self.preview_generation = 0;
         self.command = 0;
-        self.glass_command = 0;
-        self.foreground_command = 0;
+        self.clip_piece = 0;
         self.blur_mip = 0;
         self.phase = PreparedGpuPresentPhase::Complete;
         self.abandonment_slot = u8::MAX;
@@ -642,79 +621,98 @@ impl GpuContext {
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_scene_packet") });
                 self.pipelines.clear_prepared_scene(&mut encoder, scene, self.depth_view.as_ref());
                 self.queue.submit(Some(encoder.finish()));
+                cursor.phase = PreparedGpuPresentPhase::InitializeComposite;
+            }
+            PreparedGpuPresentPhase::InitializeComposite => {
+                let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
+                let Some(composite) = self.composite_color.as_ref() else { return Err("prepared composite target was missing".to_string()) };
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_composite_packet") });
+                self.pipelines.blit_prepared_scene(&self.device, &mut encoder, composite.view(), scene);
+                self.queue.submit(Some(encoder.finish()));
                 cursor.phase = PreparedGpuPresentPhase::Commands;
             }
             PreparedGpuPresentPhase::Commands => {
                 let Some(command) = packet.command_pages().get(cursor.command) else {
-                    cursor.phase = PreparedGpuPresentPhase::BlurScene;
+                    cursor.phase = PreparedGpuPresentPhase::Present;
                     return Ok(false);
                 };
-                let source = u32::try_from(command.source()).map_err(|_| "prepared command source exceeded fixed GPU record".to_string())?;
-                let digest = command.digest();
-                let record = [command.kind().code(), source, digest as u32, (digest >> 32) as u32];
-                let offset = u64::try_from(cursor.command).ok().and_then(|value| value.checked_mul(16)).ok_or_else(|| "prepared command buffer offset exhausted".to_string())?;
-                self.queue.write_buffer(&self.prepared_command_buffer, offset, bytemuck::cast_slice(&record));
-                if let Some(draw_cursor) = command.draw_cursor() {
-                    let overlay_owner = command.packet_overlay();
-                    let owner = if overlay_owner { packet.overlay.as_ref() } else { Some(&packet.draw) };
-                    let overlay_after = if overlay_owner { None } else { packet.overlay.as_ref() };
-                    if !owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor) && !prepared_foreground_scalar_is_enclosed(draw, overlay_after, draw_cursor)) {
-                        self.encode_prepared_draw_scalar(packet, draw_cursor, overlay_owner, PreparedDrawTarget::Scene)?;
+                if cursor.clip_piece == 0 {
+                    let source = u32::try_from(command.source()).map_err(|_| "prepared command source exceeded fixed GPU record".to_string())?;
+                    let digest = command.digest();
+                    let record = [command.kind().code(), source, digest as u32, (digest >> 32) as u32];
+                    let offset = u64::try_from(cursor.command).ok().and_then(|value| value.checked_mul(16)).ok_or_else(|| "prepared command buffer offset exhausted".to_string())?;
+                    self.queue.write_buffer(&self.prepared_command_buffer, offset, bytemuck::cast_slice(&record));
+                }
+                let Some(draw_cursor) = command.draw_cursor() else {
+                    cursor.command = cursor.command.checked_add(1).ok_or_else(|| "prepared command cursor exhausted".to_string())?;
+                    cursor.clip_piece = 0;
+                    return Ok(false);
+                };
+                let draw = if command.packet_overlay() { packet.overlay.as_ref().ok_or_else(|| "prepared command overlay owner was missing".to_string())? } else { &packet.draw };
+                match prepared_command_clip_piece(draw, draw_cursor, cursor.clip_piece, self.logical_width, self.logical_height)? {
+                    PreparedCommandClipPiece::Unclipped => {
+                        self.encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay(), None)?;
+                        cursor.command = cursor.command.checked_add(1).ok_or_else(|| "prepared command cursor exhausted".to_string())?;
+                        cursor.clip_piece = 0;
+                    }
+                    PreparedCommandClipPiece::Empty => {
+                        cursor.clip_piece = cursor.clip_piece.checked_add(1).ok_or_else(|| "prepared clip-piece cursor exhausted".to_string())?;
+                    }
+                    PreparedCommandClipPiece::Scissor(_scissor) if matches!(draw_cursor, DrawMeasureCursor::Glass(_)) => {
+                        cursor.phase = PreparedGpuPresentPhase::SnapshotBackdrop;
+                    }
+                    PreparedCommandClipPiece::Scissor(scissor) => {
+                        self.encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay(), Some(scissor))?;
+                        cursor.clip_piece = cursor.clip_piece.checked_add(1).ok_or_else(|| "prepared clip-piece cursor exhausted".to_string())?;
+                    }
+                    PreparedCommandClipPiece::Complete => {
+                        cursor.command = cursor.command.checked_add(1).ok_or_else(|| "prepared command cursor exhausted".to_string())?;
+                        cursor.clip_piece = 0;
                     }
                 }
-                cursor.command = cursor.command.checked_add(1).ok_or_else(|| "prepared command cursor exhausted".to_string())?;
+            }
+            PreparedGpuPresentPhase::SnapshotBackdrop => {
+                let glass = prepared_glass_command(packet, cursor.command)?;
+                let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
+                let Some(composite) = self.composite_color.as_ref() else { return Err("prepared composite target was missing".to_string()) };
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_glass_backdrop") });
+                self.pipelines.blit_prepared_composite(&self.device, &mut encoder, scene.mip_view(0), composite);
+                self.queue.submit(Some(encoder.finish()));
+                cursor.blur_mip = 1;
+                cursor.phase = if glass.blur_px > 0.0 { PreparedGpuPresentPhase::BlurScene } else { PreparedGpuPresentPhase::CompositeGlass };
             }
             PreparedGpuPresentPhase::BlurScene => {
                 if cursor.blur_mip >= SCENE_MIP_LEVELS {
-                    cursor.phase = PreparedGpuPresentPhase::EncodeComposite;
+                    cursor.phase = PreparedGpuPresentPhase::CompositeGlass;
                     return Ok(false);
                 }
                 let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
                 self.pipelines.encode_prepared_blur_mip(&self.device, &self.queue, scene, cursor.blur_mip).map_err(str::to_owned)?;
                 cursor.blur_mip = cursor.blur_mip.checked_add(1).ok_or_else(|| "prepared blur cursor exhausted".to_string())?;
             }
-            PreparedGpuPresentPhase::EncodeComposite => {
+            PreparedGpuPresentPhase::CompositeGlass => {
+                let glass = prepared_glass_command(packet, cursor.command)?;
+                let command = packet.command_pages().get(cursor.command).ok_or_else(|| "prepared glass command was missing".to_string())?;
+                let draw = if command.packet_overlay() { packet.overlay.as_ref().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { &packet.draw };
+                let Some(draw_cursor) = command.draw_cursor() else { return Err("prepared glass command cursor was missing".to_string()) };
+                let piece = prepared_command_clip_piece(draw, draw_cursor, cursor.clip_piece, self.logical_width, self.logical_height)?;
+                if matches!(piece, PreparedCommandClipPiece::Empty) {
+                    cursor.clip_piece = cursor.clip_piece.checked_add(1).ok_or_else(|| "prepared glass clip-piece cursor exhausted".to_string())?;
+                    return Ok(false);
+                }
+                if matches!(piece, PreparedCommandClipPiece::Complete) {
+                    cursor.command = cursor.command.checked_add(1).ok_or_else(|| "prepared command cursor exhausted".to_string())?;
+                    cursor.clip_piece = 0;
+                    cursor.phase = PreparedGpuPresentPhase::Commands;
+                    return Ok(false);
+                }
+                let PreparedCommandClipPiece::Scissor(scissor) = piece else { return Err("prepared glass command did not own a clipped color scalar".to_string()) };
                 let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
                 let Some(composite) = self.composite_color.as_ref() else { return Err("prepared composite target was missing".to_string()) };
-                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_composite_packet") });
-                self.pipelines.blit_prepared_scene(&self.device, &mut encoder, composite.view(), scene);
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_glass_scalar") });
+                self.pipelines.encode_prepared_glass_scalar(&self.device, &self.queue, &mut encoder, composite.view(), scene, &mut self.frame_buffers, glass, scissor, self.logical_width, self.logical_height).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
-                cursor.phase = PreparedGpuPresentPhase::GlassCommands;
-            }
-            PreparedGpuPresentPhase::GlassCommands => {
-                let Some(command) = packet.command_pages().get(cursor.glass_command) else {
-                    cursor.phase = PreparedGpuPresentPhase::ForegroundCommands;
-                    return Ok(false);
-                };
-                if let Some(DrawMeasureCursor::Glass(region)) = command.draw_cursor() {
-                    let overlay_owner = command.packet_overlay();
-                    let draw = if overlay_owner { packet.overlay.as_ref().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { &packet.draw };
-                    let addressed =
-                        address_prepared_glass_region(region, draw.glass_regions.len()).map_err(|len| format!("prepared glass region cursor was stale: region {region} of {len} on the {} owner", if overlay_owner { "overlay" } else { "draw" }))?;
-                    if let Some(glass) = addressed.and_then(|index| draw.glass_regions.get(index)) {
-                        let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
-                        let Some(composite) = self.composite_color.as_ref() else { return Err("prepared composite target was missing".to_string()) };
-                        let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_glass_scalar") });
-                        self.pipelines.encode_prepared_glass_scalar(&self.device, &self.queue, &mut encoder, composite.view(), scene, &mut self.frame_buffers, glass).map_err(str::to_owned)?;
-                        self.queue.submit(Some(encoder.finish()));
-                    }
-                }
-                cursor.glass_command = cursor.glass_command.checked_add(1).ok_or_else(|| "prepared glass command cursor exhausted".to_string())?;
-            }
-            PreparedGpuPresentPhase::ForegroundCommands => {
-                let Some(command) = packet.command_pages().get(cursor.foreground_command) else {
-                    cursor.phase = PreparedGpuPresentPhase::Present;
-                    return Ok(false);
-                };
-                if let Some(draw_cursor) = command.draw_cursor() {
-                    let overlay_owner = command.packet_overlay();
-                    let owner = if overlay_owner { packet.overlay.as_ref() } else { Some(&packet.draw) };
-                    let overlay_after = if overlay_owner { None } else { packet.overlay.as_ref() };
-                    if owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor) && !prepared_foreground_scalar_is_enclosed(draw, overlay_after, draw_cursor)) {
-                        self.encode_prepared_draw_scalar(packet, draw_cursor, overlay_owner, PreparedDrawTarget::Composite)?;
-                    }
-                }
-                cursor.foreground_command = cursor.foreground_command.checked_add(1).ok_or_else(|| "prepared foreground command cursor exhausted".to_string())?;
+                cursor.clip_piece = cursor.clip_piece.checked_add(1).ok_or_else(|| "prepared glass clip-piece cursor exhausted".to_string())?;
             }
             PreparedGpuPresentPhase::Present => {
                 let Some(composite) = self.composite_color.as_ref() else { return Err("prepared composite target was missing".to_string()) };
@@ -749,21 +747,14 @@ impl GpuContext {
         Ok(cursor.phase == PreparedGpuPresentPhase::Complete)
     }
 
-    fn encode_prepared_draw_scalar(&mut self, packet: &PreparedRenderPacket, cursor: DrawMeasureCursor, packet_overlay: bool, target: PreparedDrawTarget) -> Result<(), String> {
+    fn encode_prepared_draw_scalar(&mut self, packet: &PreparedRenderPacket, cursor: DrawMeasureCursor, packet_overlay: bool, scissor: Option<crate::wgpu::draw_types::ScissorRect>) -> Result<(), String> {
         let draw = if packet_overlay { packet.overlay.as_ref().ok_or_else(|| "prepared overlay owner was missing".to_string())? } else { &packet.draw };
         let world_encoded = prepared_draw_scalar_uses_world_encoded_attachment(cursor);
-        let color_view = match target {
-            PreparedDrawTarget::Scene => self
-                .scene_color
-                .as_ref()
-                .map(|scene| if world_encoded { scene.world_encoded_view() } else { scene.mip_view(0) })
-                .ok_or_else(|| "prepared scene target was missing".to_string())?,
-            PreparedDrawTarget::Composite => self
-                .composite_color
-                .as_ref()
-                .map(|composite| if world_encoded { composite.world_encoded_view() } else { composite.view() })
-                .ok_or_else(|| "prepared composite target was missing".to_string())?,
-        };
+        let color_view = self
+            .composite_color
+            .as_ref()
+            .map(|composite| if world_encoded { composite.world_encoded_view() } else { composite.view() })
+            .ok_or_else(|| "prepared composite target was missing".to_string())?;
         let Some(depth) = self.depth_view.as_ref() else { return Err("prepared depth owner was missing".to_string()) };
         let width = self.logical_width;
         let height = self.logical_height;
@@ -774,7 +765,7 @@ impl GpuContext {
                 let instance = instances.get(item).ok_or_else(|| "prepared UI scalar cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_ui_scalar") });
                 self.pipelines
-                    .encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, instance, None, layer.scissor, width, height, packet.time_seconds)
+                    .encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, instance, None, scissor, width, height, packet.time_seconds)
                     .map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
@@ -784,7 +775,7 @@ impl GpuContext {
                 let start = item.checked_sub(2).ok_or_else(|| "prepared vector triangle cursor underflowed".to_string())?;
                 let triangle = vertices.get(start..=item).ok_or_else(|| "prepared vector triangle cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_vector_triangle") });
-                self.pipelines.encode_prepared_vector_triangle(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, triangle, layer.scissor, width, height, packet.time_seconds).map_err(str::to_owned)?;
+                self.pipelines.encode_prepared_vector_triangle(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, triangle, scissor, width, height, packet.time_seconds).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::LayerRaster { layer, raster, overlay } => {
@@ -793,7 +784,7 @@ impl GpuContext {
                 let (key, instance) = instances.get(raster).ok_or_else(|| "prepared raster scalar cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_raster_scalar") });
                 self.pipelines
-                    .encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, instance, Some(key), layer.scissor, width, height, packet.time_seconds)
+                    .encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, instance, Some(key), scissor, width, height, packet.time_seconds)
                     .map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
@@ -820,6 +811,7 @@ impl GpuContext {
                 }
             }
             DrawMeasureCursor::PassInstance { pass, draw: draw_index, instance, translucent } => {
+                let scissor = scissor.ok_or_else(|| "prepared world instance clip piece was missing".to_string())?;
                 let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared world pass cursor was stale".to_string())?;
                 let draws = if translucent { &pass_owner.translucent_draws } else { &pass_owner.draws };
                 let draw_owner = draws.get(draw_index).ok_or_else(|| "prepared world draw cursor was stale".to_string())?;
@@ -841,6 +833,7 @@ impl GpuContext {
                         instance_owner,
                         draw_owner.shadow_role.receives,
                         translucent,
+                        scissor,
                         width,
                         height,
                     )
@@ -852,6 +845,7 @@ impl GpuContext {
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::PassMaterialInstance { pass, draw: draw_index, instance, .. } => {
+                let scissor = scissor.ok_or_else(|| "prepared world material clip piece was missing".to_string())?;
                 let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared material pass cursor was stale".to_string())?;
                 let draw_owner = pass_owner.material_draws.get(draw_index).ok_or_else(|| "prepared material draw cursor was stale".to_string())?;
                 let instance_owner = draw_owner.instances.get(instance).ok_or_else(|| "prepared material instance cursor was stale".to_string())?;
@@ -870,6 +864,7 @@ impl GpuContext {
                         pass_owner,
                         draw_owner,
                         instance_owner,
+                        scissor,
                         width,
                         height,
                     )
@@ -881,26 +876,29 @@ impl GpuContext {
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::PassTexturedInstance { pass, draw: draw_index, instance } => {
+                let scissor = scissor.ok_or_else(|| "prepared world textured clip piece was missing".to_string())?;
                 let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared textured pass cursor was stale".to_string())?;
                 let draw_owner = pass_owner.textured_draws.get(draw_index).ok_or_else(|| "prepared textured draw cursor was stale".to_string())?;
                 let instance_owner = draw_owner.instances.get(instance).ok_or_else(|| "prepared textured instance cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_textured") });
-                self.pipelines.encode_prepared_world_textured(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, pass_owner, instance_owner).map_err(str::to_owned)?;
+                self.pipelines.encode_prepared_world_textured(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, pass_owner, instance_owner, scissor).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::PassGrid { pass } => {
+                let scissor = scissor.ok_or_else(|| "prepared world grid clip piece was missing".to_string())?;
                 let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared grid pass cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_grid") });
-                self.pipelines.encode_prepared_world_grid(&self.device, &self.queue, &mut encoder, color_view, depth, pass_owner).map_err(str::to_owned)?;
+                self.pipelines.encode_prepared_world_grid(&self.device, &self.queue, &mut encoder, color_view, depth, pass_owner, scissor).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex } if vertex % 2 == 1 => {
+                let scissor = scissor.ok_or_else(|| "prepared world line clip piece was missing".to_string())?;
                 let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared line pass cursor was stale".to_string())?;
                 let line_owner = pass_owner.line_draws.get(draw_index).ok_or_else(|| "prepared line draw cursor was stale".to_string())?;
                 let start = vertex.checked_sub(1).ok_or_else(|| "prepared line segment cursor underflowed".to_string())?;
                 let segment = line_owner.vertices.get(start..=vertex).ok_or_else(|| "prepared line segment cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_line") });
-                self.pipelines.encode_prepared_world_line(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, pass_owner, segment).map_err(str::to_owned)?;
+                self.pipelines.encode_prepared_world_line(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, pass_owner, segment, scissor).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             _ => {}
@@ -999,6 +997,18 @@ impl GpuContext {
 
     pub fn retire_unowned_raster_step(&mut self) -> Result<bool, String> {
         self.raster_store.retire_unowned_step().map_err(str::to_owned)
+    }
+
+    pub fn begin_exact_raster_close(&mut self, key: &str) -> Result<bool, String> {
+        self.raster_store.begin_exact_close(key).map_err(str::to_owned)
+    }
+
+    pub fn close_exact_raster_step(&mut self, key: &str) -> Result<bool, String> {
+        self.raster_store.close_exact_step(key).map_err(str::to_owned)
+    }
+
+    pub fn exact_raster_terminal_is_empty(&self, key: &str) -> bool {
+        self.raster_store.exact_close_terminal_is_empty(key)
     }
 
     pub fn cancel_engine_texture_admission(&mut self, admission: RasterTextureAdmission) -> Result<(), String> {

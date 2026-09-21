@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Reduced stand-in for a real generator's output (dvisvgm 3.0.4 shape), written by hand for this
+     crate so the native-routing laws own their fixture instead of reading an untracked scratch file.
+     It deliberately keeps every construct that once made those laws disagree with our own writer:
+     a SINGLE-quoted declaration and single-quoted element attributes, a space before `/>`, an
+     attribute run long enough to wrap, entity references in content, a comment, a processing
+     instruction, and a CDATA section whose body must survive verbatim. -->
+<?xml-stylesheet type='text/css' href='print.css'?>
+<svg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='536.3165pt'
+    height='783.9565pt' viewBox='-72.00425 -71.99995 536.3165 783.9565'>
+    <style type='text/css'>
+        <![CDATA[
+        @font-face {
+            font-family: nf0;
+            src: url(data:application/x-font-woff;base64,d09GRgABAAAAAB48AAoAAAAAJuwAAAAA);
+        }
+        text.body { font-family: nf0; font-size: 9.9626px }
+        ]]>
+    </style>
+    <g id='page1' transform='translate(0,0)'>
+        <path d='M-33.98 73.82812V50.5937Z' stroke='#000' fill='none' stroke-width='.3985'
+            stroke-miterlimit='10' />
+        <path d='M-33.98 84.4023V107.6367L-38.242 105.7734V82.5391Z' stroke='#000' fill='none' stroke-width='.3985' />
+        <rect x='0' y='0' width='10' height='10' fill='red'/>
+        <use xlink:href='#glyph-0-1' x='12.5' y='24.75'/>
+        <text class='body' x='5' y='40'>Tom &amp; Jerry &#x2014; &lt;draft&gt;</text>
+    </g>
+</svg>

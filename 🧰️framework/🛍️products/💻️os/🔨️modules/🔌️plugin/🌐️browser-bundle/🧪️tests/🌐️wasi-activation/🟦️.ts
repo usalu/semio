@@ -11,12 +11,12 @@ import { runExactCargoLawProcess } from "../../../../../../🦑️repo/🔨️mo
 /** 🗣️ Exercises installed and vendored CLI streams against the neutral fragmented-line trace. */
 export async function testPreview2GuestLogVendoring(repoRoot: string): Promise<void> {
   const fixture = JSON.parse(readFileSync(join(testSourceDirectory, "🔣️.json"), "utf8"));
-  const { ensurePreview2ShimVendorAt, patchPreview2ShimGuestLogClassification } = await import("../../🏗️materialization/🟦️.ts");
+  const { ensurePreview2ShimVendorAt, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease } = await import("../../🏗️materialization/🟦️.ts");
   const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactBase?.includes("🗑️generated"));
   mkdirSync(artifactBase, { recursive: true });
   const vendor = mkdtempSync(join(artifactBase, "preview2-log-vendor-"));
-  const observe = async (path: string, isolated: boolean) => {
+  const observe = async (path: string, isolated: boolean, flushed = false) => {
     const module = await import(pathToFileURL(path).href);
     const cli = isolated ? module.createCli() : module;
     const calls: { channel: string; text: string; level: string }[] = [];
@@ -27,7 +27,7 @@ export async function testPreview2GuestLogVendoring(repoRoot: string): Promise<v
       for (const chunk of fixture.lineBuffer.chunks) {
         const bytes = new TextEncoder().encode(chunk);
         assert(stream.checkWrite() >= BigInt(bytes.byteLength));
-        stream.write(bytes);
+        if (flushed) stream.blockingWriteAndFlush(bytes); else stream.write(bytes);
       }
     } finally { Object.assign(console, original); }
     assert.equal(typeof cli.stdin.getStdin, "function");
@@ -36,18 +36,27 @@ export async function testPreview2GuestLogVendoring(repoRoot: string): Promise<v
     return calls;
   };
   for (const isolated of [false, true]) {
-    const oracle = await observe(join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser/cli.js"), isolated);
+    const upstream = join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser/cli.js");
+    const oracle = await observe(upstream, isolated);
     assert.deepEqual(oracle.map(({ text }) => text), fixture.lineBuffer.hostCalls.map(({ text }: { text: string }) => text));
+    const shattered = await observe(upstream, isolated, true);
+    assert.equal(shattered.length, fixture.lineBuffer.preview2HostCalls);
+    assert.notDeepEqual(shattered.map(({ text }) => text), fixture.lineBuffer.hostCalls.map(({ text }: { text: string }) => text));
   }
   ensurePreview2ShimVendorAt(vendor, repoRoot);
   const path = join(vendor, "cli.js"), first = readFileSync(path, "utf8");
   patchPreview2ShimGuestLogClassification(path);
+  patchPreview2ShimGuestLogLineRelease(path);
   assert.equal(readFileSync(path, "utf8"), first);
-  for (const isolated of [false, true]) assert.deepEqual(await observe(path, isolated), fixture.lineBuffer.hostCalls);
+  for (const isolated of [false, true]) {
+    assert.deepEqual(await observe(path, isolated), fixture.lineBuffer.hostCalls);
+    assert.deepEqual(await observe(path, isolated, true), fixture.lineBuffer.hostCalls);
+  }
   const drift = join(vendor, "drift.js");
   writeFileSync(drift, "export const stderr = {};\n");
   assert.throws(() => patchPreview2ShimGuestLogClassification(drift), /patch did not match/);
-  console.log("[DEBUG] Preview2 guest log vendoring: installed oracle, fragmented lines, severity, idempotence and drift refusal passed");
+  assert.throws(() => patchPreview2ShimGuestLogLineRelease(drift), /line release patch did not match/);
+  console.log(`[DEBUG] Preview2 guest log vendoring: installed oracle, fragmented lines, blocking-write-and-flush release (${fixture.lineBuffer.preview2HostCalls} upstream fragments collapse to ${fixture.lineBuffer.hostCalls.length} lines), severity, idempotence and drift refusal passed`);
 }
 
 export async function testBrowserWasiActivation(repoRoot: string): Promise<void> {

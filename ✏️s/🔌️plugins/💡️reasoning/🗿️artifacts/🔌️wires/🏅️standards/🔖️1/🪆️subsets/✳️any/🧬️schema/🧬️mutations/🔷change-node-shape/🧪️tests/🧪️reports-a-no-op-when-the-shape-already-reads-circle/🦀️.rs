@@ -144,5 +144,5 @@ async fn the_shape_guard_leaves_every_extent_key_alone() {
     assert_eq!((node_id.as_str(), new_shape.as_str()), ("node-orbit", "circle"), "the inverse restores BASE's own shape on BASE's own node");
     let semantics = <WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("change", "node", "change-node-shape", "ChangedNodeShape"), "the fixture must be bound to change-node-shape's own descriptor, not its change-node-kind sibling's");
-    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()), "Change node \"node-orbit\" shape to \"circle\"", "change-node-shape's undo label quotes both the node and the shape");
+    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()).resolve(protocol::Terminology::Native, protocol::Locale::En), "Change node \"node-orbit\" shape to \"circle\"", "change-node-shape's undo label quotes both the node and the shape");
 }

@@ -162,8 +162,6 @@ async fn every_graph_operation_route_is_admitted_by_its_own_retained_factory() {
         FlowCommand::Reorganize(reorganize::Reorganize {}),
         FlowCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: widget_id.clone(), source_port_id: String::new(), target_node_id: widget_id.clone(), target_port_id: String::new() }),
         FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: widget_id.clone(), value: widget_id.clone() }),
-        FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: Vec::new() }),
-        FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: Vec::new() }),
         FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
     ];
     assert_eq!(commands.len(), FLOW_GRAPH_OPERATION_TOOL_IDS.len(), "one probe per graph-operation route");
@@ -218,7 +216,15 @@ fn booting_renders_and_evaluates_without_dropping_a_live_flow_owner() {
         assert!(!tree.is_empty());
     }
     let armed = evaluate::evaluate_result(&snapshot, &config, &mut session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN);
-    assert!(armed.effects.is_empty(), "the starter graph contains operators unavailable to this bare fixture and must not arm a spin");
+    assert!(armed.effects.len() <= 1, "one probe arms at most this window's single flowEvalTick continuation");
+    // ♻️ The anti-spin law, stated so it does not depend on WHO ran first: the flow extension
+    // registry is process-global, so whether the starter graph's `math.add` is servable depends on
+    // whether a sibling law already installed the `math` fixture module. Asserting "no effect at all"
+    // was a claim about a bare registry this law does not own — it passed alone and failed in the
+    // suite (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). What must hold either way is that a
+    // SECOND probe of the same unchanged snapshot arms nothing: that is the latch the spin fix added.
+    let rearmed = evaluate::evaluate_result(&snapshot, &config, &mut session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN);
+    assert!(rearmed.effects.is_empty(), "a second probe of the same unchanged snapshot must not arm a second tick");
     let _ = flow_eval_tick::tick_result(&snapshot, &config, &mut session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN);
     session.retire_cold();
 }

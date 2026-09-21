@@ -27,6 +27,38 @@ pub fn remove_layer_from_tree(layers: &mut Vec<RasterLayerNode>, target_id: &str
     None
 }
 
+/// 🔀 The MOVE phase's insert: the node was just lifted out of the tree, so the valid positions are
+/// `0..=len` of the container it lands in, and a request past the end means "last". A move's index
+/// was validated against the tree ITS diff was built from; once `absorb` coalesces that move with a
+/// later removal of a sibling, the same relative position is simply one slot shorter, and refusing it
+/// as `mutation.apply.invalid-index` broke `absorb(d1, d2).apply(base) == d2.apply(d1.apply(base))`
+/// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). An UNKNOWN parent is still refused — only
+/// the index saturates, never the address.
+pub fn reposition_layer(layers: &mut Vec<RasterLayerNode>, parent_id: Option<&str>, index: usize, layer: RasterLayerNode) -> bool {
+    match parent_id {
+        None => {
+            let position = index.min(layers.len());
+            layers.insert(position, layer);
+            true
+        }
+        Some(parent_id) => {
+            for node in layers.iter_mut() {
+                if let RasterLayerNode::Group { id, children, .. } = node {
+                    if id == parent_id {
+                        let position = index.min(children.len());
+                        children.insert(position, layer);
+                        return true;
+                    }
+                    if reposition_layer(children, Some(parent_id), index, layer.clone()) {
+                        return true;
+                    }
+                }
+            }
+            false
+        }
+    }
+}
+
 pub fn insert_layer(layers: &mut Vec<RasterLayerNode>, parent_id: Option<&str>, index: usize, layer: RasterLayerNode) -> bool {
     match parent_id {
         None => {
@@ -280,7 +312,7 @@ pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta)
     }
     for (index, mv) in delta.moved.iter().enumerate() {
         let node = remove_layer_from_tree(&mut next, &mv.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved layer does not exist after structural edits").at(["moved".to_string(), index.to_string()]))?;
-        if !insert_layer(&mut next, mv.parent_id.as_deref(), mv.index, node) {
+        if !reposition_layer(&mut next, mv.parent_id.as_deref(), mv.index, node) {
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "moved layer parent or index is invalid").at(["moved".to_string(), index.to_string()]));
         }
     }
@@ -382,12 +414,7 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
         take!(id);
         take!(title);
         match (&mut self.layers, other.layers) {
-            (Some(dst), Some(src)) => {
-                dst.added.extend(src.added);
-                dst.removed.extend(src.removed);
-                dst.patched.extend(src.patched);
-                dst.moved.extend(src.moved);
-            }
+            (Some(dst), Some(src)) => absorb_layers_delta(dst, src),
             (None, Some(src)) => self.layers = Some(src),
             _ => {}
         }
@@ -419,6 +446,81 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
     }
 }
 //#endregion 🔖️Apply
+
+//#region 🔖️Absorb
+/// 🩹 Field-wise coalesce of two patches of the SAME layer — the later `Some` wins, an unwritten
+/// field keeps what the earlier patch wrote. Mirrors the whole-diff `take!` macro one level down.
+fn absorb_layer_patch(dst: &mut RasterLayerPatch, src: RasterLayerPatch) {
+    macro_rules! take {
+        ($field:ident) => {
+            if src.$field.is_some() {
+                dst.$field = src.$field;
+            }
+        };
+    }
+    take!(name);
+    take!(visible);
+    take!(opacity);
+    take!(blend_mode);
+    take!(transform_x);
+    take!(transform_y);
+    take!(width);
+    take!(height);
+    take!(adjustment_kind);
+}
+
+/// 🧩️ Sequential coalesce of two layer deltas. `apply` runs the phases `removed → patched → moved →
+/// added` ONCE, so a naive concatenation produces a delta that applies differently from the two
+/// deltas in sequence: two patches of one layer became two `patched` entries (refused as
+/// `mutation.apply.duplicate-target`) and two moves of one layer became two `moved` entries. Each
+/// identity therefore carries at most one entry per phase here, and an edit that lands on a layer
+/// THIS delta inserts folds into the insertion itself — the insertion happens after the patch/move
+/// phases, so a separate entry could never find its target.
+fn absorb_layers_delta(dst: &mut RasterLayersDelta, src: RasterLayersDelta) {
+    for id in src.removed {
+        if let Some(position) = dst.added.iter().position(|insertion| layer_node_id(&insertion.layer) == id) {
+            // 🫧 Inserted by this delta and removed by the next: the layer never reaches the document.
+            let insertion = dst.added.remove(position);
+            crate::retire_raster_layer(insertion.layer);
+        } else if !dst.removed.contains(&id) {
+            dst.removed.push(id.clone());
+        }
+        dst.patched.retain(|entry| entry.id != id);
+        dst.moved.retain(|entry| entry.id != id);
+    }
+    for entry in src.patched {
+        if let Some(insertion) = dst.added.iter_mut().find(|insertion| layer_node_id(&insertion.layer) == entry.id) {
+            patch_layer_in_tree(std::slice::from_mut(&mut insertion.layer), &entry.id, &entry.patch);
+            continue;
+        }
+        match dst.patched.iter_mut().find(|existing| existing.id == entry.id) {
+            Some(existing) => absorb_layer_patch(&mut existing.patch, entry.patch),
+            None => dst.patched.push(entry),
+        }
+    }
+    for moved in src.moved {
+        if let Some(insertion) = dst.added.iter_mut().find(|insertion| layer_node_id(&insertion.layer) == moved.id) {
+            insertion.parent_id = moved.parent_id;
+            insertion.index = moved.index;
+            continue;
+        }
+        match dst.moved.iter_mut().find(|existing| existing.id == moved.id) {
+            Some(existing) => *existing = moved,
+            None => dst.moved.push(moved),
+        }
+    }
+    for insertion in src.added {
+        let id = layer_node_id(&insertion.layer).to_string();
+        match dst.added.iter().position(|existing| layer_node_id(&existing.layer) == id) {
+            Some(position) => {
+                let displaced = std::mem::replace(&mut dst.added[position], insertion);
+                crate::retire_raster_layer(displaced.layer);
+            }
+            None => dst.added.push(insertion),
+        }
+    }
+}
+//#endregion 🔖️Absorb
 
 //#region 🔖️Builders
 pub fn diff_set_snapshot(snapshot: &RasterSnapshot) -> RasterDiff {

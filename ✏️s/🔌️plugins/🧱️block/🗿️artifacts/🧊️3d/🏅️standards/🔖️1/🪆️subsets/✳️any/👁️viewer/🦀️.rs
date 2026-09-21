@@ -53,6 +53,18 @@ impl ArtifactViewer for Block3dViewer {
     const DIALECT: Dialect = BLOCK3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BLOCK_3D_SCHEMA;
 
+    /// 🔐️ The document-store disposal catalogue — the SAME one the sibling editor installs
+    /// (`♻️retirement/document_store_owners`), because a viewer owns exactly the same document.
+    ///
+    /// 🐛️ Left at the trait default (`None`) this surface could never close: every close ladder of a
+    /// mounted `ViewerApp<Block3dViewer>` failed with `interactive-job.close-owned-disposer-missing`
+    /// ("app owner did not provide the required bounded disposer for document-store") and the store
+    /// then reached `Drop` without its terminal-empty witness. Read-only says nothing about
+    /// ownership: a viewer allocates the same envelope and must retire it the same way.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::standards::v1::subsets::any::schema::retirement::document_store_owners())
+    }
+
     /// 🚀️ Boots on the `hexagonal-cut-concrete-forest-left` fixture rather than the empty document —
     /// a viewer has no `setActiveExample` action at all (its sole command is `Noop`), so an empty boot
     /// document made this surface permanently blank. See `dsl::block3d_boot_snapshot`.

@@ -36,18 +36,8 @@ fn detached_sync_leaf_is_always_dockable_and_owns_all_three_choices() {
 #[test]
 fn sync_body_routes_draft_attach_and_detach_through_the_existing_controller() {
     let mut shell = super::panel_anchor_model_tests::host_test_shell();
-    semio_framework_async::block_on(shell.handle_sync_action(ActionDescriptor {
-        controller_id: "framework.sync".into(),
-        action: "selectRemote".into(),
-        args: None,
-    }))
-    .expect("select remote");
-    semio_framework_async::block_on(shell.handle_sync_action(ActionDescriptor {
-        controller_id: "framework.sync".into(),
-        action: "setSyncDraft".into(),
-        args: crate::action_args_json!({ "value": "https://hub.example" }),
-    }))
-    .expect("draft route");
+    semio_framework_async::block_on(shell.handle_sync_action(ActionDescriptor { controller_id: "framework.sync".into(), action: "selectRemote".into(), args: None })).expect("select remote");
+    semio_framework_async::block_on(shell.handle_sync_action(ActionDescriptor { controller_id: "framework.sync".into(), action: "setSyncDraft".into(), args: crate::action_args_json!({ "value": "https://hub.example" }) })).expect("draft route");
     assert_eq!(shell.sync_card_draft, "https://hub.example");
     let remote = serde_json::to_value(shell.build_sync_attach_ui()).expect("remote body");
     let attach = find_id(&remote, "framework.sync.attach").expect("attach action").to_string();
@@ -57,12 +47,7 @@ fn sync_body_routes_draft_attach_and_detach_through_the_existing_controller() {
     let attached = serde_json::to_value(shell.build_sync_attach_ui()).expect("attached body");
     let detach = find_id(&attached, "framework.sync.detach").expect("detach action").to_string();
     assert!(detach.contains("framework.sync") && detach.contains("detach"));
-    semio_framework_async::block_on(shell.handle_sync_action(ActionDescriptor {
-        controller_id: "framework.sync".into(),
-        action: "detach".into(),
-        args: None,
-    }))
-    .expect("detach route");
+    semio_framework_async::block_on(shell.handle_sync_action(ActionDescriptor { controller_id: "framework.sync".into(), action: "detach".into(), args: None })).expect("detach route");
     assert!(shell.sync_backbone_uri.is_none());
 }
 
@@ -93,10 +78,7 @@ fn shell_owned_retained_document_closure_includes_sync_and_task_manager() {
     let leaves = shell.shell_owned_panel_leaves();
     assert!(leaves.iter().any(|leaf| leaf == FRAMEWORK_SYNC_PANEL_TAB_ID));
     assert!(leaves.iter().any(|leaf| leaf == FRAMEWORK_TASK_MANAGER_PANEL_ID));
-    for (id, body) in [
-        (FRAMEWORK_SYNC_PANEL_TAB_ID, shell.build_sync_attach_ui()),
-        (FRAMEWORK_TASK_MANAGER_PANEL_ID, shell.build_task_manager_ui()),
-    ] {
+    for (id, body) in [(FRAMEWORK_SYNC_PANEL_TAB_ID, shell.build_sync_attach_ui()), (FRAMEWORK_TASK_MANAGER_PANEL_ID, shell.build_task_manager_ui())] {
         let records = panel_ui_records(id, &body).unwrap_or_else(|error| panic!("{id} retained projection: {error}"));
         assert!(!records.is_empty(), "{id} retained document");
     }

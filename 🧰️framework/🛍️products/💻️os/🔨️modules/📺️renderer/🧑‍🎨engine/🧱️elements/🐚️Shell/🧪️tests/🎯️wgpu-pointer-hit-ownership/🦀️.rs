@@ -18,7 +18,6 @@
 
 use super::*;
 
-
 /// 🧾️ The eight leaking steps, each with the hit its press actually resolved to in run 14 — kind and
 /// control id as the live hit ledger published them (`steps.json`'s `detail.id`, and for the caps and
 /// the gutter the `os_host pointer hit` lines of `📓️w9c-behaviour-parity-run-2.md` §1.1 and §5).
@@ -111,7 +110,9 @@ fn fixed_pointer_captures_keep_independent_positions_and_release_only_their_owne
     assert_eq!(capture.position(ui_render::PointerId(0)), Some([end_x + 4.0, end_y - 3.0]));
     assert_eq!(capture.position(ui_render::PointerId(1)), None);
     assert_eq!(capture.press(ui_render::PointerId(capacity as u64), PointerHitOwner::Chrome, 900.0, 900.0), Some(PointerHitOwner::Chrome));
-    for index in 0..=capacity { capture.release(ui_render::PointerId(index as u64)); }
+    for index in 0..=capacity {
+        capture.release(ui_render::PointerId(index as u64));
+    }
     assert!(!capture.any_active());
 }
 
@@ -136,23 +137,28 @@ fn the_surface_body_and_the_empty_canvas_are_never_chrome() {
 fn an_open_overlay_owns_every_pointer_until_it_closes() {
     let mut shell = super::window_pane_chrome_tests::split_pane_shell();
     let theme = Theme::light();
-    let input = InputState::<ActionDescriptor>::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    shell.publish_retained_input_for_test(&mut input, &theme);
     assert!(!shell.pointer_input_is_modal(), "🚧️ a shell with no overlay open is not modal");
     assert_eq!(shell.pointer_owner_at(400.0, 400.0, &input, &theme), PointerHitOwner::Chrome, "an empty registry publishes no scene owner");
 
     shell.context_menu = Some(ContextMenuState::default());
+    shell.publish_retained_input_for_test(&mut input, &theme);
     assert!(shell.pointer_input_is_modal(), "🚧️ an open context menu is modal");
     assert_eq!(shell.pointer_owner_at(400.0, 400.0, &input, &theme), PointerHitOwner::Chrome, "🚧️ even where the menu paints nothing");
     assert!(!shell.wheel_reaches_scene_surface(400.0, 400.0, &input, &theme), "🚧️ and a wheel notch over it never zooms the world");
     shell.context_menu = None;
 
     shell.open_selects.insert("playground.navbar.fixture".into(), true);
+    shell.publish_retained_input_for_test(&mut input, &theme);
     assert!(shell.pointer_input_is_modal(), "🚧️ an open dropdown is modal — `example-switch` presses its option list");
     shell.open_selects.clear();
 
     shell.chrome_build.start_introduction();
+    shell.publish_retained_input_for_test(&mut input, &theme);
     assert!(shell.pointer_input_is_modal(), "🚧️ the tour owns every pointer it covers while it plays");
     shell.chrome_build.skip_introduction();
+    shell.publish_retained_input_for_test(&mut input, &theme);
     assert!(!shell.pointer_input_is_modal());
 }
 
@@ -164,16 +170,18 @@ fn an_open_overlay_owns_every_pointer_until_it_closes() {
 fn an_open_panels_whole_box_owns_the_pointer_over_the_pane_it_floats_on() {
     let mut shell = super::window_pane_chrome_tests::split_pane_shell();
     let theme = Theme::light();
-    let input = InputState::<ActionDescriptor>::default();
+    let mut input = InputState::<ActionDescriptor>::default();
     shell.screen_w = 1594.0;
     shell.screen_h = 936.0;
     let body = shell.body_rect(&theme);
     let centre = [body.x + body.w / 2.0, body.y + body.h / 2.0];
+    shell.publish_retained_input_for_test(&mut input, &theme);
     assert_eq!(shell.pointer_owner_at(centre[0], centre[1], &input, &theme), PointerHitOwner::Chrome, "folded anchors do not mint an unregistered scene");
 
     *shell.dock_tabs.tabs_mut(PanelAnchor::TopLeft) = vec![DockTabNode::leaf("framework.panel.artifact", "Artifact", "circle-dot", 0)];
     shell.anchor_state_mut(PanelAnchor::TopLeft).visible = true;
     assert!(shell.anchor_open(PanelAnchor::TopLeft), "📑️ the anchor paints a panel now");
+    shell.publish_retained_input_for_test(&mut input, &theme);
     let panel = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
     let inside = [panel.x + panel.w / 2.0, panel.y + panel.h / 2.0];
     assert!(shell.pointer_is_over_open_panel(inside[0], inside[1], &theme));

@@ -589,7 +589,7 @@ pub enum ArtifactEvent {
 fn decode_document_backbone_message_exact(message: &[u8]) -> Result<Vec<MutationEnvelope>, String> {
     match decode_hot_backbone_message_exact(message).map_err(|error| error.to_string())? {
         BackboneMessage::Mutations { envelopes } => decode_document_backbone_envelopes_exact(&envelopes).map_err(|error| error.to_string()),
-        BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } => Err("document backbone requires a canonical mutation message".into()),
+        BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } | BackboneMessage::Member { .. } => Err("document backbone requires a canonical mutation message".into()),
     }
 }
 
@@ -880,6 +880,7 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
             origin: crate::os_spr::command::MutationOrigin::Owner,
             messages: Vec::new(),
         }]),
+        lane: None,
     }
 }
 
@@ -1972,6 +1973,7 @@ mod native_actor {
                 }
                 BackboneMessage::Genesis { pack } => self.persist_genesis(pack).await,
                 BackboneMessage::Ack { .. } => {}
+                BackboneMessage::Member { .. } => return Err(vcs::VcsError::Backbone("a composed member requires its exact member transport lane".into())),
             }
             Ok(true)
         }
@@ -3538,6 +3540,7 @@ mod wasm_actor {
                     self.relay_operations(&envelopes).await;
                 }
                 BackboneMessage::Genesis { .. } | BackboneMessage::Ack { .. } => {}
+                BackboneMessage::Member { .. } => return Err(vcs::VcsError::Backbone("a composed member requires its exact member transport lane".into())),
             }
             Ok(true)
         }

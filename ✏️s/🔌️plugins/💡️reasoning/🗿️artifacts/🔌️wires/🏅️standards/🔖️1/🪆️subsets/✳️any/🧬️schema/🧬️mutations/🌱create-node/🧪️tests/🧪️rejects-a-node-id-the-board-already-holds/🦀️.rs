@@ -76,7 +76,7 @@ async fn a_colliding_node_id_is_a_fatal_duplicate_id() {
     assert_eq!(messages[0].target, vec!["node-alpha".to_string()], "the diagnostic addresses the colliding id lifted out of the payload's node blob");
     let semantics = <WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("create", "node", "create-node", "CreatedNode"), "the fixture must be bound to create-node's own descriptor");
-    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()), "Add node \"node-alpha\"", "create-node's undo label reads \"Add\", the one place this verb's prose and its `create` descriptor diverge");
+    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()).resolve(protocol::Terminology::Native, protocol::Locale::En), "Add node \"node-alpha\"", "create-node's undo label reads \"Add\", the one place this verb's prose and its `create` descriptor diverge");
 }
 
 /// ↩️ `create-node`'s inverse is PAYLOAD-derived, not BASE-derived: it is a `delete-node` of the id

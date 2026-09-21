@@ -1,4 +1,3 @@
-
 use super::*;
 use semio_framework::{
     ActionArgControl, ActionKind, AppDefinition, AppRole, ArtifactDialect, CommandDefinition, CommandOwnerAddress, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds,
@@ -87,9 +86,12 @@ fn window_action_context_fallback_uses_the_clicked_window_kind() {
     let left = fixture["activeWindowId"].as_str().unwrap();
     let right = fixture["clickedWindowId"].as_str().unwrap();
     shell.active_window_id = Some(left.into());
-    shell.dock.root = crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance(left, "left-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft), DockStackTab::instance(right, "right-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft)], active: left.into() };
+    shell.dock.root =
+        crate::dock::DockNode::Stack { windows: vec![DockStackTab::instance(left, "left-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft), DockStackTab::instance(right, "right-kind", ui_wgpu::wgpu::WindowStackCorner::TopLeft)], active: left.into() };
     shell.dock_drop_bodies = vec![(Vec::new(), Rect::new(100.0, 0.0, 100.0, 100.0), right.into())];
     shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    let mut input = InputState::<ActionDescriptor>::default();
+    shell.publish_retained_input_for_test(&mut input, &Theme::light());
     semio_framework_async::block_on(shell.open_context_menu(125.0, 25.0, None));
     let menu = shell.context_menu.as_ref().unwrap();
     let action = menu.items.iter().find_map(|item| item.action.as_ref().filter(|action| action.action == "right-action")).expect("clicked window contributes its own fallback actions");

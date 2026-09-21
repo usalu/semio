@@ -56,15 +56,20 @@ const log = (...parts) => console.log("[s6]", ...parts);
  * S8 had to reconstruct it from the captures and re-ran six kinds against a map nobody could diff.
  * A permanent probe's own map belongs in the probe. `S6_VERBS` still overrides it wholesale.
  *
- * ✏️ Two ids are corrected against the artifacts' own manifests: `wfc`'s verb is `change-seed`
- * (S7 drove `changeSeed`, which the rail never offers), and `procedural`'s is `generate`
- * (S7 drove `nodeGraphEdit`, which is 🧮️mathematical's). */
+ * ✏️ Three ids are corrected against the artifacts' own manifests. `wfc`'s verb is `change-seed`
+ * (S7 drove `changeSeed`, which the rail never offers). `procedural`'s is **`addWidget`**: S7 drove
+ * `nodeGraphEdit` (🧮️mathematical's), S9 corrected it to `generate` — but `generate` is declared
+ * `ActionKind::View` (`🌀️generation2d/…/✏️editor/🦀️.rs:1846`) even though it publishes on the `Config`
+ * lane, so `#s-checkin`'s uncommitted-MUTATION count rightly never counts it. Measured on the rebuilt
+ * guests: `generate` gives `edits [0,0,0,0]` with a live `Generate↶` ledger row, while `addWidget`
+ * (`ActionKind::Mutation`) is the artifact's real document verb. The oracle was right and the verb
+ * was wrong (ticket 26/09/18 S10). */
 const DEFAULT_VERBS = {
   animate: "addTile", architect: "setAdjacencyKind", block: "addHandleKind", cad: "addNode", dag: "addNode",
   demonstrator: "changeSchema", draw: "addLayer", energy: "rename-zone", fem: "addNode", flow: "addWidget",
   forms: "addStep", gis: "addFeature", imperative: "addStep", layout: "addPage", lowpoly: "addPrimitive",
   mathematical: "nodeGraphEdit", norm: "setSnapshot", note: "addBlock", playbook: "addStep",
-  "playbook-module-procedural": "importSolidGeometry", procedural: "generate", process: "addStep",
+  "playbook-module-procedural": "importSolidGeometry", procedural: "addWidget", process: "addStep",
   puzzle: "addNode", raster: "addLayer", reasoning: "addNode", remodel: "addStream", sequence: "addStep",
   shooting: "addShot", sourcing: "curationSetCount", stdio: "paste", trinity: "setParameter",
   vcs: "incrementCounter", wfc: "change-seed", writer: "paste",

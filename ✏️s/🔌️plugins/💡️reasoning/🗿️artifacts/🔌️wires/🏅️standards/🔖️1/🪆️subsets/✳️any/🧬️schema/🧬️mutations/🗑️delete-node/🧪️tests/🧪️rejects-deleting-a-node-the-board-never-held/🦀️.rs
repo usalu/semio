@@ -74,7 +74,7 @@ async fn a_missing_node_is_reported_by_the_node_id_it_was_handed() {
     assert_eq!(messages[0].target, vec!["node-phantom".to_string()], "the diagnostic names the node id the payload carried, never the bystander that was actually on the board");
     let semantics = <WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("delete", "node", "delete-node", "DeletedNode"), "the fixture must be bound to delete-node's own descriptor");
-    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()), "Delete node \"node-phantom\"", "delete-node's undo label quotes the id it was asked to remove");
+    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()).resolve(protocol::Terminology::Native, protocol::Locale::En), "Delete node \"node-phantom\"", "delete-node's undo label quotes the id it was asked to remove");
 }
 
 /// ↩️ `delete-node`'s inverse is BASE-derived — it recreates the removed node from the full blob

@@ -65,7 +65,7 @@ fn select_tree(item_count: usize) -> UiNode {
 fn upward_tree_select(item_count: usize) -> UiNode {
     let mut item = UiTreeItemNode::base("fixture.item", Label::data("Fixture item"));
     item.control = Some(UiControlNode::Select(select_node(item_count)));
-    UiNode::Tree(UiTreeNode {
+    UiNode::Tree(UiTreeNode { presentation: Default::default(),
         sections: vec![UiTreeSectionNode { id: "fixture.section".into(), label: Some(Label::data("Fixture section")), default_open: Some(true), presence: UiPresence::default(), items: vec![item], window: None }],
         presence: UiPresence::default(),
         drop_action: None,

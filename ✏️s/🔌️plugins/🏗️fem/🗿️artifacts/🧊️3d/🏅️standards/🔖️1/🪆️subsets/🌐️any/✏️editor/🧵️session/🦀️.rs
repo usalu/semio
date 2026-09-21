@@ -3548,7 +3548,7 @@ fn decode_input(job: u64, input: &[u8]) -> Option<(u16, Identity)> {
     Some((shell, Identity { app_instance_id, base_revision, generation, canonical_base_revision, operation, job }))
 }
 
-fn factory(job: u64, input: &[u8]) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
+fn factory(job: u64, input: &[u8], _restored: Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
     let (shell, identity) = decode_input(job, input).ok_or_else(|| b"fem3d.visual-input".to_vec())?;
     MOUNTED.with(|registry| {
         let registry = registry.borrow();

@@ -188,10 +188,7 @@ fn neither_renderer_accepts_an_os_file_drop() {
             }
         }
     }
-    assert!(
-        react_file_drops.is_empty(),
-        "📥️ React now reads dropped FILES ({react_file_drops:?}) — wgpu owes the twin: page-side `dragover`/`drop` listeners in 🚀️browser-boot/🟦️.ts feeding the existing `request-file-open` host-io door"
-    );
+    assert!(react_file_drops.is_empty(), "📥️ React now reads dropped FILES ({react_file_drops:?}) — wgpu owes the twin: page-side `dragover`/`drop` listeners in 🚀️browser-boot/🟦️.ts feeding the existing `request-file-open` host-io door");
 
     let trunk = read_engine("🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts");
     for listener in ["\"drop\"", "\"dragover\"", "\"dragenter\"", "\"dragleave\""] {
@@ -319,11 +316,7 @@ fn every_palette_command_shape_has_a_live_route() {
     assert!(!items.is_empty(), "🎛️ the os built-ins alone fill the palette");
     for item in &items {
         let action = item.action.as_deref().unwrap_or_default();
-        assert!(
-            action.starts_with("os-command:") || action.starts_with("command:") || action.starts_with("command-form:"),
-            "🎛️ palette row `{}` carries an action shape `activate_search_item` can route, got {action:?}",
-            item.id
-        );
+        assert!(action.starts_with("os-command:") || action.starts_with("command:") || action.starts_with("command-form:"), "🎛️ palette row `{}` carries an action shape `activate_search_item` can route, got {action:?}", item.id);
     }
 }
 // #endregion 🎛️PaletteCommandRoutes

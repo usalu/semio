@@ -133,3 +133,36 @@ fn camera_json_follows_the_projection() {
     assert_ne!(perspective, orthographic, "the projection must reach the host camera payload");
 }
 //#endregion ☑️Options
+
+//#region 🧊️MeshLane
+/// 🧊️ LAW: every instance this window publishes names a mesh the SAME scene publishes, and a document
+/// whose parts carry `/mesh/…` urls publishes at least one real GLB row.
+///
+/// 🐛️ An instance whose `meshId` no `meshesJson` row declares draws NOTHING — the renderer has no
+/// geometry to attach to it and never even fetches a GLB. The 2026-09-21 play-grid audit saw exactly
+/// that on the `puzzle5d` pane: booted ready, a curated example named in the picker, an empty 3D
+/// viewport and not one `/mesh/*.glb` request on the wire. The window builds `meshesJson` from a mesh
+/// LANE handed in by `puzzle5d_mesh_lane` while `instancesJson` resolves each part's url itself, so the
+/// two can disagree without any error anywhere — this law is what ties them together.
+#[test]
+fn every_world_instance_names_a_mesh_this_scene_publishes() {
+    let mut app = app();
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": crate::editor::puzzle5d::PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
+    let rendered = render_body(&mut app, BODY_KEY);
+    close_app(&mut app);
+    let scene: serde_json::Value = serde_json::from_str(&rendered).expect("world scene json");
+    let meshes: serde_json::Value = serde_json::from_str(scene["scene"]["meshesJson"].as_str().expect("the world scene carries meshesJson")).expect("meshesJson parses");
+    let instances: serde_json::Value = serde_json::from_str(scene["scene"]["instancesJson"].as_str().expect("the world scene carries instancesJson")).expect("instancesJson parses");
+    let published: Vec<&str> = meshes.as_array().expect("mesh rows").iter().filter_map(|mesh| mesh["id"].as_str()).collect();
+    let rows = instances.as_array().expect("instance rows");
+    assert!(!rows.is_empty(), "the loaded example must place world instances");
+    for instance in rows {
+        let mesh_id = instance["meshId"].as_str().unwrap_or_default();
+        assert!(published.contains(&mesh_id), "instance {} names mesh {mesh_id:?}, which this scene never publishes: {published:?}", instance["id"]);
+    }
+    assert!(
+        meshes.as_array().expect("mesh rows").iter().any(|mesh| mesh["url"].as_str().is_some_and(|url| url.starts_with("/mesh/"))),
+        "a document whose parts carry mesh urls must publish at least one real GLB row: {meshes}"
+    );
+}
+//#endregion 🧊️MeshLane

@@ -856,8 +856,14 @@ where
     // cancels the live one FIRST — its future (and anything it owns, including a parked
     // `RequestFuture`) is dropped without ever completing, so no resume is ever queued for it.
     if let Some(key) = &key {
-        if TASK_RECORDS.with(|records| records.borrow().find_key(instance, key)).is_some() {
-            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.supersession-pending"), "keyed task supersession awaits bounded disposal of its previous owner"));
+        if let Some(previous) = TASK_RECORDS.with(|records| records.borrow().find_key(instance, key)) {
+            let detached = TEST_FUTURE_EXECUTOR.with(|executor| executor.detach(previous));
+            let record = TASK_RECORDS.with(|records| records.borrow_mut().remove(previous));
+            if detached.is_none() && record.is_none() {
+                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.supersession-pending"), "keyed task supersession found no exact previous owner to dispose"));
+            }
+            drop(record);
+            drop(detached);
         }
     }
 
@@ -911,6 +917,11 @@ async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
 /// registry sweep is defense-in-depth for a pending request whose task somehow isn't tracked here
 /// (there should be none, by construction — every `RequestFuture` is created inside `TaskCtx.host`,
 /// itself only ever handed to a task by `spawn_task`).
+///
+/// 🪞️ Both arms DROP. The production arm hands the sweep to `ReactorExecutor::close_instance_step`;
+/// the native arm `detach`es the same future out of `TEST_FUTURE_EXECUTOR`. Neither ever polls a
+/// cancelled task: a cancelled body must never observe its await resolving, which is also what
+/// `RequestRegistry::begin_cancel_instance`'s doc relies on when it retires slots with no wake.
 // 🚫️async: E1 pure in-memory sweep over `TASK_RECORDS`/`EXECUTOR`/`TASK_KEYS` (all sync now,
 // R9) consumed by `poll`'s sync `world actor` boundary — zero suspension.
 pub(crate) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> bool {
@@ -926,11 +937,10 @@ pub(crate) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> b
         }
         let entry = TASK_RECORDS.with(|records| records.borrow().entry_at(*cursor).and_then(|(id, record)| (record.instance == instance).then_some(id)));
         if let Some(id) = entry {
-            let poll = TEST_FUTURE_EXECUTOR.with(|executor| executor.poll_one(id));
-            if poll == executor::TaskPoll::Pending {
-                return false;
-            }
-            TASK_RECORDS.with(|records| drop(records.borrow_mut().remove(id)));
+            let detached = TEST_FUTURE_EXECUTOR.with(|executor| executor.detach(id));
+            let record = TASK_RECORDS.with(|records| records.borrow_mut().remove(id));
+            drop(record);
+            drop(detached);
         }
         *cursor += 1;
         *cursor >= REACTOR_TASK_SLOTS

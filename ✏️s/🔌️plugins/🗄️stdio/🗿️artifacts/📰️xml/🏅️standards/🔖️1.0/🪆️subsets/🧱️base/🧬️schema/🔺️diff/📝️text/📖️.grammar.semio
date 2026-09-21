@@ -29,9 +29,12 @@ opt-hex = "[" "0" "]" | "[" "1" "," hex "]"
 opt-bool = "[" "0" "]" | "[" "1" "," bool-lit "]"
 bool-lit = "0" | "1"
 
-# `enc_declaration`/`dec_declaration`: `[hex(version),opt-hex(encoding),opt-bool(standalone)]`.
+# `enc_declaration`/`dec_declaration`:
+# `[hex(version),opt-hex(encoding),opt-bool(standalone),bool-lit(quote)]` -- the trailing flag is
+# `XmlQuote` (`0` = the `"` spelling, `1` = `'`), real document state per XML 1.0 §2.8, not
+# retained source text (`enc_quote`/`dec_quote`).
 opt-declaration = "[" "0" "]" | "[" "1" "," declaration-lit "]"
-declaration-lit = "[" hex "," opt-hex "," opt-bool "]"
+declaration-lit = "[" hex "," opt-hex "," opt-bool "," bool-lit "]"
 opt-doctype = "[" "0" "]" | "[" "1" "," doctype-lit "]"
 doctype-lit = "[" hex "," opt-external-id "," "[" dtd-declaration-list? "]" "]"
 opt-external-id = "[" "0" "]" | "[" "1" "," external-id "]"

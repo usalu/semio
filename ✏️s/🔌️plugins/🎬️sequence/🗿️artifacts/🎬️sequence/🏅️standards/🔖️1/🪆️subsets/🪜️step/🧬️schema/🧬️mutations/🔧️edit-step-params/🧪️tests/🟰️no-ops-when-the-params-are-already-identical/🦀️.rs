@@ -22,23 +22,28 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-the-params-are-already-identical/🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔧️edit-step-params/🟰️no-ops-when-the-params-are-already-identical/🎯️outcome/🔣️.json");
 
-fn mutation() -> SequenceMutation {
-    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
+/// 🧊️ Every decoded fixture here owns its own non-empty `StepParams` pair root, so it is the FINAL
+/// owner of a dictionary and must leave through a cold boundary — a bare drop trips `final Dictionary
+/// ownership must be explicitly retired or owned by a cold boundary`. Handing every fixture out
+/// already cold-owned keeps that obligation at the single place each value is built.
+fn mutation() -> neural_engine::ColdOwner<SequenceMutation> {
+    neural_engine::ColdOwner::new(dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes"))
 }
-fn expected_after() -> SequenceSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+fn expected_after() -> neural_engine::ColdOwner<SequenceSnapshot> {
+    neural_engine::ColdOwner::new(dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes"))
 }
 
 /// 🌱 The committed `⬅️before`, with its composed `content` child resolved to a one-step scene whose
 /// step already carries the committed payload's params dictionary — nothing about it is invented.
-fn before() -> SequenceSnapshot {
+fn before() -> neural_engine::ColdOwner<SequenceSnapshot> {
     let mut snapshot: SequenceSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
-    let SequenceMutation::EditStepParams(payload) = mutation() else {
+    let committed = mutation();
+    let SequenceMutation::EditStepParams(payload) = &*committed else {
         panic!("no-ops-when-the-params-are-already-identical's committed mutation must be an edit-step-params");
     };
     let step = SequenceStep { id: payload.id.clone(), kind: "log.print".into(), params: payload.params.clone(), x: 0.0, y: 0.0, slot: None, collapsed: false };
     snapshot.content.set_local_owner(std::sync::Arc::new(SequenceWorkingScene { steps: vec![step], edges: Vec::new() }));
-    snapshot
+    neural_engine::ColdOwner::new(snapshot)
 }
 
 /// ▶️ Re-submitting a step's current parameter body carries `before` to exactly the committed
@@ -46,7 +51,7 @@ fn before() -> SequenceSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let base = before();
-    let snapshot = apply_sequence_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
+    let snapshot = neural_engine::ColdOwner::new(apply_sequence_mutation(&base, &mutation()).expect("an empty diff still applies cleanly"));
     assert_eq!(snapshot, expected_after(), "edit-step-params/no-ops-when-the-params-are-already-identical: applied state differs from committed after-snapshot");
     assert_eq!(&snapshot.content.child_id, &base.content.child_id, "a params-identity edit must not re-mint the content handle");
 }
@@ -77,7 +82,7 @@ async fn committed_diff_is_canonical() {
 async fn committed_diff_applies_to_after() {
     let decoded: SequenceDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
     assert!(decoded.content.is_none(), "a params-identity edit must leave the composed content slot unset");
-    let produced = <SequenceDiff as protocol::MutationDiff<SequenceSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = neural_engine::ColdOwner::new(<SequenceDiff as protocol::MutationDiff<SequenceSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot"));
     assert_eq!(produced, expected_after(), "edit-step-params/no-ops-when-the-params-are-already-identical: committed diff did not carry before to after");
 }
 
@@ -87,12 +92,13 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SequenceSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded = neural_engine::ColdOwner::new(dsl::os_pack::from_json_str::<SequenceSnapshot>(text).expect("snapshot decodes"));
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&*decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "edit-step-params/no-ops-when-the-params-are-already-identical: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let committed = mutation();
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&*committed)).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "edit-step-params/no-ops-when-the-params-are-already-identical: committed mutation JSON is not canonical");
     assert!(original.get("params").map(serde_json::Value::is_object).unwrap_or(false), "a transparent StepParams encodes as a bare object, never as a wrapper");
@@ -116,15 +122,17 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_restores_the_whole_captured_params_body() {
     let base = before();
-    let SequenceMutation::EditStepParams(payload) = mutation() else {
+    let committed = mutation();
+    let SequenceMutation::EditStepParams(payload) = &*committed else {
         panic!("committed mutation must be an edit-step-params");
     };
-    let inverse = inverse_sequence_mutation(&base, &mutation());
+    let inverse = neural_engine::ColdOwner::new(inverse_sequence_mutation(&base, &mutation()));
     assert_eq!(inverse.len(), 1, "edit-step-params undoes with exactly one step, got {inverse:?}");
     let SequenceMutation::EditStepParams(undo) = &inverse[0] else {
         panic!("edit-step-params' inverse must be an edit-step-params, got {:?}", inverse[0]);
     };
     assert_eq!((undo.id.as_str(), &undo.params), (payload.id.as_str(), &payload.params), "the inverse restores the captured body, which here equals the requested one");
-    let restored = apply_sequence_mutation(&apply_sequence_mutation(&base, &mutation()).expect("forward applies"), &inverse[0]).expect("inverse step applies");
+    let forward = neural_engine::ColdOwner::new(apply_sequence_mutation(&base, &mutation()).expect("forward applies"));
+    let restored = neural_engine::ColdOwner::new(apply_sequence_mutation(&forward, &inverse[0]).expect("inverse step applies"));
     assert_eq!(restored, base, "edit-step-params/no-ops-when-the-params-are-already-identical: inverse did not restore the before-snapshot");
 }

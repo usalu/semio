@@ -12,7 +12,7 @@ use crate::SvgSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration, XmlExternalId};
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlQuote};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.svg`. No `snapshot: Option<SvgSnapshot>` full-replace slot -- even
@@ -872,13 +872,40 @@ fn dec_attr(s: &str) -> Result<XmlAttr, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_declaration(d: &XmlDeclaration) -> String {
-    format!("[{},{},{}]", enc_str(&d.version), encode_option(&d.encoding, |v| enc_str(v)), encode_option(&d.standalone, |v| if *v { "1".to_string() } else { "0".to_string() }),)
+    format!(
+        "[{},{},{},{}]",
+        enc_str(&d.version),
+        encode_option(&d.encoding, |v| enc_str(v)),
+        encode_option(&d.standalone, |v| if *v { "1".to_string() } else { "0".to_string() }),
+        enc_quote(d.quote),
+    )
+}
+
+/// 🗣️ `XmlQuote` as the 1/0 flag the declaration frame carries (`1` = the `'` spelling), the same
+/// shape `standalone` already uses one slot earlier — restated here exactly as `📰️xml`'s own
+/// sibling codec spells it (svg reuses xml's `XmlDeclaration` type but owns its own wire).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_quote(quote: XmlQuote) -> String {
+    if quote.is_double() {
+        "0".to_string()
+    } else {
+        "1".to_string()
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_quote(s: &str) -> Result<XmlQuote, String> {
+    match s {
+        "0" => Ok(XmlQuote::Double),
+        "1" => Ok(XmlQuote::Single),
+        other => Err(format!("declaration quote: expected 0 or 1, got {other}")),
+    }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_declaration(s: &str) -> Result<XmlDeclaration, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
-    let [version, encoding, standalone] = parts.as_slice() else { return Err(format!("declaration: expected 3 fields, got {}", parts.len())) };
-    Ok(XmlDeclaration { version: dec_str(version)?, encoding: decode_option(encoding, dec_str)?, standalone: decode_option(standalone, |v| Ok(v == "1"))? })
+    let [version, encoding, standalone, quote] = parts.as_slice() else { return Err(format!("declaration: expected 4 fields, got {}", parts.len())) };
+    Ok(XmlDeclaration { version: dec_str(version)?, encoding: decode_option(encoding, dec_str)?, standalone: decode_option(standalone, |v| Ok(v == "1"))?, quote: dec_quote(quote)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_doctype(doctype: &XmlDoctype) -> String {
@@ -1045,13 +1072,15 @@ pub(crate) fn enc_declaration_bin(d: &XmlDeclaration, out: &mut Vec<u8>) {
     if let Some(standalone) = d.standalone {
         out.push(if standalone { 1 } else { 0 });
     }
+    out.push(u8::from(!d.quote.is_double()));
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_declaration_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDeclaration, String> {
     let version = read_str_lp(reader)?;
     let encoding = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     let standalone = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
-    Ok(XmlDeclaration { version, encoding, standalone })
+    let quote = if reader.read_u8().map_err(|e| e.to_string())? != 0 { XmlQuote::Single } else { XmlQuote::Double };
+    Ok(XmlDeclaration { version, encoding, standalone, quote })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
@@ -1515,7 +1544,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SvgDiff> {
     let a = snapshot(XmlDocument {
         root: Some(elem("svg", vec![("width", "10")], vec![elem("rect", vec![("x", "0")], vec![])])),
         doctype: Some("<!DOCTYPE svg>".into()),
-        declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+        declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), quote: XmlQuote::Single }),
         prolog: Vec::new(),
     });
     let b = snapshot(XmlDocument { root: Some(elem("svg", vec![("width", "20"), ("height", "30")], vec![elem("circle", vec![("r", "5")], vec![]), XmlNode::Text { text: "hi".into() }])), doctype: None, declaration: None, prolog: Vec::new() });

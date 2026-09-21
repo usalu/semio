@@ -22,7 +22,9 @@ fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_t
     assert!(close_retired_scene_surface_one());
     assert_eq!(SCENE_STATE.with(|cell| cell.borrow().external_reservations), 1);
     for _ in 0..262_144 {
-        if !close_retired_scene_surface_one() { break; }
+        if !close_retired_scene_surface_one() {
+            break;
+        }
     }
     assert!(SCENE_SURFACE_RETIREMENT.with(|cell| cell.borrow().is_none()));
     assert_eq!(SCENE_STATE.with(|cell| cell.borrow().external_reservations), 0);
@@ -30,8 +32,38 @@ fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_t
     assert!(!retire_scene_identity(&owner));
     assert_eq!(SCENE_STATE.with(|cell| cell.borrow().get(&successor.surface_id).and_then(|state| state.mount_owner.clone())), Some(successor.clone()));
     assert!(retire_scene_identity(&successor));
-    for _ in 0..262_144 { if !close_retired_scene_surface_one() { break; } }
+    for _ in 0..262_144 {
+        if !close_retired_scene_surface_one() {
+            break;
+        }
+    }
     assert!(!SCENE_STATE.with(|cell| cell.borrow().contains_key(&owner.surface_id)));
+}
+
+#[test]
+fn a_second_component_retirement_yields_before_detaching_its_live_owner() {
+    let mut first = crate::interpreter::fixture_scene_pointer_target("retirement-window", "retirement-document-a", "scene-a");
+    first.kind = SurfaceKind::Canvas2d;
+    first.host_id = "retirement-host-a".into();
+    let mut second = crate::interpreter::fixture_scene_pointer_target("retirement-window", "retirement-document-b", "scene-b");
+    second.kind = SurfaceKind::Canvas2d;
+    second.host_id = "retirement-host-b".into();
+    assert!(mount_scene_identity(&first));
+    assert!(mount_scene_identity(&second));
+    assert!(retire_scene_identity(&first));
+    assert!(!retire_scene_identity(&second));
+    assert_eq!(SCENE_STATE.with(|cell| cell.borrow().get(&second.host_id).and_then(|state| state.mount_owner.clone())), Some(second.clone()));
+    for _ in 0..262_144 {
+        if !close_retired_scene_surface_one() {
+            break;
+        }
+    }
+    assert!(retire_scene_identity(&second));
+    for _ in 0..262_144 {
+        if !close_retired_scene_surface_one() {
+            break;
+        }
+    }
 }
 
 fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
@@ -101,17 +133,8 @@ fn catalogue_drop_publishes_one_terminal_leave_drop_slice_and_preserves_raw_payl
         seed_catalogue_hover(&scene);
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let point = &row["point"];
-        let accepted = canvas_catalogue_drop_into(
-            &scene,
-            inner,
-            "canvas-catalogue-terminal-window",
-            7,
-            point["x"].as_f64().unwrap() as f32,
-            point["y"].as_f64().unwrap() as f32,
-            row["rawPayload"].as_str().unwrap(),
-            &mut input,
-        )
-        .expect("terminal action batch admits");
+        let accepted = canvas_catalogue_drop_into(&scene, inner, "canvas-catalogue-terminal-window", 7, point["x"].as_f64().unwrap() as f32, point["y"].as_f64().unwrap() as f32, row["rawPayload"].as_str().unwrap(), &mut input)
+            .expect("terminal action batch admits");
         assert_eq!(accepted, row["terminal"] != "empty");
         let actions = catalogue_actions(&mut input);
         assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), row["expectedActions"].as_array().unwrap().iter().map(|action| action.as_str().unwrap()).collect::<Vec<_>>());
@@ -136,10 +159,7 @@ fn catalogue_drop_refusal_keeps_hover_and_never_publishes_a_partial_pair() {
         let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&["fixture", action.as_str()]).unwrap();
         input.reserve_action("fixture", &action, bytes).unwrap().publish().unwrap();
     }
-    assert_eq!(
-        canvas_catalogue_drop_into(&scene, inner, "canvas-catalogue-terminal-window", 7, 73.0, 41.0, "{\"kind\":\"rect\"}", &mut input),
-        Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits),
-    );
+    assert_eq!(canvas_catalogue_drop_into(&scene, inner, "canvas-catalogue-terminal-window", 7, 73.0, 41.0, "{\"kind\":\"rect\"}", &mut input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits),);
     assert!(CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().is_some()), "refusal retains the terminal hover owner for a bounded retry");
     let first = input.take_action_step().unwrap().unwrap().into_descriptor().unwrap();
     assert_eq!(first.action, "occupied-0", "refusal leaves the pre-existing FIFO unchanged and publishes neither terminal member");
@@ -230,10 +250,7 @@ fn canvas2d_wheel_schedules_a_settled_camera_dispatch_without_firing_immediately
     let actions = handle_scene_wheel(&node, Rect::new(0.0, 0.0, 400.0, 300.0), 50.0, 50.0, -100.0, false);
     assert!(actions.is_empty(), "wheel-zoom never dispatches inline anymore");
     let immediate = sweep_expired_scene_camera_dispatches(crate::app_now_ms());
-    assert!(
-        immediate.iter().all(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) != Some(surface_id)),
-        "sweeping immediately must not yet report this surface"
-    );
+    assert!(immediate.iter().all(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) != Some(surface_id)), "sweeping immediately must not yet report this surface");
     let due = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + canvas_camera_gesture_fixture()["wheel"]["settleDelayMs"].as_f64().unwrap());
     let matched = due.iter().find(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) == Some(surface_id)).expect("this surface's setCamera fires once its deadline has passed");
     assert_eq!(matched.controller_id, "controller");
@@ -304,7 +321,10 @@ fn assert_canvas_pan_case(case_id: &str) {
     let actual = scene_state(&surface_id).viewport;
     assert_eq!((actual.x, actual.y, actual.zoom), (expected.x, expected.y, expected.zoom), "{case_id} owns React's exact camera");
     let camera_actions = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
-    assert_eq!(camera_actions.iter().any(|action| action.action == fixture["wheel"]["expectedAction"].as_str().unwrap() && action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) == Some(surface_id.as_str())), row["expectedCameraAction"].as_bool().unwrap());
+    assert_eq!(
+        camera_actions.iter().any(|action| action.action == fixture["wheel"]["expectedAction"].as_str().unwrap() && action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) == Some(surface_id.as_str())),
+        row["expectedCameraAction"].as_bool().unwrap()
+    );
 }
 
 #[test]

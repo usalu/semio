@@ -83,16 +83,22 @@ fn plan(shell: &mut ShellState) {
 /// React's `closeWindow(windowId)` (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1475-1485`: one
 /// `removeWindowFromLayout`, then `onActiveWindowChange(remaining[0] ?? null)`).
 ///
-/// 🧾️ The dispatch funnel error is the proof the close was JOURNALED: React's `onWindowClose` notes
-/// `shell.windowClose` with the closed window (`🏛️ShellHost/🟦️.tsx:10530-10531`), and a registry-less
-/// fixture answers that note with `action program missing`.
+/// 🧾️ The retained deferred action is the proof the close was JOURNALED: React's `onWindowClose`
+/// notes `shell.windowClose` with the closed window (`🏛️ShellHost/🟦️.tsx:10530-10531`). Keeping that
+/// guest round trip outside the pointer dispatch returns the exact interaction owner before the
+/// next presented-input candidate needs it.
 #[test]
 fn the_close_cap_closes_exactly_the_clicked_window_and_refocuses_the_survivor() {
     let mut shell = journey_shell(Vec::new());
     let outcome = semio_framework_async::block_on(shell.handle_shell_hit(&cap(&format!("dock.tab.0.{TOP}.close"))));
     assert_eq!(shell.dock.collect_window_ids(), vec![PERSPECTIVE.to_string()], "🪟️ one window closed, the other stayed");
     assert_eq!(shell.active_window_id.as_deref(), Some(PERSPECTIVE), "🪟️ focus moved to the survivor, as React's `remaining[0]` does");
-    assert_eq!(outcome.err().as_deref(), Some("action program missing"), "🕒️ …and the close crossed the note funnel React's `onWindowClose` uses");
+    assert!(outcome.is_ok(), "🕒️ the close returns its interaction owner without awaiting the guest journal");
+    let note = shell.deferred_actions.last().expect("🕒️ the close arms the note React's onWindowClose uses");
+    assert_eq!(note.action, "noteShellCommand");
+    let args = note.args.as_ref().expect("the close note carries its command and window");
+    assert_eq!(args.get("commandId").and_then(DslValue::as_str), Some("shell.windowClose"));
+    assert_eq!(args.get("detail").and_then(|detail| detail.get("windowId")).and_then(DslValue::as_str), Some(TOP));
 }
 
 /// ⚖️ LAW: after that close, the FIRST `dock.tab.…` row the dock publishes is the survivor's SELECT
@@ -204,6 +210,8 @@ fn the_focus_cap_journals_no_shell_command_and_only_its_activation() {
 fn a_press_in_a_docked_pane_arms_the_activation_the_undo_chord_replays() {
     let mut shell = journey_shell(Vec::new());
     plan(&mut shell);
+    let mut input = InputState::<ActionDescriptor>::default();
+    shell.publish_retained_input_for_test(&mut input, &Theme::default());
     shell.arm_window_activation_note();
     shell.deferred_actions.clear();
     let (_, body) = shell.dock_window_plan.iter().find(|(window_id, _)| window_id == PERSPECTIVE).cloned().expect("🪟️ the perspective pane is planned");
@@ -219,6 +227,7 @@ fn a_press_in_a_docked_pane_arms_the_activation_the_undo_chord_replays() {
     let mut empty = journey_shell(Vec::new());
     assert!(empty.dock.close_window(TOP) && empty.dock.close_window(PERSPECTIVE));
     plan(&mut empty);
+    empty.publish_retained_input_for_test(&mut input, &Theme::default());
     empty.deferred_actions.clear();
     assert!(!empty.activate_window_under_pointer(CANVAS.w * 0.7, CANVAS.h * 0.45, &Theme::light()), "🈳️ an empty dock has no pane to activate — the run-19 state in which `mod+z` carried no `shell.windowActivate`");
 }

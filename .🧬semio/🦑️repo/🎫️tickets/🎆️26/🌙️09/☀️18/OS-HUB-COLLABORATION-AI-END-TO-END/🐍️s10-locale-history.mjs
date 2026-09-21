@@ -60,15 +60,25 @@ try {
   await page.waitForTimeout(3_000);
   say(`EN rows ${JSON.stringify(await rows(), null, 1)}`);
   await page.screenshot({ path: `${OUT}s10-history-en-${TAG}.png` });
-  const input = await palette("Locale");
-  if (input) {
-    await click('[data-slot="command-item"][data-command-item-id="command.os.os.setLocale"]');
-    await page.waitForTimeout(2_500);
-    const de = page.locator('[role="option"], [data-slot="command-item"]').filter({ hasText: /deutsch|german|\bde\b/iu }).first();
-    say(`de option count=${await de.count()}`);
-    if ((await de.count()) > 0) await de.click({ force: true }).catch(() => undefined);
-    await page.waitForTimeout(6_000);
+  // 🌐️ The locale lives on the SETTINGS surface's language tab. The palette's `os.setLocale` row is an
+  // arg-bearing shell command whose chooser renders nothing headlessly (measured: `locale chooser
+  // offers []`), so the settings surface is the honest lane for a locale toggle in a probe.
+  say(`settings ${await click('[id="os.openSettings"], [data-slot="navbar"] [id*="settings" i], button:has-text("Settings")')}`);
+  await page.waitForTimeout(3_000);
+  const controls = await page.evaluate(() => [...document.querySelectorAll('[role="dialog"] [id], [data-slot="settings"] [id], [role="tab"], select, [role="combobox"]')].map((e) => `${e.id || e.getAttribute("role")}|${(e.textContent ?? "").trim().slice(0, 24)}`).slice(0, 30));
+  say(`settings controls ${JSON.stringify(controls, null, 1)}`);
+  const lang = page.locator('[role="tab"], [role="button"], button').filter({ hasText: /language|sprache/iu }).first();
+  if ((await lang.count()) > 0) { await lang.click({ force: true }).catch(() => undefined); await page.waitForTimeout(2_000); }
+  const sel = page.locator('select, [role="combobox"]').filter({ hasText: /english|deutsch|german/iu }).first();
+  say(`locale control count=${await sel.count()}`);
+  if ((await sel.count()) > 0) {
+    const tag = await sel.evaluate((e) => e.tagName.toLowerCase());
+    if (tag === "select") await sel.selectOption("de").catch(() => undefined);
+    else { await sel.click({ force: true }).catch(() => undefined); await page.waitForTimeout(800); await page.locator('[role="option"]').filter({ hasText: /deutsch|german/iu }).first().click({ force: true }).catch(() => undefined); }
   }
+  await page.waitForTimeout(6_000);
+  await page.keyboard.press("Escape").catch(() => undefined);
+  await page.waitForTimeout(2_000);
   await click('[data-slot="panel-tab-button"][id="framework.panel.history"], [id="framework.panel.history"]');
   await page.waitForTimeout(3_000);
   say(`DE rows ${JSON.stringify(await rows(), null, 1)}`);

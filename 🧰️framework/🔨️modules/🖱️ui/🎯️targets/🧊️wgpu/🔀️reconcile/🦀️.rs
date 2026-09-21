@@ -33,7 +33,7 @@ use crate::wgpu::component::ui::{
 };
 use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
 use crate::wgpu::{IconName, UiIntentAddress, UiIntentBindings};
-use ui_contract::{UiDocumentNodePage, UiNodeId, UiNodeRecord, UI_DOCUMENT_NODES};
+use ui_contract::{UI_DOCUMENT_NODES, UiDocumentNodePage, UiNodeId, UiNodeRecord};
 
 //#region 📄️DocumentPageReconcile
 impl UiDocumentTree {
@@ -95,6 +95,7 @@ pub enum UiDocumentReconcileStep {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct UiRetiredComponentScene {
+    pub document_id: UiNodeId,
     pub host_id: String,
     pub window_id: String,
     pub window_generation: u64,
@@ -103,6 +104,18 @@ pub struct UiRetiredComponentScene {
     pub key: NodeKey,
     pub kind: SurfaceKind,
     pub surface_id: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct UiComponentSceneWitness<'a> {
+    pub document_id: UiNodeId,
+    pub host_id: &'a str,
+    pub window_id: &'a str,
+    pub window_generation: u64,
+    pub component_generation: u64,
+    pub key: &'a NodeKey,
+    pub kind: SurfaceKind,
+    pub surface_id: &'a str,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -733,6 +746,7 @@ fn toggle_node(record: &UiNodeRecord, controller: &str) -> UiNode {
     let mut presence = record_presence(record);
     presence.selected = props.on;
     UiNode::Toggle(UiToggleNode {
+        appearance: props.appearance,
         id: record.key.as_str().to_string(),
         icon_id: icon_name(&props.icon),
         text: optional_contract_label(props.text.as_ref()),
@@ -895,7 +909,7 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
                     _ => UiTreeSectionNode { window: None, id: child.key.as_str().to_string(), label: None, default_open: None, presence: record_presence(child), items: vec![tree_item(document, child, surface, controller, 1)] },
                 })
                 .collect();
-            UiNode::Tree(UiTreeNode { sections, presence, drop_action: record_action(record, ui_contract::Trigger::Drop, controller), menu, interaction_domain: props.interaction_domain.as_ref().map(|value| value.as_str().to_string()) })
+            UiNode::Tree(UiTreeNode { presentation: props.presentation, sections, presence, drop_action: record_action(record, ui_contract::Trigger::Drop, controller), menu, interaction_domain: props.interaction_domain.as_ref().map(|value| value.as_str().to_string()) })
         }
         // 🌳️ A tree's section and item records mount as the keyed `Stack` ROWS this engine's
         // interactive sync resolves by id — the document-path twin of `children_of`'s `Tree` arm
@@ -949,7 +963,7 @@ impl UiTree {
     /// re-mount must not drop an open Select's hit-test priority.
     pub fn step_document_reconcile(&mut self, cursor: &mut UiDocumentReconcileCursor, surface: &str, controller: &str) -> UiDocumentReconcileStep {
         let mut component_mount_generation = self.document_bindings().iter().filter_map(|(_, node)| self.node(*node).map(Node::component_generation)).max().unwrap_or(0);
-        self.step_document_reconcile_preserving(cursor, surface, controller, None, 0, None, &mut component_mount_generation, &mut |_| true)
+        self.step_document_reconcile_preserving(cursor, surface, controller, None, 0, None, true, &mut component_mount_generation, &mut |_| true)
     }
 
     /// 🔒️ Reconciles while preserving the synthesized rows owned by the Select whose option has
@@ -963,6 +977,7 @@ impl UiTree {
         preserved_composite_owner: Option<NodeId>,
         window_generation: u64,
         presented: Option<&UiTree>,
+        preserve_candidate_scene_identity: bool,
         component_mount_generation: &mut u64,
         retire_scene: &mut impl FnMut(UiRetiredComponentScene) -> bool,
     ) -> UiDocumentReconcileStep {
@@ -1004,11 +1019,7 @@ impl UiTree {
                 let children: Vec<UiNodeId> = {
                     let Some(document) = self.document() else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
                     let Some(record) = document.record(id) else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
-                    if record_consumes_subtree(record) {
-                        Vec::new()
-                    } else {
-                        record.children.iter().rev().copied().collect()
-                    }
+                    if record_consumes_subtree(record) { Vec::new() } else { record.children.iter().rev().copied().collect() }
                 };
                 let index = cursor.plan.len();
                 cursor.plan.push(PlannedNode { id, parent, node: None });
@@ -1045,38 +1056,41 @@ impl UiTree {
                         let node = tree.document_node(planned.id)?;
                         let retained = tree.node(node)?;
                         let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
-                        (retained.key == key && scene.component_kind == next.component_kind && scene.surface_id == next.surface_id)
-                            .then(|| (scene.host_id.clone(), retained.component_generation()))
+                        (retained.key == key && scene.component_kind == next.component_kind && scene.surface_id == next.surface_id).then(|| (scene.host_id.clone(), retained.component_generation()))
                     }),
                     _ => None,
                 };
                 let node = match self.document_node(planned.id).filter(|node| self.contains(*node)) {
                     Some(node) => {
-                        let Some((retirement, candidate_scene)) = self.node(node).map(|existing| {
+                        let Some((old_scene, candidate_scene)) = self.node(node).map(|existing| {
                             let old_scene = match &existing.spec.0 {
                                 UiNode::ComponentScene(scene) => Some(scene),
                                 _ => None,
                             };
-                            let survives = matches!(
+                            let same_logical_scene = matches!(
                                 (old_scene, &spec.0),
                                 (Some(old_scene), UiNode::ComponentScene(next_scene))
                                     if existing.key == key && old_scene.component_kind == next_scene.component_kind && old_scene.surface_id == next_scene.surface_id
                             );
-                            let retirement = old_scene.filter(|_| !survives).map(|old_scene| UiRetiredComponentScene {
-                                host_id: old_scene.host_id.clone(),
-                                window_id: surface.to_owned(),
-                                window_generation,
-                                component_generation: existing.component_generation(),
-                                node,
-                                key: existing.key.clone(),
-                                kind: old_scene.component_kind,
-                                surface_id: old_scene.surface_id.clone(),
-                            });
-                            let candidate_scene = survives.then(|| (old_scene.expect("surviving scene").host_id.clone(), existing.component_generation()));
-                            (retirement, candidate_scene)
-                        }) else { return cursor.refuse(UiDocumentReconcileFault::Detached) };
+                            let old_scene = old_scene.map(|old_scene| (old_scene.host_id.clone(), existing.component_generation(), existing.key.clone(), old_scene.component_kind, old_scene.surface_id.clone()));
+                            let candidate_scene = if preserve_candidate_scene_identity && same_logical_scene { old_scene.as_ref().map(|(host_id, generation, ..)| (host_id.clone(), *generation)) } else { None };
+                            (old_scene, candidate_scene)
+                        }) else {
+                            return cursor.refuse(UiDocumentReconcileFault::Detached);
+                        };
+                        let preserved_scene_identity = presented_scene.or(candidate_scene);
+                        let retirement = old_scene.filter(|(host_id, _, _, _, _)| {
+                            let owned = preserve_candidate_scene_identity || presented.is_some_and(|tree| tree.component_scene_host_is_mounted(host_id));
+                            let survives = preserved_scene_identity.as_ref().is_some_and(|(preserved_host, _)| preserved_host == host_id);
+                            owned && !survives
+                        });
+                        if let Some((host_id, generation, key, kind, surface_id)) = retirement {
+                            if !retire_scene(UiRetiredComponentScene { document_id: planned.id, host_id, window_id: surface.to_owned(), window_generation, component_generation: generation, node, key, kind, surface_id }) {
+                                return UiDocumentReconcileStep::Pending;
+                            }
+                        }
                         let scene_identity = if matches!(&spec.0, UiNode::ComponentScene(_)) {
-                            match presented_scene.or(candidate_scene) {
+                            match preserved_scene_identity {
                                 Some(identity) => Some(identity),
                                 None => {
                                     let Some(generation) = component_mount_generation.checked_add(1) else { return cursor.refuse(UiDocumentReconcileFault::ComponentGeneration) };
@@ -1089,9 +1103,6 @@ impl UiTree {
                         };
                         if let UiNode::ComponentScene(scene) = &mut spec.0 {
                             scene.host_id = scene_identity.as_ref().expect("scene mount identity").0.clone();
-                        }
-                        if retirement.is_some_and(|retirement| !retire_scene(retirement)) {
-                            return UiDocumentReconcileStep::Pending;
                         }
                         if let Some(existing) = self.node_mut(node) {
                             if let Some((_, generation)) = scene_identity {
@@ -1170,6 +1181,7 @@ impl UiTree {
                 let retirement = self.node(node).and_then(|existing| {
                     let UiNode::ComponentScene(scene) = &existing.spec.0 else { return None };
                     Some(UiRetiredComponentScene {
+                        document_id: id,
                         host_id: scene.host_id.clone(),
                         window_id: surface.to_owned(),
                         window_generation,

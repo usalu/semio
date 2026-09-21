@@ -125,11 +125,24 @@ pub enum SpaceAdministrationPaintOp {
     /// 🕶️ The sheet's own surface (glass, like every other shell overlay).
     Sheet(Rect),
     /// 🎨️ One filled rect — a row's disabled tint or a control's button face.
-    Fill { rect: Rect, color: Rgba },
-    Text { value: String, x: f32, y: f32, max_w: f32, size: f32, color: Rgba },
+    Fill {
+        rect: Rect,
+        color: Rgba,
+    },
+    Text {
+        value: String,
+        x: f32,
+        y: f32,
+        max_w: f32,
+        size: f32,
+        color: Rgba,
+    },
     /// 🎯️ One hit-testable control. A DISABLED control registers nothing: React renders the button
     /// with `disabled`, and a hit target no click may act on is worse than none.
-    Hit { rect: Rect, control_id: String },
+    Hit {
+        rect: Rect,
+        control_id: String,
+    },
     /// 🖱️ The step that applies this frame's click, last, so every hit above it is registered first.
     Clicks,
 }

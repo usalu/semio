@@ -10,7 +10,7 @@ use semio_framework_plugin::{artifact_app_laws, Effect, PluginApp};
 async fn settled(app: &mut PresentationApp, command: PresentationCommand) -> artifact_app_laws::TypedOperationFixtureReceipt {
     let instance_id = artifact_app_laws::meta("local").instance_id;
     app.dispatch_typed(command, &artifact_app_laws::meta("local")).await.expect("dispatch");
-    artifact_app_laws::settle_registered_typed_operation(app, instance_id).await.expect("retained publication settles")
+    artifact_app_laws::settle_registered_typed_operation(&mut **app, instance_id).await.expect("retained publication settles")
 }
 
 async fn selected_tiles(app: &PresentationApp) -> Vec<String> {
@@ -31,5 +31,5 @@ async fn canvas_pointer_down_selects_a_hit_inline_and_clears_on_miss() {
     let miss = settled(&mut app, PresentationCommand::CanvasPointerDown(CanvasPointerDown { layer_id: Some("source-frame".into()) })).await;
     assert!(!miss.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "the clearing interactionSelect is folded too: {:?}", miss.effects);
     assert!(selected_tiles(&app).await.is_empty(), "a miss clears the tiles selection inside the carrying operation");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut *app);
 }

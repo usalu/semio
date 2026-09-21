@@ -223,7 +223,7 @@ fn painting_a_waiting_stack_emits_a_waiting_border_instance() {
 }
 
 fn loading_tree() -> UiNode {
-    UiNode::Tree(UiTreeNode {
+    UiNode::Tree(UiTreeNode { presentation: Default::default(),
         sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
         presence: UiPresence::status(UiStatus::Loading),
         drop_action: None,
@@ -233,7 +233,7 @@ fn loading_tree() -> UiNode {
 }
 
 fn waiting_tree() -> UiNode {
-    UiNode::Tree(UiTreeNode {
+    UiNode::Tree(UiTreeNode { presentation: Default::default(),
         sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
         presence: UiPresence::status(UiStatus::Waiting),
         drop_action: None,
@@ -349,7 +349,7 @@ fn tree_with_item_description() -> UiNode {
     let mut item = UiTreeItemNode::base("i1", Label::data("Item One"));
     item.description = Some("desc".into());
     item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), placement: None }]);
-    UiNode::Tree(UiTreeNode {
+    UiNode::Tree(UiTreeNode { presentation: Default::default(),
         sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
         presence: UiPresence::default(),
         drop_action: None,
@@ -359,7 +359,7 @@ fn tree_with_item_description() -> UiNode {
 }
 
 fn tree_with_bare_item() -> UiNode {
-    UiNode::Tree(UiTreeNode {
+    UiNode::Tree(UiTreeNode { presentation: Default::default(),
         sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item One"))] }],
         presence: UiPresence::default(),
         drop_action: None,
@@ -674,7 +674,7 @@ fn an_activatable_stack_paints_a_frame_and_a_selected_one_paints_an_extra_ring()
 fn tree_with_draggable_item() -> UiNode {
     let mut item = UiTreeItemNode::base("i1", Label::data("Item One"));
     item.draggable = Some(true);
-    UiNode::Tree(UiTreeNode {
+    UiNode::Tree(UiTreeNode { presentation: Default::default(),
         sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
         presence: UiPresence::default(),
         drop_action: None,
@@ -801,7 +801,7 @@ fn painting_a_focused_input_shows_the_live_edit_buffer_text_not_the_stale_declar
 }
 
 fn toggle(id: &str) -> UiNode {
-    UiNode::Toggle(UiToggleNode { id: id.into(), icon_id: IconName::CircleDot, text: Some(Label::data("Toggle")), on_change: action(), presence: UiPresence::default(), menu: None })
+    UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: id.into(), icon_id: IconName::CircleDot, text: Some(Label::data("Toggle")), on_change: action(), presence: UiPresence::default(), menu: None })
 }
 
 fn icon_select(id: &str) -> UiNode {
@@ -1036,7 +1036,7 @@ fn retained_select_sync_max_plus_one_fault_closes_exact_cursor_owner() {
 #[test]
 fn retained_tree_sync_skips_a_declared_row_the_document_never_mounted() {
     let section = |id: &str, item: &str| UiTreeSectionNode { window: None, id: id.into(), label: Some(Label::data(id)), default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base(item, Label::data(item))] };
-    let tree_of = |id: &str, item: &str| UiNode::Tree(UiTreeNode { sections: vec![section(id, item)], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None });
+    let tree_of = |id: &str, item: &str| UiNode::Tree(UiTreeNode { presentation: Default::default(), sections: vec![section(id, item)], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None });
     let (mut tree, root, theme, _) = setup(&tree_of("mounted", "row"));
     let Some(node) = tree.node_mut(root) else { panic!("retained tree root") };
     node.spec = crate::wgpu::tree::WidgetSpec(tree_of("never-mounted", "ghost"));
@@ -1059,7 +1059,7 @@ fn retained_tree_sync_abandonment_releases_one_record_or_depth_owner_per_grant()
     let mut nested = UiTreeItemNode::base("nested", Label::data("Nested"));
     nested.default_open = Some(true);
     nested.items = Some(vec![UiTreeItemNode::base("leaf", Label::data("Leaf"))]);
-    let authored = UiNode::Tree(UiTreeNode {
+    let authored = UiNode::Tree(UiTreeNode { presentation: Default::default(),
         sections: vec![UiTreeSectionNode { window: None, id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }],
         presence: UiPresence::default(),
         drop_action: None,

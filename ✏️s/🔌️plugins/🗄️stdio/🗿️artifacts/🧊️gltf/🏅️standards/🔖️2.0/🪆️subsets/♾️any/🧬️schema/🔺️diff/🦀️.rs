@@ -23,6 +23,46 @@ use crate::schema::snapshot::{
     GltfJson, GltfMaterial, GltfMesh, GltfMorphTarget, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive, GltfSampler, GltfScene, GltfSkin, GltfSnapshot,
     GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues, GltfTexture, GltfTextureInfo,
 };
+//#region 🔖️JsonPresence
+/// 🈳️ Wire form for a diff slot holding `Option<Option<GltfJson>>`. Three states must stay
+/// DISTINCT on the wire: "unchanged" (outer `None` — the key is absent, `skip_serializing_if`),
+/// "cleared" (`Some(None)`) and "set to a JSON value" (`Some(Some(v))`). A bare `null` cannot
+/// carry that, because [`GltfJson`] has its own `Null` variant: glTF 2.0 §3.2's `extras`/
+/// `extensions` may legitimately hold JSON `null`, so `Some(Some(GltfJson::Null))` and
+/// `Some(None)` both printed `null` and `Option`'s own `FromValue` read either one back as the
+/// outer `None` — the change vanished from every JSON wire round trip (`GltfDiff` -> text ->
+/// `GltfDiff`), taking the inverse mutation with it. The presence tag is the same `state`/`value`
+/// vocabulary `GltfDataPresence` (the change-extras mutation payload) already spells.
+/// https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
+pub mod json_presence {
+    use super::GltfJson;
+
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn to_value(value: &Option<Option<GltfJson>>) -> dsl::DslValue {
+        match value {
+            None => dsl::DslValue::Null,
+            Some(None) => dsl::DslValue::object([("state".to_string(), dsl::DslValue::String("absent".to_string()))]),
+            Some(Some(inner)) => dsl::DslValue::object([("state".to_string(), dsl::DslValue::String("present".to_string())), ("value".to_string(), dsl::ToValue::to_value(inner))]),
+        }
+    }
+
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn from_value(value: dsl::DslValue) -> Result<Option<Option<GltfJson>>, dsl::ValueError> {
+        let dsl::DslValue::Object(entries) = &value else {
+            return Err(dsl::ValueError::new("expected a presence object {state,value}"));
+        };
+        match entries.iter().find(|(key, _)| key == "state").map(|(_, state)| state) {
+            Some(dsl::DslValue::String(state)) if state == "absent" => Ok(Some(None)),
+            Some(dsl::DslValue::String(state)) if state == "present" => {
+                let inner = entries.iter().find(|(key, _)| key == "value").map(|(_, inner)| inner.clone()).unwrap_or(dsl::DslValue::Null);
+                Ok(Some(Some(<GltfJson as dsl::FromValue>::from_value(inner)?)))
+            }
+            _ => Err(dsl::ValueError::new("presence object needs state = \"absent\" | \"present\"")),
+        }
+    }
+}
+//#endregion 🔖️JsonPresence
+
 // 🧬️ `GltfDocument` is only reached through `mod tests`' `use super::*;` glob (its non-test uses
 // below are all inside `#[cfg(test)]`), so — like the reactor/puzzle wasm-only imports elsewhere in
 // this ticket — it must be gated to its actual consumer or it warns unused on the plain `lib` build.
@@ -366,9 +406,9 @@ pub struct GltfAssetDiff {
     pub copyright: Option<Option<String>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub min_version: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extras: Option<Option<GltfJson>>,
 }
 
@@ -454,9 +494,9 @@ pub struct GltfSceneDiff {
     pub nodes: Option<Vec<usize>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extras: Option<Option<GltfJson>>,
 }
 
@@ -534,9 +574,9 @@ pub struct GltfNodeDiff {
     pub weights: Option<Vec<f64>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extras: Option<Option<GltfJson>>,
 }
 
@@ -664,9 +704,9 @@ pub struct GltfMeshDiff {
     pub weights: Option<Vec<f64>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extras: Option<Option<GltfJson>>,
 }
 
@@ -752,9 +792,9 @@ pub struct GltfAccessorDiff {
     pub sparse: Option<Option<GltfSparseAccessor>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extras: Option<Option<GltfJson>>,
 }
 
@@ -894,9 +934,9 @@ pub struct GltfMaterialDiff {
     pub alpha_cutoff: Option<f64>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub double_sided: Option<bool>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extras: Option<Option<GltfJson>>,
 }
 
@@ -1021,9 +1061,9 @@ pub struct GltfBufferDiff {
     pub uri: Option<Option<String>>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<Option<String>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extras: Option<Option<GltfJson>>,
 }
 
@@ -1163,10 +1203,10 @@ pub struct GltfDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub extensions_required: Option<Vec<String>>,
     #[state(artifact)]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extensions: Option<Option<GltfJson>>,
     #[state(artifact)]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "json_presence")]
     pub extras: Option<Option<GltfJson>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]

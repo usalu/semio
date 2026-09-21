@@ -14,5 +14,5 @@ pub fn diff(payload: &DeleteKnowledgeRecord, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", "No knowledge record exists with this id.", [payload.id.0.clone()]);
     }
     records.retain(|row| row.header.id != payload.id);
-    protocol::MutationOutcome::new(ProgramDiff { knowledge: Some(crate::knowledge_child_from_records(&records)), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { knowledge_payload: Some(records.clone()), knowledge: Some(crate::knowledge_child_from_records(&records)), ..Default::default() })
 }

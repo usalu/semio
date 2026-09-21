@@ -81,7 +81,7 @@ async fn a_missing_edge_is_reported_by_its_edge_id_not_by_an_endpoint() {
         ("disconnect", "relationship", "disconnect-nodes", "DisconnectedNodes"),
         "the fixture must be bound to disconnect-nodes' own descriptor — entity `relationship`, not `node`"
     );
-    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()), "Disconnect edge \"edge-severed\"", "disconnect-nodes' undo label quotes the edge id");
+    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()).resolve(protocol::Terminology::Native, protocol::Locale::En), "Disconnect edge \"edge-severed\"", "disconnect-nodes' undo label quotes the edge id");
 }
 
 /// ↩️ `disconnect-nodes` inverts by rebuilding a `connect-nodes` from BOTH halves captured off

@@ -53,7 +53,7 @@ fn a_childful_up_flow_tree_item_registers_label_and_gutter_on_its_painted_bottom
     branch.items = Some(vec![child]);
     let section = UiTreeSectionNode { window: None, id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![branch] };
     let mut tree = UiTree::new();
-    let owner = tree.insert_child(None, Node::new(NodeKey::Explicit("tree".into()), WidgetSpec(UiNode::Tree(UiTreeNode { sections: vec![section], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }))));
+    let owner = tree.insert_child(None, Node::new(NodeKey::Explicit("tree".into()), WidgetSpec(UiNode::Tree(UiTreeNode { presentation: Default::default(), sections: vec![section], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }))));
     let row = |id: &str| {
         UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
@@ -196,7 +196,7 @@ fn shared_tree_drag_fixture_projects_driver_specific_row_and_handle_targets() {
         item.drag_data = drag_data;
         let section = UiTreeSectionNode { window: None, id: "fixture".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
         let mut tree = UiTree::new();
-        let owner = tree.insert_child(None, Node::new(NodeKey::Explicit("tree".into()), WidgetSpec(UiNode::Tree(UiTreeNode { sections: vec![section], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }))));
+        let owner = tree.insert_child(None, Node::new(NodeKey::Explicit("tree".into()), WidgetSpec(UiNode::Tree(UiTreeNode { presentation: Default::default(), sections: vec![section], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }))));
         let stack = UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(id.into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None };
         let row_node = tree.insert_child(Some(owner), Node::new(NodeKey::Explicit(id.into()), WidgetSpec(UiNode::Stack(stack))));
         let rect = Rect::new(0.0, 0.0, row_width, metrics.row_height);

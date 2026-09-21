@@ -2626,11 +2626,12 @@ impl PreparedRenderJob {
         let (usage, next) = match *cursor {
             DrawMeasureCursor::LayerHeader(layer) => {
                 let Some(value) = draw.layers.get(layer) else {
-                    *cursor = DrawMeasureCursor::PassHeader(0);
+                    *cursor = DrawMeasureCursor::Complete;
                     return Some(PreparedRenderUsage::default());
                 };
                 let _ = value;
-                let next = Self::layer_channel_cursor(draw, layer, 0);
+                let region = draw.glass_regions.partition_point(|region| region.layer_index < layer);
+                let next = if draw.glass_regions.get(region).is_some_and(|region| region.layer_index == layer) { DrawMeasureCursor::Glass(region) } else { Self::layer_channel_cursor(draw, layer, 0) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<DrawLayer>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::LayerUi { layer, item, overlay } => {
@@ -2660,7 +2661,7 @@ impl PreparedRenderJob {
             }
             DrawMeasureCursor::PassHeader(pass) => {
                 let Some(value) = draw.scene_passes.get(pass) else {
-                    *cursor = DrawMeasureCursor::Glass(0);
+                    *cursor = DrawMeasureCursor::Complete;
                     return Some(PreparedRenderUsage::default());
                 };
                 let next = if value.shadow.enabled && value.shadow_draws.iter().any(|draw| draw.shadow_role.casts && !draw.instances.is_empty()) { DrawMeasureCursor::PassShadowBegin(pass) } else { Self::next_after_shadow(draw, pass) };
@@ -2800,11 +2801,8 @@ impl PreparedRenderJob {
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::Glass(index) => {
-                if index >= draw.glass_regions.len() {
-                    *cursor = DrawMeasureCursor::Complete;
-                    return Some(PreparedRenderUsage::default());
-                }
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::GlassRegion>(), ..PreparedRenderUsage::default() }, DrawMeasureCursor::Glass(index + 1))
+                let region = draw.glass_regions.get(index)?;
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::GlassRegion>(), ..PreparedRenderUsage::default() }, Self::layer_channel_cursor(draw, region.layer_index, 0))
             }
             DrawMeasureCursor::Complete => return None,
         };
@@ -2816,15 +2814,16 @@ impl PreparedRenderJob {
         let instances = if overlay { &draw.layers[layer].overlay_raster_instances } else { &draw.layers[layer].raster_instances };
         if raster + 1 < instances.len() {
             DrawMeasureCursor::LayerRaster { layer, raster: raster + 1, overlay }
+        } else if overlay {
+            Self::layer_channel_cursor(draw, layer, 6)
         } else {
-            Self::layer_channel_cursor(draw, layer, if overlay { 6 } else { 3 })
+            Self::next_after_layer(draw, layer)
         }
     }
 
-    /// 🥞️ The six channels one `DrawLayer` publishes, walked in the order the IMMEDIATE renderer
-    /// composites them (`Pipelines::render`: the ui/vector pass, then `ui_raster_pass`, then the
-    /// `overlay_pass` LAST) — opaque ui, opaque vector, rasters, overlay ui, overlay vector,
-    /// overlay rasters.
+    /// 🥞️ The six channels one `DrawLayer` publishes. Normal ui, vector, and raster channels
+    /// terminate at that layer's scene passes; its overlay ui, vector, and raster channels resume
+    /// after those passes and before the following layer.
     ///
     /// 🩸️ This walk used to put the RASTERS last, after both overlay channels, so within one layer an
     /// engine surface's opaque vello texture was composited ON TOP of the overlay glyphs painted over
@@ -2835,9 +2834,10 @@ impl PreparedRenderJob {
     /// `📓️w14b-generation3d-labels-preview-layout.md`).
     fn layer_channel_cursor(draw: &DrawList, layer: usize, from_channel: u8) -> DrawMeasureCursor {
         let Some(value) = draw.layers.get(layer) else {
-            return DrawMeasureCursor::LayerHeader(layer + 1);
+            return DrawMeasureCursor::Complete;
         };
-        for channel in from_channel..6 {
+        let terminal_channel = if from_channel < 3 { 3 } else { 6 };
+        for channel in from_channel..terminal_channel {
             match channel {
                 0 if !value.ui_instances.is_empty() => return DrawMeasureCursor::LayerUi { layer, item: 0, overlay: false },
                 1 if !value.vector_vertices.is_empty() => return DrawMeasureCursor::LayerVector { layer, item: 0, overlay: false },
@@ -2848,7 +2848,25 @@ impl PreparedRenderJob {
                 _ => {}
             }
         }
-        DrawMeasureCursor::LayerHeader(layer + 1)
+        if from_channel < 3 { Self::next_after_layer(draw, layer) } else { DrawMeasureCursor::LayerHeader(layer + 1) }
+    }
+
+    fn next_after_layer(draw: &DrawList, layer: usize) -> DrawMeasureCursor {
+        let pass = draw.scene_passes.partition_point(|pass| pass.layer_index < layer);
+        if draw.scene_passes.get(pass).is_some_and(|pass| pass.layer_index == layer) {
+            DrawMeasureCursor::PassHeader(pass)
+        } else {
+            Self::layer_channel_cursor(draw, layer, 3)
+        }
+    }
+
+    fn next_after_scene_pass(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
+        let Some(value) = draw.scene_passes.get(pass) else { return DrawMeasureCursor::Complete };
+        if draw.scene_passes.get(pass + 1).is_some_and(|next| next.layer_index == value.layer_index) {
+            DrawMeasureCursor::PassHeader(pass + 1)
+        } else {
+            Self::layer_channel_cursor(draw, value.layer_index, 3)
+        }
     }
 
     fn next_pass_instance(draw: &DrawList, pass: usize, draw_index: usize, instance: usize, translucent: bool) -> DrawMeasureCursor {
@@ -2935,7 +2953,7 @@ impl PreparedRenderJob {
         {
             DrawMeasureCursor::PassMaterial { pass, draw: next, translucent }
         } else if translucent {
-            DrawMeasureCursor::PassHeader(pass + 1)
+            Self::next_after_scene_pass(draw, pass)
         } else if !draw.scene_passes[pass].draws.is_empty() {
             DrawMeasureCursor::PassDraw { pass, draw: 0, translucent: false }
         } else {
@@ -3000,7 +3018,7 @@ impl PreparedRenderJob {
     }
 
     fn next_after_translucent(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
-        Self::first_material(draw, pass, true).unwrap_or(DrawMeasureCursor::PassHeader(pass + 1))
+        Self::first_material(draw, pass, true).unwrap_or_else(|| Self::next_after_scene_pass(draw, pass))
     }
 
     fn next_textured_draw(draw: &DrawList, pass: usize, draw_index: usize) -> DrawMeasureCursor {

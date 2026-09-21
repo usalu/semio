@@ -332,6 +332,15 @@ pub mod standards {
             #[path = "."]
             pub mod i_json {
                 #[path = "."]
+                pub mod examples {
+                    #[path = "."]
+                    pub mod demo {
+                        #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/📚️examples/🎬️demo/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+                #[path = "."]
                 pub mod schema {
                     #[path = "🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json/🧬️schema/🦀️.rs"]
                     mod component;

@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/prepared-gpu-clip-pieces-v1.json",
+  "title": "Prepared GPU Clip Piece Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "surface", "cases"],
+  "properties": {
+    "schema": { "const": "semio.ui.prepared-gpu-clip-pieces.v1" },
+    "surface": { "$ref": "#/$defs/rectSize" },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "dpr", "scissor", "clip", "sceneViewport", "expected", "samples"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["ui", "glass", "world"] },
+          "dpr": { "type": "number", "exclusiveMinimum": 0, "maximum": 8 },
+          "scissor": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/rect" }] },
+          "clip": { "oneOf": [{ "type": "null" }, { "type": "array", "items": { "$ref": "#/$defs/rect" } }] },
+          "sceneViewport": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/rect" }] },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["accepted", "logicalPieces", "physicalPieces", "colorEncodes", "snapshots", "glassComposites", "shadowBegins", "commandAdvances"],
+            "properties": {
+              "accepted": { "type": "boolean" },
+              "logicalPieces": { "type": "array", "items": { "$ref": "#/$defs/rect" } },
+              "physicalPieces": { "type": "array", "items": { "$ref": "#/$defs/rect" } },
+              "colorEncodes": { "type": "integer", "minimum": 0 },
+              "snapshots": { "type": "integer", "minimum": 0 },
+              "glassComposites": { "type": "integer", "minimum": 0 },
+              "shadowBegins": { "type": "integer", "minimum": 0 },
+              "commandAdvances": { "type": "integer", "minimum": 0, "maximum": 1 }
+            }
+          },
+          "samples": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["at", "painted"],
+              "properties": {
+                "at": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": { "type": "integer", "minimum": 0 }
+                },
+                "painted": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "rectSize": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "integer", "minimum": 1, "maximum": 16384 }
+    },
+    "rect": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "type": "integer", "minimum": 0, "maximum": 16384 }
+    }
+  }
+}

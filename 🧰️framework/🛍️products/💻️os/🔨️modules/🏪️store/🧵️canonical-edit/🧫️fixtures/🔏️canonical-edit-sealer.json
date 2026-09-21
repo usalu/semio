@@ -86,9 +86,9 @@
     },
     {
       "kind": "contributed",
-      "plugin_id": "plugin-✓",
-      "mutation_id": "schema#mutation",
-      "payload_hash": [
+      "pluginId": "plugin-✓",
+      "mutationId": "schema#mutation",
+      "payloadHash": [
         0,
         1,
         2,

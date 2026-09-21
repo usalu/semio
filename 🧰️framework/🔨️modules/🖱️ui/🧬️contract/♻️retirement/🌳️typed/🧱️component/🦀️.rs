@@ -131,6 +131,8 @@ typed_scalar!(
     Trigger,
     ContainerRole,
     InputKind,
+    ToggleAppearance,
+    TreePresentation,
     RowActionPlacement,
     SurfaceKind,
     Liveness,

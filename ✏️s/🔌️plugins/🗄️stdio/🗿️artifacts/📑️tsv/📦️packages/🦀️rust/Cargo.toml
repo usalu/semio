@@ -19,6 +19,7 @@ default = []
 component-app-assembly = []
 
 [dependencies]
+semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }

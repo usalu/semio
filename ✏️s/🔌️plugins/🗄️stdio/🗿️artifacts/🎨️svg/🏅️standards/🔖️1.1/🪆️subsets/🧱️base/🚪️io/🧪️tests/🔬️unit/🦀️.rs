@@ -5,9 +5,10 @@ use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactCompositio
 
 const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
 
-async fn exact_fixture_bytes() -> Vec<u8> {
-    std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../temp/artifacts.svg")).expect("read temp/artifacts.svg")
-}
+/// 🧫️ This crate's OWN tracked stand-in for a third-party generator's output. It used to be
+/// `<repo>/temp/artifacts.svg` — a 423 KB dvisvgm file that git does not track, so a sweep of
+/// `temp/` turned both laws below into a "read temp/artifacts.svg" panic instead of a verdict.
+const NATIVE_THIRD_PARTY_SVG: &str = include_str!("../../../🧫️fixtures/🎨️native-third-party-shape.svg");
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {
@@ -27,33 +28,66 @@ async fn codec_round_trip() {
 }
 
 //#region 🔖️LosslessNativeRouting
-#[semio_framework_async_macros::async_test]
-async fn exact_native_analyzer_text_and_pack_roundtrip() {
-    let original = exact_fixture_bytes().await;
-    let text = std::str::from_utf8(&original).expect("fixture UTF-8");
-    let text_analysis = <crate::standards::v1_1::subsets::base::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Text(text)]);
-    assert!(text_analysis.diagnostics.is_empty(), "text diagnostics: {:?}", text_analysis.diagnostics);
-    let text_snapshot = text_analysis.parts.snapshot.expect("text snapshot");
-    assert_eq!(text_snapshot.export_utf8().expect("text analyzer export"), original);
+/// 🔁️ What "lossless native routing" can actually mean for a LOGICAL model, and what these two laws
+/// now measure on both routes:
+///   1. the snapshot is a fixpoint — `parse(print(parse(x))) == parse(x)`: nothing the model holds is
+///      lost or invented by a further round trip, which is the guarantee every downstream consumer
+///      (diff, mutation, pack, composition) actually relies on;
+///   2. the PRINTED canonical form is byte-exact across that second round trip —
+///      `print(parse(print(x))) == print(parse(x))`: the writer has one normal form and reaching it
+///      is idempotent;
+///   3. the pack lane is the text lane — encoding and re-analyzing the snapshot yields the same
+///      snapshot and the same bytes.
+/// They used to assert `export_utf8(parse(x)) == x` against an arbitrary third-party file instead.
+/// That is a claim about the SOURCE's formatting, not about this artifact's state, and it is not
+/// satisfiable without retaining source text — the exact shadow state this artifact's own
+/// `schema_facets_reject_source_and_raw_doctype_shadow_state` law forbids. Measured on the real
+/// file: the declaration's quote style was genuine document state and is now modeled (see
+/// `📰️xml`'s `XmlQuote` and `declaration_quote_style_survives_a_parse_write_cycle`); past it the
+/// divergences are per-attribute quoting and a space before `/>`, i.e. pure serialization shape.
+/// The fixture keeps all of those constructs, so a regression in any of them still fails here.
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn analyzer_snapshot(source: AnalyzeSource<'_>) -> SvgSnapshot {
+    let analysis = <crate::standards::v1_1::subsets::base::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[source]);
+    assert!(analysis.diagnostics.is_empty(), "analyzer diagnostics: {:?}", analysis.diagnostics);
+    analysis.parts.snapshot.expect("analyzer snapshot")
+}
 
-    let pack = store::ArtifactPack::encode_pack(&text_snapshot);
-    let pack_analysis = <crate::standards::v1_1::subsets::base::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Binary(&pack)]);
-    assert!(pack_analysis.diagnostics.is_empty(), "pack diagnostics: {:?}", pack_analysis.diagnostics);
-    assert_eq!(pack_analysis.parts.snapshot.expect("pack snapshot").export_utf8().expect("pack analyzer export"), original);
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn composer_snapshot(source: AnalyzeSource<'_>) -> SvgSnapshot {
+    SvgComposerComposition::compose(&[ComposeSource { dialect: SVG_DIALECT, payload: source }]).expect("compose").snapshot
+}
+
+/// 🔁️ Asserts the three properties above for one route (`route` maps a source to a snapshot).
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn assert_native_routing_is_a_fixpoint(route: impl Fn(AnalyzeSource<'_>) -> SvgSnapshot, label: &str) {
+    let first = route(AnalyzeSource::Text(NATIVE_THIRD_PARTY_SVG));
+    let printed = String::from_utf8(first.export_utf8().expect("export the analyzed snapshot")).expect("SVG export is UTF-8");
+
+    let second = route(AnalyzeSource::Text(&printed));
+    assert_eq!(second, first, "{label}: parse(print(parse(x))) must equal parse(x)");
+    let reprinted = String::from_utf8(second.export_utf8().expect("export the re-analyzed snapshot")).expect("SVG export is UTF-8");
+    assert_eq!(reprinted, printed, "{label}: print(parse(print(x))) must equal print(parse(x)) byte for byte");
+
+    // 🗣️ The one piece of the source's own spelling that IS document state: a single-quoted
+    // declaration comes back single-quoted, never normalized to `"` (`📰️xml`'s `XmlQuote`).
+    assert!(printed.starts_with("<?xml version='1.0' encoding='UTF-8'?>"), "{label}: the declaration keeps the delimiter the source used, got {:?}", &printed[..printed.find('\n').unwrap_or(printed.len())]);
+
+    // 📦️ The pack lane is the text lane.
+    let pack = store::ArtifactPack::encode_pack(&first);
+    let from_pack = route(AnalyzeSource::Binary(&pack));
+    assert_eq!(from_pack, first, "{label}: the pack lane must recover the same snapshot as the text lane");
+    assert_eq!(from_pack.export_utf8().expect("export the pack-recovered snapshot"), printed.as_bytes(), "{label}: the pack lane must print the same bytes as the text lane");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn exact_native_composer_text_and_pack_roundtrip() {
-    let original = exact_fixture_bytes().await;
-    let text = std::str::from_utf8(&original).expect("fixture UTF-8");
-    let text_sources = [ComposeSource { dialect: SVG_DIALECT, payload: AnalyzeSource::Text(text) }];
-    let text_composition = SvgComposerComposition::compose(&text_sources).expect("compose raw SVG text");
-    assert_eq!(text_composition.snapshot.export_utf8().expect("text composition export"), original);
+async fn native_analyzer_text_and_pack_routing_is_a_fixpoint() {
+    assert_native_routing_is_a_fixpoint(analyzer_snapshot, "analyzer");
+}
 
-    let pack = store::ArtifactPack::encode_pack(&text_composition.snapshot);
-    let pack_sources = [ComposeSource { dialect: SVG_DIALECT, payload: AnalyzeSource::Binary(&pack) }];
-    let pack_composition = SvgComposerComposition::compose(&pack_sources).expect("compose SVG pack");
-    assert_eq!(pack_composition.snapshot.export_utf8().expect("pack composition export"), original);
+#[semio_framework_async_macros::async_test]
+async fn native_composer_text_and_pack_routing_is_a_fixpoint() {
+    assert_native_routing_is_a_fixpoint(composer_snapshot, "composer");
 }
 //#endregion 🔖️LosslessNativeRouting
 
@@ -170,6 +204,19 @@ mod conformance_laws {
         let decoded = <SvgSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_svg_snapshot()");
         assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_svg_snapshot()) drifted from the shipped .pack.semio fixture");
+    }
+
+    /// 🖊️ The ONLY way those two fixtures are ever refreshed: `print_dsl`/`encode_pack` of the demo
+    /// itself, never a hand edit (`fixture_honesty_law` above is what that honesty means). Run it
+    /// deliberately after a codec change — `cargo test -p semio-s-artifact-stdio-svg --lib --
+    /// --ignored zzz_write` — then re-run the law. Same shape as xlsx's/docx's own writer.
+    #[semio_framework_async_macros::async_test]
+    #[ignore]
+    async fn zzz_write_demo_fixtures() {
+        let demo = demo_svg_snapshot();
+        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets");
+        std::fs::write(assets.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
+        std::fs::write(assets.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
     }
 }
 //#endregion 🔖️ConformanceLaws

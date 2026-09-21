@@ -91,7 +91,10 @@ message XmlAttr {
 }
 
 message XmlDeclaration {
+  // 🗣️ Delimiter the pseudo-attributes are written with (XML 1.0 §2.8); unset = DOUBLE.
+  enum Quote { DOUBLE = 0; SINGLE = 1; }
   string version = 1;
   optional string encoding = 2;
   optional bool standalone = 3;
+  optional Quote quote = 4;
 }

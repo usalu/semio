@@ -34,16 +34,7 @@ fn member_space(id: &str, name: &str, role: DirectorySpaceRole, updated_at_ms: i
 }
 
 fn public_space(id: &str, name: &str, updated_at_ms: i64) -> PublicSpaceViewV1 {
-    PublicSpaceViewV1 {
-        id: id.to_string(),
-        name: name.to_string(),
-        kind: DirectorySpaceKind::Archive,
-        visibility: DirectorySpaceVisibility::Public,
-        member_count: 9,
-        document_count: 4,
-        created_at_ms: 1,
-        updated_at_ms,
-    }
+    PublicSpaceViewV1 { id: id.to_string(), name: name.to_string(), kind: DirectorySpaceKind::Archive, visibility: DirectorySpaceVisibility::Public, member_count: 9, document_count: 4, created_at_ms: 1, updated_at_ms }
 }
 
 fn member(user_id: &str, display_name: &str, email: &str, role: DirectorySpaceRole, owner: bool) -> DirectorySpaceAdministrationMemberRowV1 {
@@ -75,17 +66,8 @@ fn every_command_builder_emits_the_shared_canonical_field_order() {
         let expected: Vec<String> = orders[variant].as_array().expect("field order").iter().map(|value| value.as_str().expect("field").to_string()).collect();
         let needle = format!("    {command} {{ ");
         let line = DIRECTORY_SCHEMA_SOURCE.lines().find(|line| line.starts_with(&needle)).unwrap_or_else(|| panic!("{command} is no longer declared in the directory schema"));
-        let fields: Vec<String> = line
-            .trim_start()
-            .trim_start_matches(command)
-            .trim()
-            .trim_start_matches('{')
-            .trim_end_matches("},")
-            .split(',')
-            .filter_map(|part| part.split(':').next())
-            .map(|field| camel_case(field.trim()))
-            .filter(|field| !field.is_empty())
-            .collect();
+        let fields: Vec<String> =
+            line.trim_start().trim_start_matches(command).trim().trim_start_matches('{').trim_end_matches("},").split(',').filter_map(|part| part.split(':').next()).map(|field| camel_case(field.trim())).filter(|field| !field.is_empty()).collect();
         assert_eq!(std::iter::once("kind".to_string()).chain(fields).collect::<Vec<String>>(), expected, "{variant}");
     }
 }

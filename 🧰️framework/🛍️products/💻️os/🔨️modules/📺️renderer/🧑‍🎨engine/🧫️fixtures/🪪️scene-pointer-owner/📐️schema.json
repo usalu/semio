@@ -10,9 +10,43 @@
     "expectedOwner",
     "cases",
     "captureCapacity",
-    "moveDelta"
+    "moveDelta",
+    "siblingInsertion",
+    "sceneIntentPresentation",
+    "barrierScope"
   ],
   "properties": {
+    "siblingInsertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["records", "receiver", "terminalReceivers", "events"],
+      "properties": {
+        "records": { "const": [[2], [2, 4], [2, 3, 4]] },
+        "receiver": { "const": 4 },
+        "terminalReceivers": { "const": 1 },
+        "events": { "const": ["pointerdown", "pointermove", "pointerup"] }
+      }
+    },
+    "sceneIntentPresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["records", "receiver", "unchangedUtilities", "changedUtilities", "admittedActions", "successorActions"],
+      "properties": {
+        "records": { "const": [[2, 4], [2, 3, 4]] },
+        "receiver": { "const": 4 },
+        "unchangedUtilities": { "const": ["text", "text"] },
+        "changedUtilities": { "const": ["text", "pan"] },
+        "admittedActions": { "const": 1 },
+        "successorActions": { "const": [1, 0] }
+      }
+    },
+    "barrierScope": {
+      "const": [
+        { "name": "participating-current", "sealed": true, "currentRevision": true, "blocks": true },
+        { "name": "hidden-window", "sealed": false, "currentRevision": true, "blocks": false },
+        { "name": "stale-revision", "sealed": true, "currentRevision": false, "blocks": false }
+      ]
+    },
     "version": {
       "const": 1
     },

@@ -200,7 +200,8 @@ fn disclosure_header_band(tree: &UiTree, id: NodeId, rect: Rect, reversed: bool,
             (UiNode::Tree(owner), NodeKey::Explicit(key)) => owner.sections.iter().find(|section| &section.id == key),
             _ => None,
         });
-    match (tree_section, tree_metrics) {
+    let scoped_metrics = tree_metrics.map(|metrics| crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, id, metrics));
+    match (tree_section, scoped_metrics.as_ref()) {
         (Some(section), Some(metrics)) => tree_section_header_band(rect, tree_section_header_height(section, metrics), reversed),
         (None, Some(metrics)) if tree.authored_tree_item(id).is_some() => tree_section_header_band(rect, metrics.row_height, reversed),
         _ => Rect::new(rect.x, rect.y, rect.w, crate::wgpu::flex::SECTION_HEADER_HEIGHT.min(rect.h)),
@@ -1120,13 +1121,7 @@ impl EventRouter {
     /// exact document identity, key, and widget-kind matches transfer; candidate registrations stay
     /// owned by the candidate paint.
     pub(crate) fn transfer_interaction_from(&mut self, presented: &EventRouter, presented_tree: &UiTree, candidate_tree: &UiTree) {
-        let remap = |source: NodeId| {
-            let document_id = presented_tree.document_bindings().iter().find_map(|(document, node)| (*node == source).then_some(*document))?;
-            let target = candidate_tree.document_node(document_id)?;
-            let source_node = presented_tree.node(source)?;
-            let target_node = candidate_tree.node(target)?;
-            source_node.interaction_identity_matches(target_node).then_some(target)
-        };
+        let remap = |source: NodeId| candidate_tree.interaction_successor_from(presented_tree, source);
         self.capture.target = presented.capture.target.and_then(|(pointer, node, kind)| remap(node).map(|node| (pointer, node, kind)));
         self.focus.focused = presented.focus.focused.and_then(remap);
         self.focus.tab_order.clear();
@@ -1245,7 +1240,8 @@ impl EventRouter {
         if tree.authored_tree_item(id).is_some() {
             let Some(rect) = tree.absolute_rect(id) else { return false };
             let Some(depth) = tree.tree_item_depth(id) else { return false };
-            if !tree_item_chevron_rect(rect, depth, &self.tree_drag_metrics, self.flow.block.is_reversed()).contains(x, y) {
+            let metrics = crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, id, &self.tree_drag_metrics);
+            if !tree_item_chevron_rect(rect, depth, &metrics, self.flow.block.is_reversed()).contains(x, y) {
                 return false;
             }
         }
@@ -1269,6 +1265,7 @@ impl EventRouter {
             return false;
         }
         self.flow = flow;
+        self.tree_drag_metrics = self.tree_drag_metrics.with_inline(flow.inline);
         true
     }
 
@@ -1317,7 +1314,8 @@ impl EventRouter {
             return true;
         }
         let Some(row_rect) = node_abs_rect(tree, row) else { return false };
-        let relative = tree_drag_handle_rect(row_rect.w, &self.tree_drag_metrics);
+        let metrics = crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, row, &self.tree_drag_metrics);
+        let relative = tree_drag_handle_rect(row_rect.w, &metrics);
         Rect::new(row_rect.x + relative.x, row_rect.y + relative.y, relative.w, relative.h).contains(x, y)
     }
 

@@ -85,8 +85,17 @@ class BoundedCompletionQueue {
     return index < 0 ? null : index;
   }
 
+  firstInteractionRestoration(): number | null {
+    const index = this.ready.findIndex(completion => completion.restoresInteraction);
+    return index < 0 ? null : index;
+  }
+
   takeAt(index: number): Completion | null {
     return this.ready.splice(index, 1)[0] ?? null;
+  }
+
+  restoreAt(index: number, completion: Completion): void {
+    this.ready.splice(Math.min(index, this.ready.length), 0, completion);
   }
 }
 
@@ -166,6 +175,18 @@ function replay(row: Row) {
           break;
         }
         case "checkIn": {
+          ledger.checkIn();
+          available = true;
+          break;
+        }
+        case "presenterRestore": {
+          const at = queue.firstInteractionRestoration();
+          expect(at, `${where}: presenter restoration owner`).not.toBeNull();
+          const completion = queue.takeAt(at ?? -1);
+          expect(completion?.revision, `${where}: exact return owner`).toBe(step.restoredRevision);
+          if (!completion) throw new Error(`${where}: typed restoration completion`);
+          completion.restoresInteraction = false;
+          queue.restoreAt(at ?? 0, completion);
           ledger.checkIn();
           available = true;
           break;

@@ -6,7 +6,7 @@ mod tests {
     fn snapshot_with(doctype: Option<&str>, standalone: Option<bool>, root_name: &str) -> XmlSnapshot {
         XmlSnapshot {
             doc: XmlDocument {
-                declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone }),
+                declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone, ..Default::default() }),
                 doctype: doctype.map(Into::into),
                 prolog: Vec::new(),
                 root: Some(XmlNode::Element { name: root_name.into(), attrs: Vec::new(), children: Vec::new() }),

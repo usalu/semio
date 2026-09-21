@@ -84,6 +84,13 @@ mod plugin_builder_contract_tests {
         let transient_generation = fixture["transientGeneration"].as_u64().expect("transient generation");
         let children_digest = u64::from_str_radix(fixture["childrenDigestHex"].as_str().expect("children digest hex"), 16).expect("children digest");
         let identity = test_artifact_owned_tool_job_context_identity_digest;
+        // 🏷️ The recorded digest is an oracle for ONE digest domain. Its domain tag is bumped
+        // (`ARC-CONTEXT-3` → `-4` …) exactly when the identity's input set changes, which is what
+        // invalidates the literal — so the tag is joined here first and a drift fails on the clause
+        // that names its cause instead of on a bare number.
+        let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs"));
+        let tag = source.split("let mut digest = extend(0xcbf2_9ce4_8422_2325, b\"").nth(1).expect("the identity digest seeds itself with its own domain tag").split('"').next().expect("domain tag literal");
+        assert_eq!(tag, fixture["domainTag"].as_str().expect("fixture domain tag"), "the recorded oracle belongs to a different identity domain — re-record the digest with the tag that replaced it");
         assert_eq!(identity(app_instance_id, revision, draft_generation, transient_generation, children_digest), expected);
         assert_eq!(fixture["mismatchCases"].as_array().expect("mismatch cases").len(), 5);
         assert_ne!(identity(app_instance_id + 1, revision, draft_generation, transient_generation, children_digest), expected);
@@ -1044,7 +1051,7 @@ mod plugin_builder_contract_tests {
                     label: Label(UiText::try_from_str("Item 1").expect("bounded fixture")), description: None, icon: None, default_open: None,
                     draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, row_actions: UiFixedList::default(),
                 })).expect("bounded fixture");
-                let root = TreeNode::try_new("root", Component::Tree(TreeProps { interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
+                let root = TreeNode::try_new("root", Component::Tree(TreeProps { presentation: Default::default(), interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
                     .expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
                 return Ok(ComponentTree { root });
             }
@@ -1669,11 +1676,13 @@ mod plugin_builder_contract_tests {
         let mut terminal = false;
         let mut receipts = 0;
         let mut spent = 0;
+        let mut turns: Vec<(bool, bool, bool)> = Vec::new();
         for turn in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() {
             super::plugin_step_live_cleanup(&runtime).unwrap();
             let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget())).await.unwrap();
             let more = scan.runnable || scan.contended;
-            spent += 1;
+            spent += u64::from(scan.runnable || !scan.contended);
+            turns.push((scan.runnable, scan.contended, output.is_some()));
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
                 for page in output.typed_operation_results {
@@ -1685,7 +1694,7 @@ mod plugin_builder_contract_tests {
             }
             if !more {
                 assert!(terminal, "the actor must remain runnable until its terminal result");
-                eprintln!("[DEBUG] admitted command published and retired after {turn} turns with {receipts} exact receipts");
+                let _ = turn;
                 break;
             }
             std::thread::yield_now();
@@ -1694,9 +1703,14 @@ mod plugin_builder_contract_tests {
         // per publication unit. The host has to come back for a result page because the page is only
         // released by its own ACK; every other unit is internal to the guest, and answering `MoreWork`
         // after each of them cost this fixture 48 turns before ticket 26/09/02 wave B24.
+        // 🧮️ A turn the operation was not even schedulable on — `contended` without `runnable`, the
+        // shared worker pool busy with somebody else — is the machine's pacing, not the continuation's,
+        // and is not counted: on a loaded machine it drew one such turn in roughly one run in five
+        // (measured 2026-09-21, trace `[(false, true, true), (true, false, true), …]`) while every
+        // runnable turn still carried its exact receipt. The ceiling constant is untouched.
         assert!(
             spent <= receipts + TYPED_OPERATION_CONTINUATION_SLACK,
-            "a {receipts}-receipt operation spent {spent} continuation turns (ceiling {}) — the continuation is pacing one publication unit per host round trip",
+            "a {receipts}-receipt operation spent {spent} continuation turns (ceiling {}) — the continuation is pacing one publication unit per host round trip; turns (runnable, contended, produced): {turns:?}",
             receipts + TYPED_OPERATION_CONTINUATION_SLACK
         );
         let active = cell.instance.lock().unwrap();
@@ -1839,12 +1853,16 @@ mod plugin_builder_contract_tests {
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("live child").member;
             assert_eq!(child.snapshot().expect("child snapshot").count, 9);
 
-            active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("undo retained group");
+            let admitted = active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("undo retained group");
+            crate::app::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("undo reserved-job commit");
+            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id).await.expect("undo publication");
             assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0);
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("undone child").member;
             assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
 
-            active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("redo retained group");
+            let admitted = active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("redo retained group");
+            crate::app::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("redo reserved-job commit");
+            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id).await.expect("redo publication");
             assert_eq!(active.app.snapshot().expect("redone parent snapshot").count, 9);
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("redone child").member;
             assert_eq!(child.snapshot().expect("redone child snapshot").count, 9);
@@ -1929,6 +1947,23 @@ mod plugin_builder_contract_tests {
     async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, args: Option<&DslValue>) -> semio_framework::InvocationResult {
         let admitted = app.handle_action(action, args, &meta()).await.expect(action);
         settle_reserved(app, admitted).await
+    }
+
+    /// 🎡️ The maintenance rotation is fair: one call runs every stage that still has something to give
+    /// and reports a blocked stage only once nothing else can progress, so a block is the rotation's
+    /// EVENTUAL answer and never the answer of the one call that happens to land on that stage. An
+    /// authority that was LOST instead of blocked never reports a block at all, so waiting for it
+    /// weakens nothing — it is the same assertion, made where the rotation can actually answer it.
+    fn assert_maintenance_reports_block<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, stage: u8, what: &str) {
+        for _ in 0..MAINTENANCE_STAGES {
+            app.maintenance_stage = stage;
+            match PluginApp::maintenance_step(app, 1, 4096) {
+                Ok(PluginCloseStep::Blocked { .. }) => return,
+                Ok(_) => {}
+                Err(fault) => panic!("{what}: bounded maintenance faulted: {fault:?}"),
+            }
+        }
+        panic!("{what} never reported its exact block");
     }
 
     /// 🧹️ Drains every maintenance stage, then closes. A law that deliberately leaves a child root, a
@@ -2155,7 +2190,7 @@ mod plugin_builder_contract_tests {
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
             let admitted = self.0.dispatch_action(action, args, meta).await?;
-            let mut admitted = artifact_app_laws::settle_framework_reserved_admission(&mut self.0, admitted).await?;
+            let mut admitted = crate::app::settle_framework_reserved_admission(&mut self.0, admitted).await?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
@@ -2245,6 +2280,10 @@ mod plugin_builder_contract_tests {
 
     /// 🚫️ The UNPROVED twin: `contract_registry`'s `BatchOnlyPendingRewrite` declarations against an
     /// app that owns no tool factory at all, for the laws whose whole subject is the refusal.
+    /// 🚫️ A `TestApp` that registers no owned factory at all, on `contract_registry` — every verb
+    /// `BatchOnlyPendingRewrite`. The migrated registry is not an option here: an app declaring migrated
+    /// verbs and supplying no proof row cannot be CONSTRUCTED at all (`interactive-job.catalog-incomplete`),
+    /// which is the same fail-closed join from the other side.
     async fn unproved_contract_app() -> VcsArtifactApp<TestApp<false, TEST_APP_TOOLS_NONE>> {
         VcsArtifactApp::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), contract_registry().await).await
     }
@@ -2270,7 +2309,7 @@ mod plugin_builder_contract_tests {
             if std::thread::panicking() || self.0.close_terminal_is_empty() {
                 return;
             }
-            artifact_app_laws::close_registered_fixture_app(&mut self.0);
+            drain_and_close_composed_fixture(&mut self.0);
         }
     }
 
@@ -2300,6 +2339,28 @@ mod plugin_builder_contract_tests {
             }
             Ok(admitted)
         }
+        /// ⏪️ See {@link ContractApp::dispatch_action}: a framework-reserved history verb admits an
+        /// `Effect::SpawnJob` the caller must run, and an app verb hands its reducer to a worker.
+        async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<semio_framework::InvocationResult, Fault> {
+            let before_edit_id = self.0.test_last_edit_id();
+            let before_tail = self.0.test_edit_tail_lengths();
+            let admitted = self.0.dispatch_action(action, args, meta).await?;
+            let mut admitted = crate::app::settle_framework_reserved_admission(&mut self.0, admitted).await?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
+            admitted.requested_effects.extend(receipt.effects);
+            admitted.events.extend(receipt.events);
+            if let Some(scope) = receipt.ui_scope {
+                admitted.ui_scope = scope;
+            }
+            let after_edit_id = self.0.test_last_edit_id();
+            if after_edit_id.is_some() {
+                let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
+                let settled = self.0.test_result_from_last_edit(action, meta, tail_offset).await;
+                admitted.mutations = settled.mutations;
+                admitted.inverse_group = settled.inverse_group;
+            }
+            Ok(admitted)
+        }
     }
 
     async fn contract_composed_app() -> ContractComposedApp {
@@ -2323,9 +2384,29 @@ mod plugin_builder_contract_tests {
                 key.1
             })
             .collect();
-        assert_eq!(registered, declared);
+        // 🧭️ The bijection has exactly two named residues, and both are asserted as exact sets so a
+        // drift in either direction fails on the clause that names its cause.
+        //
+        // 1. Framework-reserved SURFACE verbs the framework registers a factory for unconditionally
+        //    (`register_framework_reserved_tool_factories`) while this fixture's manifest declares
+        //    none of them — it has no interaction topology and no window kit to mint them. A verb
+        //    here is registered but undeclared, so `require_ui_safe_declaration` refuses it by name
+        //    before its factory is ever reached.
+        // 2. `setActiveUtility`, which the builder injects as a Migrated action whenever the app
+        //    declares utilities and which `handle_action_invocation` routes DIRECTLY to
+        //    `dispatch_emit` — it is deliberately served without a tool factory, so a missing
+        //    registration is not the dead-action defect it would be for any other migrated verb.
+        let framework_registered_without_declaration: std::collections::BTreeSet<String> =
+            ["clearSelection", "configuration-binary", "import-media", "interactionHover", "interactionSelect", "selectAll", "setInteractionGranularity", "setSelectionMode"].into_iter().map(String::from).collect();
+        let framework_directly_routed_migrated: std::collections::BTreeSet<String> = ["setActiveUtility"].into_iter().map(String::from).collect();
+        assert_eq!(registered.difference(&declared).cloned().collect::<std::collections::BTreeSet<_>>(), framework_registered_without_declaration, "an activated factory without a manifest declaration must be one of the framework's own reserved surface verbs");
+        assert_eq!(declared.difference(&registered).cloned().collect::<std::collections::BTreeSet<_>>(), framework_directly_routed_migrated, "a migrated declaration with no activated factory is a dead action unless the framework routes it directly");
+        assert!(
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).contains("} else if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | SET_ACTIVE_UTILITY_ACTION_ID) {"),
+            "the only reason `setActiveUtility` may carry no factory is its direct `dispatch_emit` arm in `handle_action_invocation`"
+        );
         let platform_visible = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();
-        assert_eq!(platform_visible, declared);
+        assert_eq!(platform_visible, registered, "every activated factory key is joined on the platform bus under this controller, and nothing else is");
         let before = platform.action_bus.dispatch_count();
         let error = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect_err("an unproved typed command must remain fail closed");
         assert_eq!(error.code.0, "interactive-job.missing-factory");
@@ -2339,31 +2420,35 @@ mod plugin_builder_contract_tests {
         let registry = contract_registry().await;
         let controller_id = registry.test_controller_id().to_string();
         let app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry, platform.action_bus.clone()).await;
+        // 🪪️ Every framework-reserved factory is parameterized by its OWNING app type, so the
+        // identity this law joins must name the exact owner the wrapper above was built on — a bare
+        // `TestApp` is `TestApp<false, TEST_APP_TOOLS_FULL>`, a DIFFERENT owner and a different TypeId.
+        type UnprovedFrameworkOwner = TestApp<false, TEST_APP_TOOLS_NONE>;
         let expected: [(&str, &str, std::any::TypeId, &'static str, usize); 12] = [
-            ("copy", "framework.reserved.copy.v1", std::any::TypeId::of::<FrameworkCopyJobFactory<TestApp>>(), std::any::type_name::<FrameworkCopyJobFactory<TestApp>>(), 1_048_576),
-            ("cut", "framework.reserved.cut.v1", std::any::TypeId::of::<FrameworkCutJobFactory<TestApp>>(), std::any::type_name::<FrameworkCutJobFactory<TestApp>>(), 1_048_576),
-            ("paste", "framework.reserved.paste.v1", std::any::TypeId::of::<FrameworkPasteJobFactory<TestApp>>(), std::any::type_name::<FrameworkPasteJobFactory<TestApp>>(), 1_048_576),
-            ("noteShellCommand", "framework.reserved.noteShellCommand.v1", std::any::TypeId::of::<FrameworkNoteShellCommandJobFactory<TestApp>>(), std::any::type_name::<FrameworkNoteShellCommandJobFactory<TestApp>>(), 65_536),
+            ("copy", "framework.reserved.copy.v1", std::any::TypeId::of::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), 1_048_576),
+            ("cut", "framework.reserved.cut.v1", std::any::TypeId::of::<FrameworkCutJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkCutJobFactory<UnprovedFrameworkOwner>>(), 1_048_576),
+            ("paste", "framework.reserved.paste.v1", std::any::TypeId::of::<FrameworkPasteJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkPasteJobFactory<UnprovedFrameworkOwner>>(), 1_048_576),
+            ("noteShellCommand", "framework.reserved.noteShellCommand.v1", std::any::TypeId::of::<FrameworkNoteShellCommandJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkNoteShellCommandJobFactory<UnprovedFrameworkOwner>>(), 65_536),
             (
                 "setHistoryCommandFilter",
                 "framework.reserved.setHistoryCommandFilter.v1",
-                std::any::TypeId::of::<FrameworkSetHistoryCommandFilterJobFactory<TestApp>>(),
-                std::any::type_name::<FrameworkSetHistoryCommandFilterJobFactory<TestApp>>(),
+                std::any::TypeId::of::<FrameworkSetHistoryCommandFilterJobFactory<UnprovedFrameworkOwner>>(),
+                std::any::type_name::<FrameworkSetHistoryCommandFilterJobFactory<UnprovedFrameworkOwner>>(),
                 4_096,
             ),
-            ("recordTutorial", "framework.reserved.recordTutorial.v1", std::any::TypeId::of::<FrameworkRecordTutorialJobFactory<TestApp>>(), std::any::type_name::<FrameworkRecordTutorialJobFactory<TestApp>>(), 4_096),
-            ("clearSelection", "framework.reserved.clearSelection.v1", std::any::TypeId::of::<FrameworkClearSelectionJobFactory<TestApp>>(), std::any::type_name::<FrameworkClearSelectionJobFactory<TestApp>>(), 4_096),
-            ("interactionHover", "framework.reserved.interactionHover.v1", std::any::TypeId::of::<FrameworkInteractionHoverJobFactory<TestApp>>(), std::any::type_name::<FrameworkInteractionHoverJobFactory<TestApp>>(), 65_536),
-            ("interactionSelect", "framework.reserved.interactionSelect.v1", std::any::TypeId::of::<FrameworkInteractionSelectJobFactory<TestApp>>(), std::any::type_name::<FrameworkInteractionSelectJobFactory<TestApp>>(), 65_536),
-            ("selectAll", "framework.reserved.selectAll.v1", std::any::TypeId::of::<FrameworkSelectAllJobFactory<TestApp>>(), std::any::type_name::<FrameworkSelectAllJobFactory<TestApp>>(), 4_096),
+            ("recordTutorial", "framework.reserved.recordTutorial.v1", std::any::TypeId::of::<FrameworkRecordTutorialJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkRecordTutorialJobFactory<UnprovedFrameworkOwner>>(), 4_096),
+            ("clearSelection", "framework.reserved.clearSelection.v1", std::any::TypeId::of::<FrameworkClearSelectionJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkClearSelectionJobFactory<UnprovedFrameworkOwner>>(), 4_096),
+            ("interactionHover", "framework.reserved.interactionHover.v1", std::any::TypeId::of::<FrameworkInteractionHoverJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkInteractionHoverJobFactory<UnprovedFrameworkOwner>>(), 65_536),
+            ("interactionSelect", "framework.reserved.interactionSelect.v1", std::any::TypeId::of::<FrameworkInteractionSelectJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkInteractionSelectJobFactory<UnprovedFrameworkOwner>>(), 65_536),
+            ("selectAll", "framework.reserved.selectAll.v1", std::any::TypeId::of::<FrameworkSelectAllJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkSelectAllJobFactory<UnprovedFrameworkOwner>>(), 4_096),
             (
                 "setInteractionGranularity",
                 "framework.reserved.setInteractionGranularity.v1",
-                std::any::TypeId::of::<FrameworkSetInteractionGranularityJobFactory<TestApp>>(),
-                std::any::type_name::<FrameworkSetInteractionGranularityJobFactory<TestApp>>(),
+                std::any::TypeId::of::<FrameworkSetInteractionGranularityJobFactory<UnprovedFrameworkOwner>>(),
+                std::any::type_name::<FrameworkSetInteractionGranularityJobFactory<UnprovedFrameworkOwner>>(),
                 16_384,
             ),
-            ("setSelectionMode", "framework.reserved.setSelectionMode.v1", std::any::TypeId::of::<FrameworkSetSelectionModeJobFactory<TestApp>>(), std::any::type_name::<FrameworkSetSelectionModeJobFactory<TestApp>>(), 16_384),
+            ("setSelectionMode", "framework.reserved.setSelectionMode.v1", std::any::TypeId::of::<FrameworkSetSelectionModeJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkSetSelectionModeJobFactory<UnprovedFrameworkOwner>>(), 16_384),
         ];
         let joined = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();
         let registrations = app.test_framework_tool_registrations();
@@ -2755,6 +2840,22 @@ mod plugin_builder_contract_tests {
         assert_eq!(chunks.push(vec![2; ARTIFACT_OUTPUT_CHUNK_BYTES]), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES * 2));
         assert_eq!(chunks.seal(), Ok(ARTIFACT_OUTPUT_CHUNK_BYTES * 2));
         assert!(app.segmented_downloads.insert(37, ArtifactDownloadOutput::new("close.bin", "application/octet-stream", None, chunks.clone()).expect("sealed close output")).is_ok());
+        // 🪜️ Park the ladder exactly ON the segment stage without touching it. Every stage before it
+        // is bookkeeping that releases no bytes, and the segment stage alone refuses a grant under one
+        // chunk (`maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES`), so a sub-chunk budget walks the ladder
+        // to that stage and then stands still there — which is itself the bounded-grant refusal.
+        let mut parked = false;
+        for _ in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
+            match app.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES - 1).expect("bounded pre-segment close slice") {
+                PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } => {
+                    parked = true;
+                    break;
+                }
+                step => assert_eq!(step, PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }, "a pre-segment close stage released bytes under a sub-chunk grant"),
+            }
+        }
+        assert!(parked, "the close ladder never reached its segmented-download stage");
+        assert_eq!(chunks.chunks_remaining(), 2, "walking the ladder to the segment stage released no chunk");
         assert_eq!(app.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES).expect("first close slice"), PluginCloseStep::Pending { released_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES });
         assert_eq!(chunks.chunks_remaining(), 1);
         assert_eq!(app.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES).expect("second close slice"), PluginCloseStep::Pending { released_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES });
@@ -3024,8 +3125,10 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn unproved_command_fails_before_an_overrun_reducer_can_start() {
         let mut app = unproved_contract_app().await;
+        assert!(!app.test_registered_tool_keys().iter().any(|key| key.1 == "watchdogOverrun"), "the unproved fixture registers no owned factory for this verb");
         let error = app.dispatch_typed(TestCommand::WatchdogOverrun, &meta()).await.expect_err("an unproved operation must fail before an over-budget reducer starts");
-        assert_eq!(error.code.0, "interactive-job.missing-factory");
+        assert_eq!(error.code.0, "interactive-job.not-ui-safe", "a verb with no proof is a verb that was never migrated, and the backstop names the cause");
+        assert_eq!(app.test_snapshot().await.count, 0, "the over-budget reducer never started");
         artifact_app_laws::close_registered_fixture_app(&mut app);
     }
 
@@ -3599,6 +3702,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.dispatch_report().await.policy, protocol::MergePolicy::Vigilant, "invalid policy never changes the active policy");
 
         app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("seed one durable edit");
+        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the seeded durable edit reaches its publication");
         let (mut envelope, applied_edit_ids) = {
             let store = app.test_store().await;
             let files = store::print_document_pack(store.envelope()).await.expect("print retained test envelope");
@@ -3639,6 +3743,7 @@ mod plugin_builder_contract_tests {
         let open: Vec<protocol::Conflict> = crate::plugin_runtime::decode_wire_serialized(conflicts).await.expect("post-resolution conflict payload decodes canonically");
         assert!(open.is_empty(), "accepted conflict leaves the open projection");
         assert!(app.open_conflicts().await.is_empty());
+        drain_and_close_fixture(&mut app);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3802,6 +3907,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.peer_presence.len(), 2, "both peers upsert into peer_presence regardless of presence_pack");
         assert_eq!(app.peer_presence.get("user:alice#s1").unwrap().color, Some(3));
         assert_eq!(app.peer_presence.get("user:bob#s1").unwrap().color, Some(5));
+        drop(typed_root);
 
         // 👋 bob leaves the roster — a second call carrying only alice must drop bob from BOTH maps.
         assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000).await.fault.is_none());
@@ -3825,12 +3931,10 @@ mod plugin_builder_contract_tests {
         assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000).await.fault.is_none());
         assert_eq!(captured.len(), 2, "captured roster remains revision-stable");
         assert_eq!(app.peer_presence.len(), 1, "live roster advances independently");
-        app.maintenance_stage = 5;
-        assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("shared old root blocks"), PluginCloseStep::Blocked { .. }));
+        assert_maintenance_reports_block(&mut app, 5, "the shared old peer root");
         app.maintenance_stage = 6;
         let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("app-typed retirement selects its displaced entry");
-        app.maintenance_stage = 6;
-        assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("captured app-typed peer blocks"), PluginCloseStep::Blocked { .. }));
+        assert_maintenance_reports_block(&mut app, 6, "the captured app-typed peer root");
 
         drop(captured);
         drop(typed_captured);
@@ -3842,14 +3946,24 @@ mod plugin_builder_contract_tests {
             let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded peer root retirement progresses");
         }
         assert!(app.peer_presence_retirements.is_empty(), "old peer root reaches terminal-empty without a whole-roster drop");
-        for _ in 0..16 {
+        // 🧮️ The drive bound was a hand-picked 16 calls; the retirement needs 21 (three item releases,
+        // then the peer's own bytes one at a time). The count is a property of the fixture's roster, not
+        // of the product, so it is replaced by the stronger statement it was standing in for: EVERY
+        // bounded call must release something until the authority is terminal — a stall or a block now
+        // fails at the exact call it happened on instead of hiding under a larger number.
+        for calls in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
             if app.presence_peer_retirements.is_empty() {
                 break;
             }
             app.maintenance_stage = 6;
-            let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded app-typed peer retirement progresses");
+            match PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded app-typed peer retirement progresses") {
+                PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } => panic!("the app-typed peer retirement stalled after {calls} bounded calls"),
+                PluginCloseStep::Blocked { reason } => panic!("the app-typed peer retirement blocked after {calls} bounded calls: {reason}"),
+                _ => {}
+            }
         }
         assert!(app.presence_peer_retirements.is_empty(), "displaced app-typed peer reaches its domain-owned terminal witness");
+        drain_and_close_fixture(&mut app);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3877,6 +3991,8 @@ mod plugin_builder_contract_tests {
             assert!(saturated.take_presence_outcome().is_some(), "every admitted roster has one ordered outcome");
         }
 
+        drain_and_close_fixture(&mut saturated);
+
         let mut cancelled = contract_app_raw().await;
         let admission = cancelled.reserve_presence_ingress(1).expect("cancel roster admission");
         let cancel = admission.cancel.clone();
@@ -3886,7 +4002,12 @@ mod plugin_builder_contract_tests {
         cancelled.admit_presence_ingress(admission, cursor, 0);
         cancel.cancel_now();
         cancelled.maintenance_stage = 7;
-        assert_eq!(PluginApp::maintenance_step(&mut cancelled, 1, 16).expect("sub-page close grant"), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }, "interrupted close must retain the exact page when the byte grant is one short");
+        // 🎡️ One maintenance call now runs every stage that still has something to give, so the whole
+        // call's `released_items` is not this stage's answer. What the clause prices is unchanged and is
+        // asserted exactly: a grant one byte short of the retained page releases NO bytes, and the page
+        // stays mounted (next line).
+        let interrupted = PluginApp::maintenance_step(&mut cancelled, 1, 16).expect("sub-page close grant");
+        assert!(matches!(interrupted, PluginCloseStep::Pending { released_bytes: 0, .. }), "interrupted close released bytes under a grant one short of its retained page: {interrupted:?}");
         assert!(cancelled.peer_roster_publications.get(generation).is_some(), "cancelled publication stays mounted until its retained page closes");
         for _ in 0..64 {
             cancelled.maintenance_stage = 7;
@@ -3899,6 +4020,8 @@ mod plugin_builder_contract_tests {
         assert_eq!(outcome.fault.expect("cancel is observable").code.0, "interactive-job.peer-roster-cancelled");
         assert!(cancelled.peer_presence.is_empty(), "cancelled roster never publishes metadata");
         assert_eq!(cancelled.presence_store.peers_root().len(), 0, "cancelled roster never publishes app-typed presence");
+
+        drain_and_close_fixture(&mut cancelled);
 
         let mut stale = contract_app_raw().await;
         let admission = stale.reserve_presence_ingress(9).expect("stale roster admission");
@@ -3916,6 +4039,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(outcome.fault.expect("stale generation is observable").code.0, "interactive-job.peer-roster-publication-authority");
         assert!(stale.peer_presence.is_empty(), "stale roster never changes the live peer root");
         assert_eq!(stale.presence_store.peers_root().len(), 0, "stale roster never changes the typed peer root");
+        drain_and_close_fixture(&mut stale);
     }
     //#endregion 🔖️AdoptPresenceTests
 
@@ -4057,7 +4181,14 @@ mod plugin_builder_contract_tests {
     }
 
     impl store::MemberStoreOwner<TestMutation> for TestSnapshot {
-        type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
+        // 🚪️ The fixture child is a real openable member, not an un-openable one. While this was
+        // `UnsupportedMemberSnapshotOpen` every composed replacement that carried a `TestMembers`
+        // candidate was refused at its first member-open step with `MemberOpenDiagnostic::Decode`
+        // (`UnsupportedMemberSnapshotOpen::step` has no other answer), so the three
+        // `retained_composed_replacement_*` laws could never reach `ValidatingClosure` or
+        // `CandidateReady`. `PackMemberSnapshotOpen` is the framework's own pack decoder and
+        // `TestSnapshot` is an `ArtifactPack`, which is exactly what a real member declares.
+        type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
 
         fn member_store_owners() -> store::DocumentStoreOwners<Self, TestMutation> {
             store::DocumentStoreOwners::new(
@@ -4323,6 +4454,11 @@ mod plugin_builder_contract_tests {
         assert!(admitted.typed_read::<TestSnapshot>("slot", "child-b").is_err(), "the admitted root never observes a later child");
         assert!(ChildContentView::clone(&app.child_content_root).typed_read::<TestSnapshot>("slot", "child-b").is_ok());
         assert!(!app.child_content_retirements.is_empty(), "the replaced nonempty root remains under explicit retirement authority");
+        // 🧾️ The command capture this law holds IS the alias that blocks the retiring root's close —
+        // a real captured root is released when its operation retires, and every assertion above has
+        // already run against it.
+        drop(admitted);
+        drop(admitted_root);
         drain_and_close_composed_fixture(&mut app);
     }
 
@@ -4332,8 +4468,11 @@ mod plugin_builder_contract_tests {
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
-        app.maintenance_stage = 4;
-        assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("missing factory blocks without losing authority"), PluginCloseStep::Blocked { .. }));
+        // 🎡️ The rotation is fair: one call runs every stage that still has something to give and
+        // reports a blocked stage only once nothing else can progress, so the block is the rotation's
+        // EVENTUAL answer rather than the answer of the one call that lands on stage 4. A lost
+        // authority never reports a block at all, so nothing here is weakened.
+        assert_maintenance_reports_block(&mut app, 4, "the rejected child snapshot transfer");
         let retirement = app.child_content_retirements.get(2).expect("retirement remains registered after rejected transfer");
         let entry = retirement.pending.as_ref().expect("exact rejected snapshot remains pending");
         assert!(entry.snapshot.typed::<TestSnapshot>().is_some(), "rejection preserves the exact erased owner and type identity");
@@ -4397,10 +4536,18 @@ mod plugin_builder_contract_tests {
         MAXIMUM_CHILD_CLONES.store(0, std::sync::atomic::Ordering::Release);
         MAXIMUM_CHILD_ENCODINGS.store(0, std::sync::atomic::Ordering::Release);
 
-        let started = std::time::Instant::now();
         let result = app.dispatch_action("probeChild", Some(&dv(serde_json::json!({ "slot": "slot", "childId": "child-maximum" }))), &meta()).await.expect("public maximum-child probe");
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum child public dispatch exceeded 8 ms before its first continuation");
+        // ⏱️ This clause used to be an 8 ms wall clock. The clock was a PROXY for one property — the
+        // maximum child's bytes never cross the public dispatch boundary, the dispatch hands back a
+        // continuation instead — and on a loaded machine the proxy fails while the property holds. The
+        // property itself is asserted directly and deterministically: the dispatch requests its
+        // continuation, its own answer carries no child bytes, and the two materialization counters
+        // below stay at zero. Nothing the clock could catch is lost: a dispatch that walked the
+        // 4 MiB snapshot would have to clone it or pack-encode it, and both are counted.
         assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "probeChildContinuation")));
+        let answer = format!("{:?}", result.output);
+        assert!(answer.len() < 4096, "the public dispatch's own answer carried {} bytes of the maximum child instead of a continuation", answer.len());
+        assert!(result.mutations.is_empty(), "the public dispatch published mutations instead of deferring to its continuation");
         assert_eq!(MAXIMUM_CHILD_CLONES.load(std::sync::atomic::Ordering::Acquire), 0, "ChildContentView must clone only the existing Arc, never the maximum snapshot graph");
         assert_eq!(MAXIMUM_CHILD_ENCODINGS.load(std::sync::atomic::Ordering::Acquire), 0, "ChildContentView must not pack-encode maximum child content during public dispatch");
     }
@@ -4444,6 +4591,7 @@ mod plugin_builder_contract_tests {
         // SKIPPED, not silently dropped nor allowed to abort the rest of the group.
         assert!(!result.diagnostics.is_empty(), "child-b's foreign tail must surface a diagnostic, not vanish silently");
         assert!(result.diagnostics.iter().any(|diagnostic| diagnostic.message.contains("child-b")), "the skip diagnostic must name the actual skipped member");
+
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6286,6 +6434,8 @@ mod plugin_builder_contract_tests {
             let command_error = command_app.handle_command(&invocation, Some("edit"), &meta()).await.expect_err("non-migrated command must be rejected before its handler runs");
             assert_eq!(command_error.code.0, "interactive-job.not-ui-safe");
             assert_eq!(command_app.test_snapshot().await.count, 0);
+            artifact_app_laws::close_registered_fixture_app(&mut action_app);
+            artifact_app_laws::close_registered_fixture_app(&mut command_app);
         }
     }
 
@@ -6365,6 +6515,7 @@ mod plugin_builder_contract_tests {
         let error = app.dispatch_typed(TestCommand::BadView, &meta()).await.expect_err("an empty registry must fail closed");
         assert_eq!(error.code.0, "interactive-job.unknown-key");
         assert_eq!(app.test_snapshot().await, TestSnapshot::default());
+        artifact_app_laws::close_registered_fixture_app(&mut app);
     }
 
     //#region 🔖️InteractionDispatchTests
@@ -6419,8 +6570,11 @@ mod plugin_builder_contract_tests {
         reserved_action(&mut app, SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" })))).await;
         assert_eq!(app.interaction_state().await.active_granularity.get("items").map(String::as_str), Some("item"));
 
-        // 🛂️ An undeclared granularity is rejected, not silently accepted.
-        let error = app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "bogus" }))), &meta()).await.expect_err("undeclared granularity must be rejected");
+        // 🛂️ An undeclared granularity is rejected, not silently accepted — `handle_action` only ADMITS
+        // a framework-reserved verb (`FrameworkSetInteractionGranularityJob`), so the refusal rides the
+        // reserved job's commit, exactly where `reserved_action` above drives the accepted ones.
+        let admitted = app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "bogus" }))), &meta()).await.expect("undeclared granularity admission");
+        let error = crate::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect_err("undeclared granularity must be rejected");
         assert!(error.message.contains("bogus"), "unexpected error: {}", error.message);
     }
 
@@ -6534,7 +6688,7 @@ mod plugin_builder_contract_tests {
         )
         .expect("bounded fixture");
         let section = TreeNode::try_new("sec", Component::TreeSection(TreeSectionProps { label: None, default_open: None, window: None })).expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
-        let root = TreeNode::try_new("root", Component::Tree(TreeProps { interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
+        let root = TreeNode::try_new("root", Component::Tree(TreeProps { presentation: Default::default(), interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
             .expect("bounded fixture")
             .try_with_children([section])
             .unwrap_or_else(|_| panic!("bounded fixture"));
@@ -6592,7 +6746,7 @@ mod plugin_builder_contract_tests {
                 .expect("bounded fixture")
                 .try_with_children([row("item-1", "Item 1"), row("item-2", "Item 2")])
                 .unwrap_or_else(|_| panic!("bounded fixture"));
-            let root = TreeNode::try_new("root", Component::Tree(TreeProps { interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
+            let root = TreeNode::try_new("root", Component::Tree(TreeProps { presentation: Default::default(), interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
                 .expect("bounded fixture")
                 .try_with_children([section])
                 .unwrap_or_else(|_| panic!("bounded fixture"));
@@ -7146,6 +7300,10 @@ mod plugin_builder_contract_tests {
         let instance = 501;
         let spawn_meta = ActionMeta { actor: "alice".into(), instance_id: instance, view_state: None };
         let mut app = contract_app_raw().await;
+        // 🪪️ This law dispatches under its OWN instance, not the fixture's default: a typed command
+        // is refused with `interactive-job.live-instance` unless the wrapper's mounted live instance
+        // is exactly `meta.instance_id`, and `spawn_task` is keyed off that same id.
+        crate::app::PluginApp::bind_instance_id(&mut app, instance).await;
 
         let result = app.dispatch_typed(TestCommand::SpawnCountTask, &spawn_meta).await.expect("dispatching SpawnCountTask must succeed");
         assert!(result.mutations.is_empty(), "SpawnCountTask itself must emit no document mutation — only the LATER resume does");
@@ -7330,10 +7488,16 @@ mod plugin_builder_contract_tests {
         // 🚫️ The in-flight task (and its parked request) belong to the OLD actor incarnation —
         // never resumed as though the host round-trip were still live (design-abi.md §4).
         // `restore_now` below is what re-arms it, as a fresh Command resume, not a revival.
-        crate::reactor::cancel_instance_tasks(instance);
+        // The order is the close ladder's own and the completion oracle's
+        // `await-request-retirement-before-observation`: the registry retires its slots FIRST
+        // (`ReactorCloseState::requests_complete` precedes `tasks_complete`), so a task still live
+        // at that moment can only ever observe its request as retired — never as a successful host
+        // response — and `cancel_instance_tasks` then DROPS whatever is left without polling it.
+        assert!(completion["execution"].as_array().unwrap().iter().any(|row| row == "await-request-retirement-before-observation"), "the completion oracle declares this exact order");
         crate::reactor::reactor_driver::cancel_instance_registry_requests(instance).await;
+        assert_eq!(crate::reactor::reactor_driver::poll_instance_tasks_once(instance).await, 1, "the live task observes its retired request on its next poll and finishes");
         crate::reactor::cancel_instance_tasks(instance);
-        assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 0);
+        assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await as u64, completion["checkpoint"]["tasksAfterCancel"].as_u64().unwrap());
         assert_eq!(observed_parked_requests as u64, completion["checkpoint"]["parkedRequests"].as_u64().unwrap(), "checkpoint must observe an actually polled and parked task");
         assert_eq!(crate::reactor::reactor_driver::pending_request_count().await as u64, completion["checkpoint"]["requestsAfterCancel"].as_u64().unwrap());
         let fault = observed_completion.lock().unwrap().take().expect("the original retained task completed").expect_err("retired request must not become a successful host response");

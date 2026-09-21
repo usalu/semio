@@ -921,6 +921,66 @@ macro_rules! impl_serde_op_codec {
     };
 }
 
+//#region 🎬️ExampleSwitch
+/// 🎬️ The verb the react/wgpu shells' navbar example picker dispatches
+/// (`SET_ACTIVE_EXAMPLE_ACTION_ID` in the renderer's own `🛠️ShellHelpers`). An app that does not
+/// declare it is hidden from the picker outright by `appSwitchesExamples`, and the shell then never
+/// announces a boot example — the pane opens the app's genesis document instead of its curated one.
+pub const SET_ACTIVE_EXAMPLE_ACTION_ID: &str = "setActiveExample";
+
+/// 📚️ Reads the example id out of a shell `{action, args}` pair. The shells spell it `exampleId`;
+/// the palette, a context menu and a replayed shell command may spell it `id` or `value`, and an
+/// EMPTY id means "the app's own default document", which is exactly what `fallback` of `""` says.
+pub fn example_id_argument(args: Option<&kernel::DslValue>, fallback: &str) -> String {
+    let entries: &[(String, kernel::DslValue)] = match args {
+        Some(kernel::DslValue::Object(object)) => object.as_slice(),
+        _ => &[],
+    };
+    for key in ["exampleId", "example_id", "id", "value"] {
+        if let Some(kernel::DslValue::String(raw)) = entries.iter().find(|(name, _)| name == key).map(|(_, value)| value) {
+            if !raw.is_empty() {
+                return raw.clone();
+            }
+        }
+    }
+    fallback.to_string()
+}
+
+/// 🧬️ The whole-document load an example switch hands the host. Whole-document replacement is not an
+/// in-history mutation (no stdio subset mints a whole-snapshot edit for it), so the switch emits an
+/// `Effect::LoadDocument` carrying the example's own pack plus an edit-free `.spr` log — the shape
+/// `dag`/`reasoning.wires` already use, and the reason the route publishes on the HostOnly lane.
+pub fn load_example_effect<P: kernel::ArtifactPack>(document: &P, schema: &'static str) -> semio_framework_plugin::Effect {
+    let pack = document.encode_pack();
+    let spr = semio_framework_plugin::resolve_ready(kernel::empty_document_spr(schema, schema));
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+}
+
+/// 📇️ The picker's own action declaration — one row per stdio editor, so the nine editors cannot
+/// drift on label, kind or icon. The caller still chains `.action_args(..)`, `.action_destructive(..)`
+/// and `.action_interactive_job(.., Migrated)`: only `Migrated` survives UI dispatch, and only a
+/// destructive row makes the MCP gateway ask before replacing a document.
+pub fn set_active_example_action() -> semio_framework_plugin::ActionDefinition {
+    semio_framework_plugin::ActionDefinition::new(
+        SET_ACTIVE_EXAMPLE_ACTION_ID,
+        semio_framework_plugin::LocalizedLabel::native("Load Example", "Beispiel laden"),
+        semio_framework_plugin::ActionKind::Mutation,
+        "file",
+    )
+}
+
+/// 📝️ The picker's typed argument: one option per example this editor's subset publishes, defaulting
+/// to the one the pane boots.
+pub fn set_active_example_args(options: &[(&str, semio_framework_plugin::LocalizedLabel)], default_example_id: &str) -> Vec<semio_framework_plugin::ActionArgDef> {
+    vec![semio_framework_plugin::ActionArgDef::select(
+        "exampleId",
+        semio_framework_plugin::LocalizedLabel::native("Example", "Beispiel"),
+        options.iter().map(|(id, label)| semio_framework_plugin::ActionArgOption::new(*id, label.clone())).collect(),
+    )
+    .default_value(&default_example_id.to_string())]
+}
+//#endregion 🎬️ExampleSwitch
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

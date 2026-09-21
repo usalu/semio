@@ -246,8 +246,13 @@ fn the_window_chords_close_maximize_and_open_a_new_instance() {
     let mut shell = two_window_shell();
     press(&mut shell, "mod+shift+w", &mut input);
     assert_eq!(shell.dock.window_instances().into_iter().map(|(id, _)| id).collect::<Vec<_>>(), vec!["side".to_string()], "mod+shift+w closes the active window");
+    let first_close = shell.deferred_actions.last().expect("the shortcut journals its exact closed window");
+    assert_eq!(first_close.action, "noteShellCommand");
+    assert_eq!(first_close.args.as_ref().and_then(|args| args.get("commandId")).and_then(DslValue::as_str), Some("shell.windowClose"));
+    assert_eq!(first_close.args.as_ref().and_then(|args| args.get("detail")).and_then(|detail| detail.get("windowId")).and_then(DslValue::as_str), Some("main"));
     press(&mut shell, "mod+shift+w", &mut input);
     assert!(shell.dock.window_instances().is_empty(), "and keeps closing: React's `closeWindow` has no last-window guard, so an empty mode is reachable by chord too");
+    assert_eq!(shell.deferred_actions.len(), 2, "each successful shortcut close queues one journal note");
     eprintln!("[DEBUG] wgpu window chords: close / maximize / new-instance all drive the dock");
 }
 
@@ -309,14 +314,7 @@ fn built_in_command_labels_match_the_neutral_react_locale_oracle() {
         let command_id = row["id"].as_str().expect("localized command id");
         for locale in ["en", "de"] {
             shell.locale_id = locale.to_string();
-            let actual = shell
-                .build_os_commands()
-                .into_iter()
-                .find(|command| command.id == command_id)
-                .expect("native registry contains the canonical React command")
-                .label
-                .resolve(shell.active_terminology(), shell.active_locale())
-                .to_string();
+            let actual = shell.build_os_commands().into_iter().find(|command| command.id == command_id).expect("native registry contains the canonical React command").label.resolve(shell.active_terminology(), shell.active_locale()).to_string();
             assert_eq!(actual, row["labels"][locale].as_str().expect("localized command label"), "{command_id}:{locale}");
         }
     }
@@ -356,6 +354,24 @@ fn palette_shell() -> ShellState {
     shell
 }
 
+fn accept_find_fixture_action(_instance_id: u32, _action_json: &str, _view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
+    Ok(semio_framework::kernel::InvocationResult {
+        output: DslValue::Null,
+        mutations: Vec::new(),
+        inverse_group: semio_framework::kernel::UndoGroup {
+            invocation_id: semio_framework::kernel::InvocationId(String::new()),
+            mutations: Vec::new(),
+            inverse_mutations: Vec::new(),
+            member_edits: Vec::new(),
+        },
+        diagnostics: Vec::new(),
+        requested_effects: Vec::new(),
+        events: Vec::new(),
+        ui_scope: semio_framework::kernel::UiDirtyScope::default(),
+        history_patch: None,
+    })
+}
+
 /// ⚖️ LAW: every in-palette command of every owner is REACHABLE. Arg-carrying App/Plugin/Mode-scope
 /// commands used to be dropped on the (stale) premise that the plugin bridge had no `handle_command`
 /// RPC — it has one on both backends, and `dispatch_command` has always driven it.
@@ -369,11 +385,7 @@ fn the_palette_lists_and_executes_every_in_palette_command() {
     assert_eq!(fire.label, "Fire", "a zero-arg command carries its plain label");
     assert!(fire.action.as_deref().is_some_and(|action| action.starts_with("command:")), "and fires across the command boundary: {:?}", fire.action);
 
-    for (id, label) in [
-        ("command.app.test.test-app.app.pick", "Pick…"),
-        ("command.app.test.test-app.app.compose", "Compose…"),
-        ("command.app.test.test-app.app.rename", "Rename…"),
-    ] {
+    for (id, label) in [("command.app.test.test-app.app.pick", "Pick…"), ("command.app.test.test-app.app.compose", "Compose…"), ("command.app.test.test-app.app.rename", "Rename…")] {
         let row = by_id(id);
         assert_eq!(row.label, label, "a command whose args cannot be expanded carries React's `…` suffix");
         assert!(row.action.as_deref().is_some_and(|action| action.starts_with("command-form:")), "and redirects to its staged form rather than firing a guess: {:?}", row.action);
@@ -445,7 +457,7 @@ fn publish_palette_chrome(shell: &mut ShellState, input: &mut InputState<ActionD
     while input.retire_hit_step() {}
     shell.screen_w = 1280.0;
     shell.screen_h = 720.0;
-    let mut frame = ShellChromeFrameCursor { phase: ShellChromeFramePhase::Overlay, setup: 0, child: ShellChromeChildCursor::default(), ..ShellChromeFrameCursor::default() };
+    let mut frame = ShellChromeFrameCursor::default();
     let mut draw = DrawList::default();
     let mut overlay = DrawList::default();
     let mut atlas = FontAtlas::builtin();
@@ -454,6 +466,7 @@ fn publish_palette_chrome(shell: &mut ShellState, input: &mut InputState<ActionD
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     for _ in 0..65_536 {
         if shell.render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, input, &theme, &mut world_resources) {
+            shell.publish_retained_hit_registry(input);
             return;
         }
     }
@@ -493,11 +506,7 @@ fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
     assert_eq!(shell.search_query, "Set Theme");
 
     publish_palette_chrome(&mut shell, &mut input);
-    let rows = shell
-        .chrome_accessibility_nodes(input.hits())
-        .into_iter()
-        .filter(|node| node.role == "option")
-        .collect::<Vec<_>>();
+    let rows = shell.chrome_accessibility_nodes(input.hits()).into_iter().filter(|node| node.role == "option").collect::<Vec<_>>();
     assert_eq!(rows.len(), 1, "the query is reflected by the published row set: {rows:?}");
     assert_eq!(rows[0].key, fixture_staged_palette_id());
     assert_eq!(rows[0].label.as_deref(), Some("Set Theme…"), "the deterministic result is the staged command");
@@ -516,17 +525,24 @@ fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
 /// activates its existing selection funnel and retires the modal focus owner.
 #[test]
 fn find_publishes_filters_and_activates_with_a_physical_row_click() {
-    let mut shell = ShellState::new(Vec::new(), String::new());
-    shell.find_items
-        .try_push(ShellFindItem {
-            id: "media.node".into(),
-            label: "Media Node".into(),
-            description: Some("Canvas".into()),
-            category: Some("Nodes".into()),
-            surface_id: "canvas".into(),
-            node_id: "node-7".into(),
-        })
-        .expect("bounded find fixture");
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    shell.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("host fixture guest program").install_fixture_action(accept_find_fixture_action);
+    shell.dock.root = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("main")], active: "main".into() };
+    shell.dock.active_window_id = Some("main".into());
+    shell.active_window_id = Some("main".into());
+    shell.sync_dock_tabs();
+    let window_id = shell.dock.window_instances().first().map(|(id, _)| id.clone()).expect("the app contributes one mounted window");
+    let mut graph: ui_wgpu::wgpu::NodeGraphScene = serde_json::from_value(serde_json::json!({
+        "nodes": [],
+        "edges": [],
+        "viewport": { "x": 0.0, "y": 0.0, "zoom": 1.0 }
+    }))
+    .expect("NodeGraph find fixture decodes");
+    graph.find_items.push(ui_wgpu::wgpu::NodeGraphFindItem { id: "media.node".into(), label: "Media Node".into(), category: "Nodes".into() });
+    let surface = ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, &graph).expect("bounded NodeGraph find scene encodes");
+    let records = vec![super::shell_input_tests::tree_pointer_record(1, "find-node-graph", ui_contract::Component::Surface(surface), &[], None)];
+    let document = shell.publish_surface_records(&window_id, records).expect("NodeGraph production ingress");
+    shell.window_ui.insert(window_id, document);
     let mut input = InputState::<ActionDescriptor>::default();
     let (action, modifiers) = chord_event("mod+f");
     shell.handle_keyboard(action, &modifiers, &mut input);

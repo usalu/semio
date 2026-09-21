@@ -19,14 +19,14 @@
 //! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
 
 use super::schema::{
-    DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES,
-    DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEvent, DirectoryEventPageV1,
-    DirectorySessionAuthorityV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1,
-    DirectorySpaceListEntryV1, DirectorySpaceRole, DirectoryStreamMessage, DocumentBrowserActorSourceV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1,
-    DocumentOpenBrowserActorV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanV1,
-    DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR, GIS_MAP_INFERENCE_REQUEST_MAX_BYTES,
-    GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, GisMapInferenceApprovalReceiptV1, GisMapInferenceApprovalRequestV1, GisMapInferenceEventPageV1, GisMapInferenceJobReceiptV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, MemberSpaceViewV1,
-    lease_fields_from_plan_v1, same_lease_fields_v1,
+    lease_fields_from_plan_v1, same_lease_fields_v1, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEvent, DirectoryEventPageV1, DirectorySessionAuthorityV1,
+    DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1,
+    DirectorySpaceRole, DirectoryStreamMessage, DocumentBrowserActorSourceV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenBrowserActorV1,
+    DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1,
+    DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, GisMapInferenceApprovalReceiptV1, GisMapInferenceApprovalRequestV1, GisMapInferenceEventPageV1,
+    GisMapInferenceJobReceiptV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, MemberSpaceViewV1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES,
+    DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER,
+    GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR, GIS_MAP_INFERENCE_REQUEST_MAX_BYTES, GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES,
 };
 use crate::os_dsl::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_async::OperationContext;
@@ -606,7 +606,11 @@ fn wall_now_ms() -> i64 {
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 fn wall_now_ms() -> i64 {
     let millis = js_sys::Date::now();
-    if millis.is_finite() && millis > 0.0 { millis as i64 } else { 0 }
+    if millis.is_finite() && millis > 0.0 {
+        millis as i64
+    } else {
+        0
+    }
 }
 
 fn directory_socket_hello_v1() -> Vec<u8> {
@@ -734,10 +738,7 @@ impl LocalHubCredential {
     /// 🎫️ Seals a capability returned by the public session-mint route. The token stays in
     /// this non-serializable, zeroing owner and can only be consumed through [`DirectoryClient`].
     pub fn from_minted_session(hub_origin: &str, capability: &str) -> Result<Self, DirectoryClientError> {
-        let absolute = hub_origin
-            .strip_prefix("https://")
-            .or_else(|| hub_origin.strip_prefix("http://"))
-            .is_some_and(|authority| !authority.is_empty() && !authority.chars().any(|character| matches!(character, '/' | '?' | '#' | '@')));
+        let absolute = hub_origin.strip_prefix("https://").or_else(|| hub_origin.strip_prefix("http://")).is_some_and(|authority| !authority.is_empty() && !authority.chars().any(|character| matches!(character, '/' | '?' | '#' | '@')));
         let browser_proxy = hub_origin.starts_with('/') && !hub_origin.starts_with("//") && !hub_origin.chars().any(|character| character.is_control() || matches!(character, '?' | '#'));
         if !(absolute || browser_proxy) || !valid_session_capability(capability) {
             return Err(DirectoryClientError::Unauthorized);
@@ -906,7 +907,11 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
 
     pub async fn spaces(&self, ctx: &OperationContext) -> Result<Vec<DirectorySpaceListEntryV1>, DirectoryClientError> {
         let spaces: Vec<DirectorySpaceListEntryV1> = self.request_json(ctx, HttpMethod::Get, "/directory/spaces", None).await?;
-        if spaces.iter().all(DirectorySpaceListEntryV1::validate) { Ok(spaces) } else { Err(DirectoryClientError::Decode("directory space list access discriminator mismatch".into())) }
+        if spaces.iter().all(DirectorySpaceListEntryV1::validate) {
+            Ok(spaces)
+        } else {
+            Err(DirectoryClientError::Decode("directory space list access discriminator mismatch".into()))
+        }
     }
 
     /// 🏛️ Fetches one bounded canonical administration page for exactly one space. `cursor`
@@ -1536,18 +1541,21 @@ pub mod native {
     use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, LocalHubCredential, TransportError};
     use semio_framework_actor::{ActorId, PackageId};
     use semio_framework_async::{HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle};
-    use semio_framework_os_services::{AsyncHttpTransport, ComputeError, ComputePool, HttpBody, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponseHead, TokioHostRuntime};
+    use semio_framework_os_services::{
+        AsyncHttpTransport, ComputeError, ComputePool, HttpBody, HttpBodyCancellationHandle, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponseHead, HttpTransportStart, HttpTransportTerminalGuard, TokioHostRuntime,
+    };
     use std::io::Read;
     use std::net::{TcpStream, ToSocketAddrs};
     use std::sync::{Arc, Mutex};
     use std::time::Duration;
-    use tokio_tungstenite::tungstenite::{self, Message, client::IntoClientRequest, stream::MaybeTlsStream};
+    use tokio_tungstenite::tungstenite::{self, client::IntoClientRequest, stream::MaybeTlsStream, Message};
 
     const UREQ_HTTP_URL_BYTES: usize = 2_048;
     const UREQ_HTTP_HEADER_ITEMS: usize = 64;
     const UREQ_HTTP_HEADER_BYTES: usize = 16 * 1024;
     const UREQ_HTTP_REQUEST_BODY_BYTES: usize = 16 * 1024 * 1024;
     const UREQ_HTTP_BODY_PAGE_BYTES: usize = 16 * 1024;
+    const UREQ_HTTP_READ_TIMEOUT_MS: u64 = 15_000;
 
     type UreqBodyReader = Box<dyn Read + Send + Sync + 'static>;
 
@@ -1563,12 +1571,13 @@ pub mod native {
 
     impl UreqStreamingHttpTransport {
         pub fn new(compute: Arc<ComputePool>, runtime: Arc<TokioHostRuntime>, scope: ScopeHandle) -> Self {
-            Self { agent: ureq::Agent::new(), compute, runtime, scope }
+            Self { agent: ureq::AgentBuilder::new().timeout(Duration::from_millis(UREQ_HTTP_READ_TIMEOUT_MS)).timeout_read(Duration::from_millis(UREQ_HTTP_READ_TIMEOUT_MS)).build(), compute, runtime, scope }
         }
     }
 
     struct UreqStreamingHttpBody {
         reader: Arc<Mutex<Option<UreqBodyReader>>>,
+        cancellation: HttpBodyCancellationHandle,
         compute: Arc<ComputePool>,
         runtime: Arc<TokioHostRuntime>,
         scope: ScopeHandle,
@@ -1576,24 +1585,39 @@ pub mod native {
     }
 
     impl HttpBody for UreqStreamingHttpBody {
-        fn next_chunk(&mut self) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
+        fn cancellation_handle(&self) -> HttpBodyCancellationHandle {
+            self.cancellation.clone()
+        }
+
+        fn next_chunk(&mut self, terminal: HttpTransportTerminalGuard) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
             if self.ctx.cancel.is_cancelled_now() {
-                return Box::pin(async { Err(HttpPoolError::Transport("ureq HTTP body cancelled".into())) });
+                return Box::pin(async move {
+                    let _terminal = terminal;
+                    Err(HttpPoolError::Transport("ureq HTTP body cancelled".into()))
+                });
             }
             let reader = self.reader.clone();
             let compute = self.compute.clone();
             let runtime = self.runtime.clone();
             let scope = self.scope.clone();
             let ctx = self.ctx.clone();
-            Box::pin(async move { compute.run_io(runtime.as_ref(), &scope, ctx, move || ureq_stream_read_page(&reader)).await.map_err(HttpPoolError::Compute)? })
+            Box::pin(async move {
+                compute
+                    .run_io(runtime.as_ref(), &scope, ctx, move || {
+                        let _terminal = terminal;
+                        ureq_stream_read_page(&reader)
+                    })
+                    .await
+                    .map_err(HttpPoolError::Compute)?
+            })
         }
     }
 
     impl AsyncHttpTransport for UreqStreamingHttpTransport {
-        fn start(&self, ctx: &OperationContext, request: PoolHttpRequest) -> HostFuture<Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>> {
-            if ctx.cancel.is_cancelled_now() {
-                return Box::pin(async { Err(HttpPoolError::Transport("ureq HTTP request cancelled".into())) });
-            }
+        fn begin(&self, ctx: &OperationContext, request: PoolHttpRequest) -> HttpTransportStart {
+            let cancellation = HttpBodyCancellationHandle::read_deadline(UREQ_HTTP_READ_TIMEOUT_MS);
+            let body_cancellation = cancellation.clone();
+            let cancelled = ctx.cancel.is_cancelled_now();
             let agent = self.agent.clone();
             let compute = self.compute.clone();
             let runtime = self.runtime.clone();
@@ -1603,11 +1627,23 @@ pub mod native {
             let connect_scope = scope.clone();
             let connect_ctx = ctx.clone();
             let body_ctx = ctx.clone();
-            Box::pin(async move {
-                let (head, reader) = connect_compute.run_io(connect_runtime.as_ref(), &connect_scope, connect_ctx, move || ureq_stream_start(&agent, request)).await.map_err(HttpPoolError::Compute)??;
-                let body: Box<dyn HttpBody> = Box::new(UreqStreamingHttpBody { reader: Arc::new(Mutex::new(Some(reader))), compute, runtime, scope, ctx: body_ctx });
+            let (terminal, terminal_guard) = semio_framework_os_services::HttpTransportTerminalHandle::pair();
+            let response = Box::pin(async move {
+                if cancelled {
+                    drop(terminal_guard);
+                    return Err(HttpPoolError::Transport("ureq HTTP request cancelled".into()));
+                }
+                let (head, reader) = connect_compute
+                    .run_io(connect_runtime.as_ref(), &connect_scope, connect_ctx, move || {
+                        let _terminal = terminal_guard;
+                        ureq_stream_start(&agent, request)
+                    })
+                    .await
+                    .map_err(HttpPoolError::Compute)??;
+                let body: Box<dyn HttpBody> = Box::new(UreqStreamingHttpBody { reader: Arc::new(Mutex::new(Some(reader))), cancellation, compute, runtime, scope, ctx: body_ctx });
                 Ok((head, body))
-            })
+            });
+            HttpTransportStart::new(body_cancellation, terminal, response)
         }
     }
 
@@ -1907,9 +1943,7 @@ pub mod native {
         }
         let mut request = url.into_client_request().map_err(|error| TransportError::Io(error.to_string()))?;
         if !protocols.is_empty() {
-            request
-                .headers_mut()
-                .insert("Sec-WebSocket-Protocol", protocols.join(", ").parse().map_err(|_| TransportError::Io("websocket protocol header invalid".into()))?);
+            request.headers_mut().insert("Sec-WebSocket-Protocol", protocols.join(", ").parse().map_err(|_| TransportError::Io("websocket protocol header invalid".into()))?);
         }
         let host = request.uri().host().ok_or_else(|| TransportError::Io("websocket URL has no host".to_string()))?.to_string();
         let port = request.uri().port_u16().unwrap_or_else(|| if request.uri().scheme_str() == Some("wss") { 443 } else { 80 });
@@ -1956,10 +1990,10 @@ pub mod native {
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub mod browser {
     use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
-    use semio_framework_async::OperationContext;
     use semio_framework_async::browser::JsFuture;
-    use wasm_bindgen::JsCast;
+    use semio_framework_async::OperationContext;
     use wasm_bindgen::prelude::*;
+    use wasm_bindgen::JsCast;
     use web_sys::{BinaryType, CloseEvent, MessageEvent, RequestInit, Response, WebSocket};
 
     enum BrowserDirectoryFrame {

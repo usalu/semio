@@ -11,7 +11,7 @@
 
 use super::*;
 use semio_framework_os_kernel::Viewport2d;
-use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, NodeGraphInteractionDomain, NodeGraphScene, SurfaceKind, UiPresence};
+use ui_wgpu::wgpu::{InputState, NodeGraphInteractionDomain, NodeGraphScene, SurfaceKind, UiPresence};
 
 const NODE_GRAPH_SCENE_FIXTURE: &str = include_str!("../../🧫️fixtures/🕸️wgpu-node-graph/🔣️.json");
 
@@ -79,30 +79,8 @@ pub(super) fn drop_engine_surface(surface_id: &str) {
     }
 }
 
-fn paint_scene_into_draw_list(scene: &UiComponentSceneNode, bounds: Rect) -> DrawList {
-    let mut draw = DrawList::default();
-    let mut atlas = FontAtlas::builtin();
-    let icons = IconAtlas::default();
-    let mut input = InputState::<ActionDescriptor>::default();
-    let theme = Theme::default();
-    let mut scroll = HashMap::new();
-    let mut collapsed = HashMap::new();
-    let mut selects = HashMap::new();
-    let mut world3d_states = crate::scenes::AdmittedSurfaceMap::default();
-    let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    {
-        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
-        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: "law-window" };
-        let mut cursor = ui_wgpu::wgpu::ScenePaintCursor::default();
-        for _ in 0..4096 {
-            match crate::scenes::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts, ui_wgpu::wgpu::UiDriverDrag::Handle, 1) {
-                ui_wgpu::wgpu::ScenePaintStep::Pending => continue,
-                ui_wgpu::wgpu::ScenePaintStep::Complete => break,
-                ui_wgpu::wgpu::ScenePaintStep::Fault => panic!("node-graph scene paint faulted"),
-            }
-        }
-    }
-    draw
+fn paint_scene_into_draw_list(scene: &UiComponentSceneNode, bounds: Rect) -> super::engine_surface_attach_tests::RetainedSurfacePaint {
+    super::engine_surface_attach_tests::paint_retained_surface_scene(scene, bounds)
 }
 
 /// 🔤️ One action's string fields, key-sorted — the emitted value contract is order-preserving, and a
@@ -148,11 +126,13 @@ fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list()
     let scene = flow_window_scene(surface_id);
     let bounds = Rect { x: 24.0, y: 36.0, w: 966.0, h: 836.0 };
 
-    let draw = paint_scene_into_draw_list(&scene, bounds);
+    let painted = paint_scene_into_draw_list(&scene, bounds);
+    let host_id = painted.owner.host_id.clone();
+    let draw = painted.draw;
 
     let (nodes, edges, engine_is_flow) = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
-        let entry = map.get(surface_id).expect("attach published the engine surface");
+        let entry = map.get(&host_id).expect("attach published the engine surface");
         match entry.node_graph.as_ref().expect("attach constructed the node-graph engine") {
             NodeGraphEngine::Flow(host) => (host.dag.host_snapshot.nodes.len(), host.dag.host_snapshot.edges.len(), true),
             NodeGraphEngine::Dag(host) => (host.dag.host_snapshot.nodes.len(), host.dag.host_snapshot.edges.len(), false),
@@ -161,7 +141,7 @@ fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list()
     assert!(engine_is_flow, "a scene carrying hostSnapshotJson selects the flow engine, exactly as React's NodeGraphHost does");
     assert_eq!((nodes, edges), (7, 6), "the hexagonal-mushroom-column fixture reaches the engine whole");
 
-    let key = engine_raster_key(surface_id).expect("bounded engine raster key");
+    let key = engine_raster_key(&host_id).expect("bounded engine raster key");
     let raster = draw.layers.iter().flat_map(|layer| layer.raster_instances.iter()).find(|(instance_key, _)| instance_key == &key);
     assert!(raster.is_some(), "the painted graph is composited into the window's draw list under {key}");
 
@@ -183,7 +163,7 @@ fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list()
     assert!(resources.terminal_is_empty());
     drop(packet);
     drop(resources);
-    drop_engine_surface(surface_id);
+    super::engine_surface_attach_tests::close_retained_surface_fixture(surface_id);
 }
 
 #[test]
@@ -193,7 +173,8 @@ fn tutorial_semantic_points_resolve_through_live_graph_geometry() {
     drop_engine_surface(surface_id);
     let scene = flow_window_scene(surface_id);
     let bounds = Rect { x: 24.0, y: 36.0, w: 966.0, h: 836.0 };
-    let _draw = paint_scene_into_draw_list(&scene, bounds);
+    let painted = paint_scene_into_draw_list(&scene, bounds);
+    let host_id = painted.owner.host_id.clone();
     let points = [
         semio_framework::IntroductionPoint::Canvas { id: surface_id.into(), x: 0.0, y: 0.0 },
         semio_framework::IntroductionPoint::Entity { id: surface_id.into(), domain: "node".into(), entity: "radius".into(), offset: Some([0.5, 0.5]) },
@@ -201,57 +182,40 @@ fn tutorial_semantic_points_resolve_through_live_graph_geometry() {
         semio_framework::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "radius".into(), value: 1.5 },
     ];
     for point in points {
-        let resolved = resolve_tutorial_surface_point(surface_id, &point).unwrap_or_else(|| panic!("known graph semantic point resolves: {point:?}"));
+        let resolved = resolve_tutorial_surface_point(&host_id, &point).unwrap_or_else(|| panic!("known graph semantic point resolves: {point:?}"));
         assert!(resolved.0 >= 0.0 && resolved.0 <= bounds.w && resolved.1 >= 0.0 && resolved.1 <= bounds.h, "resolved point remains inside the live surface: {resolved:?}");
     }
     for point in [
+        semio_framework::IntroductionPoint::Canvas { id: "another-graph".into(), x: 0.0, y: 0.0 },
+        semio_framework::IntroductionPoint::Canvas { id: host_id.clone(), x: 0.0, y: 0.0 },
         semio_framework::IntroductionPoint::Entity { id: surface_id.into(), domain: "node".into(), entity: "height".into(), offset: None },
         semio_framework::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "height".into(), value: 0.0 },
         semio_framework::IntroductionPoint::Canvas { id: surface_id.into(), x: -1_000_000.0, y: 0.0 },
     ] {
-        assert_eq!(resolve_tutorial_surface_point(surface_id, &point), None, "off-surface semantic point is not targetable: {point:?}");
+        assert_eq!(resolve_tutorial_surface_point(&host_id, &point), None, "off-surface semantic point is not targetable: {point:?}");
     }
     let expected = ENGINE_SURFACES.with(|cell| {
         let surfaces = cell.borrow();
-        let engine = surfaces.get(surface_id).unwrap().node_graph.as_ref().unwrap();
+        let engine = surfaces.get(&host_id).unwrap().node_graph.as_ref().unwrap();
         let NodeGraphEngine::Flow(host) = engine else { panic!("flow host") };
         let state: Value = serde_json::from_str(&host.slider_overlay_state_json().unwrap()).unwrap();
         let slider = state["sliders"].as_array().unwrap().iter().find(|row| row["widgetId"] == "radius").unwrap();
         let ratio = (1.5 - slider["min"].as_f64().unwrap()) / (slider["max"].as_f64().unwrap() - slider["min"].as_f64().unwrap());
         tutorial_graph_world_to_screen(engine, slider["x"].as_f64().unwrap() + (ratio - 0.5) * slider["w"].as_f64().unwrap(), slider["y"].as_f64().unwrap())
     });
-    let actual = resolve_tutorial_surface_point(surface_id, &semio_framework::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "radius".into(), value: 1.5 }).unwrap();
+    let actual = resolve_tutorial_surface_point(&host_id, &semio_framework::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "radius".into(), value: 1.5 }).unwrap();
     assert!((actual.0 - expected[0]).abs() < 0.001 && (actual.1 - expected[1]).abs() < 0.001, "slider domain must use the same zoomed track as React: {actual:?} vs {expected:?}");
-    assert_eq!(resolve_tutorial_surface_point(surface_id, &semio_framework::IntroductionPoint::Scene { id: surface_id.into(), position: [0.0, 0.0, 0.0] }), None, "a 2D graph intentionally has no 3D scene projector");
-    drop_engine_surface(surface_id);
+    assert_eq!(resolve_tutorial_surface_point(&host_id, &semio_framework::IntroductionPoint::Scene { id: surface_id.into(), position: [0.0, 0.0, 0.0] }), None, "a 2D graph intentionally has no 3D scene projector");
+    super::engine_surface_attach_tests::close_retained_surface_fixture(surface_id);
 }
 
 #[test]
 fn node_graph_domain_qualifies_every_target_kind_and_absence_suppresses_interaction_actions() {
-    let domain = NodeGraphInteractionDomain {
-        id: "graph".into(),
-        node_target_prefix: "flow-play-document.widget.".into(),
-        edge_target_prefix: "flow-play-document.synapse.".into(),
-        handle_target_prefix: "flow-play-document.handle.".into(),
-    };
-    assert_eq!(
-        node_graph_domain_targets_json(&domain, "node", &["add".into()]).expect("node targets"),
-        r#"[{"granularity":"node","id":"flow-play-document.widget.add"}]"#
-    );
-    assert_eq!(
-        node_graph_domain_targets_json(&domain, "edge", &["wire-1".into()]).expect("edge targets"),
-        r#"[{"granularity":"edge","id":"flow-play-document.synapse.wire-1"}]"#
-    );
-    assert_eq!(
-        node_graph_domain_targets_json(&domain, "handle", &["add@result".into()]).expect("handle targets"),
-        r#"[{"granularity":"handle","id":"flow-play-document.handle.add@result"}]"#
-    );
-    let snapshot = GraphInteractionSnapshot {
-        node_ids: vec!["add".into()],
-        hovered_id: Some("add".into()),
-        hovered_handle: None,
-        viewport: Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 },
-    };
+    let domain = NodeGraphInteractionDomain { id: "graph".into(), node_target_prefix: "flow-play-document.widget.".into(), edge_target_prefix: "flow-play-document.synapse.".into(), handle_target_prefix: "flow-play-document.handle.".into() };
+    assert_eq!(node_graph_domain_targets_json(&domain, "node", &["add".into()]).expect("node targets"), r#"[{"granularity":"node","id":"flow-play-document.widget.add"}]"#);
+    assert_eq!(node_graph_domain_targets_json(&domain, "edge", &["wire-1".into()]).expect("edge targets"), r#"[{"granularity":"edge","id":"flow-play-document.synapse.wire-1"}]"#);
+    assert_eq!(node_graph_domain_targets_json(&domain, "handle", &["add@result".into()]).expect("handle targets"), r#"[{"granularity":"handle","id":"flow-play-document.handle.add@result"}]"#);
+    let snapshot = GraphInteractionSnapshot { node_ids: vec!["add".into()], hovered_id: Some("add".into()), hovered_handle: None, viewport: Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } };
     let dispatch = graph_interaction_dispatch(PublishedGraphInteraction::default(), snapshot, None).expect("domainless dispatch");
     assert!(!dispatch.publish_select && !dispatch.publish_hover);
     assert_eq!(dispatch.item_count(), 1, "the domain-independent viewport remains publishable");
@@ -273,7 +237,12 @@ fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
     assert_eq!(select.controller_id, "generation3d");
     assert_eq!(
         action_fields(select),
-        vec![("domainId".to_owned(), "graph".to_owned()), ("merge".to_owned(), "replace".to_owned()), ("method".to_owned(), "pick".to_owned()), ("targets".to_owned(), r#"[{"granularity":"node","id":"flow-play-document.widget.extrude"}]"#.to_owned()),],
+        vec![
+            ("domainId".to_owned(), "graph".to_owned()),
+            ("merge".to_owned(), "replace".to_owned()),
+            ("method".to_owned(), "pick".to_owned()),
+            ("targets".to_owned(), r#"[{"granularity":"node","id":"flow-play-document.widget.extrude"}]"#.to_owned()),
+        ],
         "byte-identical to React's nodeGraphSelectionActionArgs with nodeIds [extrude]"
     );
     let hover = actions.iter().find(|action| action.action == "interactionHover").expect("pointer-down publishes interactionHover");
@@ -385,12 +354,14 @@ fn node_graph_paint_publishes_its_captions_over_the_engine_raster() {
     let scene = flow_window_scene(surface_id);
     let bounds = Rect { x: 3.0, y: 54.0, w: 975.0, h: 814.0 };
 
-    let draw = paint_scene_into_draw_list(&scene, bounds);
+    let painted = paint_scene_into_draw_list(&scene, bounds);
+    let host_id = painted.owner.host_id.clone();
+    let draw = painted.draw;
 
     let rows: Value = ENGINE_SURFACES
         .with(|cell| {
             let map = cell.borrow();
-            let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
+            let Some(NodeGraphEngine::Flow(host)) = map.get(&host_id)?.node_graph.as_ref() else { return None };
             serde_json::from_str(&host.label_overlay_paint_state_json().ok()?).ok()
         })
         .expect("the live flow host answers its label overlay state");
@@ -402,15 +373,15 @@ fn node_graph_paint_publishes_its_captions_over_the_engine_raster() {
     assert_eq!(labels - ports, fixture["captionExpectation"]["nodes"].as_u64().unwrap() as usize);
     assert!(!label_rows.iter().any(|row| row["id"] == "column-preview"));
     for handle in fixture["captionExpectation"]["outputHandles"].as_array().unwrap() {
-        let rect = entity_screen_rect(surface_id, "handle", handle.as_str().unwrap());
+        let rect = entity_screen_rect(&host_id, "handle", handle.as_str().unwrap());
         assert!(rect.iter().all(|value| value.is_finite()));
     }
 
-    let key = engine_raster_key(surface_id).expect("bounded engine raster key");
+    let key = engine_raster_key(&host_id).expect("bounded engine raster key");
     let raster_layer = draw.layers.iter().position(|layer| layer.raster_instances.iter().any(|(instance_key, _)| instance_key == &key)).expect("the painted graph is composited into the window's draw list");
     let caption_layer = draw.layers.iter().position(|layer| !layer.overlay_ui_instances.is_empty()).expect("the caption overlay published glyph instances");
     assert!(caption_layer > raster_layer, "captions paint in a LATER layer than the engine raster ({caption_layer} vs {raster_layer}), or the opaque texture covers them");
     let glyphs: usize = draw.layers.iter().map(|layer| layer.overlay_ui_instances.len()).sum();
     assert!(glyphs >= labels, "every published caption reaches the draw list as glyphs, got {glyphs} for {labels} captions");
-    drop_engine_surface(surface_id);
+    super::engine_surface_attach_tests::close_retained_surface_fixture(surface_id);
 }

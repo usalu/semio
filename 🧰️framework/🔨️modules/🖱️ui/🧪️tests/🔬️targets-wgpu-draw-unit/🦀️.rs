@@ -413,7 +413,7 @@ fn world_globals_slot_size_is_aligned() {
 }
 
 #[test]
-fn scene_pass_records_layer_watermarks() {
+fn scene_pass_terminates_its_layer_and_records_the_complete_preceding_watermarks() {
     let mut draw = DrawList::default();
     draw.push_solid([0.0, 0.0, 10.0, 10.0], Rgba::new(1.0, 0.0, 0.0, 1.0));
     draw.push_solid([1.0, 1.0, 8.0, 8.0], Rgba::new(0.0, 1.0, 0.0, 1.0));
@@ -424,7 +424,10 @@ fn scene_pass_records_layer_watermarks() {
     assert_eq!(pass.ui_watermark, 2);
     assert_eq!(pass.vector_watermark, 0);
     assert_eq!(draw.layers[0].ui_instances.len(), 2);
-    assert_eq!(draw.layers[0].vector_vertices.len(), 6);
+    assert!(draw.layers[0].vector_vertices.is_empty());
+    assert_eq!(draw.layers[1].vector_vertices.len(), 6);
+    assert_eq!(draw.layers[1].scissor, draw.layers[0].scissor);
+    assert_eq!(draw.layers[1].foreground_of, draw.layers[0].foreground_of);
 }
 
 #[test]
@@ -532,9 +535,11 @@ fn glass_content_layers_tagged_with_foreground_of() {
     draw.end_glass_content();
     let backdrop = draw.layers.iter().filter(|layer| layer.foreground_of.is_none()).count();
     let foreground = draw.layers.iter().filter(|layer| layer.foreground_of == Some(glass)).count();
-    assert_eq!(backdrop, 2);
+    assert_eq!(backdrop, 3);
     assert_eq!(foreground, 1);
-    assert_eq!(draw.layers[1].ui_instances.len(), 1);
+    assert_eq!(draw.glass_regions[glass].layer_index, 1);
+    assert!(draw.layers[1].ui_instances.is_empty());
+    assert_eq!(draw.layers[2].ui_instances.len(), 1);
 }
 
 #[test]

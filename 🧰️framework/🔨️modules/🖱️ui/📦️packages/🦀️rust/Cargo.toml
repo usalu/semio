@@ -140,6 +140,7 @@ wgpu = { version = "29.0.4", default-features = false, features = ["std", "metal
 arboard = { version = "3", optional = true }
 
 [dev-dependencies]
+tiny-skia = "0.11.4"
 # 🧪️ Keeps `#[test] async fn` bodies' literal `async` while expanding to a sync harness — see the
 # crate's own doc comment. Dev-only: `--lib` never links it, only `--tests`/`--all-targets` do.
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -8,6 +8,13 @@ fn law() -> serde_json::Value {
 }
 
 fn drive_with_suspension(suspension_us: u64) -> (u64, u64) {
+    drive_with_suspension_executing(suspension_us, 0)
+}
+
+/// 🔥️ The same harness with a turn that really executes: after the suspension it spins until its own
+/// accumulator has passed `execute_at_least_us`, so a later turn's accumulator proves non-inheritance
+/// by construction rather than by how quiet the machine happened to be.
+fn drive_with_suspension_executing(suspension_us: u64, execute_at_least_us: u64) -> (u64, u64) {
     let observed = std::rc::Rc::new(std::cell::Cell::new(None));
     let sink = observed.clone();
     let mut suspended = false;
@@ -15,6 +22,9 @@ fn drive_with_suspension(suspension_us: u64) -> (u64, u64) {
         if !suspended {
             suspended = true;
             return std::task::Poll::Pending;
+        }
+        while guest_turn_executing_us().is_some_and(|executing_us| executing_us < execute_at_least_us) {
+            std::hint::spin_loop();
         }
         sink.set(guest_turn_executing_us());
         std::task::Poll::Ready(())
@@ -48,10 +58,19 @@ fn guest_turn_execution_excludes_every_suspension_gap() {
 #[test]
 fn guest_turn_execution_resets_for_every_turn() {
     let law = law();
-    let (first_us, _) = drive_with_suspension(law["suspensionUs"].as_u64().unwrap());
-    let (second_us, _) = drive_with_suspension(law["suspensionUs"].as_u64().unwrap());
+    let suspension_us = law["suspensionUs"].as_u64().unwrap();
     let bound_us = law["perTurnBoundUs"].as_u64().unwrap();
-    assert!(first_us < bound_us && second_us < bound_us, "first={first_us} us second={second_us} us must each stay under {bound_us} us");
-    assert_eq!(guest_turn_executing_us(), Some(second_us), "a settled turn keeps exactly the microseconds it executed");
-    eprintln!("[DEBUG] guest turn execution reset first_us={first_us} second_us={second_us}");
+    // 🧭️ Non-inheritance is proved by CONSTRUCTION, not by a wall-clock read gap. The first turn spins
+    // until its own accumulator has passed the whole per-turn bound; a second turn that inherited it
+    // could not then come back under that bound. The previous shape drove two equally cheap turns and
+    // pinned `guest_turn_executing_us() == second_us` — an equality that holds only while the
+    // microsecond between the in-turn sample and the settled read rounds to zero, so a loaded machine
+    // failed it (`left: Some(3)`) while the product property held. Both clauses below are ratios
+    // against a measured accumulator, so load inflates both sides.
+    let (busy_us, _) = drive_with_suspension_executing(suspension_us, bound_us);
+    assert!(busy_us >= bound_us, "the first turn must really execute past the per-turn bound: busy={busy_us} us bound={bound_us} us");
+    let (second_us, _) = drive_with_suspension(suspension_us);
+    assert!(second_us < bound_us, "a fresh turn inherited the previous turn's microseconds: second={second_us} us busy={busy_us} us bound={bound_us} us");
+    let settled_us = guest_turn_executing_us().expect("a settled turn keeps its own accumulator");
+    assert!(settled_us >= second_us && settled_us < bound_us, "a settled turn keeps exactly the microseconds it executed: settled={settled_us} us in-turn={second_us} us bound={bound_us} us");
 }

@@ -215,11 +215,7 @@ fn shared_clipboard_fixture_copies_order_and_publishes_text_svg_and_recursive_bl
     assert_eq!(raster_events[0]["asset"]["mime"], fixture["paste"]["raster"]["mime"]);
     assert_eq!(raster_events[0]["asset"]["data"], fixture["paste"]["raster"]["dataUrl"]);
     for axis in ["width", "height"] {
-        assert_eq!(
-            raster_events[1]["block"][axis].as_f64(),
-            fixture["paste"]["raster"]["size"][axis].as_f64(),
-            "JSON numeric spelling cannot change the natural raster {axis}",
-        );
+        assert_eq!(raster_events[1]["block"][axis].as_f64(), fixture["paste"]["raster"]["size"][axis].as_f64(), "JSON numeric spelling cannot change the natural raster {axis}",);
     }
 }
 
@@ -228,9 +224,7 @@ fn ink_cancel_requires_the_exact_surface_generation_and_pointer_owner() {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🖋️ink-clipboard/🔣️.json")).expect("shared clipboard fixture");
     let scene = clipboard_scene(&fixture, &fixture["copy"]["selectedIds"]);
     let pointer = ui_render::PointerId(7);
-    let job = InkInteractionJob::new(3, 11, Some(pointer), &scene, InkInteractionEvent::PointerMove { x: 4.0, y: 5.0 })
-        .expect("bounded Ink interaction")
-        .expect("interactive Ink surface");
+    let job = InkInteractionJob::new(3, 11, Some(pointer), &scene, InkInteractionEvent::PointerMove { x: 4.0, y: 5.0 }).expect("bounded Ink interaction").expect("interactive Ink surface");
     assert!(job.matches_pointer_owner(11, pointer));
     assert!(!job.matches_pointer_owner(12, pointer), "a reused surface generation cannot retire the old job");
     assert!(!job.matches_pointer_owner(11, ui_render::PointerId(8)), "a sibling pointer cannot retire the job");

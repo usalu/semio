@@ -291,12 +291,7 @@ fn shared_fixture_table_transfer_crosses_windows_and_revalidates_mime_payload_an
     let source_fixture = &fixture["table"]["source"];
     let destination_fixture = &fixture["table"]["destination"];
     let source = transfer_table(source_fixture["surfaceId"].as_str().unwrap(), "controller.table-a", source_fixture["mime"].as_str(), None);
-    let destination = transfer_table(
-        destination_fixture["surfaceId"].as_str().unwrap(),
-        destination_fixture["dropAction"]["controllerId"].as_str().unwrap(),
-        None,
-        Some(destination_fixture["dropAction"].clone()),
-    );
+    let destination = transfer_table(destination_fixture["surfaceId"].as_str().unwrap(), destination_fixture["dropAction"]["controllerId"].as_str().unwrap(), None, Some(destination_fixture["dropAction"].clone()));
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let theme = Theme::default();
     remember_scene_theme(&theme);

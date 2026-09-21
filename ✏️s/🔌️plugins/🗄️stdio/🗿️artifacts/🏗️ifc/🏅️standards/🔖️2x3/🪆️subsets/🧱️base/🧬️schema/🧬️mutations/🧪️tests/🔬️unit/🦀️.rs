@@ -104,7 +104,11 @@ async fn exact_native_between_noop_inverse_absorb_and_supported_rewrite() {
     assert_exact("self diff export", &crate::standards::v2x3::engine::encode_ifc2x3(&MutationDiff::apply(&self_diff, &imported).expect("valid self diff")).expect("self diff export")).await;
 
     let mut changed_header = imported.document.header.clone();
-    changed_header.file_name = vec![Part21Value::Str("semio-roundtrip-changed.ifc".into())];
+    // 📜️ FILE_NAME's attribute 1 IS the name (ISO 10303-21 §8.2.3); replacing the whole record with
+    // a one-value list states a header of the wrong ARITY, which `write_part21` pads back out to the
+    // standard's seven attributes on export — so the re-import assertion below compared a padded
+    // record against a short one rather than proving the mutation survived the round trip.
+    changed_header.file_name[0] = Part21Value::Str("semio-roundtrip-changed.ifc".into());
     let mutation = Ifc2x3Mutation::SetHeader(set_header::SetHeader { header: changed_header });
     let d1 = Mutation::diff(&mutation, &imported);
     let changed = MutationDiff::apply(d1.diff(), &imported).expect("valid forward diff");

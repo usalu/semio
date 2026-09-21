@@ -41,3 +41,37 @@ The exact Engine token is bound to `SceneSurfaceState` during paint. NodeGraph, 
 The existing Native102 257th Canvas mount capacity failure is fail-first evidence for missing component retirement at the generic scene registry. The new laws must cover the distinct CPU, GPU candidate, and raster table owners; that receipt alone does not prove those owners close.
 
 The first native law is now registered as `a_component_engine_close_retires_only_its_exact_staged_host_and_preserves_the_wire_surface`. It creates two CPU siblings with host ids `scene.41.3.7.1` and `scene.41.4.2.1` over the same public `shared-document-surface`, stages both generations, retires A through the current CPU ladder without the test helper's broad staged drain, and expects only B to remain staged. Production was intentionally left unchanged until the parent records the focused RED receipt.
+
+## Native108 receipt and implementation boundary
+
+Native108 selected 38 renderer laws: 30 passed and eight failed. The exact staged-close law reached its intended RED: after closing sibling A, the staged table still returned `[B, A]` instead of `[B]`. This distinguishes the missing component close from the already-correct host identity and public action address.
+
+The authorized repair now removes a staged packet only through the generation-bearing `EngineSurfaceIdentity`, carries the CPU token from successful scene paint into `SceneSurfaceState`, and drives one fixed external owner through World, CPU, GPU, exact raster-key, witness, and terminal phases. `OsHost` advances one phase before frame admission and the browser worker keeps `continue_frame` armed while the request is occupied. Terminal requests permit the next runtime frame so `SceneSurfaceRetirement` can observe and acknowledge them; whole-host retirement refuses while the bridge still owns a request.
+
+`RasterTextureTable` gained an exact-key retirement mode. Admission waits for foreign upload, reservation, presentation, and retirement owners; it removes only `engine:<host>` from the committed/candidate/previous residency sets and retires matching live or staged GPU resources without consuming another presentation witness. `World3dState` and `IconRender` use the same host-qualified request but no engine token, so Shell takes and drains the exact dynamic owner. Generic components with neither resource finish on the existing local lane.
+
+The separate fail-first law `a_second_component_retirement_yields_before_detaching_its_live_owner` covers backpressure between the UI retirement ledger and the sole Scene external owner. The current pre-repair order removes the second `SCENE_STATE` row and then asserts that the retirement slot is empty; the intended repair must leave the second owner live and leave its UI ledger row at the head until Scene accepts it.
+
+The stale World pointer harness now discovers each generated component host after paint, records wire surface and host separately, reads event counts from the exact host through captured release, and asserts the public wire surface on the retained `World3dState` is unchanged. It no longer indexes runtime state by the document address.
+
+## Native111 receipt and admission repair
+
+Native111 selected 43 laws: 35 passed and eight failed. The exact staged Engine close and Map external-reservation laws passed, validating the exact staged removal and paired external bridge. The second component retirement law reached its intended RED at the old `slot.is_none()` assertion: the second owner had already detached from `SCENE_STATE` before the sole retirement slot refused it.
+
+The authorized repair now checks the sole Scene retirement admission before `SCENE_STATE::take_exact_to_retirement`. Normal retained-document work peeks the exact `UiRetiredComponentScene`, admits its Scene owner, then acknowledges that unchanged queue head. Document close checks the same admission before `close_surface_one` can pop a retirement. A refused second owner therefore remains both live in `SCENE_STATE` and queued in UI until the first external owner is terminal.
+
+## Component asset-close fail-first law
+
+`a_component_world_close_begins_with_its_exact_checked_out_asset_before_world_transfer` is registered in the actual OsHost included test module. It creates real World A and B states with independent GLB requests, checks out A through `RuntimeMailbox::take_renderer_asset_step`, proves distinct admission tokens and B's untouched request, observes the production `ComponentSurfaceCloseOwner` initial phase, returns both exact owners, and retires both states before asserting. Current production begins at `World`; the law requires `Asset`, so a checked-out owner is cancelled or returned against still-live World A before dynamic retirement transfers that state. Root owns the exact target-aware RuntimeMailbox asset step and decoder session; this lane owns the Asset-before-World phase ordering.
+
+Native114 ran three selected renderer laws. The decoder cancellation and rejected-session recovery laws passed. The component close law reached its intended RED because the production owner reported `World` where the exact contract requires `Asset`.
+
+The production owner now starts at `Asset`. One opportunity calls `RuntimeMailbox::close_component_asset_step` against the exact component target and advances to `World` only after the World asset authority reports terminal. The behavioral law keeps A's real asset owner checked out through the first close opportunity, verifies A remains reachable and B retains its distinct token, returns A, and drives the phase owner to finite terminal retirement before checking that A is absent and B's exact request can still be checked out and returned. This law calls the same private Asset/World phase method used by the real OsHost owner; it does not manufacture a presenter or bypass the Shell World transfer.
+
+`build_and_publish_snapshot` now performs its existing bounded `pump_pending_applies` share before the component-close gate. This preserves the prior fixed credit count and one call per host turn while allowing a queued asset-owner handback to rejoin the still-live World authority even when component close keeps frame admission shut. Independent transport job pumping and per-request fetch cancellation remain outside this acceptance claim.
+
+## Native 117 follow-up
+
+The finite component-close law failed at its immediate post-removal fetch of World B. `RuntimeMailbox::take_renderer_asset_step` is a one-surface round-robin step: after World A is removed from the dense admitted map, B shifts behind the retained cursor, so one step may return no owner while resetting the scan. The fixture now scans at most `SCENE_SURFACE_CAPACITY` steps and still requires B's exact token, request, and returned owner. It does not change production scheduling.
+
+A new actual-runtime fail-first law, `a_temporarily_checked_out_runtime_is_busy_not_cancelled_for_its_exact_world_asset`, checks out `AppInteractionState`, observes the exact World fetch as temporarily unavailable, restores the interaction owner, returns the fetch, drains both World fixtures, and only then asserts `current == None` and `cancelled == false`. This distinguishes backpressure from cancellation without leaking the owner on the intended RED. The current `renderer_asset_cancelled` predicate (`!= Some(true)`) is expected to fail that law until root's tri-state repair is activated.

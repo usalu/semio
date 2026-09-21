@@ -38,7 +38,7 @@ afterEach(async () => {
 describe("mounted shell locale refresh", () => {
   it("validates the shared schema and advances one exact mounted owner per step", () => {
     expect(new Ajv({ allErrors: true, strict: false }).validate(schema, fixture)).toBe(true);
-    expect(fixture.requiresGuestRefresh).toBe(false);
+    expect(fixture.requiresGuestRefresh).toBe(true);
     let cursor: RefreshCursor = { generation: 1, locale: fixture.nextLocale, pending: fixture.mountedSurfaceIds };
     for (let index = 0; index < fixture.mountedSurfaceIds.length; index += 1) {
       const before = cursor.pending;

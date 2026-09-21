@@ -21,7 +21,7 @@ fn select_ui(id: &str, value: &str) -> UiNode {
 }
 
 fn tree_ui(sections: Vec<UiTreeSectionNode>) -> UiNode {
-    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
+    UiNode::Tree(UiTreeNode { presentation: Default::default(), sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
 }
 
 /// 🌳️ Manually inserts a `Tree` row `Stack` (mirroring `reconcile::tree_item_row`'s synthesized
@@ -1082,7 +1082,7 @@ fn slider_ui(id: &str, value: f64) -> UiNode {
 fn toggle_ui(id: &str, on: bool) -> UiNode {
     let mut presence = UiPresence::default();
     presence.selected = on;
-    UiNode::Toggle(UiToggleNode { id: id.into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence, menu: None })
+    UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: id.into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence, menu: None })
 }
 
 fn key(key: &str) -> UiEvent {

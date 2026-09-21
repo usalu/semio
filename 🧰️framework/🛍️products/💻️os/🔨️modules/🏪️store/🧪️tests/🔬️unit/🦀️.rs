@@ -1357,6 +1357,12 @@ where
         Self(super::ArtifactStore::new(envelope).await.expect("test fixture history is valid"), None)
     }
 
+    /// 🧹️ Arms the drop-close on a `bare` store once the test has installed its OWN owner catalog:
+    /// a store that carries a disposer must still reach its terminal-empty witness before it drops.
+    fn closes_on_drop(&mut self) {
+        self.1 = Some(close_test_store::<P, Mutation>);
+    }
+
     fn into_inner(self) -> super::ArtifactStore<P, Mutation> {
         let this = std::mem::ManuallyDrop::new(self);
         unsafe { std::ptr::read(&this.0) }
@@ -1536,6 +1542,15 @@ where
     async fn dispatch_wire_with_policy(&mut self, command: &[u8], policy: crate::os_spr::MergePolicy) -> Result<CommandReceipt, VcsError> {
         SpaceMember::dispatch_wire_with_policy(&mut self.0, command, policy).await
     }
+    async fn event_log_payload(&self) -> Result<Vec<u8>, VcsError> {
+        SpaceMember::event_log_payload(&self.0).await
+    }
+    async fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, VcsError> {
+        SpaceMember::announce_tail_edit_payload(&mut self.0).await
+    }
+    async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<(), VcsError> {
+        SpaceMember::ingest_remote_payload(&mut self.0, envelopes).await
+    }
     async fn tail_group_id(&self) -> Option<String> {
         SpaceMember::tail_group_id(&self.0).await
     }
@@ -1579,13 +1594,13 @@ macro_rules! fixture_member_factory {
                 if dialect != &demo_child_dialect() {
                     return Err(VcsError::ValidationFailed("unregistered fixture member dialect".into()));
                 }
-                Ok(Self(create_member_store("demo/v1", id, dialect, initial_pack).await?, None))
+                Ok(Self(create_member_store("demo/v1", id, dialect, initial_pack).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
             }
             async fn open(expected: &crate::os_io::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8]) -> Result<Self, VcsError> {
                 if expected.dialect != demo_child_dialect() {
                     return Err(VcsError::ValidationFailed("unregistered fixture member dialect".into()));
                 }
-                Ok(Self(open_member_store("demo/v1", expected, owner, envelope_pack).await?, None))
+                Ok(Self(open_member_store("demo/v1", expected, owner, envelope_pack).await?, Some(close_test_store::<DemoSnapshot, $mutation>)))
             }
         }
     };
@@ -1831,6 +1846,7 @@ async fn artifact_store_snapshot_roots_and_final_envelope_transfer_in_exact_clos
     drive_retirement_terminal(initial);
     assert!(store.close_take_final_envelope_retirement().expect("detached envelope probe").is_none());
     assert!(store.owned_roots_terminal_is_empty());
+    close_test_store(&mut store);
 }
 
 impl MemberStoreOwner<DemoMutation> for DemoSnapshot {
@@ -2174,6 +2190,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
                         origin: crate::os_spr::MutationOrigin::Transaction { initiator: crate::os_spr::ForeignTarget { artifact_id: "initiator".into(), artifact_kind: "s.test.member".into(), dialect: Some("1/*".into()) } },
                         ..Default::default()
                     }]),
+                    lane: None,
                 }],
                 composition: Some(crate::os_spr::HistoryComposition {
                     owner: Some(("parent".into(), "slot".into(), "member-retained".into())),
@@ -2458,7 +2475,9 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
         assert_eq!(publication.progress().completed_bytes, 0);
         assert!(matches!(member.advance_one_item_publication(&mut *publication, ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 }), Ok(ArtifactStoreOneItemAdvance::Blocked)));
         let mut published = false;
+        let mut turns = 0usize;
         for _ in 0..byte_count + 32 {
+            turns += 1;
             let before = publication.progress();
             match member.advance_one_item_publication(&mut *publication, grant).expect("bounded retained member unit") {
                 ArtifactStoreOneItemAdvance::Published(receipt) => {
@@ -2470,6 +2489,7 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
                 step => panic!("member publication did not progress: {step:?}"),
             }
         }
+        eprintln!("[KN2PROBE] row {sequence} bytes={byte_count} turns={turns} published={published} phase={:?} progress={:?}", publication.phase(), publication.progress());
         assert!(published);
         assert!(publication.retry());
         assert!(matches!(member.advance_one_item_publication(&mut *publication, grant), Ok(ArtifactStoreOneItemAdvance::AwaitingAck(_))));
@@ -2498,10 +2518,12 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
 #[semio_framework_async_macros::async_test]
 async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_without_commit() {
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
-    let mut member = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None)).await;
-    let mut wrong = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut member = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut wrong = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "same-id", DemoSnapshot { n: Some(0) }, None)).await;
     member.install_document_store_owners_exact(retained_demo_member_owners());
     wrong.install_document_store_owners_exact(demo_closable_store_owners());
+    member.closes_on_drop();
+    wrong.closes_on_drop();
     let request = |generation, revision| MemberStoreOneItemWireRequest {
         operation: semio_framework_job::OperationId(800),
         expected_generation: generation,
@@ -2548,11 +2570,12 @@ async fn retained_member_publication_rejects_wrong_owner_staleness_and_cancels_w
 async fn retained_member_group_preparation_reserves_real_history_without_partial_visibility_and_aborts_stale_owners() {
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4096 };
     let mut members = [
-        ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-first", DemoSnapshot { n: Some(0) }, None)).await,
-        ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-second", DemoSnapshot { n: Some(0) }, None)).await,
+        ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-first", DemoSnapshot { n: Some(0) }, None)).await,
+        ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "group-second", DemoSnapshot { n: Some(0) }, None)).await,
     ];
     for member in &mut members {
         member.install_document_store_owners_exact(retained_demo_member_owners());
+        member.closes_on_drop();
     }
     let roots = [members[0].snapshot_root(), members[1].snapshot_root()];
     let before = [members[0].one_item_publication_identity(), members[1].one_item_publication_identity()];
@@ -2576,6 +2599,7 @@ async fn retained_member_group_preparation_reserves_real_history_without_partial
         let mut reserved = false;
         for _ in 0..32 {
             let step = members[index].prepare_one_item_publication(&mut *publications[index], grant).expect("one group preparation or reservation turn");
+            eprintln!("[KN2PROBE] group member {index} phase={:?} step={:?}", publications[index].phase(), step);
             for other in 0..members.len() {
                 assert_eq!(members[other].one_item_publication_identity(), before[other]);
                 assert!(members[other].envelope().vcs.edits.is_empty());
@@ -2929,13 +2953,38 @@ fn close_durable_publication(publication: &mut ArtifactStoreBatchPublication<Dem
 }
 
 fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
-    for _ in 0..4_096 {
+    let mut last = SnapshotRetirementStep::Complete;
+    let mut histogram: std::collections::BTreeMap<String, (usize, usize)> = std::collections::BTreeMap::new();
+    for turn in 0..4_096 {
+        let phase = store.close_owned_phase_witness().split('/').next().unwrap_or("?").to_string();
         let step = SpaceMember::close_owned_step(store, 1, 512).expect("demo artifact store closes under its bounded owner grant");
+        let entry = histogram.entry(phase).or_default();
+        entry.0 += 1;
+        if let SnapshotRetirementStep::Pending { released_bytes, .. } = step {
+            entry.1 += released_bytes;
+        }
         if step == SnapshotRetirementStep::Complete {
             assert!(SpaceMember::close_owned_terminal_is_empty(store));
+            eprintln!("[KN2PROBE] close_demo_artifact_store id={} turns={turn}", store.envelope.id);
             return;
         }
+        last = step;
     }
+    eprintln!("[KN2PROBE] histogram {histogram:?}");
+    eprintln!("[KN2PROBE] close_demo_artifact_store STUCK id={} last={last:?} edits={} applied={} witness={}", store.envelope.id, store.envelope.vcs.edits.len(), store.applied_edit_ids().len(), store.close_owned_phase_witness());
+    let mut extra = 0usize;
+    let mut bytes = 0usize;
+    for _ in 0..4_000_000 {
+        extra += 1;
+        let step = SpaceMember::close_owned_step(store, 1, 512).expect("demo artifact store closes under its bounded owner grant");
+        if let SnapshotRetirementStep::Pending { released_bytes, .. } = step {
+            bytes += released_bytes;
+        }
+        if step == SnapshotRetirementStep::Complete {
+            break;
+        }
+    }
+    eprintln!("[KN2PROBE] close_demo_artifact_store EXTRA turns={extra} bytes={bytes} witness={}", store.close_owned_phase_witness());
     panic!("demo artifact store did not reach its exact terminal-empty witness");
 }
 
@@ -3665,6 +3714,54 @@ fn ephemeral_transfer_preparation_faults_close_presence_and_transient_owners() {
     eprintln!("[DEBUG] ephemeral preparation faults: task errors and invalid prepared receipts close both presence and transient owners while preserving neutral state");
 }
 
+/// 📍️ An ephemeral one-item publication's `progress()` is MONOTONE across its whole life. It used to
+/// answer `ArtifactStoreOneItemCheckpoint::default()` — all zeros — the moment `close_step` released
+/// its preparation owner, so a host polling a gesture saw its progress snap back to 0 between items
+/// (measured on `🌊️flow` as `preparation progress changed from 22013 to 0`, ticket 26/09/19
+/// `📓️flow.md` §5.4). Every window-transient, presence and transient publication polls through this
+/// exact reader, and its batched twin `ArtifactStoreBatchPublication::progress()` already retains its
+/// checkpoint the same way.
+#[semio_framework_async_macros::async_test]
+async fn an_ephemeral_one_item_publication_reports_monotone_progress_across_owner_release() {
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
+    let factory = DemoEphemeralPreparationFactory::admissible();
+    let mut transient = TransientStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(0) });
+    let mut publication =
+        transient.begin_publish_one(semio_framework_job::OperationId(41), 0, DemoMutation::SetN(SetN { n: 4 }), Some(&factory), Some(Arc::new(DemoSnapshotRetirementFactory))).expect("ephemeral publication admits");
+    let mut seen = publication.progress();
+    let mut check = |next: ArtifactStoreOneItemCheckpoint, seen: &mut ArtifactStoreOneItemCheckpoint, phase: &str| {
+        assert!(
+            next.completed_items >= seen.completed_items && next.completed_bytes >= seen.completed_bytes,
+            "ephemeral progress went backwards at {phase}: {:?} items / {:?} bytes after {:?} items / {:?} bytes",
+            next.completed_items,
+            next.completed_bytes,
+            seen.completed_items,
+            seen.completed_bytes
+        );
+        *seen = next;
+    };
+    loop {
+        let advance = transient.advance_publish_one(&mut publication, grant).expect("ephemeral step");
+        check(publication.progress(), &mut seen, "advance");
+        if matches!(advance, ArtifactStoreOneItemAdvance::Published(_)) {
+            break;
+        }
+    }
+    let published = publication.progress();
+    assert!(published.completed_items > 0, "a published ephemeral gesture reports the work it actually did, not zero");
+    assert!(publication.acknowledge());
+    for _ in 0..2048 {
+        let step = publication.close_step(grant).expect("ephemeral close advances");
+        check(publication.progress(), &mut seen, "close");
+        if step == SnapshotRetirementStep::Complete {
+            break;
+        }
+    }
+    assert_eq!(publication.progress(), published, "a fully retired ephemeral publication still reports the gesture it completed");
+    close_ephemeral_publication(&mut publication);
+    eprintln!("[DEBUG] ephemeral one-item progress stayed monotone through advance, publication, acknowledgement and owner release");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn presence_and_transient_one_item_publications_are_retained_stale_safe_cancelable_and_exactly_closed() {
     let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
@@ -3740,7 +3837,7 @@ async fn presence_and_transient_one_item_publications_are_retained_stale_safe_ca
 #[semio_framework_async_macros::async_test]
 #[should_panic(expected = "terminal-empty witness")]
 async fn artifact_store_one_item_drop_rejects_an_unclosed_publication_owner() {
-    let store = Box::leak(Box::new(ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-drop", DemoSnapshot { n: Some(0) }, None)).await));
+    let store = Box::leak(Box::new(ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "retained-drop", DemoSnapshot { n: Some(0) }, None)).await));
     store.install_document_store_owners_exact(demo_closable_store_owners());
     let publication = store
         .begin_apply_batch(
@@ -3774,7 +3871,8 @@ async fn a_panicking_body_holding_a_live_store_unwinds_instead_of_aborting_the_p
     }));
     std::panic::set_hook(previous);
     let payload = outcome.expect_err("the simulated failure must unwind, not abort the process");
-    assert_eq!(payload.downcast_ref::<String>().map(String::as_str), Some("simulated assertion failure with a live store in scope"));
+    let message = payload.downcast_ref::<String>().map(String::as_str).or_else(|| payload.downcast_ref::<&'static str>().copied());
+    assert_eq!(message, Some("simulated assertion failure with a live store in scope"));
 }
 //#endregion 📬️OneItemPublicationLaws
 
@@ -4708,7 +4806,9 @@ async fn composition_pins_rederive_checkpoint_identity_without_partial_mutation(
     let rederived = &store.envelope().vcs.checkpoints[0];
     assert_ne!(rederived.id, original_checkpoint_id);
     assert_eq!(rederived.composition_pins.len(), 1);
-    assert!(super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(owned_test_envelope(&store).await).await.is_ok(), "a persisted pinned checkpoint must validate its rederived identity");
+    let mut revalidated = super::ArtifactStore::<DemoSnapshot, DemoMutation>::new(owned_test_envelope(&store).await).await.expect("a persisted pinned checkpoint must validate its rederived identity");
+    revalidated.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
+    close_test_store(&mut revalidated);
     retire_demo_envelope(before);
 }
 
@@ -5361,13 +5461,15 @@ async fn reset_and_apply_reject_malformed_history_before_persisting() {
     malformed_constructor.cursor = Some(ArtifactCursor::new(vec!["missing".into()], Vec::new(), None));
     assert!(matches!(super::ArtifactStore::new(malformed_constructor).await, Err(VcsError::UnknownEdit(id)) if id == "missing"), "construction must reject malformed cursor history before any mutation applies");
 
-    let mut legacy_seed = super::ArtifactStore::new(fresh()).await.expect("valid seed history");
+    let mut legacy_seed = ArtifactStore::new(fresh()).await;
     legacy_seed.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], description: None }).await.expect("seed edit");
     let files = print_document_pack(legacy_seed.envelope()).await.expect("owned history encode");
-    let mut cursorless = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("owned history decode").envelope;
+    let mut cursorless = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("owned history decode").into_envelope();
     cursorless.cursor = None;
-    assert_eq!(super::ArtifactStore::new(cursorless).await.expect("cursorless authoritative history is validated and folded").snapshot().expect("cursorless snapshot"), DemoSnapshot { n: Some(3) });
-    let mut duplicate_history = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("second owned history decode").envelope;
+    let cursorless_store = ArtifactStore::new(cursorless).await;
+    assert_eq!(cursorless_store.snapshot().expect("cursorless snapshot"), DemoSnapshot { n: Some(3) });
+    drop(cursorless_store);
+    let mut duplicate_history = parse_document_pack::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr).await.expect("second owned history decode").into_envelope();
     duplicate_history.cursor = None;
     let duplicate_edit = duplicate_history.vcs.edits[0].clone();
     duplicate_history.vcs.edits.try_push(duplicate_edit).expect("duplicate test edit fits the fixed history ledger");
@@ -5939,10 +6041,10 @@ async fn space_switch_alternative_fans_out_and_restores_pinned_member_state() {
 
 #[semio_framework_async_macros::async_test]
 async fn space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt() {
-    let mut member_early = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-early", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut member_early = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-early", DemoSnapshot { n: Some(0) }, None)).await;
     member_early.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN(TimestampedSetN { n: 1, physical_ms: 1_000 })], description: None }).await.expect("apply early");
 
-    let mut member_late = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: Some(0) }, None)).await;
+    let mut member_late = ArtifactStore::new(create_document_envelope::<DemoSnapshot, TimestampedMutation>("demo-ts/v1", "member-late", DemoSnapshot { n: Some(0) }, None)).await;
     member_late.dispatch(ArtifactCommand::Apply { mutations: vec![TimestampedMutation::SetN(TimestampedSetN { n: 9, physical_ms: 2_000 })], description: None }).await.expect("apply late");
 
     let mut host = SpaceHost::new(create_document_envelope(&format!("{S_SPACE_HISTORY_SCHEMA}/v1"), "studio", SpaceHistorySnapshot::default(), None)).await.expect("valid space host history");
@@ -6198,8 +6300,9 @@ async fn document_text_preserves_non_contiguous_edit_sequences_and_rejects_inval
     store.0.envelope.vcs.edits[1].sequence_number = 17;
 
     let files = print_document_text(store.envelope()).await.expect("print strict text");
-    let parsed = parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &files.ops).await.expect("parse strict text");
-    assert_eq!(parsed.envelope.vcs.edits.iter().map(|edit| edit.sequence_number).collect::<Vec<_>>(), vec![4, 17]);
+    let parsed = parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &files.ops).await.expect("parse strict text").into_envelope();
+    assert_eq!(parsed.vcs.edits.iter().map(|edit| edit.sequence_number).collect::<Vec<_>>(), vec![4, 17]);
+    retire_demo_envelope(parsed);
 
     let invalid = files.ops.replacen("sequence=4", "sequence=-1", 1);
     assert!(matches!(parse_document_text::<DemoSnapshot, SeverityMutation>(&files.dsl, &invalid).await, Err(error) if error.message.contains("invalid edit sequence -1")));
@@ -6246,6 +6349,7 @@ async fn conflict_generation_and_validation_canonicalize_repeated_actors() {
     let mut malformed = owned_test_envelope(&store).await;
     malformed.conflicts[0].actors.push(ActorId("same-peer".into()));
     assert!(matches!(validate_persisted_conflicts(&malformed).await, Err(VcsError::ValidationFailed(message)) if message.contains("malformed actor identities")));
+    retire_demo_envelope(malformed);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -6406,7 +6510,7 @@ async fn spr_parse_rejects_history_without_authoritative_operation_metadata() {
             description: None,
             ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(SeverityMutation::SetN(SeveritySetN { n: 1 }).encode_op().expect("encode")) }],
             inverse: Vec::new(),
-            meta: None,
+            meta: None, lane: None,
         }],
         ..Default::default()
     };
@@ -6659,6 +6763,7 @@ async fn materialize_document_snapshot_rejects_an_unknown_edit_id() {
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let error = materialize_document_snapshot(&envelope, &["missing-edit".to_string()]).await.unwrap_err();
     assert_eq!(error, VcsError::UnknownEdit("missing-edit".into()));
+    retire_demo_envelope(envelope);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -6722,6 +6827,7 @@ async fn reconcile_alternative_requires_an_existing_checkpoint() {
     let mut envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let error = reconcile_alternative(&mut envelope, "reconciled", None, Vec::new()).await.unwrap_err();
     assert_eq!(error, VcsError::NoCheckpoint);
+    retire_demo_envelope(envelope);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -6747,6 +6853,8 @@ async fn reconcile_alternative_pins_the_latest_checkpoint_and_optionally_records
     assert_eq!(recorded_checkpoint.authors, authors);
     assert_eq!(recorded_checkpoint.message, Some("reconciled".into()), "the reconciliation checkpoint's own message is fixed, distinct from the change description");
     assert_eq!(with_message.vcs.changes.last().unwrap().description, Some("merged concurrent work".into()), "the passed checkpoint_message becomes the change's description");
+    retire_demo_envelope(without_message);
+    retire_demo_envelope(with_message);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -7206,6 +7314,14 @@ impl MemberStoreOwner<ValidatedMutation> for DemoSnapshot {
     }
 }
 
+impl MemberStoreOwner<TimestampedMutation> for DemoSnapshot {
+    type SnapshotOpen = UnsupportedMemberSnapshotOpen<Self>;
+
+    fn member_store_owners() -> DocumentStoreOwners<Self, TimestampedMutation> {
+        DocumentStoreOwners::new(Arc::new(DemoSnapshotRetirementFactory), Arc::new(DemoInitialSnapshotRetirementFactory), Arc::new(DemoMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<DemoSnapshot, TimestampedMutation>::new()))
+    }
+}
+
 /// 🎯️ The dialect every composition fixture below mints children under.
 fn demo_child_dialect() -> crate::os_io::ArtifactDialect {
     crate::os_io::ArtifactDialect { artifact_kind: "s.stdio.mesh".into(), standard: "1".into(), subset: "*".into() }
@@ -7350,10 +7466,11 @@ async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog
 
 #[semio_framework_async_macros::async_test]
 async fn member_close_rejects_missing_owner_and_preserves_the_installed_disposer_until_terminal() {
-    let mut missing = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: Some(1) }, None)).await;
+    let mut missing = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "missing-member-owner", DemoSnapshot { n: Some(1) }, None)).await;
     assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Err(reason) if reason.contains("no owner-supplied bounded disposer")));
 
     missing.install_document_store_owners_exact(DemoSnapshot::member_store_owners());
+    missing.closes_on_drop();
     assert!(matches!(SpaceMember::close_owned_step(&mut missing, 1, 4_096), Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= 4_096));
     assert!(missing.owned_disposer_installed(), "the admitted owner remains retained until terminal close");
     assert!(!SpaceMember::close_owned_terminal_is_empty(&missing));
@@ -7376,6 +7493,7 @@ async fn typed_child_store_factory_rejects_empty_genesis_and_dialect_less_owned_
     let orphan = encode_document_pack_bytes(&files.pack, &files.spr).await;
     let expected = crate::os_io::ArtifactRef { artifact_id: "child-no-dialect".into(), dialect: demo_child_dialect() };
     assert!(matches!(open_member_store::<DemoSnapshot, DemoMutation>("demo/v1", &expected, envelope.owner.as_ref(), &orphan).await, Err(VcsError::Deserialize(_))), "an owned child with no dialect must fail closed");
+    retire_demo_envelope(envelope);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -8254,3 +8372,25 @@ async fn group_receipt_messages_contains_the_union_with_member_path_prefixed_tar
 }
 //#endregion 🔖️PhasePolicyTests
 //#endregion 🔖️CompositionTests
+
+//#region 🔖️RefusedReloadTests
+/// 🛡️ A REFUSED reload RETURNS its `VcsError` — it never aborts the process. `set_state` owns the
+/// candidate envelope it consumed and `ArtifactEnvelope`'s `Drop` asserts its owners were detached,
+/// so letting a `?` drop a POPULATED candidate turned every malformed-document refusal into a
+/// process abort instead of the error the caller is meant to read (measured 2026-09-21 as
+/// `ArtifactEnvelope::drop ← drop_glue ← set_state::{closure#0} ← reset::{closure#0}`). The refusal
+/// path hands the candidate to `ArtifactEnvelope::retire_unadopted`, the live store survives
+/// unchanged, and it still closes to terminal-empty afterwards.
+#[semio_framework_async_macros::async_test]
+async fn a_refused_reload_returns_its_error_and_retires_the_candidate_it_consumed() {
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(3) }, None)).await;
+    store.install_document_store_owners_exact(demo_closable_store_owners());
+    let mut rejected = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "refused-reload", DemoSnapshot { n: Some(9) }, None);
+    let orphan = vec![crate::os_spr::EditMessages { edit_id: "edit-that-never-existed".to_string(), messages: vec![crate::os_spr::MutationMessage::info("mutation.cascade", "orphan")] }];
+    rejected.edit_messages = ArtifactEditMessageLedger::try_from_entries(orphan).unwrap_or_else(|_| panic!("one exact orphan message entry is admitted by the fixed ledger"));
+    let error = store.reset(rejected).await.expect_err("a message ledger naming an edit the history never recorded must be refused");
+    assert!(format!("{error:?}").contains("invalid message ledger"), "the caller reads the refusal itself: {error:?}");
+    assert_eq!(store.snapshot_ref().n, Some(3), "the live store survives a refused reload unchanged");
+    close_demo_artifact_store(&mut store);
+}
+//#endregion 🔖️RefusedReloadTests

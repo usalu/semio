@@ -66,7 +66,13 @@ pub(crate) fn agg_diff(this: &Ifc2x3Mutation, base: &Ifc2x3Snapshot) -> protocol
     let mut next = base.clone();
     match this {
         Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
-            crate::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot).expect("IFC2X3 SetSnapshot must carry a valid logical model");
+            // 🪓 The RAW model-edit path: it carries the logical model verbatim and never validates.
+            // Schema conformance is owned by the two gates that can report it — `encode_ifc2x3`
+            // (refuses to export a non-IFC2X3 model) and every SUBSET's own validator reached
+            // through `build()` (`Ifc2x3CobieMutation`/`Ifc2x3SavMutation`/`Ifc2x3Cv20Mutation`
+            // each `reject` instead). The `expect` that used to stand here aborted the whole
+            // process, and `agg_inverse` below hands back `SetSnapshot(base)` for EVERY mutation —
+            // so an inverse taken against a still-default snapshot panicked by construction.
             return protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot));
         }
         Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance }) => match next.document.instances.iter_mut().find(|candidate| candidate.id == instance.id) {

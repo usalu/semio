@@ -15,5 +15,5 @@ pub fn diff(payload: &CreateBenchmarkRecord, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A benchmark record already exists with this id.", [payload.benchmark_record.header.id.0.clone()]);
     }
     records.push(payload.benchmark_record.clone());
-    protocol::MutationOutcome::new(ProgramDiff { benchmarks: Some(crate::benchmarks_child_from_records(&records)), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { benchmarks_payload: Some(records.clone()), benchmarks: Some(crate::benchmarks_child_from_records(&records)), ..Default::default() })
 }

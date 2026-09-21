@@ -8,15 +8,51 @@ pub(crate) mod context {
     /// 🧪️ A registry-backed app bound to the live runtime instance `meta("local")` addresses. The registry-less
     /// `artifact_app_laws::new_app` cannot construct this app: its tool proofs need the manifest's `Migrated`
     /// classifications, and without them construction faults with `interactive-job.catalog-authority`.
-    pub async fn new_app() -> WiresApp {
+    pub async fn new_app() -> OwnedWiresApp {
         let mut app = app_with_registry().await;
         app.bind_instance_id(meta("local").instance_id).await;
         app
     }
     
     /// 🧹️ Retires the app through its bounded close protocol instead of a panicking destructor.
-    pub fn close(mut app: WiresApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    pub fn close(mut app: OwnedWiresApp) {
+        app.close();
+    }
+
+    /// 🔚 A mounted app that RETIRES ITSELF. A live `ArtifactStore` asserts in `Drop`
+    /// (`artifact store reached Drop without its exact terminal-empty shallow-shell witness`) unless
+    /// it walked its bounded close loop first, so the fixture owns the close instead of asking every
+    /// law to remember a trailing `close(&mut app)` — which is what makes a law that fails an
+    /// assertion report ITS failure instead of a close panic. Skipped while unwinding, where the
+    /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
+    pub struct OwnedWiresApp(WiresApp);
+
+    impl OwnedWiresApp {
+        /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
+        pub fn close(&mut self) {
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+        }
+    }
+
+    impl std::ops::Deref for OwnedWiresApp {
+        type Target = WiresApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for OwnedWiresApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for OwnedWiresApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                self.close();
+            }
+        }
     }
     
     /// 🧪️ Framework test context gap (SDK GAP, see this ticket's `📓️w0-f-report.md` handoff #3):
@@ -30,12 +66,12 @@ pub(crate) mod context {
     
     /// 🧪️ An app wired to the real manifest registry — required to resolve the "graph" interaction
     /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
-    pub async fn app_with_registry() -> WiresApp {
-        new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(wires_manifest_for_tests).await
+    pub async fn app_with_registry() -> OwnedWiresApp {
+        OwnedWiresApp(new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(wires_manifest_for_tests).await)
     }
     
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
-    pub async fn metabolism_app() -> WiresApp {
+    pub async fn metabolism_app() -> OwnedWiresApp {
         let mut app = new_app().await;
         let document = crate::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
         let mut envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
@@ -53,8 +89,19 @@ pub(crate) mod context {
         assert!(retirement.terminal_is_empty(), "seed envelope retires completely");
     }
     
+    /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does — on a
+    /// mounted app `dispatch_typed` only QUEUES the operation, so a law reading `app.snapshot()`
+    /// straight afterwards would observe the pre-dispatch document, and the returned
+    /// `InvocationResult` carries neither the mutations nor the effects the operation produces.
+    pub async fn settle(app: &mut WiresApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation")
+    }
+
+    /// 🎛️ Dispatches one typed command and settles its publication.
     pub async fn dispatch(app: &mut WiresApp, command: WiresCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        settle(app).await;
+        result
     }
     
     pub async fn render(app: &mut WiresApp, body_key: &str) -> String {
@@ -258,7 +305,7 @@ async fn ingest_operations_is_idempotent() {
     let (near, mut far) = MemoryBackbone::pair("mem://wires-idempotent", "mem://wires-idempotent").await;
     sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
     sender.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("local")).await.expect("apply command");
-    settle_registered_typed_operation(&mut sender, meta("local").instance_id).await.expect("the edit publishes");
+    settle_registered_typed_operation(&mut *sender, meta("local").instance_id).await.expect("the edit publishes");
     let mut envelopes = Vec::new();
     for message in far.receive().await.expect("receive") {
         if let BackboneMessage::Mutations { envelopes: operations } = message {
@@ -308,9 +355,9 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     // A adds node-3; B relates node-1 to node-2 — disjoint edits on the graph.
     let receiver = meta("local").instance_id;
     instance_a.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a")).await.expect("a adds node");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's edit publishes");
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *instance_a, receiver).await.expect("a's edit publishes");
     instance_b.dispatch_typed(WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into() }), &meta("actor-b")).await.expect("b relates node-1 to node-2");
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance_b, receiver).await.expect("b's edit publishes");
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *instance_b, receiver).await.expect("b's edit publishes");
 
     instance_a.tick_backbone().await.expect("a folds b's events");
     instance_b.tick_backbone().await.expect("b folds a's events");

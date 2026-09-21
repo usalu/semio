@@ -320,11 +320,30 @@ pub struct SelectProps {
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct ToggleProps {
+    #[serde(default, skip_serializing_if = "ToggleAppearance::is_button")]
+    #[value(default, skip_serializing_if = "ToggleAppearance::is_button")]
+    pub appearance: ToggleAppearance,
     pub on: bool,
     pub icon: crate::UiText,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<Label>,
+}
+
+/// ☑️ Closed binary-control presentation shared by every renderer.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub enum ToggleAppearance {
+    #[default]
+    Button,
+    Checkbox,
+}
+
+impl ToggleAppearance {
+    pub fn is_button(&self) -> bool {
+        matches!(self, Self::Button)
+    }
 }
 
 /// 🗝️ Props for `Component::KeyValueList`.
@@ -400,7 +419,6 @@ impl ProgressProps {
     pub fn is_determinate(&self) -> bool {
         self.total.is_some()
     }
-
 }
 
 /// 📐️ The filled share in `0.0..=1.0` of a bar at `completed` of `total`; `None` while indeterminate. A
@@ -418,11 +436,30 @@ pub fn progress_fraction(completed: f64, total: Option<f64>) -> Option<f64> {
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct TreeProps {
+    #[serde(default, skip_serializing_if = "TreePresentation::is_standard")]
+    #[value(default, skip_serializing_if = "TreePresentation::is_standard")]
+    pub presentation: TreePresentation,
     /// 🕹️ Binds this tree to an app-declared `InteractionDefinition` domain — selection/hover for
     /// bound items is owned by the framework's presence channel, not by per-item props.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub interaction_domain: Option<crate::UiText>,
+}
+
+/// 🌳️ A tree's inherited row and value-column presentation.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub enum TreePresentation {
+    #[default]
+    Standard,
+    Compact,
+}
+
+impl TreePresentation {
+    pub fn is_standard(&self) -> bool {
+        matches!(self, Self::Standard)
+    }
 }
 
 /// 🪟️ The materialised slice of a logically `total`-long child list: the record's `children` are the
@@ -554,7 +591,18 @@ impl TreeItemProps {
         for action in self.row_actions.iter() {
             row_actions.try_push(action.credited_clone()?).ok()?;
         }
-        Some(Self { label: self.label.clone(), description: self.description.clone(), icon: self.icon.clone(), default_open: self.default_open, draggable: self.draggable, drag_data: self.drag_data.clone(), dimmed: self.dimmed, window: self.window, granularity: self.granularity.clone(), row_actions })
+        Some(Self {
+            label: self.label.clone(),
+            description: self.description.clone(),
+            icon: self.icon.clone(),
+            default_open: self.default_open,
+            draggable: self.draggable,
+            drag_data: self.drag_data.clone(),
+            dimmed: self.dimmed,
+            window: self.window,
+            granularity: self.granularity.clone(),
+            row_actions,
+        })
     }
 }
 

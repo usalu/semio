@@ -68,7 +68,12 @@ fn contribution_consumers_declare_the_hidden_app_command() {
     for app in test_bundle().manifest.apps {
         if let Some(command) = app.commands.iter().find(|command| command.id == "setContributions") {
             assert!(!command.in_palette, "host catalogue command leaked into {}'s palette", app.id);
-            assert_eq!(command.args.iter().map(|arg| arg.id.as_str()).collect::<Vec<_>>(), vec!["json"]);
+            // 📄️ A contributions push is either one whole payload (`json`) or one PAGE of it
+            // (`json` + `page`/`pageCount`) — generation3d's push outgrew the single-invocation wire
+            // ceiling and streams pages now (`✏️editor/🦀️.rs` `COMMAND_MAXIMUM_BYTES`). Both rosters
+            // start with the payload argument and declare no other host-catalogue argument.
+            let args: Vec<&str> = command.args.iter().map(|arg| arg.id.as_str()).collect();
+            assert!(args == vec!["json"] || args == vec!["json", "page", "pageCount"], "{} declares an unknown contributions argument roster: {args:?}", app.id);
             assert_eq!(command.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "host catalogue command in {} must be admitted as migrated interactive work", app.id);
         }
     }
@@ -152,7 +157,9 @@ fn every_bundled_surface_declares_its_derived_child_dialects() {
     assert_editor_children_declared::<Puzzle3dPlayApp>("s.puzzle.puzzle3d@1/*#editor", 0);
     assert_editor_children_declared::<SourcingCurationApp>("s.sourcing.curation@1/*#editor", 1);
     assert_viewer_children_declared::<SourcingViewer>("s.sourcing.curation@1/*#viewer", 1);
-    assert_editor_children_declared::<Process3dPlayApp>("s.process.process3d@1/*#editor", 0);
-    assert_viewer_children_declared::<Process3dViewer>("s.process.process3d@1/*#viewer", 0);
+    // 🏭️ process3d composes its own genesis children now (ticket 26/09/17 `LoadDocument` path:
+    // `genesis_child_pack` + `SemioMembers`), so its default document derives five declared children.
+    assert_editor_children_declared::<Process3dPlayApp>("s.process.process3d@1/*#editor", 5);
+    assert_viewer_children_declared::<Process3dViewer>("s.process.process3d@1/*#viewer", 5);
     assert_editor_children_declared::<Gis2dPlayApp>("s.gis.gismap@1/*#editor", 2);
 }

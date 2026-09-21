@@ -126,3 +126,65 @@ async fn regenerate_committed_diff_fixtures() {
     }
 }
 //#endregion 🚧️TemporaryFixtureRegeneration
+
+//#region 🔖️GenesisLaw
+/// 🌱️ `s.note.note`'s creation authority, exercised through the ONE producer every plugin's
+/// `codec.genesis` export runs (`app::artifact_app_genesis_pair`, ticket 26/09/18 slice TC3b). GIS
+/// has this law in `📇️native-codecs/🧪️tests`; note is the first package a hub links NO Rust codec
+/// for, so for note this producer is not merely the guest's answer — it IS how the document gets
+/// created, and nothing else can catch a fault in it before a hub traps on a live creation.
+///
+/// Measured 2026-09-21: `codec.genesis(s.note.note)` on the freshly built note component trapped
+/// with `wasm trap: unreachable executed` during the trusted-catalog bootstrap, i.e. a guest panic.
+/// This runs the identical producer natively, where a panic carries its message.
+#[semio_framework_async_macros::async_test]
+async fn note_genesis_produces_a_complete_zero_history_pair_at_a_server_minted_id() {
+    let document_id = "artifact-11223344556677889900aabbccddeeff";
+    let pair = semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<crate::editor::note::NotePlayApp>>(document_id)
+        .await
+        .expect("note genesis pair");
+    assert!(!pair.pack.is_empty(), "note genesis pack is empty");
+    assert!(!pair.spr.is_empty(), "note genesis spr is empty");
+    let history = store::os_spr::decode_history(&pair.spr, &store::os_spr::DecodeOptions::default()).await.expect("note genesis history");
+    assert_eq!(history.doc_id, document_id);
+    assert_eq!(history.schema, NOTE_DOCUMENT_SCHEMA);
+    assert!(history.edits.is_empty() && history.transitions.is_empty(), "note genesis carries history");
+}
+//#endregion 🔖️GenesisLaw
+
+#[test]
+fn temporary_regenerate_mutation_fixtures() {
+    fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+        for entry in std::fs::read_dir(dir).into_iter().flatten().flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                walk(&path, out);
+            } else if path.file_name().is_some_and(|name| name == "🔣️.json") {
+                out.push(path);
+            }
+        }
+    }
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets");
+    let mut files = Vec::new();
+    walk(&root, &mut files);
+    for path in files {
+        let text = std::fs::read_to_string(&path).expect("fixture reads");
+        let parent = path.parent().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+        let canonical = if parent == "🔺️diff" {
+            dsl::os_pack::from_json_str::<NoteDiff>(&text).ok().map(|value| dsl::os_pack::to_json_string(&value))
+        } else if parent == "🦠️mutation" {
+            dsl::os_pack::from_json_str::<crate::schema::mutations::NoteMutation>(&text).ok().map(|value| dsl::os_pack::to_json_string(&value))
+        } else if parent == "⬅️before" || parent == "➡️after" {
+            dsl::os_pack::from_json_str::<NoteSnapshot>(&text).ok().map(|value| dsl::os_pack::to_json_string(&value))
+        } else {
+            None
+        };
+        let Some(canonical) = canonical else { continue };
+        let reparsed: serde_json::Value = serde_json::from_str(&canonical).expect("canonical reparses");
+        let original: serde_json::Value = serde_json::from_str(&text).expect("original reparses");
+        if reparsed != original {
+            std::fs::write(&path, format!("{}\n", serde_json::to_string_pretty(&reparsed).expect("pretty"))).expect("fixture writes");
+            println!("[DEBUG] rewrote {}", path.display());
+        }
+    }
+}

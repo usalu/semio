@@ -102,14 +102,17 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 #[semio_framework_async_macros::async_test]
 async fn flow_document_text_round_trips_store_with_applied_operation() {
     let mut app = flow_app_with_registry().await;
+    let content_id = app.snapshot().expect("Flow parent before move").content.child_id.clone();
     Box::pin(settle_flow_command(
         &mut *app,
         FlowCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "slider".into(), x: 1.0, y: 2.0 }),
     ))
     .await;
-    let live = app.snapshot().expect("moved Flow parent snapshot").to_host_snapshot();
-    let moved = live.layout.get("slider").expect("moved slider layout");
-    assert_eq!((moved.x, moved.y), (1.0, 2.0));
+    let snapshot = app.snapshot().expect("moved Flow parent snapshot");
+    assert_eq!(snapshot.content.child_id, content_id, "move must retain the exact composed content member");
+    let content = Box::pin(content_snapshot(&app)).await;
+    let moved = content.nodes.iter().find(|node| node.id == "slider").expect("moved slider content node");
+    assert_eq!((moved.position.x, moved.position.y), (1.0, 2.0));
     Box::pin(assert_document_archive_round_trip(&mut *app, 71)).await;
     close_registered_fixture_app(&mut *app);
 }

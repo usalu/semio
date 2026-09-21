@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn request(generation: u64, width: u32) -> SurfaceResizeRequest {

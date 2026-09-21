@@ -9,8 +9,74 @@
  * exactly this reason; these are the other two control kinds. */
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement } from "react";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import Ajv from "ajv";
 import { afterEach, describe, expect, it } from "vitest";
 import { WindowMeasureNumber, WindowMeasureSelect, WindowMeasureToggle } from "../../🧱️elements/🛠️ShellHelpers/🎚️measure-controls/🟦️.tsx";
+import { renderWindowMeasuresTree } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
+import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
+import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+
+it("interprets the neutral compact Tree and preserves checkbox identity, authority, and disability", () => {
+  const law = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/📏️window-measures/🔣️.json"), "utf8"));
+  const root = law.windows[0].expectedOverlay;
+  for (const disabled of [false, true]) {
+    const nodes: any[] = [];
+    const visit = (outline: any): number => {
+      const id = nodes.length;
+      const node = { ...outline, id, children: [] as number[], layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, accessibility: { label: outline.label, description: null, live: "off", shortcut: null, hidden: false }, menu: null, transition: null };
+      if (outline.component.type === "toggle") node.disabled = disabled;
+      nodes.push(node);
+      node.children = outline.children.map(visit);
+      return id;
+    };
+    const rootId = visit(root);
+    const store = new UiDocumentStore("compact-tree-law");
+    store.loadSnapshot({ surface: "compact-tree-law", revision: 1, root: rootId, nodes, layoutEpoch: 0n } as any);
+    const intents: any[] = [];
+    const view = render(createElement(UiNodeView, { store, id: rootId, context: { store, onAction: () => {}, onIntent: (intent: unknown) => intents.push(intent) } }));
+    const tree = view.container.querySelector("[role='tree']")!;
+    expect(tree.getAttribute("data-tree-presentation")).toBe("compact");
+    const input = view.container.querySelector<HTMLInputElement>("input[type='checkbox'][aria-label='Grid']")!;
+    expect(input).toBeTruthy();
+    expect(input.checked).toBe(true);
+    expect(input.disabled).toBe(disabled);
+    expect(input.id).toBe("compact-tree-law/puzzle3d-main/grid-visible");
+    fireEvent.click(input);
+    expect(intents).toHaveLength(disabled ? 0 : 1);
+    if (!disabled) {
+      expect(intents[0].nodeKey).toBe("puzzle3d-main/grid-visible");
+      expect(intents[0].trigger).toBe("change");
+      expect(intents[0].input).toBe(false);
+    }
+    cleanup();
+  }
+});
+
+it("renders the neutral Window Options tree with compact rows and closed child retirement", () => {
+  const law = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🌳️window-measures-tree-parity/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🧬️schema/🌳️window-measures-tree-parity/🔣️.json"), "utf8"));
+  const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);
+  expect(validate(law), JSON.stringify(validate.errors)).toBe(true);
+  const view = render(renderWindowMeasuresTree(law.measures, () => undefined));
+  const rows = Array.from(view.container.querySelectorAll("[data-slot='window-measure-tree-row']"));
+  expect(rows.map(row => row.querySelector("[data-slot='tree-label']")?.textContent)).toEqual(law.expected.labels);
+  const hasClosedLabel = () => Array.from(view.container.querySelectorAll("[data-slot='tree-label']")).some(label => label.textContent === law.expected.closedLabel);
+  expect(hasClosedLabel()).toBe(false);
+  const toggle = view.container.querySelector<HTMLInputElement>("input[type='checkbox'][aria-label='Visible']")!;
+  expect(toggle).toBeTruthy();
+  expect(toggle.checked).toBe(true);
+  expect(view.container.querySelector("[role='combobox']")).toBeTruthy();
+  expect(rows.every(row => row.classList.contains("min-h-tiny"))).toBe(true);
+  const lastGroup = rows.at(-1)!;
+  fireEvent.click(lastGroup.querySelector("button")!);
+  expect(hasClosedLabel()).toBe(true);
+  fireEvent.click(lastGroup.querySelector("button")!);
+  expect(hasClosedLabel()).toBe(false);
+  cleanup();
+});
 
 type Dispatched = { readonly args?: Record<string, unknown> };
 

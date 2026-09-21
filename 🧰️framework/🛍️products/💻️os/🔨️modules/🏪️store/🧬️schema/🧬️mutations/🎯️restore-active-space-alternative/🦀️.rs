@@ -8,10 +8,12 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Payload
 /// @emoji 🎯️ serde stays TEST-ONLY: feeds `SpaceHistoryMutation`'s own `cfg_attr(test)` oracle
 /// derive (this file's own `serde_json` differential test below). Production never serializes
-/// through serde. `#[value(...)]` carries no `deserialize_with` mirror for `alternative_id`
-/// because the derive's own missing-field rule (no `#[value(default)]` → decode error) already
-/// gives the same "key must be present, value may be `null`" shape as the test-only hand-written
-/// `#[serde(deserialize_with = "required_option")]` bridge below.
+/// through serde. `alternative_id` is `#[value(required)]`: the derive's default rule for an
+/// `Option<T>` field is to DECODE A MISSING KEY AS `None`, which is not this mutation's contract —
+/// "restore the active alternative to nothing" and "the sender forgot to say" must not be the same
+/// wire word. `required` is what gives the `#[value]` codec the same "key must be present, value
+/// may be `null`" shape as the test-only `#[serde(deserialize_with = "required_option")]` bridge
+/// below, which is exactly what this leaf's own wire law measures.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
@@ -19,6 +21,7 @@ use serde::{Deserialize, Serialize};
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RestoreActiveSpaceAlternative {
     #[cfg_attr(test, serde(deserialize_with = "required_option"))]
+    #[value(required)]
     pub alternative_id: Option<String>,
 }
 //#endregion 🔖️Payload

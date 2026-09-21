@@ -24,8 +24,9 @@ async fn text_edit_action_persists_projection_changes() {
     edited.counter = before.counter + 41;
     edited.tags.push("edited-in-place".into());
     let text = serde_json::to_string_pretty(&edited).unwrap();
+    // 🧾️ Mounted apps publish after answering: the settled `Artifact` lane, not `result.mutations`.
     let result = dispatch(&mut instance, VcsCommand::TextEdit(text_edit::TextEdit { text })).await;
-    assert!(!result.mutations.is_empty());
+    assert!(result.edited_document(), "textEdit must publish on the document lane");
     let after = instance.snapshot().expect("materialize snapshot");
     assert_eq!(after.title, "Edited via JSON");
     assert_eq!(after.counter, before.counter + 41);
@@ -40,6 +41,6 @@ async fn edit_action_is_alias_for_text_edit() {
     edited.status = "reviewed".into();
     let text = serde_json::to_string(&edited).unwrap();
     let result = dispatch(&mut instance, VcsCommand::Edit(edit::Edit { text })).await;
-    assert!(!result.mutations.is_empty());
+    assert!(result.edited_document(), "edit must publish on the document lane");
     assert_eq!(instance.snapshot().expect("materialize snapshot").status, "reviewed");
 }

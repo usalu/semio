@@ -144,9 +144,17 @@ pub struct ProgramDiff {
     pub audit_events: Option<ProgramAuditEventsDelta>,
     #[state(artifact)]
     pub templates: Option<ProgramTemplatesDelta>,
+    /// 📚️ Replacement rows for the composed knowledge table — the persisted payload the
+    /// replacement handle below was minted from; they travel together so an applied diff leaves the
+    /// parent able to re-derive its child through `crate::genesis_program_child_pack`.
+    #[state(artifact)]
+    pub knowledge_payload: Option<Vec<crate::KnowledgeRecord>>,
     /// 🧩️ Replacement handle for the composed knowledge table.
     #[state(artifact)]
     pub knowledge: Option<crate::ProgramKnowledgeChild>,
+    /// 🏁️ Replacement rows for the composed benchmarks table — see [`ProgramDiff::knowledge_payload`].
+    #[state(artifact)]
+    pub benchmarks_payload: Option<Vec<crate::BenchmarkRecord>>,
     /// 🧩️ Replacement handle for the composed benchmarks table.
     #[state(artifact)]
     pub benchmarks: Option<crate::ProgramBenchmarksChild>,

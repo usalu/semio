@@ -361,7 +361,9 @@ async fn meta_carries_actor_and_local_instance_id() {
 async fn new_app_constructs_a_registry_less_wrapper() {
     let mut app = new_app::<DummyApp>().await;
     let error = app.dispatch_typed(DummyCommand::Increment, &meta("local")).await.expect_err("registry-less wrapper must fail closed");
-    assert_eq!(error.code.0, "interactive-job.missing-factory");
+    assert_eq!(error.code.0, "interactive-job.unknown-key");
+    assert!(error.message.contains("no exact manifest declaration"), "the registry-less wrapper fails on the missing declaration, not on a missing factory: {}", error.message);
+    assert_eq!(app.snapshot().unwrap().count, 0, "a fail-closed dispatch never reaches the reducer");
     close_registered_fixture_app(&mut app);
 }
 

@@ -57,7 +57,9 @@ fn a_wheel_over_a_live_pane_requires_the_published_scene_hit() {
 fn a_wheel_over_chrome_painted_inside_the_pane_never_reaches_the_scene() {
     let shell = shell_with_pane();
     let theme = Theme::default();
-    for row in [hit(HitKind::PanelTab, "framework.panel.toolRun"), hit(HitKind::Toggle, "framework.window.puzzle3dMainPerspective.engagement.toggle"), hit(HitKind::ContextMenu, "shell.context.menu.scroll"), hit(HitKind::Button, "ui.introduction.skip")] {
+    for row in
+        [hit(HitKind::PanelTab, "framework.panel.toolRun"), hit(HitKind::Toggle, "framework.window.puzzle3dMainPerspective.engagement.toggle"), hit(HitKind::ContextMenu, "shell.context.menu.scroll"), hit(HitKind::Button, "ui.introduction.skip")]
+    {
         let mut input = InputState::<ActionDescriptor>::default();
         input.register_hit(row.clone());
         input.publish_hits();
@@ -191,6 +193,8 @@ fn a_press_inside_a_window_body_activates_that_window_and_notes_it() {
     let mut shell = shell_with_escape_binding();
     shell.dock_window_plan = vec![("puzzle3d-main-top".into(), Rect::new(3.2, 54.4, 531.2, 913.6)), ("puzzle3d-main-perspective".into(), Rect::new(PANE.0, PANE.1, PANE.2, PANE.3))];
     shell.active_window_id = Some("puzzle3d-main-top".into());
+    let mut input = InputState::<ActionDescriptor>::default();
+    shell.publish_retained_input_for_test(&mut input, &Theme::light());
     shell.arm_window_activation_note();
     shell.deferred_actions.clear();
 
@@ -215,12 +219,15 @@ fn a_modal_layer_or_an_unnamed_dock_row_activates_no_window() {
     shell.dock_window_plan = vec![("puzzle3d-main-perspective".into(), Rect::new(PANE.0, PANE.1, PANE.2, PANE.3))];
     shell.overlay_state = OverlayState::Dropdown("example".into());
     shell.open_selects.insert("example".into(), true);
+    let mut input = InputState::<ActionDescriptor>::default();
+    shell.publish_retained_input_for_test(&mut input, &Theme::light());
     assert!(shell.pointer_input_is_modal());
     assert!(!shell.activate_window_under_pointer(AIM.0, AIM.1, &Theme::light()), "🚧️ a modal layer owns every pointer, wherever it lands");
     assert!(shell.active_window_id.is_none());
 
     let mut shell = shell_with_escape_binding();
     shell.dock_window_plan = vec![(String::new(), Rect::new(PANE.0, PANE.1, PANE.2, PANE.3))];
+    shell.publish_retained_input_for_test(&mut input, &Theme::light());
     assert!(!shell.activate_window_under_pointer(AIM.0, AIM.1, &Theme::light()), "🕳️ the dock's unnamed window row is not a window");
     assert!(shell.active_window_id.is_none());
 }
@@ -247,7 +254,10 @@ fn a_plain_secondary_press_over_a_pane_opens_the_menu_and_still_presses_the_surf
 fn a_modal_layer_opening_clears_every_published_hover_in_that_frame() {
     let anchor = "if modal && world3d_hover_clear_is_owed(state) && enqueue_world3d_event(state, WorldInteractionIntent::pointer_leave(";
     assert!(WGPU_RENDERER_SOURCE.contains(anchor), "🚧️ the world authority phase clears a published hover while a modal layer is up");
-    assert!(!WGPU_RENDERER_SOURCE.contains("if modal && world3d_hover_is_published(state)"), "🚧️ and it asks the OWED predicate, never the published one — a per-FRAME caller that asks `is_published` re-enqueues one leave per frame until the bounded queue saturates and the frame faults");
+    assert!(
+        !WGPU_RENDERER_SOURCE.contains("if modal && world3d_hover_is_published(state)"),
+        "🚧️ and it asks the OWED predicate, never the published one — a per-FRAME caller that asks `is_published` re-enqueues one leave per frame until the bounded queue saturates and the frame faults"
+    );
     assert!(WGPU_RENDERER_SOURCE.contains("let modal = shell.pointer_input_is_modal();"), "🚧️ and it asks the shell's own modal predicate, the one W12a's overlay laws already pin");
 
     let fixture: serde_json::Value = serde_json::from_str(WORLD_JOURNAL_SEQUENCES).expect("🧫️ the world journal oracle parses");

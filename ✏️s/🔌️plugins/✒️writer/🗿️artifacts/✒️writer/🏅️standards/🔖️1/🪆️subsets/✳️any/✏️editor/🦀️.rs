@@ -455,12 +455,7 @@ impl WriterCommandToolJob {
                 }
             }
             WriterCommand::SetActiveExample(payload) => {
-                let document = match payload.example_id.as_str() {
-                    "jack" => crate::document_dsl::jack_example_document(),
-                    "dag.jack" => crate::document_dsl::dag_jack_example_document(),
-                    _ => crate::schema::empty_writer_snapshot(),
-                };
-                emit.effects.push(reset_document_effect_now(&document));
+                emit.effects.push(reset_document_effect_now(&set_active_example::document_for_example_id(&payload.example_id)));
             }
             WriterCommand::SetSnapshot(payload) => {
                 if let Ok(document) = dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json) {

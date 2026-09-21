@@ -11,14 +11,13 @@
 //! SAME kind of process-global registry `job_io_run`/`job_io_sniff`/`💡️infer`/`🧬️mutation-plan`
 //! all read from, not a new mechanism.
 //!
-//! Sliced across `super::run_two_phase`'s two ticks exactly like its siblings: slice 1
-//! decodes+validates `input` (parsing both dialect coordinates, reporting `"{from}->{to}"` as
-//! progress) and checkpoints; slice 2 runs the real `migrate_document` re-encode.
+//! Sliced across `super::TwoPhaseBoundedJob`'s two explicit states exactly like its siblings:
+//! `Decode` validates `input` (parsing both dialect coordinates, reporting `"{from}->{to}"` as
+//! progress) and makes `PHASE_DECODED` its checkpoint; `Execute` runs the real `migrate_document`
+//! re-encode.
 
-use super::{run_two_phase, JobCtx};
+use super::{BoundedJob, TwoPhaseBoundedJob};
 use semio_framework_value_derive::FromValue;
-use std::future::Future;
-use std::pin::Pin;
 
 /// 🌉️ Mirrors `job_io_run`'s own `IoRunInput`: what used to be `migrate-artifact`'s three separate
 /// export parameters, bundled into one JSON tuple a `Vec<u8>`-only job can carry.
@@ -29,14 +28,22 @@ struct MigrateInput {
     pack: Vec<u8>,
 }
 
-// 🚫️async: E4 fn-pointer slot — see `job_mutation_plan`'s own comment in the sibling `🧬️mutation-plan`
-// module for the full explanation; same `JobFn` registry shape.
-pub(super) fn job_migrate(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
-    Box::pin(async move {
-        let decode_input = input.clone();
-        let execute_input = input;
-        run_two_phase(ctx, restored, move || async move { decode(&decode_input).await }, move || async move { execute(&execute_input).await }).await
-    })
+// 🚫️async: E4 fn-pointer slot — registered into `BoundedJobFactory` (see
+// `⚛️reactor/💼️jobs/🦀️.rs`'s `builtin_registry`); the admission body is a pure constructor call.
+pub(super) fn job_migrate(_job: u64, input: &[u8], restored: Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
+    Ok(Box::new(TwoPhaseBoundedJob::admit("job.migrate", input, restored, decode_phase, execute_phase)))
+}
+
+// 🚫️async: E4 phase slot — `BuiltinPhaseFn` is synchronous by contract; `decode` itself has no
+// suspension point, so `settle_in_step` resolves it inside this state action.
+fn decode_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+    super::settle_in_step("job.migrate", decode(input))
+}
+
+// 🚫️async: E4 phase slot — see `decode_phase`; `store::migrate_document` is the unchunked native
+// call this state action declares `WORK_UNITS_EXECUTE` for.
+fn execute_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+    super::settle_in_step("job.migrate", execute(input))
 }
 
 async fn parse_dialects(input: &MigrateInput) -> Result<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::ArtifactDialect), semio_framework::Fault> {

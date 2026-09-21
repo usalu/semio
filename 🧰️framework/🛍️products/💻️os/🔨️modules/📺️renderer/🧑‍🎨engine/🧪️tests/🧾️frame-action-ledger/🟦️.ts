@@ -127,7 +127,9 @@ describe("frame action ledger", () => {
     expect(rendererSource, "no close ladder retires a user's commit as a retirement unit").not.toContain("deferred_actions.pop_front()");
   });
 
-  it("keeps the superseded candidate a plain drop, which is what makes the ledger's owner load-bearing", () => {
-    expect(frameJobSource).toContain("AppFrameTransactionStep::Superseded => {\n                        self.phase = ActiveFramePhase::Terminal;");
+  it("returns a superseded input witness before dropping the action-free candidate", () => {
+    const superseded = frameJobSource.split("AppFrameTransactionStep::Superseded => {")[1] ?? "";
+    expect(superseded.indexOf("transaction.discard_presented_input_candidate(&self.runtime)")).toBeGreaterThanOrEqual(0);
+    expect(superseded.indexOf("transaction.discard_presented_input_candidate(&self.runtime)")).toBeLessThan(superseded.indexOf("self.phase = ActiveFramePhase::Terminal;"));
   });
 });

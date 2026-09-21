@@ -28,9 +28,13 @@ fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSna
     let mut restored = forward.clone();
     for back in mutation.inverse(snapshot) {
         let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
-        restored = next;
+        // 🧹️ Every displaced projection owns the document's `assets` pool and every adjustment's
+        // `params` map, so it retires instead of reaching `RasterOwnedMap`'s fail-closed `Drop`.
+        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(std::mem::replace(&mut restored, next));
+        protocol::Mutation::retire_cold(back);
     }
-    assert_eq!(&restored, snapshot, "inverse(base) must restore the pre-mutation snapshot");
+    assert_eq!(&restored, snapshot, "inverse(base) must restore the pre-mutation snapshot for {mutation:?}");
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(restored);
     forward
 }
 
@@ -79,8 +83,10 @@ async fn every_variant_round_trips_via_inverse() {
     let seed_asset = RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() };
     base.assets.insert("asset-1".into(), crate::mint_raster_asset_child("asset-1", &seed_asset)).expect("bounded fixture operation succeeds");
     for mutation in every_mutation() {
-        round_trip(&base, &mutation);
+        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(round_trip(&base, &mutation));
+        protocol::Mutation::retire_cold(mutation);
     }
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -127,8 +133,13 @@ async fn resize_layer_is_a_graceful_no_op_on_a_group() {
 #[semio_framework_async_macros::async_test]
 async fn store_applies_layer_create() {
     let mut store = RasterStore::new(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None)).await.expect("valid artifact store fixture");
+    // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
+    // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
+    // built with the artifact's own `raster_document_store_owners`, never bare.
+    store.install_document_store_owners_exact(crate::spr::raster_document_store_owners());
     store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], description: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
+    store::os_store::test_support::close_plain_test_store(&mut store);
 }
 
 //#region 🔖️OpText
@@ -202,8 +213,9 @@ fn representative_raster_document() -> RasterSnapshot {
 async fn raster_op_text_round_trips_every_variant() {
     for mutation in every_mutation() {
         store::os_store::test_support::assert_op_line_round_trip(&mutation);
+        protocol::Mutation::retire_cold(mutation);
     }
-    let _ = representative_raster_document();
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(representative_raster_document());
 }
 //#endregion 🔖️OpText
 

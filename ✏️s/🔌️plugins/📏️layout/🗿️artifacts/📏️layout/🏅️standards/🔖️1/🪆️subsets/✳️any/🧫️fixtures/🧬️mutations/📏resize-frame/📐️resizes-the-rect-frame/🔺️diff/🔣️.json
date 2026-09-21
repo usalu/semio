@@ -32,8 +32,8 @@
             "patch": {
               "x": null,
               "y": null,
-              "width": 90,
-              "height": 70,
+              "width": 90.0,
+              "height": 70.0,
               "fill": null,
               "stroke": null,
               "wrap_mode": null,

@@ -75,7 +75,13 @@ pub fn accessibility_role(component: &crate::Component, activatable: bool) -> &'
         crate::Component::Separator(_) => "separator",
         crate::Component::Input(_) => "textbox",
         crate::Component::Select(_) => "combobox",
-        crate::Component::Toggle(_) => "switch",
+        crate::Component::Toggle(props) => {
+            if props.appearance == crate::ToggleAppearance::Checkbox {
+                "checkbox"
+            } else {
+                "switch"
+            }
+        }
         crate::Component::KeyValueList(_) => "list",
         crate::Component::Slider(_) | crate::Component::Ring(_) => "slider",
         crate::Component::NumberStepper(_) => "spinbutton",
@@ -231,12 +237,16 @@ pub fn accessibility_value(component: &crate::Component) -> AccessibilityValue {
 pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize) -> AccessibilityProjectionNode {
     let activatable = record.bindings.iter().any(|binding| binding.trigger == crate::Trigger::Activate);
     let value = accessibility_value(&record.component);
+    let label = record.accessibility.label.as_ref().or_else(|| match &record.component {
+        crate::Component::TreeItem(props) => Some(&props.label),
+        _ => None,
+    });
     AccessibilityProjectionNode {
         node_id: record.id.0,
         key: record.key.as_str().to_string(),
         role: accessibility_role(&record.component, activatable).to_string(),
         depth,
-        label: record.accessibility.label.as_ref().map(|label| label.0.as_str().to_string()),
+        label: label.map(|label| label.0.as_str().to_string()),
         description: record.accessibility.description.as_ref().map(|label| label.0.as_str().to_string()),
         live: liveness_name(record.accessibility.live).to_string(),
         shortcut: record.accessibility.shortcut.as_ref().map(|shortcut| shortcut.as_str().to_string()),

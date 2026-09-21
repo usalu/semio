@@ -38,12 +38,7 @@ fn find_select<'a>(node: &'a UiNode, id: &str) -> Option<&'a UiSelectNode> {
 }
 
 fn dispatch(shell: &mut ShellState, action: &str, args: Value) {
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor {
-        controller_id: "framework".into(),
-        action: action.into(),
-        args: semio_framework::optional_json_to_dsl(Some(args)),
-    }))
-    .expect("driver editor action");
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(args)) })).expect("driver editor action");
 }
 
 #[test]
@@ -108,4 +103,22 @@ fn draft_is_live_selection_clears_it_and_save_delete_use_owned_preferences() {
     assert_eq!(shell.driver_id, "default");
     assert!(shell.driver_draft.is_none());
     assert_eq!(shell.chrome_build.driver, ui_wgpu::wgpu::UiDriverChrome::DEFAULT);
+}
+
+#[test]
+fn driver_rows_localize_only_closed_builtins_and_preserve_authored_custom_labels() {
+    let fixture = fixture();
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    dispatch(&mut shell, "setDriverField", serde_json::json!({ "key": "labelTier", "value": "beginner" }));
+    dispatch(&mut shell, "setDriverSaveLabel", serde_json::json!({ "value": "Focus Flow" }));
+    dispatch(&mut shell, "saveDriver", serde_json::json!({}));
+
+    for locale in ["en", "de"] {
+        shell.locale_id = locale.into();
+        let rows = shell.driver_rows().into_iter().collect::<std::collections::HashMap<_, _>>();
+        for expected in fixture["displayLabels"].as_array().expect("display label rows") {
+            let id = expected["id"].as_str().expect("driver id");
+            assert_eq!(rows.get(id).map(String::as_str), expected[locale].as_str(), "{locale}:{id}");
+        }
+    }
 }

@@ -142,6 +142,35 @@ pub fn vortex_kinds_of(snapshot: &Block3dSnapshot) -> Vec<Block3dVortexKind> {
     vortex_kinds_of_parts(&snapshot.catalog, &snapshot.vortex_kind_extra)
 }
 
+/// 🎯️ Padding the world `fit` lane frames a document with — a quarter of the bounding sphere's
+/// radius of air around it, the render host's own default (twin of puzzle3d's `PUZZLE3D_FIT_PADDING`).
+pub const BLOCK3D_FIT_PADDING: f64 = 1.25;
+
+/// 🎯️ Document IDENTITY for the world `fit` lane: WHICH object kind this document is and WHICH
+/// representation meshes it delivers — never where its vortices currently sit. `WorldAutoFit` refits
+/// once per revision, so this is the difference between "frame the example that was just loaded" and
+/// "yank the camera on every vortex drag".
+///
+/// Without the lane a world window is framed solely by the document's authored `camera3d`, and a
+/// document whose representation mesh lies outside that camera's frustum renders a viewport with no
+/// visible geometry at all — measured on the curated `hexagonal-cut-concrete-forest-left` example
+/// (its camera is authored around the 0.36 m rim ring at the origin, while the representation GLB is
+/// an ~11 m × 4.7 m slab reaching away from it).
+///
+/// The bounds themselves stay unpublished (`world3d_fit_json(..., None)`, as puzzle3d does): a
+/// representation is a mesh URL, so this crate knows what it asked for but never how big the
+/// delivered geometry is — only the render host, which loaded it, can measure that.
+pub fn block3d_world_fit_revision(snapshot: &Block3dSnapshot) -> u32 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    snapshot.object_kind.id.hash(&mut hasher);
+    for representation in &snapshot.representations {
+        representation.id.hash(&mut hasher);
+        representation.mesh_url.hash(&mut hasher);
+    }
+    (hasher.finish() >> 32) as u32
+}
+
 /// ✍️ The one writer every mutation-diff-apply call site funnels through to replace the full vortex-
 /// kinds catalogue: mints a fresh content-addressed `catalog` handle, seeds the working-scene cache,
 /// and writes the overflow half — given the composed child handle and overflow list directly (works

@@ -14,5 +14,5 @@ pub fn diff(payload: &DeleteBenchmarkRecord, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::error("mutation.target-missing", "No benchmark record exists with this id.", [payload.id.0.clone()]);
     }
     records.retain(|row| row.header.id != payload.id);
-    protocol::MutationOutcome::new(ProgramDiff { benchmarks: Some(crate::benchmarks_child_from_records(&records)), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { benchmarks_payload: Some(records.clone()), benchmarks: Some(crate::benchmarks_child_from_records(&records)), ..Default::default() })
 }

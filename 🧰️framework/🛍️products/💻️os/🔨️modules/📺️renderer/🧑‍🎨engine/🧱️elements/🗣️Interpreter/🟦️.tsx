@@ -36,6 +36,7 @@ import {
   TREE_WINDOW_OVERSCAN_ROWS,
   Textarea,
   Toggle,
+  TreeCheckbox,
   Tree,
   VirtualFileSystem,
   borderElementClass,
@@ -1258,7 +1259,7 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
       id={nodeDomId(context.store, record)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       type={inputType}
-      className="h-medium w-full min-w-0"
+      className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0"
       value={component.kind === "file" ? undefined : commitOnBlur ? draft : component.value}
       placeholder={component.placeholder ?? undefined}
       min={component.min ?? undefined}
@@ -1276,7 +1277,7 @@ function SelectView({ record, context }: { readonly record: UiNodeRecord; readon
   const component = record.component as Extract<Component, { type: "select" }>;
   return (
     <Select id={`${nodeDomId(context.store, record)}-select`} value={component.value || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
-      <SelectTrigger id={nodeDomId(context.store, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-medium w-full min-w-0" size="sm">
+      <SelectTrigger id={nodeDomId(context.store, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0" size="sm">
         <SelectValue placeholder={component.placeholder ?? interpLabel("ui.common.select")} />
       </SelectTrigger>
       <SelectContent>
@@ -1292,6 +1293,7 @@ function SelectView({ record, context }: { readonly record: UiNodeRecord; readon
 
 function ToggleView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "toggle" }>;
+  if (component.appearance === "checkbox") return <TreeCheckbox id={nodeDomId(context.store, record)} checked={component.on} disabled={record.disabled} ariaLabel={record.accessibility.label ?? component.text ?? undefined} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
   return <Toggle id={nodeDomId(context.store, record)} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
 }
 
@@ -1940,6 +1942,7 @@ function TreeView({ store, record, context }: { readonly store: UiDocumentStore;
     <div ref={rootRef} className="contents">
       <Tree
         className="min-h-0 min-w-0 flex-1 overflow-auto"
+        presentation={(record.component as Extract<Component, { type: "tree" }>).presentation}
         sections={sections.length > 0 ? sections : [treeStatusSection(store, record)]}
         selectionMode="single"
         showLines

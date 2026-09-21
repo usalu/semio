@@ -2,6 +2,10 @@ use super::super::*;
 use super::*;
 use crate::app::{ArtifactInferenceExecution, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest};
 
+/// ⛽️ A grant that covers any state action a builtin declares — `WORK_UNITS_EXECUTE` is the price
+/// the execute state of every two-phase builtin charges for its unchunked native dispatch.
+const FULL_GRANT: JobBudget = JobBudget { fuel: WORK_UNITS_EXECUTE, deadline_ms: 1 };
+
 const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceServiceMetadata {
     owner: "s.jobtest",
     artifact_kind: "s.jobtest.widget",
@@ -17,7 +21,9 @@ fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<Artifac
     Ok(ArtifactInferenceExecution { canonical_payload: request.canonical_payload.to_vec(), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
 }
 
-fn request_bytes() -> Vec<u8> {
+/// 🪪️ Every fixture request carries its OWN `cancellation_id`: the in-flight inference registry is
+/// process-global, so two tests reusing one id race each other for the same slot.
+fn request_bytes(cancellation_id: &str) -> Vec<u8> {
     let request = WireArtifactInferenceRequest {
         wire_version: crate::app::ARTIFACT_INFERENCE_WIRE_VERSION,
         owner: TEST_METADATA.owner.into(),
@@ -33,7 +39,7 @@ fn request_bytes() -> Vec<u8> {
         source_dialect: "s.jobtest.widget.standard.v1.dialect.canonical".into(),
         policy: Vec::new(),
         budgets: WireArtifactInferenceBudget { allocation_bytes: 1 << 20, work_units: 1000, recursion_depth: 4 },
-        cancellation_id: "jobtest-cancel-1".into(),
+        cancellation_id: cancellation_id.to_string(),
         previous_state: None,
         requested_cache_mode: WireArtifactInferenceCacheMode::Cold,
         canonical_payload: vec![9, 8, 7],
@@ -48,9 +54,9 @@ fn request_bytes() -> Vec<u8> {
 #[semio_framework_async_macros::async_test]
 async fn a_two_slice_infer_job_decodes_then_dispatches_to_the_registered_service() {
     let _ = crate::app::register_artifact_inference_service(ArtifactInferenceService::new(TEST_METADATA, echo_infer));
-    start_job(200, JOB_KIND_INFER, &request_bytes()).await;
+    start_job(200, JOB_KIND_INFER, &request_bytes("jobtest-cancel-dispatch")).await;
 
-    match step_job(200, JobBudget { fuel: 1, deadline_ms: 1 }).await {
+    match step_job(200, FULL_GRANT).await {
         JobStep::Running(Some(progress)) => {
             let (artifact_kind, inference_schema): (String, String) = serde_json::from_slice(&progress).expect("slice 1 progress decodes");
             assert_eq!(artifact_kind, TEST_METADATA.artifact_kind);
@@ -62,7 +68,7 @@ async fn a_two_slice_infer_job_decodes_then_dispatches_to_the_registered_service
         }
         _ => panic!("slice 1 must be Running(Some(identity))"),
     }
-    match step_job(200, JobBudget { fuel: 1, deadline_ms: 1 }).await {
+    match step_job(200, FULL_GRANT).await {
         JobStep::Done(bytes) => {
             let result: crate::app::WireArtifactInferenceResult = protocol::json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8")).expect("slice 2 result decodes");
             assert_eq!(result.canonical_payload, vec![9, 8, 7]);
@@ -83,17 +89,21 @@ async fn a_two_slice_infer_job_decodes_then_dispatches_to_the_registered_service
 #[semio_framework_async_macros::async_test]
 async fn infer_job_checkpoint_restore_matches_an_uninterrupted_run() {
     let _ = crate::app::register_artifact_inference_service(ArtifactInferenceService::new(TEST_METADATA, echo_infer));
-    let input = request_bytes();
+    let input = request_bytes("jobtest-cancel-restore");
 
     start_job(201, JOB_KIND_INFER, &input).await;
-    step_job(201, JobBudget::default()).await;
-    let baseline = match step_job(201, JobBudget::default()).await {
+    step_job(201, FULL_GRANT).await;
+    let baseline = match step_job(201, FULL_GRANT).await {
         JobStep::Done(bytes) => bytes,
-        _ => panic!("uninterrupted run must finish Done within 2 slices"),
+        JobStep::Failed(bytes) => {
+            let fault = dsl::decode_fault_bytes(&bytes);
+            panic!("uninterrupted run must finish Done within 2 state actions, not fail: {} {}", fault.code.0, fault.message);
+        }
+        JobStep::Running(_) => panic!("uninterrupted run must finish Done within 2 state actions"),
     };
 
     start_job(202, JOB_KIND_INFER, &input).await;
-    step_job(202, JobBudget::default()).await;
+    step_job(202, FULL_GRANT).await;
     let entries = checkpoint_jobs().await;
     let entry = entries.iter().find(|entry| entry.job == 202).expect("job 202 must appear in checkpoint_jobs()");
     assert_eq!(entry.checkpoint.as_deref(), Some(PHASE_DECODED), "slice 1 must have checkpointed PHASE_DECODED");
@@ -101,7 +111,7 @@ async fn infer_job_checkpoint_restore_matches_an_uninterrupted_run() {
     cancel_job(202).await;
 
     restore_job(202, JOB_KIND_INFER, &input, checkpoint).await;
-    let restored_final = match step_job(202, JobBudget::default()).await {
+    let restored_final = match step_job(202, FULL_GRANT).await {
         JobStep::Done(bytes) => bytes,
         JobStep::Running(_) => panic!("a restore from PHASE_DECODED must finish Done on its FIRST step_job call (only the execute tick remains)"),
         JobStep::Failed(bytes) => {
@@ -115,7 +125,7 @@ async fn infer_job_checkpoint_restore_matches_an_uninterrupted_run() {
 #[semio_framework_async_macros::async_test]
 async fn infer_job_reports_a_named_decode_fault_on_garbage_input() {
     start_job(203, JOB_KIND_INFER, b"not json").await;
-    match step_job(203, JobBudget::default()).await {
+    match step_job(203, FULL_GRANT).await {
         JobStep::Failed(bytes) => {
             let fault = dsl::decode_fault_bytes(&bytes);
             assert_eq!(fault.code.0, "job.infer.decode");

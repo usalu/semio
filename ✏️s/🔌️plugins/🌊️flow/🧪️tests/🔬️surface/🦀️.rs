@@ -24,9 +24,18 @@ async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants() {
             let mut app = plugin.create_app(&definition.id).expect("every declared surface has an actual factory");
             assert!(matches!((&app, &definition.role), (super::FlowApps::FlowEditor(_), AppRole::Editor) | (super::FlowApps::FlowViewer(_), AppRole::Viewer)));
             let mut completed = false;
+            let (mut turns, mut released_item_total, mut released_byte_total, mut idle_turns) = (0u64, 0u64, 0u64, 0u64);
             for _ in 0..fixture["maximumSteps"].as_u64().unwrap() {
+                turns += 1;
                 match app.close_step(items, bytes).expect("the actual Flow app owns every store and instance close stage") {
-                    PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= items && released_bytes <= bytes),
+                    PluginCloseStep::Pending { released_items, released_bytes } => {
+                        assert!(released_items <= items && released_bytes <= bytes);
+                        released_item_total += released_items as u64;
+                        released_byte_total += released_bytes as u64;
+                        if released_items == 0 && released_bytes == 0 {
+                            idle_turns += 1;
+                        }
+                    }
                     PluginCloseStep::Blocked { reason } => panic!("fresh Flow surface retains no external reader: {reason}"),
                     PluginCloseStep::AwaitingInput { reason } => panic!("fixture has no active worker input to await: {reason}"),
                     PluginCloseStep::Complete => {
@@ -35,7 +44,12 @@ async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants() {
                     }
                 }
             }
-            assert_eq!(completed, fixture["expected"]["complete"].as_bool().unwrap(), "{} bytes={bytes}", definition.id);
+            assert_eq!(
+                completed,
+                fixture["expected"]["complete"].as_bool().unwrap(),
+                "{} bytes={bytes} after {turns} close turns: {released_item_total} items / {released_byte_total} bytes released, {idle_turns} of them releasing nothing",
+                definition.id
+            );
             assert_eq!(app.close_terminal_is_empty(), fixture["expected"]["terminalEmpty"].as_bool().unwrap());
             assert!(matches!(app.close_step(0, 0).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
             assert!(app.close_terminal_is_empty());

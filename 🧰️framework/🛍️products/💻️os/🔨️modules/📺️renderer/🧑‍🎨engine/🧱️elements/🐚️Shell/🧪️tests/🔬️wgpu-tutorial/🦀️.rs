@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn shell() -> ShellState {
@@ -161,10 +160,7 @@ fn normal_interaction_completion_updates_typed_selection_projection() {
                         ("anchorId".into(), DslValue::String("solid-a".into())),
                     ]),
                 ),
-                (
-                    "graph".into(),
-                    DslValue::Object(vec![("granularity".into(), DslValue::String("node".into())), ("ids".into(), DslValue::Array(vec![DslValue::String("node-a".into())]))]),
-                ),
+                ("graph".into(), DslValue::Object(vec![("granularity".into(), DslValue::String("node".into())), ("ids".into(), DslValue::Array(vec![DslValue::String("node-a".into())]))])),
             ]),
         )]),
     )]));

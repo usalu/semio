@@ -1,0 +1,139 @@
+{
+  "schema": "semio.ui.prepared-gpu-clip-pieces.v1",
+  "surface": [12, 8],
+  "cases": [
+    {
+      "id": "no-clip-ui",
+      "kind": "ui",
+      "dpr": 1,
+      "scissor": null,
+      "clip": null,
+      "sceneViewport": null,
+      "expected": {
+        "accepted": true,
+        "logicalPieces": [[0, 0, 12, 8]],
+        "physicalPieces": [[0, 0, 12, 8]],
+        "colorEncodes": 1,
+        "snapshots": 0,
+        "glassComposites": 0,
+        "shadowBegins": 0,
+        "commandAdvances": 1
+      },
+      "samples": [{ "at": [5, 4], "painted": true }]
+    },
+    {
+      "id": "two-disjoint-ui-pieces",
+      "kind": "ui",
+      "dpr": 1,
+      "scissor": null,
+      "clip": [[0, 0, 4, 8], [8, 0, 4, 8]],
+      "sceneViewport": null,
+      "expected": {
+        "accepted": true,
+        "logicalPieces": [[0, 0, 4, 8], [8, 0, 4, 8]],
+        "physicalPieces": [[0, 0, 4, 8], [8, 0, 4, 8]],
+        "colorEncodes": 2,
+        "snapshots": 0,
+        "glassComposites": 0,
+        "shadowBegins": 0,
+        "commandAdvances": 1
+      },
+      "samples": [{ "at": [2, 4], "painted": true }, { "at": [6, 4], "painted": false }, { "at": [10, 4], "painted": true }]
+    },
+    {
+      "id": "empty-clip-ui",
+      "kind": "ui",
+      "dpr": 1,
+      "scissor": null,
+      "clip": [],
+      "sceneViewport": null,
+      "expected": {
+        "accepted": true,
+        "logicalPieces": [],
+        "physicalPieces": [],
+        "colorEncodes": 0,
+        "snapshots": 0,
+        "glassComposites": 0,
+        "shadowBegins": 0,
+        "commandAdvances": 1
+      },
+      "samples": [{ "at": [5, 4], "painted": false }]
+    },
+    {
+      "id": "fractional-dpr-scissor-intersection",
+      "kind": "ui",
+      "dpr": 1.5,
+      "scissor": [1, 1, 10, 6],
+      "clip": [[0, 0, 4, 4], [8, 0, 4, 4]],
+      "sceneViewport": null,
+      "expected": {
+        "accepted": true,
+        "logicalPieces": [[1, 1, 3, 3], [8, 1, 3, 3]],
+        "physicalPieces": [[1, 1, 5, 5], [12, 1, 5, 5]],
+        "colorEncodes": 2,
+        "snapshots": 0,
+        "glassComposites": 0,
+        "shadowBegins": 0,
+        "commandAdvances": 1
+      },
+      "samples": [{ "at": [2, 2], "painted": true }, { "at": [6, 2], "painted": false }, { "at": [9, 2], "painted": true }]
+    },
+    {
+      "id": "glass-shares-one-snapshot-across-two-pieces",
+      "kind": "glass",
+      "dpr": 1,
+      "scissor": null,
+      "clip": [[0, 0, 4, 8], [8, 0, 4, 8]],
+      "sceneViewport": null,
+      "expected": {
+        "accepted": true,
+        "logicalPieces": [[0, 0, 4, 8], [8, 0, 4, 8]],
+        "physicalPieces": [[0, 0, 4, 8], [8, 0, 4, 8]],
+        "colorEncodes": 0,
+        "snapshots": 1,
+        "glassComposites": 2,
+        "shadowBegins": 0,
+        "commandAdvances": 1
+      },
+      "samples": [{ "at": [2, 4], "painted": true }, { "at": [6, 4], "painted": false }, { "at": [10, 4], "painted": true }]
+    },
+    {
+      "id": "world-viewport-intersects-two-pieces",
+      "kind": "world",
+      "dpr": 1,
+      "scissor": null,
+      "clip": [[0, 0, 5, 5], [8, 0, 4, 4]],
+      "sceneViewport": [2, 1, 8, 6],
+      "expected": {
+        "accepted": true,
+        "logicalPieces": [[2, 1, 3, 4], [8, 1, 2, 3]],
+        "physicalPieces": [[2, 1, 3, 4], [8, 1, 2, 3]],
+        "colorEncodes": 2,
+        "snapshots": 0,
+        "glassComposites": 0,
+        "shadowBegins": 1,
+        "commandAdvances": 1
+      },
+      "samples": [{ "at": [3, 2], "painted": true }, { "at": [6, 2], "painted": false }, { "at": [9, 2], "painted": true }]
+    },
+    {
+      "id": "overlapping-pieces-refused-before-alpha",
+      "kind": "ui",
+      "dpr": 1,
+      "scissor": null,
+      "clip": [[0, 0, 6, 6], [4, 4, 6, 4]],
+      "sceneViewport": null,
+      "expected": {
+        "accepted": false,
+        "logicalPieces": [],
+        "physicalPieces": [],
+        "colorEncodes": 0,
+        "snapshots": 0,
+        "glassComposites": 0,
+        "shadowBegins": 0,
+        "commandAdvances": 0
+      },
+      "samples": []
+    }
+  ]
+}

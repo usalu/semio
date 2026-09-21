@@ -191,10 +191,11 @@ mod subject {
         let params = spec.get("params").cloned().unwrap_or(Json::Null);
         match spec.str("kind").as_str() {
             "set-declaration" => Ok(SvgMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload {
-                declaration: str_field(&params, "version").map(|version| XmlDeclaration {
-                    version,
-                    encoding: str_field(&params, "encoding"),
-                    standalone: match params.get("standalone") { Some(Json::Bool(b)) => Some(*b), _ => None },
+                declaration: str_field(&params, "version").map(|version| {
+                    XmlDeclaration::new(version, str_field(&params, "encoding"), match params.get("standalone") {
+                        Some(Json::Bool(b)) => Some(*b),
+                        _ => None,
+                    })
                 }),
             }))),
             "set-doctype" => Ok(SvgMutation::SetDoctype(SetDoctypeMutation::Apply(SetDoctypePayload {

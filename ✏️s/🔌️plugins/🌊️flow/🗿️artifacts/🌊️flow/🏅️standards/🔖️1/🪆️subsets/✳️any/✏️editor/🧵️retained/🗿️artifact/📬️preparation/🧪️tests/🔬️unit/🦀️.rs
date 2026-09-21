@@ -67,8 +67,10 @@ async fn semantic_artifact_prepare_publish_retry_cancel_and_close_use_production
                         }
                     }
                 }
+                let closed_progress = publication.progress();
                 for _ in 0..500_000 {
                     let step = publication.close_step(grant).unwrap();
+                    assert_eq!(publication.progress(), closed_progress, "owner retirement preserves the final preparation checkpoint");
                     if let Close::Pending { released_items, released_bytes } = step {
                         assert!(released_items <= 1 && released_bytes <= grant.maximum_bytes);
                     }

@@ -11,11 +11,13 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { setUiLocale } from "@semio-tech/ui-react";
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
+import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AgentChatPanel } from "../../🟦️.tsx";
 import { type AgentConversationEntry } from "../../../🔗️AgentBridge/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -27,6 +29,18 @@ function toolCall(id: string, state: "running" | "cancelling" | "ok" | "failed")
 
 const IDLE_PRESENCE = { active: false, label: "", invocationId: null } as const;
 const here = dirname(fileURLToPath(import.meta.url));
+const chatInputFixture = JSON.parse(readFileSync(join(here, "../../../../🧫️fixtures/💬️chat-input-accessibility/🔣️.json"), "utf8")) as {
+  readonly contractVersion: 1;
+  readonly cases: readonly {
+    readonly locale: "en" | "de";
+    readonly bridge: "open" | "closed";
+    readonly accessibleName: string;
+    readonly placeholder: string;
+    readonly enabled: boolean;
+    readonly enterAction: "sendChatDraft" | null;
+  }[];
+};
+const chatInputSchema = JSON.parse(readFileSync(join(here, "../../../../🧬️schema/💬️chat-input-accessibility/🔣️.json"), "utf8"));
 const cancellationFixture = JSON.parse(readFileSync(join(here, "../../../🔗️AgentBridge/🧫️fixtures/🛑️cancellation/🔣️.json"), "utf8")) as {
   readonly invocation: { readonly id: string; readonly toolName: string; readonly arguments: string };
   readonly openCancellation: { readonly state: "cancelling"; readonly cancelControl: false };
@@ -36,6 +50,9 @@ const cancellationFixture = JSON.parse(readFileSync(join(here, "../../../🔗️
 
 //#region 🔖️CancelAffordance
 afterEach(cleanup);
+beforeEach(async () => {
+  await setUiLocale("en");
+});
 
 describe("AgentChatPanel cancel affordance", () => {
   it("offers cancel only on a tool call still reported as running", () => {
@@ -94,3 +111,31 @@ describe("AgentChatPanel cancel affordance", () => {
   });
 });
 //#endregion 🔖️CancelAffordance
+
+//#region ♿️ComposerAccessibility
+describe("AgentChatPanel composer accessibility", () => {
+  it("validates the language-neutral two-locale, two-bridge contract", () => {
+    const validate = new Ajv({ allErrors: true, strict: true }).compile(chatInputSchema);
+    expect(validate(chatInputFixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({ ...chatInputFixture, unknown: true })).toBe(false);
+    expect(new Set(chatInputFixture.cases.map(({ locale, bridge }) => `${locale}:${bridge}`))).toEqual(new Set(["en:open", "en:closed", "de:open", "de:closed"]));
+  });
+
+  it("keeps the localized accessible name separate from placeholder and bridge liveness", async () => {
+    for (const row of chatInputFixture.cases) {
+      await setUiLocale(row.locale);
+      const onSendMessage = vi.fn(() => true);
+      const view = render(<AgentChatPanel status={row.bridge} presence={IDLE_PRESENCE} conversation={[]} onSendMessage={onSendMessage} />);
+      const composer = screen.getByRole("textbox", { name: row.accessibleName });
+      expect(composer.getAttribute("placeholder")).toBe(row.placeholder);
+      expect(row.accessibleName).not.toBe(row.placeholder);
+      expect(composer.hasAttribute("disabled")).toBe(!row.enabled);
+      fireEvent.change(composer, { target: { value: "  inspect the scene  " } });
+      fireEvent.keyDown(composer, { key: "Enter", shiftKey: false });
+      if (row.enterAction === "sendChatDraft") expect(onSendMessage).toHaveBeenCalledWith("inspect the scene");
+      else expect(onSendMessage).not.toHaveBeenCalled();
+      view.unmount();
+    }
+  });
+});
+//#endregion ♿️ComposerAccessibility

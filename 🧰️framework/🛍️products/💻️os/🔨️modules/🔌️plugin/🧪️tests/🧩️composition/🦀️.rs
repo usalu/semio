@@ -1088,7 +1088,8 @@ async fn drive_composed_replacement_to(
         let _ = PluginApp::maintenance_step(app, 1, 4096).expect("retained composed replacement step");
         semio_framework_async::yield_once().await;
     }
-    panic!("retained composed replacement did not reach {target:?}");
+    let active = app.store_replacement_jobs.get(handle.operation.0);
+    panic!("retained composed replacement did not reach {target:?}; state {:?} refusal {:?}", active.map(|active| active.state), active.and_then(|active| active.refusal_fault()));
 }
 
 async fn live_composed_replacement_app() -> VcsArtifactApp<ComposedParentApp, TestMembers> {
@@ -1408,7 +1409,8 @@ async fn drive_recursive_replacement_to(
         let _ = drive_recursive_replacement_step(app);
         semio_framework_async::yield_once().await;
     }
-    panic!("recursive retained replacement did not reach {target:?}");
+    let active = app.store_replacement_jobs.get(handle.operation.0);
+    panic!("recursive retained replacement did not reach {target:?}; state {:?} refusal {:?}", active.map(|active| active.state), active.and_then(|active| active.refusal_fault()));
 }
 
 async fn live_recursive_replacement_app() -> Box<VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>> {
@@ -1417,6 +1419,35 @@ async fn live_recursive_replacement_app() -> Box<VcsArtifactApp<ComposedParentAp
     let member = Box::pin(RecursiveTestMembers::create("child-1", &dialect, &RecursiveBranchSnapshot { count: 0, label: "live".into(), nested: None }.encode_pack())).await.expect("live recursive child");
     Box::pin(app.register_child("slot", "child-1", dialect, member)).await.expect("live recursive child publication");
     Box::new(app)
+}
+
+/// 🎡️ `maintenance_step` answers its idle `Pending { 0, 0 }` ONLY when every stage of the fixed
+/// rotation is idle. The rotation runs one bounded unit per stage; when an EMPTY stage also consumed
+/// the whole call, a caller that drives one maintenance unit per turn released one owner per
+/// `MAINTENANCE_STAGES` turns — measured on the assembled `s.flow.flow@1/*#editor` surface as 2_051
+/// items in 100_000 close turns, 96_588 of them releasing nothing — and a real editor could not finish
+/// closing inside any committed turn budget. This law prices the guarantee without a wall-clock or
+/// call-count ceiling: while a displaced child root is still queued, no call may answer idle.
+#[semio_framework_async_macros::async_test]
+async fn maintenance_answers_idle_only_when_every_stage_is_idle() {
+    let mut app = live_composed_replacement_app().await;
+    let generation = app.admit_child_content_publication().expect("child content publication authority");
+    app.publish_child_content_member(generation, "slot", "child-1").await.expect("second child content generation");
+    assert!(!app.child_content_retirements.is_empty(), "a second child-content publication queues its displaced root");
+    for call in 0..4_096 {
+        match PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded maintenance call") {
+            PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } | PluginCloseStep::Complete => {
+                assert!(app.child_content_retirements.is_empty(), "maintenance answered idle on call {call} while a displaced child root was still queued");
+                close_member_admission_app(&mut app);
+                return;
+            }
+            PluginCloseStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1 && released_bytes <= 4096, "maintenance call {call} released {released_items} items / {released_bytes} bytes against a grant of 1 / 4096");
+            }
+            step => panic!("maintenance call {call} answered {step:?} while draining one displaced child root"),
+        }
+    }
+    panic!("maintenance never reached its idle answer while draining one displaced child root");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1675,8 +1706,16 @@ async fn retained_window_input_recursive_document_archive_cancel_retires_the_exa
     assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err());
     PluginApp::cancel_document_archive_load(app.as_mut(), 84).expect("recursive archive cancellation request");
     let requested = Box::pin(PluginApp::poll_document_archive_load(app.as_mut(), 84)).await.expect("recursive archive cancellation request status");
-    assert!(matches!(requested.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running));
-    assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err());
+    // 🧭️ One poll spends up to `DOCUMENT_ARCHIVE_POLL_WALL_US` driving the same rotation, so whether it
+    // comes back still `Running` or already `Cancelled` is a scheduling coincidence, not a product
+    // property — a quiet machine fits more bounded steps into that budget than a loaded one, and this
+    // clause used to demand the loaded outcome. What the law is named for is the ORDER: a cancelled
+    // archive never publishes or faults, and it is not acknowledgeable until its exact input owner has
+    // been retired. Both are asserted directly.
+    assert!(!matches!(requested.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Fault), "a cancelled recursive archive published or faulted: {:?}", requested.state);
+    if requested.state != protocol::DocumentArchiveLoadState::Cancelled {
+        assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err(), "a cancelled archive short of its terminal status was acknowledgeable");
+    }
     let status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 84)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Cancelled);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).expect("recursive archive cancelled acknowledgement");

@@ -5,12 +5,10 @@
 //! diagnostics use a bounded ring. Inferences without an ActionBus route retain the synchronous
 //! two-phase registry path.
 
-use super::{run_two_phase, JobCtx};
+use super::{BoundedJob, JobBudget, JobStep, TwoPhaseBoundedJob, WORK_UNITS_EXECUTE, WORK_UNITS_PUMP, WORK_UNITS_RETIRE};
 use semio_framework_job::{Generation, Operation, OperationId, RevisionId, StepOutcome};
 use semio_framework_value_derive::ToValue;
 use std::collections::VecDeque;
-use std::future::Future;
-use std::pin::Pin;
 
 const PREVIEW_MAX_BYTES: usize = 1 << 20;
 #[cfg(test)]
@@ -201,129 +199,403 @@ fn encode_bridge_item(item: &InferenceBridgeItem) -> Vec<u8> {
 }
 //#endregion 🌉️Channels
 
-// 🚫️async: E4 fn-pointer slot — see `job_mutation_plan`'s own comment in the sibling `🧬️mutation-plan`
-// module for the full explanation; same `JobFn` registry shape.
-pub(super) fn job_infer(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
-    Box::pin(async move {
-        let input_text = std::str::from_utf8(&input).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
-        let request: crate::app::WireArtifactInferenceRequest = dsl::os_pack::json::from_json_str(input_text).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
-        let key = semio_framework::ToolFactoryKey::new(super::JOB_KIND_INFER, request.inference_schema.clone());
-        if semio_framework::ActionBus::production().contains(&key) {
-            return run_interactive_inference(ctx, request, restored).await;
-        }
-        let decode_input = input.clone();
-        let execute_input = input;
-        run_two_phase(ctx, restored, move || async move { decode(&decode_input).await }, move || async move { crate::app::wire_artifact_infer(&execute_input).await.map_err(|error| super::fault(error.code, error.message.clone())) }).await
-    })
+/// 🎟️ Ceiling on the bounded retirement actions one `cancel`/`fail` may drive in a single call.
+/// A retirement that needs more than this leaves the owner deep, which `step_job`/`cancel_job`
+/// report as `job.bounded-false-terminal` rather than silently dropping a live worker session.
+const RETIRE_STEP_CEILING: usize = 4_096;
+
+type InferenceSession = semio_framework_job::MountedWorkerJobSession<semio_framework::action_bus::ErasedToolJob>;
+type InferenceRejected = semio_framework_job::WorkerJobSessionAdmissionRejected<semio_framework::action_bus::ErasedToolJob>;
+
+// 🚫️async: E4 fn-pointer slot — registered into `BoundedJobFactory` (see
+// `⚛️reactor/💼️jobs/🦀️.rs`'s `builtin_registry`); the admission body routes and constructs only.
+pub(super) fn job_infer(job: u64, input: &[u8], restored: Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
+    let request = match decode_request(input) {
+        Ok(request) => request,
+        Err(error) => return Err(dsl::encode_fault_bytes(&error)),
+    };
+    let key = semio_framework::ToolFactoryKey::new(super::JOB_KIND_INFER, request.inference_schema.clone());
+    if semio_framework::ActionBus::production().contains(&key) {
+        return InteractiveInferenceJob::admit(job, request, restored).map(|owner| Box::new(owner) as Box<dyn BoundedJob>);
+    }
+    Ok(Box::new(TwoPhaseBoundedJob::admit("job.infer", input, restored, decode_phase, execute_phase)))
 }
 
-async fn run_interactive_inference(ctx: JobCtx, request: crate::app::WireArtifactInferenceRequest, restored: Option<Vec<u8>>) -> Result<Vec<u8>, semio_framework::Fault> {
-    crate::app::validate_wire_request_resources(&request).map_err(|error| super::fault(error.code, error.message))?;
-    let _cancellation = crate::app::begin_artifact_inference(&request.cancellation_id).map_err(|error| super::fault(error.code, error.message))?;
-    let operation = Operation::new(OperationId(ctx.id().await), RevisionId(request.revision), Generation(request.generation), 0);
-    let mut bridge = InferenceBridge::new(operation);
-    ctx.tick().await;
-    bridge.publish_preview(dsl::os_pack::json::to_json_string(&(request.artifact_kind.clone(), request.inference_schema.clone())).into_bytes()).map_err(|error| bridge_fault(&error))?;
-    if let Some(item) = bridge.take_preview() {
-        ctx.progress(encode_bridge_item(&item)).await;
+// 🚫️async: E4 phase slot — `BuiltinPhaseFn` is synchronous by contract; `decode` has no suspension
+// point, so `settle_in_step` resolves it inside this state action.
+fn decode_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+    super::settle_in_step("job.infer", decode(input))
+}
+
+// 🚫️async: E4 phase slot — see `decode_phase`; `wire_artifact_infer` is the unchunked native call
+// this state action declares `WORK_UNITS_EXECUTE` for, and its own error type is translated here.
+fn execute_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
+    super::settle_in_step("job.infer", async move { crate::app::wire_artifact_infer(input).await.map_err(|error| super::fault(error.code, error.message.clone())) })
+}
+
+// 🚫️async: E1 pure parse consumed by the sync factory above and by `decode`'s own body.
+fn decode_request(input: &[u8]) -> Result<crate::app::WireArtifactInferenceRequest, semio_framework::Fault> {
+    let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
+    dsl::os_pack::json::from_json_str(input_text).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))
+}
+
+/// 🚦️ The explicit states of one ActionBus-routed inference. Each is exactly one `step-job`
+/// opportunity: `Dispatch` admits the worker session, `Pump` advances it by one bounded worker
+/// step, `OutcomeClose` retires one page of the checked-out outcome, `SessionClose` retires one
+/// page of the session after a terminal outcome, `RejectedClose` retires an admission rejection,
+/// and `Complete` has no action left. The state walk is the literal translation of the former
+/// `run_interactive_inference` future: every `ctx.tick().await` in that body is one state boundary
+/// here, so the sliceability the async shape had is preserved without an executor to park on.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum InteractivePhase {
+    Dispatch,
+    Pump,
+    OutcomeClose,
+    SessionClose,
+    RejectedClose,
+    Complete,
+}
+
+struct InteractiveInferenceJob {
+    request: crate::app::WireArtifactInferenceRequest,
+    restored: Option<Vec<u8>>,
+    operation: Operation,
+    bridge: InferenceBridge,
+    /// 🛑️ Drop guard: releases this inference's cancellation slot when the machine is dropped,
+    /// exactly as the former future's own `let _cancellation = …` binding did for its whole run.
+    _cancellation: crate::app::ArtifactInferenceCancellationGuard,
+    cancel: semio_framework_job::CancelToken,
+    session: Option<InferenceSession>,
+    rejected: Option<InferenceRejected>,
+    outcome: Option<StepOutcome>,
+    result: Option<Result<Vec<u8>, semio_framework::Fault>>,
+    terminal: bool,
+    checkpoint: Option<Vec<u8>>,
+    phase: InteractivePhase,
+    cancelled: bool,
+}
+
+impl InteractiveInferenceJob {
+    /// 🎟️ Admission: validates the request's declared resources and claims its cancellation slot
+    /// before any worker capacity is touched, so a refused inference never reaches the pool.
+    fn admit(job: u64, request: crate::app::WireArtifactInferenceRequest, restored: Option<&[u8]>) -> Result<Self, Vec<u8>> {
+        crate::app::validate_wire_request_resources(&request).map_err(|error| dsl::encode_fault_bytes(&super::fault(error.code, error.message)))?;
+        let cancellation = crate::app::begin_artifact_inference(&request.cancellation_id).map_err(|error| dsl::encode_fault_bytes(&super::fault(error.code, error.message)))?;
+        let operation = Operation::new(OperationId(job), RevisionId(request.revision), Generation(request.generation), 0);
+        let bridge = InferenceBridge::new(operation);
+        Ok(Self {
+            request,
+            restored: restored.map(<[u8]>::to_vec),
+            operation,
+            bridge,
+            _cancellation: cancellation,
+            cancel: semio_framework_job::root_cancel_token(),
+            session: None,
+            rejected: None,
+            outcome: None,
+            result: None,
+            terminal: false,
+            checkpoint: None,
+            phase: InteractivePhase::Dispatch,
+            cancelled: false,
+        })
     }
 
-    let bus = semio_framework::ActionBus::production();
-    let key = semio_framework::ToolFactoryKey::new(super::JOB_KIND_INFER, request.inference_schema.clone());
-    let schema_id = bus.payload_schema_id(&key).ok_or_else(|| super::fault("job.infer.dispatch", "interactive inference factory disappeared before admission"))?;
-    let dispatch = bus.dispatch_wire(super::JOB_KIND_INFER, request.inference_schema.clone(), schema_id, &request.canonical_payload, restored, operation).map_err(|error| super::fault("job.infer.dispatch", error.to_string()))?;
-    let cancel = semio_framework_job::root_cancel_token();
-    let params = semio_framework_job::BatchJobParams {
-        operation: operation.operation,
-        generation: operation.generation,
-        cancel: cancel.clone(),
-        config: semio_framework_job::BatchDriveConfig {
-            site: "semio.infer.action-bus",
-            stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
-            fuel_per_step: request.budgets.work_units.clamp(1, semio_framework_job::USER_VISIBLE_LANE_FUEL),
-            step_budget_us: semio_framework_job::USER_VISIBLE_LANE_WALL_US,
-        },
-        now_us: semio_framework_job::default_now_us,
-    };
-    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-    let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
-    let mut session = match semio_framework_job::MountedWorkerJobSession::try_new(dispatch.job, params) {
-        Ok(session) => session,
-        Err(mut rejected) => {
-            loop {
-                ctx.tick().await;
-                match rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-                    semio_framework_job::InteractiveJobCloseStep::Pending { .. } | semio_framework_job::InteractiveJobCloseStep::Blocked => {}
-                    semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => break,
-                    semio_framework_job::InteractiveJobCloseStep::Complete => return Err(super::fault("job.infer.admission-false-terminal", "interactive inference admission rejection did not reach terminal-empty authority")),
+    // 🚫️async: E1 pure price table consumed by `step`'s sync budget gate.
+    fn price(&self) -> u64 {
+        match self.phase {
+            InteractivePhase::Dispatch => WORK_UNITS_EXECUTE,
+            InteractivePhase::Pump => WORK_UNITS_PUMP,
+            InteractivePhase::OutcomeClose | InteractivePhase::SessionClose | InteractivePhase::RejectedClose => WORK_UNITS_RETIRE,
+            InteractivePhase::Complete => 0,
+        }
+    }
+
+    /// 🧹️ Drives every deep owner this machine still holds through its own bounded close protocol
+    /// so the wrapper left behind is shallow — the property `step_job`/`cancel_job` assert on.
+    // 🚫️async: E1 retirement driver consumed by `cancel` (an externally-declared sync trait method)
+    // and by `fail`; every close protocol it drives is itself synchronous.
+    fn retire(&mut self) {
+        if let Some(outcome) = self.outcome.as_mut() {
+            for _ in 0..RETIRE_STEP_CEILING {
+                if matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) && outcome.terminal_is_empty() {
+                    break;
                 }
             }
-            return Err(super::fault("job.infer.admission", "interactive inference worker session capacity is exhausted"));
+            if outcome.terminal_is_empty() {
+                self.outcome = None;
+            }
         }
-    };
+        if let Some(session) = self.session.as_mut() {
+            session.begin_close();
+            for _ in 0..RETIRE_STEP_CEILING {
+                if matches!(session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::WorkerJobCloseStep::Complete) && session.terminal_is_empty() {
+                    break;
+                }
+            }
+            if session.terminal_is_empty() {
+                self.session = None;
+            }
+        }
+        if let Some(rejected) = self.rejected.as_mut() {
+            for _ in 0..RETIRE_STEP_CEILING {
+                if matches!(rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) && rejected.terminal_is_empty() {
+                    break;
+                }
+            }
+            if rejected.terminal_is_empty() {
+                self.rejected = None;
+            }
+        }
+    }
 
-    loop {
-        if crate::app::inference_cancelled(&request.cancellation_id).map_err(|error| super::fault(error.code, error.message))? {
-            cancel.cancel_now();
+    // 🚫️async: E1 pure terminal constructor consumed by every sync state action below.
+    fn fail(&mut self, error: semio_framework::Fault) -> JobStep {
+        self.retire();
+        self.phase = InteractivePhase::Complete;
+        JobStep::Failed(dsl::encode_fault_bytes(&error))
+    }
+
+    /// 🚀️ `Dispatch`: publishes the request's identity preview, resolves the ActionBus factory for
+    /// `semio.infer/<schema>`, and mounts one worker session for it.
+    // 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
+    fn dispatch(&mut self) -> JobStep {
+        if let Err(error) = self.bridge.publish_preview(dsl::os_pack::json::to_json_string(&(self.request.artifact_kind.clone(), self.request.inference_schema.clone())).into_bytes()) {
+            return self.fail(bridge_fault(&error));
         }
-        ctx.tick().await;
-        let scheduled = bridge.scheduled();
-        ctx.progress(encode_bridge_item(&scheduled)).await;
-        let poll = session.pump_one(&pool, semio_framework_async::Lane::UserVisible).map_err(|_| super::fault("job.infer.worker-pump", "interactive inference mounted worker transition was rejected"))?;
+        let progress = self.bridge.take_preview().map(|item| encode_bridge_item(&item));
+        let bus = semio_framework::ActionBus::production();
+        let key = semio_framework::ToolFactoryKey::new(super::JOB_KIND_INFER, self.request.inference_schema.clone());
+        let Some(schema_id) = bus.payload_schema_id(&key) else {
+            return self.fail(super::fault("job.infer.dispatch", "interactive inference factory disappeared before admission"));
+        };
+        let dispatch = match bus.dispatch_wire(super::JOB_KIND_INFER, self.request.inference_schema.clone(), schema_id, &self.request.canonical_payload, self.restored.clone(), self.operation) {
+            Ok(dispatch) => dispatch,
+            Err(error) => return self.fail(super::fault("job.infer.dispatch", error.to_string())),
+        };
+        let params = semio_framework_job::BatchJobParams {
+            operation: self.operation.operation,
+            generation: self.operation.generation,
+            cancel: self.cancel.clone(),
+            config: semio_framework_job::BatchDriveConfig {
+                site: "semio.infer.action-bus",
+                stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
+                fuel_per_step: self.request.budgets.work_units.clamp(1, semio_framework_job::USER_VISIBLE_LANE_FUEL),
+                step_budget_us: semio_framework_job::USER_VISIBLE_LANE_WALL_US,
+            },
+            now_us: semio_framework_job::default_now_us,
+        };
+        match InferenceSession::try_new(dispatch.job, params) {
+            Ok(session) => {
+                self.session = Some(session);
+                self.phase = InteractivePhase::Pump;
+            }
+            Err(rejected) => {
+                self.rejected = Some(rejected);
+                self.phase = InteractivePhase::RejectedClose;
+            }
+        }
+        JobStep::Running(progress)
+    }
+
+    /// ⚙️ `Pump`: one bounded worker transition. An outcome that is not ready keeps the machine in
+    /// this state with a fresh scheduled progress item, so the stall guard sees real movement.
+    // 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
+    fn pump(&mut self) -> JobStep {
+        match crate::app::inference_cancelled(&self.request.cancellation_id) {
+            Ok(true) => self.cancel.cancel_now(),
+            Ok(false) => {}
+            Err(error) => return self.fail(super::fault(error.code, error.message)),
+        }
+        let scheduled = self.bridge.scheduled();
+        let mut progress = encode_bridge_item(&scheduled);
+        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+        let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
+        let poll = match self.session.as_mut() {
+            Some(session) => session.pump_one(&pool, semio_framework_async::Lane::UserVisible),
+            None => return self.fail(super::fault("job.infer.session-missing", "interactive inference lost its mounted worker session before pumping")),
+        };
+        let poll = match poll {
+            Ok(poll) => poll,
+            Err(_) => return self.fail(super::fault("job.infer.worker-pump", "interactive inference mounted worker transition was rejected")),
+        };
         if !matches!(poll, semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) {
-            continue;
+            return JobStep::Running(Some(progress));
         }
-        let mut outcome = session.take_checked_out_outcome().ok_or_else(|| super::fault("job.infer.outcome-missing", "interactive inference mounted worker checkout lost its exact outcome"))?;
-        let terminal = outcome.is_terminal();
+        let Some(outcome) = self.session.as_mut().and_then(InferenceSession::take_checked_out_outcome) else {
+            return self.fail(super::fault("job.infer.outcome-missing", "interactive inference mounted worker checkout lost its exact outcome"));
+        };
+        self.terminal = outcome.is_terminal();
         let result = match &outcome {
             StepOutcome::Yield => None,
             StepOutcome::PreviewReady(payload) => {
-                let bytes = copy_retained_payload(payload, PREVIEW_MAX_BYTES)?;
-                bridge.publish_preview(bytes).map_err(|error| bridge_fault(&error))?;
-                if let Some(item) = bridge.take_preview() {
-                    ctx.progress(encode_bridge_item(&item)).await;
+                let bytes = match copy_retained_payload(payload, PREVIEW_MAX_BYTES) {
+                    Ok(bytes) => bytes,
+                    Err(error) => {
+                        self.outcome = Some(outcome);
+                        return self.fail(error);
+                    }
+                };
+                if let Err(error) = self.bridge.publish_preview(bytes) {
+                    self.outcome = Some(outcome);
+                    return self.fail(bridge_fault(&error));
+                }
+                if let Some(item) = self.bridge.take_preview() {
+                    progress = encode_bridge_item(&item);
                 }
                 None
             }
             StepOutcome::CheckpointReady(checkpoint) => {
-                ctx.checkpoint(copy_retained_payload(&checkpoint.state, LOSSLESS_MAX_BYTES)?).await;
+                match copy_retained_payload(&checkpoint.state, LOSSLESS_MAX_BYTES) {
+                    Ok(bytes) => self.checkpoint = Some(bytes),
+                    Err(error) => {
+                        self.outcome = Some(outcome);
+                        return self.fail(error);
+                    }
+                }
                 None
             }
-            StepOutcome::Complete(candidate) => {
-                let output = copy_retained_payload(&candidate.output, LOSSLESS_MAX_BYTES)?;
-                Some(encode_result(request.clone(), output))
-            }
+            StepOutcome::Complete(candidate) => match copy_retained_payload(&candidate.output, LOSSLESS_MAX_BYTES) {
+                Ok(output) => Some(encode_result(self.request.clone(), output)),
+                Err(error) => {
+                    self.outcome = Some(outcome);
+                    return self.fail(error);
+                }
+            },
             StepOutcome::Cancelled => Some(Err(super::fault("job.infer.cancelled", "interactive inference was cancelled"))),
             StepOutcome::Fault(fault) => {
-                bridge.publish_diagnostic(copy_retained_payload(&fault.detail, DIAGNOSTIC_MAX_BYTES)?);
-                if let Some(item) = bridge.latest_diagnostic() {
-                    ctx.progress(encode_bridge_item(item)).await;
+                match copy_retained_payload(&fault.detail, DIAGNOSTIC_MAX_BYTES) {
+                    Ok(bytes) => self.bridge.publish_diagnostic(bytes),
+                    Err(error) => {
+                        self.outcome = Some(outcome);
+                        return self.fail(error);
+                    }
                 }
-                let detail = bridge.latest_diagnostic().map_or_else(|| "interactive inference failed without retained diagnostic bytes".to_string(), |item| String::from_utf8_lossy(&item.payload).into_owned());
+                if let Some(item) = self.bridge.latest_diagnostic() {
+                    progress = encode_bridge_item(item);
+                }
+                let detail = self.bridge.latest_diagnostic().map_or_else(|| "interactive inference failed without retained diagnostic bytes".to_string(), |item| String::from_utf8_lossy(&item.payload).into_owned());
                 Some(Err(super::fault("job.infer.interactive", detail)))
             }
         };
-        loop {
-            ctx.tick().await;
-            match outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-                semio_framework_job::JobPayloadCloseStep::Pending { .. } => {}
-                semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => break,
-                semio_framework_job::JobPayloadCloseStep::Complete => return Err(super::fault("job.infer.outcome-false-terminal", "interactive inference outcome did not reach terminal-empty payload authority")),
-            }
-        }
-        if terminal {
-            session.begin_close();
-            loop {
-                ctx.tick().await;
-                match session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
-                    semio_framework_job::WorkerJobCloseStep::Pending { .. } | semio_framework_job::WorkerJobCloseStep::Blocked => {}
-                    semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => break,
-                    semio_framework_job::WorkerJobCloseStep::Complete => return Err(super::fault("job.infer.session-false-terminal", "interactive inference session did not reach terminal-empty authority")),
+        self.result = result;
+        self.outcome = Some(outcome);
+        self.phase = InteractivePhase::OutcomeClose;
+        JobStep::Running(Some(progress))
+    }
+
+    /// 🧾️ `OutcomeClose`: one page of the checked-out outcome's retained payload authority. On
+    /// completion the machine either closes a terminal session or resumes the worker for the next
+    /// pump, exactly as the former future's inner close loop did.
+    // 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
+    fn close_outcome(&mut self) -> JobStep {
+        let Some(outcome) = self.outcome.as_mut() else {
+            return self.fail(super::fault("job.infer.outcome-missing", "interactive inference lost the outcome it was retiring"));
+        };
+        match outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+            semio_framework_job::JobPayloadCloseStep::Pending { .. } => JobStep::Running(Some(self.retirement_progress())),
+            semio_framework_job::JobPayloadCloseStep::Complete if outcome.terminal_is_empty() => {
+                self.outcome = None;
+                if self.terminal {
+                    if let Some(session) = self.session.as_mut() {
+                        session.begin_close();
+                    }
+                    self.phase = InteractivePhase::SessionClose;
+                    return JobStep::Running(Some(self.retirement_progress()));
+                }
+                match self.session.as_mut().map(InferenceSession::resume) {
+                    Some(Ok(())) => {
+                        self.phase = InteractivePhase::Pump;
+                        JobStep::Running(Some(self.retirement_progress()))
+                    }
+                    _ => self.fail(super::fault("job.infer.resume", "interactive inference outcome lost its exact resume authority")),
                 }
             }
-            return result.unwrap_or_else(|| Err(super::fault("job.infer.terminal-result", "terminal interactive inference produced no result")));
+            semio_framework_job::JobPayloadCloseStep::Complete => self.fail(super::fault("job.infer.outcome-false-terminal", "interactive inference outcome did not reach terminal-empty payload authority")),
         }
-        session.resume().map_err(|_| super::fault("job.infer.resume", "interactive inference outcome lost its exact resume authority"))?;
+    }
+
+    /// 🧾️ `SessionClose`: one page of the mounted session's retirement after a terminal outcome.
+    // 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
+    fn close_session(&mut self) -> JobStep {
+        let Some(session) = self.session.as_mut() else {
+            return self.fail(super::fault("job.infer.session-missing", "interactive inference lost the session it was retiring"));
+        };
+        match session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+            semio_framework_job::WorkerJobCloseStep::Pending { .. } | semio_framework_job::WorkerJobCloseStep::Blocked => JobStep::Running(Some(self.retirement_progress())),
+            semio_framework_job::WorkerJobCloseStep::Complete if session.terminal_is_empty() => {
+                self.session = None;
+                self.phase = InteractivePhase::Complete;
+                match self.result.take() {
+                    Some(Ok(bytes)) => JobStep::Done(bytes),
+                    Some(Err(error)) => JobStep::Failed(dsl::encode_fault_bytes(&error)),
+                    None => JobStep::Failed(dsl::encode_fault_bytes(&super::fault("job.infer.terminal-result", "terminal interactive inference produced no result"))),
+                }
+            }
+            semio_framework_job::WorkerJobCloseStep::Complete => self.fail(super::fault("job.infer.session-false-terminal", "interactive inference session did not reach terminal-empty authority")),
+        }
+    }
+
+    /// 🧾️ `RejectedClose`: one page of an admission rejection's retirement, after which the
+    /// capacity refusal is reported — the former future's own rejection loop, state by state.
+    // 🚫️async: E1 state action consumed by the sync `BoundedJob::step` dispatch table.
+    fn close_rejected(&mut self) -> JobStep {
+        let Some(rejected) = self.rejected.as_mut() else {
+            return self.fail(super::fault("job.infer.admission", "interactive inference lost the rejection it was retiring"));
+        };
+        match rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+            semio_framework_job::InteractiveJobCloseStep::Pending { .. } | semio_framework_job::InteractiveJobCloseStep::Blocked => JobStep::Running(Some(self.retirement_progress())),
+            semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
+                self.rejected = None;
+                self.phase = InteractivePhase::Complete;
+                JobStep::Failed(dsl::encode_fault_bytes(&super::fault("job.infer.admission", "interactive inference worker session capacity is exhausted")))
+            }
+            semio_framework_job::InteractiveJobCloseStep::Complete => self.fail(super::fault("job.infer.admission-false-terminal", "interactive inference admission rejection did not reach terminal-empty authority")),
+        }
+    }
+
+    /// 📈️ A fresh scheduled bridge item for a retirement state, so every `Running` this machine
+    /// reports carries monotonic progress bytes and the stall guard never mistakes a bounded close
+    /// walk for a wedged job.
+    // 🚫️async: E1 pure bridge read consumed by the sync state actions above.
+    fn retirement_progress(&mut self) -> Vec<u8> {
+        let item = self.bridge.scheduled();
+        encode_bridge_item(&item)
+    }
+}
+
+impl BoundedJob for InteractiveInferenceJob {
+    fn step(&mut self, budget: JobBudget) -> JobStep {
+        if self.cancelled {
+            self.phase = InteractivePhase::Complete;
+            return JobStep::Failed(dsl::encode_fault_bytes(&super::fault("job.infer.cancelled", "interactive inference was cancelled before its next state action")));
+        }
+        let price = self.price();
+        if budget.fuel < price {
+            return self.fail(super::fault("job.infer.budget-exhausted", format!("interactive inference needs {price} work units for its next state action and was granted {}", budget.fuel)));
+        }
+        match self.phase {
+            InteractivePhase::Dispatch => self.dispatch(),
+            InteractivePhase::Pump => self.pump(),
+            InteractivePhase::OutcomeClose => self.close_outcome(),
+            InteractivePhase::SessionClose => self.close_session(),
+            InteractivePhase::RejectedClose => self.close_rejected(),
+            InteractivePhase::Complete => JobStep::Failed(dsl::encode_fault_bytes(&super::fault("job.infer.terminal", "interactive inference has no state action left to advance"))),
+        }
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+        self.cancel.cancel_now();
+        self.retire();
+    }
+
+    fn checkpoint(&self) -> Option<Vec<u8>> {
+        self.checkpoint.clone()
+    }
+
+    fn terminal_drop_is_shallow(&self) -> bool {
+        self.session.is_none() && self.rejected.is_none() && self.outcome.is_none()
     }
 }
 
@@ -389,12 +661,11 @@ fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_pa
 }
 
 /// 🔎️ Validates `input` decodes as a `WireArtifactInferenceRequest` and reports its
-/// `(artifact_kind, inference_schema)` identity as the first slice's progress bytes — a REAL
-/// decode (not a placeholder), since a malformed request should fail on slice 1, before ever
-/// touching the inference-service registry on slice 2.
+/// `(artifact_kind, inference_schema)` identity as the `Decode` state's progress bytes — a REAL
+/// decode (not a placeholder), since a malformed request should fail on the first state action,
+/// before ever touching the inference-service registry.
 async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
-    let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
-    let request: crate::app::WireArtifactInferenceRequest = dsl::os_pack::json::from_json_str(input_text).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
+    let request = decode_request(input)?;
     Ok(dsl::os_pack::json::to_json_string(&(request.artifact_kind, request.inference_schema)).into_bytes())
 }
 

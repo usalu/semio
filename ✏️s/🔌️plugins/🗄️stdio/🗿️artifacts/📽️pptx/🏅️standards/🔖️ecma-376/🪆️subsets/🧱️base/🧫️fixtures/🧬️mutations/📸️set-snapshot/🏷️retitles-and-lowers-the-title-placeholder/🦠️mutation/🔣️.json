@@ -7,12 +7,12 @@
       "contentTypes": {
         "defaults": [
           [
-            "xml",
-            "application/xml"
-          ],
-          [
             "rels",
             "application/vnd.openxmlformats-package.relationships+xml"
+          ],
+          [
+            "xml",
+            "application/xml"
           ]
         ],
         "overrides": [

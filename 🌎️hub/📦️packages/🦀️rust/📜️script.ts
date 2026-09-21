@@ -9540,21 +9540,22 @@ function trustedBootstrapSelectPackages(list: string): readonly TrustedBootstrap
   );
 }
 
-/** 🧬️ Asks ONE built component which document kinds it owns, through the `codecs` subcommand of the
- * same descriptor emitter the build already ran. `kinds` are the dialect artifact kinds the
- * package's own compiled descriptor declares; the schema and the 32-byte pack fingerprint come back
- * out of `codec.genesis` and `codec.pack-schema-hash` on the exact component bytes about to be
- * published, so a package the hub links no Rust codec for transcribes nothing. */
-function trustedBootstrapComponentCodecRowsV1(repoRoot: string, emitter: string, componentPath: string, outPath: string, kinds: readonly string[]): readonly TrustedBootstrapCodec[] {
-  if (kinds.length === 0) throw new Error("component codec probe requires at least one declared artifact kind");
-  const probe = runProbe(emitter, ["codecs", componentPath, "--kinds", kinds.join(","), "--out", outPath], { cwd: repoRoot, ...orchestratorBudgetOpts() });
+/** 🧬️ Asks ONE built component for the pack fingerprint of each document kind its OWN compiled
+ * descriptor declares, through the `codecs` subcommand of the same descriptor emitter the build
+ * already ran. `pairs` are that descriptor's `ArtifactKindSpec { id, schema }` rows: the kind and
+ * the schema are the package's own published identities, and only the 32-byte fingerprint — the one
+ * thing a manifest cannot state — comes from the component, on the exact bytes about to be
+ * published. So a package the hub links no Rust codec for transcribes nothing. */
+function trustedBootstrapComponentCodecRowsV1(repoRoot: string, emitter: string, componentPath: string, outPath: string, pairs: readonly (readonly [string, string])[]): readonly TrustedBootstrapCodec[] {
+  if (pairs.length === 0) throw new Error("component codec probe requires at least one declared artifact kind");
+  const probe = runProbe(emitter, ["codecs", componentPath, "--kinds", pairs.map(([kind, schema]) => `${kind}=${schema}`).join(","), "--out", outPath], { cwd: repoRoot, ...orchestratorBudgetOpts() });
   if (probe.status !== 0) throw new Error(`component codec probe failed (${probe.status}): ${probe.stderr.trim() || probe.stdout.trim()}`);
   const document = JSON.parse(readFileSync(outPath, "utf8"));
-  if (document?.schema !== "semio.plugin.component-codec-rows/v1" || !Array.isArray(document.rows) || document.rows.length !== kinds.length) throw new Error("component codec probe answered outside its exact declared closure");
+  if (document?.schema !== "semio.plugin.component-codec-rows/v1" || !Array.isArray(document.rows) || document.rows.length !== pairs.length) throw new Error("component codec probe answered outside its exact declared closure");
   const rows = document.rows.map((value: unknown) => {
     const row = documentOpenNeutralObject(value, ["artifactKind", "artifactSchema", "packSchemaHash"]);
-    if (!kinds.includes(row.artifactKind as string) || typeof row.artifactSchema !== "string" || row.artifactSchema.length === 0 || row.artifactSchema.length > 256 || !/^(?!0{64}$)[0-9a-f]{64}$/u.test(String(row.packSchemaHash)))
-      throw new Error("component codec row is not a bounded nonzero identity");
+    if (!pairs.some(([kind, schema]) => kind === row.artifactKind && schema === row.artifactSchema) || !/^(?!0{64}$)[0-9a-f]{64}$/u.test(String(row.packSchemaHash)))
+      throw new Error("component codec row is not a bounded nonzero identity the descriptor declares");
     return Object.freeze({ artifactKind: row.artifactKind as string, artifactSchema: row.artifactSchema as string, packSchemaHash: row.packSchemaHash as string });
   });
   if (new Set(rows.map((row: TrustedBootstrapCodec) => row.artifactKind)).size !== rows.length) throw new Error("component codec probe repeated an artifact kind");
@@ -9665,7 +9666,7 @@ async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot: strin
         // the rows its compiled provider previews, so those come from the same registry the provider
         // is generated from; every other package answers for itself, through the `codecs` subcommand
         // of the descriptor emitter this build already produced, on these exact component bytes.
-        const manifestKinds = trustedBootstrapDescriptorKindsV1(descriptorJson.get(request.pluginId)!).map((kind) => String(kind.id));
+        const manifestKinds = trustedBootstrapDescriptorKindsV1(descriptorJson.get(request.pluginId)!).map((kind) => [String(kind.id), String(kind.schema)] as const);
         if (spec.linkedCodecRegistry) {
           const linked = linkedCodecs[request.pluginId as "gis" | "stdio"];
           if (!linked || linked.length === 0) throw new Error(`trusted codec capture carries no linked closure for ${request.pluginId}`);

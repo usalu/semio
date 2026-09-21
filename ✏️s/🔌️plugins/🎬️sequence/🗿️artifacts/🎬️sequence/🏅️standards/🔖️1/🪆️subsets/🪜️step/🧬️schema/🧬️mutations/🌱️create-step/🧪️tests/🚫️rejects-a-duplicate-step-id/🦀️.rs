@@ -25,29 +25,34 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const DIFF_ABSENT: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱️create-step/🚫️rejects-a-duplicate-step-id/🔺️diff/🚫️.absent");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱️create-step/🚫️rejects-a-duplicate-step-id/🎯️outcome/🔣️.json");
 
-fn mutation() -> SequenceMutation {
-    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
+/// 🧊️ The committed payload's step carries a non-empty `StepParams`, so every decoded fixture here is
+/// the FINAL owner of a dictionary and must leave through a cold boundary — a bare drop trips `final
+/// Dictionary ownership must be explicitly retired or owned by a cold boundary`. Handing each fixture
+/// out already cold-owned keeps that obligation at the single place the value is built.
+fn mutation() -> neural_engine::ColdOwner<SequenceMutation> {
+    neural_engine::ColdOwner::new(dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes"))
 }
-fn expected_after() -> SequenceSnapshot {
-    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
+fn expected_after() -> neural_engine::ColdOwner<SequenceSnapshot> {
+    neural_engine::ColdOwner::new(dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes"))
 }
 
 /// 🌱 The committed `⬅️before`, with its composed `content` child resolved to a scene holding
 /// exactly the step the committed payload carries, and no edges — the collision the Fatal guards.
-fn before() -> SequenceSnapshot {
+fn before() -> neural_engine::ColdOwner<SequenceSnapshot> {
     let mut snapshot: SequenceSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
-    let SequenceMutation::CreateStep(payload) = mutation() else {
+    let committed = mutation();
+    let SequenceMutation::CreateStep(payload) = &*committed else {
         panic!("rejects-a-duplicate-step-id's committed mutation must be a create-step");
     };
     snapshot.content.set_local_owner(std::sync::Arc::new(SequenceWorkingScene { steps: vec![payload.step.clone()], edges: Vec::new() }));
-    snapshot
+    neural_engine::ColdOwner::new(snapshot)
 }
 
 /// ▶️ A rejected `create-step` leaves the document byte-identical to the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
-    let snapshot = apply_sequence_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
+    let snapshot = neural_engine::ColdOwner::new(apply_sequence_mutation(&base, &mutation()).expect("an empty diff still applies cleanly"));
     assert_eq!(snapshot, expected_after(), "create-step/rejects-a-duplicate-step-id: applied state differs from committed after-snapshot");
     assert_eq!(&snapshot.content.child_id, &base.content.child_id, "a rejected create must not mint a new content handle");
 }
@@ -79,12 +84,13 @@ async fn the_committed_diff_is_declared_absent() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SequenceSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
+        let decoded = neural_engine::ColdOwner::new(dsl::os_pack::from_json_str::<SequenceSnapshot>(text).expect("snapshot decodes"));
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&*decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-step/rejects-a-duplicate-step-id: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
+    let committed = mutation();
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&*committed)).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "create-step/rejects-a-duplicate-step-id: committed mutation JSON is not canonical");
     assert!(original.get("step").and_then(|step| step.get("slot")).map(serde_json::Value::is_null).unwrap_or(false), "an unslotted step serializes slot as an explicit null");
@@ -106,7 +112,7 @@ async fn declared_outcome_holds() {
 /// produced even here where the create was refused as a duplicate.
 #[semio_framework_async_macros::async_test]
 async fn inverse_is_a_delete_of_the_requested_id_even_when_refused() {
-    let inverse = inverse_sequence_mutation(&before(), &mutation());
+    let inverse = neural_engine::ColdOwner::new(inverse_sequence_mutation(&before(), &mutation()));
     assert_eq!(inverse.len(), 1, "create-step always undoes with exactly one step, got {inverse:?}");
     let SequenceMutation::DeleteStep(undo) = &inverse[0] else {
         panic!("create-step's inverse must be a delete-step, got {:?}", inverse[0]);

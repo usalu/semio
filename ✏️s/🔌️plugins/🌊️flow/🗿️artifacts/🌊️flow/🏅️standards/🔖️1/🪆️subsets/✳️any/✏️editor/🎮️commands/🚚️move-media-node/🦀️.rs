@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::flow::host_operations;
+use crate::editor::flow::commands::node_graph_edit::{self, FlowNodeGraphEditOp};
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -16,13 +16,8 @@ pub struct MoveMediaNode {
 }
 
 pub fn handle(payload: &MoveMediaNode, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    let operations = host_operations(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, |host| {
-        host.begin_change();
-        host.move_widget(&payload.node_id, payload.x, payload.y).is_ok()
-    });
-    if operations.is_empty() {
-        Ok(Emit::default())
-    } else {
-        Ok(Emit::amend(operations, format!("move-{}", payload.node_id)))
-    }
+    let operations = [FlowNodeGraphEditOp::Move { node_id: payload.node_id.clone(), x: payload.x, y: payload.y }];
+    let mut emit = node_graph_edit::node_graph_edit_result(doc, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &operations, &[])?;
+    emit.coalesce_key = (!emit.child_emits.is_empty()).then(|| format!("move-{}", payload.node_id));
+    Ok(emit)
 }

@@ -224,26 +224,23 @@ fn decode_rich_synthetic_archive() {
     assert_eq!(snap.entries.len(), 5);
     assert_eq!(snap.comment, "archive-level comment");
 
-    let stored = &snap.entries[0];
-    assert_eq!(stored.name, "stored.txt");
-    assert_eq!(stored.data, b"stored payload, no compression");
+    // 🔤️ The physical member order of the container is NOT snapshot state: `decode_zip` canonicalizes
+    // to the same name-ascending order `encode_zip` writes, so the two are fixpoints of each other
+    // (see `decode_zip`'s ordering comment and `deterministic_logical_round_trip` below). Pinning the
+    // canonical order here is what makes the per-member lookups underneath unambiguous.
+    assert_eq!(
+        snap.entries.iter().map(|entry| entry.name.as_str()).collect::<Vec<_>>(),
+        vec!["café-\u{1F600}.txt", "caf\u{00e9}.txt", "huge-in-theory.bin", "stored.txt", "streamed.bin"],
+        "decoded members are canonically name-ascending, not in the archive's physical order"
+    );
+    let member = |name: &str| snap.entries.iter().find(|entry| entry.name == name).unwrap_or_else(|| panic!("decoded archive has a {name} member")).data.clone();
 
-    let utf8_entry = &snap.entries[1];
-    assert_eq!(utf8_entry.name, "café-\u{1F600}.txt");
-    assert_eq!(utf8_entry.data, b"deflate me please, this text should compress reasonably well well well".to_vec());
-
-    let cp437_entry = &snap.entries[2];
+    assert_eq!(member("stored.txt"), b"stored payload, no compression".to_vec());
+    assert_eq!(member("café-\u{1F600}.txt"), b"deflate me please, this text should compress reasonably well well well".to_vec());
     // 0xE9 in CP437 decodes to 'é'
-    assert_eq!(cp437_entry.name, "caf\u{00e9}.txt");
-    assert_eq!(cp437_entry.data, b"legacy codepage name entry");
-
-    let streamed = &snap.entries[3];
-    assert_eq!(streamed.name, "streamed.bin");
-    assert_eq!(streamed.data, b"data written before its size was known, so a trailing descriptor carries the real crc/sizes".to_vec());
-
-    let zip64_entry = &snap.entries[4];
-    assert_eq!(zip64_entry.name, "huge-in-theory.bin");
-    assert_eq!(zip64_entry.data, b"tiny payload but declared via a ZIP64 extra field for test purposes".to_vec());
+    assert_eq!(member("caf\u{00e9}.txt"), b"legacy codepage name entry".to_vec());
+    assert_eq!(member("streamed.bin"), b"data written before its size was known, so a trailing descriptor carries the real crc/sizes".to_vec());
+    assert_eq!(member("huge-in-theory.bin"), b"tiny payload but declared via a ZIP64 extra field for test purposes".to_vec());
 }
 
 #[test]

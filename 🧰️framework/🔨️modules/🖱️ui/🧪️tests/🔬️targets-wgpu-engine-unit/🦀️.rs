@@ -68,29 +68,55 @@ fn scene_lifetime_document(window_id: &str, generation: u64, scene: bool) -> UiD
     document
 }
 
-fn captured_slider_document(window_id: &str, generation: u64, value: f64) -> UiDocumentTree {
-    let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
+fn captured_slider_document(window_id: &str, generation: u64, value: f64, children: &[u64]) -> UiDocumentTree {
+    let mut root: UiNodeRecord = serde_json::from_value(serde_json::json!({
         "id": 1,
-        "key": "captured-slider",
-        "component": { "type": "slider", "value": value, "min": 0, "max": 10, "step": 1 },
+        "key": "captured-slider/root",
+        "component": { "type": "container" },
         "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
         "style": {},
         "activity": "idle",
-        "accessibility": { "label": "Captured slider" },
-        "bindings": [{ "trigger": "change", "action": { "scope": "fixture", "name": "setValue", "version": 1 } }],
-        "children": []
+        "accessibility": {},
+        "children": children
     }))
-    .expect("captured slider record");
+    .expect("captured slider root");
+    root.layout = ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { axis: ui_contract::Axis::Horizontal, grow: true, ..Default::default() });
     let mut document = UiDocumentTree::new(UiDocumentLeaseHeader {
         generation,
         surface: SurfaceId::try_from(window_id).expect("captured slider surface"),
         revision: UiRevision(generation),
         root: UiNodeId(1),
         layout_epoch: generation,
-        node_count: 1,
+        node_count: children.len() + 1,
     })
     .expect("captured slider document");
-    document.try_upsert_record(record).expect("captured slider record admits");
+    document.try_upsert_record(root).expect("captured slider root admits");
+    for id in children {
+        let component = if *id == 4 {
+            serde_json::json!({ "type": "slider", "value": value, "min": 0, "max": 10, "step": 1 })
+        } else {
+            serde_json::json!({ "type": "container" })
+        };
+        let bindings = if *id == 4 {
+            serde_json::json!([{ "trigger": "change", "action": { "scope": "fixture", "name": "setValue", "version": 1 } }])
+        } else {
+            serde_json::json!([])
+        };
+        let mut record: UiNodeRecord = serde_json::from_value(serde_json::json!({
+            "id": id,
+            "key": format!("captured-slider/{id}"),
+            "component": component,
+            "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
+            "style": {},
+            "activity": "idle",
+            "accessibility": if *id == 4 { serde_json::json!({ "label": "Captured slider" }) } else { serde_json::json!({}) },
+            "bindings": bindings,
+            "children": []
+        }))
+        .expect("captured slider child");
+        record.layout = ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { grow: true, ..Default::default() });
+        document.try_upsert_record(record).expect("captured slider child admits");
+    }
     document
 }
 
@@ -146,6 +172,23 @@ fn candidate_scene_removal_retires_only_after_presentation_acknowledgement() {
 }
 
 #[test]
+fn superseded_candidate_rechecks_deferred_scene_retirement() {
+    let window_id = "superseded-scene-removal";
+    let mut ui = Ui::new();
+    reconcile_scene_lifetime_candidate(&mut ui, window_id, 1, true);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 15);
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
+    let presented_host = ui.windows.get(window_id).and_then(|window| root_scene_host(&window.presented_tree)).expect("presented scene host");
+
+    reconcile_scene_lifetime_candidate(&mut ui, window_id, 2, false);
+    reconcile_scene_lifetime_candidate(&mut ui, window_id, 3, true);
+    assert!(ui.take_retired_component_scene(window_id).is_none(), "superseding an unaccepted removal cannot publish the presented host retirement");
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 16);
+    assert_eq!(ui.windows.get(window_id).and_then(|window| root_scene_host(&window.presented_tree)).as_deref(), Some(presented_host.as_str()));
+    assert!(ui.take_retired_component_scene(window_id).is_none(), "the surviving successor cancels its deferred retirement before acknowledgement");
+}
+
+#[test]
 fn component_scene_host_survives_alternating_arenas_and_readd_gets_a_fresh_mount() {
     let window_id = "alternating-scene-host";
     let mut ui = Ui::new();
@@ -155,7 +198,13 @@ fn component_scene_host_survives_alternating_arenas_and_readd_gets_a_fresh_mount
 
     drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
     reconcile_scene_lifetime_candidate(&mut ui, window_id, 2, true);
-    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 22);
+    assert!(ui.seal_presented_input_candidate(22, &[window_id.to_string()]));
+    let presented_node = ui.windows.get(window_id).and_then(|window| window.presented_tree.root).expect("presented scene node");
+    let candidate_node = ui.windows.get(window_id).and_then(|window| window.tree.root).expect("candidate scene node");
+    assert!(ui.candidate_is_sealed_for(window_id, 22));
+    assert_eq!(ui.candidate_scene_node_for_presented_node(window_id, 22, presented_node), Some(candidate_node));
+    assert!(ui.candidate_scene_node_for_presented_node(window_id, 23, presented_node).is_none(), "a different presenter witness cannot expose the candidate mapping");
+    assert!(ui.acknowledge_presented_input(22));
     assert_eq!(ui.windows.get(window_id).and_then(|window| root_scene_host(&window.presented_tree)).as_deref(), Some(first.as_str()));
 
     drive_scene_lifetime_reconcile(&mut ui, window_id, 2);
@@ -173,19 +222,34 @@ fn component_scene_host_survives_alternating_arenas_and_readd_gets_a_fresh_mount
 fn held_pointer_capture_transfers_to_the_accepted_candidate_and_releases_once() {
     let window_id = "presented-captured-slider";
     let mut ui = Ui::new();
-    assert!(ui.publish_document(window_id, captured_slider_document(window_id, 1, 2.0)));
+    assert!(ui.publish_document(window_id, captured_slider_document(window_id, 1, 2.0, &[2])));
     drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
     let mut atlas = FontAtlas::builtin();
     drive_layout(&mut ui, window_id, 200.0, 40.0, &mut atlas);
-    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 31);
-    ui.dispatch_pointer_event(window_id, 77, UiEvent::PointerDown { x: 40.0, y: 20.0, button: PointerButton::Primary, modifiers: Default::default() });
-    assert!(ui.windows.get(window_id).and_then(|window| window.presented_router.capture()).is_some());
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 30);
 
     drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
-    assert!(ui.publish_document(window_id, captured_slider_document(window_id, 2, 3.0)));
+    assert!(ui.publish_document(window_id, captured_slider_document(window_id, 2, 2.0, &[2, 3])));
     drive_scene_lifetime_reconcile(&mut ui, window_id, 2);
+    assert!(ui.publish_document(window_id, captured_slider_document(window_id, 3, 2.0, &[2, 4])));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 3);
+    drive_layout(&mut ui, window_id, 200.0, 40.0, &mut atlas);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 31);
+    let presented_node = ui.windows.get(window_id).and_then(|window| window.presented_tree.document_node(UiNodeId(4))).expect("presented slider node");
+    let (x, y, w, h) = ui.windows.get(window_id).and_then(|window| window.presented_tree.mounted_layout(presented_node)).expect("presented slider layout");
+    ui.dispatch_pointer_event(window_id, 77, UiEvent::PointerDown { x: x + w * 0.5, y: y + h * 0.5, button: PointerButton::Primary, modifiers: Default::default() });
+    assert!(ui.windows.get(window_id).and_then(|window| window.presented_router.capture()).is_some());
+
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 3);
+    assert!(ui.publish_document(window_id, captured_slider_document(window_id, 4, 3.0, &[2, 3, 4])));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 4);
     drive_layout(&mut ui, window_id, 200.0, 40.0, &mut atlas);
     assert!(ui.seal_presented_input_candidate(32, &[window_id.to_string()]), "a surviving captured control cannot block pixel publication");
+    let candidate_node = ui.windows.get(window_id).and_then(|window| window.tree.document_node(UiNodeId(4))).expect("candidate slider node");
+    assert!(ui.candidate_is_sealed_for(window_id, 32));
+    assert_eq!(ui.candidate_scene_node_for_presented_node(window_id, 32, presented_node), None, "the generic retained mapper refuses a non-scene node");
+    assert!(!ui.candidate_is_sealed_for(window_id, 33));
+    assert_ne!(presented_node, candidate_node, "the capture law exercises separate retained arenas");
     assert!(ui.acknowledge_presented_input(32));
     assert!(ui.windows.get(window_id).and_then(|window| window.presented_router.capture()).is_some(), "the exact pointer owner transfers with accepted pixels");
 
@@ -512,14 +576,8 @@ fn accessibility_dispatch_uses_current_window_generation_and_node_identity() {
     assert_eq!(value.iter().filter(|command| matches!(command, UiCommand::App { .. })).count(), 1, "one AT value event mints one retained action");
     assert!(ui.dispatch_accessibility_event(window_id, first_generation + 1, 2, "#width", AccessibilityUiEvent::Activate).is_none());
     assert!(ui.dispatch_accessibility_event(window_id, first_generation, 2, "#reused", AccessibilityUiEvent::Activate).is_none());
-    let mut closed = false;
-    for _ in 0..4096 {
-        if ui.close_document_step(window_id) {
-            closed = true;
-            break;
-        }
-    }
-    assert!(closed, "the retained document reaches terminal retirement");
+    let token = ui.surface_token(window_id).expect("published surface token");
+    close_surface_to_terminal(&mut ui, token);
     assert!(ui.dispatch_accessibility_event(window_id, first_generation, 2, "#width", AccessibilityUiEvent::Activate).is_none(), "a retired document cannot receive a stale activation");
     publish_accessibility_document(&mut ui, window_id);
     let second_generation = ui.surface_generation(window_id).unwrap();
@@ -1644,7 +1702,7 @@ fn golden_toggle() {
     // capability `widgets::render_toggle` (the immediate-mode reference this harness compares
     // against) never had, so a selected fixture would fail this equivalence check for the wrong
     // reason. This test stays scoped to the base (unselected) toggle's fill/label parity.
-    assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::default(), menu: None })));
+    assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::default(), menu: None })));
 }
 
 /// ✨️ `presence.selected` draws its outset accent ring universally — proven here on `Toggle`, a
@@ -1653,8 +1711,8 @@ fn golden_toggle() {
 /// is now a shared channel every element gets for free from `presence_overlay`.
 #[test]
 fn selected_presence_draws_an_outset_ring_on_any_element() {
-    let unselected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::default(), menu: None });
-    let selected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::selected(true), menu: None });
+    let unselected = UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::default(), menu: None });
+    let selected = UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::selected(true), menu: None });
     let (unselected_instances, _, _) = retained_stats(&leaf(unselected));
     let (selected_instances, _, _) = retained_stats(&leaf(selected));
     assert!(selected_instances > unselected_instances, "a selected element should paint more instances than an unselected one (the outset accent ring)");
@@ -1732,7 +1790,7 @@ fn golden_tree() {
         dimmed: None,
         menu: None,
     };
-    let node = UiNode::Tree(UiTreeNode {
+    let node = UiNode::Tree(UiTreeNode { presentation: Default::default(),
         sections: vec![UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
         presence: UiPresence::default(),
         drop_action: None,

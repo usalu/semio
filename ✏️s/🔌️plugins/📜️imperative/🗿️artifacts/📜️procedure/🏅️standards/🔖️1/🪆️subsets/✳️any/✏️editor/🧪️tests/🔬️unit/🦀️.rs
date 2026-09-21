@@ -13,7 +13,7 @@ pub(crate) mod context {
     /// 🧪️ Every fixture now runs against the real registry: with the ten verbs `Migrated`, a
     /// registry-less wrapper carries no migrated action rows at all and the guest's catalog authority
     /// rejects EVERY proof (`interactive-job.catalog-authority`, `migrated={}`).
-    pub async fn imperative_app() -> ImperativeApp {
+    pub async fn imperative_app() -> OwnedImperativeApp {
         imperative_app_with_registry().await
     }
     
@@ -27,10 +27,46 @@ pub(crate) mod context {
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline and materializes
     /// declared action-arg defaults (e.g. `addStep`'s `kind`).
-    pub async fn imperative_app_with_registry() -> ImperativeApp {
+    pub async fn imperative_app_with_registry() -> OwnedImperativeApp {
         let mut app = new_app_with_registry::<EditorApp<ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(imperative_app_manifest_for_tests).await;
         semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
-        app
+        OwnedImperativeApp(app)
+    }
+
+    /// 🔚 A mounted app that RETIRES ITSELF. A live `ArtifactStore` asserts in `Drop`
+    /// (`artifact store reached Drop without its exact terminal-empty shallow-shell witness`) unless
+    /// it walked its bounded close loop first, so the fixture owns the close instead of asking every
+    /// law to remember a trailing `close(&mut app)` — which is what makes a law that fails an
+    /// assertion report ITS failure instead of a close panic. Skipped while unwinding, where the
+    /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
+    pub struct OwnedImperativeApp(ImperativeApp);
+
+    impl OwnedImperativeApp {
+        /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
+        pub fn close(&mut self) {
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+        }
+    }
+
+    impl std::ops::Deref for OwnedImperativeApp {
+        type Target = ImperativeApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for OwnedImperativeApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for OwnedImperativeApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                self.close();
+            }
+        }
     }
 
     /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does.
@@ -96,8 +132,10 @@ fn set_active_example_is_host_only_and_both_composed_children_mint_genesis_packs
     let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared on the app roster");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     let demo = <crate::ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a procedure snapshot");
-    for (slot, child) in [("flow", &demo.flow), ("text", &demo.text)] {
-        assert_eq!(child.target.artifact_id, child.child_id, "slot {slot}'s target must name its own child_id or ChildRestoreProjection refuses the whole load with InvalidReference");
+    // 🧬️ The two composed slots carry DIFFERENT snapshot types (`SemioFlowSnapshot`/`SemioTextSnapshot`),
+    // so they are stated one by one rather than iterated over a heterogeneous array.
+    for (slot, artifact_id, child_id) in [("flow", demo.flow.target.artifact_id.as_str(), demo.flow.child_id.as_str()), ("text", demo.text.target.artifact_id.as_str(), demo.text.child_id.as_str())] {
+        assert_eq!(artifact_id, child_id, "slot {slot}'s target must name its own child_id or ChildRestoreProjection refuses the whole load with InvalidReference");
     }
     for (slot, child_id) in [("flow", demo.flow.child_id.as_str()), ("text", demo.text.child_id.as_str())] {
         let pack = <ImperativePlayApp as ArtifactEditor>::genesis_child_pack(&demo, slot, child_id).unwrap_or_else(|| panic!("slot {slot} mints no genesis pack, so the archive closure leg refuses the load"));

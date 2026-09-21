@@ -79,12 +79,21 @@ impl ui_wgpu::wgpu::SceneHost for DisplayTreeSceneHost {
     }
 }
 
-fn settle_display_tree(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu::FontAtlas) {
+fn settle_display_tree(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu::FontAtlas, witness: u64) {
     engine.set_viewport(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, 300.0, 240.0);
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
+    let reconciled = (0..16_384).any(|_| {
+        let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(witness), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
+        match engine.step_document_reconcile(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, "framework", &mut cx) {
+            ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Pending => false,
+            ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Complete => true,
+            step => panic!("Display branch reconcile answered {step:?}"),
+        }
+    });
+    assert!(reconciled, "Display's accepted interaction rebases into its next paint candidate");
     for _ in 0..64 {
         for _ in 0..16_384 {
             let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
@@ -101,7 +110,11 @@ fn settle_display_tree(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu
     for _ in 0..131_072 {
         match engine.frame_step::<DisplayTreeSceneHost>(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, 300.0, 240.0, atlas, None, None) {
             ui_wgpu::wgpu::UiFrameStep::Pending => {}
-            ui_wgpu::wgpu::UiFrameStep::Ready => return,
+            ui_wgpu::wgpu::UiFrameStep::Ready => {
+                assert!(engine.seal_presented_input_candidate(witness, &[FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.to_string()]));
+                assert!(engine.acknowledge_presented_input(witness));
+                return;
+            },
             step => panic!("Display branch paint answered {step:?}"),
         }
     }
@@ -126,13 +139,25 @@ fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its
 
     let parallel_id = "framework.display.windows.main.projection.parallel";
     let child_id = "framework.display.windows.main.projection.parallel.orthographic";
-    let chevron_id = format!("tree.chevron.{parallel_id}");
-    let child_label_id = format!("tree.label.{child_id}");
+    let chevron_id = format!("tree.chevron.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{parallel_id}");
+    let child_label_id = format!("tree.label.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{child_id}");
     let mut engine = ui_wgpu::wgpu::Ui::new();
-    engine.apply_tree(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &body);
+    let records = panel_ui_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &body).expect("Display's authored tree projects into retained records");
+    let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
+        generation: 1,
+        surface: SurfaceId::try_from(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).unwrap(),
+        revision: ui_contract::UiRevision(1),
+        root: records.first().expect("Display document root").id,
+        layout_epoch: 0,
+        node_count: records.len(),
+    }).expect("Display retained document header");
+    for record in records {
+        document.try_upsert_record(record).expect("Display retained record admits");
+    }
+    assert!(engine.publish_document(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, document));
     engine.set_window_flow(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
     let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
-    settle_display_tree(&mut engine, &mut atlas);
+    settle_display_tree(&mut engine, &mut atlas, 1);
 
     let chevron = engine
         .window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID)
@@ -143,12 +168,12 @@ fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its
     assert!(!engine.window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).iter().any(|hit| hit.control_id == child_label_id), "the closed Parallel branch publishes no child hit");
 
     press_display_tree(&mut engine, chevron);
-    settle_display_tree(&mut engine, &mut atlas);
+    settle_display_tree(&mut engine, &mut atlas, 2);
     assert!(engine.window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).iter().any(|hit| hit.control_id == child_label_id), "the gutter opens Parallel and publishes Orthographic");
 
     let chevron = engine.window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).iter().find(|hit| hit.control_id == chevron_id).expect("the open branch keeps its gutter").rect;
     press_display_tree(&mut engine, chevron);
-    settle_display_tree(&mut engine, &mut atlas);
+    settle_display_tree(&mut engine, &mut atlas, 3);
     assert!(!engine.window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).iter().any(|hit| hit.control_id == child_label_id), "closing Parallel retires Orthographic from the published hit generation");
 }
 
@@ -158,23 +183,10 @@ fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its
 fn the_display_layout_leaf_publishes_the_save_box_and_both_layout_rosters() {
     let mut shell = display_shell();
     shell.layout_save_label.clear();
-    shell.user_layouts = vec![ui_wgpu::wgpu::NamedLayout {
-        id: "user-7".into(),
-        label: "Mine".into(),
-        icon_id: None,
-        layout: shell.dock.to_window_layout(),
-        origin: "user".into(),
-        group_path: None,
-    }];
+    shell.user_layouts = vec![ui_wgpu::wgpu::NamedLayout { id: "user-7".into(), label: "Mine".into(), icon_id: None, layout: shell.dock.to_window_layout(), origin: "user".into(), group_path: None }];
     if let Some(session) = shell.session.as_mut() {
-        session.app.named_layouts = vec![ui_wgpu::wgpu::NamedLayout {
-            id: "review".into(),
-            label: "Review".into(),
-            icon_id: None,
-            layout: ui_wgpu::wgpu::create_stack_layout(&["main".to_string()], None),
-            origin: "builtin".into(),
-            group_path: Some(vec!["Work".into()]),
-        }];
+        session.app.named_layouts =
+            vec![ui_wgpu::wgpu::NamedLayout { id: "review".into(), label: "Review".into(), icon_id: None, layout: ui_wgpu::wgpu::create_stack_layout(&["main".to_string()], None), origin: "builtin".into(), group_path: Some(vec!["Work".into()]) }];
     }
     let node = shell.build_display_layout_ui();
     let keys = published_keys(&shell, FRAMEWORK_DISPLAY_LAYOUT_TAB_ID, &node);

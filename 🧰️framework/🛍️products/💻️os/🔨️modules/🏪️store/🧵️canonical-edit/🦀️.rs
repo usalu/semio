@@ -551,7 +551,7 @@ impl ArtifactCanonicalJsonCursor {
 //#region 🔏️Sealing
 pub(super) struct ArtifactStoreOneItemAuthorityRetirement {
     authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
-    strings: [Option<String>; 2],
+    strings: [Option<String>; 3],
     active: Option<ArtifactStoreStringRetirement>,
 }
 
@@ -582,7 +582,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreOneItemAuthorityRetirement {
         }
         if let Some(authority) = self.authority.take() {
             if let Some(authority) = Arc::into_inner(authority) {
-                self.strings = [Some(authority.actor), authority.group_id];
+                self.strings = [Some(authority.actor), authority.group_id, authority.stamped_edit_id];
             }
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }

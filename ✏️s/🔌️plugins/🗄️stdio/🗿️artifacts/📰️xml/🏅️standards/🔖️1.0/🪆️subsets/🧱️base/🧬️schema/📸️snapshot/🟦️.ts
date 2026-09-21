@@ -13,10 +13,14 @@ export type XmlNode =
   | { kind: 'processingInstruction'; target: string; data: string };
 
 /** 🏳️ Typed `<?xml version="1.0" encoding="..." standalone="..."?>` declaration. */
+export type XmlQuote = 'double' | 'single';
+
 export interface XmlDeclaration {
   version: string;
   encoding?: string;
   standalone?: boolean;
+  /** 🗣️ Delimiter the pseudo-attributes are written with (XML 1.0 §2.8); absent = `double`. */
+  quote?: XmlQuote;
 }
 
 export type XmlExternalId =
@@ -108,6 +112,7 @@ export function parseXmlDeclaration(value: unknown, at = "$"): XmlDeclaration {
     version: stdioXml10BaseSnapshotGuardString(row["version"], `${at}.version`),
     encoding: row["encoding"] === undefined ? undefined : stdioXml10BaseSnapshotGuardString(row["encoding"], `${at}.encoding`),
     standalone: row["standalone"] === undefined ? undefined : stdioXml10BaseSnapshotGuardBoolean(row["standalone"], `${at}.standalone`),
+    quote: row["quote"] === undefined ? undefined : stdioXml10BaseSnapshotGuardMember<XmlQuote>(row["quote"], `${at}.quote`, ["double", "single"]),
   };
 }
 

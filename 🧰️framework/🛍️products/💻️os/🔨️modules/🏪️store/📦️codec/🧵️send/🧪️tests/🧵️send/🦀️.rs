@@ -15,6 +15,7 @@ async fn document_codec_native_send_compile_dsl_preserves_exact_snapshots() {
         let snapshot: DemoSnapshot = serde_json::from_value(value.clone()).unwrap();
         let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap(), "native-send", snapshot.clone(), None);
         let text = print_document_text(&envelope).await.expect("exact schema-owned input");
+        envelope.retire_unadopted();
         let future = (codec.compile_dsl)(&text.dsl, &text.ops);
         require_send(&future);
         let (files, mirror) = future.await.expect("actual registered compile future");
@@ -32,6 +33,7 @@ async fn document_codec_native_send_print_mirror_preserves_exact_snapshots() {
         let snapshot: DemoSnapshot = serde_json::from_value(value.clone()).unwrap();
         let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap(), "native-send", snapshot.clone(), None);
         let files = print_document_pack(&envelope).await.expect("exact schema-owned PACK input");
+        envelope.retire_unadopted();
         let future = (codec.print_mirror)(&files.pack, &files.spr);
         require_send(&future);
         let mirror = future.await.expect("actual registered mirror future");

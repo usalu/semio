@@ -17,5 +17,5 @@ pub fn diff(payload: &RenameKnowledgeRecord, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This knowledge record already has this name.").at([payload.id.0.clone()])]);
     }
     existing.header.name = payload.new_name.clone();
-    protocol::MutationOutcome::new(ProgramDiff { knowledge: Some(crate::knowledge_child_from_records(&records)), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { knowledge_payload: Some(records.clone()), knowledge: Some(crate::knowledge_child_from_records(&records)), ..Default::default() })
 }

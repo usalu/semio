@@ -14,8 +14,8 @@
           "visible": null,
           "opacity": null,
           "blendMode": null,
-          "transformX": 16,
-          "transformY": -8,
+          "transformX": 16.0,
+          "transformY": -8.0,
           "width": null,
           "height": null,
           "adjustmentKind": null

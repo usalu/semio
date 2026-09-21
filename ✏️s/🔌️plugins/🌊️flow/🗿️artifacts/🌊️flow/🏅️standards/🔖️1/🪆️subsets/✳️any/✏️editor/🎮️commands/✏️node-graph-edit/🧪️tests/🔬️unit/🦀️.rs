@@ -1,8 +1,23 @@
 use super::*;
-use crate::editor::flow::unit_tests::context::{dispatch, flow_app_closing, flow_app_with_registry, render, select_graph, settle};
+use crate::editor::flow::unit_tests::context::{dispatch, flow_app_closing, flow_app_with_registry, render, select_graph, FlowApp};
 use crate::editor::flow::FlowCommand;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
-use semio_framework_plugin::PluginApp;
+use semio_framework_plugin::{app::TypedOperationResultLane, PluginApp};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use store::{ArtifactPack, SpaceMember};
+
+async fn content_snapshot(app: &FlowApp) -> SemioFlowSnapshot {
+    let parent = app.snapshot().expect("Flow parent snapshot");
+    SemioFlowSnapshot::decode_pack(
+        &app.child_store("content", &parent.content.child_id)
+            .await
+            .expect("Flow content child")
+            .document_pack_bytes()
+            .await
+            .expect("Flow content child pack"),
+    )
+    .expect("Flow content child snapshot")
+}
 
 /// 🎯️ The batched `DeleteSelection` sub-op must clear the node selection (visible on the rendered
 /// scene) while leaving the widget count intact when nothing resolves — the behavior that
@@ -10,10 +25,15 @@ use semio_framework_plugin::PluginApp;
 #[semio_framework_async_macros::async_test]
 async fn batched_delete_selection_clears_the_node_selection_on_the_scene() {
     let mut app = flow_app_with_registry().await;
+    let content_id = app.snapshot().expect("snapshot before batched delete").content.child_id.clone();
     select_graph(&mut app, &["slider"], &[]).await;
     dispatch(&mut app, FlowCommand::NodeGraphEdit(NodeGraphEdit { operations: vec![FlowNodeGraphEditOp::DeleteSelection] })).await;
-    settle(&mut app).await;
-    assert!(!app.snapshot().expect("snapshot").to_host_snapshot().widgets.iter().any(|widget| crate::schema::widget_id(widget) == "slider"), "batched delete removes the picked widget");
+    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("batched delete child publication");
+    assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
+    let snapshot = app.snapshot().expect("snapshot");
+    assert_eq!(snapshot.content.child_id, content_id, "batched delete must publish through the existing content child");
+    let content = content_snapshot(&app).await;
+    assert!(!content.nodes.iter().any(|node| node.id == "slider"), "batched delete removes the picked widget from the composed content child");
     let _ = render(&mut app, crate::editor::flow::FLOW_PLAY_BODY_MAIN).await;
 }
 
@@ -21,6 +41,7 @@ async fn batched_delete_selection_clears_the_node_selection_on_the_scene() {
 async fn spotlight_commit_shares_the_node_graph_edit_vocabulary() {
     use crate::editor::flow::commands::spotlight_commit;
     let mut app = flow_app_with_registry().await;
+    let content_id = app.snapshot().expect("snapshot before Spotlight publication").content.child_id.clone();
     let result = dispatch(
         &mut app,
         FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit {
@@ -29,10 +50,12 @@ async fn spotlight_commit_shares_the_node_graph_edit_vocabulary() {
     )
     .await;
     assert!(result.mutations.is_empty(), "retained Spotlight admission does not publish synchronously");
-    settle(&mut app).await;
-    let live = app.snapshot().expect("snapshot after Spotlight publication").to_host_snapshot();
-    assert!(live.synapses.iter().any(|edge| edge.from == "slider" && edge.from_port == "number" && edge.to == "add" && edge.to_port == "b"), "Spotlight and nodeGraphEdit share the exact valid connect vocabulary");
-    live.retire_cold();
+    let receipt = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("Spotlight child publication");
+    assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
+    let snapshot = app.snapshot().expect("snapshot after Spotlight publication");
+    assert_eq!(snapshot.content.child_id, content_id, "Spotlight must publish through the existing content child");
+    let content = content_snapshot(&app).await;
+    assert!(content.edges.iter().any(|edge| edge.from.node == "slider" && edge.from.port == "number" && edge.to.node == "add" && edge.to.port == "b"), "Spotlight and nodeGraphEdit share the exact valid connect vocabulary in the composed content child");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -84,6 +107,7 @@ async fn operation_parser_refuses_beyond_the_retained_route_row_and_wire_authori
 #[semio_framework_async_macros::async_test]
 async fn node_graph_move_wire_publishes_the_requested_widget_layout() {
     let mut app = flow_app_closing().await;
+    let content_id = app.snapshot().expect("snapshot before nodeGraphEdit move").content.child_id.clone();
     let initial = app.snapshot().expect("snapshot before nodeGraphEdit move").to_host_snapshot();
     assert!(initial.widgets.iter().any(|widget| crate::schema::widget_id(widget) == "add"), "the real starter graph must contain the renderer's move target");
     let initial_position = initial.layout.get("add").map_or((0.0, 0.0), |layout| (layout.x, layout.y));
@@ -93,10 +117,12 @@ async fn node_graph_move_wire_publishes_the_requested_widget_layout() {
         "operations": [{ "operation": "move", "nodeId": "add", "x": 284.0, "y": 48.0 }]
     }));
     app.handle_action("nodeGraphEdit", Some(&args), &meta("flow-node-graph-move")).await.expect("nodeGraphEdit move admission");
-    settle_registered_typed_operation(&mut *app, 1).await.expect("nodeGraphEdit move publication");
-    let live = app.snapshot().expect("snapshot after nodeGraphEdit move").to_host_snapshot();
-    let moved = live.layout.iter().find(|(id, _)| id.as_str() == "add").map(|(_, layout)| (layout.x, layout.y));
-    live.retire_cold();
+    let receipt = settle_registered_typed_operation(&mut *app, 1).await.expect("nodeGraphEdit move publication");
+    assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
+    let snapshot = app.snapshot().expect("snapshot after nodeGraphEdit move");
+    assert_eq!(snapshot.content.child_id, content_id, "nodeGraphEdit move must publish through the existing content child");
+    let content = content_snapshot(&app).await;
+    let moved = content.nodes.iter().find(|node| node.id == "add").map(|node| (node.position.x, node.position.y));
     assert_eq!(moved, Some((284.0, 48.0)), "the renderer's exact move row must survive strict wire parsing and reach the Flow host layout");
 }
 
@@ -112,7 +138,7 @@ async fn node_graph_edit_rejects_an_unknown_operation_instead_of_dropping_it() {
     let result = app.handle_action("nodeGraphEdit", Some(&args), &meta("flow-node-graph-invalid")).await;
     assert!(result.is_err(), "one malformed operation must reject the whole bounded edit before its valid prefix is admitted");
     assert!(!app.has_pending_typed_operations(), "atomic refusal cannot leave a retained operation to publish the valid prefix");
-    let live = app.snapshot().expect("snapshot after refused nodeGraphEdit batch").to_host_snapshot();
-    assert!(live.layout.get("add").is_none(), "atomic refusal cannot move the valid prefix's target");
-    live.retire_cold();
+    let content = content_snapshot(&app).await;
+    let add = content.nodes.iter().find(|node| node.id == "add").expect("starter add node");
+    assert_eq!((add.position.x, add.position.y), (0.0, 0.0), "atomic refusal cannot move the valid prefix's target");
 }

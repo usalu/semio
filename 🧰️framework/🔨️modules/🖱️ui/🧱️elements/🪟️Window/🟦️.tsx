@@ -185,6 +185,7 @@ const Window: React.FC<WindowProps> = ({
     onActionsFoldedChange?.(folded);
     if (actionsFoldedProp === undefined) setActionsFoldedInternal(folded);
   };
+  const [searchFolded, setSearchFolded] = reactHostPort.useState(true);
   const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
   const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);
   const utilityBarMaxHeightPx = useWindowUtilityBarMaxHeightPx(!utilityBarFolded && !!utilityBar, windowBodyRef);
@@ -205,14 +206,9 @@ const Window: React.FC<WindowProps> = ({
   const engagementVisible = !!(engagement || actionPane);
   const engagementExpanded = engagementVisible && !actionsFolded;
   const searchVisible = !!search;
-  // 🗣️ The engagement bar is ONE affordance laid out as two anchored panes — the top-left status/action
-  // pane and the top-middle command line — so both follow the same fold state. Giving the command line
-  // its own private `searchFolded` meant unfolding "Actions" left the typed input unmounted, i.e. the
-  // engagement bar's only input was unreachable unless the user found the second, separate toggle.
-  const searchExpanded = searchVisible && !actionsFolded;
+  const searchExpanded = searchVisible && !searchFolded;
   const setEngagementBarFolded = (folded: boolean) => {
     setActionsFolded(folded);
-    if (!folded && search?.input) queueMicrotask(() => focusActiveSearchInput());
   };
 
   useShellKeydown(
@@ -394,7 +390,10 @@ const Window: React.FC<WindowProps> = ({
               icon={WINDOW_PANE_SEARCH_ICON}
               label={searchLabel}
               folded={!searchExpanded}
-              onFoldToggle={() => setEngagementBarFolded(searchExpanded)}
+              onFoldToggle={() => {
+                setSearchFolded(searchExpanded);
+                if (!searchExpanded && search.input) queueMicrotask(() => focusActiveSearchInput());
+              }}
               toggleId={childElementId("framework.window", id, "search", "toggle")}
               stackSlot="window-search-zone"
               bodySlot="window-search-body"

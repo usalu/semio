@@ -1,45 +1,100 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, settle_registered_typed_operation};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
-    
-    pub type LayoutApp = VcsArtifactApp<EditorApp<LayoutPlayApp>>;
-    
-    /// ✏️ `LayoutPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
-    /// `ArtifactApp` — `EditorApp<LayoutPlayApp>` (SDK adapter, contract §2.1) is the real
+
+    /// 🪪️ The one live instance every fixture app binds. A registry-backed app refuses every typed
+    /// command until it knows its instance (`interactive-job.live-instance`) — `meta("local")`
+    /// addresses exactly this id, so binding it is what makes the dispatch route live.
+    pub const INSTANCE: u32 = 1;
+
+    /// 🧪️ The app instance every test builds — registry-backed, instance-bound, and closing its
+    /// stores on drop. `LayoutPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the
+    /// runtime `ArtifactApp`; `EditorApp<LayoutPlayApp>` (SDK adapter, contract §2.1) is the real
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
-    /// `PluginBuilder::editor::<LayoutPlayApp>` builds it.
-    
-    /// 🧪️ The app instance every test builds — registry-backed, because there is no other kind.
-    /// `EditorApp<LayoutPlayApp>` publishes a `bounded_first_step_tool_proofs!` roster, and
-    /// `with_registry_on_bus` joins that roster against the registry's `Migrated` tool ids
-    /// (`AppActionRegistry::validate_tool_job_rows`): an empty registry declares none of them, so the
-    /// registry-LESS `artifact_app_laws::new_app` fails construction outright with
-    /// `interactive-job.catalog-authority … generated_migrated=false, migrated={}`.
-    pub async fn layout_app() -> LayoutApp {
-        layout_app_with_registry().await
+    /// `PluginBuilder::editor::<LayoutPlayApp>` builds it. The guard exists because the artifact
+    /// store's drop witness panics for any fixture that reaches `Drop` without a terminal-empty
+    /// shallow shell — the same guard lowpoly's fixture installs.
+    pub struct LayoutApp(pub VcsArtifactApp<EditorApp<LayoutPlayApp>>);
+
+    impl std::ops::Deref for LayoutApp {
+        type Target = VcsArtifactApp<EditorApp<LayoutPlayApp>>;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
     }
-    
+
+    impl std::ops::DerefMut for LayoutApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for LayoutApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
+
     /// 🧪️ Adapts `create_layout_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `new_app_with_registry` still expects — framework test context gap, not
     /// modifiable here (`🧰️framework/**` is outside this packet's lease).
     fn layout_app_manifest_for_tests() -> App {
         App { definition: create_layout_app(), examples: Vec::new() }
     }
-    
+
+    pub async fn layout_app() -> LayoutApp {
+        layout_app_with_registry().await
+    }
+
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
+    /// `EditorApp<LayoutPlayApp>` publishes a `bounded_first_step_tool_proofs!` roster, and
+    /// `with_registry_on_bus` joins that roster against the registry's `Migrated` tool ids
+    /// (`AppActionRegistry::validate_tool_job_rows`): an empty registry declares none of them, so the
+    /// registry-LESS `artifact_app_laws::new_app` fails construction outright with
+    /// `interactive-job.catalog-authority … generated_migrated=false, migrated={}`.
     pub async fn layout_app_with_registry() -> LayoutApp {
-        new_app_with_registry::<EditorApp<LayoutPlayApp>>(layout_app_manifest_for_tests).await
+        let mut app = new_app_with_registry::<EditorApp<LayoutPlayApp>>(layout_app_manifest_for_tests).await;
+        app.bind_instance_id(INSTANCE).await;
+        LayoutApp(app)
     }
-    
+
+    /// 🎯️ Dispatches one typed command through the retained route and settles its typed operation,
+    /// so the snapshot a test reads next is the committed one.
     pub async fn dispatch(app: &mut LayoutApp, command: LayoutCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        let verb = command.command_id().to_string();
+        let result = app.0.dispatch_typed(command, &meta("local")).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
+        settle_registered_typed_operation(&mut app.0, INSTANCE).await.unwrap_or_else(|fault| panic!("{verb} did not settle: {fault:?}"));
+        result
     }
-    
+
     pub async fn render(app: &mut LayoutApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("fixture projection")
+        render_in(app, body_key, &ViewModel::default()).await
     }
-    
+
+    /// 🌐️ The same projection, rendered for one locale — a body's labels are resolved against the
+    /// VIEW's locale, so a translation assertion that reuses the default view reads English text no
+    /// matter which language it is asserting.
+    pub async fn render_localized(app: &mut LayoutApp, body_key: &str, locale: &str) -> String {
+        let view = ViewModel { locale: semio_framework_plugin::locale_from_str(locale), ..Default::default() };
+        render_in(app, body_key, &view).await
+    }
+
+    async fn render_in(app: &mut LayoutApp, body_key: &str, view: &ViewModel) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.0.render(body_key, None, view).await.expect("render")).expect("fixture projection")
+    }
+
+    /// 🎬️ The ASSEMBLED canvas scene behind a window body. A built surface carries its scene as a
+    /// binary pack inside `SurfaceProps.doc` (plus out-of-doc payload lanes), so the projected tree's
+    /// JSON text contains none of the scene's own strings — a test that greps the projection for a
+    /// layer id reads an empty field no matter what the window rendered.
+    pub async fn scene(app: &mut LayoutApp, body_key: &str) -> semio_framework_plugin::Canvas2dScene {
+        let projection = render(app, body_key).await;
+        semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("window body carries an assembled canvas scene")
+    }
+
     pub fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {
         let camera = infinite_canvas::camera::Camera { x: camera_x, y: camera_y, zoom };
         let viewport = infinite_canvas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
@@ -64,7 +119,9 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 21, "every LayoutCommand row must be covered by every_command()");
+    let mut declared: Vec<&str> = LayoutCommand::TOOL_JOB_IDS.to_vec();
+    declared.sort_unstable();
+    assert_eq!(sorted, declared, "every LayoutCommand row declared by `app_commands!` must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -191,7 +248,7 @@ async fn context_menu_on_empty_canvas_offers_create_verbs_not_delete() {
     assert!(menu.contains(r#""id":"addPage""#), "empty canvas should offer addPage: {menu}");
     assert!(menu.contains(r#""action":"addFrame""#), "empty canvas should offer addFrame kinds: {menu}");
     assert!(!menu.contains(r#""action":"deleteSelection""#), "empty canvas must not offer deleteSelection: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 
 /// ⚖️ LAW: a frame selection ends with delete-selection and clearSelection.
@@ -212,7 +269,7 @@ async fn context_menu_on_frame_selection_offers_delete_last() {
     .await;
     assert!(menu.contains(r#""action":"deleteSelection""#), "selection menu must include deleteSelection: {menu}");
     assert!(menu.contains(r#""action":"clearSelection""#), "selection menu must include clearSelection: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 
 /// ⚖️ LAW: a page-tree row hit offers setActivePage, not canvas delete verbs.
@@ -233,7 +290,7 @@ async fn context_menu_on_page_row_offers_set_active_page() {
     .await;
     assert!(menu.contains(r#""action":"setActivePage""#), "page row menu must set active page: {menu}");
     assert!(!menu.contains(r#""action":"deleteSelection""#), "page row menu must not delete frames: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 
 /// ⚖️ LAW: preview is read-only — selectAll only, no authoring delete/create.
@@ -254,7 +311,7 @@ async fn context_menu_on_preview_surface_is_read_only() {
     assert!(menu.contains(r#""action":"selectAll""#), "preview should offer selectAll: {menu}");
     assert!(!menu.contains(r#""action":"addFrame""#), "preview must not offer addFrame: {menu}");
     assert!(!menu.contains(r#""action":"deleteSelection""#), "preview must not offer deleteSelection: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 
 /// ⚖️ LAW: multi-frame selection uses a plural delete label and still exposes clipboard verbs.
@@ -276,7 +333,7 @@ async fn context_menu_on_multi_frame_selection_offers_plural_delete() {
     .await;
     assert!(menu.contains(r#""action":"deleteSelection""#), "multi selection must delete: {menu}");
     assert!(menu.contains("frames") || menu.contains("Rahmen"), "multi selection label should mention frames: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 
 /// ⚖️ LAW: a links-tree row hit offers interactionSelect over referencing image frames.
@@ -297,7 +354,7 @@ async fn context_menu_on_link_row_offers_select_linked_frames() {
     .await;
     assert!(menu.contains(INTERACTION_SELECT_ACTION_ID), "link row must select referencing frames: {menu}");
     assert!(menu.contains("frame-image-1"), "link row must target the demo image frame: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 
 /// ⚖️ LAW: a preflight issue row hit offers focusPreflightIssue with the issue payload.
@@ -321,7 +378,7 @@ async fn context_menu_on_preflight_row_offers_focus_issue() {
     .await;
     assert!(menu.contains(r#""action":"focusPreflightIssue""#), "preflight row must focus the issue: {menu}");
     assert!(menu.contains(&issue.code), "preflight menu must carry the issue code: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 
 /// ⚖️ LAW: right-clicking an unselected frame hit offers Select before create verbs.
@@ -342,7 +399,7 @@ async fn context_menu_on_frame_hit_without_selection_offers_select() {
     .await;
     assert!(menu.contains(r#""id":"select-hit""#), "frame hit must offer select: {menu}");
     assert!(menu.contains(INTERACTION_SELECT_ACTION_ID), "select must dispatch interactionSelect: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 
 /// ⚖️ LAW: a single text-frame selection adds a same-kind create row in the create group.
@@ -363,7 +420,7 @@ async fn context_menu_on_text_frame_selection_offers_same_kind_create() {
     .await;
     assert!(menu.contains(r#""id":"add-text-frame""#), "text selection must offer add text frame: {menu}");
     assert!(menu.contains(r#""kind":"text""#), "create row must target text frames: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 
 /// ⚖️ LAW: when the surface carries no selection, the live interaction snapshot supplies element ids.
@@ -375,7 +432,7 @@ async fn context_menu_uses_live_interaction_when_surface_selection_empty() {
     let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
     app.bind_instance_id(meta.instance_id).await;
     app.dispatch_typed(LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: Some(frame_id.clone()), page_id: Some("page-1".into()) }), &meta).await.expect("select frame");
-    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.expect("focus settles");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id).await.expect("focus settles");
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
@@ -388,7 +445,7 @@ async fn context_menu_uses_live_interaction_when_surface_selection_empty() {
     )
     .await;
     assert!(menu.contains(r#""action":"deleteSelection""#), "live interaction selection must drive delete menu: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 //#endregion 🔖️ContextMenu
 //#endregion 🔖️CommandSurface
@@ -536,14 +593,23 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_cover_both_windows() {
+    // 🪟️ An engagement is ADDRESSED: `window_engagements` answers for the window the view names and
+    // for no other, so covering both windows means asking for each in turn — a view with no
+    // `window_id` addresses nothing and gets an empty map, not both windows at once.
     let mut app = layout_app().await;
-    let engagements = app.window_engagements(&semio_framework_plugin::ViewModel::default()).await;
-    let blueprint_engagement = engagements.get(LAYOUT_PLAY_WINDOW_BLUEPRINT).expect("blueprint engagement");
-    let status = blueprint_engagement.status.as_ref().and_then(|rows| rows.first()).expect("status");
-    assert!(status.text.contains("Page"));
-    let input = blueprint_engagement.input.as_ref().expect("input");
-    assert_eq!(input.placeholder.as_deref(), Some("undo, redo, export png"));
-    assert!(engagements.contains_key(LAYOUT_PLAY_WINDOW_PREVIEW));
+    for window_id in [LAYOUT_PLAY_WINDOW_BLUEPRINT, LAYOUT_PLAY_WINDOW_PREVIEW] {
+        let view = semio_framework_plugin::ViewModel {
+            window_id: Some(window_id.into()),
+            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: window_id.into(), window_kind_id: window_id.into() }],
+            ..Default::default()
+        };
+        let engagements = app.window_engagements(&view).await;
+        let engagement = engagements.get(window_id).unwrap_or_else(|| panic!("{window_id} engagement"));
+        let status = engagement.status.as_ref().and_then(|rows| rows.first()).unwrap_or_else(|| panic!("{window_id} status"));
+        assert!(status.text.contains("Page"), "{window_id} status must name the active page: {}", status.text);
+        let input = engagement.input.as_ref().unwrap_or_else(|| panic!("{window_id} input"));
+        assert_eq!(input.placeholder.as_deref(), Some("undo, redo, export png"));
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -668,7 +734,7 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
                 let args: DslValue = case["args"].clone().into();
                 let command = LayoutPlayApp::command_from_action(action, Some(&args)).map_err(|error| error.message)?;
                 app.dispatch_typed(command, &meta).await.map_err(|error| format!("{error:?}"))?;
-                artifact_app_laws::settle_registered_typed_operation(&mut *app, meta.instance_id).await.map_err(|error| format!("{error:?}"))?;
+                artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id).await.map_err(|error| format!("{error:?}"))?;
                 let transient = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("addressed transient missing")?;
                 let preview = &transient.get::<LayoutBlueprintWindowTransientOwner>().ok_or("blueprint transient missing")?.drop_preview;
                 if action == "canvasDragOver" {
@@ -691,7 +757,7 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
             }
             Ok(())
         }.await;
-        artifact_app_laws::close_registered_fixture_app(&mut *app);
+        artifact_app_laws::close_registered_fixture_app(&mut app.0);
         outcome.unwrap_or_else(|error| panic!("{kind}: {error}"));
         eprintln!("[DEBUG] Layout catalogue {kind}: addressed preview, one creation, terminal preview retirement");
     }

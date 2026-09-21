@@ -137,14 +137,7 @@ fn the_example_picker_offers_every_example_of_the_open_dialect_and_nothing_else(
         .collect();
     let mut cases = 0;
     for case in fixture["cases"].as_array().expect("fixture cases") {
-        let app = parity_app(
-            case["app"]["id"].as_str().expect("fixture app id"),
-            fixture_role(case["app"]["role"].as_str().expect("fixture app role")),
-            fixture_dialect(&case["app"]["dialect"]),
-            "Surface",
-            "Fläche",
-            &["edit"],
-        );
+        let app = parity_app(case["app"]["id"].as_str().expect("fixture app id"), fixture_role(case["app"]["role"].as_str().expect("fixture app role")), fixture_dialect(&case["app"]["dialect"]), "Surface", "Fläche", &["edit"]);
         let expected: Vec<String> = case["expected"].as_array().expect("fixture expectation").iter().map(|id| id.as_str().expect("fixture example id").to_string()).collect();
         let rows = shell_example_rows(&examples, &app, None, Terminology::default(), Locale::default());
         let control_ids: Vec<String> = rows.iter().map(|row| row.control_id.clone()).collect();
@@ -323,12 +316,7 @@ fn every_shared_keybinding_row_routes_to_its_shell_verb_and_outranks_app_keybind
     for case in fixture["keybindings"].as_array().expect("fixture keybinding rows") {
         let event = &case["event"];
         let action = chord_key_action(event["key"].as_str().expect("fixture chord key"));
-        let modifiers = PointerModifiers {
-            shift: event["shiftKey"].as_bool().unwrap_or(false),
-            ctrl: event["ctrlKey"].as_bool().unwrap_or(false),
-            alt: event["altKey"].as_bool().unwrap_or(false),
-            meta: event["metaKey"].as_bool().unwrap_or(false),
-        };
+        let modifiers = PointerModifiers { shift: event["shiftKey"].as_bool().unwrap_or(false), ctrl: event["ctrlKey"].as_bool().unwrap_or(false), alt: event["altKey"].as_bool().unwrap_or(false), meta: event["metaKey"].as_bool().unwrap_or(false) };
         assert!(is_reserved_shell_chord(&action, &modifiers), "{}: a shell chord must outrank every app-declared keybinding", case["controlId"]);
         let control_id = case["controlId"].as_str().expect("fixture control id");
         if let Some(role_suffix) = control_id.strip_prefix("playground.navbar.roles.") {
@@ -389,20 +377,13 @@ fn a_live_surface_offers_exactly_the_overlay_controls_the_shared_fixture_declare
     let theme = crate::resolve_theme("light");
     // 🔤️ The fixture carries the shared control-height token so the TypeScript twin can apply the
     // very same size gate without re-deriving `UI_SPACING_COMPACT_PX × CONTROL_HEIGHT_UI_SPACING`.
-    assert!(
-        (f64::from(theme.control_height) - fixture["controlHeightPx"].as_f64().expect("fixture control height")).abs() < 1e-6,
-        "the fixture's declared control height must stay the theme's own token"
-    );
+    assert!((f64::from(theme.control_height) - fixture["controlHeightPx"].as_f64().expect("fixture control height")).abs() < 1e-6, "the fixture's declared control height must stay the theme's own token");
     let mut rows = 0;
     for case in fixture["surfaceControls"].as_array().expect("fixture surface rows") {
         let bounds = |value: &Value| Rect::new(value[0].as_f64().expect("x") as f32, value[1].as_f64().expect("y") as f32, value[2].as_f64().expect("w") as f32, value[3].as_f64().expect("h") as f32);
         let graph_rows: Vec<(String, Rect)> = case["graphs"].as_array().expect("fixture graphs").iter().map(|row| (row["surfaceId"].as_str().expect("surface id").to_string(), bounds(&row["bounds"]))).collect();
-        let world_rows: Vec<(String, Rect, Option<String>)> = case["worlds"]
-            .as_array()
-            .expect("fixture worlds")
-            .iter()
-            .map(|row| (row["surfaceId"].as_str().expect("surface id").to_string(), bounds(&row["bounds"]), row["statusJson"].as_str().map(str::to_string)))
-            .collect();
+        let world_rows: Vec<(String, Rect, Option<String>)> =
+            case["worlds"].as_array().expect("fixture worlds").iter().map(|row| (row["surfaceId"].as_str().expect("surface id").to_string(), bounds(&row["bounds"]), row["statusJson"].as_str().map(str::to_string))).collect();
         let graphs: Vec<(&str, Rect)> = graph_rows.iter().map(|(id, bounds)| (id.as_str(), *bounds)).collect();
         let worlds: Vec<(&str, Rect, Option<&str>)> = world_rows.iter().map(|(id, bounds, status)| (id.as_str(), *bounds, status.as_deref())).collect();
         let controls = surface_overlay_controls_for(&graphs, &worlds, &[], &theme, false);
@@ -490,7 +471,8 @@ fn the_status_pill_speaks_the_readers_language_and_never_defaults_to_one() {
 #[test]
 fn the_status_pill_leads_the_row_the_cancel_control_follows() {
     let theme = crate::resolve_theme("light");
-    let computing = "{\"computing\":true,\"phase\":\"meshingFaces\",\"phaseLabel\":{\"en\":\"Meshing faces\",\"de\":\"Flächen werden vernetzt\"},\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
+    let computing =
+        "{\"computing\":true,\"phase\":\"meshingFaces\",\"phaseLabel\":{\"en\":\"Meshing faces\",\"de\":\"Flächen werden vernetzt\"},\"cancellable\":true,\"cancelAction\":\"cancelPreviewEval\",\"progress\":{\"unitsDone\":3,\"unitsTotal\":8}}";
     let bounds = Rect::new(480.0, 40.0, 480.0, 320.0);
     let worlds = [("window:procedural-view-preview", bounds, Some(computing))];
     let pills = surface_status_pills_for(&worlds, &[], &theme, false);
@@ -908,7 +890,12 @@ fn the_shells_own_accelerator_chords_are_reserved_from_the_app_keybinding_loop()
     }
     assert_eq!(semio_framework::ToolRunAction::Step.chord(), block["collision"]["chord"].as_str().expect("⌨️ fixture collision chord"), "the tool-run step chord still collides with the shell's mode step");
     assert_eq!(block["collision"]["alsoMintedFor"].as_str(), Some(semio_framework::ToolRunAction::Step.id()), "the fixture names the action the chord is minted for");
-    eprintln!("[DEBUG] reserved shell chords: {} of {} fixture rows reserved, collision {}", block["cases"].as_array().expect("rows").iter().filter(|case| case["reserved"].as_bool() == Some(true)).count(), block["cases"].as_array().expect("rows").len(), block["collision"]["chord"]);
+    eprintln!(
+        "[DEBUG] reserved shell chords: {} of {} fixture rows reserved, collision {}",
+        block["cases"].as_array().expect("rows").iter().filter(|case| case["reserved"].as_bool() == Some(true)).count(),
+        block["cases"].as_array().expect("rows").len(),
+        block["collision"]["chord"]
+    );
 }
 
 //#endregion ⌨️WindowScope
@@ -942,7 +929,8 @@ fn a_chrome_panel_reserves_a_safe_area_for_the_surface_overlay_row() {
         let safe_area = chrome_panel_safe_area(affordance, host, anchor, &panels, yield_axis, gap);
         assert_eq!(safe_area.inline, row["expected"]["inline"].as_f64().unwrap() as f32, "🛟️ {id}: inline reserve");
         assert_eq!(safe_area.block, row["expected"]["block"].as_f64().unwrap() as f32, "🛟️ {id}: block reserve");
-        let cleared = Rect::new(affordance.x - if anchor.horizontal() == "right" { safe_area.inline } else { -safe_area.inline }, affordance.y - if anchor.vertical() == "bottom" { safe_area.block } else { -safe_area.block }, affordance.w, affordance.h);
+        let cleared =
+            Rect::new(affordance.x - if anchor.horizontal() == "right" { safe_area.inline } else { -safe_area.inline }, affordance.y - if anchor.vertical() == "bottom" { safe_area.block } else { -safe_area.block }, affordance.w, affordance.h);
         if safe_area.inline > 0.0 || safe_area.block > 0.0 {
             for panel in &panels {
                 assert!(!(cleared.x < panel.x + panel.w && cleared.x + cleared.w > panel.x && cleared.y < panel.y + panel.h && cleared.y + cleared.h > panel.y), "🛟️ {id}: the reserved affordance clears every panel it yielded to");

@@ -417,10 +417,18 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     // owners, and `Config` is `NoConfig`), so no config one-item preparation factory is owed.
     assert!(!contracts.iter().any(|contract| contract.lanes.contains(&semio_framework_plugin::ArtifactToolPublicationLane::Config)), "a Config-lane route would need a config one-item preparation factory");
 
-    // 🧭️ `try_build_definition` fans every declared action into every window kind, so the built
-    // definition's per-window action lists are where a declaration is observable after the fact.
+    // 🧭️ `try_build_definition` fans an app action into a window kind only when that window REFERENCES
+    // it (`action_refs`) or the framework derives it (interaction / tool-run verbs) — every one of
+    // remodeling's retained routes is an app-level action, so the built `definition.actions` is where
+    // its declaration and classification are observable after the fact. (Reading only the per-window
+    // lists made this law assert against a set that never contained a single retained route.)
     let definition = create_remodeling_app();
-    let declared: std::collections::BTreeMap<&str, InteractiveJobClassification> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|action| (action.id.as_str(), action.semantics.execution.interactive_job)).collect();
+    let declared: std::collections::BTreeMap<&str, InteractiveJobClassification> = definition
+        .actions
+        .iter()
+        .chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter()))
+        .map(|action| (action.id.as_str(), action.semantics.execution.interactive_job))
+        .collect();
     for id in &retained {
         assert_eq!(declared.get(id), Some(&InteractiveJobClassification::Migrated), "action '{id}' must be declared and classified Migrated");
     }

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::layout::unit_tests::context::{layout_app, render as render_body};
+use crate::editor::layout::unit_tests::context::{layout_app, render as render_body, scene as body_scene};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_preview_canvas_scene() {
@@ -10,7 +10,7 @@ async fn renders_preview_canvas_scene() {
 #[semio_framework_async_macros::async_test]
 async fn preview_scene_has_white_background_and_no_guides() {
     let mut app = layout_app().await;
-    let json = render_body(&mut app, LAYOUT_PLAY_BODY_PREVIEW).await;
+    let json = body_scene(&mut app, LAYOUT_PLAY_BODY_PREVIEW).await.layers_json;
     assert!(json.contains("layout.page-bg"));
     assert!(!json.contains("layout.guide."));
 }

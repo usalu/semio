@@ -75,20 +75,17 @@ fn a_single_over_ceiling_gpu_opportunity_is_recorded_and_only_a_run_is_terminal(
     }
 }
 
-/// 🫧 The terminal glass command page — the measured step that retires the section, carrying
-/// `index == glass_regions.len()` — addresses no region and is not a stale cursor. Driven by the
-/// `glassCommandPages` rows of the same neutral fixture.
+/// 🫧 Every authored glass page addresses one live region; an out-of-range page is stale.
 #[test]
-fn the_terminal_glass_command_page_addresses_no_region_and_is_not_stale() {
+fn every_glass_command_page_addresses_one_live_region() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖥️prepared-gpu-opportunity/🔣️.json")).expect("prepared gpu opportunity fixture");
     for row in fixture["glassCommandPages"]["rows"].as_array().expect("glass rows") {
         let region = usize::try_from(row["region"].as_u64().expect("region")).expect("region fits");
         let len = usize::try_from(row["len"].as_u64().expect("len")).expect("len fits");
-        let addressed = row["addressed"].as_u64().map(|index| usize::try_from(index).expect("addressed fits"));
         match address_prepared_glass_region(region, len) {
             Ok(resolved) => {
                 assert!(!row["stale"].as_bool().expect("stale"), "{row}");
-                assert_eq!(resolved, addressed, "{row}");
+                assert_eq!(resolved as u64, row["addressed"].as_u64().expect("exact region"), "{row}");
             }
             Err(reported) => {
                 assert!(row["stale"].as_bool().expect("stale"), "{row}");
@@ -98,13 +95,7 @@ fn the_terminal_glass_command_page_addresses_no_region_and_is_not_stale() {
     }
 }
 
-/// 🐕️ LAW: every cursor the present ladder walks moves the watchdog signature.
-///
-/// 🩸️ `progress()` is the ONLY thing `AppPresentStallWatch` can see inside one `AppPresentPhase::Render`,
-/// and a ladder index missing from it is indistinguishable from a frozen cursor. `ForegroundCommands`
-/// was added without its index and the host quarantined the surface on every boot —
-/// `presentation stalled: phase=Render engine=0 upload=1 gpu-cursor=Some((6, 13770, 13770, 5))`
-/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
+/// 🐕️ Every advancing cursor remains visible to the presentation watchdog.
 #[test]
 fn every_ladder_index_moves_the_watchdog_signature() {
     let _guard = guard();
@@ -114,11 +105,8 @@ fn every_ladder_index_moves_the_watchdog_signature() {
     cursor.command += 1;
     assert_ne!(cursor.progress(), seen, "the draw command index is visible");
     seen = cursor.progress();
-    cursor.glass_command += 1;
-    assert_ne!(cursor.progress(), seen, "the glass command index is visible");
-    seen = cursor.progress();
-    cursor.foreground_command += 1;
-    assert_ne!(cursor.progress(), seen, "the glass-foreground command index is visible");
+    cursor.clip_piece += 1;
+    assert_ne!(cursor.progress(), seen, "the bounded clip-piece index is visible");
     seen = cursor.progress();
     cursor.blur_mip += 1;
     assert_ne!(cursor.progress(), seen, "the blur mip is visible");
@@ -130,100 +118,156 @@ fn every_ladder_index_moves_the_watchdog_signature() {
     assert!(cursor.terminal_is_empty(), "a closed cursor zeroes every index it walked");
 }
 
-/// 🫧 LAW: only a layer opened by `begin_glass_content` is split off the scene target.
-///
-/// A glass region samples the scene and paints over it, so content measured into the scene inside a
-/// glass rect is blurred away by the very region that carries it — the window cap's `Puzzle 3D`
-/// title was painted and then erased on every frame (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
-#[test]
-fn only_a_glass_content_layer_is_split_off_the_scene_target() {
-    let theme = crate::wgpu::theme::Theme::default();
-    let mut draw = crate::wgpu::draw_types::DrawList::default();
-    draw.push_rounded([0.0, 0.0, 100.0, 40.0], theme.accent, 0.0);
-    let region = draw.push_glass([0.0, 0.0, 100.0, 40.0], 0.0, theme.glass(crate::wgpu::theme::Level::Window));
-    draw.begin_glass_content(region);
-    draw.push_rounded([4.0, 4.0, 40.0, 16.0], theme.accent, 0.0);
-    draw.end_glass_content();
-    draw.push_rounded([0.0, 60.0, 100.0, 40.0], theme.accent, 0.0);
-
-    let foreground_layers: Vec<usize> = draw.layers.iter().enumerate().filter(|(_, layer)| layer.foreground_of.is_some()).map(|(index, _)| index).collect();
-    assert_eq!(foreground_layers.len(), 1, "exactly one layer is glass content");
-    let glass_layer = foreground_layers[0];
-
-    for (index, _) in draw.layers.iter().enumerate() {
-        let cursor = DrawMeasureCursor::LayerUi { layer: index, item: 0, overlay: false };
-        assert_eq!(prepared_draw_scalar_is_glass_foreground(&draw, cursor), index == glass_layer, "layer {index} classification");
-    }
-    assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::LayerUi { layer: draw.layers.len(), item: 0, overlay: false }), "a stale layer index is never a foreground scalar");
-    assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::Glass(0)), "a glass region itself is not its own foreground");
-    assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::PassInstance { pass: 0, draw: 0, instance: 0, translucent: false }), "a scene pass with no layer is never a foreground scalar");
-}
-
-#[test]
-fn overlay_rasters_are_encoded_in_the_foreground_phase() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
-    let image = &fixture["image"];
-    let key = image["sharedKey"].as_str().expect("shared raster key");
-    let mut draw = crate::wgpu::draw_types::DrawList::default();
-    draw.push_raster_quad(key, [0.0, 0.0, 8.0, 8.0], [0.0, 0.0, 1.0, 1.0], 1.0);
-    draw.begin_overlay_route();
-    draw.push_raster_quad(key, [8.0, 0.0, 8.0, 8.0], [0.0, 0.0, 1.0, 1.0], 1.0);
-    draw.end_overlay_route();
-
-    for row in image["draws"].as_array().expect("draw phase rows") {
-        let overlay = row["route"].as_str() == Some("overlay");
-        let foreground = prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::LayerRaster { layer: 0, raster: 0, overlay });
-        assert_eq!(if foreground { "foreground" } else { "scene" }, row["expectedPhase"].as_str().expect("expected phase"));
+fn clip_fixture_rect(value: &serde_json::Value) -> crate::wgpu::draw_types::ScissorRect {
+    crate::wgpu::draw_types::ScissorRect {
+        x: value[0].as_u64().expect("rect x") as u32,
+        y: value[1].as_u64().expect("rect y") as u32,
+        w: value[2].as_u64().expect("rect width") as u32,
+        h: value[3].as_u64().expect("rect height") as u32,
     }
 }
 
-/// ⚖️ LAW: **a window cap goes UNDER the veil.** Glass content whose own region is fully enclosed by a
-/// LATER glass region — the introduction veil over a cap, a dialog over a floating panel — is encoded
-/// into the SCENE the blur chain mips, not into the composite after the glass pass. React's veil
-/// covers the whole shell except the card, and this renderer's caps used to stay crisp over it
-/// (`📓️w8a-tour-crispness-and-symbol-glyphs.md` §5, hand-off 1).
-///
-/// Containment, not overlap, is the predicate: a menu that clips a panel's corner must not push that
-/// panel's whole content into the backdrop, and a spotlight step's veil BANDS enclose nothing that
-/// straddles them, which leaves the introduced element crisp exactly as React elevates it.
+fn clip_fixture_pieces(row: &serde_json::Value, surface: crate::wgpu::draw_types::ScissorRect) -> Result<Vec<crate::wgpu::draw_types::ScissorRect>, ()> {
+    let mut pieces = match row["clip"].as_array() {
+        Some(values) => values.iter().map(clip_fixture_rect).collect::<Vec<_>>(),
+        None => vec![surface],
+    };
+    for left in 0..pieces.len() {
+        for right in left + 1..pieces.len() {
+            let overlap = pieces[left].intersect(&pieces[right]);
+            if overlap.w > 0 && overlap.h > 0 {
+                return Err(());
+            }
+        }
+    }
+    let scissor = (!row["scissor"].is_null()).then(|| clip_fixture_rect(&row["scissor"]));
+    let viewport = (!row["sceneViewport"].is_null()).then(|| clip_fixture_rect(&row["sceneViewport"]));
+    pieces = pieces
+        .into_iter()
+        .map(|piece| piece.intersect(&surface))
+        .map(|piece| scissor.map_or(piece, |scissor| piece.intersect(&scissor)))
+        .map(|piece| viewport.map_or(piece, |viewport| piece.intersect(&viewport)))
+        .filter(|piece| piece.w > 0 && piece.h > 0)
+        .collect();
+    Ok(pieces)
+}
+
 #[test]
-fn glass_content_under_a_later_enclosing_region_is_encoded_into_the_scene() {
+fn prepared_gpu_color_commands_advance_one_bounded_clip_piece_at_a_time() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖥️prepared-gpu-clip-pieces/🔣️.json")).expect("neutral prepared GPU clip fixture");
+    let surface = crate::wgpu::draw_types::ScissorRect { x: 0, y: 0, w: fixture["surface"][0].as_u64().expect("surface width") as u32, h: fixture["surface"][1].as_u64().expect("surface height") as u32 };
+    for row in fixture["cases"].as_array().expect("clip cases") {
+        let expected = &row["expected"];
+        let pieces = clip_fixture_pieces(row, surface);
+        assert_eq!(pieces.is_ok(), expected["accepted"].as_bool().expect("accepted"), "{}", row["id"]);
+        let Ok(pieces) = pieces else { continue };
+        let logical = pieces.iter().map(|piece| serde_json::json!([piece.x, piece.y, piece.w, piece.h])).collect::<Vec<_>>();
+        assert_eq!(serde_json::Value::Array(logical), expected["logicalPieces"].clone(), "{}", row["id"]);
+        let dpr = row["dpr"].as_f64().expect("DPR") as f32;
+        let physical = pieces.iter().map(|piece| crate::wgpu::draw::physical_scissor_rect(*piece, dpr)).map(|piece| serde_json::json!([piece.x, piece.y, piece.w, piece.h])).collect::<Vec<_>>();
+        assert_eq!(serde_json::Value::Array(physical), expected["physicalPieces"].clone(), "{}", row["id"]);
+        let kind = row["kind"].as_str().expect("command kind");
+        let color_encodes = if matches!(kind, "ui" | "world") { pieces.len() } else { 0 };
+        assert_eq!(color_encodes as u64, expected["colorEncodes"].as_u64().expect("color encodes"), "{}", row["id"]);
+        assert_eq!(u64::from(kind == "glass" && !pieces.is_empty()), expected["snapshots"].as_u64().expect("snapshots"), "{}", row["id"]);
+        assert_eq!(if kind == "glass" { pieces.len() as u64 } else { 0 }, expected["glassComposites"].as_u64().expect("glass composites"), "{}", row["id"]);
+        assert_eq!(u64::from(kind == "world"), expected["shadowBegins"].as_u64().expect("shadow begins"), "{}", row["id"]);
+        assert_eq!(expected["commandAdvances"].as_u64(), Some(1), "{}", row["id"]);
+        let mut draw = crate::wgpu::draw_types::DrawList::default();
+        draw.layers[0].scissor = (!row["scissor"].is_null()).then(|| clip_fixture_rect(&row["scissor"]));
+        draw.layers[0].clip = row["clip"].as_array().map(|values| crate::wgpu::draw_types::ClipRegion { scissors: values.iter().map(clip_fixture_rect).collect() });
+        let cursor = match kind {
+            "ui" => DrawMeasureCursor::LayerUi { layer: 0, item: 0, overlay: false },
+            "glass" => {
+                draw.glass_regions.push(crate::wgpu::draw_types::GlassRegion {
+                    layer_index: 0,
+                    rect: [0.0, 0.0, surface.w as f32, surface.h as f32],
+                    radius: 0.0,
+                    tint: crate::wgpu::theme::Rgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+                    alpha: 1.0,
+                    blur_px: 8.0,
+                    saturate: 1.0,
+                });
+                DrawMeasureCursor::Glass(0)
+            }
+            "world" => {
+                draw.scene_passes.push(crate::wgpu::kernel_3d_scene::ScenePass3d { layer_index: 0, viewport: row["sceneViewport"].as_array().map(|viewport| [viewport[0].as_f64().unwrap() as f32, viewport[1].as_f64().unwrap() as f32, viewport[2].as_f64().unwrap() as f32, viewport[3].as_f64().unwrap() as f32]).unwrap(), ..Default::default() });
+                DrawMeasureCursor::PassGrid { pass: 0 }
+            }
+            _ => unreachable!(),
+        };
+        let mut actual = Vec::new();
+        let mut piece = 0usize;
+        loop {
+            match prepared_command_clip_piece(&draw, cursor, piece, surface.w as f32, surface.h as f32).expect("production clip-piece resolver") {
+                PreparedCommandClipPiece::Scissor(scissor) => actual.push(scissor),
+                PreparedCommandClipPiece::Empty => {}
+                PreparedCommandClipPiece::Complete => break,
+                PreparedCommandClipPiece::Unclipped => panic!("every color scalar has an exact clip piece"),
+            }
+            piece += 1;
+            assert!(piece <= values_capacity_for_clip_law(row), "bounded clip progression");
+        }
+        assert_eq!(actual, pieces, "production clip progression matches the language-neutral oracle for {}", row["id"]);
+        let mut oracle = tiny_skia::Pixmap::new(surface.w, surface.h).expect("independent clip raster oracle");
+        let mut paint = tiny_skia::Paint::default();
+        paint.anti_alias = false;
+        paint.set_color_rgba8(255, 255, 255, 255);
+        for piece in &pieces {
+            let rect = tiny_skia::Rect::from_xywh(piece.x as f32, piece.y as f32, piece.w as f32, piece.h as f32).expect("nonempty clip piece");
+            oracle.fill_rect(rect, &paint, tiny_skia::Transform::identity(), None);
+        }
+        for sample in row["samples"].as_array().expect("clip samples") {
+            let pixel = oracle.pixel(sample["at"][0].as_u64().unwrap() as u32, sample["at"][1].as_u64().unwrap() as u32).expect("sample in surface");
+            assert_eq!(pixel.alpha() > 0, sample["painted"].as_bool().expect("painted"), "{}", row["id"]);
+        }
+    }
+}
+
+fn values_capacity_for_clip_law(row: &serde_json::Value) -> usize {
+    row["clip"].as_array().map_or(1, |pieces| pieces.len()).saturating_add(1)
+}
+
+#[test]
+fn overlapping_silhouette_pieces_are_refused_before_retained_draw_ownership() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖥️prepared-gpu-clip-pieces/🔣️.json")).expect("neutral prepared GPU clip fixture");
+    let row = fixture["cases"].as_array().expect("clip cases").iter().find(|row| row["id"] == "overlapping-pieces-refused-before-alpha").expect("overlap refusal case");
+    let rects = row["clip"].as_array().expect("overlapping pieces").iter().map(|value| {
+        let rect = clip_fixture_rect(value);
+        crate::wgpu::geometry::Rect::new(rect.x as f32, rect.y as f32, rect.w as f32, rect.h as f32)
+    }).collect::<Vec<_>>();
+    let mut draw = crate::wgpu::draw_types::DrawList::default();
+    draw.begin_retained_output(16, 4_096).expect("bounded retained output grant");
+    draw.begin_silhouette_clip(&rects);
+    assert_eq!(draw.finish_retained_output(), Err(crate::wgpu::draw_types::RetainedOutputError::LimitExceeded), "overlapping alpha pieces must be rejected before they can double-blend a pixel");
+}
+
+/// 🪟️ Glass insertion ends earlier content and retains the enclosing foreground.
+#[test]
+fn authored_glass_boundaries_preserve_the_enclosing_layer() {
     let theme = crate::wgpu::theme::Theme::default();
     let mut draw = crate::wgpu::draw_types::DrawList::default();
-    let cap = draw.push_glass([0.0, 0.0, 200.0, 24.0], 0.0, theme.glass(crate::wgpu::theme::Level::Window));
-    draw.begin_glass_content(cap);
-    draw.push_rounded([4.0, 4.0, 40.0, 16.0], theme.accent, 0.0);
+    draw.push_solid([0.0, 0.0, 100.0, 100.0], theme.accent);
+    let panel = draw.push_glass([0.0, 0.0, 100.0, 100.0], 0.0, theme.glass(crate::wgpu::theme::Level::Window));
+    draw.begin_glass_content(panel);
+    draw.begin_silhouette_clip(&[crate::wgpu::geometry::Rect::new(0.0, 0.0, 80.0, 80.0)]);
+    draw.push_scissor(crate::wgpu::geometry::Rect::new(4.0, 4.0, 60.0, 60.0));
+    draw.push_solid([0.0, 0.0, 100.0, 20.0], theme.accent);
+    let previous = draw.layers.last().expect("panel text layer");
+    let scissor = previous.scissor;
+    let clip = previous.clip.clone();
+    let foreground = previous.foreground_of;
+    let layer = draw.layers.len();
+    let popup = draw.push_glass([40.0, 0.0, 80.0, 40.0], 0.0, theme.glass(crate::wgpu::theme::Level::Menu));
+    assert_eq!(draw.glass_regions[popup].layer_index, layer);
+    assert_eq!(draw.layers.len(), layer + 1);
+    assert_eq!(draw.layers[layer].scissor, scissor);
+    assert_eq!(draw.layers[layer].clip, clip);
+    assert_eq!(draw.layers[layer].foreground_of, foreground);
+    assert!(draw.layers[layer].ui_instances.is_empty());
+    draw.pop_scissor();
+    draw.end_silhouette_clip();
     draw.end_glass_content();
-    let cap_layer = draw.layers.iter().position(|layer| layer.foreground_of == Some(cap)).expect("the cap opened one content layer");
-    let cap_cursor = DrawMeasureCursor::LayerUi { layer: cap_layer, item: 0, overlay: false };
-
-    assert!(!prepared_foreground_scalar_is_enclosed(&draw, None, cap_cursor), "with nothing over it the cap's chips stay crisp");
-
-    let mut veiled = crate::wgpu::draw_types::DrawList::default();
-    veiled.push_glass([0.0, 0.0, 800.0, 600.0], 0.0, theme.veil_glass(crate::wgpu::theme::Level::Dialog));
-    assert!(prepared_foreground_scalar_is_enclosed(&draw, Some(&veiled), cap_cursor), "a full-viewport veil in the OVERLAY list encloses a cap of the main list");
-
-    let mut banded = crate::wgpu::draw_types::DrawList::default();
-    banded.push_glass([0.0, 40.0, 800.0, 560.0], 0.0, theme.veil_glass(crate::wgpu::theme::Level::Dialog));
-    assert!(!prepared_foreground_scalar_is_enclosed(&draw, Some(&banded), cap_cursor), "a veil band that starts below the cap encloses nothing of it");
-
-    let mut clipped = crate::wgpu::draw_types::DrawList::default();
-    clipped.push_glass([150.0, 0.0, 400.0, 300.0], 0.0, theme.glass(crate::wgpu::theme::Level::Menu));
-    assert!(!prepared_foreground_scalar_is_enclosed(&draw, Some(&clipped), cap_cursor), "a menu that merely clips the cap's corner never blurs the whole cap");
-
-    let card = draw.push_glass([300.0, 300.0, 200.0, 120.0], 0.0, theme.glass(crate::wgpu::theme::Level::Dialog));
-    draw.begin_glass_content(card);
-    draw.push_rounded([310.0, 310.0, 40.0, 16.0], theme.accent, 0.0);
-    draw.end_glass_content();
-    let card_layer = draw.layers.iter().position(|layer| layer.foreground_of == Some(card)).expect("the card opened one content layer");
-    let card_cursor = DrawMeasureCursor::LayerUi { layer: card_layer, item: 0, overlay: false };
-    assert!(!prepared_foreground_scalar_is_enclosed(&draw, None, card_cursor), "the LAST region's own content has nothing after it and stays crisp");
-    assert!(!prepared_foreground_scalar_is_enclosed(&draw, None, cap_cursor), "a later region that does not enclose the cap leaves it crisp");
-
-    assert!(prepared_glass_region_covers([0.0, 0.0, 10.0, 10.0], [0.0, 0.0, 10.0, 10.0]), "an exactly coincident region encloses");
-    assert!(!prepared_glass_region_covers([0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]), "a degenerate region encloses nothing");
-    assert!(!prepared_foreground_scalar_is_enclosed(&draw, None, DrawMeasureCursor::Glass(0)), "a glass region itself is never enclosed content");
-    eprintln!("[DEBUG] glass enclosure: cap under veil = scene, cap under band/menu = composite");
 }
 
 /// 🖼️ LAW: a TEXTURED world instance is encoded, and into the same target every other scene scalar
@@ -257,12 +301,11 @@ fn a_textured_world_instance_is_encoded_into_its_pass_target() {
     });
     assert_eq!(draw.scene_passes.len(), 1, "the pass carries its textured draw");
     let cursor = DrawMeasureCursor::PassTexturedInstance { pass: 0, draw: 0, instance: 0 };
-    assert!(!prepared_draw_scalar_is_glass_foreground(&draw, cursor), "a textured scalar under an ordinary layer stays on the scene target");
-    assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::PassTexturedInstance { pass: draw.scene_passes.len(), draw: 0, instance: 0 }), "a stale pass index is never a foreground scalar");
+    assert!(prepared_draw_scalar_uses_world_encoded_attachment(cursor), "the textured pass preserves its encoded color attachment");
 }
 
 #[test]
-fn every_world_color_cursor_uses_the_encoded_attachment_in_scene_and_foreground_phases() {
+fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
     let theme = crate::wgpu::theme::Theme::default();
     let mut draw = crate::wgpu::draw_types::DrawList::default();
     draw.push_rounded([0.0, 0.0, 100.0, 40.0], theme.accent, 0.0);
@@ -272,7 +315,7 @@ fn every_world_color_cursor_uses_the_encoded_attachment_in_scene_and_foreground_
     draw.push_scene_pass(crate::wgpu::kernel_3d_scene::ScenePass3d::default());
     draw.end_glass_content();
 
-    for (pass, foreground) in [(0, false), (1, true)] {
+    for pass in [0, 1] {
         let cursors = [
             DrawMeasureCursor::PassInstance { pass, draw: 0, instance: 0, translucent: false },
             DrawMeasureCursor::PassInstance { pass, draw: 0, instance: 0, translucent: true },
@@ -283,7 +326,6 @@ fn every_world_color_cursor_uses_the_encoded_attachment_in_scene_and_foreground_
         ];
         for cursor in cursors {
             assert!(prepared_draw_scalar_uses_world_encoded_attachment(cursor), "every World color family selects the encoded attachment");
-            assert_eq!(prepared_draw_scalar_is_glass_foreground(&draw, cursor), foreground, "the encoded view follows the pass into its ordinary or glass-foreground target");
         }
     }
     for cursor in [
@@ -297,7 +339,6 @@ fn every_world_color_cursor_uses_the_encoded_attachment_in_scene_and_foreground_
     }
 
     let source = include_str!("../../🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs");
-    assert!(source.contains("if world_encoded { scene.world_encoded_view() } else { scene.mip_view(0) }"));
     assert!(source.contains("if world_encoded { composite.world_encoded_view() } else { composite.view() }"));
     let draw_source = include_str!("../../🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs");
     assert!(draw_source.contains("let world_encoded_format = format.remove_srgb_suffix();"));
@@ -319,7 +360,7 @@ fn every_world_color_cursor_uses_the_encoded_attachment_in_scene_and_foreground_
         assert!(draw_source.contains(&format!("label: Some(\"{label}\")")), "the {label} encoded-color pipeline remains registered");
     }
     assert_eq!(draw_source.matches("format: world_encoded_format, blend:").count(), encoded_world_pipelines.len(), "standard, translucent, painted, celebration, line, textured and procedural-grid pipelines all target the encoded UNORM view exactly once");
-    assert!(draw_source.contains("shadow: [if pass.shadow.enabled { 1.0 } else { 0.0 }, 0.0, 0.0, 1.0]"), "the legacy WGPU producer declares that its World attachment expects encoded output");
+    assert!(draw_source.contains("shadow: [if pass.shadow.enabled { 1.0 } else { 0.0 }, 0.0, 0.0, 1.0]"), "the WGPU producer declares that its World attachment expects encoded output");
 }
 
 /// 🫧 LAW: React's transparent `MeshStandardMaterial` remains front-sided and depth-writing; it is

@@ -19,8 +19,8 @@ async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn add_step_dispatches_its_mutation() {
     let mut app = context::app();
-    let result = context::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("drill".into()), machine_id: None, capability_id: None, position: None }));
-    assert!(!result.mutations.is_empty(), "AddStep must dispatch its CreateStep mutation");
+    let (_, receipt) = context::settled_dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("drill".into()), machine_id: None, capability_id: None, position: None }));
+    assert!(context::published_a_document_mutation(&receipt), "AddStep must dispatch its CreateStep mutation");
 }
 
 /// 🌉️ Same documented gap as above, from the catalogue-routed (machine/capability-addressed)
@@ -30,15 +30,15 @@ async fn add_step_dispatches_its_mutation() {
 #[semio_framework_async_macros::async_test]
 async fn add_step_via_catalogue_no_longer_gates_on_stock_dimensions() {
     let mut app = context::app();
-    let result = context::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
-    assert!(!result.mutations.is_empty(), "documented gap: the dimension-validation gate can no longer reject an oversized stock");
+    let (_, receipt) = context::settled_dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: None, machine_id: Some("circularSaw".into()), capability_id: Some("crosscut".into()), position: None }));
+    assert!(context::published_a_document_mutation(&receipt), "documented gap: the dimension-validation gate can no longer reject an oversized stock");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn measure_arg_routes_to_generic_machine_and_dispatches() {
     let mut app = context::app();
-    let result = context::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
-    assert!(!result.mutations.is_empty());
+    let (_, receipt) = context::settled_dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }));
+    assert!(context::published_a_document_mutation(&receipt), "a generic-machine measure arg must reach the document lane");
 }
 //#endregion 🔖️AddStepDispatch
 

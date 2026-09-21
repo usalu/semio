@@ -31,7 +31,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 let command_id = command.command_id();
                 let meta = ActionMeta { instance_id: 83, view_state: Some(view.clone()), ..artifact_app_laws::meta("sequence-window-ownership") };
                 app.dispatch_typed(command, &meta).await.map_err(|error| format!("{command_id}: {error:?}"))?;
-                let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                 let lanes = (
                     receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count(),
                     receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient).count(),
@@ -125,7 +125,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                 let reopened_left = graph_scene(&mut reopened, &main_left).await?.viewport.ok_or("reopened left Sequence viewport missing")?;
                 let reopened_right = graph_scene(&mut reopened, &main_right).await?.viewport.ok_or("reopened right Sequence viewport missing")?;
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened);
+                drop(reopened);
                 if reopened_left != left_graph || reopened_right != right_graph { return Err("Sequence persisted window config changed during restore".into()); }
                 let stale = ViewModel { window_id: Some("lost-sequence-window".into()), window_instances: view.window_instances.clone(), ..Default::default() };
                 if addressed(&stale, SequenceMainWindowConfig::default()).is_ok() { return Err("Sequence accepted stale window identity".into()); }
@@ -135,7 +135,9 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 Ok(())
             }.await;
             if let Err(error) = &outcome { eprintln!("[DEBUG] Sequence exact-window runtime failure before close: {error}"); }
-            artifact_app_laws::close_registered_fixture_app(&mut *app);
+            // 🔚 `SequenceApp` is the registered fixture GUARD now — it walks the framework close loop
+            // on drop, so closing it a second time by hand would fault the already-terminal store.
+            drop(app);
             outcome.expect("Sequence exact-window runtime law");
             eprintln!("[DEBUG] Sequence runtime isolated two main cameras and two script results, restored config, cleared transient on reload, and preserved document bytes");
         }))

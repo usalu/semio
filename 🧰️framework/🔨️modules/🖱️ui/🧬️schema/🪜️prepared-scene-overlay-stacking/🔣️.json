@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/prepared-scene-overlay-stacking-v1.json",
+  "title": "Prepared Scene And Overlay Stacking Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "size", "steps", "expectedOrder", "samples"],
+  "properties": {
+    "schema": { "const": "semio.ui.prepared-scene-overlay-stacking.v1" },
+    "size": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "integer", "minimum": 1, "maximum": 4096 }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["op", "route", "id", "rect", "rgba"],
+        "properties": {
+          "op": { "enum": ["solid", "raster", "scene"] },
+          "route": { "enum": ["normal", "overlay", "scene"] },
+          "id": { "type": "string", "minLength": 1 },
+          "rasterKey": { "type": "string", "minLength": 1 },
+          "rect": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": { "type": "number", "minimum": 0 }
+          },
+          "rgba": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+          }
+        },
+        "oneOf": [
+          {
+            "properties": { "op": { "const": "scene" }, "route": { "const": "scene" } },
+            "not": { "required": ["rasterKey"] }
+          },
+          {
+            "properties": { "op": { "const": "solid" }, "route": { "enum": ["normal", "overlay"] } },
+            "not": { "required": ["rasterKey"] }
+          },
+          {
+            "properties": { "op": { "const": "raster" }, "route": { "const": "normal" } },
+            "required": ["rasterKey"]
+          }
+        ]
+      }
+    },
+    "expectedOrder": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "samples": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "rgba"],
+        "properties": {
+          "at": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": { "type": "integer", "minimum": 0 }
+          },
+          "rgba": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+          }
+        }
+      }
+    }
+  }
+}

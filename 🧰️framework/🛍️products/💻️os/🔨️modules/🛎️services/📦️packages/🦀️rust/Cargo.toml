@@ -60,3 +60,4 @@ tokio = { workspace = true, features = ["sync", "macros"] }
 # tests exercise is `async fn` — every test needs a real async-test harness. Path dependency, same
 # pattern `🎭️actor`'s Cargo.toml already uses for this macro crate.
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

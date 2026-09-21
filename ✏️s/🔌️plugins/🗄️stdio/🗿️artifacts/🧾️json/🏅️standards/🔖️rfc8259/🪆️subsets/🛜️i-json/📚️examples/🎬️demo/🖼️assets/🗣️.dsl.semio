@@ -1,0 +1,17 @@
+semio stdio.json.dsl v1
+{
+  "id": "semio.stdio.i-json.demo",
+  "interoperable": true,
+  "revision": 1048576,
+  "ratio": 0.25,
+  "members": [
+    {
+      "name": "alpha",
+      "weight": 0.5
+    },
+    {
+      "name": "beta",
+      "weight": 0.5
+    }
+  ]
+}

@@ -71,7 +71,9 @@
     "issues",
     "auditEvents",
     "templates",
+    "knowledgePayload",
     "knowledge",
+    "benchmarksPayload",
     "benchmarks",
     "traces",
     "governance"
@@ -530,12 +532,26 @@
       },
       "x-semio-state": "artifact"
     },
+    "knowledgePayload": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/KnowledgeRecord"
+      },
+      "x-semio-state": "artifact"
+    },
     "knowledge": {
       "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio",
       "x-semio-child-standard": "v1",
       "x-semio-child-subset": "table"
+    },
+    "benchmarksPayload": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BenchmarkRecord"
+      },
+      "x-semio-state": "artifact"
     },
     "benchmarks": {
       "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",

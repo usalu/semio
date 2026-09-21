@@ -315,6 +315,14 @@
               "type": "null"
             }
           ]
+        },
+        "quote": {
+          "type": "string",
+          "enum": [
+            "double",
+            "single"
+          ],
+          "description": "🗣️ Delimiter the declaration's pseudo-attributes are written with (XML 1.0 §2.8); absent means the default `\"` spelling."
         }
       }
     }

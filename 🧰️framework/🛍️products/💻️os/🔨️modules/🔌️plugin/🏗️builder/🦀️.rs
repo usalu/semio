@@ -59,12 +59,13 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::app::NoPluginApp> {
     capabilities: Vec<CapabilityRequirement>,
     commands: Vec<(CommandDefinition, PluginCommandHandler)>,
     /// 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jobs-runtime, design-abi.md §4/§6) —
-    /// `.job(kind, run)` declarations, folded into `⚛️reactor/💼️jobs::register_job_kind` at the end
-    /// of `try_build()` ("registered on bundle install like other builder registrations" per this
-    /// packet's brief) rather than stored on `Plugin` itself — the job registry is a thread-local
-    /// keyed by `kind`, not a `Plugin`-scoped table, since `step_job`/`start_job` never carry a
-    /// plugin id to look one up by.
-    jobs: Vec<(&'static str, crate::reactor::jobs::JobFn)>,
+    /// `.job(kind, factory)` declarations, folded into
+    /// `⚛️reactor/💼️jobs::register_bounded_job_kind` at the end of `try_build()` ("registered on
+    /// bundle install like other builder registrations" per this packet's brief) rather than stored
+    /// on `Plugin` itself — the job registry is a thread-local keyed by `kind`, not a
+    /// `Plugin`-scoped table, since `step_job`/`start_job` never carry a plugin id to look one up
+    /// by.
+    jobs: Vec<(&'static str, crate::reactor::jobs::BoundedJobFactory)>,
     /// 🧭️ Metadata-only routes whose executable is an ActionBus-owned cold job rather than a
     /// synchronous `ArtifactInferenceService` facade.
     routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
@@ -266,12 +267,13 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
     }
 
     /// 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jobs-runtime, design-abi.md §4/§6) —
-    /// declares one cold job kind this plugin authors, resolved by `⚛️reactor/💼️jobs::start_job`
-    /// through the SAME `kind` string a `spawn-job` effect names. `try_build()` folds every
-    /// declared entry into `⚛️reactor/💼️jobs::register_job_kind` at bundle-install time — see that
-    /// field's own doc comment for why the registry lives there rather than on `Plugin`.
-    pub fn job(mut self, kind: &'static str, run: crate::reactor::jobs::JobFn) -> Self {
-        self.jobs.push((kind, run));
+    /// declares one cold job kind this plugin authors as an explicit bounded state machine,
+    /// resolved by `⚛️reactor/💼️jobs::start_job` through the SAME `kind` string a `spawn-job`
+    /// effect names. `try_build()` folds every declared entry into
+    /// `⚛️reactor/💼️jobs::register_bounded_job_kind` at bundle-install time — see that field's own
+    /// doc comment for why the registry lives there rather than on `Plugin`.
+    pub fn job(mut self, kind: &'static str, factory: crate::reactor::jobs::BoundedJobFactory) -> Self {
+        self.jobs.push((kind, factory));
         self
     }
 
@@ -704,8 +706,8 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         // install like other builder registrations" per this packet's brief: folded here, in the
         // SAME `try_build()` call that installs every other builder registration, rather than
         // deferred to a separate hook.
-        for (kind, run) in jobs {
-            crate::reactor::jobs::register_job_kind(kind, run);
+        for (kind, factory) in jobs {
+            crate::reactor::jobs::register_bounded_job_kind(kind, factory);
         }
         for kind in artifact_kinds {
             plugin = plugin.artifact_kind(kind);

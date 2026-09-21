@@ -92,17 +92,11 @@ fn worker_now_ms() -> f64 {
     js_sys::global().dyn_into::<web_sys::WorkerGlobalScope>().ok().and_then(|scope| scope.performance()).map(|performance| performance.now()).unwrap_or(0.0)
 }
 
-
 fn declare_boot_subphase(phase: &str, state: &str, elapsed_ms: f64) {
     let global = js_sys::global();
     if let Ok(func) = js_sys::Reflect::get(&global, &wasm_bindgen::JsValue::from_str("semioDeclareBootSubphase")) {
         if let Ok(func) = func.dyn_into::<js_sys::Function>() {
-            let _ = func.call3(
-                &wasm_bindgen::JsValue::NULL,
-                &wasm_bindgen::JsValue::from_str(phase),
-                &wasm_bindgen::JsValue::from_str(state),
-                &wasm_bindgen::JsValue::from_f64(elapsed_ms),
-            );
+            let _ = func.call3(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_str(phase), &wasm_bindgen::JsValue::from_str(state), &wasm_bindgen::JsValue::from_f64(elapsed_ms));
         }
     }
 }
@@ -142,7 +136,7 @@ impl BrowserRendererWorker {
             "responseByteCapacity": WORLD_ASSET_RESPONSE_BYTE_CAPACITY,
             "pageByteCapacity": WORLD_ASSET_RESPONSE_PAGE_BYTES
         }))
-            .map_err(|error| js_error("asset-request-encode", &error.to_string()))
+        .map_err(|error| js_error("asset-request-encode", &error.to_string()))
     }
 
     #[wasm_bindgen(js_name = assetResponseCurrent)]
@@ -248,22 +242,22 @@ impl BrowserRendererWorker {
     }
 
     #[wasm_bindgen(js_name = abortAssetResponse)]
-    pub fn abort_asset_response(&mut self) -> Result<(), JsValue> {
-        let Some(mut owner) = self.asset_fetch.take() else { return Ok(()) };
+    pub fn abort_asset_response(&mut self) -> Result<bool, JsValue> {
+        let Some(mut owner) = self.asset_fetch.take() else { return Ok(true) };
         #[cfg(not(target_env = "p2"))]
         if let Some(host) = self.host.as_ref() {
             host.runtime.discard_staged_reference_image(owner.owner().token());
         }
         owner.begin_close();
         let Some(host) = self.host.as_ref() else {
-            self.asset_blocked = Some(owner);
-            return Err(js_error("worker-closed", "renderer host is unavailable"));
+            self.asset_fetch = Some(owner);
+            return Ok(false);
         };
         match host.runtime.return_renderer_asset_owner(owner) {
-            Ok(()) => Ok(()),
+            Ok(()) => Ok(true),
             Err(owner) => {
-                self.asset_blocked = Some(owner);
-                Err(js_error("asset-return", "cancelled asset owner could not return to its generation authority"))
+                self.asset_fetch = Some(owner);
+                Ok(false)
             }
         }
     }
@@ -303,11 +297,7 @@ impl BrowserRendererWorker {
             return Ok(());
         }
         self.latest_generation = generation;
-        let mut latency = crate::frame_latency::FrameLatencyTimer::start(
-            crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation),
-            crate::frame_latency::FrameLatencyStage::WireApply,
-            1,
-        );
+        let mut latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation), crate::frame_latency::FrameLatencyStage::WireApply, 1);
         let batch: BrowserBatch = serde_json::from_str(events_json).map_err(|error| js_error("message-decode", &error.to_string()))?;
         latency.set_work_items(batch.replaceable.len().saturating_add(batch.lossless.len()));
         if batch.replaceable.len() > 18 || batch.lossless.len() > 16 {
@@ -338,12 +328,16 @@ impl BrowserRendererWorker {
         Ok(())
     }
 
+    /// 🧵️ Executes one private decoder opportunity without producing a frame or input acknowledgement.
+    #[wasm_bindgen(js_name = assetDecodeStep)]
+    pub fn asset_decode_step(&mut self) -> Result<String, JsValue> {
+        self.ensure_live()?;
+        let host = self.host.as_ref().ok_or_else(|| js_error("closed", "asset decoder has no live host"))?;
+        serde_json::to_string(&host.runtime.asset_decode_step()).map_err(|error| js_error("asset-decode-result", &error.to_string()))
+    }
+
     pub fn tick(&mut self, _timestamp_ms: f64, _sequence: u64, generation: u64) -> Result<String, JsValue> {
-        let _latency = crate::frame_latency::FrameLatencyTimer::start(
-            crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation),
-            crate::frame_latency::FrameLatencyStage::WorkerTick,
-            1,
-        );
+        let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation), crate::frame_latency::FrameLatencyStage::WorkerTick, 1);
         let _ = crate::os_host::OsHostRetirement::close_abandoned_step();
         self.ensure_live()?;
         self.flush_hub_document_event();
@@ -351,7 +345,10 @@ impl BrowserRendererWorker {
             return Err(js_error("generation-mismatch", "frame tick generation does not match admitted input"));
         }
         if let Some(detail) = self.quarantined.clone() {
-            return encode_tick_timed(generation, BrowserTickOutput { cursor: "default", fullscreen: None, request_frame: false, continue_frame: false, progress: 1.0, quarantined: true, fault_code: Some("present-failed"), fault_detail: Some(detail) });
+            return encode_tick_timed(
+                generation,
+                BrowserTickOutput { cursor: "default", fullscreen: None, request_frame: false, continue_frame: false, progress: 1.0, quarantined: true, fault_code: Some("present-failed"), fault_detail: Some(detail) },
+            );
         }
         let host = self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
         let outcome = host.redraw_offscreen_worker();
@@ -369,29 +366,32 @@ impl BrowserRendererWorker {
             self.quarantined = Some(detail);
         }
         let continue_frame = host.take_cursor_wake_directive().is_some()
+            || crate::os_host::component_surface_close_occupied()
             || host.runtime.has_pending_text_work()
             || host.runtime.has_pending_world3d_work()
-            || host.runtime.has_pending_asset_decode()
             || host.runtime.has_pending_settle()
             || host.runtime.has_pending_applies()
             || host.frame_build.has_live_session()
             || host.presenter.has_pending_presentation();
-        encode_tick_timed(generation, BrowserTickOutput {
-            cursor: cursor_name(outcome.cursor),
-            fullscreen: host.platform_fullscreen.take(),
-            // 🎞️ A live frame build and an unapplied runtime completion each owe the shell another
-            // frame. Without them a settled browser shell ticks only on input, so a build that needed
-            // a second step never got one and a queued `DispatchEvents` was never pumped
-            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
-            request_frame: continue_frame || host.scheduler.next_deadline().is_some(),
-            // 🚏️ The dedicated Worker owns runnable retained work directly. A future shell deadline
-            // remains page-rAF paced and must not create an unbounded MessagePort loop.
-            continue_frame,
-            progress: 1.0,
-            quarantined: present_fault.is_some(),
-            fault_code: present_fault.as_ref().map(|_| fault_code),
-            fault_detail: present_fault,
-        })
+        encode_tick_timed(
+            generation,
+            BrowserTickOutput {
+                cursor: cursor_name(outcome.cursor),
+                fullscreen: host.platform_fullscreen.take(),
+                // 🎞️ A live frame build and an unapplied runtime completion each owe the shell another
+                // frame. Without them a settled browser shell ticks only on input, so a build that needed
+                // a second step never got one and a queued `DispatchEvents` was never pumped
+                // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
+                request_frame: continue_frame || host.scheduler.next_deadline().is_some(),
+                // 🚏️ The dedicated Worker owns runnable retained work directly. A future shell deadline
+                // remains page-rAF paced and must not create an unbounded MessagePort loop.
+                continue_frame,
+                progress: 1.0,
+                quarantined: present_fault.is_some(),
+                fault_code: present_fault.as_ref().map(|_| fault_code),
+                fault_detail: present_fault,
+            },
+        )
     }
 }
 
@@ -628,11 +628,7 @@ impl BrowserRendererWorker {
         let mut count = 0usize;
         for event in events {
             match event {
-                BrowserWireEvent::PointerMove { .. }
-                | BrowserWireEvent::Wheel { .. }
-                | BrowserWireEvent::Resize { .. }
-                | BrowserWireEvent::HubDocumentStatus { .. }
-                | BrowserWireEvent::HubDocumentClose { .. } => {}
+                BrowserWireEvent::PointerMove { .. } | BrowserWireEvent::Wheel { .. } | BrowserWireEvent::Resize { .. } | BrowserWireEvent::HubDocumentStatus { .. } | BrowserWireEvent::HubDocumentClose { .. } => {}
                 BrowserWireEvent::TextChunk { stream_id, target, text, total_bytes, final_, .. } => {
                     if text.len() > 4 * 1024 {
                         return Err(js_error("text-chunk-credits", "text chunk exceeds the Worker hard cap"));
@@ -923,11 +919,7 @@ fn encode_tick(output: BrowserTickOutput) -> Result<String, JsValue> {
 }
 
 fn encode_tick_timed(generation: u64, output: BrowserTickOutput) -> Result<String, JsValue> {
-    let _latency = crate::frame_latency::FrameLatencyTimer::start(
-        crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation),
-        crate::frame_latency::FrameLatencyStage::WorkerReplyEncode,
-        1,
-    );
+    let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation), crate::frame_latency::FrameLatencyStage::WorkerReplyEncode, 1);
     encode_tick(output)
 }
 

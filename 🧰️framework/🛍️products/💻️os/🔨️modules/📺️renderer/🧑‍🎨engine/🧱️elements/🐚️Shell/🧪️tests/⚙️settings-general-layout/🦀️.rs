@@ -128,8 +128,8 @@ fn general_projection_is_the_react_tree_with_inline_controls() {
             continue;
         }
         let actual = controls.iter().find(|(id, _)| *id == row_id).unwrap_or_else(|| panic!("missing inline control row {row_id}"));
-        assert_eq!(actual.1.0, expected["controlId"].as_str().unwrap());
-        assert_eq!(actual.1.1, expected["action"].as_str().unwrap());
+        assert_eq!(actual.1 .0, expected["controlId"].as_str().unwrap());
+        assert_eq!(actual.1 .1, expected["action"].as_str().unwrap());
     }
 }
 
@@ -158,13 +158,7 @@ fn chrome_hosted_panel_owns_only_nested_rows_above_the_footer_root_toggle() {
     let mut shell = ShellState::new(Vec::new(), String::new());
     let anchor = PanelAnchor::BottomRight;
     shell.dock_tabs.tabs_mut(anchor).clear();
-    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(
-        "framework.settings",
-        "Settings",
-        "settings",
-        0,
-        vec![DockTabNode::leaf("framework.settings.general", "General", "settings", 0)],
-    ));
+    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch("framework.settings", "Settings", "settings", 0, vec![DockTabNode::leaf("framework.settings.general", "General", "settings", 0)]));
     shell.anchor_state_mut(anchor).path = vec!["framework.settings".into(), "framework.settings.general".into()];
     shell.anchor_state_mut(anchor).visible = true;
     let theme = Theme::default();
@@ -184,13 +178,7 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
     let mut shell = ShellState::new(Vec::new(), String::new());
     let anchor = PanelAnchor::BottomRight;
     shell.dock_tabs.tabs_mut(anchor).clear();
-    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(
-        FRAMEWORK_SETTINGS_PANEL_ID,
-        "Settings",
-        "settings",
-        0,
-        vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General", "settings", 0)],
-    ));
+    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General", "settings", 0)]));
     shell.anchor_state_mut(anchor).path = vec![FRAMEWORK_SETTINGS_PANEL_ID.into(), FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into()];
     shell.anchor_state_mut(anchor).visible = true;
     shell.screen_w = 1_440.0;
@@ -225,26 +213,14 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
     assert!(input.hits().is_empty(), "an incomplete frame cannot promote even its completed footer");
     assert!(input.staged_hits().iter().all(|hit| hit.kind != HitKind::PanelTab || hit.control_id.as_deref() != Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)), "a pending panel stages no premature leaf hit");
 
-    let panel_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
-        shell.render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources)
-    });
+    let panel_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources));
     assert!(panel_complete, "the same pending panel cursor reaches accepted layout and paints");
     let mut settled_footer_cursor = ShellChromeChildCursor::default();
-    let footer_complete = (0..4_096).any(|_| {
-        shell.render_footer_step(&mut settled_footer_cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, shell.screen_w, shell.screen_h)
-    });
+    let footer_complete = (0..4_096).any(|_| shell.render_footer_step(&mut settled_footer_cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, shell.screen_w, shell.screen_h));
     assert!(footer_complete, "the settled frame paints its footer");
     shell.publish_retained_hit_registry(&mut input);
-    let root = input
-        .hits()
-        .iter()
-        .find(|hit| hit.kind == HitKind::Toggle && hit.control_id.as_deref() == Some(FRAMEWORK_SETTINGS_PANEL_ID))
-        .expect("rendered footer Settings toggle");
-    let leaf = input
-        .hits()
-        .iter()
-        .find(|hit| hit.kind == HitKind::PanelTab && hit.control_id.as_deref() == Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID))
-        .expect("rendered General panel tab after accepted layout");
+    let root = input.hits().iter().find(|hit| hit.kind == HitKind::Toggle && hit.control_id.as_deref() == Some(FRAMEWORK_SETTINGS_PANEL_ID)).expect("rendered footer Settings toggle");
+    let leaf = input.hits().iter().find(|hit| hit.kind == HitKind::PanelTab && hit.control_id.as_deref() == Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)).expect("rendered General panel tab after accepted layout");
     assert!(root.rect.y + root.rect.h <= leaf.rect.y || leaf.rect.y + leaf.rect.h <= root.rect.y, "the actual rendered Toggle and PanelTab hit rectangles never overlap");
     let (x, y) = (root.rect.x + root.rect.w * 0.5, root.rect.y + root.rect.h * 0.5);
 
@@ -265,13 +241,7 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     shell.screen_w = vector["screen"]["width"].as_f64().unwrap() as f32;
     shell.screen_h = vector["screen"]["height"].as_f64().unwrap() as f32;
     shell.dock_tabs.tabs_mut(anchor).clear();
-    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(
-        FRAMEWORK_SETTINGS_PANEL_ID,
-        "Settings",
-        "settings",
-        0,
-        vec![DockTabNode::leaf(SURFACE, "General", "settings", 0)],
-    ));
+    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, vec![DockTabNode::leaf(SURFACE, "General", "settings", 0)]));
     shell.anchor_state_mut(anchor).path = vec![FRAMEWORK_SETTINGS_PANEL_ID.into(), SURFACE.into()];
     shell.anchor_state_mut(anchor).visible = true;
     let records = panel_ui_records(SURFACE, &shell.build_settings_general_ui()).expect("actual General producer records");
@@ -292,9 +262,7 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     let mut first_input = InputState::<ActionDescriptor>::default();
     let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut first_cursor = ShellChromeChildCursor::default();
-    let first_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
-        shell.render_panel_step(&mut first_cursor, anchor, &mut first_draw, None, &mut atlas, &icons, &mut first_input, &theme, body, &mut resources)
-    });
+    let first_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut first_cursor, anchor, &mut first_draw, None, &mut atlas, &icons, &mut first_input, &theme, body, &mut resources));
     assert!(first_complete, "normal General ingress, reconcile, layout and paint complete");
     assert!(crate::interpreter::retained_root_is_tree(SURFACE), "the accepted production root remains Tree");
     let intrinsic = crate::interpreter::retained_content_height(SURFACE).expect("accepted General intrinsic height");
@@ -309,9 +277,7 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     draw.set_screen_height(shell.screen_h);
     let mut input = InputState::<ActionDescriptor>::default();
     let mut cursor = ShellChromeChildCursor::default();
-    let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
-        shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources)
-    });
+    let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources));
     assert!(complete, "a new Shell panel cursor completes against the accepted General layout");
     let compact = cursor.rect.expect("second panel rectangle");
     let glass = draw.glass_regions.first().expect("General panel glass").rect;
@@ -322,6 +288,18 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     let owners = shell.retained_hit_windows_staging.values().filter(|(owner, _)| owner == SURFACE).collect::<Vec<_>>();
     assert!(!owners.is_empty() && owners.iter().all(|(_, rect)| *rect == content), "every retained General target is owned by the compact content rectangle");
     shell.publish_retained_hit_registry(&mut input);
+    let accessibility = crate::interpreter::published_accessibility_nodes_for_test(SURFACE);
+    for (key, label) in [
+        ("framework.settings.appearance", "Appearance"),
+        ("framework.settings.layout", "Layout"),
+        ("framework.settings.driver", "Driver"),
+        ("framework.settings.language", "Language"),
+        ("framework.settings.terminology", "Terminology"),
+        ("framework.settings.mergePolicy", "Merge policy"),
+    ] {
+        let retained_key = format!("{SURFACE}/{key}");
+        assert!(accessibility.iter().any(|node| node.key == retained_key && node.role == "treeitem" && node.label.as_deref() == Some(label)), "accepted General TreeItem {key} projects its intrinsic label {label}");
+    }
     let control_suffix = vector["controlId"].as_str().unwrap();
     let live = input.hits().iter().find(|hit| hit.control_id.as_deref().is_some_and(|id| id.ends_with(control_suffix))).expect("actual General control hit");
     assert!(content.contains(live.rect.x + live.rect.w * 0.5, live.rect.y + live.rect.h * 0.5));
@@ -345,13 +323,7 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
     shell.screen_w = 1_440.0;
     shell.screen_h = 1_000.0;
     shell.dock_tabs.tabs_mut(anchor).clear();
-    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(
-        FRAMEWORK_SETTINGS_PANEL_ID,
-        "Settings",
-        "settings",
-        0,
-        vec![DockTabNode::leaf(SURFACE, "General", "settings", 0)],
-    ));
+    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, vec![DockTabNode::leaf(SURFACE, "General", "settings", 0)]));
     shell.anchor_state_mut(anchor).path = vec![FRAMEWORK_SETTINGS_PANEL_ID.into(), SURFACE.into()];
     shell.anchor_state_mut(anchor).visible = true;
     let initial = shell.build_settings_general_ui();
@@ -381,9 +353,7 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
         let mut draw = DrawList::default();
         draw.set_screen_height(shell.screen_h);
         let mut cursor = ShellChromeChildCursor::default();
-        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
-            shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, theme, body, &mut resources)
-        });
+        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, theme, body, &mut resources));
         assert!(complete, "General panel ingress/layout/paint completes");
         shell.publish_retained_hit_registry(input);
         draw
@@ -392,17 +362,9 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
     let theme = Theme::default();
     let _ = paint(&mut shell, &mut input, &theme);
     let retained_control_id = format!("{SURFACE}/{control_id}");
-    let trigger = input
-        .hits()
-        .iter()
-        .find(|hit| hit.kind == HitKind::Select && hit.control_id.as_deref() == Some(retained_control_id.as_str()))
-        .cloned()
-        .expect("published appearance Select trigger");
+    let trigger = input.hits().iter().find(|hit| hit.kind == HitKind::Select && hit.control_id.as_deref() == Some(retained_control_id.as_str())).cloned().expect("published appearance Select trigger");
     let inline = &fixture["inlineControls"];
-    let select_geometry = inline["cases"]
-        .as_array()
-        .and_then(|cases| cases.iter().find(|case| case["kind"] == "select"))
-        .expect("neutral Select geometry");
+    let select_geometry = inline["cases"].as_array().and_then(|cases| cases.iter().find(|case| case["kind"] == "select")).expect("neutral Select geometry");
     assert!((trigger.rect.w - select_geometry["expectedWidthPx"].as_f64().unwrap() as f32).abs() < 0.01, "the retained Select fills React's token-backed Tree value column");
     assert!((trigger.rect.h - select_geometry["expectedHeightPx"].as_f64().unwrap() as f32).abs() < 0.01, "the retained Select keeps React's authored small height");
     assert_eq!(shell.retained_hit_window(&trigger).map(|(owner, _)| owner), Some(SURFACE.to_string()), "the qualified Select address resolves to its General surface owner");
@@ -411,19 +373,10 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
     semio_framework_async::block_on(shell.handle_pointer_button(trigger_x, trigger_y, false, 0, &mut input, &theme)).expect("appearance trigger release");
 
     let _ = paint(&mut shell, &mut input, &theme);
-    let option = input
-        .hits()
-        .iter()
-        .find(|hit| hit.kind == HitKind::Button && hit.control_id.as_deref() == Some(option_id))
-        .cloned()
-        .expect("open appearance popup publishes the dark option as one retained Button");
+    let option = input.hits().iter().find(|hit| hit.kind == HitKind::Button && hit.control_id.as_deref() == Some(option_id)).cloned().expect("open appearance popup publishes the dark option as one retained Button");
     assert_eq!(shell.retained_hit_window(&option).map(|(owner, _)| owner), Some(SURFACE.to_string()), "the popup option stays owned by the same General surface");
     let (option_x, option_y) = (option.rect.x + option.rect.w * 0.5, option.rect.y + option.rect.h * 0.5);
-    let underlying = input
-        .hits()
-        .iter()
-        .find(|hit| hit.kind == HitKind::Select && hit.rect.contains(option_x, option_y))
-        .expect("the fixture keeps a real underlying control beneath the popup option");
+    let underlying = input.hits().iter().find(|hit| hit.kind == HitKind::Select && hit.rect.contains(option_x, option_y)).expect("the fixture keeps a real underlying control beneath the popup option");
     assert_ne!(underlying.control_id.as_deref(), Some(option_id));
     assert_eq!(input.hit_at(option_x, option_y).and_then(|hit| hit.control_id.as_deref()), Some(option_id), "the overlay option outranks the overlapping underlying Select in the host registry");
     semio_framework_async::block_on(shell.handle_pointer_button(option_x, option_y, true, 0, &mut input, &theme)).expect("appearance option press");
@@ -433,12 +386,7 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
     let refreshed_document = shell.publish_surface_records(SURFACE, refreshed_records).expect("normal General refresh while the option owns pointer capture");
     shell.panel_documents.insert(SURFACE.into(), refreshed_document);
     let _ = paint(&mut shell, &mut input, &theme);
-    let captured_option = input
-        .hits()
-        .iter()
-        .find(|hit| hit.kind == HitKind::Button && hit.control_id.as_deref() == Some(option_id))
-        .cloned()
-        .expect("the pressed option remains published until its captured release");
+    let captured_option = input.hits().iter().find(|hit| hit.kind == HitKind::Button && hit.control_id.as_deref() == Some(option_id)).cloned().expect("the pressed option remains published until its captured release");
     assert_eq!(captured_option.rect, option.rect, "the interleaved Shell walk retains the exact pressed option geometry");
 
     semio_framework_async::block_on(shell.handle_pointer_button(option_x, option_y, false, 0, &mut input, &theme)).expect("appearance option release");
@@ -458,34 +406,20 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
 
     let updated = shell.build_settings_general_ui();
     let UiNode::Tree(updated_tree) = &updated else { panic!("updated General root remains Tree") };
-    let selected = updated_tree
-        .sections
-        .iter()
-        .flat_map(|section| &section.items)
-        .filter_map(|item| item.control.as_ref())
-        .find_map(|control| match control {
-            UiControlNode::Select(select) if select.id == control_id => Some(select.value.as_str()),
-            _ => None,
-        });
+    let selected = updated_tree.sections.iter().flat_map(|section| &section.items).filter_map(|item| item.control.as_ref()).find_map(|control| match control {
+        UiControlNode::Select(select) if select.id == control_id => Some(select.value.as_str()),
+        _ => None,
+    });
     assert_eq!(selected, Some(next_value), "the next General projection reflects the committed appearance");
     let records = panel_ui_records(SURFACE, &updated).expect("updated General records");
     let document = shell.publish_surface_records(SURFACE, records).expect("updated General ingress");
     shell.panel_documents.insert(SURFACE.into(), document);
     let _ = paint(&mut shell, &mut input, &next_theme);
-    let open_options = input
-        .hits()
-        .iter()
-        .filter(|hit| hit.kind == HitKind::Button && matches!(hit.control_id.as_deref(), Some("system" | "light" | "dark")))
-        .count();
+    let open_options = input.hits().iter().filter(|hit| hit.kind == HitKind::Button && matches!(hit.control_id.as_deref(), Some("system" | "light" | "dark"))).count();
     assert_eq!(open_options, vector["expectedOpenOptionsAfterCommit"].as_u64().unwrap() as usize, "the same commit retires every popup option before the next paint");
 
     let ordinary_control_id = format!("{SURFACE}/framework.settings.resetDock");
-    let ordinary = input
-        .hits()
-        .iter()
-        .find(|hit| hit.kind == HitKind::Button && hit.control_id.as_deref() == Some(ordinary_control_id.as_str()))
-        .cloned()
-        .expect("ordinary retained General Button");
+    let ordinary = input.hits().iter().find(|hit| hit.kind == HitKind::Button && hit.control_id.as_deref() == Some(ordinary_control_id.as_str())).cloned().expect("ordinary retained General Button");
     assert_eq!(shell.retained_hit_window(&ordinary).map(|(owner, _)| owner), Some(SURFACE.to_string()), "the qualified ordinary Button address resolves to its General surface owner");
     let (ordinary_x, ordinary_y) = (ordinary.rect.x + ordinary.rect.w * 0.5, ordinary.rect.y + ordinary.rect.h * 0.5);
     semio_framework_async::block_on(shell.handle_pointer_button(ordinary_x, ordinary_y, true, 0, &mut input, &next_theme)).expect("ordinary retained Button press");
@@ -509,13 +443,7 @@ fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_th
     shell.screen_w = 1_440.0;
     shell.screen_h = 1_000.0;
     shell.dock_tabs.tabs_mut(anchor).clear();
-    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(
-        FRAMEWORK_SETTINGS_PANEL_ID,
-        "Settings",
-        "settings",
-        0,
-        vec![DockTabNode::leaf(SURFACE, "General", "settings", 0)],
-    ));
+    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, vec![DockTabNode::leaf(SURFACE, "General", "settings", 0)]));
     shell.anchor_state_mut(anchor).path = vec![FRAMEWORK_SETTINGS_PANEL_ID.into(), SURFACE.into()];
     shell.anchor_state_mut(anchor).visible = true;
     let records = panel_ui_records(SURFACE, &shell.build_settings_general_ui()).expect("General retained records");
@@ -534,22 +462,13 @@ fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_th
         let mut draw = DrawList::default();
         draw.set_screen_height(shell.screen_h);
         let mut cursor = ShellChromeChildCursor::default();
-        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
-            shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources)
-        });
+        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources));
         assert!(complete, "General panel ingress/layout/paint completes");
         shell.publish_retained_hit_registry(input);
     };
     let section_id = format!("section.chevron.{SURFACE}/framework.settings.driver.editor");
     let child_id = format!("{SURFACE}/framework.settings.driver.saveLabel");
-    let section_hit = |input: &InputState<ActionDescriptor>| {
-        input
-            .hits()
-            .iter()
-            .find(|hit| hit.control_id.as_deref() == Some(section_id.as_str()))
-            .cloned()
-            .expect("Drivers disclosure hit")
-    };
+    let section_hit = |input: &InputState<ActionDescriptor>| input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(section_id.as_str())).cloned().expect("Drivers disclosure hit");
 
     paint(&mut shell, &mut input);
     assert!(!input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(child_id.as_str())), "Drivers starts closed with no child hit");
@@ -559,20 +478,10 @@ fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_th
     semio_framework_async::block_on(shell.handle_pointer_button(point.0, point.1, false, 0, &mut input, &theme)).expect("Drivers open release");
     paint(&mut shell, &mut input);
     paint(&mut shell, &mut input);
-    let child = input
-        .hits()
-        .iter()
-        .find(|hit| hit.control_id.as_deref() == Some(child_id.as_str()))
-        .cloned()
-        .expect("opening Drivers publishes its real save-label child");
+    let child = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(child_id.as_str())).cloned().expect("opening Drivers publishes its real save-label child");
 
     let header = section_hit(&input);
-    assert!(
-        header.rect.y >= child.rect.y + child.rect.h,
-        "an expanded Up-flow section keeps its disclosure header below every child: header={:?} child={:?}",
-        header.rect,
-        child.rect
-    );
+    assert!(header.rect.y >= child.rect.y + child.rect.h, "an expanded Up-flow section keeps its disclosure header below every child: header={:?} child={:?}", header.rect, child.rect);
     let point = (header.rect.x + header.rect.w * 0.5, header.rect.y + header.rect.h * 0.5);
     let top = input.hit_at(point.0, point.1).expect("the painted Drivers header center remains targetable");
     assert_eq!(top.control_id.as_deref(), Some(section_id.as_str()), "the disclosure header, rather than an expanded child, owns its painted center");
@@ -591,12 +500,7 @@ fn host_preference_dispatch_republishes_general_without_a_guest_refresh() {
     let surface = contract["surfaceId"].as_str().unwrap();
     assert!(!contract["requiresGuestRefresh"].as_bool().unwrap());
     let mut shell = ShellState::new(Vec::new(), String::new());
-    shell.session = Some(ActiveSession {
-        plugin_id: "test".into(),
-        instance_id: 1,
-        app: super::command_registry_tests::test_app(Vec::new(), Vec::new()),
-        view_state: ViewModel::default(),
-    });
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::default() });
     shell.chrome_present.maintenance.load_requested = false;
     let initial = shell.publish_shell_panel_document(surface).expect("initial General publication").expect("General owns a retained document");
     shell.panel_documents.insert(surface.to_string(), initial);
@@ -610,12 +514,7 @@ fn host_preference_dispatch_republishes_general_without_a_guest_refresh() {
         assert_eq!(retained_select_value(&shell, surface, control_id), initial_value);
         let before = shell.panel_documents.get(surface).unwrap().header().expect("initial General header");
 
-        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor {
-            controller_id: "framework".into(),
-            action: action.into(),
-            args: crate::action_args_json!({ "value": next_value }),
-        }))
-        .expect("host preference dispatch");
+        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: crate::action_args_json!({ "value": next_value }) })).expect("host preference dispatch");
 
         let after_dispatch = shell.panel_documents.get(surface).expect("dispatch keeps General published").header().expect("General header after dispatch");
         if publication_lane == "maintenance" {
@@ -649,12 +548,8 @@ fn driver_draft_save_and_reset_republish_every_retained_general_field() {
     for vector in contract["driverWorkflow"].as_array().unwrap() {
         let action = vector["action"].as_str().unwrap();
         let before = shell.panel_documents.get(surface).unwrap().header().expect("General header before driver mutation");
-        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor {
-            controller_id: "framework".into(),
-            action: action.into(),
-            args: semio_framework::optional_json_to_dsl(Some(vector["arguments"].clone())),
-        }))
-        .expect("driver preference dispatch");
+        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(vector["arguments"].clone())) }))
+            .expect("driver preference dispatch");
         let after = shell.panel_documents.get(surface).unwrap().header().expect("General header after driver mutation");
         if after.revision == before.revision || after.generation <= before.generation {
             missing.push(action.to_string());
@@ -680,24 +575,16 @@ fn general_republication_refusal_preserves_the_exact_readable_owner_and_retries(
     let vacancy = shell.closing_documents.first_vacant_index().expect("retirement vacancy");
     shell.closing_documents.epochs[vacancy] = u64::MAX;
 
-    let error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor {
-        controller_id: "framework".into(),
-        action: "setAppearance".into(),
-        args: crate::action_args_json!({ "value": "dark" }),
-    }))
-    .expect_err("exhausted retirement admission refuses replacement");
+    let error = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setAppearance".into(), args: crate::action_args_json!({ "value": "dark" }) }))
+        .expect_err("exhausted retirement admission refuses replacement");
     assert!(error.contains("retirement registry refused"));
     let retained = shell.panel_documents.get(surface).expect("refusal keeps the readable General owner");
     assert_eq!(retained.header().expect("retained General header"), before, "refusal preserves exact generation and revision");
     assert_eq!(retained_select_value(&shell, surface, "framework.settings.appearance"), "system");
 
     shell.closing_documents.epochs[vacancy] = 0;
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor {
-        controller_id: "framework".into(),
-        action: "setAppearance".into(),
-        args: crate::action_args_json!({ "value": "dark" }),
-    }))
-    .expect("the exact refused preference retries after retirement admission returns");
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setAppearance".into(), args: crate::action_args_json!({ "value": "dark" }) }))
+        .expect("the exact refused preference retries after retirement admission returns");
     let successor = shell.panel_documents.get(surface).unwrap().header().expect("successor General header");
     assert!(successor.generation > before.generation);
     assert_ne!(successor.revision, before.revision);
@@ -717,12 +604,8 @@ fn locale_refresh_republishes_one_exact_mounted_shell_owner_per_maintenance_step
     let unmounted = contract["unmountedSurfaceIds"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>();
     let initial_headers = mounted.iter().map(|surface| (surface.clone(), retained_header_identity(&shell, surface))).collect::<HashMap<_, _>>();
 
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor {
-        controller_id: "framework".into(),
-        action: "setLocale".into(),
-        args: crate::action_args_json!({ "value": contract["nextLocale"].as_str().unwrap() }),
-    }))
-    .expect("locale host mutation arms retained refresh");
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setLocale".into(), args: crate::action_args_json!({ "value": contract["nextLocale"].as_str().unwrap() }) }))
+        .expect("locale host mutation arms retained refresh");
 
     assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_GENERAL_TAB_ID), "Allgemein");
     assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_THEME_TAB_ID), "Thema");
@@ -755,6 +638,22 @@ fn locale_refresh_republishes_one_exact_mounted_shell_owner_per_maintenance_step
 }
 
 #[test]
+fn locale_and_terminology_changes_require_one_full_guest_refresh_and_settle() {
+    let contract = locale_refresh_fixture();
+    assert_eq!(contract["requiresGuestRefresh"].as_bool(), Some(true));
+    for (action, value) in [("setLocale", contract["nextLocale"].as_str().unwrap()), ("setTerminology", "de")] {
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::default() });
+        shell.chrome_present.maintenance.load_requested = false;
+        semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: crate::action_args_json!({ "value": value }) }))
+            .expect("locale-bearing host mutation");
+        assert!(matches!(shell.owed_refresh_scope, semio_framework::kernel::UiDirtyScope::Full), "{action} must rebuild guest bodies and Window Measures from the new ViewModel axes");
+        assert!(shell.settle_pump_pending(), "{action} arms the bounded settle owner for the full guest refresh");
+        assert!(shell.chrome_present.maintenance.locale_refresh.is_none(), "{action} must not schedule a duplicate shell-only locale publication lane");
+    }
+}
+
+#[test]
 fn locale_refresh_refusal_and_supersession_preserve_exact_owner_and_generation() {
     let contract = locale_refresh_fixture();
     let mut shell = ShellState::new(Vec::new(), String::new());
@@ -763,12 +662,7 @@ fn locale_refresh_refusal_and_supersession_preserve_exact_owner_and_generation()
     let mounted = mount_localized_fixture_documents(&mut shell, &contract);
     let first = mounted.first().unwrap();
     let prior = retained_header_identity(&shell, first);
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor {
-        controller_id: "framework".into(),
-        action: "setLocale".into(),
-        args: crate::action_args_json!({ "value": "de" }),
-    }))
-    .expect("German cursor");
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setLocale".into(), args: crate::action_args_json!({ "value": "de" }) })).expect("German cursor");
     let first_generation = shell.chrome_present.maintenance.locale_refresh.as_ref().unwrap().generation;
     let vacancy = shell.closing_documents.first_vacant_index().expect("retirement vacancy");
     shell.closing_documents.epochs[vacancy] = u64::MAX;
@@ -779,12 +673,7 @@ fn locale_refresh_refusal_and_supersession_preserve_exact_owner_and_generation()
     shell.closing_documents.epochs[vacancy] = 0;
     shell.advance_chrome_maintenance_step();
     assert!(retained_header_identity(&shell, first).0 > prior.0, "returned admission refreshes the refused owner");
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor {
-        controller_id: "framework".into(),
-        action: "setLocale".into(),
-        args: crate::action_args_json!({ "value": "en" }),
-    }))
-    .expect("newer English cursor supersedes German work");
+    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setLocale".into(), args: crate::action_args_json!({ "value": "en" }) })).expect("newer English cursor supersedes German work");
     let successor = shell.chrome_present.maintenance.locale_refresh.as_ref().unwrap();
     assert!(successor.generation > first_generation);
     assert_eq!(successor.locale_id, "en");

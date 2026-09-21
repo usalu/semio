@@ -210,6 +210,11 @@ impl EngineSurfaceRegistry {
         Some(EngineSurfaceIdentity { token: EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation }, id: self.slots[index].id? })
     }
 
+    fn identity_for_token(&self, token: EngineSurfaceToken) -> Option<EngineSurfaceIdentity> {
+        let slot = self.slots.get(usize::from(token.slot))?;
+        (slot.generation == token.generation).then_some(EngineSurfaceIdentity { token, id: slot.id? })
+    }
+
     fn reserve(&mut self, id: &str) -> Option<EngineSurfaceToken> {
         let Ok(id) = EngineSurfaceId::try_from_str(id) else {
             self.faulted = true;
@@ -880,9 +885,16 @@ impl StagedEngineScenes {
         self.slots[index].take()
     }
 
-    #[cfg(test)]
     fn remove_surface(&mut self, surface_id: &str) {
         let Some(index) = self.slots[..self.len].iter().position(|slot| slot.as_ref().is_some_and(|staged| staged.surface.identity.id.as_str() == surface_id)) else {
+            return;
+        };
+        self.len -= 1;
+        self.slots[index] = self.slots[self.len].take();
+    }
+
+    fn remove_exact(&mut self, identity: EngineSurfaceIdentity) {
+        let Some(index) = self.slots[..self.len].iter().position(|slot| slot.as_ref().is_some_and(|staged| staged.surface.identity == identity)) else {
             return;
         };
         self.len -= 1;
@@ -1823,18 +1835,18 @@ fn tutorial_surface_geometry(surface: &EngineSurface, domain: &str, entity: &str
 }
 
 /// 👻️ Resolves typed tutorial points through the attached engine surface that owns their live camera and geometry.
-pub fn resolve_tutorial_surface_point(surface_id: &str, point: &semio_framework::IntroductionPoint) -> Option<(f32, f32)> {
+pub fn resolve_tutorial_surface_point(host_id: &str, point: &semio_framework::IntroductionPoint) -> Option<(f32, f32)> {
     use semio_framework::IntroductionPoint as P;
     let point_surface_id = match point {
         P::Scene { id, .. } | P::Canvas { id, .. } | P::Entity { id, .. } | P::Curve { id, .. } | P::Domain { id, .. } => id,
         _ => return None,
     };
-    if point_surface_id != surface_id {
-        return None;
-    }
     ENGINE_SURFACES.with(|cell| {
         let surfaces = cell.borrow();
-        let surface = surfaces.get(surface_id)?;
+        let surface = surfaces.get(host_id)?;
+        if point_surface_id.as_str() != surface.surface_id.as_ref()?.as_str() {
+            return None;
+        }
         let resolved = (|| match point {
             P::Canvas { x, y, .. } => {
                 if let Some(engine) = surface.node_graph.as_ref() {
@@ -1988,6 +2000,10 @@ fn engine_surface_wire_id(host_id: &str) -> Option<EngineSurfaceId> {
     ENGINE_SURFACES.with(|cell| cell.borrow().get(host_id)?.surface_id)
 }
 
+pub(crate) fn engine_surface_token(host_id: &str) -> Option<EngineSurfaceToken> {
+    ENGINE_SURFACES.with(|cell| cell.borrow().identity(host_id).map(|identity| identity.token))
+}
+
 fn engine_surface_live_freshness(token: EngineSurfaceToken) -> Result<Option<EngineSurfaceLiveFreshness>, ()> {
     ENGINE_SURFACES.with(|cell| {
         let registry = cell.try_borrow_mut().ok_or(())?;
@@ -2015,7 +2031,20 @@ pub(crate) fn engine_surface_token_at(index: usize) -> Result<Option<EngineSurfa
 }
 
 pub(crate) fn begin_engine_surface_close_token(token: EngineSurfaceToken) -> Result<bool, ()> {
-    ENGINE_SURFACES.with(|cell| cell.try_borrow_mut().map(|mut registry| registry.begin_close(token)).ok_or(()))
+    let (begun, identity) = ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.try_borrow_mut().ok_or(())?;
+        let identity = registry.identity_for_token(token);
+        Ok((registry.begin_close(token), identity))
+    })?;
+    if begun {
+        let Some(identity) = identity else { return Err(()) };
+        STAGED_ENGINE_SCENES.with(|cell| {
+            let mut staged = cell.try_borrow_mut().ok_or(())?;
+            staged.remove_exact(identity);
+            Ok(())
+        })?;
+    }
+    Ok(begun)
 }
 
 pub(crate) fn close_engine_surface_step(token: EngineSurfaceToken, context: &mut semio_framework_job::StepContext<'_>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
@@ -2072,6 +2101,7 @@ pub enum EngineSurfaceKindDetail {
 pub struct EngineSurfaceRegistration {
     pub host_id: String,
     pub surface_id: String,
+    pub(crate) engine_token: Option<EngineSurfaceToken>,
     /// 🪟️ The window instance whose body this surface is painted into — the shell's one retention
     /// authority for it.
     pub window_id: String,
@@ -2099,6 +2129,7 @@ impl AttachedSurfaceRegistry {
     fn upsert(&mut self, registration: EngineSurfaceRegistration) {
         if let Some(slot) = self.slots[..self.len].iter_mut().flatten().find(|slot| slot.host_id == registration.host_id) {
             slot.surface_id = registration.surface_id;
+            slot.engine_token = registration.engine_token;
             slot.window_id = registration.window_id;
             slot.bounds = registration.bounds;
             slot.controller_id = registration.controller_id;
@@ -2372,9 +2403,7 @@ pub fn sync_node_graph_scene(scene: &UiComponentSceneNode, window_id: &str, boun
     };
     let width = bounds.w.max(1.0) as u32;
     let height = bounds.h.max(1.0) as u32;
-    if ensure_engine_surface(&scene.host_id, &scene.surface_id, width, height).is_none() {
-        return false;
-    }
+    let Some(snapshot) = ensure_engine_surface(&scene.host_id, &scene.surface_id, width, height) else { return false };
     let created = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(&scene.host_id) else {
@@ -2406,15 +2435,17 @@ pub fn sync_node_graph_scene(scene: &UiComponentSceneNode, window_id: &str, boun
         return false;
     };
     log_graph_geometry_census(&scene.host_id);
-    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::NodeGraph, created);
+    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::NodeGraph, created, Some(snapshot.identity.token));
     true
 }
 
 /// 🧩️ Records one attached surface for the shell's per-frame mirror. Every kind goes through it —
 /// including `World3d`, whose host lives in the shell's own `world3d_states` — so the shell has ONE
 /// drained witness of what the chrome walk actually painted this frame.
-pub(crate) fn register_engine_surface(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect, detail: EngineSurfaceKindDetail, created: bool) {
-    ATTACHED_SURFACES.with(|cell| cell.borrow_mut().upsert(EngineSurfaceRegistration { host_id: scene.host_id.clone(), surface_id: scene.surface_id.clone(), window_id: window_id.to_string(), bounds, controller_id: scene.controller_id.clone(), detail, created }));
+pub(crate) fn register_engine_surface(scene: &UiComponentSceneNode, window_id: &str, bounds: Rect, detail: EngineSurfaceKindDetail, created: bool, engine_token: Option<EngineSurfaceToken>) {
+    ATTACHED_SURFACES.with(|cell| {
+        cell.borrow_mut().upsert(EngineSurfaceRegistration { host_id: scene.host_id.clone(), surface_id: scene.surface_id.clone(), engine_token, window_id: window_id.to_string(), bounds, controller_id: scene.controller_id.clone(), detail, created })
+    });
 }
 
 /// 🎥️ A `{x, y, zoom}` camera document — the shape React's `parseCameraJson`/`parseBoardCamera` read
@@ -2542,9 +2573,7 @@ pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, window_id: &str, bound
     };
     let width = bounds.w.max(1.0) as u32;
     let height = bounds.h.max(1.0) as u32;
-    if ensure_engine_surface(&scene.host_id, &scene.surface_id, width, height).is_none() {
-        return false;
-    }
+    let Some(snapshot) = ensure_engine_surface(&scene.host_id, &scene.surface_id, width, height) else { return false };
     let created = ENGINE_SURFACES.with(|cell| {
         let mut map_registry = cell.borrow_mut();
         let entry = map_registry.get_mut(&scene.host_id)?;
@@ -2563,7 +2592,7 @@ pub fn sync_tiled_map_scene(scene: &UiComponentSceneNode, window_id: &str, bound
     let Some(created) = created else {
         return false;
     };
-    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::TiledMap { selection_method: map.selection_method.clone() }, created);
+    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::TiledMap { selection_method: map.selection_method.clone() }, created, Some(snapshot.identity.token));
     true
 }
 
@@ -2787,9 +2816,7 @@ pub fn sync_board2d_scene(scene: &UiComponentSceneNode, window_id: &str, bounds:
     };
     let width = bounds.w.max(1.0) as u32;
     let height = bounds.h.max(1.0) as u32;
-    if ensure_engine_surface(&scene.host_id, &scene.surface_id, width, height).is_none() {
-        return false;
-    }
+    let Some(snapshot) = ensure_engine_surface(&scene.host_id, &scene.surface_id, width, height) else { return false };
     let created = ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
         let entry = registry.get_mut(&scene.host_id)?;
@@ -2809,7 +2836,7 @@ pub fn sync_board2d_scene(scene: &UiComponentSceneNode, window_id: &str, bounds:
     let Some(created) = created else {
         return false;
     };
-    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::Board2d { fixture_json: board.fixture_json.clone() }, created);
+    register_engine_surface(scene, window_id, bounds, EngineSurfaceKindDetail::Board2d { fixture_json: board.fixture_json.clone() }, created, Some(snapshot.identity.token));
     true
 }
 
@@ -2920,9 +2947,7 @@ pub fn sync_paint2d_scene(scene: &UiComponentSceneNode, bounds: Rect, theme: &Th
     };
     let width = bounds.w.max(1.0) as u32;
     let height = bounds.h.max(1.0) as u32;
-    if ensure_engine_surface(&scene.host_id, &scene.surface_id, width, height).is_none() {
-        return false;
-    }
+    let Some(_snapshot) = ensure_engine_surface(&scene.host_id, &scene.surface_id, width, height) else { return false };
     ENGINE_SURFACES.with(|cell| {
         let mut registry = cell.borrow_mut();
         let Some(entry) = registry.get_mut(&scene.host_id) else {
@@ -2951,9 +2976,7 @@ pub fn sync_text_editor_scene(scene: &UiComponentSceneNode, bounds: Rect, theme:
     };
     let width = bounds.w.max(1.0) as u32;
     let height = bounds.h.max(1.0) as u32;
-    if ensure_engine_surface(&scene.host_id, &scene.surface_id, width, height).is_none() {
-        return false;
-    }
+    let Some(_snapshot) = ensure_engine_surface(&scene.host_id, &scene.surface_id, width, height) else { return false };
     let Ok(scene_json) = serde_json::to_string(editor) else {
         return false;
     };
@@ -3483,7 +3506,9 @@ pub fn node_graph_pointer_cancel_into(surface_id: &str) -> bool {
         let Some(engine) = entry.node_graph.as_mut() else { return false };
         match engine {
             NodeGraphEngine::Flow(host) => host.pointer_cancel_screen(),
-            NodeGraphEngine::Dag(host) => { host.pointer_cancel_screen(); }
+            NodeGraphEngine::Dag(host) => {
+                host.pointer_cancel_screen();
+            }
         }
         entry.scene_revision = entry.scene_revision.wrapping_add(1);
         true
@@ -3939,11 +3964,7 @@ fn node_graph_domain_targets_json(domain: &ui_wgpu::wgpu::NodeGraphInteractionDo
     serde_json::to_string(&ids.iter().map(|id| json!({ "granularity": granularity, "id": format!("{prefix}{id}") })).collect::<Vec<_>>()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)
 }
 
-fn graph_interaction_dispatch(
-    published: PublishedGraphInteraction,
-    snapshot: GraphInteractionSnapshot,
-    domain: Option<&ui_wgpu::wgpu::NodeGraphInteractionDomain>,
-) -> Result<GraphInteractionDispatch, ui_wgpu::wgpu::BoundedActionFault> {
+fn graph_interaction_dispatch(published: PublishedGraphInteraction, snapshot: GraphInteractionSnapshot, domain: Option<&ui_wgpu::wgpu::NodeGraphInteractionDomain>) -> Result<GraphInteractionDispatch, ui_wgpu::wgpu::BoundedActionFault> {
     let select_targets = match domain {
         Some(domain) => node_graph_domain_targets_json(domain, "node", &snapshot.node_ids)?,
         None => "[]".into(),
@@ -4451,8 +4472,8 @@ pub fn stamp_map_interaction_owner(surface_id: &str, owner: &ScenePointerTarget)
 pub fn retire_map_interaction_owner(owner: &ScenePointerTarget) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&owner.surface_id) else { return false };
-        if entry.map_interaction_owner.as_ref() != Some(owner) {
+        let Some(entry) = map.get_mut(&owner.host_id) else { return false };
+        if !entry.map_interaction_owner.as_ref().is_some_and(|current| current.same_component_host(owner)) {
             return false;
         }
         entry.map_interaction_owner = None;

@@ -173,11 +173,14 @@
     "priority": ["image", "ink.clipboard", "svg", "plainText"]
   },
   "ownership": {
-    "address": ["windowId", "windowGeneration", "nodeId", "surfaceId"],
+    "address": ["windowId", "windowGeneration", "nodeId", "hostId"],
     "editorBypass": true,
     "completion": "exactLiveAddress",
     "close": "cancelAndRetire",
+    "retirement": "matchingOnly",
+    "progress": "oneOwnerPerOpportunity",
     "replacement": "rejectOldCompletion",
+    "slotReuse": "generationToken",
     "admission": "boundedIndependentOperations"
   }
 }

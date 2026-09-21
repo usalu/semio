@@ -215,7 +215,7 @@ pub fn demo_xml_snapshot() -> XmlSnapshot {
     };
     XmlSnapshot {
         schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
-        doc: XmlDocument { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }), doctype: Some("<!DOCTYPE catalog>".into()), prolog: Vec::new(), root: Some(root) },
+        doc: XmlDocument { declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }), doctype: Some("<!DOCTYPE catalog>".into()), prolog: Vec::new(), root: Some(root) },
     }
 }
 //#endregion 🔖️DocumentHelpers

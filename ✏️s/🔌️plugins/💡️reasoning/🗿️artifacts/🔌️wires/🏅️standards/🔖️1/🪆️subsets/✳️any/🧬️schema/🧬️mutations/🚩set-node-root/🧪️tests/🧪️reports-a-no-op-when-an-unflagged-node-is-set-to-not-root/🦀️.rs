@@ -148,5 +148,5 @@ async fn an_absent_root_key_reads_as_false_rather_than_as_missing() {
     assert!(!*new_root, "the inverse spells out the `false` the missing key stood for");
     let semantics = <WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("set", "node", "set-node-root", "SetNodeRoot"), "set-node-root is the vocabulary's only `set` verb, and the only one whose record name is not past tense");
-    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()), "Set node \"node-leaf\" root to false", "set-node-root's undo label renders the bool unquoted");
+    assert_eq!(<WiresMutation as protocol::SemanticMutation<WiresSnapshot>>::label(&mutation()).resolve(protocol::Terminology::Native, protocol::Locale::En), "Set node \"node-leaf\" root to false", "set-node-root's undo label renders the bool unquoted");
 }

@@ -78,7 +78,12 @@ fn replay(row: &RowFixture) -> (u64, Tally) {
             let hold = if live_build.is_some() { FrameGenerationHold::UnderLiveBuild } else { FrameGenerationHold::Free };
             match step.op.as_str() {
                 "input" => {
-                    assert_eq!(enqueue_host_event(&mut events, &mut scheduler, token, &mut generation, hold, DispatchEvent::PointerMove { pointer, x: index as f32, y: 0.0, modifiers: ui_render::EventModifiers::default() }), ui_host::EnqueueOutcome::Accepted, "{}: input {index} was refused", row.id);
+                    assert_eq!(
+                        enqueue_host_event(&mut events, &mut scheduler, token, &mut generation, hold, DispatchEvent::PointerMove { pointer, x: index as f32, y: 0.0, modifiers: ui_render::EventModifiers::default() }),
+                        ui_host::EnqueueOutcome::Accepted,
+                        "{}: input {index} was refused",
+                        row.id
+                    );
                     tally.delivered += 1;
                 }
                 "metrics" => {

@@ -45,21 +45,26 @@ export const PLUGIN_CATALOG: PluginCatalog = buildPluginCatalog();
 // #region 🏠️HostPlaygroundFilter
 /**
  * 🏠️ Whether a raw playground filter (a variant, one of its aliases, or a bare crate pluginId)
- * resolves to a plugin crate declaring `[package.metadata.semio].host` — the studio-hub case every
- * consumer treats as "unfiltered". Pure lookup over the two generated registry modules, with the
- * identical resolution order as `projectedHostPluginFilter` in `📇️registry/📜️script.ts` (variant or
- * alias first, else the filter read as a bare plugin id) and the identical host predicate
- * (`host !== undefined` on the plugin row); `🧫️fixtures/🏠️host-filter.json` is the shared vector
- * pinning the two together. `⚙️vite.config.ts` mounts this one because it costs two array scans over
- * already-generated rows, where the script twin costs the repository walk behind `getWorkspaceRoot`.
+ * resolves to a HOST SESSION — the studio-hub case every consumer treats as "unfiltered". A row is
+ * one when its crate declares `[package.metadata.semio].host` AND the row names no `app`: host mode
+ * is a property of the session, not of the crate, so an app-pinned row of the very same crate
+ * (`🪐️space`'s `home` and `space`) boots that one artifact app standalone like every other
+ * single-app row. Same rule, same resolution order (variant or alias first, else the filter read as
+ * a bare plugin id) as {@link resolvePluginHostConfig} in `🎠️kernel/🟦️.ts`, as
+ * `projectedHostPluginFilter` in `📇️registry/📖️catalog-view/🟦️.ts` and as `appScoped` in
+ * `🕸️dependencies/🧩️runtime/🟨️.mjs`; `🧫️fixtures/📖️generated-projection.json` plus the live
+ * cross-check in `🧪️tests/📖️generated-projection` is the shared vector pinning the twins together.
+ * `⚙️vite.config.ts` mounts this one because it costs two array scans over already-generated rows,
+ * where the projection twin costs reading the projected `🤖️generated` JSON from disk.
  */
 export function isHostPlaygroundFilter(
   pluginFilter?: string,
-  playgrounds: readonly { readonly variant: string; readonly pluginId: string; readonly aliases: readonly string[] }[] = PLAYGROUND_BUILD_TARGETS,
+  playgrounds: readonly { readonly variant: string; readonly pluginId: string; readonly app?: string; readonly aliases: readonly string[] }[] = PLAYGROUND_BUILD_TARGETS,
   targets: readonly { readonly pluginId: string; readonly host?: unknown }[] = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS],
 ): boolean {
   if (!pluginFilter) return true;
   const variantRow = playgrounds.find((row) => row.variant === pluginFilter || row.aliases.includes(pluginFilter));
+  if (variantRow?.app !== undefined) return false;
   const pluginId = variantRow?.pluginId ?? pluginFilter;
   return targets.some((target) => target.pluginId === pluginId && target.host !== undefined);
 }

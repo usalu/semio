@@ -4538,3 +4538,32 @@ async fn security_authz_hook_rejects_a_principal_denied_by_its_policy() {
     assert!(matches!(result.await, Err(DbError::Unauthorized(_))), "a default-deny policy with no grants must reject every action");
 }
 //#endregion 🔖️Security
+
+//#region 🔖️MemberOpen
+/// 📦️ The version-graph projection must be OPENABLE as an owned member of a composed document. Until
+/// 2026-09-21 it declared `UnsupportedMemberSnapshotOpen`, whose `step` has exactly one answer —
+/// `Rejected(MemberOpenDiagnostic::Decode)` — so a composed document owning a version-graph member was
+/// refused at member-open step 0, always. The declared opener is named here so a regression back to the
+/// rejecting one fails loudly instead of silently refusing every such member.
+#[test]
+fn version_graph_member_opens_through_its_own_pack_codec() {
+    assert_eq!(
+        std::any::type_name::<<HashProjection as store::MemberStoreOwner<HashMutation>>::SnapshotOpen>(),
+        std::any::type_name::<store::PackMemberSnapshotOpen<HashProjection>>(),
+        "a version-graph member must open through PackMemberSnapshotOpen"
+    );
+    let projection = HashProjection { latest_hash: [7u8; 32] };
+    let encoded = store::ArtifactPack::encode_pack(&projection);
+    let decoded = <HashProjection as store::ArtifactPack>::decode_pack(&encoded).expect("the member opener's whole-pack decode");
+    assert_eq!(decoded, projection, "the opener's decode round-trips the exact member snapshot");
+    let mut cursor = store::retirement::RetireOwned::retirement(decoded);
+    for turn in 0..4_096 {
+        match cursor.close_step(4_096) {
+            store::retirement::RetirementStep::Complete if cursor.terminal_is_empty() => break,
+            store::retirement::RetirementStep::BudgetExhausted => panic!("the member opener's owner cursor stalled on turn {turn}"),
+            _ => {}
+        }
+        assert!(turn < 4_095, "the member opener's owner cursor never reached terminal-empty");
+    }
+}
+//#endregion 🔖️MemberOpen

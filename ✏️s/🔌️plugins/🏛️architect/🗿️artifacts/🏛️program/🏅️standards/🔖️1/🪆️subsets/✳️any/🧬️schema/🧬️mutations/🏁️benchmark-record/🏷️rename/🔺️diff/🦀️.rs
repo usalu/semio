@@ -17,5 +17,5 @@ pub fn diff(payload: &RenameBenchmarkRecord, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::warn("mutation.no-op", "This benchmark record already has this name.").at([payload.id.0.clone()])]);
     }
     existing.header.name = payload.new_name.clone();
-    protocol::MutationOutcome::new(ProgramDiff { benchmarks: Some(crate::benchmarks_child_from_records(&records)), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { benchmarks_payload: Some(records.clone()), benchmarks: Some(crate::benchmarks_child_from_records(&records)), ..Default::default() })
 }

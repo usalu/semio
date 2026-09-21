@@ -150,7 +150,10 @@ where
     assert_eq!(<T as MutationKind<GisTerrainWindowConfig, GisTerrainWindowConfigMutation>>::SEMANTICS.kind, T::DESCRIPTOR.semantic_kind);
     assert_eq!(provenance.owner, T::DESCRIPTOR.owner);
     assert_eq!(provenance.source_path, format!("{}/🦀️.rs", T::DESCRIPTOR.owner));
-    assert_eq!(provenance.descriptor_path, format!("{}/../../🧫️fixtures/🧬️direct-leaves/🔣️.json", T::DESCRIPTOR.owner));
+    // 🪪️ The leaf's descriptor lives NEXT TO its source (`🧬️schema/🧬️mutations/<leaf>/🔣️.json`):
+    // `MutationLeafSourceScope::validate` admits only one safe normalized portable FILENAME here, so a
+    // relative path into a shared fixtures folder is not a legal descriptor location at all.
+    assert_eq!(provenance.descriptor_path, format!("{}/🔣️.json", T::DESCRIPTOR.owner));
     let mutation_root: &'static str = T::DESCRIPTOR.owner.rsplit_once('/').expect("direct leaf parent").0;
     let scope = protocol::MutationLeafSourceScope {
         workspace_token: provenance.workspace_token,
@@ -159,7 +162,7 @@ where
         taxonomy_path: provenance.taxonomy_path,
         mutation_payload_facet: "🦠️mutation",
         source_filename: "🦀️.rs",
-        descriptor_filename: "../../🧫️fixtures/🧬️direct-leaves/🔣️.json",
+        descriptor_filename: "🔣️.json",
     };
     assert!(protocol::validate_mutation_leaf_source(&T::DESCRIPTOR, &provenance, &scope).is_ok());
     assert_eq!(<GisTerrainWindowConfigMutation as Mutation<GisTerrainWindowConfig>>::DESCRIPTORS.iter().filter(|entry| entry.owner == T::DESCRIPTOR.owner).count(), 1);

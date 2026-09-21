@@ -258,7 +258,7 @@ mod subject {
     /// 📄️ `{"version":...,"encoding":...,"standalone":...}` when present, absent (no `version` key)
     /// meaning "no declaration" -- the same convention `set-doctype`'s `name` key uses below.
     fn json_to_declaration(params: &Json) -> Option<XmlDeclaration> {
-        non_empty(params, "version").map(|version| XmlDeclaration { version, encoding: non_empty(params, "encoding"), standalone: match params.get("standalone") { Some(Json::Bool(value)) => Some(*value), _ => None } })
+        non_empty(params, "version").map(|version| XmlDeclaration::new(version, non_empty(params, "encoding"), match params.get("standalone") { Some(Json::Bool(value)) => Some(*value), _ => None }))
     }
 
     fn json_to_doctype(params: &Json) -> Option<XmlDoctype> {

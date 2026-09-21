@@ -1,6 +1,6 @@
 use super::*;
 
-const PLUGIN_WASM_TARGET_DIR: &str = ".🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2";
+const PLUGIN_WASM_CARGO_CACHE_DIR: &str = ".🧬semio/🦑️repo/⚡️cache/cargo";
 const PLUGIN_WASM_PROFILE_DIRS: [&str; 2] = ["wasm-dev", "wasm-release"];
 
 /// 🗒️ `✏️s/🔌️plugins/🗒️note/🔣️.json` `manifest.apps[0].id` — the guest refuses any other id with
@@ -21,9 +21,29 @@ fn repo_root() -> PathBuf {
     dir
 }
 
+/// 🔎️ The FRESHEST build of one plugin component anywhere in the shared cargo cache. Preamble
+/// rule 25 gives every slice a private `CARGO_TARGET_DIR` (`target-<slice>`) beside the shared
+/// `target`, so the component a fleet slice just rebuilt is routinely NOT under `target/`. Picking
+/// the newest mtime across every `target*` root is what keeps these laws honest about the tree
+/// that is actually checked out rather than about whichever build happened to land first.
 fn plugin_wasm(file_name: &str) -> Option<PathBuf> {
-    let root = repo_root();
-    PLUGIN_WASM_PROFILE_DIRS.iter().map(|profile| root.join(PLUGIN_WASM_TARGET_DIR).join(profile).join(file_name)).find(|path| path.is_file())
+    let cache = repo_root().join(PLUGIN_WASM_CARGO_CACHE_DIR);
+    let mut newest: Option<(std::time::SystemTime, PathBuf)> = None;
+    for entry in std::fs::read_dir(&cache).ok()?.flatten() {
+        let name = entry.file_name();
+        let Some(name) = name.to_str() else { continue };
+        if name != "target" && !name.starts_with("target-") {
+            continue;
+        }
+        for profile in PLUGIN_WASM_PROFILE_DIRS {
+            let candidate = entry.path().join("wasm32-wasip2").join(profile).join(file_name);
+            let Ok(modified) = candidate.metadata().and_then(|meta| meta.modified()) else { continue };
+            if newest.as_ref().is_none_or(|(seen, _)| modified > *seen) {
+                newest = Some((modified, candidate));
+            }
+        }
+    }
+    newest.map(|(_, path)| path)
 }
 
 /// 🖍️ `✏️s/🔌️plugins/🖍️draw/🔣️.json` `manifest.apps[0].id` — the bigger of the two staged components
@@ -183,4 +203,113 @@ async fn a_mid_flight_owned_turn_refuses_new_events_instead_of_dropping_them() {
     let resumed = runtime.execute_turn(&mut instance, &[], Budget { fuel: 1_000_000, ..open_budget() }).await;
     assert!(matches!(resumed, Err(TurnFault::FuelExhausted | TurnFault::DeadlineExceeded)), "resuming with no events continues the same turn rather than refusing it, got {resumed:?}");
     assert!(runtime.turn_in_flight(&instance), "the resumed turn is still the same one");
+}
+
+/// 🗒️ `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs`'s `NOTE_DOCUMENT_SCHEMA` — the PRIMARY key
+/// `plugin_artifact_codec_app` resolves on and the exact key the hub's `VerifiedTrustedCatalog` pin
+/// carries, so a law that asks by it walks the identical guest path a server does.
+const NOTE_DOCUMENT_SCHEMA: &str = "note.document";
+
+/// 🪪️ `s.note.note`'s own artifact kind — the SECOND key the resolver admits, because a compiled
+/// descriptor publishes a kind and never a document schema. A note bundle owns two apps whose
+/// dialect carries this kind (an editor and a viewer), so this key is also what exercises the
+/// resolver's two-role path.
+const NOTE_ARTIFACT_KIND: &str = "s.note.note";
+
+/// 🪪️ One server-minted identity of the exact shape `artifact_app_genesis_pair` admits
+/// (`artifact-` plus 32 lowercase hex digits, not all zero); any other spelling is refused by the
+/// producer before a document is built, which would hide a guest-side fault behind a validation.
+const MINTED_DOCUMENT_ID: &str = "artifact-0123456789abcdef0123456789abcdef";
+
+/// 🌱️ A codec budget, not an interactive slice: the four `codec` exports run to completion on a
+/// throwaway instance, so slicing them at 8 ms would only measure the interpreter's re-entry.
+fn codec_budget() -> Budget {
+    Budget { fuel: u64::MAX, deadline_ms: 120_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+}
+
+/// 🌱️ The permanent oracle that `codec.genesis` answers on a REAL staged component. Ticket
+/// 26/09/18 slice TC3c measured this trapping with `wasm trap: unreachable` at 16:14 on
+/// 2026-09-21, which killed the three-package trusted-catalog bootstrap in its last step — while
+/// the single native producer `artifact_app_genesis_pair` was green, so the fault was the guest
+/// half of `world actor`'s `codec` interface and nothing in the genesis reduction itself.
+///
+/// 🪦️ The cause: `plugin_artifact_codec_app` constructs EVERY app of the installed bundle to read
+/// its `artifact_schema()` and dropped each one it did not return, and a `VcsArtifactApp` owns an
+/// `ArtifactStore` whose `Drop` asserts an exact terminal-empty shallow-shell witness. In a
+/// `panic = "abort"` wasm32 guest that assert is the `unreachable`. Any bundle with more than one
+/// app traps here, so this is a law over every plugin rather than over note.
+#[semio_framework_async_macros::async_test]
+async fn owned_codec_genesis_answers_on_a_real_plugin_component() {
+    let Some(path) = plugin_wasm("semio_s_plugin_note.wasm") else { return };
+    let bytes = std::fs::read(&path).expect("read plugin component");
+    let runtime = OwnedRuntime::new();
+    let compiled = runtime.compile(&package_ref("semio:note", &bytes), &bytes).await.expect("compile plugin component");
+    let pair = runtime.codec_genesis(&compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("codec.genesis by document schema");
+    assert!(!pair.pack.is_empty() && !pair.spr.is_empty(), "codec.genesis produced an empty pair: pack={} spr={}", pair.pack.len(), pair.spr.len());
+}
+
+/// 🪪️ The same export through the SECOND resolver key. A build tool holding nothing but a compiled
+/// descriptor asks by kind, so a resolver that answers only by schema silently strands every
+/// catalog builder — and a kind whose bundle owns both an editor and a viewer is exactly the shape
+/// that used to drop the loser and abort.
+#[semio_framework_async_macros::async_test]
+async fn owned_codec_genesis_answers_by_artifact_kind_too() {
+    let Some(path) = plugin_wasm("semio_s_plugin_note.wasm") else { return };
+    let bytes = std::fs::read(&path).expect("read plugin component");
+    let runtime = OwnedRuntime::new();
+    let compiled = runtime.compile(&package_ref("semio:note", &bytes), &bytes).await.expect("compile plugin component");
+    let by_kind = runtime.codec_genesis(&compiled, NOTE_ARTIFACT_KIND, MINTED_DOCUMENT_ID, codec_budget()).await.expect("codec.genesis by artifact kind");
+    let by_schema = runtime.codec_genesis(&compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("codec.genesis by document schema");
+    assert_eq!(by_kind, by_schema, "the two resolver keys must select the same editor and therefore the same genesis pair");
+}
+
+/// 🧬️ `codec.pack-schema-hash` shares `plugin_artifact_codec_app` with `codec.genesis`, so it is
+/// the discriminator TC3c's report asked for: if THIS answers while genesis traps the fault is
+/// genesis-specific, and if both trap the resolver is the fault. It is also the one call the
+/// trusted-catalog bootstrap now makes per unlinked package, so a red here is a dead bootstrap.
+#[semio_framework_async_macros::async_test]
+async fn owned_codec_pack_schema_hash_answers_on_a_real_plugin_component() {
+    let Some(path) = plugin_wasm("semio_s_plugin_note.wasm") else { return };
+    let bytes = std::fs::read(&path).expect("read plugin component");
+    let runtime = OwnedRuntime::new();
+    let compiled = runtime.compile(&package_ref("semio:note", &bytes), &bytes).await.expect("compile plugin component");
+    let hash = runtime.codec_pack_schema_hash(&compiled, NOTE_DOCUMENT_SCHEMA, codec_budget()).await.expect("codec.pack-schema-hash by document schema");
+    assert_ne!(hash, [0; 32], "a kind with a structural record specification must not answer the zero fingerprint");
+}
+
+/// 🧩️ The round trip a hub performs for a package whose Rust codec it links nothing for: create the
+/// document, then print its pair back through the guest's own mirror. `print-mirror` and `apply-ops`
+/// take the SELECTED app by reference and used to drop it on the way out, so they carry the same
+/// defect as genesis and need the same oracle.
+#[semio_framework_async_macros::async_test]
+async fn owned_codec_print_mirror_round_trips_a_genesis_pair() {
+    let Some(path) = plugin_wasm("semio_s_plugin_note.wasm") else { return };
+    let bytes = std::fs::read(&path).expect("read plugin component");
+    let runtime = OwnedRuntime::new();
+    let compiled = runtime.compile(&package_ref("semio:note", &bytes), &bytes).await.expect("compile plugin component");
+    let pair = runtime.codec_genesis(&compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("codec.genesis");
+    let mirror = runtime.codec_print_mirror(&compiled, NOTE_DOCUMENT_SCHEMA, &pair.pack, &pair.spr, codec_budget()).await.expect("codec.print-mirror");
+    assert!(mirror.dsl.contains(MINTED_DOCUMENT_ID), "the mirrored document must carry the minted identity, got {} bytes of dsl", mirror.dsl.len());
+    let applied = runtime.codec_apply_ops(&compiled, NOTE_DOCUMENT_SCHEMA, &pair.pack, &pair.spr, &[], codec_budget()).await.expect("codec.apply-ops with an empty batch");
+    assert!(!applied.pack.is_empty() && !applied.spr.is_empty(), "an empty apply-ops batch must return the baseline pair, not an empty one");
+}
+
+/// 🐎️ The A/B half of the `codec.genesis` bisect: the same component, the same export, through the
+/// compiled runtime instead of the interpreter. Both runtimes trapped identically before the fix —
+/// which is what placed the fault in the GUEST's own resolver rather than in either host — and both
+/// must answer the identical bytes after it, because `codec` is a pure function of the component.
+#[semio_framework_async_macros::async_test]
+async fn wasmtime_codec_genesis_answers_the_same_pair_as_the_interpreter() {
+    let Some(path) = plugin_wasm("semio_s_plugin_note.wasm") else { return };
+    let bytes = std::fs::read(&path).expect("read plugin component");
+    let jit = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let compiled = jit.compile(&package_ref("semio:note", &bytes), &bytes).await.expect("compile plugin component");
+    let jit_pair = jit.codec_genesis(&compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, &jit_budget()).await.expect("wasmtime codec.genesis");
+    assert!(!jit_pair.pack.is_empty() && !jit_pair.spr.is_empty(), "wasmtime codec.genesis produced an empty pair");
+    let hash = jit.codec_pack_schema_hash(&compiled, NOTE_DOCUMENT_SCHEMA, &jit_budget()).await.expect("wasmtime codec.pack-schema-hash");
+    assert_ne!(hash, [0; 32], "a kind with a structural record specification must not answer the zero fingerprint");
+    let owned = OwnedRuntime::new();
+    let owned_compiled = owned.compile(&package_ref("semio:note", &bytes), &bytes).await.expect("compile plugin component");
+    let owned_pair = owned.codec_genesis(&owned_compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("owned codec.genesis");
+    assert_eq!(jit_pair, owned_pair, "a pure codec export must answer identically under both runtimes");
 }

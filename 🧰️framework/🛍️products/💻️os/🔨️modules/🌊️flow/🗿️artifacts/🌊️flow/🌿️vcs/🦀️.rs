@@ -734,8 +734,47 @@ impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetiremen
     }
 }
 
+/// ♻️ One owned `FlowHostSnapshot` as the framework's own incremental owner cursor, so a flow document
+/// can be opened as an owned MEMBER of a composed document. It drives flow's own reserve-then-close
+/// frontier through [`FlowRetirement::close_page`] — the single entry point that never answers
+/// `Blocked` under a non-zero grant — rather than the bare `close_step` a naive bridge would call.
+struct FlowOwnedSnapshotCursor {
+    retirement: FlowRetirement,
+}
+
+impl crate::os_store::retirement::RetirementCursor for FlowOwnedSnapshotCursor {
+    fn close_step(&mut self, maximum_bytes: usize) -> crate::os_store::retirement::RetirementStep {
+        if self.retirement.terminal_is_empty() {
+            return crate::os_store::retirement::RetirementStep::Complete;
+        }
+        if maximum_bytes == 0 {
+            return crate::os_store::retirement::RetirementStep::BudgetExhausted;
+        }
+        match self.retirement.close_page(1, maximum_bytes) {
+            Ok(SnapshotRetirementStep::Complete) => crate::os_store::retirement::RetirementStep::Complete,
+            Ok(SnapshotRetirementStep::Pending { released_bytes, .. }) => crate::os_store::retirement::RetirementStep::Bytes(released_bytes.min(maximum_bytes)),
+            Ok(SnapshotRetirementStep::Blocked) | Err(_) => crate::os_store::retirement::RetirementStep::BudgetExhausted,
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.retirement.terminal_is_empty()
+    }
+}
+
+impl crate::os_store::retirement::RetireOwned for FlowHostSnapshot {
+    fn retirement(self) -> Box<dyn crate::os_store::retirement::RetirementCursor> {
+        Box::new(FlowOwnedSnapshotCursor { retirement: FlowRetirement::from_owner(FlowOwner::HostSnapshot(self)) })
+    }
+}
+
 impl MemberStoreOwner<FlowMutation> for FlowHostSnapshot {
-    type SnapshotOpen = crate::os_store::UnsupportedMemberSnapshotOpen<Self>;
+    /// 📦️ A flow document opens as an owned member through its OWN `ArtifactPack` codec (the
+    /// hand-written twin above). It declared `UnsupportedMemberSnapshotOpen` until 2026-09-21, whose
+    /// `step` has exactly one answer — `Rejected(MemberOpenDiagnostic::Decode)` — so every composed
+    /// replacement or document archive carrying a real flow member was refused at member-open step 0,
+    /// always.
+    type SnapshotOpen = crate::os_store::PackMemberSnapshotOpen<Self>;
 
     fn member_store_owners() -> DocumentStoreOwners<Self, FlowMutation> {
         DocumentStoreOwners::new(Arc::new(FlowSnapshotRetirementFactory), Arc::new(FlowOwnedHostSnapshotRetirementFactory), Arc::new(FlowMutationRetirementFactory), Box::new(ArtifactStoreCursorDisposer::<FlowHostSnapshot, FlowMutation>::new()))

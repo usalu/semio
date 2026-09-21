@@ -2258,7 +2258,7 @@ fn decode_input(job: u64, input: &[u8]) -> Option<(u16, MountedIdentity)> {
     Some((shell, MountedIdentity { app_instance_id, base_revision, generation, canonical_base_revision, operation, job }))
 }
 
-fn mounted_job_factory(job: u64, input: &[u8]) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
+fn mounted_job_factory(job: u64, input: &[u8], _restored: Option<&[u8]>) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
     let (shell, identity) = decode_input(job, input).ok_or_else(|| b"fem2d.session-input".to_vec())?;
     MOUNTED.with(|registry| {
         let registry = registry.borrow();

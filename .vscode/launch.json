@@ -4740,6 +4740,17 @@
       }
     },
     {
+      "name": "⚖️gate🎠️kernel🦀️lib",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-os-kernel:test --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.4
+      }
+    },
+    {
       "name": "🧹clean🧩️taxonomy🧪️artifact-support",
       "type": "node-terminal",
       "request": "launch",
@@ -6015,6 +6026,50 @@
       }
     },
 {
+      "name": "🛠️dev🪐️space🪐️space⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- space",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6109",
+        "SEMIO_PLUGIN": "space",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.space.space@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 420.58
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6109)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev🪐️space🪐️space🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- space",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6209",
+        "SEMIO_PLUGIN": "space",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.space.space@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 420.581
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6209)",
+        "uriFormat": "%s"
+      }
+    },
+{
       "name": "🛠️dev🗄️stdio📝️md⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -6147,7 +6202,7 @@
       }
     },
 {
-      "name": "🛠️dev🗄️stdio🔣️.json⚛️react",
+      "name": "🛠️dev🗄️stdio🧾️json⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- stdio-json",
@@ -6169,7 +6224,7 @@
       }
     },
 {
-      "name": "🛠️dev🗄️stdio🔣️.json🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🗄️stdio🧾️json🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- stdio-json",
@@ -6191,7 +6246,7 @@
       }
     },
 {
-      "name": "🛠️dev🗄️stdio🔣️.json⚛️react",
+      "name": "🛠️dev🗄️stdio🧾️json🛜️i-json⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- stdio-json-i",
@@ -6213,7 +6268,7 @@
       }
     },
 {
-      "name": "🛠️dev🗄️stdio🔣️.json🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🗄️stdio🧾️json🛜️i-json🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- stdio-json-i",
@@ -6367,7 +6422,7 @@
       }
     },
 {
-      "name": "🛠️dev🗄️stdio📰️xml⚛️react",
+      "name": "🛠️dev🗄️stdio📰️xml✅️valid⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- stdio-xml-valid",
@@ -6389,7 +6444,7 @@
       }
     },
 {
-      "name": "🛠️dev🗄️stdio📰️xml🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🗄️stdio📰️xml✅️valid🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- stdio-xml-valid",

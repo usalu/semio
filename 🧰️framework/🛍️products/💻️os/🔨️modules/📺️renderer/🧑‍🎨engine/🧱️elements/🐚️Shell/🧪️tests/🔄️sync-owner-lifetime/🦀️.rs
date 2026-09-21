@@ -7,13 +7,7 @@ const BRIDGE_SOURCE: &str = include_str!("../../../🌉️ProgramBridge/🎯️t
 const KERNEL_SOURCE: &str = include_str!("../../../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
 
 fn owner(generation: u64, uri: &str) -> ShellSyncOwner {
-    ShellSyncOwner {
-        plugin_id: "s.plugin.puzzle".into(),
-        instance_id: 7,
-        binding_generation: generation,
-        actor_uri: uri.into(),
-        document_key: "space-a/map".into(),
-    }
+    ShellSyncOwner { plugin_id: "s.plugin.puzzle".into(), instance_id: 7, binding_generation: generation, actor_uri: uri.into(), document_key: "space-a/map".into() }
 }
 
 #[test]

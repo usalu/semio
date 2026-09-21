@@ -168,7 +168,9 @@ fn a_press_on_a_node_body_selects_that_node_and_a_released_drag_publishes_its_mo
     node_graph_pointer_down_into(surface_id, &scene.controller_id, bounds, body.0, body.1, 0, false, false, false, false, &mut input).expect("the press is admitted");
     let pressed = crate::collect_fixture_actions(&mut input);
     let node_target_prefix = scene.node_graph.as_ref().and_then(|graph| graph.interaction_domain.as_ref()).map(|domain| domain.node_target_prefix.as_str()).expect("the physical Flow scene declares its node target domain");
-    let expected_selection = serde_json::to_string(&select_case["expectedSelection"].as_array().expect("selection").iter().map(|id| json!({ "granularity": "node", "id": format!("{node_target_prefix}{}", id.as_str().expect("node id")) })).collect::<Vec<_>>()).expect("targets");
+    let expected_selection =
+        serde_json::to_string(&select_case["expectedSelection"].as_array().expect("selection").iter().map(|id| json!({ "granularity": "node", "id": format!("{node_target_prefix}{}", id.as_str().expect("node id")) })).collect::<Vec<_>>())
+            .expect("targets");
     assert_eq!(selection_targets(&pressed).as_deref(), Some(expected_selection.as_str()), "a press on {node_id}'s draggable body selects exactly that node");
     node_graph_pointer_up_into(surface_id, &scene.controller_id, bounds, body.0, body.1, false, false, false, &mut input).expect("the release is admitted");
     let clicked = crate::collect_fixture_actions(&mut input);

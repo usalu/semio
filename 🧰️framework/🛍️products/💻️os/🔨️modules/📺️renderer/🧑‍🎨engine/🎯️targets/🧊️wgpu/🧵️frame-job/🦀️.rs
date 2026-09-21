@@ -121,13 +121,7 @@ fn now_us() -> Option<u64> {
 /// GPU opportunities are priced separately. Derived rather than chosen so it cannot drift away from
 /// the one ceiling every interactive site is measured against.
 fn batch_params(operation: OperationId, generation: Generation, cancel: CancelToken) -> BatchJobParams {
-    BatchJobParams {
-        operation,
-        generation,
-        cancel,
-        config: BatchDriveConfig { site: "os_renderer_frame_build", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US },
-        now_us,
-    }
+    BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { site: "os_renderer_frame_build", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US }, now_us }
 }
 //#endregion ⏱️Clock
 
@@ -234,6 +228,14 @@ impl ActiveFrameBuild {
     }
 
     fn retire_cancelled_phase(&mut self) -> bool {
+        let candidate_returned = match &mut self.phase {
+            ActiveFramePhase::Build(transaction) => transaction.discard_presented_input_candidate(&self.runtime),
+            ActiveFramePhase::Prepare(preparation) => preparation.discard_presented_input_candidate(&self.runtime),
+            _ => true,
+        };
+        if !candidate_returned {
+            return false;
+        }
         retire_active_phase(&mut self.phase)
     }
 
@@ -341,7 +343,14 @@ impl ActiveFrameBuild {
                 }
                 let transaction_step = {
                     let now = now_us();
-                    let mut context = StepContext::new(self.operation, self.generation, now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, INTERACTIVE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)), self.cancel.clone(), now_us, &mut self.preview_sequence);
+                    let mut context = StepContext::new(
+                        self.operation,
+                        self.generation,
+                        now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, INTERACTIVE_LANE_WALL_US)).unwrap_or(semio_framework_job::StepBudget::new(0, 0)),
+                        self.cancel.clone(),
+                        now_us,
+                        &mut self.preview_sequence,
+                    );
                     transaction.step(&self.runtime, &self.handle, &mut context)
                 };
                 if self.overruns.admit(&watchdog.finish()).is_terminal() {
@@ -360,10 +369,13 @@ impl ActiveFrameBuild {
                     crate::AppFrameTransactionStep::Pending => ActiveFrameStep::Pending,
                     // 🌀️ Superseded inputs end THIS build with no frame and no fault; the caller's next
                     // opportunity admits a fresh one against the current witness. The transaction is
-                    // DROPPED here rather than closed, which is only sound because a transaction owns
-                    // nothing a user minted: every action its authorities take belongs to
-                    // `AppRuntime::frame_actions` (`🧊️renderer/🦀️.rs`), which outlives every candidate.
+                    // DROPPED here rather than closed after its exact external input witness is
+                    // returned. Every action its authorities take belongs to `AppRuntime::frame_actions`
+                    // (`🧊️renderer/🦀️.rs`), which outlives every candidate.
                     crate::AppFrameTransactionStep::Superseded => {
+                        if !transaction.discard_presented_input_candidate(&self.runtime) {
+                            return ActiveFrameStep::Pending;
+                        }
                         self.phase = ActiveFramePhase::Terminal;
                         ActiveFrameStep::Complete(None)
                     }
@@ -431,13 +443,16 @@ impl InteractiveJob for ActiveFrameBuild {
             return if self.terminal_is_empty() { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 } };
         }
         if let Some(frame) = self.completed.as_mut() {
+            if !frame.discard_presented_input_candidate(&self.runtime) {
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
             if !frame.close_step() || !frame.terminal_is_empty() {
                 return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             self.completed = None;
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
-        if !retire_active_phase(&mut self.phase) {
+        if !self.retire_cancelled_phase() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         self.phase = ActiveFramePhase::Terminal;
@@ -474,7 +489,6 @@ impl FrameBuildHandle {
             self.completion_waker = Some(waker);
         }
     }
-
 
     fn admit_active(&mut self, active: ActiveFrameBuild) {
         let params = batch_params(active.operation, active.generation, active.cancel.clone());
@@ -548,9 +562,9 @@ impl FrameBuildHandle {
                 semio_framework_job::WorkerJobPoll::Terminal => {
                     if let Ok(mut owner) = session.take_terminal() {
                         let frame_generation = owner.job().generation;
-                        let frame = owner.job_mut().completed.take();
+                        let frame = generation_is_fresh(generation, frame_generation).then(|| owner.job_mut().completed.take()).flatten();
                         owner.begin_close();
-                        return generation_is_fresh(generation, frame_generation).then_some(frame).flatten();
+                        return frame;
                     }
                 }
                 semio_framework_job::WorkerJobPoll::Rejected => {
@@ -645,9 +659,9 @@ impl FrameBuildHandle {
                 semio_framework_job::WorkerJobPoll::Terminal => {
                     if let Ok(mut owner) = session.take_terminal() {
                         let frame_generation = owner.job().generation;
-                        let frame = owner.job_mut().completed.take();
+                        let frame = generation_is_fresh(generation, frame_generation).then(|| owner.job_mut().completed.take()).flatten();
                         owner.begin_close();
-                        presentation = generation_is_fresh(generation, frame_generation).then_some(frame).flatten();
+                        presentation = frame;
                     }
                 }
                 semio_framework_job::WorkerJobPoll::Closing => {

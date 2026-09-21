@@ -7,10 +7,10 @@ project {
   id=project-1 code=CLN-001 client-name="Sample Health" owner-organization="" funding-model="" brief-summary=text="" problem-statement=text="" vision=text="" mission=text="" objectives=[ ] success-criteria=[ ] project-priorities=[ ] completion-criteria=[ ] decision-criteria=[ ] scope-inclusions=[ ] scope-exclusions=[ ] assumptions=[ ] constraints-summary=[ ] dependencies=[ ] deliverables=[ ] phases=[ ] geographic-context=text="" development-context=text="" operational-context=text="" regulatory-context=[ ] ownership=consultant-ids=[ ] participant-ids=[ ] timestamps=created="1970-01-01T00:00:00Z" updated="1970-01-01T00:00:00Z"
 }
 knowledge {
-  child_id=architect-knowledge-7904dd65836c8ff4 target="architect-knowledge-7904dd65836c8ff4!s.stdio.semio@v1/table"
+  child_id=architect-knowledge-2e254b7dcdf61384 target="architect-knowledge-2e254b7dcdf61384!s.stdio.semio@v1/table"
 }
 benchmarks {
-  child_id=architect-benchmarks-7904dd65836c8ff4 target="architect-benchmarks-7904dd65836c8ff4!s.stdio.semio@v1/table"
+  child_id=architect-benchmarks-f9c02ec748440f77 target="architect-benchmarks-f9c02ec748440f77!s.stdio.semio@v1/table"
 }
 governance {
   id=governance-2 framework="" roles=[ ] responsibilities=[ ] approval-matrix=[ ] escalation-paths=[ ] meeting-cadence=[ ] decision-rights=[ ] change-control-process=[ ] quality-policy=text="" compliance-obligations=[ ] document-control=[ ] stakeholder-engagement-plan=[ ] ethics-policy=[ ] data-governance=[ ] review-hierarchy=[ ] accountability-rules=[ ] exception-management=[ ] governance-performance=[ ]
@@ -144,6 +144,12 @@ issues [header:REC issue-type:TEXT summary:REC issue-description:REC severity:EN
 audit-events [header:REC action:ENUM actor-id:TEXT subject-id:TEXT subject-kind:TEXT timestamp:TEXT details:REC before-state:TEXT after-state:TEXT ip-address:TEXT client:TEXT session-id:TEXT change-record-id:TEXT trace-link:REC success:BOOL error-message:TEXT correlation-id:TEXT compliance-tags:LIST retention-until:TEXT] {
 }
 templates [header:REC template-type:TEXT sector:TEXT project-type:TEXT version:TEXT content-ref:TEXT entity-kinds:LIST default-fields:LIST checklists:LIST standards:LIST applicability:LIST author-id:TEXT approval-status:ENUM usage-count:UINT last-applied:TEXT customization-notes:LIST related-knowledge-ids:LIST benchmark-ids:LIST license:TEXT source-organization:TEXT] {
+}
+knowledge-payload [header:REC topic:TEXT category:TEXT summary:REC content:REC sources:LIST references:LIST lessons-learned:LIST best-practices:LIST applicable-sectors:LIST related-entity-kinds:LIST author-ids:LIST expertise-level:TEXT validation-status:ENUM last-reviewed:TEXT keywords:LIST attachments:LIST citations:LIST usage-count:UINT] {
+  {id=knowledge-8 name="Clinic Reception Sightlines" status=draft priority=preferred ownership=consultant-ids=[ ] participant-ids=[ ] tags=[ ] notes=[ ] timestamps=created="1970-01-01T00:00:00Z" updated="1970-01-01T00:00:00Z"} Reception Wayfinding {text="Keep the waiting area in direct sight of the reception desk."} {text="Staff at the reception desk must see every seat of the waiting area without standing up; this shortens perceived wait times and removes the need for a second supervision post."} [ "Sample Health facility review 2025" ] [ ] [ "A single sightline removes one supervision post." ] [ "Place the desk on the waiting area's long axis." ] [ healthcare ] [ element ] [ ] practitioner pending _ [ reception sightline ] [ ] [ ] 1
+}
+benchmarks-payload [header:REC benchmark-name:TEXT sector:TEXT metric:TEXT value:NUM unit:TEXT sample-size:UINT source:TEXT collection-year:UINT geography:TEXT building-type:TEXT confidence:TEXT methodology:TEXT applicable-element-kinds:LIST related-requirement-ids:LIST comparison-notes:LIST limitations:LIST license:TEXT knowledge-id:TEXT last-verified:TEXT] {
+  {id=benchmark-9 name="Outpatient Waiting Area per Seat" status=draft priority=preferred ownership=consultant-ids=[ ] participant-ids=[ ] tags=[ ] notes=[ ] timestamps=created="1970-01-01T00:00:00Z" updated="1970-01-01T00:00:00Z"} "Outpatient waiting area per seat" healthcare area-per-seat 3.2 m2 42 "Sample Health portfolio" 2025 DE clinic medium "Floor areas measured from as-built plans." [ room ] [ ] [ "The sample clinic's 40 m2 waiting area seats 12." ] [ "Single operator, one region." ] CC-BY-4.0 _ _
 }
 traces [id:TEXT from-id:TEXT to-id:TEXT kind:ENUM label:TEXT] {
 }

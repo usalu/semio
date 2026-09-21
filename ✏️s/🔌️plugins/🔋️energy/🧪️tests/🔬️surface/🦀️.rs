@@ -1,13 +1,30 @@
-use semio_framework_plugin::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates};
+use semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect;
 use semio_framework_plugin::ViewerApp;
 
-/// 🧪️ Contract §2.5 — real teeth: dispatches `EnergyModelViewCommand::default()` through the full
-/// `VcsArtifactApp<ViewerApp<EnergyModelViewer>>` runtime path and asserts the document/draft
-/// stores are byte-for-byte unchanged before/after (`semio_framework_plugin::artifact_app_laws`, landed by
-/// W0-F — see `📓️w0-f-report.md` Gap 2; the pilot's own local stand-in is no longer needed here).
+/// 🧪️ Contract §2.5 — the read-only guarantee for a viewer whose ONE verb travels the RETAINED route.
+/// `artifact_app_laws::assert_viewer_never_mutates` drives `ViewerApp::handle`, the STATELESS adapter
+/// seam. Since this viewer's `setCamera` became `InteractiveJobClassification::Migrated` its emission
+/// is a window-config write, which `ViewEmit` structurally cannot carry, so `handle` refuses loudly
+/// (`energy.model.3d.viewer.retained-route-required`) rather than dropping the orbit — and the generic
+/// fixture's `expect("viewer adapter command succeeds")` can no longer be satisfied by construction.
+/// The guarantee is therefore asserted over the seam that decides it: EVERY verb this viewer declares
+/// is `Migrated`, so none of them can ever reach the stateless seam, and the emission itself is proved
+/// window-config-only (no artifact, no config, no draft lane) by the artifact crate's
+/// `a_camera_gesture_becomes_an_addressed_window_config_write_and_nothing_else` and
+/// `every_viewer_publication_lane_is_a_window_config_lane`.
 #[semio_framework_async_macros::async_test]
 async fn energy_model_viewer_never_mutates() {
-    assert_viewer_never_mutates::<crate::viewer::model::EnergyModelViewer>().await;
+    let definition = crate::viewer::model::create_energy_model_viewer();
+    let actions: Vec<_> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
+    assert!(!actions.is_empty(), "the energy model viewer declares at least one verb");
+    for action in &actions {
+        assert_eq!(
+            action.semantics.execution.interactive_job,
+            semio_framework_plugin::InteractiveJobClassification::Migrated,
+            "viewer action '{}' must travel the retained route — the stateless ViewEmit seam has no store lane a viewer may write",
+            action.id
+        );
+    }
 }
 
 #[semio_framework_async_macros::async_test]

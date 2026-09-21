@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the cad artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadDiff {
     #[state(artifact)]

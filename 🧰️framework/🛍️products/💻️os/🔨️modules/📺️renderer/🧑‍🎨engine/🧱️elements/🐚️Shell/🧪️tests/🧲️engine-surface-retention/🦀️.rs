@@ -20,47 +20,71 @@ use serde_json::Value;
 #[test]
 fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route() {
     let fixture = law();
-    for case in fixture["cases"].as_array().unwrap() {
-        let mut mirror = SurfaceMirror::default();
-        for frame in case["frames"].as_array().unwrap() {
-            mirror.frame(frame);
-        }
-        let mut shell = ShellState::new(Vec::new(), String::new());
-        shell.node_graph_states = mirror.node_graph_states;
-        shell.tiled_map_states = mirror.tiled_map_states;
-        shell.board2d_states = mirror.board2d_states;
-        shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
-        shell.dock_tabs = ShellDock::default();
-        let theme = Theme::default();
-        for probe in case["expectedResolve"].as_array().unwrap() {
-            let Some(surface) = probe["surfaceId"].as_str() else { continue };
-            let (window, bounds, suffix, kind) = if let Some(state) = shell.node_graph_states.get(surface) {
-                (state.window_id.clone(), state.bounds, "pane", ui_wgpu::wgpu::SurfaceKind::NodeGraph)
-            } else if let Some(state) = shell.tiled_map_states.get(surface) {
-                (state.window_id.clone(), state.bounds, "map", ui_wgpu::wgpu::SurfaceKind::TiledMap)
-            } else {
-                let state = shell.board2d_states.get(surface).expect("live Board2d surface");
-                (state.window_id.clone(), state.bounds, "pane", ui_wgpu::wgpu::SurfaceKind::Board2d)
-            };
-            let control = format!("{surface}.{suffix}");
-            let mut input = InputState::<ActionDescriptor>::default();
-            input.register_hit(HitTarget { rect: bounds, event: None, control_id: Some(control.clone()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
-            let node = ui_wgpu::wgpu::Arena::new().insert(());
-            shell.retained_scene_hits_staging.insert(control.clone(), (bounds, crate::interpreter::ScenePointerTarget { host_id: surface.into(), window_id: window.clone(), surface_id: surface.into(), kind, node, key: ui_wgpu::wgpu::NodeKey::Explicit(control.clone()), window_generation: 0, component_generation: 1 }));
-            shell.retained_hit_windows_staging.insert(control.clone(), (window, bounds));
-            shell.publish_retained_hit_registry(&mut input);
-            let x = probe["at"][0].as_f64().unwrap() as f32;
-            let y = probe["at"][1].as_f64().unwrap() as f32;
-            assert_eq!(shell.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Surface, "{} live {surface}", case["name"]);
-            assert!(shell.wheel_reaches_scene_surface(x, y, &input, &theme), "{} live wheel {surface}", case["name"]);
-            assert!(!shell.handle_pointer_wheel(x, y, 0.0, 1.0, &mut input), "{} generic retained scroll must yield to {surface}", case["name"]);
-            shell.retained_hit_windows.insert(control, ("unrelated-window".into(), bounds));
-            assert_eq!(shell.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Chrome, "{} forged owner {surface}", case["name"]);
-        }
+    let case = fixture["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|case| case["name"] == "every-composited-kind-is-retained-alike")
+        .expect("cross-kind retained-surface case");
+    let rows = case["frames"][0]["drain"].as_array().expect("painted surface rows");
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
+    shell.dock_tabs = ShellDock::default();
+    let mut documents = Vec::new();
+    for row in rows {
+        let surface = row["surfaceId"].as_str().expect("surface id");
+        let window = row["windowId"].as_str().expect("window id");
+        let controller = row["controllerId"].as_str().expect("controller id");
+        let surface_doc = match row["kind"].as_str().expect("surface kind") {
+            "nodeGraph" => {
+                let scene: ui_wgpu::wgpu::NodeGraphScene = serde_json::from_value(serde_json::json!({
+                    "nodes": [],
+                    "edges": [],
+                    "viewport": { "x": 0.0, "y": 0.0, "zoom": 1.0 }
+                }))
+                .expect("NodeGraph pointer fixture decodes");
+                ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, &scene).expect("bounded NodeGraph scene encodes")
+            }
+            "tiledMap" => {
+                let mut scene = ui_wgpu::wgpu::TiledMapScene::base("{}".into(), "{}".into());
+                scene.selection_method = row["selectionMethod"].as_str().unwrap_or("rectangle").into();
+                ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TiledMap, &scene).expect("bounded TiledMap scene encodes")
+            }
+            "board2d" => ui_wgpu::wgpu::encode_surface_doc(
+                ui_contract::SurfaceKind::Board2d,
+                &ui_wgpu::wgpu::Board2dScene::base(row["fixtureJson"].as_str().unwrap_or("{}").into(), "{}".into(), true),
+            )
+            .expect("bounded Board2d scene encodes"),
+            kind => panic!("unsupported retained surface kind {kind}"),
+        };
+        let records = vec![super::shell_input_tests::tree_pointer_record(1, surface, ui_contract::Component::Surface(surface_doc), &[], None)];
+        let document = shell.publish_surface_records(window, records).expect("component scene document publishes");
+        documents.push((surface.to_string(), window.to_string(), controller.to_string(), rect(&row["bounds"]), document));
+    }
+    shell.dock_window_plan = documents.iter().map(|(_, window, _, bounds, _)| (window.clone(), *bounds)).collect();
+    let paint_rows: Vec<_> = documents.iter().map(|(_, window, controller, bounds, document)| (window.as_str(), controller.as_str(), document, *bounds)).collect();
+    let mut input = super::shell_input_tests::paint_component_pointer_documents(&mut shell, &paint_rows);
+    shell.sync_engine_surface_states();
+    let theme = Theme::default();
+    for probe in case["expectedResolve"].as_array().unwrap() {
+        let surface = probe["surfaceId"].as_str().expect("live surface id");
+        let x = probe["at"][0].as_f64().unwrap() as f32;
+        let y = probe["at"][1].as_f64().unwrap() as f32;
+        let (control, (bounds, target)) = shell
+            .retained_scene_hits
+            .iter()
+            .find(|(_, (_, target))| target.surface_id == surface)
+            .map(|(control, retained)| (control.clone(), retained.clone()))
+            .unwrap_or_else(|| panic!("accepted ComponentScene hit for {surface}"));
+        assert!(shell.node_graph_states.contains_key(&target.host_id) || shell.tiled_map_states.contains_key(&target.host_id) || shell.board2d_states.contains_key(&target.host_id), "{surface} state is keyed by its accepted component host");
+        assert_eq!(shell.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Surface, "{} live {surface}", case["name"]);
+        assert!(shell.wheel_reaches_scene_surface(x, y, &input, &theme), "{} live wheel {surface}", case["name"]);
+        assert!(!shell.handle_pointer_wheel(x, y, 0.0, 1.0, &mut input), "{} generic retained scroll must yield to {surface}", case["name"]);
+        shell.retained_hit_windows.insert(control, ("unrelated-window".into(), bounds));
+        assert_eq!(shell.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Chrome, "{} forged owner {surface}", case["name"]);
     }
     println!("[DEBUG] retained Graph, Map and Board hits reached only their live surface owner's dedicated ingress");
 }
-
 
 fn law() -> Value {
     serde_json::from_str(include_str!("../../../../🧫️fixtures/🧲️engine-surface-retention/🔣️.json")).expect("engine surface retention fixture")
@@ -84,6 +108,7 @@ fn registration(value: &Value) -> crate::engine_canvas::EngineSurfaceRegistratio
     crate::engine_canvas::EngineSurfaceRegistration {
         host_id: value["hostId"].as_str().unwrap_or_else(|| value["surfaceId"].as_str().expect("surface id")).to_string(),
         surface_id: value["surfaceId"].as_str().expect("surface id").to_string(),
+        engine_token: None,
         window_id: value["windowId"].as_str().expect("window id").to_string(),
         bounds: rect(&value["bounds"]),
         controller_id: value["controllerId"].as_str().expect("controller id").to_string(),
@@ -180,6 +205,7 @@ fn the_mirror_never_evicts_a_world3d_surface() {
     let registration = crate::engine_canvas::EngineSurfaceRegistration {
         host_id: "scene.1.0.0.1".into(),
         surface_id: "procedural-preview-world".into(),
+        engine_token: None,
         window_id: "procedural-preview".into(),
         bounds: Rect { x: 0.0, y: 0.0, w: 10.0, h: 10.0 },
         controller_id: "procedural".into(),

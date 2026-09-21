@@ -97,11 +97,7 @@ fn fixture() -> InputAuthorityFixture {
 }
 
 fn hit(control: &ControlFixture) -> HitTarget<ActionDescriptor> {
-    let event = control.binding.as_ref().map(|binding| ActionDescriptor {
-        controller_id: "framework".into(),
-        action: "setDriverSaveLabel".into(),
-        args: crate::action_args_json!({ "value": binding }),
-    });
+    let event = control.binding.as_ref().map(|binding| ActionDescriptor { controller_id: "framework".into(), action: "setDriverSaveLabel".into(), args: crate::action_args_json!({ "value": binding }) });
     HitTarget { rect: Rect::new(control.rect[0], control.rect[1], control.rect[2], control.rect[3]), event, control_id: Some(control.id.clone()), kind: HitKind::Input, drag_axis: None, drag_data: None }
 }
 
@@ -150,7 +146,7 @@ fn retained_input_record(control: &RetainedKeyboardFixture) -> ui_contract::UiNo
     serde_json::from_value(serde_json::json!({
         "id": 1,
         "key": control.key,
-        "component": { "type": "input", "kind": "text", "value": "", "commit": "enter" },
+        "component": { "type": "input", "kind": "text", "value": "", "commit": "blur" },
         "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
         "style": {},
         "activity": "idle",
@@ -210,13 +206,7 @@ fn retained_button_record(key: &str, binding: &str) -> ui_contract::UiNodeRecord
     .expect("retained presentation button record")
 }
 
-fn paint_retained_button_candidate(
-    shell: &mut ShellState,
-    surface: &str,
-    document: &UiDocumentLease,
-    body: Rect,
-    input: &mut InputState<ActionDescriptor>,
-) {
+fn paint_retained_button_candidate(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect, input: &mut InputState<ActionDescriptor>) {
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -259,27 +249,13 @@ fn admitted_bindings(input: &mut InputState<ActionDescriptor>) -> Vec<String> {
         .collect()
 }
 
-fn publish_presented_button(
-    shell: &mut ShellState,
-    input: &mut InputState<ActionDescriptor>,
-    surface: &str,
-    key: &str,
-    control: &ControlFixture,
-) -> UiDocumentLease {
-    let document = shell
-        .publish_surface_records(surface, vec![retained_button_record(key, control.binding.as_deref().expect("button binding"))])
-        .expect("retained button document publishes");
+fn publish_presented_button(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, surface: &str, key: &str, control: &ControlFixture) -> UiDocumentLease {
+    let document = shell.publish_surface_records(surface, vec![retained_button_record(key, control.binding.as_deref().expect("button binding"))]).expect("retained button document publishes");
     paint_retained_button_candidate(shell, surface, &document, hit(control).rect, input);
     document
 }
 
-fn publish_retained_candidate(
-    shell: &mut ShellState,
-    input: &mut InputState<ActionDescriptor>,
-    surface: &str,
-    record: ui_contract::UiNodeRecord,
-    body: Rect,
-) -> UiDocumentLease {
+fn publish_retained_candidate(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, surface: &str, record: ui_contract::UiNodeRecord, body: Rect) -> UiDocumentLease {
     let document = shell.publish_surface_records(surface, vec![record]).expect("retained candidate document publishes");
     paint_retained_button_candidate(shell, surface, &document, body, input);
     document
@@ -377,20 +353,14 @@ fn actual_retained_pointer_dispatch_keeps_the_presented_position_and_binding_unt
     let presented_surface = "presented-input.same-key";
     let overlap_surface = "presented-input.overlap";
 
-    let mut presented_document = shell
-        .publish_surface_records(presented_surface, vec![retained_button_record("stable-button", presented.binding.as_deref().expect("presented binding"))])
-        .expect("presented retained document publishes");
+    let mut presented_document = shell.publish_surface_records(presented_surface, vec![retained_button_record("stable-button", presented.binding.as_deref().expect("presented binding"))]).expect("presented retained document publishes");
     crate::interpreter::begin_accessibility_visible_documents();
     paint_retained_button_candidate(&mut shell, presented_surface, &presented_document, hit(presented).rect, &mut input);
     let presented_witness = shell.seal_presented_input_candidate(&theme).expect("presented candidate witness");
     assert!(shell.acknowledge_presented_input(&mut input, presented_witness));
 
-    let mut moved_document = shell
-        .publish_surface_records(presented_surface, vec![retained_button_record("stable-button", moved.binding.as_deref().expect("moved binding"))])
-        .expect("moved retained document publishes");
-    let mut overlap_document = shell
-        .publish_surface_records(overlap_surface, vec![retained_button_record("overlap-button", overlap.binding.as_deref().expect("overlap binding"))])
-        .expect("overlap retained document publishes");
+    let mut moved_document = shell.publish_surface_records(presented_surface, vec![retained_button_record("stable-button", moved.binding.as_deref().expect("moved binding"))]).expect("moved retained document publishes");
+    let mut overlap_document = shell.publish_surface_records(overlap_surface, vec![retained_button_record("overlap-button", overlap.binding.as_deref().expect("overlap binding"))]).expect("overlap retained document publishes");
     crate::interpreter::begin_accessibility_visible_documents();
     paint_retained_button_candidate(&mut shell, presented_surface, &moved_document, hit(moved).rect, &mut input);
     paint_retained_button_candidate(&mut shell, overlap_surface, &overlap_document, hit(overlap).rect, &mut input);
@@ -484,7 +454,6 @@ fn presented_button_press_a_release_b_activates_neither() {
     while !document_a.close_step() {}
     while !document_b.close_step() {}
 }
-
 
 #[test]
 fn pending_select_uses_the_presented_options_and_binding_for_keyboard_input() {

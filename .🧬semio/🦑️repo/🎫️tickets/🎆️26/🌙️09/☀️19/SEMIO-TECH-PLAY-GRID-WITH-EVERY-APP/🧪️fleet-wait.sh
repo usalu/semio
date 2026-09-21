@@ -6,7 +6,7 @@ requests() { ls "$G/activate.request" 2>/dev/null | wc -l | tr -d ' '; }
 n0=$(reports); r0=$(requests); end=$(( $(date +%s) + ${1:-580} ))
 while [ "$(date +%s)" -lt "$end" ]; do
   free=$(df -g /System/Volumes/Data | tail -1 | awk '{print $4}')
-  [ "$(reports)" -gt "$n0" ] && break; [ "$(requests)" -gt "$r0" ] && break; [ "$free" -lt 25 ] && break; sleep 30
+  [ "$(reports)" -gt "$n0" ] && break; [ "$(requests)" -gt "$r0" ] && break; [ "$free" -lt 15 ] && break; sleep 30
 done
 date '+%H:%M:%S'; echo "reports: $(ls 📓️*.md 2>/dev/null | grep -vE 'status|app-boot-defects|audit-artifacts' | tr '\n' ' ')"
 echo "activate requests: $(ls "$G/activate.request" 2>/dev/null | tr '\n' ' ')"

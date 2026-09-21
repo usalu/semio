@@ -103,11 +103,11 @@ pub fn benchmarks_child_from_records(records: &[BenchmarkRecord]) -> ProgramBenc
     store::ArtifactChild::new(scene_id, target).with_local_owner(std::sync::Arc::new(ProgramBenchmarksWorkingTable { records: records.to_vec() }))
 }
 
-/// 🔎 The live `benchmarks` rows behind a snapshot's composed child — the single read call site
+/// 🔎 The `benchmarks` rows this document persists for its composed child — the single read call site
 /// every mutation-diff/panel/report call path in this artifact now uses instead of a direct
-/// `.benchmarks` field. A wire-only child fails soft until host materialization.
+/// `.benchmarks` field — the persisted payload, never the handle's serialization-skipped local owner.
 pub fn program_benchmarks(snapshot: &ProgramSnapshot) -> Vec<BenchmarkRecord> {
-    snapshot.benchmarks.local_owner::<ProgramBenchmarksWorkingTable>().map(|table| table.records.clone()).unwrap_or_default()
+    snapshot.benchmarks_payload.clone()
 }
 //#endregion 🔖️WorkingScene
 
@@ -172,8 +172,10 @@ pub fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowl
     store::ArtifactChild::new(scene_id, target).with_local_owner(std::sync::Arc::new(ProgramKnowledgeWorkingTable { records: records.to_vec() }))
 }
 
+/// 🔎 The `knowledge` rows this document persists for its composed child — see
+/// [`program_benchmarks`].
 pub fn program_knowledge(snapshot: &ProgramSnapshot) -> Vec<KnowledgeRecord> {
-    snapshot.knowledge.local_owner::<ProgramKnowledgeWorkingTable>().map(|table| table.records.clone()).unwrap_or_default()
+    snapshot.knowledge_payload.clone()
 }
 //#endregion 🔖️WorkingScene
 //#endregion 🔖️Knowledge
@@ -188,8 +190,8 @@ pub fn genesis_program_child_pack(snapshot: &ProgramSnapshot, slot: &str, child_
     use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
     use store::ArtifactPack;
     match slot {
-        "knowledge" if child_id == snapshot.knowledge.child_id => Some(<SemioTableSnapshot as ArtifactPack>::encode_pack(&knowledge_table_from_records(&program_knowledge(snapshot)))),
-        "benchmarks" if child_id == snapshot.benchmarks.child_id => Some(<SemioTableSnapshot as ArtifactPack>::encode_pack(&benchmark_table_from_records(&program_benchmarks(snapshot)))),
+        "knowledge" if child_id == snapshot.knowledge.child_id => Some(<SemioTableSnapshot as ArtifactPack>::encode_pack(&knowledge_table_from_records(&snapshot.knowledge_payload))),
+        "benchmarks" if child_id == snapshot.benchmarks.child_id => Some(<SemioTableSnapshot as ArtifactPack>::encode_pack(&benchmark_table_from_records(&snapshot.benchmarks_payload))),
         _ => None,
     }
 }
@@ -353,7 +355,9 @@ pub fn empty_plugin() -> ProgramSnapshot {
         issues: Vec::new(),
         audit_events: Vec::new(),
         templates: Vec::new(),
+        knowledge_payload: Vec::new(),
         knowledge: knowledge_child_from_records(&[]),
+        benchmarks_payload: Vec::new(),
         benchmarks: benchmarks_child_from_records(&[]),
         governance: Governance {
             id: governance_id,
@@ -508,6 +512,53 @@ pub fn sample_plugin() -> ProgramSnapshot {
         source_relationship_id: None,
         internal_external_access: None,
     });
+
+    program.knowledge_payload = vec![KnowledgeRecord {
+        header: EntityHeader::new(EntityId::new_serial("knowledge", "knowledge"), "Clinic Reception Sightlines"),
+        topic: "Reception".into(),
+        category: "Wayfinding".into(),
+        summary: TextField::plain("Keep the waiting area in direct sight of the reception desk."),
+        content: TextField::plain("Staff at the reception desk must see every seat of the waiting area without standing up; this shortens perceived wait times and removes the need for a second supervision post."),
+        sources: vec!["Sample Health facility review 2025".into()],
+        references: Vec::new(),
+        lessons_learned: vec!["A single sightline removes one supervision post.".into()],
+        best_practices: vec!["Place the desk on the waiting area's long axis.".into()],
+        applicable_sectors: vec!["healthcare".into()],
+        related_entity_kinds: vec!["element".into()],
+        author_ids: Vec::new(),
+        expertise_level: Some("practitioner".into()),
+        validation_status: ValidationStatus::Pending,
+        last_reviewed: None,
+        keywords: vec!["reception".into(), "sightline".into()],
+        attachments: Vec::new(),
+        citations: Vec::new(),
+        usage_count: 1,
+    }];
+    program.knowledge = knowledge_child_from_records(&program.knowledge_payload);
+
+    program.benchmarks_payload = vec![BenchmarkRecord {
+        header: EntityHeader::new(EntityId::new_serial("benchmark", "benchmark"), "Outpatient Waiting Area per Seat"),
+        benchmark_name: "Outpatient waiting area per seat".into(),
+        sector: "healthcare".into(),
+        metric: "area-per-seat".into(),
+        value: 3.2,
+        unit: "m2".into(),
+        sample_size: Some(42),
+        source: Some("Sample Health portfolio".into()),
+        collection_year: Some(2025),
+        geography: Some("DE".into()),
+        building_type: Some("clinic".into()),
+        confidence: Some("medium".into()),
+        methodology: Some("Floor areas measured from as-built plans.".into()),
+        applicable_element_kinds: vec!["room".into()],
+        related_requirement_ids: Vec::new(),
+        comparison_notes: vec!["The sample clinic's 40 m2 waiting area seats 12.".into()],
+        limitations: vec!["Single operator, one region.".into()],
+        license: Some("CC-BY-4.0".into()),
+        knowledge_id: None,
+        last_verified: None,
+    }];
+    program.benchmarks = benchmarks_child_from_records(&program.benchmarks_payload);
 
     program
 }

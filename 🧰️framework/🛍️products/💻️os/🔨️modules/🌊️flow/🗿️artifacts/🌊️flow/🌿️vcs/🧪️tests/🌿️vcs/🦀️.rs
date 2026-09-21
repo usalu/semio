@@ -288,4 +288,31 @@ fn diff_json_contract_matches_third_party_oracle() {
         }
     }
 }
+/// 📦️ A real flow document must be OPENABLE as an owned member of a composed document. Until
+/// 2026-09-21 this declared `UnsupportedMemberSnapshotOpen`, whose `step` has exactly one answer —
+/// `Rejected(MemberOpenDiagnostic::Decode)` — so a composed replacement or document archive carrying a
+/// flow member was refused at member-open step 0, always. The declared opener is named here so a
+/// regression back to the rejecting one fails loudly instead of silently refusing every flow member.
+#[test]
+fn flow_opens_as_an_owned_member_through_its_own_pack_codec() {
+    assert_eq!(
+        std::any::type_name::<<FlowHostSnapshot as crate::os_store::MemberStoreOwner<FlowMutation>>::SnapshotOpen>(),
+        std::any::type_name::<crate::os_store::PackMemberSnapshotOpen<FlowHostSnapshot>>(),
+        "a flow member must open through PackMemberSnapshotOpen"
+    );
+    let snapshot = base();
+    let encoded = crate::os_store::ArtifactPack::encode_pack(&snapshot);
+    let decoded = <FlowHostSnapshot as crate::os_store::ArtifactPack>::decode_pack(&encoded).expect("the member opener's whole-pack decode");
+    assert_eq!(decoded, snapshot, "the opener's decode round-trips the exact member snapshot");
+    let mut cursor = crate::os_store::retirement::RetireOwned::retirement(decoded);
+    for turn in 0..1_000_000 {
+        match cursor.close_step(4_096) {
+            crate::os_store::retirement::RetirementStep::Complete if cursor.terminal_is_empty() => break,
+            crate::os_store::retirement::RetirementStep::BudgetExhausted => panic!("the member opener's owner cursor stalled on turn {turn}"),
+            _ => {}
+        }
+        assert!(turn < 999_999, "the member opener's owner cursor never reached terminal-empty");
+    }
+    snapshot.retire_cold();
+}
 //#endregion 🧪️Laws

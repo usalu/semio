@@ -7,9 +7,14 @@ use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform,
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
     let document = crate::standards::v1::subsets::any::schema::semio_fixture_snapshot();
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
     let bytes = encode(&document);
-    assert_eq!(decode(&bytes).expect("decode"), document);
+    let decoded = decode(&bytes).expect("decode");
+    assert_eq!(decoded, document);
+    // 🧹️ Both documents own a populated asset pool, so they reach the artifact's retirement seam
+    // rather than `RasterOwnedMap`'s fail-closed `Drop`.
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(decoded);
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -77,7 +82,8 @@ async fn pack_round_trips_representative_document() {
             RasterLayerNode::Adjustment { id: "adjust-1".into(), name: "Curves & Co".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "curves".into(), params },
         ],
     };
-    store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+    store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
 }
 
 //#region 🔖️CommandEnvelopeTests
@@ -92,6 +98,10 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::standards::v1::subsets::any::schema::empty_raster_document(), None);
     let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    // 🔐️ The history ledger refuses an insertion from a store without its domain owner catalog
+    // ("edit history insertion requires its exact mutation retirement factory"): a raster store is
+    // built with the artifact's own `raster_document_store_owners`, never bare.
+    store.install_document_store_owners_exact(crate::spr::raster_document_store_owners());
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
@@ -116,5 +126,6 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         .expect("apply");
     let edit: &Edit<RasterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<RasterSnapshot, RasterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
+    store::os_store::test_support::close_plain_test_store(&mut store);
 }
 //#endregion 🔖️CommandEnvelopeTests

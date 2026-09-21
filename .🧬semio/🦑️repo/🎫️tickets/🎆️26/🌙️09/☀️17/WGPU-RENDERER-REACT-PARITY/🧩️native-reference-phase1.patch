@@ -1,0 +1,180 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs
+@@ -10995,28 +10995,50 @@
+                     entered.wait();
+                     release.wait();
+                 }
++                let mut retained_decoded = None;
+                 let output = if scheduled.cancelled.load(Ordering::Acquire) {
++                    retained_decoded = decoded;
+                     NativeReferenceDecodeOutput::Failed
+                 } else if let Some(decoded) = decoded {
+                     let descriptor = SceneRasterDescriptor { width: decoded.width, height: decoded.height, source_digest: decoded.source_digest, source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
+                     let owner = decoded.source_digest[0].wrapping_add(decoded.source_digest[1]).max(1);
+                     match pool.begin(descriptor, owner, SceneRasterWriteMode::Moved) {
+-                        SceneRasterBegin::Reused(lease) => NativeReferenceDecodeOutput::Ready(lease),
+-                        SceneRasterBegin::Writer(writer) => match pool.prepare_moved(writer, decoded.pixels).and_then(|prepared| pool.seal_prepared_moved(prepared)) {
+-                            Ok(lease) => NativeReferenceDecodeOutput::Ready(lease),
+-                            Err((_pixels, _fault)) => {
+-                                let _ = pool.cancel(writer);
+-                                NativeReferenceDecodeOutput::Failed
+-                            }
+-                        },
++                        SceneRasterBegin::Reused(lease) => {
++                            retained_decoded = Some(decoded);
++                            NativeReferenceDecodeOutput::Ready(lease)
++                        }
++                        SceneRasterBegin::Writer(writer) => {
++                            let DecodedReferenceImage { width, height, source_digest, pixels } = decoded;
++                            match pool.prepare_moved(writer, pixels).and_then(|prepared| pool.seal_prepared_moved(prepared)) {
++                                Ok(lease) => NativeReferenceDecodeOutput::Ready(lease),
++                                Err((pixels, _fault)) => {
++                                    let _ = pool.cancel(writer);
++                                    retained_decoded = Some(DecodedReferenceImage { width, height, source_digest, pixels });
++                                    NativeReferenceDecodeOutput::Failed
++                                }
++                            }
++                        }
+                         SceneRasterBegin::Backpressure(_) => NativeReferenceDecodeOutput::Waiting(decoded),
+-                        SceneRasterBegin::Refused(_) => NativeReferenceDecodeOutput::Failed,
++                        SceneRasterBegin::Refused(_) => {
++                            retained_decoded = Some(decoded);
++                            NativeReferenceDecodeOutput::Failed
++                        }
+                     }
+                 } else {
+                     NativeReferenceDecodeOutput::Failed
+                 };
++                if let Some(bytes) = bytes {
++                    let mut retained = scheduled.input.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
++                    assert!(retained.is_none(), "the native reference worker returns one exact encoded owner");
++                    *retained = Some(bytes);
++                }
++                if let Some(decoded) = retained_decoded {
++                    let mut retained = scheduled.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
++                    assert!(retained.is_none(), "the native reference worker returns one exact decoded owner");
++                    *retained = Some(decoded);
++                }
+                 *scheduled.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(output);
+-                scheduled.phase.store(if scheduled.cancelled.load(Ordering::Acquire) { 3 } else { 2 }, Ordering::Release);
++                scheduled.phase.store(if scheduled.cancelled.load(Ordering::Acquire) { 3 } else { 6 }, Ordering::Release);
+                 if let Some(waker) = mailbox.0.waker.lock().expect("runtime completion waker lock").as_ref() {
+                     waker();
+                 }
+@@ -11035,7 +11057,7 @@
+         self.cancelled.store(true, Ordering::Release);
+         loop {
+             let phase = self.phase.load(Ordering::Acquire);
+-            if !matches!(phase, 0 | 2) {
++            if !matches!(phase, 0 | 2 | 6) {
+                 break;
+             }
+             if self.phase.compare_exchange(phase, 3, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+@@ -11063,32 +11085,9 @@
+         self.phase.store(if self.cancelled.load(Ordering::Acquire) { 3 } else { 2 }, Ordering::Release);
+     }
+ 
+-    fn close_step(&self, maximum_items: usize, maximum_bytes: usize) -> NativeReferenceDecodeCloseStep {
+-        self.cancel();
+-        match self.phase.load(Ordering::Acquire) {
+-            1 | 5 => return NativeReferenceDecodeCloseStep::Busy,
+-            4 => return NativeReferenceDecodeCloseStep::Complete,
+-            0 | 2 => return NativeReferenceDecodeCloseStep::Busy,
+-            3 => {}
+-            _ => return NativeReferenceDecodeCloseStep::Busy,
+-        }
++    fn retire_payload_step(&self, maximum_items: usize, maximum_bytes: usize) -> NativeReferenceDecodeCloseStep {
+         if maximum_items == 0 {
+             return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes: 0 };
+-        }
+-        if let Some(output) = self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take() {
+-            match output {
+-                NativeReferenceDecodeOutput::Waiting(decoded) => {
+-                    let mut retained = self.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+-                    assert!(retained.is_none(), "one native reference decode owns at most one decoded image");
+-                    *retained = Some(decoded);
+-                    return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes: 0 };
+-                }
+-                NativeReferenceDecodeOutput::Ready(lease) => {
+-                    let _ = lease.release();
+-                }
+-                NativeReferenceDecodeOutput::Failed => {}
+-            }
+-            return NativeReferenceDecodeCloseStep::Pending { released_items: 1, released_bytes: 0 };
+         }
+         {
+             let mut decoded = self.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+@@ -11120,6 +11119,40 @@
+                 return NativeReferenceDecodeCloseStep::Pending { released_items: 1, released_bytes: 0 };
+             }
+         }
++        NativeReferenceDecodeCloseStep::Complete
++    }
++
++    fn close_step(&self, maximum_items: usize, maximum_bytes: usize) -> NativeReferenceDecodeCloseStep {
++        self.cancel();
++        match self.phase.load(Ordering::Acquire) {
++            1 | 5 => return NativeReferenceDecodeCloseStep::Busy,
++            4 => return NativeReferenceDecodeCloseStep::Complete,
++            0 | 2 => return NativeReferenceDecodeCloseStep::Busy,
++            3 => {}
++            _ => return NativeReferenceDecodeCloseStep::Busy,
++        }
++        if maximum_items == 0 {
++            return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes: 0 };
++        }
++        if let Some(output) = self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take() {
++            match output {
++                NativeReferenceDecodeOutput::Waiting(decoded) => {
++                    let mut retained = self.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
++                    assert!(retained.is_none(), "one native reference decode owns at most one decoded image");
++                    *retained = Some(decoded);
++                    return NativeReferenceDecodeCloseStep::Pending { released_items: 0, released_bytes: 0 };
++                }
++                NativeReferenceDecodeOutput::Ready(lease) => {
++                    let _ = lease.release();
++                }
++                NativeReferenceDecodeOutput::Failed => {}
++            }
++            return NativeReferenceDecodeCloseStep::Pending { released_items: 1, released_bytes: 0 };
++        }
++        let step = self.retire_payload_step(maximum_items, maximum_bytes);
++        if !matches!(step, NativeReferenceDecodeCloseStep::Complete) {
++            return step;
++        }
+         self.phase.store(4, Ordering::Release);
+         NativeReferenceDecodeCloseStep::Complete
+     }
+@@ -12207,9 +12240,12 @@
+                     }
+                     return RendererAssetDecodeTurnKind::Pending;
+                 };
+-                let cancelled = job.cancelled.load(Ordering::Acquire) || !world3d_reference_url_is_current(state, &url);
+-                if cancelled {
+-                    mark_world3d_asset_miss(state, &url);
++                let cancelled = job.cancelled.load(Ordering::Acquire);
++                let stale = !world3d_reference_url_is_current(state, &url);
++                if cancelled || stale {
++                    if stale && !cancelled {
++                        mark_world3d_asset_miss(state, &url);
++                    }
+                     drop(runtime);
+                     job.restore_output(output);
+                     job.cancel();
+@@ -12247,6 +12283,16 @@
+                 }
+             }
+             5 => RendererAssetDecodeTurnKind::Pending,
++            6 => {
++                if matches!(job.retire_payload_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), NativeReferenceDecodeCloseStep::Complete) {
++                    let next = if job.cancelled.load(Ordering::Acquire) { 3 } else { 2 };
++                    let _ = job.phase.compare_exchange(6, next, Ordering::AcqRel, Ordering::Acquire);
++                }
++                if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
++                    waker();
++                }
++                RendererAssetDecodeTurnKind::Pending
++            }
+             _ => {
+                 self.record_frame_fault("native reference decode entered an invalid phase");
+                 RendererAssetDecodeTurnKind::Fault

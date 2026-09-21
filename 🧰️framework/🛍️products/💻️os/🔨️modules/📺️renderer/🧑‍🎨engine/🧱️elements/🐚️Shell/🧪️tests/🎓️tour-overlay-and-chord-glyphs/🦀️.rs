@@ -54,9 +54,7 @@ fn paint_tour(shell: &mut ShellState, theme: &Theme) -> PaintedTour {
     assert!(complete, "🎓️ the tour walk terminates");
     assert_eq!(shell.error, None, "🎓️ and leaves no retained fault");
     let card_region = overlay.layers.iter().find_map(|layer| layer.foreground_of);
-    let quads_of = |foreground: bool| -> Vec<[f32; 4]> {
-        overlay.layers.iter().filter(|layer| layer.foreground_of.is_some() == foreground).flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.rect).collect()
-    };
+    let quads_of = |foreground: bool| -> Vec<[f32; 4]> { overlay.layers.iter().filter(|layer| layer.foreground_of.is_some() == foreground).flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.rect).collect() };
     PaintedTour {
         quads: overlay.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.rect).collect(),
         glass: overlay.glass_regions.iter().enumerate().filter(|(index, _)| card_region == Some(*index)).map(|(_, region)| region.rect).collect(),
@@ -482,13 +480,7 @@ fn the_footer_counter_paints_its_whole_step_of_the_total() {
     // 🔠️ Only the label: the chip's four hairline strokes all start on its own edge, so insetting by
     // one `--ui-spacing` leaves exactly the glyph quads. The vertical band is generous because a
     // bitmap-fallback cell is taller than the `--text-xs` box it sits in.
-    let glyphs = painted
-        .foreground
-        .iter()
-        .filter(|rect| {
-            rect[0] >= counter.x + theme.padding_standard && rect[0] < counter.x + counter.w - theme.padding_standard && rect[1] > counter.y - counter.h && rect[1] < counter.y + counter.h
-        })
-        .count();
+    let glyphs = painted.foreground.iter().filter(|rect| rect[0] >= counter.x + theme.padding_standard && rect[0] < counter.x + counter.w - theme.padding_standard && rect[1] > counter.y - counter.h && rect[1] < counter.y + counter.h).count();
     assert_eq!(glyphs, layout.counter_text.chars().count(), "🎓️ every scalar of `{}` is painted, none clipped off the end", layout.counter_text);
 }
 
@@ -559,12 +551,7 @@ fn every_overlay_sheet_with_a_glass_region_encodes_its_glyphs_in_the_foreground_
 
     let theme = Theme::light();
     let mut shell = ShellState::new(Vec::new(), String::new());
-    shell.context_menu = Some(ContextMenuState {
-        x: 100.0,
-        y: 100.0,
-        items: vec![ContextMenuItem { id: "menu.one".into(), label: "Duplicate".into(), icon: Some("copy".into()), ..Default::default() }],
-        ..Default::default()
-    });
+    shell.context_menu = Some(ContextMenuState { x: 100.0, y: 100.0, items: vec![ContextMenuItem { id: "menu.one".into(), label: "Duplicate".into(), icon: Some("copy".into()), ..Default::default() }], ..Default::default() });
     let mut overlay = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();

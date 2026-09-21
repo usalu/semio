@@ -213,22 +213,25 @@ async fn graph_scenes_have_lod_json() {
 #[semio_framework_async_macros::async_test]
 async fn app_definition_declares_reorganize_and_history_actions() {
     let definition = create_rewriting_app();
-    let action_ids: Vec<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|action| action.id.as_str()).collect();
+    let action_ids: Vec<&str> = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).map(|action| action.id.as_str()).collect();
     assert!(action_ids.contains(&"undo"));
     assert!(action_ids.contains(&"reorganize"));
 }
 
 /// ⚖️ LAW: the navbar example picker's verb reaches EVERY window kind. `setActiveExample` is
-/// app-scoped — no `window_kind_action_refs` owns it — so `build_definition` copies it onto every
-/// window, which is what makes the shell's boot dispatch dispatchable from whichever pane happens to
-/// be focused. It was declared nowhere at all, so the very first dispatch of every boot was dropped
-/// `undeclared-action` from `trinity-rewriting-lhs`
-/// (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END, `📓️b3b-trinity-wfc-puzzle.md` §3.1).
+/// app-scoped — no `window_kind_action_refs` owns it — so `try_build_definition` leaves it on the
+/// app roster (`AppDefinition.actions`), which is what makes the shell's boot dispatch dispatchable
+/// from whichever pane happens to be focused: `undeclaredActionDiagnostic` accepts an action found
+/// on a window kind OR on the app itself (`🧱️elements/🛠️ShellHelpers/🟦️.tsx`). It was declared
+/// nowhere at all, so the very first dispatch of every boot was dropped `undeclared-action` from
+/// `trinity-rewriting-lhs` (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END,
+/// `📓️b3b-trinity-wfc-puzzle.md` §3.1).
 #[semio_framework_async_macros::async_test]
-async fn app_definition_declares_set_active_example_on_every_window_kind() {
+async fn app_definition_declares_set_active_example_unscoped_for_every_window_kind() {
     let definition = create_rewriting_app();
-    let owners = definition.window_kinds.iter().filter(|window| window.actions.iter().any(|action| action.id == "setActiveExample")).count();
-    assert_eq!(owners, definition.window_kinds.len(), "setActiveExample must stay unscoped so every window kind declares it");
+    let scoped = definition.window_kinds.iter().filter(|window| window.actions.iter().any(|action| action.id == "setActiveExample")).count();
+    assert!(definition.actions.iter().any(|action| action.id == "setActiveExample"), "setActiveExample must sit on the app roster so every window kind can dispatch it");
+    assert_eq!(scoped, 0, "scoping setActiveExample to one window kind would take it off the app roster and strand the panes that do not own it");
 }
 
 /// ⚖️ LAW: `setActiveExample` answers the id the SHELL sends with a whole-document `LoadDocument`
@@ -288,7 +291,7 @@ async fn trinity_rewriting_labels_translate_panels_in_german() {
     let parameters_json = render(&mut app, TRINITY_REWRITING_PLAY_BODY_PARAMETERS, &view).await;
     assert!(parameters_json.contains("\"Parameter\""));
     let definition = create_rewriting_app();
-    let reset_rule = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resetRule").expect("resetRule action");
+    let reset_rule = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).find(|action| action.id == "resetRule").expect("resetRule action");
     assert_eq!(reset_rule.label.resolve(Terminology::Native, Locale::De), "Regel zurücksetzen");
 }
 

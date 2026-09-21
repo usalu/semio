@@ -1202,6 +1202,7 @@ impl From<InputBuilder> for BuiltNode {
 /// 🔀️ A binary switch — `Component::Toggle`. Build with [`toggle`].
 pub struct ToggleBuilder {
     base: NodeBase,
+    appearance: crate::ToggleAppearance,
     on: bool,
     icon: crate::UiText,
     text: Option<crate::Label>,
@@ -1210,10 +1211,16 @@ pub struct ToggleBuilder {
 /// 🔀️ A toggle currently `on` or off.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn toggle(on: bool) -> ToggleBuilder {
-    ToggleBuilder { base: NodeBase::leaf(), on, icon: crate::UiText::default(), text: None }
+    ToggleBuilder { base: NodeBase::leaf(), appearance: crate::ToggleAppearance::Button, on, icon: crate::UiText::default(), text: None }
 }
 
 impl ToggleBuilder {
+    /// ☑️ Selects the shared binary-control presentation.
+    pub fn appearance(mut self, appearance: crate::ToggleAppearance) -> Self {
+        self.appearance = appearance;
+        self
+    }
+
     /// 🖼️ Sets the icon key.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn icon(mut self, icon: crate::UiText) -> Self {
@@ -1241,7 +1248,7 @@ impl HasBase for ToggleBuilder {
 impl From<ToggleBuilder> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: ToggleBuilder) -> Self {
-        assemble(builder.base, crate::Component::Toggle(crate::ToggleProps { on: builder.on, icon: builder.icon, text: builder.text }))
+        assemble(builder.base, crate::Component::Toggle(crate::ToggleProps { appearance: builder.appearance, on: builder.on, icon: builder.icon, text: builder.text }))
     }
 }
 //#endregion 🔀️Toggle
@@ -1404,16 +1411,23 @@ impl From<ProgressBuilder> for BuiltNode {
 /// [`HasChildren::child`]ren, not inline fields. Build with [`tree`].
 pub struct TreeBuilder {
     base: NodeBase,
+    presentation: crate::TreePresentation,
     interaction_domain: Option<crate::UiText>,
 }
 
 /// 🌲️ An empty tree, ready for [`tree_section`]/[`tree_item`] children.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn tree() -> TreeBuilder {
-    TreeBuilder { base: NodeBase::stack(crate::Axis::Vertical), interaction_domain: None }
+    TreeBuilder { base: NodeBase::stack(crate::Axis::Vertical), presentation: crate::TreePresentation::Standard, interaction_domain: None }
 }
 
 impl TreeBuilder {
+    /// 🌳️ Selects the inherited row and value-column presentation.
+    pub fn presentation(mut self, presentation: crate::TreePresentation) -> Self {
+        self.presentation = presentation;
+        self
+    }
+
     /// 🕹️ Binds this tree to an app-declared `InteractionDefinition` domain.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn interaction_domain(mut self, domain: crate::UiText) -> Self {
@@ -1434,7 +1448,7 @@ impl HasStackLayout for TreeBuilder {}
 impl From<TreeBuilder> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: TreeBuilder) -> Self {
-        assemble(builder.base, crate::Component::Tree(crate::TreeProps { interaction_domain: builder.interaction_domain }))
+        assemble(builder.base, crate::Component::Tree(crate::TreeProps { presentation: builder.presentation, interaction_domain: builder.interaction_domain }))
     }
 }
 

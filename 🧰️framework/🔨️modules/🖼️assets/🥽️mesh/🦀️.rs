@@ -88,10 +88,12 @@ static CATALOG: OnceLock<Result<Vec<MeshAsset>, String>> = OnceLock::new();
 
 /// 🔎️ Current public mesh IDs resolve through the sole explicit catalog; malformed IDs remain errors.
 pub fn resolve_mesh_asset(url: &str) -> Result<&'static MeshAsset, String> {
-    let catalog = CATALOG.get_or_init(|| parse_mesh_delivery_catalog(include_str!("📇️catalog.json"), |path| match path {
-        "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json" => Ok(include_str!("../🌱️metabolism/🎨️representation/📇️catalog.json").into()),
-        _ => Err(format!("Unknown mesh source catalog: {path}")),
-    }));
+    let catalog = CATALOG.get_or_init(|| {
+        parse_mesh_delivery_catalog(include_str!("📇️catalog.json"), |path| match path {
+            "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/📇️catalog.json" => Ok(include_str!("../🌱️metabolism/🎨️representation/📇️catalog.json").into()),
+            _ => Err(format!("Unknown mesh source catalog: {path}")),
+        })
+    });
     catalog.as_ref().map_err(Clone::clone)?.iter().find(|entry| entry.url == url).ok_or_else(|| format!("Unknown mesh asset: {url}"))
 }
 

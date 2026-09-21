@@ -26,6 +26,7 @@ mod tests {
             ops: vec![crate::os_spr::history::OpPayload { text: Some("set x 1".to_string()), binary: None }],
             inverse: Vec::new(),
             meta: None,
+            lane: None,
         }
     }
 

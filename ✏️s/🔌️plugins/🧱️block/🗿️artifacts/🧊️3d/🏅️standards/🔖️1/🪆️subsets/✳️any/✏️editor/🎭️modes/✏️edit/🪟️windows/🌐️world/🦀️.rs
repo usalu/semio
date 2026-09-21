@@ -8,7 +8,7 @@ use crate::editor::block3d::modes::edit::windows::world::transient::Block3dBrush
 use crate::editor::block3d::terminology::Block3dLabels;
 use crate::editor::block3d::world::{visible_representations, world_camera_json, world_instances_json, world_interaction_json, world_meshes_json, world_selection_json, world_vortices_json};
 use crate::editor::block3d::BLOCK3D_PLAY_SURFACE_ID;
-use semio_framework_plugin::{World3dScene, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{world3d_fit_json, World3dScene, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 // 🧬️ Two `SurfaceKind` enums coexist: `WindowKindDefinition` carries the retained `ui_wgpu` one
 // (re-exported by the SDK root), while `scene_surface` takes the semantic contract's — same spelling,
 // different types, so both are imported explicitly (flow's `🌊️main` window does the same).
@@ -61,6 +61,10 @@ pub fn render(definition: &Block3dSnapshot, config: &Block3dConfig, window_id: &
     let mut scene = World3dScene::base(world_camera_json(definition, config), world_meshes_json(definition, &visible), world_instances_json(definition, &visible, &view), world_selection_json(config));
     scene.vortices_json = Some(world_vortices_json(definition, config, &visible, &view, brush_preview));
     scene.interaction_json = Some(world_interaction_json(active_utility));
+    // 🎯️ Frame the document once per document IDENTITY (`block3d_world_fit_revision`): the authored
+    // `camera3d` alone leaves a representation mesh that reaches away from the rim ring outside the
+    // frustum — the curated concrete-forest example showed vortex markers and no geometry at all.
+    scene.fit_json = Some(world3d_fit_json(crate::block3d_world_fit_revision(definition), crate::BLOCK3D_FIT_PADDING, None));
     // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): not wired to `BLOCK3D_INTERACTION_VORTEX`
     // here — this shared scene builder's granularity vocabulary for a plain whole-object pick vs.
     // this app's own vortex/grip picking is not yet verified; left unbound (OS `world` domain

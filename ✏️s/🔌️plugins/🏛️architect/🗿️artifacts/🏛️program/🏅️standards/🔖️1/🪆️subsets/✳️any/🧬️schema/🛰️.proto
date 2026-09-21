@@ -137,11 +137,15 @@ message ProgramArtifact {
   // @state artifact
   repeated TemplateRecord templates = 66;
   // @state artifact
-  semio.os.store.ArtifactChild knowledge = 67;
+  repeated KnowledgeRecord knowledge_payload = 67;
   // @state artifact
-  semio.os.store.ArtifactChild benchmarks = 68;
+  semio.os.store.ArtifactChild knowledge = 68;
   // @state artifact
-  repeated TraceLink traces = 69;
+  repeated BenchmarkRecord benchmarks_payload = 69;
   // @state artifact
-  Governance governance = 70;
+  semio.os.store.ArtifactChild benchmarks = 70;
+  // @state artifact
+  repeated TraceLink traces = 71;
+  // @state artifact
+  Governance governance = 72;
 }

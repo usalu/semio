@@ -132,3 +132,44 @@ audit-visual adc299625bf483222 · audit-artifacts a41c9ecc4a2af26d6 · audit-int
   stdio wasm-release build; all wasm32 cargo must go through their `📜️wasm-build-mutex.sh` (see brief v4).
 - 14:30 stopped the serial baseline sweep (2 crates in 30 min, held the shared build-dir lock ahead of every fix agent); each topic baselines its own crates. Peer-owned plugins (norm, space, sequence, procedural, playbook) get a later run.
 - 14:30 play-stdio DONE: 9 stdio panes (group documents), 28 lanes, play unit 62/62, 69 panes boot on :6033 with 0 errors (📓️play-stdio.md).
+- 14:45 launched stdio-examples ae784cfb650546e45 (curated examples for the 9 stdio panes) and registry-projection a46e3357db7b29e0a (plugin-registry 'live home' test red since the 09-20 home/space rows).
+- 14:50 audit-visual DONE (📓️audit-visual.md): 60/60 ready, 0 refused/panics; content defects: raster + block3d blank,
+  architect stuck "Waiting", reasoning-wires + animate blank, mathematical/generation2d gated (no setActiveExample),
+  wfc3d/gis2d boot the wrong example, and a log-bridge bug emits every extra argument of a debug message as a bare
+  `console.error` (16+ bogus errors on 44/60 panes → strict e2e would fail). Launched console-spam + default-example
+  (Opus); block3d → block-puzzle, reasoning-wires/mathematical → knowledge, animate/architect/writer → knowledge-children.
+  generation2d (procedural) guest code is peer-owned → to hand to the peer.
+- 14:55 registry-projection DONE: isHostPlaygroundFilter now ignores app-pinned host rows (home/space), registry test green (📓️registry-projection.md).
+- 15:05 default-example DONE: no defect — the audit compared example ids to rendered labels; new play law pins
+  label.native.en per curated example (unit 63/63). console-spam DONE (diagnosis): vendored preview2-shim
+  `consoleStream().flush()` releases partial buffers → one console call per fmt fragment; fix is a proposed diff in
+  peer-frozen 🌐️browser-bundle (📓️console-spam.md), asked the peer to apply or allow; verified 16→0 / 172→0 on a
+  patched served copy.
+- 15:20 registry-projection follow-up DONE: launch name prefixes now plugin+artifact+subset folders, assertDistinctLaunchNamePrefixes, registry suite 60/60, play 63/63. Peer approved the browser-bundle log-bridge fix → console-spam applying it.
+- 15:30 console-spam APPLIED (peer-approved): patchPreview2ShimGuestLogLineRelease in browser-bundle materialization + wasi-activation law; laws pass; served vendor byte-identical.
+- 15:35 watchdog raised 10 → 30 min: under load ~70 the raster artifact test binary was SIGKILLed mid-run (~80 tests in) — not a hang.
+- 15:40 stdio-a DONE: all 19 crates green (1 588 tests); ifc Part-21 header conformance, stale fixtures regenerated (📓️stdio-a.md).
+- 16:00 flow DONE (diagnosis + test-side): 58→5 reds in flow-flow, 1 in plugin-flow; remaining 6 are guest/framework (maintenance_step 26-stage rotation tax makes real surfaces unable to close in bound) → proposed diffs handed to the peer (📓️flow.md §5). Fleet told: private CARGO_TARGET_DIR allowed, watchdog 30 min.
+- 16:05 activate.request/raster received; activations are batched into ONE final play activate-dev through the mutex (queue: tc3c pz1 s10 rb1 c7 stdio-a stdio-examples) — asked the peer for a slot before rb1.
+- 16:10 peer granted: mutex slot before rb1 via 📜️wasm-build-mutex-play-slot.sh (fixed ticket 20260921135030-<pid>-play), and 'apply' for flow guest diffs (flow crates only) → flow agent applying.
+- 16:35 raster report: blank composite root cause = raster never enabled stdio-semio conversion-image/-drawing features (no composer → assets {} → zero textures); fixed + retained add-layer-asset id/decode defects + a real hang (4 KiB grant vs 16 KiB pages); artifact crate 186 ok / 43 red (test debt) → agent resumed on the 43.
+- 16:45 stdio-b report: 17/18 artifact crates green (4 828 tests); svg 2 red = XmlDeclaration has no quote slot → agent resumed to land the schema-first fix; plugin-stdio descriptor_is_fresh waits on the queued describe (stdio-examples).
+- 16:50 flow DONE (guest diffs applied with peer approval): flow-flow 251/2, plugin-flow 3/1, 9 extensions green; 3 reds are framework/backbone (routed to peer FP7/S10); found: back-to-back window-config commands drop the second (live defect).
+- 16:55 peer routed flow's 3 framework reds + batch-publication zeros + dropped window-config command to its FL2 slice. knowledge-children report landed.
+- 17:15 engineering report (partial: 6 process3d root causes, energy, sourcing, gisterrain ×2 fixed; open: gismap child projection, gisterrain vectors, process3d rest, fem-3d presence leases, fem-2d wall-clock, gis descriptor) → agent resumed. rb1 (peer 60-component wasm-release) holds the mutex since 16:56 → my activation slot missed; asked peer for ETA/yield; told agents not to block on queued wasm checks.
+- 17:20 queued the full play activate-dev (28 lanes) in the mutex slot right after rb1 (ticket 20260921135200-<pid>-play; peer ETA for rb1 19:00–20:00; tc3d slots behind me). Log 🗑️generated/activation/activate-dev-*.txt.
+- 17:35 requeued the mutex job as 📜️describe-all-then-activate.sh (describe all 34 plugins → play activate-dev): activation lanes copy committed descriptors and never regenerate them; every descriptor is stale (label sweep + new setActiveExample actions). knowledge-children DONE (children content persisted as sibling state fields; architect/writer/animate demos non-empty; residual test debt buckets 1–3), design DONE-partial (draw SIGABRT fixed, layout 92→~10, wfc unmeasured, verification run waits on peer compile).
+- 17:40 stdio-b DONE: XmlDeclaration.quote landed schema-first (xml 97/0), 28/29 targets green; svg's 2 byte-exact laws on an untracked file → restated as tracked fixture + fixpoint laws (agent resumed).
+- 17:50 stdio-b DONE: all 18 artifact crates green (svg laws restated on a tracked fixture). raster pass 2: 202 ok / 22 red (3 RasterDiff defects, 2 composed-child persistence, 13 raster-side, 4 framework proposed) → pass 3 running.
+- 18:20 USAGE LIMIT: seven Opus agents (engineering, media, knowledge, cad-content, knowledge-children, block-puzzle,
+  raster) died mid-edit on the session limit (resets 20:20 Berlin); design's detached poller and the queued
+  describe-all→activate mutex job keep running. Edits are on disk; each topic's STATUS.md + 📓️<topic>.md hold the
+  trail. Resume by SendMessage to the ids above once the limit resets (user said "try again").
+- 20:30 limit reset: resumed raster, engineering, media, knowledge, cad-content, knowledge-children, block-puzzle by
+  SendMessage. Mutex job ran 17:31–19:50 (rb1 run 2 ended early): describe 29/34 ok (failed: stdio, gis, vcs on a missed
+  `XmlDeclaration { quote }` literal site in stdio-semio — stdio-b fixing; puzzle, norm — reasons below), activate-dev
+  staged 25/28 lanes (gis/stdio/vcs component-dev failed on the same error) and then got SIGINT (rc=130, origin
+  unknown). :6033 still serves the 14:21 generation. rb1 run 3 holds the mutex since 20:12; asked the peer for the next
+  slot for a re-run (~25 min, nx-cached).
+- 20:40 describe failures explained: norm wasm-dev component > 256 MiB describe bound (peer-owned, told them); puzzle owned describe() hit the 30-min epoch deadline under load (→ block-puzzle to check eager work at describe time). Re-run queued as 20260921235850-88484-play after the peer's tc3d (~60–90 min).
+- 21:35 mutex ticket moved to 20260921205000-<pid>-play (peer: right after the running s10 restage).

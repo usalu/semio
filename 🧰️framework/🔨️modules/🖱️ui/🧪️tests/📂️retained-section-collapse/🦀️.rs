@@ -112,7 +112,7 @@ fn upward_tree() -> UiNode {
     let mut populated_nested = UiTreeItemNode::base("populated-nested", Label::data("Populated nested"));
     populated_nested.default_open = Some(true);
     populated_nested.items = Some(vec![UiTreeItemNode::base("nested-child", Label::data("Nested child"))]);
-    UiNode::Tree(UiTreeNode {
+    UiNode::Tree(UiTreeNode { presentation: Default::default(),
         sections: vec![
             UiTreeSectionNode { id: "empty-section".into(), label: Some(Label::data("Empty section")), default_open: Some(true), presence: UiPresence::default(), items: Vec::new(), window: None },
             UiTreeSectionNode {
@@ -135,7 +135,7 @@ fn upward_nested_disclosure() -> UiNode {
     let mut branch = UiTreeItemNode::base("branch", Label::data("Branch"));
     branch.default_open = Some(false);
     branch.items = Some(vec![UiTreeItemNode::base("child", Label::data("Child"))]);
-    let tree = UiNode::Tree(UiTreeNode {
+    let tree = UiNode::Tree(UiTreeNode { presentation: Default::default(),
         sections: vec![UiTreeSectionNode {
             id: "section".into(),
             label: Some(Label::data("Section")),

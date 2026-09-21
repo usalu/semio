@@ -16,6 +16,58 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+test("Chromium preserves the exact captured sibling when a new scene is inserted before it", async () => {
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"), "utf8"));
+  const plan = fixture.siblingInsertion as { records: number[][]; receiver: number; terminalReceivers: number; events: string[] };
+  const { chromium } = await import("playwright");
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width: 500, height: 360 } });
+    await page.setContent('<style>body{margin:0;touch-action:none;display:flex}canvas{width:100px;height:100px}</style>');
+    const insert = async (records: number[]) => page.evaluate((records) => {
+      const state = window as unknown as { siblingEvents: { receiver: number; type: string }[]; siblingCapture?: HTMLCanvasElement; siblingPointer?: number };
+      state.siblingEvents ??= [];
+      for (let index = 0; index < records.length; index++) {
+        const receiver = records[index];
+        if (document.querySelector(`canvas[data-receiver="${receiver}"]`)) continue;
+        const canvas = document.createElement("canvas");
+        canvas.dataset.receiver = String(receiver);
+        canvas.addEventListener("pointerdown", (event) => {
+          state.siblingCapture = canvas;
+          state.siblingPointer = event.pointerId;
+          canvas.setPointerCapture(event.pointerId);
+          state.siblingEvents.push({ receiver, type: event.type });
+        });
+        canvas.addEventListener("pointermove", (event) => {
+          if (event.buttons !== 0) state.siblingEvents.push({ receiver, type: event.type });
+        });
+        canvas.addEventListener("pointerup", (event) => state.siblingEvents.push({ receiver, type: event.type }));
+        document.body.insertBefore(canvas, document.body.children.item(index));
+      }
+    }, records);
+    await insert(plan.records[0]);
+    await insert(plan.records[1]);
+    const receiver = page.locator(`canvas[data-receiver="${plan.receiver}"]`);
+    const bounds = await receiver.boundingBox();
+    expect(bounds).not.toBeNull();
+    await page.mouse.move(bounds!.x + bounds!.width / 2, bounds!.y + bounds!.height / 2);
+    await page.mouse.down();
+    await insert(plan.records[2]);
+    expect(await page.evaluate((receiver) => {
+      const state = window as unknown as { siblingCapture: HTMLCanvasElement; siblingPointer: number };
+      return document.querySelector(`canvas[data-receiver="${receiver}"]`) === state.siblingCapture && state.siblingCapture.hasPointerCapture(state.siblingPointer);
+    }, plan.receiver)).toBe(true);
+    await page.mouse.move(450, 300);
+    await page.mouse.up();
+    const events = await page.evaluate(() => (window as unknown as { siblingEvents: { receiver: number; type: string }[] }).siblingEvents);
+    expect(events).toEqual(plan.events.map((type) => ({ receiver: plan.receiver, type })));
+    expect(new Set(events.filter(({ type }) => type === "pointerup").map(({ receiver }) => receiver)).size).toBe(plan.terminalReceivers);
+    console.info("[DEBUG] Chromium kept sibling B captured through A,B to A,C,B and delivered one outside terminal release");
+  } finally {
+    await browser.close();
+  }
+});
+
 test("Chromium retires every pointer capture with its removed scene and admits a fresh owner", async () => {
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"), "utf8"));
   const { chromium } = await import("playwright");

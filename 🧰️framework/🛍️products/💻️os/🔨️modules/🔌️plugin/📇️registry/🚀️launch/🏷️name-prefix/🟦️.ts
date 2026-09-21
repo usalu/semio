@@ -25,22 +25,47 @@ function listArtifactFolderNames(pluginRoot: string, repoRoot: string): readonly
   return readdirSync(directory).filter((name) => name.length > 0 && !name.startsWith("."));
 }
 
+/** @emoji 🔍️ An EXACT taxonomy slug beats a suffix one: `🗄️stdio` holds both the artifact folder
+ * `🧾️json` and the unrelated config leaf `🔣️.json`, and a suffix-first lookup picked whichever
+ * `readdir` happened to yield first. */
 function findArtifactFolder(folders: readonly string[], slug: string): string | undefined {
   const target = slug.toLowerCase();
-  return folders.find((folder) => {
-    const folderSlug = taxonomyFolderSlug(folder).toLowerCase();
-    return folderSlug === target || folderSlug.endsWith(target);
-  });
+  return (
+    folders.find((folder) => taxonomyFolderSlug(folder).toLowerCase() === target) ??
+    folders.find((folder) => taxonomyFolderSlug(folder).toLowerCase().endsWith(target))
+  );
 }
 
-function appArtifactSlug(app: string | undefined): string | undefined {
-  if (!app) return undefined;
-  const match = app.match(/^s\.[^.]+\.([^@]+)@/);
-  return match?.[1];
+/** @emoji 🧬️ Splits a pinned app id `s.<plugin>.<artifact>@<standard>/<subset>#<role>` into the
+ * three taxonomy coordinates its launch name is built from. */
+function appDialect(app: string | undefined): { readonly artifact: string; readonly standard: string; readonly subset: string } | undefined {
+  const match = app?.match(/^s\.[^.]+\.([^@]+)@([^/]+)\/([^#]+)#/);
+  return match ? { artifact: match[1]!, standard: match[2]!, subset: match[3]! } : undefined;
 }
 
-function combinePluginAndArtifact(pluginDirectoryName: string, artifactFolder: string | undefined): string {
+/** @emoji 🪆️ The `🏅️standards/🔖️<standard>/🪆️subsets/<subset>` folder a row pins, or `undefined` for the
+ * wildcard subset every single-dialect row carries. Two rows on the SAME artifact differ only here
+ * (`🗄️stdio`'s `json` vs its `i-json` profile, `xml` vs `valid`), so the segment is what keeps their
+ * launch names apart. */
+function findSubsetFolder(pluginRoot: string, artifactFolder: string, standard: string, subset: string, repoRoot: string): string | undefined {
+  if (subset === "*") return undefined;
+  const standards = join(repoRoot, pluginRoot, "🗿️artifacts", artifactFolder, "🏅️standards");
+  if (!existsSync(standards)) return undefined;
+  const standardFolder = readdirSync(standards).find((folder) => taxonomyFolderSlug(folder).toLowerCase() === standard.toLowerCase());
+  if (!standardFolder) return undefined;
+  const subsets = join(standards, standardFolder, "🪆️subsets");
+  if (!existsSync(subsets)) return undefined;
+  return readdirSync(subsets).find((folder) => taxonomyFolderSlug(folder).toLowerCase() === subset.toLowerCase());
+}
+
+/** @emoji 🧲️ Joins the plugin folder with the artifact folder it pins. A plugin named after its one
+ * artifact reads as `🗒️note`, not `🗒️note🗒️note` — but that collapse may only fire when the plugin
+ * publishes a SINGLE playground row, because the bare plugin folder is also what a plugin-level row
+ * (one naming no `app`, e.g. `🪐️space`'s studio host `s`) resolves to; collapsing a sibling onto it
+ * makes two variants indistinguishable and one of their launchers unbuildable. */
+function combinePluginAndArtifact(pluginDirectoryName: string, artifactFolder: string | undefined, collapseEponymous: boolean): string {
   if (!artifactFolder) return pluginDirectoryName;
+  if (!collapseEponymous) return `${pluginDirectoryName}${artifactFolder}`;
   if (artifactFolder === pluginDirectoryName) return pluginDirectoryName;
   if (taxonomyFolderSlug(artifactFolder) === taxonomyFolderSlug(pluginDirectoryName)) return pluginDirectoryName;
   return `${pluginDirectoryName}${artifactFolder}`;
@@ -51,7 +76,17 @@ function prefixForHostedApp(app: string, playgrounds: readonly PlaygroundEntry[]
   return donor ? playgroundLaunchNamePrefix(donor, repoRoot, playgrounds) : undefined;
 }
 
-/** @emoji 🏷️ Builds the `🛠️dev…` middle segment from plugin deployment folders and artifact taxonomy paths. */
+/**
+ * @emoji 🏷️ Builds the `🛠️dev…` middle segment from plugin deployment folders and artifact taxonomy
+ * paths: `<plugin folder><artifact folder><subset folder>`, each segment a real taxonomy folder name.
+ *
+ * 🔒️ INJECTIVE over playground variants — `🚀️launch/🟦️.ts` names every launcher after this prefix and
+ * only synthesizes the ones the seed has not placed yet, so two variants sharing a prefix silently
+ * cost one of them both of its launchers. The three segments carry exactly what distinguishes two
+ * rows of one crate: the artifact they pin (`🏠️home` vs `🪐️space`), the dialect subset they pin
+ * (`🧾️json` vs its `🛜️i-json` profile), and — through {@link combinePluginAndArtifact} — whether the
+ * row pins an app at all (the studio host `s` keeps the bare `🪐️space`).
+ */
 export function playgroundLaunchNamePrefix(playground: PlaygroundEntry, repoRoot: string, playgrounds: readonly PlaygroundEntry[]): string {
   if (playground.brand?.startsWith("entwerfen-mit-bestand-")) {
     const hosted = playground.app ? prefixForHostedApp(playground.app, playgrounds, repoRoot) : undefined;
@@ -62,30 +97,37 @@ export function playgroundLaunchNamePrefix(playground: PlaygroundEntry, repoRoot
   const pluginDirectoryName = moduleDirectoryName(playground.pluginId);
   const pluginRoot = pluginRootFromCratePath(playground.cratePath);
   const artifactFolders = listArtifactFolderNames(pluginRoot, repoRoot);
+  const collapseEponymous = playgrounds.filter((row) => row.pluginId === playground.pluginId).length === 1;
+  const dialect = appDialect(playground.app);
+  const withArtifact = (artifactFolder: string | undefined): string => {
+    const combined = combinePluginAndArtifact(pluginDirectoryName, artifactFolder, collapseEponymous);
+    if (!artifactFolder || !dialect) return combined;
+    const subsetFolder = findSubsetFolder(pluginRoot, artifactFolder, dialect.standard, dialect.subset, repoRoot);
+    return subsetFolder ? `${combined}${subsetFolder}` : combined;
+  };
 
-  const appSlug = appArtifactSlug(playground.app);
-  if (appSlug) {
-    const artifactFolder = findArtifactFolder(artifactFolders, appSlug);
-    if (artifactFolder) return combinePluginAndArtifact(pluginDirectoryName, artifactFolder);
+  if (dialect) {
+    const artifactFolder = findArtifactFolder(artifactFolders, dialect.artifact);
+    if (artifactFolder) return withArtifact(artifactFolder);
   }
 
   const variantFolder = findArtifactFolder(artifactFolders, playground.variant);
-  if (variantFolder) return combinePluginAndArtifact(pluginDirectoryName, variantFolder);
+  if (variantFolder) return withArtifact(variantFolder);
 
   const hyphenTail = playground.variant.includes("-") ? playground.variant.split("-").pop()! : undefined;
   if (hyphenTail) {
     const tailFolder = findArtifactFolder(artifactFolders, hyphenTail);
-    if (tailFolder) return combinePluginAndArtifact(pluginDirectoryName, tailFolder);
+    if (tailFolder) return withArtifact(tailFolder);
   }
 
   if (playground.variant.startsWith(playground.pluginId)) {
     const suffix = playground.variant.slice(playground.pluginId.length);
     const suffixFolder = findArtifactFolder(artifactFolders, suffix);
-    if (suffixFolder) return combinePluginAndArtifact(pluginDirectoryName, suffixFolder);
+    if (suffixFolder) return withArtifact(suffixFolder);
   }
 
   if (playground.variant === playground.pluginId) return pluginDirectoryName;
-  return combinePluginAndArtifact(pluginDirectoryName, findArtifactFolder(artifactFolders, playground.variant));
+  return withArtifact(findArtifactFolder(artifactFolders, playground.variant));
 }
 
 /** @emoji ✂️ Keeps the renderer marker and the `👤️<slot>` multi-user discriminator after the

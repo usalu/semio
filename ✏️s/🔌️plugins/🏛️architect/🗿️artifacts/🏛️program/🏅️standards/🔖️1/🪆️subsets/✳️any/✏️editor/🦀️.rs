@@ -693,6 +693,8 @@ pub mod behavior {
             "requirements" => upsert_requirement(program, row),
             "relationships" => upsert_relationship_stub(program, row),
             "adjacencies" => upsert_adjacency_stub(program, row),
+            "knowledge" => upsert_knowledge_stub(program, row),
+            "benchmarks" => upsert_benchmark_stub(program, row),
             other => {
                 return Err(PluginError::Csv(format!("unsupported register import: {other}")));
             }
@@ -866,6 +868,70 @@ pub mod behavior {
             source_relationship_id: None,
             internal_external_access: None,
         });
+    }
+    /// 📚️ Header-only upsert for the COMPOSED `knowledge` register — `collect_rows` exports it like
+    /// every other register, so the importer must be able to read its own export back (it could not:
+    /// every `exportRegistersCsv`/`importRegistersCsv` round trip of a document with knowledge rows
+    /// failed with `unsupported register import: knowledge`). Same honest stub shape as
+    /// `upsert_adjacency_stub`: a `RegisterCsvRow` carries only the entity header, so the domain fields
+    /// start empty rather than being invented, and the parent's composed child handle is re-minted from
+    /// the new row set.
+    fn upsert_knowledge_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
+        if program.knowledge_payload.iter().any(|record| record.header.id == row.id) {
+            return;
+        }
+        program.knowledge_payload.push(crate::registers::KnowledgeRecord {
+            header: EntityHeader::new(row.id, row.name),
+            topic: String::new(),
+            category: String::new(),
+            summary: crate::kernel::TextField::plain(""),
+            content: crate::kernel::TextField::plain(""),
+            sources: Vec::new(),
+            references: Vec::new(),
+            lessons_learned: Vec::new(),
+            best_practices: Vec::new(),
+            applicable_sectors: Vec::new(),
+            related_entity_kinds: Vec::new(),
+            author_ids: Vec::new(),
+            expertise_level: None,
+            validation_status: ValidationStatus::Pending,
+            last_reviewed: None,
+            keywords: Vec::new(),
+            attachments: Vec::new(),
+            citations: Vec::new(),
+            usage_count: 0,
+        });
+        program.knowledge = crate::knowledge_child_from_records(&program.knowledge_payload);
+    }
+
+    /// 🏁️ Header-only upsert for the COMPOSED `benchmarks` register — see [`upsert_knowledge_stub`].
+    fn upsert_benchmark_stub(program: &mut ProgramSnapshot, row: RegisterCsvRow) {
+        if program.benchmarks_payload.iter().any(|record| record.header.id == row.id) {
+            return;
+        }
+        program.benchmarks_payload.push(crate::registers::BenchmarkRecord {
+            header: EntityHeader::new(row.id, row.name),
+            benchmark_name: String::new(),
+            sector: String::new(),
+            metric: String::new(),
+            value: 0.0,
+            unit: String::new(),
+            sample_size: None,
+            source: None,
+            collection_year: None,
+            geography: None,
+            building_type: None,
+            confidence: None,
+            methodology: None,
+            applicable_element_kinds: Vec::new(),
+            related_requirement_ids: Vec::new(),
+            comparison_notes: Vec::new(),
+            limitations: Vec::new(),
+            license: None,
+            knowledge_id: None,
+            last_verified: None,
+        });
+        program.benchmarks = crate::benchmarks_child_from_records(&program.benchmarks_payload);
     }
     //#endregion 📤️ExchangeImport
 
@@ -1424,9 +1490,15 @@ impl ArtifactEditor for ArchitectPlayApp {
             "importProgramRequest" => Ok(ArchitectCommand::ImportProgramRequest(import_program_request::ImportProgramRequest {})),
             "importProgram" => Ok(ArchitectCommand::ImportProgram(import_program::ImportProgram { payload: str_field("payload").or_else(|| str_field("dsl")).unwrap_or_default() })),
             "nodeGraphEdit" => Ok(ArchitectCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), dsl::json::to_json_string) })),
+            // 🖼️ An ABSENT `viewport` is the Graph window's own default, not a fault: this action carries
+            // no `action_args` row, so a palette/keybinding dispatch (and the framework's own
+            // `assert_declared_actions_bridge_to_commands` law) hands the bridge no payload at all.
+            // Only a PRESENT but malformed viewport is rejected.
             "nodeGraphViewport" => {
-                let value = args.and_then(|value| value.get("viewport")).cloned().ok_or_else(|| Fault::from("nodeGraphViewport requires viewport"))?;
-                let viewport = dsl::from_dsl_value::<semio_framework_os_kernel::Viewport2d>(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?;
+                let viewport = match args.and_then(|value| value.get("viewport")).cloned() {
+                    Some(value) => dsl::from_dsl_value::<semio_framework_os_kernel::Viewport2d>(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?,
+                    None => graph_window::config::ArchitectGraphWindowConfig::default().viewport,
+                };
                 Ok(ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport }))
             }
             "setAdjacencyKind" => Ok(ArchitectCommand::SetAdjacencyKind(set_adjacency_kind::SetAdjacencyKind {
@@ -1514,9 +1586,15 @@ pub fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
             .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View, "camera"))
             .view_action("selectRegister", LocalizedLabel::native("Select Register", "Register wählen"))
-            .view_action("addElement", LocalizedLabel::native("Add Element", "Element hinzufügen"))
-            .view_action("removeElement", LocalizedLabel::native("Remove Element", "Element entfernen"))
-            .view_action("setAdjacencyField", LocalizedLabel::native("Set Adjacency Field", "Adjazenzfeld setzen"))
+            // 🧬️ These three are DOCUMENT tools (`ARCHITECT_DOCUMENT_TOOL_IDS`, publication lane
+            // `Artifact`, handlers returning `Emit::mutations`), so they must be declared `Mutation`:
+            // the mounted registry enforces kind discipline and refused every one of them with
+            // `View-kind command '<id>' must not emit operations`, which is why they only ever worked
+            // in the registry-less unit harness.
+            .mutation("addElement", LocalizedLabel::native("Add Element", "Element hinzufügen"))
+            .mutation("removeElement", LocalizedLabel::native("Remove Element", "Element entfernen"))
+            .action_destructive("removeElement")
+            .mutation("setAdjacencyField", LocalizedLabel::native("Set Adjacency Field", "Adjazenzfeld setzen"))
             .view_action("runValidation", LocalizedLabel::native("Run Validation", "Validierung ausführen"))
             .view_action("runAnalysis", LocalizedLabel::native("Run Analysis", "Analyse ausführen"))
             .mutation("runReport", LocalizedLabel::native("Run Report", "Bericht erzeugen"))

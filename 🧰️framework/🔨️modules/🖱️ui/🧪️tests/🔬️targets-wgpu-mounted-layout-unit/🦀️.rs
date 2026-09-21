@@ -55,7 +55,7 @@ fn deep_tree(depth: usize) -> (UiTree, NodeId) {
 }
 
 fn text_job(tree: &UiTree, root: NodeId) -> MountedLayoutJob {
-    MountedLayoutJob::try_new(tree, root, MountedLayoutIdentity { surface: UiSurfaceToken::new(3, 7), generation: 11, revision: 13, theme_revision: 17, viewport_revision: 19 }, Theme::default(), 640.0, 480.0, false)
+    MountedLayoutJob::try_new(tree, root, MountedLayoutIdentity { surface: UiSurfaceToken::new(3, 7), generation: 11, revision: 13, theme_revision: 17, viewport_revision: 19 }, Theme::default(), 640.0, 480.0, false, ui_contract::FlowInline::Ltr)
         .unwrap_or_else(|fault| panic!("mounted text job: {fault:?}"))
 }
 

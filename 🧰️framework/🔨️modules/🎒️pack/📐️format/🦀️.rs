@@ -691,10 +691,15 @@ impl<S: PackSink> PackWriter<S> {
         Ok(PackIdentitySegment { owner: self, kind, payload_len, written: 0, crc })
     }
 
+    /// @emoji 🧱️ Opens one `KIND_CHUNK` segment written RAW, whatever codec the pack as a whole
+    /// uses. A chunk is framed with its own `flags = 0`, so a reader takes its codec from the
+    /// segment, not from the pack — and the chunk table indexes each chunk by absolute payload
+    /// offset plus a content hash over the stored bytes, which only lines up while those bytes are
+    /// the payload. Refusing here instead made every large `Bytes64` field unencodable under the
+    /// DEFAULT `EncodeOptions` (`codec: CodecId(1)`): `large_bytes_field_is_chunked_and_round_trips`
+    /// failed at `encode: UnsupportedCodec(1)`, i.e. no document with a blob past
+    /// `chunk_threshold` could be written at all.
     pub async fn begin_identity_chunk(&mut self, payload_len: usize) -> Result<PackIdentityChunk<'_, S>, PackError> {
-        if self.options.codec.0 != 0 {
-            return Err(PackError::UnsupportedCodec(self.options.codec.0));
-        }
         let base = self.sink.position().await;
         let mut length = [0u8; 10];
         let mut remaining = payload_len as u64;

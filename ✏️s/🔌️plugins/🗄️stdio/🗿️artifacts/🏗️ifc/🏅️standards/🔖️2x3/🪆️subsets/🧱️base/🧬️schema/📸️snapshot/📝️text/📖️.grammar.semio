@@ -1,18 +1,42 @@
+# 📖️ Real `store::ArtifactDsl::print_dsl`/`parse_dsl` shape for `Ifc2x3Snapshot` (../🦀️.rs's
+# hand-rolled impl): `schema=<hex> header=<header> instances=<list> edm-preamble=<opt>`, every
+# literal copied verbatim from that printer's own `push_str` calls. The value/instance/header
+# productions are the SAME tag scheme the sibling `🧬️mutations`/`🔺️diff` grammars spell
+# (they share `enc_part21_value`/`enc_part21_header`/`enc_part21_instance`), so all three stay in
+# lock-step. `hex` is the framework's own built-in open-ended hex-digit MACRO (`📖️grammar/🦀️.rs`
+# `macro_hex_ok`) — an UPPERCASE `HEX` is NOT a terminal this dialect has (`terminal_matches`
+# resolves an all-caps symbol against the token KINDS, and there is no `Hex` kind), so it never
+# matched anything and this grammar recognized nothing at all before.
 dialect grammar
 grammar stdio.ifc.2x3.snapshot
 extension ifc
 start document
 
+# `m5_handcrafted_grammar_conformance`/`grammar_conformance_law` feed the Recognizer
+# "<envelope-id>\n<body>" (`SemioEnvelope::envelope_id` = "stdio.ifc.2x3", the real preamble line's
+# trailing "v<n>" already stripped by the harness); the shared lexer treats the newline as trivia.
 document = envelope-mark snapshot
 envelope-mark = "stdio.ifc.2x3"
-snapshot = "schema=" HEX "header=" part21-header "instances=" instance-list "edm-preamble=" optional-preamble
-part21-header = "[" value-list "," value-list "," value-list "]"
-instance-list = "[" {instance {"," instance}*}? "]"
-instance = "[" INT "," "[" {entity {"," entity}*}? "]" "]"
-entity = "[" HEX "," value-list "]"
-value-list = "[" {value {"," value}*}? "]"
-value = "U" | "D" | tagged-value
-tagged-value = IDENT "[" {value-payload}? "]"
-value-payload = HEX | INT | value | value-list | HEX "," value-list
-optional-preamble = "[0]" | "[1," preamble "]"
-preamble = "[" HEX "," HEX "," HEX "," HEX "," HEX "," HEX "," HEX "," HEX "," HEX "," HEX "," HEX "," HEX "," HEX "," HEX "," HEX "," HEX "]"
+snapshot = "schema" "=" hex "header" "=" part21-header "instances" "=" instance-list "edm-preamble" "=" optional-edm-preamble
+
+# `Part21Value`'s tag scheme: `U`/`D` Unset/Derived bare letters, `I[n]` Integer, `R[n]` Real,
+# `S[hex]` Str, `E[hex]` Enum, `F[n]` reFerence, `A[items]` List (recursive), `T[hex,[items]]` Typed.
+part21-value = "U" | "D" | "I" "[" INT "]" | "R" "[" real-num "]" | "S" "[" hex "]" | "E" "[" hex "]" | "F" "[" INT "]" | "A" "[" value-csv "]" | "T" "[" hex "," "[" value-csv "]" "]"
+real-num = INT | FLOAT
+value-csv = {part21-value {"," part21-value}*}?
+part21-value-list = "[" value-csv "]"
+
+# `enc_part21_header`: `[fileDescriptionList,fileNameList,fileSchemaList]` — three self-bracketed
+# `part21-value-list`s (`Part21Header` keeps each HEADER record as a raw `Vec<Part21Value>`).
+part21-header = "[" part21-value-list "," part21-value-list "," part21-value-list "]"
+
+# `enc_part21_instance`: `[id,[entity,entity,...]]` — 1 entry for a simple instance, 2+ for a real
+# spec-legal COMPLEX instance (ISO 10303-21 §4.2). Each entity is `[hexname,ARGSLIST]`.
+entity-item = "[" hex "," part21-value-list "]"
+entity-list = {entity-item {"," entity-item}*}?
+part21-instance = "[" INT "," "[" entity-list "]" "]"
+instance-csv = {part21-instance {"," part21-instance}*}?
+instance-list = "[" instance-csv "]"
+
+optional-edm-preamble = "[" "0" "]" | "[" "1" "," edm-preamble "]"
+edm-preamble = "[" hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "," hex "]"

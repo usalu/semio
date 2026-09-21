@@ -1,5 +1,24 @@
 {
   "version": 1,
+  "siblingInsertion": {
+    "records": [[2], [2, 4], [2, 3, 4]],
+    "receiver": 4,
+    "terminalReceivers": 1,
+    "events": ["pointerdown", "pointermove", "pointerup"]
+  },
+  "sceneIntentPresentation": {
+    "records": [[2, 4], [2, 3, 4]],
+    "receiver": 4,
+    "unchangedUtilities": ["text", "text"],
+    "changedUtilities": ["text", "pan"],
+    "admittedActions": 1,
+    "successorActions": [1, 0]
+  },
+  "barrierScope": [
+    { "name": "participating-current", "sealed": true, "currentRevision": true, "blocks": true },
+    { "name": "hidden-window", "sealed": false, "currentRevision": true, "blocks": false },
+    { "name": "stale-revision", "sealed": true, "currentRevision": false, "blocks": false }
+  ],
   "surfaces": [
     {
       "windowId": "lower-world",

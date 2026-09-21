@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[test]
@@ -66,13 +65,7 @@ fn normalized_host_key_routes_the_platform_os_command_to_the_shell() {
     assert!(crate::shell::key_event_matches_chord(&action, &modifiers, &fixture.collision.matches));
     assert!(!crate::shell::key_event_matches_chord(&action, &modifiers, &fixture.collision.refuses), "control+meta+f must not be reserved by Find's mod+f row");
     let mut interaction = keyboard_interaction();
-    semio_framework_async::block_on(dispatch_normalized_event(
-        &mut interaction,
-        DispatchEvent::KeyDown {
-            key: "f".into(),
-            modifiers: EventModifiers { shift: false, ctrl: true, alt: false, meta: true },
-        },
-    ));
+    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, DispatchEvent::KeyDown { key: "f".into(), modifiers: EventModifiers { shift: false, ctrl: true, alt: false, meta: true } }));
     assert!(interaction.shell.fullscreen_toggle_requested, "the real host ingress reaches apply_os_command");
     assert!(interaction.shell.deferred_actions.is_empty(), "an OS command never enters the guest action lane");
 
@@ -99,23 +92,53 @@ fn normalized_pointer_and_wheel_snapshots_replace_stale_keyboard_modifiers() {
     assert!(interaction.input.modifiers.ctrl && !interaction.input.modifiers.shift, "retained dispatch state uses the pointer event snapshot");
 
     let shift_meta = EventModifiers { shift: true, ctrl: false, alt: false, meta: true };
-    semio_framework_async::block_on(dispatch_normalized_event(
-        &mut interaction,
-        DispatchEvent::PointerDown { pointer, x: -10.0, y: -10.0, button: PointerButton::Primary, modifiers: shift_meta },
-    ));
+    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, DispatchEvent::PointerDown { pointer, x: -10.0, y: -10.0, button: PointerButton::Primary, modifiers: shift_meta }));
     assert!(interaction.modifiers.shift && interaction.modifiers.meta && !interaction.modifiers.ctrl);
     let alt = EventModifiers { shift: false, ctrl: false, alt: true, meta: false };
-    semio_framework_async::block_on(dispatch_normalized_event(
-        &mut interaction,
-        DispatchEvent::PointerUp { pointer, x: -10.0, y: -10.0, button: PointerButton::Primary, modifiers: alt },
-    ));
+    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, DispatchEvent::PointerUp { pointer, x: -10.0, y: -10.0, button: PointerButton::Primary, modifiers: alt }));
     assert!(interaction.modifiers.alt && !interaction.modifiers.shift && !interaction.modifiers.meta);
 
     let none = EventModifiers::default();
-    semio_framework_async::block_on(dispatch_normalized_event(
-        &mut interaction,
-        DispatchEvent::Scroll { x: -10.0, y: -10.0, delta_x: 0.0, delta_y: 1.0, modifiers: none },
-    ));
+    semio_framework_async::block_on(dispatch_normalized_event(&mut interaction, DispatchEvent::Scroll { x: -10.0, y: -10.0, delta_x: 0.0, delta_y: 1.0, modifiers: none }));
     assert!(!interaction.modifiers.shift && !interaction.modifiers.ctrl && !interaction.modifiers.alt && !interaction.modifiers.meta, "a pointer snapshot clears stale positive keyboard state");
     assert!(!interaction.input.modifiers.shift && !interaction.input.modifiers.ctrl && !interaction.input.modifiers.alt && !interaction.input.modifiers.meta);
+}
+
+#[test]
+fn component_close_external_wait_keeps_unrelated_window_ingress_routable() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️component-close-frame-turn/🔣️.json")).expect("component-close frame-turn fixture");
+    assert_ne!(law["closeHost"], law["liveHost"]);
+    assert_eq!(law["maxCloseUnitsPerTurn"], 1);
+    let mut events = ui_host::EventQueue::new();
+    let mut scheduler = ui_render::FrameScheduler::new();
+    let token = ui_host::UiThreadToken::mint_for_host();
+    let mut generation = 0;
+    let pointer = PointerInfo { id: ui_render::PointerId(77), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None };
+    let mut delivered = Vec::new();
+    for turn in law["turns"].as_array().expect("bounded close turns") {
+        assert_eq!(turn["closeOutcome"], "externalWait");
+        assert_eq!(
+            enqueue_host_event(
+                &mut events,
+                &mut scheduler,
+                token,
+                &mut generation,
+                FrameGenerationHold::Free,
+                DispatchEvent::PointerDown {
+                    pointer,
+                    x: turn["inputSequence"].as_u64().expect("input sequence") as f32,
+                    y: 1.0,
+                    button: PointerButton::Primary,
+                    modifiers: EventModifiers::default(),
+                },
+            ),
+            ui_host::EnqueueOutcome::Accepted
+        );
+        let input_generation = events.current_generation();
+        let page = events.drain_page(ui_host::WorkerContext::new(input_generation));
+        assert_eq!(page.discrete.iter().filter(|event| event.is_some()).count(), 1, "the live window keeps its exact discrete event while the unrelated close waits");
+        delivered.push(turn["inputSequence"].as_u64().expect("input sequence"));
+    }
+    assert_eq!(delivered, serde_json::from_value::<Vec<u64>>(law["expected"]["liveInputSequences"].clone()).expect("expected live inputs"));
+    assert!(events.is_empty());
 }

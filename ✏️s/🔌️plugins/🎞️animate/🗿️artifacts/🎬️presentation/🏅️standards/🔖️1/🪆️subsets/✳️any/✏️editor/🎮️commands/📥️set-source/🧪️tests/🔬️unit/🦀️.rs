@@ -62,7 +62,7 @@ async fn set_active_example_demo_emits_a_reset_effect() {
         panic!("expected a LoadDocument effect");
     };
     let loaded = <PresentationSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
-    assert!(crate::presentation_working_scene(&loaded).1.is_empty(), "resetting to demo loads the default deck, which has no tiles");
+    assert_eq!(loaded, crate::demo_presentation_snapshot(), "resetting to demo loads THE demo deck (source figure + its 3x5 tile crops), not the tile-less default document");
 }
 
 #[semio_framework_async_macros::async_test]

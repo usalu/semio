@@ -27,6 +27,7 @@ pub const KIND_INTRODUCING_BORDER: f32 = 9.0;
 
 #[derive(Clone, Copy, Debug)]
 pub struct GlassRegion {
+    pub layer_index: usize,
     pub rect: [f32; 4],
     pub radius: f32,
     pub tint: Rgba,
@@ -131,6 +132,15 @@ impl ClipRegion {
     pub fn from_rects(rects: &[crate::wgpu::geometry::Rect], screen_h: f32) -> Self {
         let scissors = rects.iter().map(|rect| ScissorRect::from_rect(*rect, screen_h)).filter(|rect| rect.w > 0 && rect.h > 0).collect();
         Self { scissors }
+    }
+
+    fn pieces_overlap(&self) -> bool {
+        (0..self.scissors.len()).any(|left| {
+            (left + 1..self.scissors.len()).any(|right| {
+                let overlap = self.scissors[left].intersect(&self.scissors[right]);
+                overlap.w > 0 && overlap.h > 0
+            })
+        })
     }
 
     fn intersect(&self, other: &Self) -> Self {
@@ -424,8 +434,18 @@ impl DrawList {
     }
 
     fn claim_retained_output(&mut self, items: usize, bytes: usize) -> bool {
-        let Some(prepared_items) = self.prepared_items.checked_add(items) else { return false };
-        let Some(prepared_bytes) = self.prepared_bytes.checked_add(bytes) else { return false };
+        let Some(prepared_items) = self.prepared_items.checked_add(items) else {
+            if let Some(grant) = self.retained_output.as_mut() {
+                grant.faulted = true;
+            }
+            return false;
+        };
+        let Some(prepared_bytes) = self.prepared_bytes.checked_add(bytes) else {
+            if let Some(grant) = self.retained_output.as_mut() {
+                grant.faulted = true;
+            }
+            return false;
+        };
         if let Some(grant) = self.retained_output.as_mut() {
             let Some(next_items) = grant.items.checked_add(items) else {
                 grant.faulted = true;
@@ -894,7 +914,12 @@ impl DrawList {
         if !self.claim_retained_output(items, bytes) {
             return;
         }
-        let mut clip = ClipRegion::from_rects(rects, self.screen_h);
+        let candidate = ClipRegion::from_rects(rects, self.screen_h);
+        if candidate.pieces_overlap() {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        }
+        let mut clip = candidate;
         if let Some(parent) = self.clip_stack.last() {
             clip = parent.intersect(&clip);
         }
@@ -915,6 +940,14 @@ impl DrawList {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };
+        let Some(items) = items.checked_add(1) else {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        };
+        let Some(bytes) = bytes.checked_add(size_of::<DrawLayer>()) else {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        };
         if !self.claim_retained_output(items, bytes) {
             return;
         }
@@ -923,10 +956,12 @@ impl DrawList {
         }
         let layer_index = self.layers.len() - 1;
         let layer = &self.layers[layer_index];
+        let following = DrawLayer { scissor: layer.scissor, clip: layer.clip.clone(), foreground_of: layer.foreground_of, ..DrawLayer::default() };
         pass.layer_index = layer_index;
         pass.ui_watermark = layer.ui_instances.len();
         pass.vector_watermark = layer.vector_vertices.len();
         self.scene_passes.push(pass);
+        self.layers.push(following);
     }
 
     pub fn push_solid(&mut self, rect: [f32; 4], color: Rgba) {
@@ -980,11 +1015,13 @@ impl DrawList {
     /// `.🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`) rather than this method
     /// picking a per-tier lookup.
     pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, style: GlassStyle) -> usize {
-        if !self.claim_retained_output(1, size_of::<GlassRegion>()) {
+        if !self.claim_retained_output(2, size_of::<GlassRegion>() + size_of::<DrawLayer>()) {
             return usize::MAX;
         }
         let index = self.glass_regions.len();
-        self.glass_regions.push(GlassRegion { rect, radius, tint: style.tint, alpha: style.alpha, blur_px: style.blur_px, saturate: style.saturate });
+        let layer_index = self.layers.len();
+        self.layers.push(DrawLayer { scissor: self.scissor_stack.last().copied(), clip: self.clip_stack.last().cloned(), foreground_of: self.active_foreground_of(), ..DrawLayer::default() });
+        self.glass_regions.push(GlassRegion { layer_index, rect, radius, tint: style.tint, alpha: style.alpha, blur_px: style.blur_px, saturate: style.saturate });
         index
     }
 

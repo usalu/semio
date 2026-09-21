@@ -9,7 +9,7 @@
 
 use crate::{vortex_kinds_of, Block3dSnapshot};
 use crate::BlockRepresentation;
-use semio_framework_plugin::{world3d_camera_projection_json, world3d_mesh_id_from_url, World3dScene, world3d_selection_json, BuiltNode, UiAssemblyResult, WindowKindDefinition, WorldProjectionConfig};
+use semio_framework_plugin::{world3d_camera_projection_json, world3d_fit_json, world3d_mesh_id_from_url, World3dScene, world3d_selection_json, BuiltNode, UiAssemblyResult, WindowKindDefinition, WorldProjectionConfig};
 use semio_framework_ui_contract::SurfaceKind;
 // 🚧️ SDK GAP: `MeshWindowKit`/`WindowKit` (contract §2.6) are only reachable through the `app`
 // submodule they're declared in — not (yet) in `semio_framework_plugin`'s curated crate-root
@@ -48,6 +48,10 @@ pub fn render(document: &Block3dSnapshot) -> UiAssemblyResult<BuiltNode> {
     let vortices_json = vortices_json(document);
     let mut scene = World3dScene::base(camera_json, meshes_json, instances_json, selection_json);
     scene.vortices_json = Some(vortices_json);
+    // 🎯️ Same one-shot framing law as the editor's world window — a viewer has no camera action at
+    // all (`Block3dViewCommand::Noop`), so an authored `camera3d` that misses the representation mesh
+    // would leave this surface permanently empty with no way for the reader to recover it.
+    scene.fit_json = Some(world3d_fit_json(crate::block3d_world_fit_revision(document), crate::BLOCK3D_FIT_PADDING, None));
     semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::World3d, &scene)
 }
 

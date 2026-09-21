@@ -120,6 +120,13 @@ pub struct HistoryEdit {
     /// required for round-trip — a decoder recomputing inverse/meta from a fresh replay never
     /// touches this field.
     pub meta: Option<Vec<HistoryOpMeta>>,
+    /// @emoji 🛤️ Which undo/redo cursor this edit belongs to, as the document layer's own lane name
+    /// (`crate::os_store::HistoryLane`'s camelCase word). `None` means the default DOCUMENT lane, so
+    /// an ordinary edit costs nothing on the wire. It has to live here and not only on the envelope:
+    /// without it a save/load cycle turned every side-lane edit back into a document edit, and the
+    /// reloaded store's plain `Undo` then reverted an interaction edit that must never be undone
+    /// that way (`history_lane_interaction_entries_survive_owned_document_round_trip`).
+    pub lane: Option<String>,
 }
 
 /// @emoji 🧾️ `binary` carries the `crate::os_spr::command::OpBinary` encoding of this op when the
@@ -371,7 +378,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                 description: header.description,
                 ops: std::mem::take(forwards),
                 inverse: Vec::new(),
-                meta: None,
+                meta: None, lane: None,
             });
         }
     }
@@ -785,6 +792,9 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
     if !edit.inverse.is_empty() {
         presence |= 1 << 5;
     }
+    if edit.lane.is_some() {
+        presence |= 1 << 6;
+    }
     out.write_u8(presence);
     write_id_field(&mut out, &edit.id, dict, &|_: &str| None).await?;
     let mut prev_epoch_ms = crate::os_spr::scalar::write_timestamp(&mut out, &edit.started_at, None);
@@ -800,6 +810,9 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
     }
     if let Some(description) = &edit.description {
         write_str_field(&mut out, description).await;
+    }
+    if let Some(lane) = &edit.lane {
+        write_str_field(&mut out, lane).await;
     }
     if edit.ops.len() as u64 > ProtocolLimits::default().max_op_count_per_edit as u64 {
         return Err(ProtocolError::LimitExceeded("edit op count exceeds ProtocolLimits::max_op_count_per_edit"));
@@ -846,6 +859,7 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
     let _ = prev_epoch_ms;
     let coalesce_key = if presence & (1 << 2) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let description = if presence & (1 << 3) != 0 { Some(read_str_field(&mut input).await?) } else { None };
+    let lane = if presence & (1 << 6) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let op_count = input.read_varint_u64()?;
     let max_ops = ProtocolLimits::default().max_op_count_per_edit as u64;
     if op_count > max_ops {
@@ -877,7 +891,7 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
     } else {
         None
     };
-    Ok(HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse, meta })
+    Ok(HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, inverse, meta, lane })
 }
 //#endregion 🔖️Edit
 

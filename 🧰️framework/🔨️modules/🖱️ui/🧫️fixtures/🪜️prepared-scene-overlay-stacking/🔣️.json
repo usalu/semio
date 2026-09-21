@@ -1,0 +1,50 @@
+{
+  "schema": "semio.ui.prepared-scene-overlay-stacking.v1",
+  "size": [8, 8],
+  "steps": [
+    {
+      "op": "solid",
+      "route": "normal",
+      "id": "main-base",
+      "rect": [0, 0, 8, 8],
+      "rgba": [64, 64, 64, 255]
+    },
+    {
+      "op": "raster",
+      "route": "normal",
+      "id": "main-raster",
+      "rasterKey": "fixture-main-raster",
+      "rect": [4, 0, 4, 2],
+      "rgba": [0, 160, 160, 255]
+    },
+    {
+      "op": "solid",
+      "route": "overlay",
+      "id": "inline-overlay",
+      "rect": [0, 0, 4, 4],
+      "rgba": [255, 192, 0, 255]
+    },
+    {
+      "op": "scene",
+      "route": "scene",
+      "id": "world",
+      "rect": [1, 1, 6, 6],
+      "rgba": [0, 64, 255, 255]
+    },
+    {
+      "op": "solid",
+      "route": "normal",
+      "id": "following-popup",
+      "rect": [0, 0, 2, 2],
+      "rgba": [180, 0, 180, 255]
+    }
+  ],
+  "expectedOrder": ["main-base", "main-raster", "world", "inline-overlay", "following-popup"],
+  "samples": [
+    { "at": [1, 1], "rgba": [180, 0, 180, 255] },
+    { "at": [3, 3], "rgba": [255, 192, 0, 255] },
+    { "at": [5, 5], "rgba": [0, 64, 255, 255] },
+    { "at": [5, 0], "rgba": [0, 160, 160, 255] },
+    { "at": [7, 7], "rgba": [64, 64, 64, 255] }
+  ]
+}

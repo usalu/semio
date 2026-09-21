@@ -8,7 +8,7 @@ async fn document_tree_declares_drop_action() {
     let json = render_body(&mut app, BODY_ARTIFACT).await;
     assert!(json.contains(r#""trigger":"drop""#), "the tree carries a drop-trigger binding: {json}");
     assert!(json.contains("dropQuestionKind"));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    app.close();
 }
 
 #[semio_framework_async_macros::async_test]
@@ -16,7 +16,7 @@ async fn document_lists_steps() {
     let mut app = forms_app().await;
     let json = render_body(&mut app, BODY_ARTIFACT).await;
     assert!(json.contains("forms-play-document.steps"));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    app.close();
 }
 
 #[semio_framework_async_macros::async_test]

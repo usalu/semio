@@ -18,12 +18,10 @@
 //! is never returned to the surface, never placed in a `UiNode`, and never written to the book.
 
 use crate::hub_sign_in::{
-    hub_auth_error_retry_after_seconds, hub_session_mint_request_json, hub_sign_in_error_from_status, hub_sign_in_error_text, hub_sign_in_label, parse_hub_session_mint_result, selected_hub_connection, HubConnectionBook,
-    HubSessionMintResult, HubSessionPhase, HubSessionState, HubSignInCredential, HubSignInErrorCode, HubSignInLabel, HUB_SESSION_MINT_PATH_V1,
+    hub_auth_error_retry_after_seconds, hub_session_mint_request_json, hub_sign_in_error_from_status, hub_sign_in_error_text, hub_sign_in_label, parse_hub_session_mint_result, selected_hub_connection, HubConnectionBook, HubSessionMintResult,
+    HubSessionPhase, HubSessionState, HubSignInCredential, HubSignInErrorCode, HubSignInLabel, HUB_SESSION_MINT_PATH_V1,
 };
-use crate::space_browser::{
-    filter_space_rows, invite_link, space_browser_label, space_row_invitable, space_row_summary, InviteRedemptionErrorCode, SpaceBrowserLabel, SpaceBrowserPhase, SpaceMemberPresence, SpaceRow,
-};
+use crate::space_browser::{filter_space_rows, invite_link, space_browser_label, space_row_invitable, space_row_summary, InviteRedemptionErrorCode, SpaceBrowserLabel, SpaceBrowserPhase, SpaceMemberPresence, SpaceRow};
 use semio_framework::IconName;
 use semio_framework_async::OperationContext;
 use semio_framework_os_kernel::os_directory::client::{DirectoryTransport, HttpMethod, HttpResponse, TransportError};
@@ -299,30 +297,11 @@ fn tagged_row(value: &str, attributes: &[(&str, &str)]) -> UiNode {
 }
 
 fn stack(id: &str, children: Vec<UiNode>) -> UiNode {
-    UiNode::Stack(UiStackNode {
-        direction: "column".into(),
-        gap: None,
-        padding: None,
-        id: Some(id.into()),
-        children,
-        presence: UiPresence::default(),
-        activate: None,
-        drop_action: None,
-        drop_overlay: None,
-        menu: None,
-    })
+    UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some(id.into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
 }
 
 fn button(id: &str, icon_id: IconName, label: &str, action: ActionDescriptor, enabled: bool) -> UiNode {
-    UiNode::Button(UiButtonNode {
-        id: Some(id.into()),
-        icon_id,
-        label: Label::data(label),
-        action,
-        style: None,
-        presence: UiPresence { state: if enabled { UiState::Normal } else { UiState::Disabled }, ..UiPresence::default() },
-        menu: None,
-    })
+    UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id, label: Label::data(label), action, style: None, presence: UiPresence { state: if enabled { UiState::Normal } else { UiState::Disabled }, ..UiPresence::default() }, menu: None })
 }
 
 fn input(id: &str, value: &str, placeholder: &str, action: &str, submit: Option<&str>) -> UiNode {
@@ -354,10 +333,7 @@ fn input(id: &str, value: &str, placeholder: &str, action: &str, submit: Option<
 fn hub_sign_in_section(state: &HubWorkspaceState, locale: Locale) -> UiNode {
     let signed_in = state.session.phase == HubSessionPhase::SignedIn;
     let busy = matches!(state.session.phase, HubSessionPhase::SigningIn | HubSessionPhase::SigningOut);
-    let mut children = vec![tagged_row(
-        hub_sign_in_label(HubSignInLabel::Title, locale),
-        &[("data-semio-hub-phase", state.session.phase.as_str()), ("data-semio-hub-connection", selected_hub_connection(&state.book).id.as_str())],
-    )];
+    let mut children = vec![tagged_row(hub_sign_in_label(HubSignInLabel::Title, locale), &[("data-semio-hub-phase", state.session.phase.as_str()), ("data-semio-hub-connection", selected_hub_connection(&state.book).id.as_str())])];
     for connection in &state.book.connections {
         let selected = connection.id == state.book.selected_id;
         // 🏠️ The bootstrap entry's label is resolved at PAINT time, not stored: the book is built
@@ -376,22 +352,10 @@ fn hub_sign_in_section(state: &HubWorkspaceState, locale: Locale) -> UiNode {
         ));
     }
     if selected_hub_connection(&state.book).kind == crate::hub_sign_in::HubConnectionKind::Remote {
-        children.push(button(
-            &format!("{HUB_SIGN_IN_FORM_ID}.forget"),
-            IconName::Trash2,
-            hub_sign_in_label(HubSignInLabel::ForgetHub, locale),
-            descriptor(action::FORGET_CONNECTION, None),
-            !busy,
-        ));
+        children.push(button(&format!("{HUB_SIGN_IN_FORM_ID}.forget"), IconName::Trash2, hub_sign_in_label(HubSignInLabel::ForgetHub, locale), descriptor(action::FORGET_CONNECTION, None), !busy));
     }
     children.push(input(HUB_ADDRESS_INPUT_ID, &state.address_draft, hub_sign_in_label(HubSignInLabel::HubAddress, locale), action::SET_ADDRESS, Some(action::ADD_CONNECTION)));
-    children.push(button(
-        &format!("{HUB_SIGN_IN_FORM_ID}.add"),
-        IconName::Plus,
-        hub_sign_in_label(HubSignInLabel::AddHub, locale),
-        descriptor(action::ADD_CONNECTION, None),
-        !state.address_draft.trim().is_empty(),
-    ));
+    children.push(button(&format!("{HUB_SIGN_IN_FORM_ID}.add"), IconName::Plus, hub_sign_in_label(HubSignInLabel::AddHub, locale), descriptor(action::ADD_CONNECTION, None), !state.address_draft.trim().is_empty()));
     if signed_in {
         let who = state.display_name.clone().or_else(|| state.session.user_id.clone()).unwrap_or_default();
         children.push(text_row(&format!("{} {who}", hub_sign_in_label(HubSignInLabel::SignedInAs, locale))));
@@ -431,7 +395,10 @@ fn hub_spaces_section(state: &HubWorkspaceState, locale: Locale) -> UiNode {
         button(
             &format!("{HUB_SPACES_LIST_ID}.refresh"),
             IconName::RotateCw,
-            match locale { Locale::En => "Refresh", Locale::De => "Aktualisieren" },
+            match locale {
+                Locale::En => "Refresh",
+                Locale::De => "Aktualisieren",
+            },
             descriptor(action::REFRESH_SPACES, None),
             !matches!(state.phase, SpaceBrowserPhase::Loading | SpaceBrowserPhase::Submitting),
         ),
@@ -513,16 +480,7 @@ fn hub_members_section(state: &HubWorkspaceState, locale: Locale) -> UiNode {
 /// composition. Pure: it reads the state and names verbs, and owns no state of its own, so the same
 /// tree can be asserted in a unit test with no shell, no hub and no GPU.
 pub fn build_hub_workspace_ui(state: &HubWorkspaceState, locale: Locale) -> UiNode {
-    let mut children = vec![
-        button(
-            "framework.hub.close",
-            IconName::X,
-            hub_sign_in_label(HubSignInLabel::Cancel, locale),
-            descriptor(action::CLOSE_WORKSPACE, None),
-            true,
-        ),
-        hub_sign_in_section(state, locale),
-    ];
+    let mut children = vec![button("framework.hub.close", IconName::X, hub_sign_in_label(HubSignInLabel::Cancel, locale), descriptor(action::CLOSE_WORKSPACE, None), true), hub_sign_in_section(state, locale)];
     if state.session.phase == HubSessionPhase::SignedIn || !state.rows.is_empty() {
         children.push(hub_spaces_section(state, locale));
     }

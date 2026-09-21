@@ -8,6 +8,13 @@ async fn raster_image_layer_and_asset_builds_a_pixel_layer_and_matching_asset() 
     assert_eq!(image_key.as_deref(), Some(asset_id.as_str()));
 }
 
+/// 🧹️ Every fixture document below owns a populated asset pool (one `semio/image` child minted
+/// through the real png funnel), so it must reach the artifact's own retirement seam instead of
+/// `RasterOwnedMap`'s fail-closed `Drop`.
+fn retire(document: RasterSnapshot) {
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+}
+
 /// 🧪️ Builds a real one-pixel-layer document whose asset child carries genuinely PNG-encoded
 /// content (through the same `mint_raster_asset_child` funnel every mutation uses), so the
 /// composite tests below exercise the real materialization path and never a fabricated handle.
@@ -29,6 +36,7 @@ async fn composite_flattens_a_pixel_layer_back_to_its_own_canvas() {
     let frame = composite.frames.first().expect("one frame");
     assert_eq!(frame.rgba8.len(), 4 * 2 * 4);
     assert_eq!(&frame.rgba8[..4], &[10, 20, 30, 255]);
+    retire(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -37,6 +45,7 @@ async fn composite_refuses_a_visible_adjustment_layer_with_a_reason() {
     document.layers.push(crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment"));
     let error = raster_composite_image(&document).expect_err("adjustment layers must refuse");
     assert!(error.contains("adjustment layer"), "{error}");
+    retire(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -47,6 +56,7 @@ async fn composite_refuses_an_unknown_blend_mode_with_a_reason() {
     }
     let error = raster_composite_image(&document).expect_err("unknown blend modes must refuse");
     assert!(error.contains("unsupported blend mode"), "{error}");
+    retire(document);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -68,6 +78,8 @@ async fn bmp_export_writes_real_bytes_that_import_reads_back() {
     let composite = raster_composite_image(&reimported).expect("composite of the reimported document");
     assert_eq!((composite.width, composite.height), (3, 2));
     assert_eq!(&composite.frames[0].rgba8[..3], &[200, 100, 50]);
+    retire(reimported);
+    retire(document);
 }
 
 /// 🧪️ A PNG export must carry the 8-byte PNG signature — the single sharpest proof that no leaf
@@ -77,6 +89,7 @@ async fn png_export_writes_a_real_png_signature() {
     let document = document_with_solid_layer(0, 128, 255, 255, 2, 2);
     let bytes = crate::io::export::serializers::artifacts::png::v1_2::any::serialize_bytes(&document).expect("png export");
     assert_eq!(&bytes[..8], &[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A]);
+    retire(document);
 }
 
 /// 🧫️ The one cross-language oracle both implementations of the bmp hop assert. The bun twin
@@ -126,6 +139,7 @@ async fn bmp_export_matches_the_typescript_parity_fixture() {
         let document = parity_document(width, height, rgba8);
         let bytes = crate::io::export::serializers::artifacts::bmp::v_v3::any::serialize_bytes(&document).expect("bmp export");
         assert_eq!(hex_of(&bytes), bmp_hex, "the Rust bmp writer drifted from the TypeScript twin");
+        retire(document);
     }
 }
 
@@ -138,6 +152,7 @@ async fn bmp_import_matches_the_typescript_parity_fixture() {
         let composite = raster_composite_image(&document).expect("composite of the imported document");
         assert_eq!((composite.width, composite.height), (width, height));
         assert_eq!(composite.frames[0].rgba8, rgba8, "the Rust bmp reader drifted from the TypeScript twin");
+        retire(document);
     }
 }
 
@@ -152,6 +167,7 @@ async fn declined_hops_refuse_with_a_reason() {
     assert!(pdf_import.contains("pdf import not supported for a raster document:"), "{pdf_import}");
     let dwg_export = crate::io::export::serializers::artifacts::dwg::v_ac1018::any::serialize_bytes(&document).expect_err("dwg export is declined");
     assert!(dwg_export.contains("dwg export not supported for a raster document:"), "{dwg_export}");
+    retire(document);
 }
 
 /// 🧪️ The two advertised-kind lists must name only formats a leaf really encodes/decodes —

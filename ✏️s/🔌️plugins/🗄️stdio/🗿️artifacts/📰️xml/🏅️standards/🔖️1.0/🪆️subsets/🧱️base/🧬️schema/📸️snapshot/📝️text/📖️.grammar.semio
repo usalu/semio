@@ -39,8 +39,10 @@ opt-doctype = "[" "0" "]" | "[" "1" "," doctype-lit "]"
 opt-declaration = "[" "0" "]" | "[" "1" "," declaration-lit "]"
 bool-lit = "0" | "1"
 
-# `enc_declaration`: `[hex(version),opt-hex(encoding),opt-bool(standalone)]`.
-declaration-lit = "[" hex "," opt-hex "," opt-bool "]"
+# `enc_declaration`: `[hex(version),opt-hex(encoding),opt-bool(standalone),bool-lit(quote)]` --
+# the trailing flag is `XmlQuote` (`0` = the `"` spelling, `1` = `'`), real document state per
+# XML 1.0 §2.8, not retained source text.
+declaration-lit = "[" hex "," opt-hex "," opt-bool "," bool-lit "]"
 
 # `enc_doctype`: `[hex(name),opt-external-id,[dtd-declaration,...]]`.
 doctype-lit = "[" hex "," opt-external-id "," "[" dtd-declaration-list? "]" "]"

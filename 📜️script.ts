@@ -4358,19 +4358,30 @@ function toolJobReactorCloseBounded(reactor: string, requests: string, executor:
   );
 }
 
+/** \ud83d\udcbc\ufe0f There is no opaque-future job path left to fail closed: the reactor's job module admits
+ * ONE registry of `BoundedJobFactory` entries and nothing else, so a test build and a shipped
+ * component admit the same kinds. The oracle used to require the opposite shape — a `JobFn`
+ * registry parked as `JobBody::ExplicitStateMachineRequired` under `#[cfg(not(test))]` — which is
+ * precisely how every builtin kind (`semio.infer`, `semio.io-run`, `semio.io-sniff`,
+ * `semio.mutation-plan`, `semio.migrate`) shipped dead in every production build. It now refuses
+ * the opaque future, the `cfg`-split admission, and a builtin set that is not declared. */
 function toolJobOpaqueFutureProductionFailClosed(jobs: string): boolean {
   const spawnStart = jobs.indexOf("async fn spawn_job(");
   const spawnOpen = spawnStart < 0 ? -1 : jobs.indexOf("{", spawnStart);
   const spawn = spawnOpen < 0 ? undefined : toolJobRustBlock(jobs, spawnOpen);
   return (
     !!spawn &&
-    jobs.includes("#[cfg(test)]\n    static TEST_JOBS_FUTURE_EXECUTOR: super::executor::ColdFutureExecutor") &&
-    !jobs.includes("static JOBS_EXECUTOR: super::executor::ColdFutureExecutor") &&
-    jobs.includes("JobBody::ExplicitStateMachineRequired") &&
-    jobs.includes('"job.explicit-state-machine-required"') &&
-    spawn.body.includes("#[cfg(not(test))]") &&
-    spawn.body.indexOf("JobBody::ExplicitStateMachineRequired") < spawn.body.indexOf("let future = run(") &&
-    spawn.body.includes("#[cfg(test)]")
+    !jobs.includes("executor::ColdFutureExecutor") &&
+    !jobs.includes("pub type JobFn") &&
+    !jobs.includes("pub struct JobCtx") &&
+    !jobs.includes("JobBody::ExplicitStateMachineRequired") &&
+    !jobs.includes('"job.explicit-state-machine-required"') &&
+    jobs.includes("static KIND_REGISTRY: RefCell<HashMap<&'static str, BoundedJobFactory>>") &&
+    jobs.includes("pub const BUILTIN_JOB_KINDS: [&str; 5]") &&
+    jobs.includes("pub type BoundedJobFactory = fn(u64, &[u8], Option<&[u8]>)") &&
+    !spawn.body.includes("#[cfg(") &&
+    spawn.body.includes("JobBody::Bounded(owner)") &&
+    spawn.body.indexOf("JobBody::UnknownKind") < spawn.body.indexOf("JobBody::Bounded(owner)")
   );
 }
 
@@ -5111,8 +5122,8 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, model:
     glue.includes("✏️editor/🧵️session/🦀️.rs") &&
     jobs.includes("pub trait BoundedJob") &&
     jobs.includes("JobBody::Bounded(owner)") &&
-    jobs.includes("#[cfg(not(test))]") &&
-    jobs.includes("JobBody::ExplicitStateMachineRequired") &&
+    !jobs.includes("#[cfg(not(test))]") &&
+    !jobs.includes("JobBody::ExplicitStateMachineRequired") &&
     analyses.includes("pub struct AssemblyJobConstruction") &&
     analyses.includes("AssemblyConstructionStage::ValidateNodePairs") &&
     analyses.includes("AssemblyConstructionStage::DiscoverDofs") &&
@@ -6746,7 +6757,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobRuntimeRegistryFixedClose(plugin, reactor)) failures.push("runtime instance/actor authority still grows, hashes, scans, shifts, blocks, or drops the detached app on InstanceClose");
   if (!toolJobHardBoundedCloseExact(plugin, reactor)) failures.push("instance close still permits implicit nested payload destruction or lacks saturation-safe bounded cleanup job ownership");
   if (!toolJobReactorCloseBounded(reactor, reactorRequests, reactorExecutor)) failures.push("reactor task/request/open-instance close still scans resizable maps/vectors, retains ready queues, or wakes an unbounded waiter list");
-  if (!toolJobOpaqueFutureProductionFailClosed(reactorJobs)) failures.push("production reactor jobs still construct, poll, or implicitly destroy opaque Future ownership without an explicit bounded state machine");
+  if (!toolJobOpaqueFutureProductionFailClosed(reactorJobs)) failures.push("production reactor jobs still carry an opaque Future path, a cfg-split admission, or an undeclared builtin set instead of one bounded state-machine registry");
   if (!toolJobSegmentedTerminalDrainExact(`${plugin}\n${componentWit}`)) failures.push("segmented download authority lacks its exact WIT guest bridge or is removed before the host observes terminal None");
   if (!toolJobLiveInstanceIsolated(plugin)) failures.push("typed operation/cancellation scope does not distinguish live app instances from static owner/controller identity");
   failures.push(...toolJobProofCatalogFailures(allRustFiles, staticRows, dispositions, proofs));
@@ -8606,12 +8617,12 @@ export class VerifyScript extends Script {
   private runInteractivityP5d(): void {
     interactivityMountedPreparedRenderSelfTests(this.root);
     const failures = interactivityMountedPreparedRenderFailures(
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE),
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE),
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE),
-      policyReadFileSafe(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
-      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🖼️frame/🦀️.rs"),
-      policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎬️scene/🦀️.rs"),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE),
+      policyReadRustPolicySource(this.root, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
+      policyReadRustPolicySource(this.root, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🖼️frame/🦀️.rs"),
+      policyReadRustPolicySource(this.root, "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎬️scene/🦀️.rs"),
     );
     if (failures.length > 0) throw new Error(`[verify interactivity p5d] ${failures.join("; ")}`);
     console.log("[verify interactivity p5d] live-source and hostile mutations clean.");
@@ -12101,26 +12112,25 @@ export function interactivityMountedPreparedRenderFailures(preparedSource: strin
     "PreparedRenderJob::try_new(input)",
     "BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>",
     "fuel_per_step: 1",
-    "step_budget_ms: 1",
+    "step_budget_us: 1000",
     "WorkerJobSessionAdmissionRejected",
     "session.begin_close()",
     "session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)",
   ], "P5d mounted caller does not use the shared retained worker session with exact refusal and close");
-  if (preparationBoundary.includes("step_budget_ms: 16")) failures.push("P5d mounted worker deadline exceeds the admitted one-millisecond slice");
+  if (preparationBoundary.includes("step_budget_us: 16000")) failures.push("P5d mounted worker deadline exceeds the admitted one-millisecond slice");
   requireAll(gpuBoundary, [
     "PreparedGpuPresentPhase::ClearScene",
     "PreparedGpuPresentPhase::Commands",
     "PreparedGpuPresentPhase::BlurScene",
-    "PreparedGpuPresentPhase::GlassCommands",
-    "PreparedGpuPresentPhase::ForegroundCommands",
+    "PreparedGpuPresentPhase::SnapshotBackdrop",
+    "PreparedGpuPresentPhase::CompositeGlass",
     "command.draw_cursor()",
-    "encode_prepared_draw_scalar(packet, draw_cursor, overlay_owner, PreparedDrawTarget::Scene)",
-    "encode_prepared_draw_scalar(packet, draw_cursor, overlay_owner, PreparedDrawTarget::Composite)",
+    "encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay())",
+    "prepared_glass_command(packet, cursor.command)?",
+    "blit_prepared_composite(&self.device, &mut encoder, scene.mip_view(0), composite)",
     "cursor.command.checked_add(1)",
-    "cursor.glass_command.checked_add(1)",
-    "cursor.foreground_command.checked_add(1)",
     "cursor.blur_mip.checked_add(1)",
-    "default_now_ms() - started > 2",
+    "admit_prepared_gpu_opportunity(cursor.overrun_run, elapsed)",
     "impl Drop for PreparedGpuPresentCursor",
   ], "P5d GPU consumer does not retain one command/mip/glass/platform opportunity with watchdog and Drop handback");
   for (const forbidden of ["render_prepared(", "finish_prepared(", "render_scene_content(", "composite_to_swapchain(", "run_blur_chain(", "while ", "loop {"])

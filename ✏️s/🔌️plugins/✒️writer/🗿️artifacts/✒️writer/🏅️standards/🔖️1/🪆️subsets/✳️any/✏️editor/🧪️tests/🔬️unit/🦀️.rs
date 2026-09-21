@@ -1,6 +1,6 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members as framework_new_app_with_registry_and_members};
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as framework_new_app_with_registry_and_members};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
     pub const WRITER_TEST_WINDOW_ID: &str = "writer-main-test";
@@ -12,11 +12,40 @@ pub(crate) mod context {
     /// WriterPlayApp implements the AUTHORING trait ArtifactEditor, not the runtime ArtifactApp --
     /// EditorApp<WriterPlayApp> (SDK adapter, contract 2.1) is the real ArtifactApp implementor
     /// VcsArtifactApp wraps, the same way PluginBuilder::editor::<WriterPlayApp> builds it.
-    pub type WriterApp = VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+    type MountedWriterApp = VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+
+    /// 🔒️ Self-closing app handle: every registry-backed app owns Stores that must retire through the
+    /// bounded close protocol before drop (`artifact store reached Drop without its exact terminal-empty
+    /// shallow-shell witness`), so `Drop` runs `close_registered_fixture_app` for every test that returns
+    /// early — a panicking test leaves the witness alone so the FIRST failure stays the reported one.
+    pub struct WriterApp(MountedWriterApp);
+
+    impl std::ops::Deref for WriterApp {
+        type Target = MountedWriterApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for WriterApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for WriterApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
     
     /// 🧪️ Constructs the Writer app with its declared command registry.
     pub async fn new_app() -> WriterApp {
-        framework_new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(writer_app_manifest_for_tests).await
+        let mut app = framework_new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(writer_app_manifest_for_tests).await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        WriterApp(app)
     }
     
     /// Adapts create_writer_app's AppDefinition (contract 2.4) into the App { definition, examples }
@@ -28,7 +57,7 @@ pub(crate) mod context {
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn new_app_with_registry() -> WriterApp {
-        framework_new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(writer_app_manifest_for_tests).await
+        new_app().await
     }
     
     /// ✍️ Loads the canonical jack fixture into the store, returning the app ready to exercise.
@@ -50,13 +79,29 @@ pub(crate) mod context {
     pub async fn dispatch(app: &mut WriterApp, command: WriterCommand) -> InvocationResult {
         let mut meta = meta("local");
         meta.view_state = Some(main_window_view());
-        let result = app.dispatch_typed(command, &meta).await.expect("dispatch");
-        drain_typed_operations(app).await;
+        let mut result = app.dispatch_typed(command, &meta).await.expect("dispatch");
+        result.requested_effects.extend(drain_typed_operations(app).await);
+        for effect in &result.requested_effects {
+            if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
+                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+            }
+        }
         result
+    }
+
+    /// ↩️ An `undo`/`redo` verb is a FRAMEWORK-RESERVED job, not a typed command: admitted, then
+    /// committed through its reserved job, then published — all three steps or the projection never moves.
+    pub async fn history_verb(app: &mut WriterApp, action: &str) -> InvocationResult {
+        let admitted = app.handle_action(action, None, &meta("local")).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
+        let settled = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
+        drain_typed_operations(app).await;
+        settled
     }
     
     /// 🚰️ Completes every admitted retained operation and acknowledges its bounded output pages.
-    pub async fn drain_typed_operations(app: &mut WriterApp) {
+    pub async fn drain_typed_operations(app: &mut WriterApp) -> Vec<semio_framework_plugin::Effect> {
+        let mut effects = Vec::new();
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         while app.has_pending_typed_operations() {
             assert!(std::time::Instant::now() < deadline, "Writer retained operations did not finish");
@@ -68,11 +113,14 @@ pub(crate) mod context {
                 app.acknowledge_typed_operation_result(page.token).expect("Writer retained output acknowledgement");
                 assert_ne!(lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "Writer retained publication fault: {bytes:?}");
             }
-            app.take_typed_operation_effect();
+            while let Some(effect) = app.take_typed_operation_effect() {
+                effects.push(effect);
+            }
             app.take_typed_operation_event();
             app.take_typed_operation_ui_scope();
             std::thread::yield_now();
         }
+        effects
     }
     
     pub async fn render(app: &mut WriterApp, body_key: &str) -> String {

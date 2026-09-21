@@ -103,6 +103,7 @@ pub struct OsHost {
     /// handle for the deadline-scan job plus worker-owned `AppRuntime::frame` transaction.
     pub(crate) frame_build: crate::frame_job::FrameBuildHandle,
     pub(crate) surface_resize: crate::surface_lane::SurfaceResizeAuthority,
+    component_surface_close: Option<ComponentSurfaceCloseOwner>,
 }
 
 struct OsHostRetirementState {
@@ -211,6 +212,260 @@ enum PairedEngineSurfaceClosePhase {
     Witness,
     Advance,
     Terminal,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct ComponentSurfaceCloseToken(u64);
+
+#[derive(Clone)]
+struct ComponentSurfaceCloseRequest {
+    token: ComponentSurfaceCloseToken,
+    owner: crate::interpreter::ScenePointerTarget,
+    engine_token: Option<crate::engine_canvas::EngineSurfaceToken>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ComponentSurfaceCloseBridgeState {
+    Pending,
+    Active,
+    Terminal,
+}
+
+struct ComponentSurfaceCloseBridge {
+    generation: u64,
+    request: Option<ComponentSurfaceCloseRequest>,
+    state: ComponentSurfaceCloseBridgeState,
+}
+
+impl Default for ComponentSurfaceCloseBridge {
+    fn default() -> Self {
+        Self { generation: 0, request: None, state: ComponentSurfaceCloseBridgeState::Terminal }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+thread_local! {
+    static COMPONENT_SURFACE_CLOSE_BRIDGE: std::cell::RefCell<ComponentSurfaceCloseBridge> = std::cell::RefCell::new(ComponentSurfaceCloseBridge::default());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+static COMPONENT_SURFACE_CLOSE_BRIDGE: std::sync::OnceLock<std::sync::Mutex<ComponentSurfaceCloseBridge>> = std::sync::OnceLock::new();
+
+#[cfg(target_arch = "wasm32")]
+fn with_component_surface_close_bridge<R>(f: impl FnOnce(&mut ComponentSurfaceCloseBridge) -> R) -> R {
+    COMPONENT_SURFACE_CLOSE_BRIDGE.with(|bridge| f(&mut bridge.borrow_mut()))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn with_component_surface_close_bridge<R>(f: impl FnOnce(&mut ComponentSurfaceCloseBridge) -> R) -> R {
+    let mut bridge = COMPONENT_SURFACE_CLOSE_BRIDGE.get_or_init(|| std::sync::Mutex::new(ComponentSurfaceCloseBridge::default())).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    f(&mut bridge)
+}
+
+pub(crate) fn request_component_surface_close(
+    owner: crate::interpreter::ScenePointerTarget,
+    engine_token: Option<crate::engine_canvas::EngineSurfaceToken>,
+) -> Result<ComponentSurfaceCloseToken, (crate::interpreter::ScenePointerTarget, Option<crate::engine_canvas::EngineSurfaceToken>)> {
+    with_component_surface_close_bridge(|bridge| {
+        if bridge.request.is_some() {
+            return Err((owner, engine_token));
+        }
+        let Some(generation) = bridge.generation.checked_add(1).filter(|generation| *generation != 0) else {
+            return Err((owner, engine_token));
+        };
+        bridge.generation = generation;
+        let token = ComponentSurfaceCloseToken(generation);
+        bridge.request = Some(ComponentSurfaceCloseRequest { token, owner, engine_token });
+        bridge.state = ComponentSurfaceCloseBridgeState::Pending;
+        Ok(token)
+    })
+}
+
+pub(crate) fn component_surface_close_terminal(token: ComponentSurfaceCloseToken) -> bool {
+    with_component_surface_close_bridge(|bridge| bridge.request.as_ref().is_some_and(|request| request.token == token) && bridge.state == ComponentSurfaceCloseBridgeState::Terminal)
+}
+
+pub(crate) fn acknowledge_component_surface_close(token: ComponentSurfaceCloseToken) -> bool {
+    with_component_surface_close_bridge(|bridge| {
+        if bridge.request.as_ref().is_none_or(|request| request.token != token) || bridge.state != ComponentSurfaceCloseBridgeState::Terminal {
+            return false;
+        }
+        bridge.request = None;
+        true
+    })
+}
+
+fn take_component_surface_close_request() -> Option<ComponentSurfaceCloseRequest> {
+    with_component_surface_close_bridge(|bridge| {
+        if bridge.state != ComponentSurfaceCloseBridgeState::Pending {
+            return None;
+        }
+        bridge.state = ComponentSurfaceCloseBridgeState::Active;
+        bridge.request.clone()
+    })
+}
+
+fn publish_component_surface_close_terminal(token: ComponentSurfaceCloseToken) -> bool {
+    with_component_surface_close_bridge(|bridge| {
+        if bridge.request.as_ref().is_none_or(|request| request.token != token) || bridge.state != ComponentSurfaceCloseBridgeState::Active {
+            return false;
+        }
+        bridge.state = ComponentSurfaceCloseBridgeState::Terminal;
+        true
+    })
+}
+
+pub(crate) fn component_surface_close_pending() -> bool {
+    with_component_surface_close_bridge(|bridge| bridge.request.is_some() && bridge.state != ComponentSurfaceCloseBridgeState::Terminal)
+}
+
+pub(crate) fn component_surface_close_occupied() -> bool {
+    with_component_surface_close_bridge(|bridge| bridge.request.is_some())
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ComponentSurfaceClosePhase {
+    Asset,
+    World,
+    Inspect,
+    BeginCpu,
+    BeginRaster,
+    BeginGpu,
+    Cpu,
+    Gpu,
+    Raster,
+    Witness,
+    Terminal,
+}
+
+struct ComponentSurfaceCloseOwner {
+    request: ComponentSurfaceCloseRequest,
+    operation: semio_framework_trace::OperationId,
+    sequence: u64,
+    cpu_present: bool,
+    gpu_present: bool,
+    phase: ComponentSurfaceClosePhase,
+    faulted: bool,
+}
+
+impl ComponentSurfaceCloseOwner {
+    fn new(request: ComponentSurfaceCloseRequest) -> Self {
+        Self { request, operation: semio_framework_trace::allocate_operation_id(), sequence: 0, cpu_present: false, gpu_present: false, phase: ComponentSurfaceClosePhase::Asset, faulted: false }
+    }
+
+    fn close_asset_world_step(&mut self, runtime: &RuntimeMailbox) {
+        if self.faulted {
+            return;
+        }
+        match self.phase {
+            ComponentSurfaceClosePhase::Asset => {
+                if runtime.close_component_asset_step(&self.request.owner) {
+                    self.phase = ComponentSurfaceClosePhase::World;
+                }
+            }
+            ComponentSurfaceClosePhase::World => match runtime.close_component_world_step(&self.request.owner, self.operation, &mut self.sequence) {
+                Ok(true) => self.phase = if self.request.engine_token.is_some() { ComponentSurfaceClosePhase::Inspect } else { ComponentSurfaceClosePhase::Terminal },
+                Ok(false) => {}
+                Err(()) => self.faulted = true,
+            },
+            _ => {}
+        }
+    }
+
+    fn close_step(&mut self, runtime: &RuntimeMailbox, presenter: &mut AppPresenter) -> bool {
+        if self.faulted {
+            return false;
+        }
+        if matches!(self.phase, ComponentSurfaceClosePhase::Asset | ComponentSurfaceClosePhase::World) {
+            self.close_asset_world_step(runtime);
+            return self.phase == ComponentSurfaceClosePhase::Terminal;
+        }
+        let Some(engine_token) = self.request.engine_token else { return self.phase == ComponentSurfaceClosePhase::Terminal };
+        match self.phase {
+            ComponentSurfaceClosePhase::Asset | ComponentSurfaceClosePhase::World => {}
+            ComponentSurfaceClosePhase::Inspect => {
+                let cpu = crate::engine_canvas::engine_surface_token_at(usize::from(engine_token.slot)).ok().flatten();
+                let gpu = presenter.engine_surface_token_at(usize::from(engine_token.slot));
+                if cpu.is_some_and(|token| token != engine_token) || gpu.is_some_and(|token| token != engine_token) {
+                    self.faulted = true;
+                    return false;
+                }
+                self.cpu_present = cpu == Some(engine_token);
+                self.gpu_present = gpu == Some(engine_token);
+                self.phase = ComponentSurfaceClosePhase::BeginCpu;
+            }
+            ComponentSurfaceClosePhase::BeginCpu => {
+                if self.cpu_present {
+                    match runtime.begin_engine_surface_close(engine_token) {
+                        Ok(true) => {}
+                        Ok(false) => {
+                            self.faulted = true;
+                            return false;
+                        }
+                        Err(()) => return false,
+                    }
+                }
+                self.phase = ComponentSurfaceClosePhase::BeginRaster;
+            }
+            ComponentSurfaceClosePhase::BeginRaster => match presenter.begin_engine_raster_close(&self.request.owner.host_id) {
+                Ok(true) => self.phase = ComponentSurfaceClosePhase::BeginGpu,
+                Ok(false) => {}
+                Err(_) => self.faulted = true,
+            },
+            ComponentSurfaceClosePhase::BeginGpu => {
+                if self.gpu_present && !presenter.begin_engine_surface_close(engine_token) {
+                    self.faulted = true;
+                    return false;
+                }
+                self.phase = ComponentSurfaceClosePhase::Cpu;
+            }
+            ComponentSurfaceClosePhase::Cpu => {
+                if self.cpu_present && !runtime.close_engine_surface_step(engine_token, self.operation, &mut self.sequence) {
+                    return false;
+                }
+                self.phase = ComponentSurfaceClosePhase::Gpu;
+            }
+            ComponentSurfaceClosePhase::Gpu => {
+                if self.gpu_present {
+                    match presenter.close_engine_surface_step(engine_token) {
+                        Ok(true) => {}
+                        Ok(false) => return false,
+                        Err(_) => {
+                            self.faulted = true;
+                            return false;
+                        }
+                    }
+                }
+                self.phase = ComponentSurfaceClosePhase::Raster;
+            }
+            ComponentSurfaceClosePhase::Raster => match presenter.close_engine_raster_step(&self.request.owner.host_id) {
+                Ok(true) => self.phase = ComponentSurfaceClosePhase::Witness,
+                Ok(false) => {}
+                Err(_) => self.faulted = true,
+            },
+            ComponentSurfaceClosePhase::Witness => {
+                if self.cpu_present && runtime.engine_surface_terminal_is_empty(engine_token) != Ok(true) {
+                    self.faulted = true;
+                    return false;
+                }
+                if self.gpu_present && !presenter.engine_surface_terminal_is_empty(engine_token) {
+                    self.faulted = true;
+                    return false;
+                }
+                if !presenter.engine_raster_terminal_is_empty(&self.request.owner.host_id) {
+                    self.faulted = true;
+                    return false;
+                }
+                self.phase = ComponentSurfaceClosePhase::Terminal;
+            }
+            ComponentSurfaceClosePhase::Terminal => return true,
+        }
+        false
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.phase == ComponentSurfaceClosePhase::Terminal && !self.faulted
+    }
 }
 
 struct PairedEngineSurfaceClose {
@@ -369,6 +624,7 @@ impl OsHost {
             snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, CursorRequest::Default, None)),
             frame_build: crate::frame_job::FrameBuildHandle::new(),
             surface_resize: crate::surface_lane::SurfaceResizeAuthority::new(semio_framework_trace::allocate_operation_id()),
+            component_surface_close: None,
         }
     }
 
@@ -379,11 +635,31 @@ impl OsHost {
     }
 
     pub(crate) fn try_into_retirement(self) -> Result<OsHostRetirement, Self> {
+        if self.component_surface_close.is_some() || component_surface_close_occupied() {
+            return Err(self);
+        }
         let Some(abandonment) = reserve_os_host_retirement_abandonment() else {
             return Err(self);
         };
-        let Self { runtime, presenter, scheduler, clock, caret, hot_swap, frame_generation: _, frame_ready: _, cursor_wake_requested, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build, surface_resize } =
-            self;
+        let Self {
+            runtime,
+            presenter,
+            scheduler,
+            clock,
+            caret,
+            hot_swap,
+            frame_generation: _,
+            frame_ready: _,
+            cursor_wake_requested,
+            platform_fullscreen: _,
+            present_fault: _,
+            events,
+            ui_token,
+            snapshot_sink,
+            frame_build,
+            surface_resize,
+            component_surface_close: _,
+        } = self;
         let state = OsHostRetirementState {
             runtime: Some(runtime),
             presenter: Some(presenter),
@@ -413,6 +689,28 @@ impl OsHost {
 
     pub(crate) fn take_cursor_wake_directive(&mut self) -> Option<infinite_world::world::WorldCursorWakeToken> {
         self.cursor_wake_requested.take()
+    }
+
+    pub(crate) fn advance_component_surface_close(&mut self) -> bool {
+        if self.component_surface_close.is_none() {
+            if self.presenter.has_pending_presentation() || self.frame_build.has_live_session() {
+                return false;
+            }
+            self.component_surface_close = take_component_surface_close_request().map(ComponentSurfaceCloseOwner::new);
+        }
+        let Some(owner) = self.component_surface_close.as_mut() else { return false };
+        if !owner.close_step(&self.runtime, &mut self.presenter) {
+            return true;
+        }
+        if !owner.terminal_is_empty() {
+            return true;
+        }
+        let token = owner.request.token;
+        if !publish_component_surface_close_terminal(token) {
+            return true;
+        }
+        self.component_surface_close = None;
+        false
     }
 }
 
@@ -640,8 +938,6 @@ impl<T> RetirementOwner for Option<T> {
 
 #[cfg(test)]
 include!("../../../🧪️tests/🧊️wgpu-os-host-standalone/🦀️.rs");
-
-
 
 //#endregion 🏠️OsHost
 

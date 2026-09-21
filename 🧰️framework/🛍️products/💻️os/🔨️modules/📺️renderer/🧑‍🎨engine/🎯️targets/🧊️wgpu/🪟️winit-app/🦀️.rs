@@ -83,7 +83,16 @@ fn enqueue_host_event(events: &mut ui_host::EventQueue, scheduler: &mut ui_rende
 
 /// 📐️ The mounted resize-callback core, isolated for the same window-free latency proof as
 /// [`enqueue_host_event`]. GPU surface reconfiguration remains the immediate platform-only step.
-fn enqueue_host_metrics(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, hold: FrameGenerationHold, physical_width: u32, physical_height: u32, scale_factor: f32) -> ui_host::EnqueueOutcome {
+fn enqueue_host_metrics(
+    events: &mut ui_host::EventQueue,
+    scheduler: &mut ui_render::FrameScheduler,
+    ui_token: ui_host::UiThreadToken,
+    frame_generation: &mut u64,
+    hold: FrameGenerationHold,
+    physical_width: u32,
+    physical_height: u32,
+    scale_factor: f32,
+) -> ui_host::EnqueueOutcome {
     let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_metrics", render_frame_operation_id(), semio_framework_trace::Generation(*frame_generation), semio_framework_trace::InteractiveStage::UiEvent);
     let mut next_generation = *frame_generation;
     if hold == FrameGenerationHold::Free && !advance_frame_generation(&mut next_generation) {
@@ -228,6 +237,17 @@ impl OsHost {
     /// argument this fidelity loss never actually exercises on this file's own hand-rolled loop.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn build_and_publish_snapshot(&mut self) {
+        if !self.presenter.holds_presented_input_publication() {
+            let _ = self.runtime.pump_pending_applies(RUNTIME_APPLY_TICK_CREDITS);
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = self.runtime.pump_native_asset();
+            let _ = self.runtime.asset_decode_step();
+        }
+        if self.advance_component_surface_close() {
+            self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
+        }
         if !self.events.is_empty() && self.runtime.has_lossless_capacity() {
             let generation = self.events.current_generation();
             let drained = self.events.drain_page(ui_host::WorkerContext::new(generation));
@@ -242,15 +262,15 @@ impl OsHost {
         let build_generation = semio_framework_trace::Generation(self.frame_generation);
         crate::frame_latency::observe_frame_generation(build_generation.0);
         self.runtime.observe_presentation_input_generation(build_generation.0);
-        // 📮️ One bounded mailbox share per host tick, taken BEFORE the presentation gate — a completion
-        // that arrives while no frame build can run (the interaction state is checked out, or a
-        // presentation is still pending) must still be applied within the next frame.
-        let _ = self.runtime.pump_pending_applies(RUNTIME_APPLY_TICK_CREDITS);
         let runtime = self.runtime.clone();
         // 🩺️ The presentation gate decides whether a frame build runs at all, and a frame build is the
         // ONLY thing that pumps the runtime mailbox — so a gate stuck shut is indistinguishable from
         // "input never dispatched" unless it says who is holding it.
-        crate::log_debug_diagnostic_once_per_transition("frame-gate", self.presenter.has_pending_presentation(), &format!("[DEBUG] os_host frame gate blocked={} {} generation={build_generation:?}", self.presenter.has_pending_presentation(), self.presenter.presentation_gate_shape()));
+        crate::log_debug_diagnostic_once_per_transition(
+            "frame-gate",
+            self.presenter.has_pending_presentation(),
+            &format!("[DEBUG] os_host frame gate blocked={} {} generation={build_generation:?}", self.presenter.has_pending_presentation(), self.presenter.presentation_gate_shape()),
+        );
         let frame_build = &mut self.frame_build;
         let _ = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation));
         // 🖼️ Drive the present cursor for the rest of this tick's interactive share instead of one
@@ -264,47 +284,48 @@ impl OsHost {
         #[cfg(target_arch = "wasm32")]
         let present_deadline_us = semio_framework_job::default_now_us().map(|now| now.saturating_add(semio_framework_job::INTERACTIVE_STEP_CEILING_US / 2));
         loop {
-        match self.presenter.present_step() {
-            Ok(crate::AppPresentStep::Complete { generation, cursor, fullscreen, cursor_wake }) => {
-                if generation.0 != self.frame_generation {
-                    self.scheduler.invalidate(InvalidationReason::INPUT_STATE);
+            match self.presenter.present_step() {
+                Ok(crate::AppPresentStep::Complete { generation, cursor, fullscreen, cursor_wake }) => {
+                    if generation.0 != self.frame_generation {
+                        self.scheduler.invalidate(InvalidationReason::INPUT_STATE);
+                        return;
+                    }
+                    self.platform_fullscreen = fullscreen;
+                    if let Some(token) = cursor_wake {
+                        if self.runtime.acknowledge_world_cursor_wake(&token) {
+                            self.retain_cursor_wake_directive(token);
+                            self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
+                        }
+                    }
+                    let Some(revision) = self.snapshot_sink.next_revision() else {
+                        self.present_fault = Some("render snapshot revision exhausted".to_string());
+                        return;
+                    };
+                    let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::FrameLatencyAuthority::renderer_frame(generation.0), crate::frame_latency::FrameLatencyStage::SnapshotPublish, 1);
+                    self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, semio_cursor_to_request(cursor), None));
+                }
+                Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
+                Ok(crate::AppPresentStep::RetryRuntime) => {
+                    self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
                     return;
                 }
-                self.platform_fullscreen = fullscreen;
-                if let Some(token) = cursor_wake {
-                    if self.runtime.acknowledge_world_cursor_wake(&token) {
-                        self.retain_cursor_wake_directive(token);
+                Ok(crate::AppPresentStep::AwaitingRuntime) => return,
+                Ok(crate::AppPresentStep::Idle) => return,
+                Err(error) => {
+                    crate::log_debug(&format!("[DEBUG] os_host present_step faulted: {error}"));
+                    self.present_fault = Some(error);
+                    if self.presenter.has_pending_presentation() {
                         self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
                     }
-                }
-                let Some(revision) = self.snapshot_sink.next_revision() else {
-                    self.present_fault = Some("render snapshot revision exhausted".to_string());
                     return;
-                };
-                let _latency = crate::frame_latency::FrameLatencyTimer::start(
-                    crate::frame_latency::FrameLatencyAuthority::renderer_frame(generation.0),
-                    crate::frame_latency::FrameLatencyStage::SnapshotPublish,
-                    1,
-                );
-                self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, semio_cursor_to_request(cursor), None));
-            }
-            Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
-            Ok(crate::AppPresentStep::Idle) => return,
-            Err(error) => {
-                crate::log_debug(&format!("[DEBUG] os_host present_step faulted: {error}"));
-                self.present_fault = Some(error);
-                if self.presenter.has_pending_presentation() {
-                    self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
                 }
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            return;
+            #[cfg(target_arch = "wasm32")]
+            if present_deadline_us.is_none_or(|deadline| semio_framework_job::default_now_us().is_none_or(|now| now >= deadline)) {
                 return;
             }
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        return;
-        #[cfg(target_arch = "wasm32")]
-        if present_deadline_us.is_none_or(|deadline| semio_framework_job::default_now_us().is_none_or(|now| now >= deadline)) {
-            return;
-        }
         }
     }
 
@@ -419,13 +440,15 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
                 app.text_fault = Some(error);
             }
         }
-        DispatchEvent::TextEditChunk { stream, text } => {
-            match crate::interpreter::push_focused_ink_clipboard_stream(stream, &text) {
-                Ok(true) => {}
-                Ok(false) => if let Err(error) = app.push_text_operation(stream, text) { app.text_fault = Some(error) },
-                Err(error) => app.text_fault = Some(error.to_string()),
+        DispatchEvent::TextEditChunk { stream, text } => match crate::interpreter::push_focused_ink_clipboard_stream(stream, &text) {
+            Ok(true) => {}
+            Ok(false) => {
+                if let Err(error) = app.push_text_operation(stream, text) {
+                    app.text_fault = Some(error)
+                }
             }
-        }
+            Err(error) => app.text_fault = Some(error.to_string()),
+        },
         DispatchEvent::TextEditCommit { stream } => {
             if crate::interpreter::commit_focused_ink_clipboard_stream(stream, &mut app.input) {
                 return;

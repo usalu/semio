@@ -557,11 +557,7 @@ pub mod layout {
         let items = context_menu_normalize_separators(recursed);
         let items = context_menu_merge_group_rows(items);
         let interactive_count = items.iter().filter(|item| item.separator != Some(true)).count();
-        if interactive_count <= CONTEXT_MENU_ROW_BUDGET {
-            context_menu_emit_within_budget(items)
-        } else {
-            context_menu_emit_over_budget(items, category_of)
-        }
+        if interactive_count <= CONTEXT_MENU_ROW_BUDGET { context_menu_emit_within_budget(items) } else { context_menu_emit_over_budget(items, category_of) }
     }
 
     /// 🗂️ Declarative input row for `build_shell_context_menu_specs` — Rust twin of the TS `ShellMenuAction`
@@ -1728,21 +1724,13 @@ pub mod role_chrome {
 
     /// 🗣️ Context-menu/palette entry — contract freeze §5: en `"Open with…"` / de `"Öffnen mit…"`.
     pub fn open_with_label_text(is_de: bool) -> &'static str {
-        if is_de {
-            "Öffnen mit…"
-        } else {
-            "Open with…"
-        }
+        if is_de { "Öffnen mit…" } else { "Open with…" }
     }
 
     /// 🗣️ "Set as default" toggle — contract freeze §5: en `"Set as default"` / de `"Als Standard
     /// festlegen"`.
     pub fn set_as_default_label_text(is_de: bool) -> &'static str {
-        if is_de {
-            "Als Standard festlegen"
-        } else {
-            "Set as default"
-        }
+        if is_de { "Als Standard festlegen" } else { "Set as default" }
     }
     //#endregion 🔖️FrozenStrings
 
@@ -1900,8 +1888,8 @@ pub mod ui {
     use std::collections::HashMap;
 
     //#region 🔖Action
-    pub use super::layout::{build_shell_context_menu_specs, context_menu_group_label, organize_context_menu, ribbon_parent_label, ShellMenuAction, CONTEXT_MENU_GROUP_ID_PREFIX, CONTEXT_MENU_OVERFLOW_CATEGORY, RIBBON_PARENT_CATEGORIES};
     pub use super::layout::{ActionDescriptor, StyleSpec, UiPeerMark, UiPresence, UiState, UiStatus};
+    pub use super::layout::{CONTEXT_MENU_GROUP_ID_PREFIX, CONTEXT_MENU_OVERFLOW_CATEGORY, RIBBON_PARENT_CATEGORIES, ShellMenuAction, build_shell_context_menu_specs, context_menu_group_label, organize_context_menu, ribbon_parent_label};
     pub use super::layout::{ContextMenuHit, ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, ContextMenuTextContext, UiMenuRef};
     //#endregion 🔖Action
 
@@ -2102,6 +2090,9 @@ pub mod ui {
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
     pub struct UiToggleNode {
+        #[serde(default, skip_serializing_if = "ui_contract::ToggleAppearance::is_button")]
+        #[value(default, skip_serializing_if = "ui_contract::ToggleAppearance::is_button")]
+        pub appearance: ui_contract::ToggleAppearance,
         pub id: String,
         pub icon_id: IconName,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -2522,6 +2513,9 @@ pub mod ui {
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
     pub struct UiTreeNode {
+        #[serde(default, skip_serializing_if = "ui_contract::TreePresentation::is_standard")]
+        #[value(default, skip_serializing_if = "ui_contract::TreePresentation::is_standard")]
+        pub presentation: ui_contract::TreePresentation,
         pub sections: Vec<UiTreeSectionNode>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
         #[value(default, skip_serializing_if = "UiPresence::is_default")]
@@ -2691,7 +2685,7 @@ pub mod ui {
             menu: None,
             id: id.clone(),
             label: label.into(),
-            child: Box::new(UiNode::Toggle(UiToggleNode { menu: None, id, icon_id: icon_id.into(), text: None, on_change: action, presence: UiPresence::selected(mixed.pressed) })),
+            child: Box::new(UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, menu: None, id, icon_id: icon_id.into(), text: None, on_change: action, presence: UiPresence::selected(mixed.pressed) })),
             description: None,
             required: None,
             error: None,
@@ -2744,7 +2738,7 @@ pub mod ui {
             tree_sections.push(UiTreeSectionNode { window: None, id: section.id.clone(), label: section.label.clone(), default_open: Some(section.default_open.unwrap_or(true)), presence: section.presence.clone(), items });
         }
         UiNode::Tree(if tree_sections.is_empty() {
-            UiTreeNode {
+            UiTreeNode { presentation: Default::default(),
                 menu: None,
                 sections: vec![UiTreeSectionNode {
                     window: None,
@@ -2776,7 +2770,7 @@ pub mod ui {
                 drop_action: None,
             }
         } else {
-            UiTreeNode { menu: None, sections: tree_sections, presence: UiPresence::default(), drop_action: None, interaction_domain: None }
+            UiTreeNode { presentation: Default::default(), menu: None, sections: tree_sections, presence: UiPresence::default(), drop_action: None, interaction_domain: None }
         })
     }
 
@@ -3021,14 +3015,14 @@ pub mod ui {
     // own `🦀️scenes.rs` header for why (that crate is wasm-safe and depends on nothing beyond
     // `ui_contract`/`serde`, so it cannot carry either type).
     pub use ui_scene::{
-        canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal,
-        canvas2d_snapshot_terminal_is_empty, canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, decode as decode_surface_doc, encode as encode_surface_doc, world3d_snapshot_abort_write, world3d_snapshot_abort_write_step,
-        world3d_snapshot_admit_page, world3d_snapshot_begin, world3d_snapshot_begin_close, world3d_snapshot_claim_draw_permit, world3d_snapshot_close_step, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page,
-        world3d_snapshot_write_terminal_is_empty, BlockListScene, Board2dScene, Canvas2dRejectedSnapshotPage, Canvas2dScene, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken,
-        DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasInteractionDomain, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
-        NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dRejectedSnapshotPage, World3dScene, World3dSnapshotDescriptor,
-        World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken, WORLD3D_SNAPSHOT_PAGE_CAPACITY,
-        WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
+        BlockListScene, Board2dScene, Canvas2dRejectedSnapshotPage, Canvas2dScene, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken, DiffViewScene, EventFeedScene,
+        GraphTimelineScene, IconRenderScene, InkCanvasInteractionDomain, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord,
+        NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, WORLD3D_SNAPSHOT_PAGE_CAPACITY,
+        WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, World3dRejectedSnapshotPage, World3dScene, World3dSnapshotDescriptor, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage,
+        World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken, canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close,
+        canvas2d_snapshot_close_step, canvas2d_snapshot_seal, canvas2d_snapshot_terminal_is_empty, canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, decode as decode_surface_doc, encode as encode_surface_doc,
+        world3d_snapshot_abort_write, world3d_snapshot_abort_write_step, world3d_snapshot_admit_page, world3d_snapshot_begin, world3d_snapshot_begin_close, world3d_snapshot_claim_draw_permit, world3d_snapshot_close_step, world3d_snapshot_seal,
+        world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page, world3d_snapshot_write_terminal_is_empty,
     };
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
@@ -3642,11 +3636,7 @@ pub mod ui {
         while index < bytes.len() && is_ident(bytes[index]) {
             index += 1;
         }
-        if start == index {
-            None
-        } else {
-            Some((start, index))
-        }
+        if start == index { None } else { Some((start, index)) }
     }
 
     /// 🔎️ JSON `{selection, hover}` occurrence ranges for the identifier under `cursor`, for editor cross-highlighting.

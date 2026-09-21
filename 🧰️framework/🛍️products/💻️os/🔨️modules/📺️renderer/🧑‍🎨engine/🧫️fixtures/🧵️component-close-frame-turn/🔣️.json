@@ -1,0 +1,17 @@
+{
+  "$schema": "./📐️schema.json",
+  "schema": "semio.component-close-frame-turn.v1",
+  "closeHost": "component-a",
+  "liveHost": "window-b",
+  "maxCloseUnitsPerTurn": 1,
+  "turns": [
+    { "closeOutcome": "externalWait", "inputSequence": 41, "snapshotRevision": 8 },
+    { "closeOutcome": "externalWait", "inputSequence": 42, "snapshotRevision": 9 }
+  ],
+  "expected": {
+    "closeTerminal": false,
+    "liveInputSequences": [41, 42],
+    "publishedSnapshotRevisions": [8, 9],
+    "closingHostPublications": []
+  }
+}

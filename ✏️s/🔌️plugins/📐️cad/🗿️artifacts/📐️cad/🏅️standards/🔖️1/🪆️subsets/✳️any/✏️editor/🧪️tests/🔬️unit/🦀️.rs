@@ -4,7 +4,7 @@ pub(crate) mod context {
     use super::super::*;
     use protocol::{Mutation, MutationDiff};
     use semio_framework_plugin::app::EditorApp;
-    use semio_framework_plugin::{ActionMeta, HistoryView, UiMenuRef, VcsArtifactApp};
+    use semio_framework_plugin::{ActionMeta, HistoryView, PluginApp, UiMenuRef, VcsArtifactApp};
     
     pub fn meta(actor: &str) -> ActionMeta {
         semio_framework_plugin::artifact_app_laws::meta(actor)
@@ -25,9 +25,46 @@ pub(crate) mod context {
     /// 🧩️ The roster is `SemioMembers`: `CadPlayApp::genesis_child_pack` derives an
     /// `s.stdio.semio@v1/model` child for every composed pane, and a `NoMembers` store can never open
     /// that dialect (`derived child dialect … is not declared by this app's member roster`).
+    ///
+    /// 🪪️ MOUNTED on [`TEST_INSTANCE`] — the same id [`meta`] stamps on every `ActionMeta`. An unbound
+    /// app refuses every typed command with `interactive-job.live-instance` ("does not belong to the
+    /// mounted live app instance"), which is what the host would do to a command for a dead window.
+    /// Every caller must therefore settle each dispatch ([`settle`]) and [`close`] the app before it
+    /// drops, exactly as the host's own close loop does.
     pub async fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers> {
-        semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests).await
+        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests).await;
+        app.bind_instance_id(TEST_INSTANCE).await;
+        app
     }
+
+    /// 🪪️ The one live instance id this crate's mounted fixtures run on.
+    pub const TEST_INSTANCE: u32 = 1;
+
+    pub type CadFixtureApp = VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+
+    /// 🔁️ Drives the host's bounded continuation + ACK protocol to quiescence after a dispatch.
+    pub async fn settle(app: &mut CadFixtureApp) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, TEST_INSTANCE).await.unwrap_or_else(|fault| panic!("cad fixture publication: {fault:?}"));
+    }
+
+    /// 🔚️ Runs the exact terminal-empty close loop; a fixture store that drops without it panics with
+    /// `artifact store reached Drop without its exact terminal-empty shallow-shell witness`.
+    pub fn close(app: &mut CadFixtureApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app);
+    }
+
+    /// 🪟️ The four cad pane windows as `ShellHost` mounts them. `window_engagements`/`window_measures`
+    /// project ONLY the window instances the view carries, so a `ViewModel::default()` yields an empty
+    /// map however many window kinds the app declares.
+    pub fn four_pane_view() -> ViewModel {
+        ViewModel {
+            window_instances: CAD_PANE_WINDOW_KIND_IDS.iter().map(|kind| semio_framework_plugin::ViewWindowInstance { id: (*kind).to_string(), window_kind_id: (*kind).to_string() }).collect(),
+            ..ViewModel::default()
+        }
+    }
+
+    /// 🪟️ The four world-window kinds, coarsest pane first.
+    pub const CAD_PANE_WINDOW_KIND_IDS: [&str; 4] = [shape::WINDOW_KIND_ID, building::WINDOW_KIND_ID, energy::WINDOW_KIND_ID, structure_classic::WINDOW_KIND_ID];
     
     /// ✏️ Adapts `create_cad_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `context::assert_declared_actions_bridge_to_commands` still expects —
@@ -1001,10 +1038,11 @@ async fn internal_and_plumbing_actions_excluded_from_palette() {
 #[semio_framework_async_macros::async_test]
 async fn engagement_input_and_possible_engagements_present() {
     let mut app = new_app().await;
-    let engagements = app.window_engagements(&ViewModel::default()).await;
+    let engagements = app.window_engagements(&four_pane_view()).await;
     let shape = engagements.get(shape::WINDOW_KIND_ID).expect("shape engagement");
     assert!(shape.input.is_some());
     assert!(shape.possible_engagements.as_ref().is_some_and(|rows| !rows.is_empty()));
+    close(&mut app);
 }
 
 /// 🕹️ The interaction-view threading law for window chrome: the HUD's `cad-status` row counts the
@@ -1026,10 +1064,11 @@ async fn the_engagement_hud_counts_the_threaded_cad_selection() {
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_registered_for_all_four_panes() {
     let mut app = new_app().await;
-    let engagements = app.window_engagements(&ViewModel::default()).await;
-    for window_kind in [shape::WINDOW_KIND_ID, building::WINDOW_KIND_ID, energy::WINDOW_KIND_ID, structure_classic::WINDOW_KIND_ID] {
+    let engagements = app.window_engagements(&four_pane_view()).await;
+    for window_kind in CAD_PANE_WINDOW_KIND_IDS {
         assert!(engagements.contains_key(window_kind), "missing engagement for {window_kind}");
     }
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1203,10 +1242,12 @@ async fn dislocate_move_and_rotate_options_are_per_pane() {
 #[semio_framework_async_macros::async_test]
 async fn engagement_hud_no_longer_carries_utility_switcher_options() {
     let mut app = new_app().await;
-    let engagements = app.window_engagements(&ViewModel::default()).await;
+    let engagements = app.window_engagements(&four_pane_view()).await;
+    assert_eq!(engagements.len(), CAD_PANE_WINDOW_KIND_IDS.len(), "every pane must project an engagement for this law to say anything");
     for engagement in engagements.values() {
         assert!(engagement.options.is_none(), "utility switching now lives in the framework utility bar, not the engagement HUD");
     }
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1266,15 +1307,13 @@ async fn add_object_action_seeds_an_empty_pane_with_a_composed_model_child() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_object_through_wrapper_grows_the_composed_pane() {
-    // ⚠️ Test-harness debt, not app behaviour: `artifact_app_laws::new_app` is registry-less, so
-    // this dispatch fails its tool-proof catalog before reaching the reducer (see the ticket's own
-    // "Registryless testkit::new_app Unusable" note). The assertion below is what it must prove
-    // once that harness gains a registry; the no-op claim it used to make is simply wrong now.
     let mut app = new_app().await;
     let before = app.snapshot().expect("snapshot");
     app.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local")).await.expect("add object dispatch");
+    settle(&mut app).await;
     let after = app.snapshot().expect("snapshot");
     assert_ne!(json::to_json_string(&before), json::to_json_string(&after), "addObject must re-mint the addressed pane's composed model child");
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1771,6 +1810,7 @@ async fn undo_redo_round_trips_added_node_through_generic_helper() {
     let mut app = new_app().await;
     let before = app.snapshot().expect("snapshot").nodes.len();
     semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1).await;
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1778,30 +1818,34 @@ async fn undo_redo_round_trips_added_node_through_wrapper() {
     let mut app = new_app().await;
     let before = app.snapshot().expect("snapshot").nodes.len();
     app.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local")).await.expect("add node");
+    settle(&mut app).await;
     assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before + 1);
-    let undo = app.handle_action("undo", None, &meta("local")).await.expect("undo");
+    let admitted = app.handle_action("undo", None, &meta("local")).await.expect("undo");
+    let undo = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("undo commits its reserved job");
+    settle(&mut app).await;
     assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
     assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before);
-    app.handle_action("redo", None, &meta("local")).await.expect("redo");
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "redo", TEST_INSTANCE).await;
     assert_eq!(app.snapshot().expect("snapshot").nodes.len(), before + 1);
+    close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn coalesced_translate_drag_is_a_single_undo_step() {
-    // ⚠️ Test-harness debt, not app behaviour: `artifact_app_laws::new_app` is registry-less, so
-    // every dispatch below fails its tool-proof catalog before reaching the reducer. What the law
-    // asserts is still correct for an id no pane owns: `translateSelection` resolves the addressed
-    // objects out of their pane's materialization and emits nothing when there are none, so three
-    // coalesced ticks against a stranger id leave the document exactly where it started. The
-    // seam's real behaviour is proved against the demo document by
+    // 🎯️ The law holds for an id no pane owns: `translateSelection` resolves the addressed objects
+    // out of their pane's materialization and emits nothing when there are none, so three coalesced
+    // ticks against a stranger id leave the document exactly where it started. The seam's real
+    // behaviour is proved against the demo document by
     // `translate_selection_moves_the_object_and_the_rendered_instance`.
     let mut app = new_app().await;
     let before = json::to_json_string(&app.snapshot().expect("snapshot"));
     for _ in 0..3 {
         app.dispatch_typed(CadCommand::TranslateSelection(translate_selection::TranslateSelection { object_ids: vec!["object-box-1".into()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local")).await.expect("translate tick");
+        settle(&mut app).await;
     }
     let after = json::to_json_string(&app.snapshot().expect("snapshot"));
     assert_eq!(before, after, "an id no pane materializes has nothing to move");
+    close(&mut app);
 }
 //#endregion 🔖️History
 //#region 🔖️Convergence
@@ -1832,13 +1876,25 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 
     // A renames node A.
     instance_a.dispatch_typed(CadCommand::RenameNode(rename_node::RenameNode { node_id: node_a.clone(), value: "Renamed By A".into() }), &meta("actor-a")).await.expect("a renames node a");
+    settle(&mut instance_a).await;
 
     // B renames node B — a disjoint edit that must survive alongside A's.
     instance_b.dispatch_typed(CadCommand::RenameNode(rename_node::RenameNode { node_id: node_b.clone(), value: "Renamed By B".into() }), &meta("actor-b")).await.expect("b renames node b");
+    settle(&mut instance_b).await;
 
-    // A neutral history command always pumps inbound operations before doing its own work.
-    instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
-    instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
+    // 🔀️ Each replica folds the other's events, then a neutral history command commits over
+    // everything it holds — each under its OWN actor, which is what the merge distinguishes them by.
+    instance_a.tick_backbone().await.expect("a folds b's events");
+    instance_b.tick_backbone().await.expect("b folds a's events");
+    for (instance, actor) in [(&mut instance_a, "actor-a"), (&mut instance_b, "actor-b")] {
+        let admitted = instance.handle_action("commitCheckpoint", None, &meta(actor)).await.unwrap_or_else(|fault| panic!("pump {actor}: {fault:?}"));
+        semio_framework_plugin::app::settle_framework_reserved_admission(instance, admitted).await.unwrap_or_else(|fault| panic!("pump {actor} reserved job: {fault:?}"));
+        settle(instance).await;
+    }
+    instance_a.tick_backbone().await.expect("a folds b's checkpoint");
+    instance_b.tick_backbone().await.expect("b folds a's checkpoint");
+    settle(&mut instance_a).await;
+    settle(&mut instance_b).await;
 
     let scene_a = instance_a.snapshot().expect("projection a");
     let scene_b = instance_b.snapshot().expect("projection b");
@@ -1852,6 +1908,10 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     assert_eq!(label_a_in_b, "Renamed By A", "instance B converges on A's edit");
     assert_eq!(label_b_in_a, "Renamed By B", "instance A converges on B's edit");
     assert_eq!(label_b_in_b, "Renamed By B", "instance B keeps its own edit");
+    instance_a.detach_backbone().await.expect("a releases its backbone");
+    instance_b.detach_backbone().await.expect("b releases its backbone");
+    close(&mut instance_a);
+    close(&mut instance_b);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1860,6 +1920,7 @@ async fn ingest_operations_is_idempotent_for_cad() {
     let (near, mut far) = MemoryBackbone::pair("mem://cad-doc", "mem://cad-doc").await;
     sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
     sender.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local")).await.expect("add node");
+    settle(&mut sender).await;
 
     let mut envelopes = Vec::new();
     for message in far.receive().await.expect("receive") {
@@ -1875,6 +1936,9 @@ async fn ingest_operations_is_idempotent_for_cad() {
     receiver.ingest_operations(&operations).await.expect("ingest once");
     receiver.ingest_operations(&operations).await.expect("ingest twice");
     assert_eq!(receiver.snapshot().expect("snapshot").nodes.len(), nodes_before + 1, "feeding the same operation twice must not double-apply");
+    sender.detach_backbone().await.expect("sender releases its backbone");
+    close(&mut sender);
+    close(&mut receiver);
 }
 //#endregion 🔖️Convergence
 

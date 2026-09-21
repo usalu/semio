@@ -140,7 +140,14 @@ fn no_method_of_the_shared_directory_lane_is_left_without_a_browser_answer() {
 #[test]
 fn the_shared_directory_lane_declares_the_space_administration_entry_points() {
     let lane = region_of(SHELL_SOURCE, "📇️DirectoryLane");
-    for entry in ["pub fn open_space_administration(", "pub fn close_space_administration(", "pub fn acknowledge_space_administration_capability(", "pub async fn pump_space_administration(", "async fn dispatch_directory_command(", "async fn flush_pending_directory_commands("] {
+    for entry in [
+        "pub fn open_space_administration(",
+        "pub fn close_space_administration(",
+        "pub fn acknowledge_space_administration_capability(",
+        "pub async fn pump_space_administration(",
+        "async fn dispatch_directory_command(",
+        "async fn flush_pending_directory_commands(",
+    ] {
         assert!(lane.contains(entry), "{entry} left the shared directory lane");
     }
 }

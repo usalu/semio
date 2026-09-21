@@ -147,10 +147,7 @@ fn invalid_theme_field_and_import_inputs_keep_the_exact_retained_revision() {
     let initial = shell.publish_shell_panel_document(surface).expect("initial Theme publication").expect("Theme retained document");
     let before = initial.header().expect("initial Theme header");
     shell.panel_documents.insert(surface.into(), initial);
-    for (action, arguments) in [
-        ("setThemeRadius", serde_json::json!({ "key": "nodeDefault", "value": "not-a-number" })),
-        ("applyImportedTheme", serde_json::json!({ "value": "{}" })),
-    ] {
+    for (action, arguments) in [("setThemeRadius", serde_json::json!({ "key": "nodeDefault", "value": "not-a-number" })), ("applyImportedTheme", serde_json::json!({ "value": "{}" }))] {
         semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(arguments)) })).expect("invalid Theme input is ignored");
         assert_eq!(shell.panel_documents.get(surface).unwrap().header().expect("retained Theme header"), before, "{action} does not mint a successor");
         assert!(shell.closing_documents.terminal_is_empty(), "{action} retires no owner");
@@ -378,8 +375,7 @@ fn every_open_theme_section_publishes_within_the_retained_document_ceiling() {
     }
     for row in (0..960).step_by(24) {
         shell.scroll_offsets.insert(SHELL_THEME_EDITOR_SCROLL_ID.into(), row as f32 * SHELL_THEME_EDITOR_ROW_HEIGHT);
-        let records = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &shell.build_settings_theme_ui())
-            .unwrap_or_else(|error| panic!("🎨️ the all-open theme leaf publishes at row {row}: {error}"));
+        let records = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &shell.build_settings_theme_ui()).unwrap_or_else(|error| panic!("🎨️ the all-open theme leaf publishes at row {row}: {error}"));
         assert!(records.len() <= ui_contract::UI_DOCUMENT_NODES, "🎨️ row {row} publishes {} records over the {} ceiling", records.len(), ui_contract::UI_DOCUMENT_NODES);
         drop(records);
         while !ui_contract::close_ui_value_page_one() {}
@@ -512,16 +508,7 @@ fn field_and_engagement_labels_reach_focusable_child_controls() {
         description: Some("Whole-number iterations".into()),
         required: None,
         error: None,
-        child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
-            id: "settings.iterations".into(),
-            value: 3.0,
-            step: 1.0,
-            uniform: false,
-            on_absolute: action.clone(),
-            on_delta: action,
-            presence: UiPresence::default(),
-            menu: None,
-        })),
+        child: Box::new(UiNode::NumberStepper(UiNumberStepperNode { id: "settings.iterations".into(), value: 3.0, step: 1.0, uniform: false, on_absolute: action.clone(), on_delta: action, presence: UiPresence::default(), menu: None })),
         presence: UiPresence::default(),
         menu: None,
     });
@@ -532,21 +519,8 @@ fn field_and_engagement_labels_reach_focusable_child_controls() {
     assert_eq!(projected.label.as_deref(), Some("Iterations"));
     assert_eq!(projected.description.as_deref(), Some("Whole-number iterations"));
 
-    let rows = engagement_control_rows(
-        &ui_wgpu::wgpu::WindowEngagementControl::Stepper {
-            id: None,
-            label: Some("Count".into()),
-            value: 3.0,
-            min: None,
-            max: None,
-            step: Some(1.0),
-            unit: None,
-            disabled: None,
-            on_change: None,
-            on_commit: None,
-        },
-        false,
-    );
+    let rows =
+        engagement_control_rows(&ui_wgpu::wgpu::WindowEngagementControl::Stepper { id: None, label: Some("Count".into()), value: 3.0, min: None, max: None, step: Some(1.0), unit: None, disabled: None, on_change: None, on_commit: None }, false);
     assert_eq!(rows.len(), 1, "the semantic field owns the visible label and control");
     let records = panel_ui_records("engagement", &rows[0]).expect("engagement projection");
     let child = records.iter().find(|record| record.key.as_str() == "engagement/engagement-control.stepper").expect("engagement stepper");
@@ -559,45 +533,23 @@ fn accessibility_activation_updates_settings_switch_and_active_tab_projection() 
     let selection = &fixture["nestedPanelSelection"];
     let mut shell = shell_with_nested_app_settings();
     let mut input = InputState::default();
-    input.register_hit(HitTarget {
-        rect: Rect::new(0.0, 0.0, 1.0, 1.0),
-        event: None,
-        control_id: Some(FRAMEWORK_SETTINGS_PANEL_ID.into()),
-        kind: HitKind::Toggle,
-        drag_axis: None,
-        drag_data: None,
-    });
+    input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 1.0, 1.0), event: None, control_id: Some(FRAMEWORK_SETTINGS_PANEL_ID.into()), kind: HitKind::Toggle, drag_axis: None, drag_data: None });
     input.publish_hits();
     let initial = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("settings projection");
     assert_eq!(initial.checked, Some(false));
-    let target = ui_render::AccessibilityTarget {
-        window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION,
-        node_id: initial.node_id,
-        node_key: initial.key,
-    };
+    let target =
+        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION, node_id: initial.node_id, node_key: initial.key };
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("settings activation"));
     assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].checked, Some(true), "the Settings branch switch reflects its now-visible anchor");
 
     assert_eq!(shell.reveal_dock_tab(FRAMEWORK_SETTINGS_THEME_TAB_ID), Some(PanelAnchor::BottomRight));
     let mut input = InputState::default();
-    input.register_hit(HitTarget {
-        rect: Rect::new(0.0, 0.0, 1.0, 1.0),
-        event: None,
-        control_id: Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into()),
-        kind: HitKind::PanelTab,
-        drag_axis: None,
-        drag_data: None,
-    });
+    input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 1.0, 1.0), event: None, control_id: Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into()), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
     input.publish_hits();
     let general = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("general projection");
     assert_eq!(general.selected, Some(false));
-    let target = ui_render::AccessibilityTarget {
-        window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION,
-        node_id: general.node_id,
-        node_key: general.key,
-    };
+    let target =
+        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION, node_id: general.node_id, node_key: general.key };
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("general activation"));
     assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].selected, Some(true), "the activated General leaf publishes aria-selected=true");
     let expected: Vec<&str> = selection["expectedPath"].as_array().expect("expected path").iter().map(|id| id.as_str().expect("path id")).collect();
@@ -622,14 +574,7 @@ fn pointer_activation_resolves_every_nested_leaf_from_root_to_target_independent
         let width = rect["width"].as_f64().expect("width") as f32;
         let height = rect["height"].as_f64().expect("height") as f32;
         let mut input = InputState::default();
-        input.register_hit(HitTarget {
-            rect: Rect::new(x, y, width, height),
-            event: None,
-            control_id: Some(selection["targetLeafId"].as_str().expect("target leaf").into()),
-            kind: HitKind::PanelTab,
-            drag_axis: None,
-            drag_data: None,
-        });
+        input.register_hit(HitTarget { rect: Rect::new(x, y, width, height), event: None, control_id: Some(selection["targetLeafId"].as_str().expect("target leaf").into()), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
         input.publish_hits();
         semio_framework_async::block_on(shell.handle_pointer_button(x + width * 0.5, y + height * 0.5, true, 0, &mut input, &Theme::default())).expect("nested panel pointer activation");
         assert_eq!(shell.anchor_state(PanelAnchor::BottomRight).path.iter().map(String::as_str).collect::<Vec<_>>(), expected, "{} panel rectangle", rect["id"].as_str().expect("rectangle id"));
@@ -642,14 +587,7 @@ fn pointer_activation_resolves_every_nested_leaf_from_root_to_target_independent
 fn chrome_accessibility_dispatch_validates_current_identity_and_activates_once() {
     let mut shell = ShellState::new(Vec::new(), String::new());
     let mut input = InputState::default();
-    input.register_hit(HitTarget {
-        rect: Rect::new(1.0, 2.0, 3.0, 4.0),
-        event: None,
-        control_id: Some("ui.search.toggle".to_string()),
-        kind: HitKind::Button,
-        drag_axis: None,
-        drag_data: None,
-    });
+    input.register_hit(HitTarget { rect: Rect::new(1.0, 2.0, 3.0, 4.0), event: None, control_id: Some("ui.search.toggle".to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
     input.publish_hits();
     let node = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("search projection");
     let target = ui_render::AccessibilityTarget {
@@ -670,6 +608,100 @@ fn chrome_accessibility_dispatch_validates_current_identity_and_activates_once()
     let reused = ui_render::AccessibilityTarget { node_key: "ui.find.toggle".to_string(), ..target };
     assert!(!semio_framework_async::block_on(shell.handle_accessibility_event(&reused, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("reused identity dispatch"));
     assert!(shell.search_open, "a mismatched node id and key cannot activate another control");
+}
+
+#[test]
+fn a_delayed_chrome_mirror_address_cannot_activate_after_its_presented_epoch_retires() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.dock_tabs.tabs_mut(PanelAnchor::BottomRight).push(DockTabNode::branch(
+        FRAMEWORK_SETTINGS_PANEL_ID,
+        "Settings",
+        "settings",
+        0,
+        vec![DockTabNode::leaf(FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General", "settings", 0)],
+    ));
+    let mut input = InputState::default();
+    let settings_hit = || HitTarget {
+        rect: Rect::new(1.0, 2.0, 30.0, 20.0),
+        event: None,
+        control_id: Some("ui.panelToggle.settings".to_string()),
+        kind: HitKind::Toggle,
+        drag_axis: None,
+        drag_data: None,
+    };
+    input.register_hit(settings_hit());
+    shell.publish_retained_hit_registry(&mut input);
+    let initial_epoch = shell.presented_input_epoch;
+    let initial = shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "ui.panelToggle.settings").expect("first accepted Settings mirror node");
+    let delayed = ui_render::AccessibilityTarget {
+        window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
+        window_generation: initial_epoch,
+        node_id: initial.node_id,
+        node_key: initial.key,
+    };
+
+    while input.retire_hit_step() {}
+    input.register_hit(settings_hit());
+    shell.publish_retained_hit_registry(&mut input);
+    assert!(shell.presented_input_epoch > initial_epoch, "the successor mirror owns a distinct accepted epoch");
+    assert!(!semio_framework_async::block_on(shell.handle_accessibility_event(&delayed, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("delayed Settings activation"));
+    assert!(!shell.anchor_open(PanelAnchor::BottomRight), "a delayed address cannot mutate the successor frame");
+
+    let successor = shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "ui.panelToggle.settings").expect("successor Settings mirror node");
+    let current = ui_render::AccessibilityTarget { window_generation: shell.presented_input_epoch, node_id: successor.node_id, node_key: successor.key, ..delayed };
+    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&current, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("current Settings activation"));
+    assert!(shell.anchor_open(PanelAnchor::BottomRight), "the current accepted mirror address activates exactly once");
+}
+
+#[test]
+fn a_constrained_settings_strip_retains_all_semantic_tabs_and_reveals_an_accessibility_selected_tail() {
+    let fixture = accessibility_fixture();
+    let contract = &fixture["settingsTabStrip"];
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let anchor = PanelAnchor::BottomRight;
+    let tabs = contract["tabs"]
+        .as_array()
+        .expect("Settings tabs")
+        .iter()
+        .enumerate()
+        .map(|(order, tab)| DockTabNode::leaf(tab["id"].as_str().unwrap(), tab["label"].as_str().unwrap(), "settings", order as i32))
+        .collect::<Vec<_>>();
+    shell.dock_tabs.tabs_mut(anchor).push(DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, "Settings", "settings", 0, tabs));
+    shell.anchor_state_mut(anchor).path = vec![FRAMEWORK_SETTINGS_PANEL_ID.into(), contract["activeId"].as_str().unwrap().into()];
+    shell.anchor_state_mut(anchor).visible = true;
+    let theme = Theme::default();
+    let panel = Rect::new(0.0, 0.0, contract["availableWidth"].as_f64().unwrap() as f32, 240.0);
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut draw = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    shell.paint_anchor_tab_bar(anchor, &mut draw, &mut atlas, &icons, &mut input, &theme, panel);
+    shell.publish_retained_hit_registry(&mut input);
+
+    let expected = contract["tabs"].as_array().unwrap().iter().map(|tab| tab["id"].as_str().unwrap()).collect::<Vec<_>>();
+    let pointer_ids = input.hits().iter().filter(|hit| hit.kind == HitKind::PanelTab).filter_map(|hit| hit.control_id.as_deref()).collect::<Vec<_>>();
+    assert!(pointer_ids.len() < expected.len(), "the constrained pointer row exposes only nonempty clipped chips");
+    let semantic = shell.chrome_accessibility_nodes(input.hits());
+    for id in &expected {
+        assert!(semantic.iter().any(|node| node.key == *id), "the presented semantic catalogue retains {id} outside the pointer clip");
+    }
+
+    let tail_id = contract["tailIds"][1].as_str().unwrap();
+    let tail = semantic.iter().find(|node| node.key == tail_id).expect("semantic tail tab");
+    let target = ui_render::AccessibilityTarget {
+        window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
+        window_generation: shell.presented_input_epoch,
+        node_id: tail.node_id,
+        node_key: tail.key.clone(),
+    };
+    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("tail tab activation"));
+    assert_eq!(shell.anchor_state(anchor).active_tab(), Some(tail_id));
+
+    while input.retire_hit_step() {}
+    let mut draw = DrawList::default();
+    shell.paint_anchor_tab_bar(anchor, &mut draw, &mut atlas, &icons, &mut input, &theme, panel);
+    shell.publish_retained_hit_registry(&mut input);
+    assert!(input.hits().iter().any(|hit| hit.kind == HitKind::PanelTab && hit.control_id.as_deref() == Some(tail_id)), "the next accepted pointer row reveals the accessibility-selected tail");
 }
 
 /// ⚖️ LAW (§B14): a bound chrome control carries its chord INLINE, like React's `ControlHotkeyBadge`

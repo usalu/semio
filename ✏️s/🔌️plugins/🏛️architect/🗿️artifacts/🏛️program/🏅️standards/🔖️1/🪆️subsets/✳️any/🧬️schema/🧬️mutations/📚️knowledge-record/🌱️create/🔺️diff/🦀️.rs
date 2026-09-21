@@ -15,5 +15,5 @@ pub fn diff(payload: &CreateKnowledgeRecord, base: &ProgramSnapshot) -> protocol
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A knowledge record already exists with this id.", [payload.knowledge_record.header.id.0.clone()]);
     }
     records.push(payload.knowledge_record.clone());
-    protocol::MutationOutcome::new(ProgramDiff { knowledge: Some(crate::knowledge_child_from_records(&records)), ..Default::default() })
+    protocol::MutationOutcome::new(ProgramDiff { knowledge_payload: Some(records.clone()), knowledge: Some(crate::knowledge_child_from_records(&records)), ..Default::default() })
 }

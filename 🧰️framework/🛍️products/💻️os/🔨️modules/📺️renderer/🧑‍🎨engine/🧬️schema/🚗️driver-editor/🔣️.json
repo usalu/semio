@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "axes", "builtins", "transitions", "controls", "oracles"],
+  "required": ["schemaVersion", "axes", "builtins", "displayLabels", "transitions", "controls", "oracles"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "axes": {
@@ -27,6 +27,22 @@
       "properties": {
         "default": { "$ref": "#/definitions/driver" },
         "compact": { "$ref": "#/definitions/driver" }
+      }
+    },
+    "displayLabels": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "en", "de", "ownership"],
+        "properties": {
+          "id": { "enum": ["default", "compact", "custom.focus-flow"] },
+          "en": { "type": "string", "minLength": 1 },
+          "de": { "type": "string", "minLength": 1 },
+          "ownership": { "enum": ["localized-built-in", "authored-custom"] }
+        }
       }
     },
     "transitions": {

@@ -4,7 +4,7 @@ use crate::schema::mutations::{
     InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetTextMutation,
     SetTextPayload, XmlNodePath,
 };
-use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlNode};
+use crate::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDeclaration, XmlDocument, XmlNode, XmlQuote};
 use crate::{XmlDiff, XmlMutation, STDIO_XML_DOCUMENT_SCHEMA};
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, MutationDiff};
@@ -46,13 +46,36 @@ async fn codec_round_trip() {
     assert_eq!(decoded, snap);
 }
 
+/// 🗣️ XML 1.0 §2.8 admits `'` and `"` interchangeably in the declaration's pseudo-attributes, so
+/// which one a document uses is its own state and has to survive a parse/write cycle byte for byte
+/// — the divergence `🎨️svg`'s `exact_native_analyzer_text_and_pack_roundtrip` caught against a real
+/// third-party file, whose declaration is single-quoted. Double stays the default spelling, so a
+/// declaration nobody quoted explicitly still writes `"`.
+#[semio_framework_async_macros::async_test]
+async fn declaration_quote_style_survives_a_parse_write_cycle() {
+    for (source, expected) in [
+        ("<?xml version='1.0' encoding='UTF-8'?>\n<root/>", XmlQuote::Single),
+        ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<root/>", XmlQuote::Double),
+    ] {
+        let doc = xml_document_from_text(source).expect("declaration parses");
+        assert_eq!(doc.declaration.as_ref().expect("declaration present").quote, expected, "the delimiter `version` used is the declaration's own");
+        assert_eq!(xml_document_to_text(&doc), source, "the declaration is written back with the delimiter it came in with");
+    }
+
+    // 🫥 The default spelling writes no `quote` key at all, which is what keeps every wire value
+    // that predates this slot byte-identical.
+    let double = XmlDeclaration { version: "1.0".into(), encoding: None, standalone: None, ..Default::default() };
+    assert_eq!(double.quote, XmlQuote::Double);
+    assert!(double.quote.is_double());
+}
+
 //#region 🔖️Fixtures
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_snapshot() -> XmlSnapshot {
     XmlSnapshot {
         schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
         doc: XmlDocument {
-            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone: None }),
+            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: None, standalone: None, ..Default::default() }),
             doctype: None,
             prolog: Vec::new(),
             root: Some(XmlNode::Element {
@@ -77,7 +100,7 @@ fn sweep_a() -> XmlSnapshot {
     XmlSnapshot {
         schema: STDIO_XML_DOCUMENT_SCHEMA.into(),
         doc: XmlDocument {
-            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+            declaration: Some(XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }),
             doctype: Some("<!DOCTYPE html>".into()),
             prolog: Vec::new(),
             root: Some(XmlNode::Element {
@@ -122,7 +145,7 @@ fn sweep_b() -> XmlSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_mutations() -> Vec<XmlMutation> {
     vec![
-        XmlMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: Some(XmlDeclaration { version: "1.1".into(), encoding: Some("UTF-8".into()), standalone: Some(false) }) })),
+        XmlMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: Some(XmlDeclaration { version: "1.1".into(), encoding: Some("UTF-8".into()), standalone: Some(false), ..Default::default() }) })),
         XmlMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: None })),
         XmlMutation::SetDoctype(SetDoctypeMutation::Apply(SetDoctypePayload { doctype: Some("<!DOCTYPE foo>".into()) })),
         XmlMutation::InsertElement(InsertElementMutation::Apply(InsertElementPayload { path: XmlNodePath::root(), index: 2, node: XmlNode::Text { text: "new".into() } })),

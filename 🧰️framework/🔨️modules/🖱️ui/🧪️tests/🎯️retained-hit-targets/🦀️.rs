@@ -91,7 +91,7 @@ fn tree_item(value: &Value) -> UiTreeItemNode {
 /// `Component::Container` record, so the arena this law lays out is the arena 6118 lays out.
 fn ui_node(value: &Value) -> UiNode {
     match value["kind"].as_str().expect("node kind") {
-        "tree" => UiNode::Tree(UiTreeNode {
+        "tree" => UiNode::Tree(UiTreeNode { presentation: Default::default(),
             sections: value["sections"]
                 .as_array()
                 .expect("sections")

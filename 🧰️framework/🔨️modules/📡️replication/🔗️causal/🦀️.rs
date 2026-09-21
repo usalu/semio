@@ -452,7 +452,14 @@ impl MutationDag {
 
     /// @emoji ➕️ Inserts one envelope. Returns `AlreadyApplied` if its id was applied before,
     /// `Err(Duplicate)` if it's already buffered as pending, `Pending` if any dependency is wholly
-    /// unknown to this dag, else `Applied` (and cascades `drain_ready` for anything it unblocks).
+    /// unknown to this dag, else `Applied`.
+    ///
+    /// @emoji ⛓️ The unblocking is a CASCADE, not one step. An accepted envelope can release a whole
+    /// pending chain — `c` depends on `b` depends on `a`, all three arriving in reverse order — and a
+    /// single {@link advance_ready_one} released only `b`, leaving `c` pending forever. That is the
+    /// exact shape `assert_op_dag_convergence` measured: the same closed dependency set converged to
+    /// DIFFERENT applied sets depending on arrival order. The loop terminates because every
+    /// successful step moves one id out of `pending`, which is fixed-capacity.
     #[expect(clippy::result_large_err, reason = "Fixed-capacity admission returns the original envelope without allocating on rejection.")]
     pub fn insert(&mut self, envelope: MutationEnvelope) -> Result<InsertResult, MutationDagInsertRejected> {
         let id = envelope.mutation_id.0.as_str();
@@ -477,7 +484,7 @@ impl MutationDag {
             return Ok(InsertResult::Pending);
         }
         self.mark_applied(&id);
-        self.advance_ready_one();
+        while self.advance_ready_one() {}
         Ok(InsertResult::Applied)
     }
 

@@ -32,7 +32,7 @@ fn drain(mut retirement: FlowRetirement, minimum_close_bytes: usize) -> usize {
 fn flow_retirement_typed_serde_oracle_and_exact_bytes_survive_worker_transfer() {
     let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for maximum in [1, 4096] {
-        let value: FlowHostSnapshot = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(host_snapshot.get("hostSnapshot").unwrap())).unwrap();
+        let value: FlowHostSnapshot = crate::os_dsl::FromValue::from_value(crate::os_pack::json::to_dsl_value(fixture.get("hostSnapshot").unwrap())).unwrap();
         let oracle: FlowHostSnapshot = crate::os_dsl::FromValue::from_value(crate::os_dsl::ToValue::to_value(&value)).unwrap();
         assert_eq!(value, oracle);
         let oracle_released = drain(FlowRetirement::from_owner(FlowOwner::HostSnapshot(oracle)), maximum);
@@ -41,7 +41,7 @@ fn flow_retirement_typed_serde_oracle_and_exact_bytes_survive_worker_transfer() 
         assert!(matches!(retirement.close_step(1, 0).unwrap(), SnapshotRetirementStep::Blocked));
         let released = std::thread::spawn(move || drain(retirement, maximum)).join().unwrap();
         assert_eq!(released, oracle_released);
-        assert!(released >= host_snapshot.get("expected").and_then(|v| v.get("releasedBytes")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
+        assert!(released >= fixture.get("expected").and_then(|v| v.get("releasedBytes")).and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize);
     }
 }
 
@@ -155,7 +155,7 @@ fn flow_physical_retirement_frontier_requires_exact_admission_and_releases_metad
 #[test]
 fn flow_physical_retirement_multi_root_ingress_records_fault_without_admission_then_admits_exactly() {
     let fixture = crate::os_pack::json::parse(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
-    let contract = host_snapshot.get("physicalRetirement").and_then(|value| value.get("multiRootIngress")).unwrap();
+    let contract = fixture.get("physicalRetirement").and_then(|value| value.get("multiRootIngress")).unwrap();
     let first_capacity = contract.get("firstCapacityBytes").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
     let second_capacity = contract.get("secondCapacityBytes").and_then(crate::os_pack::json::Value::as_u64).unwrap() as usize;
     let mut first = Vec::with_capacity(first_capacity);

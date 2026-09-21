@@ -116,7 +116,9 @@
   "issues": null,
   "auditEvents": null,
   "templates": null,
+  "knowledgePayload": null,
   "knowledge": null,
+  "benchmarksPayload": null,
   "benchmarks": null,
   "traces": null,
   "governance": null

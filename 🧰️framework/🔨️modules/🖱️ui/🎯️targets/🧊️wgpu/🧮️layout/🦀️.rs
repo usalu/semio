@@ -130,8 +130,13 @@ pub struct TreeRowMetrics {
     pub header_height: f32,
     pub control_width: f32,
     pub control_height: f32,
+    pub control_height_small: f32,
     pub gap: f32,
     pub drag_handle_extent: f32,
+    pub inline: ui_contract::FlowInline,
+    standard_row_height: f32,
+    standard_control_width: f32,
+    standard_control_height: f32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -143,13 +148,63 @@ pub enum TreeDragRole {
 /// 🌳️ React's property-row value column: `controlValueColumnUiSpacing × --ui-spacing`.
 pub const TREE_ROW_CONTROL_WIDTH: f32 = (ui_styling::metrics::dom::CONTROL_VALUE_COLUMN_UI_SPACING * ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX) as f32;
 
+/// 🌳️ React's compact property-tree value column, measured from the actual mounted DOM.
+pub const TREE_ROW_COMPACT_CONTROL_WIDTH: f32 = 104.0;
+
 /// 🌳️ Depth past which a tree's own spec is refused rather than recursed — the same ceiling
 /// `paint::RETAINED_TREE_DEPTH` walks with, so neither side can out-recurse the other.
 pub const TREE_ROW_MAX_DEPTH: usize = 64;
 
 impl TreeRowMetrics {
     pub fn from_theme(theme: &Theme) -> Self {
-        Self { row_height: theme.tree_row_height, header_height: theme.tree_row_height, control_width: TREE_ROW_CONTROL_WIDTH, control_height: theme.control_height, gap: theme.gap_standard, drag_handle_extent: crate::wgpu::chrome::ICON_TREE_ROW }
+        Self::for_presentation(theme, ui_contract::TreePresentation::Standard)
+    }
+
+    pub fn for_presentation(theme: &Theme, presentation: ui_contract::TreePresentation) -> Self {
+        let mut metrics = Self {
+            row_height: theme.tree_row_height,
+            header_height: theme.tree_row_height,
+            control_width: TREE_ROW_CONTROL_WIDTH,
+            control_height: theme.control_height,
+            control_height_small: theme.control_height_small,
+            gap: theme.gap_standard,
+            drag_handle_extent: crate::wgpu::chrome::ICON_TREE_ROW,
+            inline: ui_contract::FlowInline::Ltr,
+            standard_row_height: theme.tree_row_height,
+            standard_control_width: TREE_ROW_CONTROL_WIDTH,
+            standard_control_height: theme.control_height,
+        };
+        metrics = metrics.with_presentation(presentation);
+        metrics
+    }
+
+    pub fn with_presentation(mut self, presentation: ui_contract::TreePresentation) -> Self {
+        self.row_height = match presentation {
+            ui_contract::TreePresentation::Standard => self.standard_row_height,
+            ui_contract::TreePresentation::Compact => crate::wgpu::chrome::SIZE_TINY * 1.5,
+        };
+        self.header_height = self.row_height;
+        self.control_width = match presentation {
+            ui_contract::TreePresentation::Standard => self.standard_control_width,
+            ui_contract::TreePresentation::Compact => TREE_ROW_COMPACT_CONTROL_WIDTH,
+        };
+        self.control_height = self.standard_control_height;
+        self
+    }
+
+    pub fn with_inline(mut self, inline: ui_contract::FlowInline) -> Self {
+        self.inline = inline;
+        self
+    }
+
+    pub fn for_item(mut self, item: &UiTreeItemNode) -> Self {
+        self.control_height = match item.control.as_ref() {
+            Some(UiControlNode::Input(_) | UiControlNode::Select(_)) => self.control_height_small,
+            Some(_) => self.standard_control_height,
+            None => 0.0,
+        };
+        self.row_height = self.row_height.max(self.control_height);
+        self
     }
 }
 
@@ -158,7 +213,9 @@ pub fn tree_drag_role(item: &UiTreeItemNode) -> Option<TreeDragRole> {
 }
 
 pub fn tree_drag_handle_rect(row_width: f32, metrics: &TreeRowMetrics) -> Rect {
-    Rect::new((row_width - metrics.gap - metrics.drag_handle_extent).max(0.0), (metrics.row_height - metrics.drag_handle_extent) * 0.5, metrics.drag_handle_extent.min(row_width.max(0.0)), metrics.drag_handle_extent.min(metrics.row_height.max(0.0)))
+    let extent = metrics.drag_handle_extent.min(row_width.max(0.0));
+    let x = if metrics.inline.is_rtl() { metrics.gap } else { (row_width - metrics.gap - extent).max(0.0) };
+    Rect::new(x, (metrics.row_height - metrics.drag_handle_extent) * 0.5, extent, metrics.drag_handle_extent.min(metrics.row_height.max(0.0)))
 }
 
 pub fn tree_drag_handle_reservation(metrics: &TreeRowMetrics) -> f32 {
@@ -175,7 +232,7 @@ fn tree_item_height_at(item: &UiTreeItemNode, metrics: &TreeRowMetrics, depth: u
     if !item.presence.visible() {
         return 0.0;
     }
-    let mut height = metrics.row_height;
+    let mut height = metrics.for_item(item).row_height;
     if depth >= TREE_ROW_MAX_DEPTH || !item.default_open.unwrap_or(false) {
         return height;
     }
@@ -223,7 +280,9 @@ pub fn tree_item_chevron_rect(rect: Rect, depth: usize, metrics: &TreeRowMetrics
     let row = tree_section_header_band(rect, metrics.row_height, reversed);
     let indent = (ui_styling::metrics::dom::TREE_INDENT_PER_LEVEL_UI_SPACING * ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX) as f32;
     let width = (ui_styling::metrics::dom::TREE_TOGGLE_UI_SPACING * ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX) as f32;
-    Rect::new(row.x + depth.saturating_sub(1) as f32 * indent, row.y, width.min(row.w), row.h)
+    let offset = depth.saturating_sub(1) as f32 * indent;
+    let x = if metrics.inline.is_rtl() { row.x + (row.w - width - offset).max(0.0) } else { row.x + offset };
+    Rect::new(x, row.y, width.min(row.w), row.h)
 }
 
 /// 🌳️ A whole `Tree` node's height: the sum of its visible sections.
@@ -240,7 +299,8 @@ pub fn tree_row_control_rect(row_width: f32, metrics: &TreeRowMetrics) -> Rect {
 /// 🎛️ The value-column rect for a control's own authored height. General's Select/Input are small;
 /// Stepper/Toggle/Button retain the default chrome height while sharing the same 160px column.
 pub fn tree_row_control_rect_with_height(row_width: f32, control_height: f32, metrics: &TreeRowMetrics) -> Rect {
-    Rect::new((row_width - metrics.control_width - metrics.gap).max(0.0), (metrics.row_height - control_height) * 0.5, metrics.control_width, control_height)
+    let x = if metrics.inline.is_rtl() { metrics.gap } else { (row_width - metrics.control_width - metrics.gap).max(0.0) };
+    Rect::new(x, (metrics.row_height - control_height) * 0.5, metrics.control_width.min((row_width - metrics.gap).max(0.0)), control_height)
 }
 
 pub fn tree_inline_control_height(control: &UiControlNode, theme: &Theme) -> f32 {
@@ -258,7 +318,8 @@ pub fn tree_inline_control_height(control: &UiControlNode, theme: &Theme) -> f32
 
 pub fn tree_row_control_rect_before_drag(row_width: f32, metrics: &TreeRowMetrics) -> Rect {
     let reservation = tree_drag_handle_reservation(metrics);
-    Rect::new((row_width - metrics.control_width - metrics.gap - reservation).max(0.0), (metrics.row_height - metrics.control_height) * 0.5, metrics.control_width.min((row_width - reservation).max(0.0)), metrics.control_height)
+    let x = if metrics.inline.is_rtl() { metrics.gap + reservation } else { (row_width - metrics.control_width - metrics.gap - reservation).max(0.0) };
+    Rect::new(x, (metrics.row_height - metrics.control_height) * 0.5, metrics.control_width.min((row_width - reservation).max(0.0)), metrics.control_height)
 }
 //#endregion 🌳️TreeRowGeometry
 

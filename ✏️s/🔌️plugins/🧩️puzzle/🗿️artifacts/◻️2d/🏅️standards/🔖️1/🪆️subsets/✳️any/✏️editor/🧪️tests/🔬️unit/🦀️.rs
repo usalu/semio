@@ -8,6 +8,27 @@ pub(crate) mod context {
         semio_framework_plugin::artifact_app_laws::meta(actor)
     }
     
+    /// ⏳️ The harness's own executor: polls one app future to completion, yielding between turns.
+    ///
+    /// 🐛️ This file used to bridge every app call through `semio_framework::io::resolve_ready`, whose
+    /// contract is "an ARTIFACT-IO body must complete without a real suspension" — it PANICS on the
+    /// first `Pending`. That contract belongs to the synchronous `IoEntry`/compose thunks it was
+    /// written for, not to a harness driving a live app: the moment a dispatch gained a real await
+    /// point (the clipboard route's store admission) every law that went through it aborted with
+    /// "future was not ready on first poll". A live app's futures make progress on every poll, so the
+    /// harness polls — the same noop-waker spin the block3d window-transient law uses.
+    pub fn block_on<F: std::future::Future>(future: F) -> F::Output {
+        let mut future = std::pin::pin!(future);
+        let waker = std::task::Waker::noop();
+        let mut context = std::task::Context::from_waker(waker);
+        loop {
+            match future.as_mut().poll(&mut context) {
+                std::task::Poll::Ready(output) => return output,
+                std::task::Poll::Pending => std::thread::yield_now(),
+            }
+        }
+    }
+    
     /// 🧰️ The registry-backed, instance-bound fixture app: `bounded_first_step_tool_proofs!` joins the manifest's
     /// migrated declarations to the live factories, which a registry-less app cannot satisfy.
     pub fn app() -> Puzzle2dApp {
@@ -26,8 +47,8 @@ pub(crate) mod context {
     /// 🧰️ A registry-backed app so kind discipline (View/Shell actions must emit no operations) and the
     /// utility contract are enforced exactly as in production.
     pub fn app_with_registry() -> Puzzle2dApp {
-        let mut app = semio_framework::io::resolve_ready(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle2dPlayApp>>(puzzle2d_manifest_for_tests));
-        semio_framework::io::resolve_ready(app.bind_instance_id(1));
+        let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle2dPlayApp>>(puzzle2d_manifest_for_tests));
+        block_on(app.bind_instance_id(1));
         app
     }
     
@@ -61,8 +82,14 @@ pub(crate) mod context {
                 return Ok(result);
             }
             PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
-            semio_framework::io::resolve_ready(app.advance_typed_operation_publication())?;
-            if let Some(page) = app.take_typed_operation_result_page(1) {
+            block_on(app.advance_typed_operation_publication())?;
+            // 📄️ EVERY presented page and EVERY completion per turn, never one: `has_pending_typed_operations`
+            // counts the outboxes and the mounted operations but NOT a page already presented and waiting
+            // for its ACK, so a turn that leaves a second page (or the terminal completion that CARRIES
+            // THE HISTORY PATCH) queued can be the very turn this loop exits on — and the caller then reads
+            // a result with no committed edits at all. The framework's own `settle_registered_typed_operation`
+            // drains both in inner loops for exactly this reason.
+            while let Some(page) = app.take_typed_operation_result_page(1) {
                 if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
                     return Err(Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
                 }
@@ -70,7 +97,7 @@ pub(crate) mod context {
             }
             result.requested_effects.extend(app.take_typed_operation_effect());
             result.events.extend(app.take_typed_operation_event());
-            if let Some(completion) = semio_framework::io::resolve_ready(app.take_typed_operation_completion())? {
+            while let Some(completion) = block_on(app.take_typed_operation_completion())? {
                 result.ui_scope = completion.ui_scope;
                 if let Some(patch) = completion.history_patch {
                     result.history_patch = Some(match result.history_patch.take() {
@@ -130,10 +157,10 @@ pub(crate) mod context {
                 | "setInteractionGranularity"
         ) {
             let dsl_args = args.map(dsl::DslValue::from);
-            let result = semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &action_meta)).and_then(|admitted| semio_framework::io::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
+            let result = block_on(app.handle_action(action, dsl_args.as_ref(), &action_meta)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
             return settle(app, result);
         }
-        let result = semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
+        let result = block_on(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
         settle(app, result)
     }
     
@@ -179,7 +206,7 @@ pub(crate) mod context {
     }
     
     pub fn render_body_with_view(app: &mut Puzzle2dApp, body_key: &str, view_state: &ViewModel) -> String {
-        let tree = semio_framework::io::resolve_ready(app.render(body_key, None, view_state)).expect("render");
+        let tree = block_on(app.render(body_key, None, view_state)).expect("render");
         let mut stack = vec![&tree.root];
         while let Some(node) = stack.pop() {
             if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
@@ -667,6 +694,18 @@ fn app_definition_has_three_lod_pane_window_kinds() {
     }
 }
 
+/// 🕹️ Every action DISPATCHABLE in one window: its OWN roster plus every app-level row no window
+/// kind claims for itself.
+///
+/// 🪪️ App-level actions are no longer CLONED onto every window kind (that made a package descriptor
+/// grow as `apps × window kinds × actions`) — `semio_framework::window_kind_actions` resolves the
+/// union at read time, so `WindowKindDefinition::actions` alone now holds only the window's own
+/// declarations (here: the framework-injected interaction verbs) and a law reading it sees none of
+/// the authored vocabulary.
+fn dispatchable_actions<'a>(definition: &'a semio_framework_plugin::AppDefinition, window: &'a semio_framework_plugin::WindowKindDefinition) -> Vec<&'a semio_framework_plugin::ActionDefinition> {
+    semio_framework::window_kind_actions(definition, window)
+}
+
 /// 🧰️ The app declares exactly the select/brush canvas utilities and binds them to the interactive
 /// overview pane; fill is declared as a mode-level tool instead.
 #[test]
@@ -677,7 +716,7 @@ fn utility_registry_declares_utilities() {
     let overview_window = definition.window_kinds.iter().find(|window| window.id == overview::WINDOW_KIND_ID).expect("overview pane");
     let overview_utilities: Vec<&str> = overview_window.utilities.iter().map(|utility| utility.as_str()).collect();
     assert_eq!(overview_utilities, vec![select_utility::UTILITY_ID, brush_utility::UTILITY_ID, area_brush_utility::UTILITY_ID]);
-    assert!(overview_window.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "declaring utilities must inject the setActiveUtility action");
+    assert!(dispatchable_actions(&definition, overview_window).iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "declaring utilities must inject the setActiveUtility action");
     // 🧰️ D-1: select/brush are this window's whole exclusive utility set, NOT a sub-collection, so
     // each carries `group: None` and renders as a flat utility bar icon (never one collapsed dropdown).
     for utility in &definition.utilities {
@@ -694,7 +733,7 @@ fn every_declared_action_resolves_to_a_command() {
     let mut unresolved = Vec::new();
     let mut declared = Vec::new();
     for window in &definition.window_kinds {
-        for action in &window.actions {
+        for action in dispatchable_actions(&definition, window) {
             let id = action.id.as_str();
             declared.push(id.to_string());
             // 🕰️ Framework-owned verbs never reach `command_from_action`: history, clipboard, the
@@ -739,8 +778,8 @@ fn tool_registry_declares_fill_tool() {
     let definition = create_puzzle2d_app();
     let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
     assert_eq!(tool_ids, vec![fill::TOOL_ID]);
-    assert_eq!(definition.modes[0].tools, vec![semio_framework::io::resolve_ready(ToolRef::new(fill::TOOL_ID))]);
-    assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
+    assert_eq!(definition.modes[0].tools, vec![block_on(ToolRef::new(fill::TOOL_ID))]);
+    assert!(definition.window_kinds.iter().flat_map(|window| dispatchable_actions(&definition, window)).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
 }
 
 /// 🎥️ The camera is session-only runtime state, never a document field — a DWG import (which has
@@ -856,7 +895,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
         window_instance_id: None,
         point: None,
     };
-    let menu = semio_framework::io::resolve_ready(app.context_menu(&request, &Default::default()));
+    let menu = block_on(app.context_menu(&request, &Default::default()));
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     assert_eq!(last.id, "deleteSelection", "the destructive row must stay last as a top-level leaf");
@@ -1078,7 +1117,7 @@ async fn context_menu_offers_suggest_nodes_on_one_selected_handle_only() {
             window_instance_id: None,
             point: None,
         };
-        semio_framework::io::resolve_ready(app.context_menu(&request, &Default::default()))
+        block_on(app.context_menu(&request, &Default::default()))
     };
     let on_handle = menu_for(&mut app, vec![handle_id.clone()]);
     let on_node = menu_for(&mut app, vec![node_id]);

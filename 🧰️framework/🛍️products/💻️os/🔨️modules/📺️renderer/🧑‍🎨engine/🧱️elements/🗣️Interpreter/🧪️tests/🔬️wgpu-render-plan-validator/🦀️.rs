@@ -1,6 +1,5 @@
-
 use super::*;
-use ui_wgpu::wgpu::{TableScene, UiStackNode, World3dScene, build_table_scene, build_world_3d_scene};
+use ui_wgpu::wgpu::{build_table_scene, build_world_3d_scene, TableScene, UiStackNode, World3dScene};
 
 #[test]
 fn validate_ui_node_rejects_oversized_json_payload() {

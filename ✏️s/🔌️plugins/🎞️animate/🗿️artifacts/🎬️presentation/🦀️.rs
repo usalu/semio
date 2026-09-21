@@ -21,7 +21,7 @@ pub use crate::standards::v1::subsets::any::schema::mutations::PresentationMutat
 pub use crate::standards::v1::subsets::any::schema::diff::PresentationDiff;
 
 pub const PRESENTATION_DOCUMENT_SCHEMA: &str = "animate.presentation";
-pub use crate::snapshot::schema::{default_snapshot, PresentationSnapshot};
+pub use crate::snapshot::schema::{default_snapshot, demo_snapshot, PresentationSnapshot};
 
 /// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1 — the one canonical
 /// `(artifact_kind, standard, subset)` coordinate shared by BOTH `✏️editor::animate::AnimatePresentationPlayApp`
@@ -73,6 +73,11 @@ pub fn default_figure_tile_source() -> FigureTileSource {
 
 pub fn default_presentation_snapshot() -> PresentationSnapshot {
     default_snapshot()
+}
+
+/// 🎬️ The `demo` example document — see [`demo_snapshot`].
+pub fn demo_presentation_snapshot() -> PresentationSnapshot {
+    demo_snapshot()
 }
 
 //#region 🔖️PresentationBridge

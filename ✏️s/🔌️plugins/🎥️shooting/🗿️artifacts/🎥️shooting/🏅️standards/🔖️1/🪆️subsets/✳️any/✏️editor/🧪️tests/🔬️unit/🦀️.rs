@@ -400,7 +400,10 @@ async fn utility_registry_scopes_transform_gumball_and_actions_are_declared() {
     let scoped: Vec<&str> = scene.utilities.iter().map(|utility| utility.as_str()).collect();
     assert_eq!(scoped, ["move", "rotate", "scale"], "utilities scoped to the scene window kind");
     for command in ["loadRequest", "importAssetRequest", "saveDownload", "exportActiveShot", "exportAllShots", "resetFixture", "saveCamera"] {
-        assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
+        assert!(
+            definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).any(|action| action.id == command),
+            "registry declares {command}"
+        );
     }
     let mut app = shooting_app().await;
     let engagements = app.window_engagements(&context::view(semio_framework_plugin::Locale::En)).await;

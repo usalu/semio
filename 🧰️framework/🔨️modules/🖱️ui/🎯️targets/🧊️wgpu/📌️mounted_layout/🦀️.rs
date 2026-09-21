@@ -83,6 +83,35 @@ pub(crate) fn find_tree_item<'a>(items: &'a [UiTreeItemNode], id: &str, depth: u
     None
 }
 
+/// 🌳️ Resolves the owning Tree's presentation and nearest authored item for one mounted node.
+pub(crate) fn retained_tree_row_metrics(tree: &UiTree, id: NodeId, metrics: &TreeRowMetrics) -> TreeRowMetrics {
+    let owner = match tree.node(id).map(|node| &node.spec.0) {
+        Some(UiNode::Tree(owner)) => Some(owner),
+        _ => owning_tree_spec(tree, id),
+    };
+    let Some(owner) = owner else { return *metrics };
+    let scoped = metrics.with_presentation(owner.presentation);
+    let mut candidate = Some(id);
+    let mut depth = 0usize;
+    while let Some(current) = candidate {
+        if depth >= TREE_ROW_MAX_DEPTH {
+            break;
+        }
+        depth += 1;
+        let Some(node) = tree.node(current) else { break };
+        if matches!(&node.spec.0, UiNode::Tree(_)) {
+            break;
+        }
+        if let NodeKey::Explicit(key) = &node.key {
+            if let Some(item) = owner.sections.iter().find_map(|section| find_tree_item(&section.items, key, 0)) {
+                return scoped.for_item(item);
+            }
+        }
+        candidate = node.parent;
+    }
+    scoped
+}
+
 /// 🌳️ Classifies the synthesized row `id` against the `Tree` that owns it — a section row when its
 /// parent is the tree itself and its key names one of that tree's sections, an item row when its
 /// parent is already a row and its key names one of that tree's items. Anything else is an ordinary
@@ -94,12 +123,13 @@ fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<LayoutNodeKind>,
     }
     let NodeKey::Explicit(key) = &tree.node(id)?.key else { return None };
     let owner = owning_tree_spec(tree, id)?;
+    let metrics = retained_tree_row_metrics(tree, id, metrics);
     match parent_kind {
         LayoutNodeKind::Tree { reversed, .. } => {
             let section = owner.sections.iter().find(|section| &section.id == key)?;
             let expanded = tree.disclosure_open(id).unwrap_or(section.default_open.unwrap_or(true));
-            let header = tree_section_header_height(section, metrics);
-            let height = live_tree_section_height(tree, id, section, metrics);
+            let header = tree_section_header_height(section, &metrics);
+            let height = live_tree_section_height(tree, id, section, &metrics);
             Some(LayoutNodeKind::TreeSection { header, height, expanded, reversed })
         }
         parent_kind => {
@@ -111,7 +141,7 @@ fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<LayoutNodeKind>,
             if matches!(parent_kind, LayoutNodeKind::TreeRow { expanded: false, .. }) {
                 return Some(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed });
             }
-            let height = live_tree_item_height(tree, id, item, metrics, 0);
+            let height = live_tree_item_height(tree, id, item, &metrics, 0);
             let expanded = height > 0.0 && tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) && item.items.as_deref().is_some_and(|items| !items.is_empty());
             Some(LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded, reversed })
         }
@@ -122,7 +152,7 @@ pub(crate) fn live_tree_item_height(tree: &UiTree, id: NodeId, item: &UiTreeItem
     if !item.presence.visible() {
         return 0.0;
     }
-    let mut height = metrics.row_height;
+    let mut height = metrics.for_item(item).row_height;
     if depth >= TREE_ROW_MAX_DEPTH || !tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) {
         return height;
     }
@@ -145,12 +175,13 @@ pub(crate) fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &crat
 }
 
 pub(crate) fn retained_tree_height(tree: &UiTree, id: NodeId, node: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
+    let metrics = metrics.with_presentation(node.presentation);
     node.sections
         .iter()
         .filter(|section| section.presence.visible())
         .map(|section| {
-            let Some(section_id) = tree.explicit_child(id, &section.id) else { return tree_section_header_height(section, metrics) };
-            live_tree_section_height(tree, section_id, section, metrics)
+            let Some(section_id) = tree.explicit_child(id, &section.id) else { return tree_section_header_height(section, &metrics) };
+            live_tree_section_height(tree, section_id, section, &metrics)
         })
         .sum()
 }
@@ -431,7 +462,16 @@ pub(crate) struct MountedLayoutIdentity {
 }
 
 impl MountedLayoutJob {
-    pub(crate) fn try_new(tree: &UiTree, root: NodeId, identity: MountedLayoutIdentity, theme: Theme, width: f32, height: f32, block_reversed: bool) -> Result<Self, MountedLayoutFault> {
+    pub(crate) fn try_new(
+        tree: &UiTree,
+        root: NodeId,
+        identity: MountedLayoutIdentity,
+        theme: Theme,
+        width: f32,
+        height: f32,
+        block_reversed: bool,
+        inline: ui_contract::FlowInline,
+    ) -> Result<Self, MountedLayoutFault> {
         let MountedLayoutIdentity { surface, generation, revision, theme_revision, viewport_revision } = identity;
         let root_node = tree.node(root).ok_or(MountedLayoutFault::Stale)?;
         if !root_node.flags.contains(NodeFlags::DIRTY_LAYOUT) && !root_node.flags.contains(NodeFlags::SUBTREE_DIRTY) {
@@ -445,7 +485,7 @@ impl MountedLayoutJob {
             revision,
             theme_revision,
             viewport_revision,
-            row_metrics: TreeRowMetrics::from_theme(&theme),
+            row_metrics: TreeRowMetrics::from_theme(&theme).with_inline(inline),
             theme,
             width,
             height,
@@ -584,7 +624,7 @@ impl MountedLayoutJob {
             self.fault = Some(MountedLayoutFault::NodeCredits);
             return (0, 0);
         }
-        let metrics = self.row_metrics;
+        let metrics = retained_tree_row_metrics(tree, id, &self.row_metrics);
         if !self.flex.push(kind, parent, node.layout_spec.as_ref(), &metrics, parent_kind) {
             self.fault = Some(MountedLayoutFault::Solver);
             return (0, 0);
@@ -991,7 +1031,7 @@ impl MountedLayoutJob {
 #[cfg(any(test, feature = "testkit"))]
 pub(crate) fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32, height: f32) -> bool {
     let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(0, 1), generation: 1, revision: 0, theme_revision: 0, viewport_revision: 0 };
-    let Ok(mut job) = MountedLayoutJob::try_new(tree, root, identity, theme, width, height, false) else { return false };
+    let Ok(mut job) = MountedLayoutJob::try_new(tree, root, identity, theme, width, height, false, ui_contract::FlowInline::Ltr) else { return false };
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview = 0;
     while !job.is_admitted() {

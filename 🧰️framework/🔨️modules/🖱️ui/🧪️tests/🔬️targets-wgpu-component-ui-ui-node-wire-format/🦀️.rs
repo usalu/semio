@@ -43,7 +43,7 @@ mod ui_node_wire_format_tests {
                     on_change: act("selectChange"),
                     presence: UiPresence::default(),
                 }),
-                UiNode::Toggle(UiToggleNode { menu: None, id: "tog1".into(), icon_id: IconName::AlignLeft, text: None, on_change: act("toggle"), presence: UiPresence::selected(true) }),
+                UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, menu: None, id: "tog1".into(), icon_id: IconName::AlignLeft, text: None, on_change: act("toggle"), presence: UiPresence::selected(true) }),
                 UiNode::Group(UiGroupNode {
                     menu: None,
                     id: "grp1".into(),
@@ -68,7 +68,7 @@ mod ui_node_wire_format_tests {
                     presence: UiPresence::default(),
                 }),
                 UiNode::Section(UiSectionNode { menu: None, id: "sec1".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), children: vec![] }),
-                UiNode::Tree(UiTreeNode {
+                UiNode::Tree(UiTreeNode { presentation: Default::default(),
                     menu: None,
                     sections: vec![UiTreeSectionNode { window: None,
                         id: "treesec1".into(),
@@ -241,7 +241,7 @@ mod ui_node_wire_format_tests {
             "Input",
         );
         assert_presence_serializes(UiNode::Select(UiSelectNode { menu: None, id: "i".into(), value: "v".into(), items: vec![], placeholder: None, on_change: act("a"), presence: UiPresence::default() }), "Select");
-        assert_presence_serializes(UiNode::Toggle(UiToggleNode { menu: None, id: "i".into(), icon_id: IconName::CircleDot, text: None, on_change: act("a"), presence: UiPresence::default() }), "Toggle");
+        assert_presence_serializes(UiNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, menu: None, id: "i".into(), icon_id: IconName::CircleDot, text: None, on_change: act("a"), presence: UiPresence::default() }), "Toggle");
         assert_presence_serializes(UiNode::KeyValue(UiKeyValueNode { menu: None, entries: vec![], presence: UiPresence::default() }), "KeyValue");
         assert_presence_serializes(UiNode::Slider(UiSliderNode { menu: None, id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("a"), presence: UiPresence::default() }), "Slider");
         assert_presence_serializes(UiNode::NumberStepper(UiNumberStepperNode { menu: None, id: "i".into(), value: 0.0, step: 1.0, uniform: true, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }), "NumberStepper");
@@ -263,7 +263,7 @@ mod ui_node_wire_format_tests {
         );
         assert_presence_serializes(UiNode::Section(UiSectionNode { menu: None, id: "i".into(), label: None, default_open: None, presence: UiPresence::default(), children: vec![] }), "Section");
         assert_presence_serializes(UiNode::Group(UiGroupNode { menu: None, id: "i".into(), label: Label::data("l"), default_open: None, presence: UiPresence::default(), children: vec![] }), "Group");
-        assert_presence_serializes(UiNode::Tree(UiTreeNode { menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
+        assert_presence_serializes(UiNode::Tree(UiTreeNode { presentation: Default::default(), menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
         assert_presence_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
         assert_presence_serializes(UiNode::ExternalSlot(UiExternalSlotNode { menu: None, plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), presence: UiPresence::default() }), "ExternalSlot");
         assert_presence_serializes(
@@ -475,7 +475,7 @@ mod ui_node_wire_format_tests {
         assert_menu_serializes(UiNode::Button(UiButtonNode { menu: None, id: None, icon_id: IconName::CircleDot, label: Label::data("l"), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
         assert_menu_serializes(UiNode::Separator(UiSeparatorNode { menu: None, presence: UiPresence::default() }), "Separator");
         assert_menu_serializes(UiNode::Image(UiImageNode { menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
-        assert_menu_serializes(UiNode::Tree(UiTreeNode { menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
+        assert_menu_serializes(UiNode::Tree(UiTreeNode { presentation: Default::default(), menu: None, sections: vec![], presence: UiPresence::default(), drop_action: None, interaction_domain: None }), "Tree");
         assert_menu_serializes(UiNode::Progress(UiProgressNode { menu: None, id: "i".into(), completed: 1.0, total: Some(2.0), value_text: Label::data("x"), presence: UiPresence::default() }), "Progress");
     }
 

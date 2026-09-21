@@ -292,7 +292,8 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
             _ => metrics.control_height,
         };
         let rect = crate::wgpu::layout::tree_row_control_rect_with_height(0.0, control_height, metrics);
-        return FlowStyle { absolute: true, inset: [Some(rect.y), Some(metrics.gap), None, None], width: Dim::Length(metrics.control_width), height: Dim::Length(control_height), ..FlowStyle::default() };
+        let inset = if metrics.inline.is_rtl() { [Some(rect.y), None, None, Some(metrics.gap)] } else { [Some(rect.y), Some(metrics.gap), None, None] };
+        return FlowStyle { absolute: true, inset, width: Dim::Length(metrics.control_width), height: Dim::Length(control_height), ..FlowStyle::default() };
     }
     let band = |height: f32, header: f32, reverse: bool| FlowStyle {
         height: Dim::Length(height),

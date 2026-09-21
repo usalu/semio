@@ -226,7 +226,7 @@ impl OpcContentTypes {
             prolog: Vec::new(),
             root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS)], children)),
             doctype: None,
-            declaration: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+            declaration: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }),
         }
     }
 
@@ -359,7 +359,7 @@ fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
         prolog: Vec::new(),
         root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS)], children)),
         doctype: None,
-        declaration: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
+        declaration: Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true), ..Default::default() }),
     }
 }
 

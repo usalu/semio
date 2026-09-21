@@ -652,16 +652,17 @@ async fn set_active_example_resolves_every_id_the_shell_can_send() {
     assert!(!result.requested_effects.is_empty() || !receipt.effects.is_empty(), "the registered example id must request the LoadDocument effect");
     app.close();
 
-    // 📇️ Actions are resolved PER WINDOW KIND now (`WindowKindDefinition.actions`) — `AppDefinition`
-    // no longer carries a flat `actions` list, and `ArgSchema::Select` folded into
-    // `ArgSchema::String { options, .. }` (`ActionArgDef::select`). `setActiveExample` is unscoped, so
-    // `build_definition` copies it onto every window kind; the staged form it offers must still be the
-    // subset's registered example set.
+    // 📇️ An action is resolved either on the app roster (`AppDefinition.actions`, where an unscoped
+    // verb such as `setActiveExample` stays) or on the window kind that owns it
+    // (`WindowKindDefinition.actions`) — the shell's `undeclaredActionDiagnostic` accepts both — and
+    // `ArgSchema::Select` folded into `ArgSchema::String { options, .. }` (`ActionArgDef::select`).
+    // Wherever it is resolved, the staged form it offers must still be the subset's registered
+    // example set.
     let definition = create_trinity_jack_app();
     let offered: Vec<String> = definition
-        .window_kinds
+        .actions
         .iter()
-        .flat_map(|window| window.actions.iter())
+        .chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter()))
         .find(|action| action.id == "setActiveExample")
         .expect("setActiveExample declared")
         .args

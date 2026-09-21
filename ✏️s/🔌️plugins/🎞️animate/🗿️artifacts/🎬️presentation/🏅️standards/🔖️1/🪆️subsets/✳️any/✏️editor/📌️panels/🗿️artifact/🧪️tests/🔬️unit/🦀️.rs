@@ -6,7 +6,7 @@ use crate::editor::animate::PresentationCommand;
 async fn document_lists_seeded_tiles() {
     use semio_framework_plugin::artifact_app_laws::meta;
     let mut app = presentation_app().await;
-    app.dispatch_typed(PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).await.expect("seed grid");
+    crate::editor::animate::unit_tests::context::dispatch(&mut app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 })).await;
     let document = render_body(&mut app, PRESENTATION_PLAY_BODY_ARTIFACT).await;
     assert!(document.contains("tile-r0-c0"));
 }

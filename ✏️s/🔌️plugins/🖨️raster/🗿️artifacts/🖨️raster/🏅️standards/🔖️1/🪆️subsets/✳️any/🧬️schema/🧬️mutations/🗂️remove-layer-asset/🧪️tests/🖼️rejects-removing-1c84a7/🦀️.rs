@@ -30,6 +30,12 @@ fn expected_after() -> RasterSnapshot {
 fn mutation() -> RasterMutation {
     dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
+/// 🧹️ This leaf's committed documents carry a populated `assets` pool, so every snapshot a test
+/// materializes reaches the artifact's own retirement seam instead of `RasterOwnedMap`'s
+/// fail-closed `Drop`.
+fn retire(snapshot: RasterSnapshot) {
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+}
 
 /// ▶️ A rejected `remove-layer-asset` leaves the document at the committed `after` — in particular
 /// the surviving `photo` handle is not re-minted, dropped or reordered.
@@ -37,8 +43,12 @@ fn mutation() -> RasterMutation {
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     let produced = apply_raster_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
-    assert_eq!(produced, expected_after(), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: applied state differs from committed after-snapshot");
+    let after = expected_after();
+    assert_eq!(produced, after, "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: applied state differs from committed after-snapshot");
     assert_eq!(produced.assets, base.assets, "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: a rejected removal must leave every committed child handle byte-identical");
+    retire(after);
+    retire(produced);
+    retire(base);
 }
 
 /// 🗂️ `remove-layer-asset` is one of only two verbs addressed by ASSET id: it searches the
@@ -61,6 +71,7 @@ async fn a_missing_asset_is_reported_by_its_asset_id() {
         ("remove", "asset", "remove-layer-asset", "RemovedLayerAsset"),
         "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the fixture must be bound to remove-layer-asset's own descriptor"
     );
+    retire(base);
 }
 
 /// ↩️ This verb's inverse is BASE-derived: it recovers the removed bytes through the working-scene
@@ -68,7 +79,9 @@ async fn a_missing_asset_is_reported_by_its_asset_id() {
 /// is empty — never a destructive `add-layer-asset` guess.
 #[semio_framework_async_macros::async_test]
 async fn inverse_has_no_asset_to_reattach() {
-    let inverse = inverse_raster_mutation(&before(), &mutation());
+    let base = before();
+    let inverse = inverse_raster_mutation(&base, &mutation());
+    retire(base);
     assert!(inverse.is_empty(), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: a rejected removal must have no inverse steps, got {inverse:?}");
 }
 
@@ -80,6 +93,7 @@ async fn committed_json_is_canonical() {
         let decoded: RasterSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
         let reencoded = dsl::json::from_dsl_value(&dsl::ToValue::to_value(&decoded));
         let original = dsl::json::parse(text).expect("snapshot reparses");
+        retire(decoded);
         assert!(dsl::json::value_eq_ignoring_object_order(&reencoded, &original), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: committed {side} JSON is not canonical");
     }
     let reencoded = dsl::json::from_dsl_value(&dsl::ToValue::to_value(&mutation()));
@@ -92,7 +106,9 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome = dsl::json::parse(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(dsl::json::Value::as_str), Some("rejected"), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached declares a rejected outcome");
-    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &before());
+    let base = before();
+    let produced = <RasterMutation as protocol::Mutation<RasterSnapshot>>::diff(&mutation(), &base);
+    retire(base);
     let message = produced.messages().first().expect("a rejected outcome carries a diagnostic");
     assert_eq!(outcome.get("code").and_then(dsl::json::Value::as_str), Some(message.code.0.as_str()), "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the declared code must match the emitted one");
     let declared_path: Vec<String> = outcome.get("path").and_then(dsl::json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();

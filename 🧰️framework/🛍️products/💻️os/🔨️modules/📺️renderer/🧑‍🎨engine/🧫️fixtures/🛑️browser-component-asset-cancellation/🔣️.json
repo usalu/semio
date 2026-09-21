@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "owners": [
+    { "id": "asset-a", "responseToken": 41, "bytes": [1, 2, 3] },
+    { "id": "asset-b", "responseToken": 42, "bytes": [4, 5, 6] }
+  ],
+  "handback": ["busy", "returned"],
+  "expected": {
+    "aborted": "asset-a",
+    "decodeCancellationOwner": "asset-a",
+    "publishedOwners": ["asset-b"],
+    "pollOrder": ["asset-a", "asset-b"]
+  }
+}

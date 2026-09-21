@@ -1,4 +1,3 @@
-
 use super::*;
 use ui_wgpu::wgpu::{Label, LayoutBucket, Node, NodeFlags, NodeKey, Theme, UiPresence, UiStackNode, UiTextNode, WidgetSpec};
 
@@ -75,7 +74,11 @@ fn the_accessibility_dump_announces_visible_windows_and_keeps_named_diagnostics(
 
     let requested = law["requestedDiagnostic"]["requested"].as_str().unwrap();
     let named = build_accessibility_dump(&engine, Some(requested));
-    assert_eq!(named.windows.iter().map(|window| window.window_id.as_str()).collect::<Vec<_>>(), law["requestedDiagnostic"]["published"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>(), "a named diagnostic remains available for an inactive retained document");
+    assert_eq!(
+        named.windows.iter().map(|window| window.window_id.as_str()).collect::<Vec<_>>(),
+        law["requestedDiagnostic"]["published"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>(),
+        "a named diagnostic remains available for an inactive retained document"
+    );
     assert_eq!(named.window_id.as_deref(), Some(requested));
     assert_eq!(named.window_ids.len(), 3, "and still names every window a caller could ask for instead");
     assert!(!accessibility_window_is_visible(law["hiddenEvent"]["windowId"].as_str().unwrap()), "the same publication rejects events for an inactive document");
@@ -163,6 +166,24 @@ fn sibling_world_diagnostics_read_their_exact_host_camera_and_keep_the_public_su
         assert_eq!(surface_id, "shared-world-document");
         assert_eq!(camera, Some(expected));
     }
+}
+
+#[test]
+fn retiring_a_component_releases_its_exact_camera_diagnostic_owner() {
+    let mut owner = fixture_scene_pointer_target("diagnostic-close-window", "diagnostic-close-document", "camera-owner");
+    owner.host_id = "diagnostic-close-host".into();
+    owner.kind = ui_wgpu::wgpu::SurfaceKind::Canvas2d;
+    assert!(crate::scenes::mount_scene_identity(&owner));
+    WORLD_CAMERA_LEDGER.borrow_mut().insert(owner.host_id.clone(), serde_json::json!({ "position": [1.0, 2.0, 3.0] }));
+    assert!(crate::scenes::retire_scene_identity(&owner));
+    let remaining = world_camera_ledger_row(&owner.host_id);
+    for _ in 0..262_144 {
+        if !crate::scenes::close_retired_scene_surface_one() {
+            break;
+        }
+    }
+    WORLD_CAMERA_LEDGER.borrow_mut().remove(&owner.host_id);
+    assert_eq!(remaining, None, "diagnostic ownership transfers to the component's bounded retirement cursor");
 }
 
 /// 🎬️ A scene host for a tree that declares no engine surface — it can never be called, and saying
@@ -310,12 +331,7 @@ fn chrome_action_args_are_truncated_on_a_character_boundary() {
 /// so a probe tells "switch off" from "nothing registered".
 #[test]
 fn chrome_dump_window_filter_keeps_chrome_and_reports_the_diagnostics_gate() {
-    let owners = [
-        ("a.row".to_string(), ("window-a".to_string(), Rect::new(0.0, 0.0, 10.0, 10.0))),
-        ("b.row".to_string(), ("window-b".to_string(), Rect::new(0.0, 0.0, 10.0, 10.0))),
-    ]
-    .into_iter()
-    .collect::<std::collections::HashMap<_, _>>();
+    let owners = [("a.row".to_string(), ("window-a".to_string(), Rect::new(0.0, 0.0, 10.0, 10.0))), ("b.row".to_string(), ("window-b".to_string(), Rect::new(0.0, 0.0, 10.0, 10.0)))].into_iter().collect::<std::collections::HashMap<_, _>>();
     let hits = vec![
         chrome_hit("shell.navbar.artifact", ui_wgpu::wgpu::HitKind::NavbarItem, Rect::new(0.0, 0.0, 40.0, 40.0), None),
         chrome_hit("a.row", ui_wgpu::wgpu::HitKind::TreeItem, Rect::new(0.0, 40.0, 40.0, 20.0), None),
@@ -347,7 +363,11 @@ fn chrome_surface_census_publishes_react_levels_sorted_and_deduplicated() {
     ];
     let mut ledger = ChromeLedger::default();
     ledger_publish_surfaces(&mut ledger, &census);
-    assert_eq!(ledger.surfaces.iter().map(|surface| (surface.level.as_str(), surface.id.as_str())).collect::<Vec<_>>(), vec![("dialog", "ui.introduction"), ("panel", "framework.panel.artifact"), ("window", "puzzle3d-main-top")], "one row per surface, level first");
+    assert_eq!(
+        ledger.surfaces.iter().map(|surface| (surface.level.as_str(), surface.id.as_str())).collect::<Vec<_>>(),
+        vec![("dialog", "ui.introduction"), ("panel", "framework.panel.artifact"), ("window", "puzzle3d-main-top")],
+        "one row per surface, level first"
+    );
     assert_eq!(ledger.surfaces[1].element_id, "framework.panelTab.framework.panel.artifact", "a panel is named by React's `panelTabElementId`, never by the window instance the shell keeps it in");
 
     let dump = project_chrome_dump(&ledger, None, true);

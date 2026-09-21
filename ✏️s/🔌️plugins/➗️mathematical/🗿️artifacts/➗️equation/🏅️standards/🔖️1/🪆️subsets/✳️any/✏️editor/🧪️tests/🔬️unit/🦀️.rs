@@ -15,7 +15,7 @@ pub(crate) mod context {
     /// (`AppActionRegistry::validate_tool_job_rows`): an empty registry declares none of them, so the
     /// registry-LESS `artifact_app_laws::new_app` fails construction outright with
     /// `interactive-job.catalog-authority … generated_migrated=false, migrated={}`.
-    pub async fn math_app() -> MathApp {
+    pub async fn math_app() -> OwnedMathApp {
         math_app_with_registry().await
     }
     
@@ -28,12 +28,62 @@ pub(crate) mod context {
     }
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn math_app_with_registry() -> MathApp {
-        new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests).await
+    /// 🪪️ Bound to the live runtime instance `meta("local")` addresses. Binding is mandatory now that
+    /// every document verb is classified `Migrated`: an unbound wrapper answers every typed dispatch
+    /// `interactive-job.live-instance: typed command … does not belong to the mounted live app instance`.
+    pub async fn math_app_with_registry() -> OwnedMathApp {
+        let mut app = new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests).await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        OwnedMathApp(app)
+    }
+
+    /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does — on a
+    /// mounted app `dispatch_typed` only QUEUES the operation, so a test reading `app.snapshot()`
+    /// straight afterwards would observe the pre-dispatch document.
+    pub async fn settle(app: &mut MathApp) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation");
+    }
+
+    /// 🔚 A mounted app that RETIRES ITSELF. A live `ArtifactStore` asserts in `Drop`
+    /// (`artifact store reached Drop without its exact terminal-empty shallow-shell witness`) unless
+    /// it walked its bounded close loop first, so the fixture owns the close instead of asking every
+    /// law to remember a trailing `close(&mut app)` — which is what makes a law that fails an
+    /// assertion report ITS failure instead of a close panic. Skipped while unwinding, where the
+    /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
+    pub struct OwnedMathApp(MathApp);
+
+    impl OwnedMathApp {
+        /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
+        pub fn close(&mut self) {
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+        }
+    }
+
+    impl std::ops::Deref for OwnedMathApp {
+        type Target = MathApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for OwnedMathApp {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for OwnedMathApp {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                self.close();
+            }
+        }
     }
     
     pub async fn dispatch(app: &mut MathApp, command: EquationCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        settle(app).await;
+        result
     }
     
     pub async fn render(app: &mut MathApp, body_key: &str) -> String {

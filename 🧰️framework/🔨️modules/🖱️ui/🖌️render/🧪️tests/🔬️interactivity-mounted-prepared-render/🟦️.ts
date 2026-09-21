@@ -43,11 +43,11 @@ export function interactivityMountedPreparedRenderSelfTests(repoRoot: string): v
     ["missing-command-max-law", 0, "fixed_command_pages_reject_max_plus_one_without_consuming_the_owner", "command_max_smoke"],
     ["missing-gpu-drop", 2, "impl Drop for PreparedGpuPresentCursor", "impl PreparedGpuPresentCursor"],
     ["bulk-gpu-command", 2, "cursor.command.checked_add(1)", "packet.command_pages().len()"],
-    ["bulk-gpu-glass", 2, "cursor.glass_command.checked_add(1)", "packet.command_pages().len()"],
+    ["missing-glass-owner", 2, "prepared_glass_command(packet, cursor.command)?", "packet.draw.glass_regions.first().unwrap()"],
     ["bulk-gpu-blur", 2, "cursor.blur_mip.checked_add(1)", "SCENE_MIP_LEVELS"],
-    ["missing-gpu-watchdog", 2, "default_now_ms() - started > 2", "false"],
-    ["whole-gpu-render", 2, "self.encode_prepared_draw_scalar(packet, draw_cursor, overlay_owner, PreparedDrawTarget::Scene)?", "self.render_prepared(packet)?"],
-    ["bulk-gpu-glass-foreground", 2, "cursor.foreground_command.checked_add(1)", "packet.command_pages().len()"],
+    ["missing-gpu-watchdog", 2, "admit_prepared_gpu_opportunity(cursor.overrun_run, elapsed)", "Ok(0)"],
+    ["whole-gpu-render", 2, "self.encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay())?", "self.render_prepared(packet)?"],
+    ["missing-current-backdrop", 2, "blit_prepared_composite(&self.device, &mut encoder, scene.mip_view(0), composite)", "blit_prepared_scene(&self.device, &mut encoder, composite.view(), scene)"],
     ["missing-ui-scalar", 1, "pub fn encode_prepared_ui_scalar", "fn encode_ui_batch"],
     ["dynamic-ui-scalar", 1, "std::slice::from_ref(instance)", "&vec![*instance]"],
     ["whole-vector-draw", 1, "pass.draw(0..3, 0..1)", "pass.draw(0..vertices.len() as u32, 0..1)"],
@@ -61,16 +61,16 @@ export function interactivityMountedPreparedRenderSelfTests(repoRoot: string): v
     [
       "caller-wide-deadline",
       3,
-      'site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_ms: 1',
-      'site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_ms: 16',
+      'site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_us: 1000',
+      'site: "os_renderer.prepare.worker", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_us: 16000',
     ],
     ["whole-frame-builder", 4, "#[cfg(test)]\n    pub fn build_frame", "    pub fn build_frame"],
-    ["whole-scene-builder", 5, "#[cfg(test)]\n    pub fn finish(", "    pub fn finish("],
+    ["whole-scene-builder", 5, "#[cfg(any(test, feature = \"backend-testing\"))]\n    pub fn finish(", "    pub fn finish("],
     ["missing-gpu-interruption-law", 2, "interrupted_present_cursor_hands_back_generation_and_fixed_owners", "present_interruption_smoke"],
   ];
   for (const [name, index, needle, replacement] of mutations) {
     const mutated: PreparedRenderPolicySources = [...clean];
-    mutated[index] = mutated[index]!.replace(needle, replacement);
+    mutated[index] = mutated[index]!.replaceAll(needle, replacement);
     if (mutated[index] === clean[index]) throw new Error(`[verify interactivity p5d] mutation ${name} did not bind live source`);
     if (interactivityMountedPreparedRenderFailures(...mutated).length === 0) throw new Error(`[verify interactivity p5d] mutation ${name} was falsely accepted`);
   }

@@ -99,14 +99,14 @@
       "label": "Documents",
       "panes": [
         { "variant": "stdio", "label": "Markdown", "tagline": "Write Markdown", "description": "Write CommonMark documents with headings, lists, links and code blocks.", "icon": "file-text", "example": "demo" },
-        { "variant": "stdio-txt", "label": "Plain Text", "tagline": "Edit plain text", "description": "Read and edit UTF-8 plain text line by line.", "icon": "align-left" },
-        { "variant": "stdio-csv", "label": "CSV", "tagline": "Edit comma-separated tables", "description": "Open RFC 4180 comma-separated tables and edit them record by record.", "icon": "file-spreadsheet" },
-        { "variant": "stdio-tsv", "label": "TSV", "tagline": "Edit tab-separated tables", "description": "Open tab-separated tables and edit them record by record.", "icon": "table-2" },
-        { "variant": "stdio-json", "label": "JSON", "tagline": "Edit JSON documents", "description": "Browse and edit RFC 8259 JSON documents as a typed value tree.", "icon": "file-json" },
-        { "variant": "stdio-json-i", "label": "I-JSON", "tagline": "Edit interoperable JSON", "description": "Edit JSON under the stricter I-JSON profile meant for safe interchange.", "icon": "list-checks" },
-        { "variant": "stdio-xml", "label": "XML", "tagline": "Edit XML documents", "description": "Edit XML element by element together with its attributes.", "icon": "file-code" },
-        { "variant": "stdio-xml-valid", "label": "Valid XML", "tagline": "Edit validated XML", "description": "Edit XML that has to stay valid against the document type it declares.", "icon": "check-circle-2" },
-        { "variant": "stdio-html", "label": "HTML", "tagline": "Edit web pages", "description": "Edit HTML 5 documents and inspect the structure of their elements.", "icon": "globe" }
+        { "variant": "stdio-txt", "label": "Plain Text", "tagline": "Edit plain text", "description": "Read and edit UTF-8 plain text line by line.", "icon": "align-left", "example": "demo" },
+        { "variant": "stdio-csv", "label": "CSV", "tagline": "Edit comma-separated tables", "description": "Open RFC 4180 comma-separated tables and edit them record by record.", "icon": "file-spreadsheet", "example": "demo" },
+        { "variant": "stdio-tsv", "label": "TSV", "tagline": "Edit tab-separated tables", "description": "Open tab-separated tables and edit them record by record.", "icon": "table-2", "example": "demo" },
+        { "variant": "stdio-json", "label": "JSON", "tagline": "Edit JSON documents", "description": "Browse and edit RFC 8259 JSON documents as a typed value tree.", "icon": "file-json", "example": "demo" },
+        { "variant": "stdio-json-i", "label": "I-JSON", "tagline": "Edit interoperable JSON", "description": "Edit JSON under the stricter I-JSON profile meant for safe interchange.", "icon": "list-checks", "example": "demo" },
+        { "variant": "stdio-xml", "label": "XML", "tagline": "Edit XML documents", "description": "Edit XML element by element together with its attributes.", "icon": "file-code", "example": "demo" },
+        { "variant": "stdio-xml-valid", "label": "Valid XML", "tagline": "Edit validated XML", "description": "Edit XML that has to stay valid against the document type it declares.", "icon": "check-circle-2", "example": "demo" },
+        { "variant": "stdio-html", "label": "HTML", "tagline": "Edit web pages", "description": "Edit HTML 5 documents and inspect the structure of their elements.", "icon": "globe", "example": "demo" }
       ]
     },
     {

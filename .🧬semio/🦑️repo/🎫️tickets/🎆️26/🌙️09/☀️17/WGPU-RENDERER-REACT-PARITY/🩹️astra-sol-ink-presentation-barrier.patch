@@ -1,0 +1,27 @@
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs
+@@ -530,5 +530,15 @@ impl SceneIntentQueue {
+     fn is_empty(&self) -> bool {
+         self.len == 0 && self.retiring.is_none()
+     }
++
++    fn blocks_presented_candidate(&self, engine: &ui_wgpu::wgpu::Ui, witness: u64) -> bool {
++        let blocks = |intent: &SceneInteractionIntent| {
++            engine.candidate_is_sealed_for(&intent.window_id, witness)
++                && engine.tree_revision(&intent.window_id) == Some(intent.tree_revision)
++                && engine.surface_generation(&intent.window_id) == Some(intent.surface_generation)
++        };
++        self.retiring.as_ref().is_some_and(blocks)
++            || (0..self.len).any(|offset| self.slots[(self.head + offset) % SCENE_INTENT_CAPACITY].as_ref().is_some_and(blocks))
++    }
+ 
+     fn cancel_pointer(&mut self, pointer_id: ui_render::PointerId, owners: &[ScenePointerOwner]) {
+@@ -4198,4 +4208,7 @@ pub fn acknowledge_presented_input(witness: u64) -> bool {
+ pub fn acknowledge_presented_input(witness: u64) -> bool {
+     UI_ENGINE.with(|cell| {
+         let mut engine = cell.borrow_mut();
++        if SCENE_INTENTS.with(|cell| cell.borrow().blocks_presented_candidate(&engine, witness)) {
++            return false;
++        }
+         let editor_rebase = prepare_presented_editor_rebase(&engine, witness);

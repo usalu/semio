@@ -1,14 +1,36 @@
 {
   "$schema": "./📐️schema.json",
-  "schema": "semio.frame-turn-scheduling.v1",
+  "schema": "semio.frame-turn-scheduling.v3",
   "input": { "lifecycle": 1, "inputSequence": 41, "generation": 7 },
-  "turnOwners": ["frame"],
-  "requests": [{ "owner": "frame", "remainingTurns": 2 }],
+  "turnOwners": ["frame", "assetDecode"],
+  "requests": [
+    { "owner": "frame", "remainingTurns": 2 },
+    { "owner": "assetDecode", "remainingTurns": 3 }
+  ],
   "runtimeTurns": [
     { "phase": "uploads", "requestFrame": true, "continueFrame": true },
     { "phase": "finish", "requestFrame": true, "continueFrame": true },
     { "phase": "terminal", "requestFrame": true, "continueFrame": false }
   ],
+  "assetDecodeTurns": [
+    { "phase": "acquire", "outcome": "pending", "pending": true, "presentationChanged": false },
+    { "phase": "parse", "outcome": "pending", "pending": true, "presentationChanged": false },
+    { "phase": "publish", "outcome": "published", "pending": false, "presentationChanged": true }
+  ],
+  "cancelledDecode": {
+    "retiredToken": 17,
+    "successorToken": 18,
+    "beforeClose": "pending",
+    "afterClose": "cancelled",
+    "publishedTokens": []
+  },
+  "runtimeWakeRetry": {
+    "beforeHandback": "idle",
+    "wakeOwners": ["frame", "assetDecode"],
+    "afterHandback": "published",
+    "publicMessages": ["wake"],
+    "frameMessages": 0
+  },
   "nonRunnableTurns": [
     { "owner": "future-deadline", "requestFrame": true, "continueFrame": false },
     { "owner": "hub-status-external", "requestFrame": false, "continueFrame": false }
@@ -21,12 +43,16 @@
   ],
   "expected": {
     "ingressTrace": ["enqueue:41", "batch-accepted:41"],
-    "callbackOwners": ["frame", "frame"],
+    "callbackOwners": ["frame", "assetDecode", "frame", "assetDecode", "assetDecode"],
     "frameSequences": [1, 2],
     "runtimePhases": ["uploads", "finish", "terminal"],
+    "assetDecodePhases": ["acquire", "parse", "publish"],
+    "assetPublicMessages": ["wake"],
+    "assetFrameMessages": 0,
+    "frameDecodeUnits": 0,
     "nonRunnableCallbacks": ["future-deadline", "hub-status-external"],
     "runnableTextPhases": ["commit", "cancel"],
-    "closeOwners": ["frame"],
+    "closeOwners": ["arbiter"],
     "exhaustion": "fault"
   }
 }

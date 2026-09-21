@@ -208,10 +208,23 @@ pub struct ProgramSnapshot {
     #[dsl(table)]
     #[state(artifact)]
     pub templates: Vec<TemplateRecord>,
+    /// 📚️ The rows the composed `knowledge` child is derived from — the PERSISTED payload of that
+    /// child slot (`🏭️process`'s `stock_payload`/`step_payloads` pattern). A composed child's content
+    /// never travels inside `store::ArtifactChild`, and the react shell answers `Effect::LoadDocument`
+    /// with an EMPTY member roster, so `crate::genesis_program_child_pack` can only derive the table
+    /// from a field the parent's own pack/DSL round-trips.
+    #[dsl(table)]
+    #[state(artifact)]
+    pub knowledge_payload: Vec<KnowledgeRecord>,
     #[dsl(block)]
     #[child(kind = "s.stdio.semio")]
     #[state(artifact)]
     pub knowledge: crate::ProgramKnowledgeChild,
+    /// 🏁️ The rows the composed `benchmarks` child is derived from — see
+    /// [`ProgramSnapshot::knowledge_payload`].
+    #[dsl(table)]
+    #[state(artifact)]
+    pub benchmarks_payload: Vec<BenchmarkRecord>,
     #[dsl(block)]
     #[child(kind = "s.stdio.semio")]
     #[state(artifact)]

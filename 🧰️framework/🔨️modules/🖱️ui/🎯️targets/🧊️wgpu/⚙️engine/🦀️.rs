@@ -9,6 +9,7 @@
 
 use std::collections::{HashMap, VecDeque};
 
+use crate::wgpu::arena::NodeId;
 use crate::wgpu::chrome::UiDriverDrag;
 use crate::wgpu::component::layout::WindowLayout;
 use crate::wgpu::component::ui::UiNode;
@@ -21,7 +22,7 @@ use crate::wgpu::mounted_layout::{MountedLayoutIdentity, MountedLayoutJob, Mount
 #[cfg(test)]
 use crate::wgpu::paint::paint_tree;
 use crate::wgpu::paint::{paint_node_step_with_driver, retained_overlay_chrome_step, sync_interactive_state_node_step, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep};
-use crate::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileFault, UiDocumentReconcileStep, UiRetiredComponentScene};
+use crate::wgpu::reconcile::{UiComponentSceneWitness, UiDocumentReconcileCursor, UiDocumentReconcileFault, UiDocumentReconcileStep, UiRetiredComponentScene};
 #[cfg(test)]
 use crate::wgpu::scene_slots::collect_scene_slots;
 use crate::wgpu::scene_slots::{scene_slot_for_node, SceneHost, ScenePaintCursor, ScenePaintStep};
@@ -71,6 +72,7 @@ struct UiWindow {
     candidate_ready: bool,
     candidate_reconciled: bool,
     candidate_retirements_resolved: bool,
+    candidate_preserves_prior_mounts: bool,
     candidate_interaction_cursor: Option<usize>,
     sealed_input_candidate: Option<(u64, u64)>,
     candidate_baseline: Option<Box<UiCandidateBaseline>>,
@@ -125,6 +127,7 @@ impl UiWindow {
             candidate_ready: false,
             candidate_reconciled: false,
             candidate_retirements_resolved: false,
+            candidate_preserves_prior_mounts: false,
             candidate_interaction_cursor: None,
             sealed_input_candidate: None,
             candidate_baseline: None,
@@ -165,16 +168,14 @@ impl UiWindow {
         self.closing.is_none() && self.tree.root.and_then(|root| self.tree.node(root)).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::DIRTY_PAINT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY))
     }
 
-    fn close_tree_storage_step(&mut self, window_id: &str) -> bool {
-        let generation = self.accessibility_generation;
-        let Self { tree, scene_retirements, .. } = self;
-        tree.close_storage_step(&mut |node_id, node| retire_surface_scene(window_id, generation, scene_retirements, node_id, node))
+    fn close_tree_storage_step(&mut self, _window_id: &str) -> bool {
+        let Self { tree, .. } = self;
+        tree.close_storage_step(&mut |_, _| true)
     }
 
-    fn close_presented_tree_storage_step(&mut self, window_id: &str) -> bool {
-        let generation = self.presented_accessibility_generation;
-        let Self { presented_tree, scene_retirements, .. } = self;
-        presented_tree.close_storage_step(&mut |node_id, node| retire_surface_scene(window_id, generation, scene_retirements, node_id, node))
+    fn close_presented_tree_storage_step(&mut self, _window_id: &str) -> bool {
+        let Self { presented_tree, .. } = self;
+        presented_tree.close_storage_step(&mut |_, _| true)
     }
 
     fn begin_presented_interaction_rebase(&mut self) {
@@ -303,12 +304,20 @@ impl UiCandidateBaseline {
     }
 }
 
-fn retire_surface_scene(window_id: &str, window_generation: u64, retirements: &mut VecDeque<UiRetiredComponentScene>, node_id: crate::wgpu::arena::NodeId, node: &crate::wgpu::tree::Node) -> bool {
+fn retire_surface_scene(
+    document_id: UiNodeId,
+    window_id: &str,
+    window_generation: u64,
+    retirements: &mut VecDeque<UiRetiredComponentScene>,
+    node_id: crate::wgpu::arena::NodeId,
+    node: &crate::wgpu::tree::Node,
+) -> bool {
     let UiNode::ComponentScene(scene) = &node.spec.0 else { return true };
     if retirements.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
         return false;
     }
     retirements.push_back(UiRetiredComponentScene {
+        document_id,
         host_id: scene.host_id.clone(),
         window_id: window_id.to_string(),
         window_generation,
@@ -601,6 +610,7 @@ fn register_retained_hit(
     theme: &Theme,
     driver_drag: UiDriverDrag,
     reversed: bool,
+    inline: ui_contract::FlowInline,
     node: crate::wgpu::arena::NodeId,
     origin_x: f32,
     origin_y: f32,
@@ -618,7 +628,7 @@ fn register_retained_hit(
     if rect.w <= 0.0 || rect.h <= 0.0 {
         return;
     }
-    let metrics = TreeRowMetrics::from_theme(theme);
+    let metrics = crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, node, &TreeRowMetrics::from_theme(theme).with_inline(inline));
     let overlay = overlay || tree.is_open_select_popup_row(node);
     if let Some(registration) = retained_hit_registration(tree, node, rect, &metrics, driver_drag, reversed) {
         push_retained_hit(out, overlay_hits, overlay, registration);
@@ -1073,7 +1083,8 @@ impl Ui {
         let metrics = TreeRowMetrics::from_theme(&self.theme);
         let mut commands = Vec::new();
         for window in self.windows.values_mut().filter(|window| window.closing.is_none()) {
-            commands.extend(window.router.set_tree_drag_policy(&mut window.tree, driver_drag, metrics));
+            let inline = window.router.flow().inline;
+            commands.extend(window.router.set_tree_drag_policy(&mut window.tree, driver_drag, metrics.with_inline(inline)));
             let Some(next_revision) = window.theme_revision.checked_add(1) else { continue };
             window.theme_revision = next_revision;
             if let Some(root) = window.tree.root {
@@ -1112,6 +1123,10 @@ impl Ui {
             if !window.candidate_ready {
                 continue;
             }
+            if window.presented_ready {
+                window.tree.transfer_composite_interaction_from(&window.presented_tree);
+                window.router.transfer_interaction_from(&window.presented_router, &window.presented_tree, &window.tree);
+            }
             window.sealed_input_candidate = Some((witness, window.candidate_base_interaction_epoch));
         }
         true
@@ -1124,13 +1139,58 @@ impl Ui {
         })
     }
 
+    pub fn candidate_is_sealed_for(&self, window_id: &str, witness: u64) -> bool {
+        self.windows
+            .get(window_id)
+            .filter(|window| window.closing.is_none())
+            .is_some_and(|window| window.sealed_input_candidate.is_some_and(|(candidate, base)| candidate == witness && base == window.presented_interaction_epoch))
+    }
+
+    pub fn candidate_scene_node_for_presented_node(&self, window_id: &str, witness: u64, presented_node: crate::wgpu::arena::NodeId) -> Option<crate::wgpu::arena::NodeId> {
+        let window = self.windows.get(window_id).filter(|window| window.closing.is_none())?;
+        let sealed = window.sealed_input_candidate.is_some_and(|(candidate, base)| candidate == witness && base == window.presented_interaction_epoch);
+        if !sealed {
+            return None;
+        }
+        let document_id = window.presented_tree.document_id(presented_node)?;
+        let candidate_node = window.tree.document_node(document_id)?;
+        matches!(&window.presented_tree.node(presented_node)?.spec.0, UiNode::ComponentScene(_))
+            .then_some(())?;
+        matches!(&window.tree.node(candidate_node)?.spec.0, UiNode::ComponentScene(_)).then_some(candidate_node)
+    }
+
+    pub fn presented_component_scene_matches(&self, witness: &UiComponentSceneWitness<'_>) -> bool {
+        let Some(window) = self.windows.get(witness.window_id).filter(|window| window.closing.is_none() && window.presented_ready && window.presented_accessibility_generation == witness.window_generation) else {
+            return false;
+        };
+        let Some(node) = window.presented_tree.document_node(witness.document_id).and_then(|node| window.presented_tree.node(node)) else {
+            return false;
+        };
+        let UiNode::ComponentScene(scene) = &node.spec.0 else { return false };
+        node.key == *witness.key
+            && node.component_generation() == witness.component_generation
+            && scene.host_id == witness.host_id
+            && scene.component_kind == witness.kind
+            && scene.surface_id == witness.surface_id
+    }
+
+    /// 📐️ Resolves the exact candidate scene node and painted rectangle for one presented node.
+    pub fn candidate_scene_geometry_for_presented_node(
+        &self,
+        window_id: &str,
+        witness: u64,
+        presented_node: crate::wgpu::arena::NodeId,
+    ) -> Option<(crate::wgpu::arena::NodeId, crate::wgpu::geometry::Rect)> {
+        let node = self.candidate_scene_node_for_presented_node(window_id, witness, presented_node)?;
+        Some((node, self.windows.get(window_id)?.tree.absolute_rect(node)?))
+    }
+
     /// 🏁 Swaps bounded move-owned tree/router revisions only after the matching pixels are accepted.
     pub fn acknowledge_presented_input(&mut self, witness: u64) -> bool {
         if !self.presented_input_candidate_matches(witness) {
             return false;
         }
         for window in self.windows.values_mut().filter(|window| window.sealed_input_candidate.is_some_and(|(candidate, _)| candidate == witness)) {
-            let initial = !window.presented_ready;
             std::mem::swap(&mut window.tree, &mut window.presented_tree);
             std::mem::swap(&mut window.router, &mut window.presented_router);
             window.presented_revision = window.revision;
@@ -1140,12 +1200,11 @@ impl Ui {
                 debug_assert!(window.scene_retirements.is_empty());
                 std::mem::swap(&mut window.scene_retirements, &mut window.accepted_scene_retirements);
             }
-            if initial {
-                window.candidate_baseline = window.presented_tree.document().map(|source| Box::new(UiCandidateBaseline::new(source)));
-            }
+            window.candidate_baseline = window.presented_tree.document().map(|source| Box::new(UiCandidateBaseline::new(source)));
             window.candidate_ready = false;
             window.candidate_reconciled = false;
             window.candidate_retirements_resolved = false;
+            window.candidate_preserves_prior_mounts = false;
             window.candidate_interaction_cursor = None;
             window.sealed_input_candidate = None;
             window.candidate_base_interaction_epoch = window.presented_interaction_epoch;
@@ -1291,7 +1350,7 @@ impl Ui {
                 let Some(window_id) = self.windows.id(token).cloned() else { return UiSurfaceCloseStep::Complete };
                 let Some(window) = self.windows.get_token_mut(token) else { return UiSurfaceCloseStep::Complete };
                 let generation = window.presented_accessibility_generation;
-                if !window.presented_tree.close_document_binding_step(&mut |node_id, node| retire_surface_scene(window_id.as_ref(), generation, &mut window.scene_retirements, node_id, node)) {
+                if !window.presented_tree.close_document_binding_step(&mut |document_id, node_id, node| retire_surface_scene(document_id, window_id.as_ref(), generation, &mut window.scene_retirements, node_id, node)) {
                     return UiSurfaceCloseStep::Pending;
                 }
                 if let Some(document) = window.retiring_presented_document.as_mut() {
@@ -1549,6 +1608,7 @@ impl Ui {
         if let Some(generation) = next_accessibility_generation {
             window.accessibility_generation = generation;
         }
+        window.candidate_preserves_prior_mounts = window.presented_ready && window.revision > window.presented_revision;
         window.retiring_document = window.tree.publish_document(ingress.document);
         window.candidate_ready = false;
         window.candidate_reconciled = false;
@@ -1589,6 +1649,7 @@ impl Ui {
         if let Some(generation) = next_accessibility_generation {
             window.accessibility_generation = generation;
         }
+        window.candidate_preserves_prior_mounts = window.presented_ready && window.revision > window.presented_revision;
         window.retiring_document = window.tree.publish_document(document);
         window.candidate_ready = false;
         window.candidate_reconciled = false;
@@ -1623,6 +1684,7 @@ impl Ui {
                 UiCandidateBaselineStep::Pending => UiDocumentReconcileStep::Pending,
                 UiCandidateBaselineStep::Complete(document) => {
                     window.candidate_baseline = None;
+                    window.candidate_preserves_prior_mounts = false;
                     window.retiring_document = window.tree.publish_document(document);
                     window.candidate_ready = false;
                     window.candidate_reconciled = false;
@@ -1672,9 +1734,9 @@ impl Ui {
         }
         let preserved_composite_owner = window.router.capture().and_then(|(target, _)| window.tree.surviving_composite_owner(target));
         let window_generation = window.accessibility_generation;
-        let UiWindow { tree, presented_tree, document_reconcile, scene_retirements, candidate_scene_retirements, accepted_scene_retirements, component_mount_generation, .. } = window;
+        let UiWindow { tree, presented_tree, document_reconcile, scene_retirements, candidate_scene_retirements, accepted_scene_retirements, component_mount_generation, candidate_preserves_prior_mounts, .. } = window;
         let step = loop {
-            let step = tree.step_document_reconcile_preserving(document_reconcile, window_id, controller, preserved_composite_owner, window_generation, Some(presented_tree), component_mount_generation, &mut |retirement| {
+            let step = tree.step_document_reconcile_preserving(document_reconcile, window_id, controller, preserved_composite_owner, window_generation, Some(presented_tree), *candidate_preserves_prior_mounts, component_mount_generation, &mut |retirement| {
                 let deferred = presented_tree.component_scene_host_is_mounted(&retirement.host_id);
                 if scene_retirements.len() + candidate_scene_retirements.len() + accepted_scene_retirements.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
                     return false;
@@ -1700,6 +1762,17 @@ impl Ui {
         self.windows.get_mut(window_id)?.scene_retirements.pop_front()
     }
 
+    pub fn retired_component_scene(&self, window_id: &str) -> Option<UiRetiredComponentScene> {
+        self.windows.get(window_id)?.scene_retirements.front().cloned()
+    }
+
+    pub fn acknowledge_retired_component_scene(&mut self, window_id: &str, expected: &UiRetiredComponentScene) -> bool {
+        let Some(window) = self.windows.get_mut(window_id) else { return false };
+        if window.scene_retirements.front() != Some(expected) { return false; }
+        window.scene_retirements.pop_front();
+        true
+    }
+
     pub fn close_document_step(&mut self, window_id: &str) -> bool {
         let Some(window) = self.windows.get_mut(window_id) else { return true };
         if let Some(baseline) = window.candidate_baseline.as_mut() {
@@ -1711,7 +1784,7 @@ impl Ui {
         }
         let window_generation = window.accessibility_generation;
         let UiWindow { tree, scene_retirements, .. } = window;
-        if !tree.close_document_binding_step(&mut |node_id, node| retire_surface_scene(window_id, window_generation, scene_retirements, node_id, node)) {
+        if !tree.close_document_binding_step(&mut |document_id, node_id, node| retire_surface_scene(document_id, window_id, window_generation, scene_retirements, node_id, node)) {
             return false;
         }
         if !window.document_reconcile.close_step() {
@@ -1899,6 +1972,7 @@ impl Ui {
             window.viewport.0,
             window.viewport.1,
             window.router.flow().block.is_reversed(),
+            window.router.flow().inline,
         )
         .ok();
         if window.layout_job.is_some() {
@@ -2192,7 +2266,7 @@ impl Ui {
                 if frame.paint_overlay {
                     frame.candidate.begin_overlay_route();
                 }
-                let step = paint_node_step_with_driver(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), self.driver_drag, window.router.flow().block.is_reversed(), &mut frame.candidate, &mut frame.node_paint);
+                let step = paint_node_step_with_driver(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), self.driver_drag, window.router.flow().block.is_reversed(), window.router.flow().inline, &mut frame.candidate, &mut frame.node_paint);
                 if frame.paint_overlay {
                     frame.candidate.end_overlay_route();
                 }
@@ -2313,7 +2387,20 @@ impl Ui {
             },
             RetainedPaintPhase::Hits => match frame.walk.step(&window.tree) {
                 RetainedPaintWalkStep::Visit(node, origin_x, origin_y, overlay_root) => {
-                    register_retained_hit(&window.tree, &theme, self.driver_drag, reversed, node, origin_x, origin_y, retained_node_clip(&window.tree, node), overlay_root.is_some(), &mut frame.overlay_index, &mut frame.hit_candidates);
+                    register_retained_hit(
+                        &window.tree,
+                        &theme,
+                        self.driver_drag,
+                        reversed,
+                        window.router.flow().inline,
+                        node,
+                        origin_x,
+                        origin_y,
+                        retained_node_clip(&window.tree, node),
+                        overlay_root.is_some(),
+                        &mut frame.overlay_index,
+                        &mut frame.hit_candidates,
+                    );
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
@@ -2430,7 +2517,7 @@ impl Ui {
                 if frame.paint_overlay {
                     target.begin_overlay_route();
                 }
-                let step = paint_node_step_with_driver(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), self.driver_drag, window.router.flow().block.is_reversed(), target, &mut frame.node_paint);
+                let step = paint_node_step_with_driver(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), self.driver_drag, window.router.flow().block.is_reversed(), window.router.flow().inline, target, &mut frame.node_paint);
                 if frame.paint_overlay {
                     target.end_overlay_route();
                 }
@@ -2566,6 +2653,7 @@ impl Ui {
                         &theme,
                         self.driver_drag,
                         reversed,
+                        window.router.flow().inline,
                         node,
                         origin_x + offset_x,
                         origin_y + offset_y,
@@ -2752,7 +2840,8 @@ impl Ui {
         let (commands, layout_changed) = {
             let (tree, router) = if presented { (&mut window.presented_tree, &mut window.presented_router) } else { (&mut window.tree, &mut window.router) };
             let Some(root) = tree.root else { return Vec::new() };
-            let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics);
+            let inline = router.flow().inline;
+            let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics.with_inline(inline));
             commands.extend(router.dispatch(tree, root, &event));
             (commands, tree.take_disclosure_changed())
         };
@@ -2782,7 +2871,8 @@ impl Ui {
         let (commands, layout_changed) = {
             let (tree, router) = if presented { (&mut window.presented_tree, &mut window.presented_router) } else { (&mut window.tree, &mut window.router) };
             let Some(root) = tree.root else { return Vec::new() };
-            let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics);
+            let inline = router.flow().inline;
+            let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics.with_inline(inline));
             commands.extend(router.dispatch_pointer(tree, root, pointer_id, &event));
             (commands, tree.take_disclosure_changed())
         };
@@ -2825,7 +2915,8 @@ impl Ui {
             if virtual_select_value.is_some() && !tree.node(target).is_some_and(|node| node.state.open) {
                 return None;
             }
-            let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics);
+            let inline = router.flow().inline;
+            let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics.with_inline(inline));
             commands.extend(match virtual_select_value {
                 Some(value) => router.dispatch_accessibility_select_option(tree, target, &value, &event),
                 None => router.dispatch_accessibility(tree, target, &event),
@@ -2964,7 +3055,7 @@ impl Ui {
     pub fn tooltip_label(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<String> {
         let tree = self.tree(window_id)?;
         let document = tree.document()?;
-        let id = tree.document_bindings().iter().find(|(_, arena)| *arena == node).map(|(id, _)| *id)?;
+        let id = tree.document_id(node)?;
         let record = document.record(id)?;
         if record.accessibility.hidden {
             return None;
@@ -3041,6 +3132,19 @@ impl Ui {
     /// 🎨️ Read-only candidate tree for the paint/hit-registration owner before presentation.
     pub fn candidate_tree(&self, window_id: &str) -> Option<&UiTree> {
         self.windows.get(window_id).map(|window| &window.tree)
+    }
+
+    pub fn presented_document_id(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<UiNodeId> {
+        self.windows.get(window_id)?.presented_tree.document_id(node)
+    }
+
+    pub fn retained_document_id(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<UiNodeId> {
+        let window = self.windows.get(window_id)?;
+        if window.presented_ready { window.presented_tree.document_id(node) } else { window.tree.document_id(node) }
+    }
+
+    pub fn candidate_document_id(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<UiNodeId> {
+        self.windows.get(window_id)?.tree.document_id(node)
     }
 
     /// 🧬️ Returns the retained tree identity revision used to reject stale interactive intents.

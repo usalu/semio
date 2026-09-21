@@ -1,9 +1,11 @@
 /** 🚗️ Language-neutral oracle for the seven-axis driver draft lifecycle. */
 import { describe, expect, test } from "vitest";
+import { uiI18n } from "@semio-tech/ui-react";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { driverDisplayLabel } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const frameworkRoot = join(engineRoot, "..", "..", "..", "..", "..");
@@ -74,5 +76,21 @@ describe("🚗️ driver editor contract", () => {
     expect(host).toContain('dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });');
     expect(host).toContain("commitUiPreference(setCustomDriver(id, canonicalUiDriver(saved)))");
     expect(host).toContain('commitUiPreference(setDriver(DEFAULT_UI_DRIVER.id))');
+  });
+
+  test("React localizes only the two closed built-in driver ids and preserves authored custom labels", async () => {
+    const drivers = [fixture.builtins.default, fixture.builtins.compact, { ...fixture.builtins.default, id: "custom.focus-flow", label: "Focus Flow" }];
+    const prior = uiI18n.language;
+    try {
+      for (const locale of ["en", "de"] as const) {
+        await uiI18n.changeLanguage(locale);
+        const labels = drivers.map((driver) => ({ id: driver.id, label: driverDisplayLabel(driver as Parameters<typeof driverDisplayLabel>[0]) }));
+        expect(labels).toEqual(fixture.displayLabels.map((row: { id: string; en: string; de: string }) => ({ id: row.id, label: row[locale] })));
+      }
+    } finally {
+      await uiI18n.changeLanguage(prior);
+    }
+    const custom = fixture.displayLabels.find((row: { ownership: string }) => row.ownership === "authored-custom");
+    expect(custom.en).toBe(custom.de);
   });
 });

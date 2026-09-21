@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema", "presentedChrome", "settingsTabStrip"],
+  "properties": {
+    "schema": { "const": "semio.renderer.wgpu.accessibility-interaction.v1" },
+    "presentedChrome": {
+      "type": "object",
+      "required": ["firstEpoch", "successorEpoch", "controls"],
+      "properties": {
+        "firstEpoch": { "type": "integer", "minimum": 1 },
+        "successorEpoch": { "type": "integer", "minimum": 1 },
+        "controls": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/namedId" } }
+      },
+      "additionalProperties": false
+    },
+    "settingsTabStrip": {
+      "type": "object",
+      "required": ["availableWidth", "activeId", "tabs", "tailIds"],
+      "properties": {
+        "availableWidth": { "type": "number", "exclusiveMinimum": 0 },
+        "activeId": { "type": "string", "minLength": 1 },
+        "tabs": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "$ref": "#/$defs/namedId" } },
+        "tailIds": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "namedId": {
+      "type": "object",
+      "required": ["id", "label"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

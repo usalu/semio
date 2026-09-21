@@ -1,5 +1,13 @@
 {
   "_": "🎬️ React's per-window Actions pane and Search pane, read off 🛠️ShellHelpers/🟦️.tsx (buildActionCategoryTree/WindowActionPane/windowEngagementToSearchSpec), 🪟️Window/🟦️.tsx (the two Panes) and 🖱️ui/🎯️targets/⚛️react/🟦️.tsx (Search, filterSearchPossibles) — plus one measured DOM capture of 6313/?plugin=puzzle3d (🗑️generated/w13b-react-dom.json). Both renderers assert against this.",
+  "foldOwnership": {
+    "_": "The Actions and Search chips own independent folded panes. Opening one publishes only that pane's retained body; the other remains a folded chip until its own physical press.",
+    "default": { "actions": "folded", "search": "folded" },
+    "physicalPress": [
+      { "chip": "actions", "actions": "open", "search": "folded", "visibleBody": "actions" },
+      { "chip": "search", "actions": "folded", "search": "open", "visibleBody": "search" }
+    ]
+  },
   "paneWidthPx": 300,
   "actionsPane": {
     "bodySlot": "window-action-pane",

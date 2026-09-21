@@ -14,10 +14,9 @@ function pluginDescriptorReader(repoRoot: string): (cratePath: string) => any | 
 }
 
 /** @emoji 📚️ Plugins whose examples never reach a navbar picker, so a pane of theirs boots its app's own
- * default document: the framework's own `NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS`, minus `stdio` — that
- * one is exempt there because only one of its 18 shipped document apps publishes an example, while play
- * gives each of those apps its OWN pane, so the single publishing app (`s.stdio.md@commonmark/*#editor`)
- * is the only stdio pane that can name a curated example and the other eight name none. */
+ * default document: the framework's own `NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS`. `stdio` used to be
+ * exempt there because only one of its nine shipped editor apps published an example; all nine publish
+ * one now (ticket 26/09/19 `📓️stdio-examples.md`), so it is exempt nowhere. */
 const EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS: readonly string[] = ["demonstrator", "flow", "norm"];
 
 /** @emoji 🕳️ The only plugins that commit no descriptor at all, so no manifest states which examples
@@ -25,7 +24,7 @@ const EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS: readonly string[] = ["demonstrator", "fl
  * plugin-wide, never per dialect. Named so that ANY OTHER plugin losing its descriptor fails this gate
  * instead of silently dropping out of it; which of these two actually has a pane is the pane catalog's
  * business, so the assertion is a subset, not an equality. */
-const PLUGINS_WITHOUT_A_COMMITTED_DESCRIPTOR: readonly string[] = ["playbook", "stdio"];
+const PLUGINS_WITHOUT_A_COMMITTED_DESCRIPTOR: readonly string[] = ["playbook"];
 
 /** @emoji 📚️ Every authored example id under a plugin, read from the `📚️examples/<emoji-id>/🟦️.ts`
  * directories its artifacts own — the fallback source for a plugin that commits no descriptor.
@@ -89,15 +88,23 @@ const PANES_WHOSE_APP_CANNOT_SWITCH_EXAMPLES: Readonly<Record<string, string>> =
   dag: "dag — committed descriptor predates the action its editor Rust already declares",
   imperative: "imperative — committed descriptor predates the action its editor Rust already declares",
   "trinity-rewriting": "trinity — committed descriptor predates the action its editor Rust already declares",
-  stdio: "stdio — md editor declares no setActiveExample",
 };
+
+/** @emoji 🏷️ The navbar example picker renders `label.native.en` — authored prose, NEVER the example id
+ * spelled out: wfc3d's curated `tower-stack` renders "Tower With A Cantilever" and gis2d's `demo` renders
+ * "Reuse Map". A boot check that word-matches the kebab-case id against the picker's trigger text therefore
+ * reports "wrong default example" for a pane booting exactly the curated one — the two false positives of
+ * ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP `📓️audit-visual.md` §3, retracted with browser
+ * evidence in `📓️default-example.md`. A boot check compares LABEL to LABEL, and this gate is what states
+ * that every curated example HAS one, so the mapping is never guessed from the id again. */
+const CURATED_EXAMPLE_LABEL_SOURCE = "label.native.en";
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, repoRoot: string): Promise<void> {
   const { PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_PANES } = dependencies;
   const { describe, expect, it } = vitest;
   const { dialectCoordinate } = await import("../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts");
   const readDescriptor = pluginDescriptorReader(repoRoot);
-  type Published = { readonly source: "descriptor" | "disk"; readonly appId: string | null; readonly ids: readonly string[]; readonly switches: boolean };
+  type Published = { readonly source: "descriptor" | "disk"; readonly appId: string | null; readonly ids: readonly string[]; readonly labels: Readonly<Record<string, string>>; readonly switches: boolean };
   const resolved = new Map<number, Published>();
 
   /** @emoji 📚️ Exactly what the pane's navbar example picker would offer, restated against the ONE
@@ -110,7 +117,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
    * — it offers them at all only when `appSwitchesExamples(app.id, app.windowKinds, app.actions)` holds,
    *   i.e. `undeclaredActionDiagnostic` finds `setActiveExample` on a window kind or on the app itself
    *   (`🛠️ShellHelpers/🟦️.tsx`) — restated here rather than imported, because that module is the
-   *   renderer's React surface and this gate is a static read of committed JSON. */
+   *   renderer's React surface and this gate is a static read of committed JSON.
+   * — `labels` is the text each row RENDERS in that picker: play is terminology-`native` and locale-`en`
+   *   (`PLAY_LOCALE`/`PLAY_TERMINOLOGY`), so the navbar shows `label.native.en`, which is authored prose
+   *   and NOT the example id spelled out. */
   const publishedExamples = (index: number): Published => {
     if (resolved.has(index)) return resolved.get(index)!;
     const row = PLAY_RUNTIME_TARGETS[index];
@@ -121,12 +131,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           const apps: any[] = manifest.apps ?? [];
           const app = apps.find((candidate) => candidate.id === row.app) ?? apps[0];
           const wanted = app?.dialect ? dialectCoordinate(app.dialect) : null;
-          const ids = wanted === null ? [] : [...new Set((manifest.examples ?? []).filter((example: any) => example.dialect && dialectCoordinate(example.dialect) === wanted).map((example: any) => example.id as string))];
+          const offered = wanted === null ? [] : (manifest.examples ?? []).filter((example: any) => example.dialect && dialectCoordinate(example.dialect) === wanted);
+          const ids = [...new Set(offered.map((example: any) => example.id as string))] as string[];
+          const labels = Object.fromEntries(ids.map((id) => [id, offered.find((example: any) => example.id === id)?.label?.native?.en ?? ""]));
           const declares = (actions: readonly any[] | undefined) => (actions ?? []).some((action: any) => action.id === "setActiveExample");
           const switches = ((app?.windowKinds ?? []) as any[]).some((kind) => declares(kind.actions)) || declares(app?.actions);
-          return { source: "descriptor", appId: app?.id ?? null, ids, switches };
+          return { source: "descriptor", appId: app?.id ?? null, ids, labels, switches };
         })()
-      : { source: "disk", appId: row.app ?? null, ids: diskExampleIds(repoRoot, pluginRoot), switches: declaresSetActiveExampleInRust(repoRoot, pluginRoot) };
+      : { source: "disk", appId: row.app ?? null, ids: diskExampleIds(repoRoot, pluginRoot), labels: {}, switches: declaresSetActiveExampleInRust(repoRoot, pluginRoot) };
     resolved.set(index, answer);
     return answer;
   };
@@ -141,6 +153,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         if (!published.ids.includes(pane.example)) wrong.push(`${pane.variant}: "${pane.example}" is not published by ${published.appId ?? "its app"} (${published.source}: ${published.ids.join(", ") || "none"})`);
       });
       expect(wrong).toEqual([]);
+    });
+
+    it(`renders every curated example under the ${CURATED_EXAMPLE_LABEL_SOURCE} a boot check reads instead of the id`, () => {
+      const unlabelled: string[] = [];
+      PLAY_RUNTIME_PANES.forEach((pane: any, index: number) => {
+        if (pane.example === undefined) return;
+        const published = publishedExamples(index);
+        if (published.source !== "descriptor" || !published.ids.includes(pane.example)) return;
+        if (!published.labels[pane.example]) unlabelled.push(`${pane.variant}: "${pane.example}" publishes no ${CURATED_EXAMPLE_LABEL_SOURCE}, so its navbar picker would boot on the placeholder`);
+      });
+      expect(unlabelled).toEqual([]);
     });
 
     it("curates an example for every pane whose app publishes one", () => {

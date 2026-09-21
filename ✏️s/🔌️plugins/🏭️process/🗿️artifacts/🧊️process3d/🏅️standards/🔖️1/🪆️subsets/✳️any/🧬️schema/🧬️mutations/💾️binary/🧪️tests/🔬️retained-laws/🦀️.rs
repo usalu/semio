@@ -25,10 +25,8 @@ fn authority_fixture() -> Process3dPublicationLease {
 /// real publication lease takes this lane first, so the suite's own parallelism cannot starve one
 /// law of the authority another law is holding. Poisoning is absorbed: a lane is a scheduling
 /// device, and the panic that poisoned it is already the failure being reported.
-static PUBLICATION_AUTHORITY_LANE: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
 fn publication_authority_lane() -> std::sync::MutexGuard<'static, ()> {
-    PUBLICATION_AUTHORITY_LANE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    process3d_publication_authority_lane()
 }
 
 fn close_store(mut store: store::ArtifactStore<Process3dSnapshot, Process3dMutation>) {

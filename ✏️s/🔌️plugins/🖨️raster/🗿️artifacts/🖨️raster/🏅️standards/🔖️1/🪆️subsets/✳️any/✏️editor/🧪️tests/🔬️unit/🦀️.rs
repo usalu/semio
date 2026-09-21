@@ -1,7 +1,7 @@
 pub(crate) mod context {
     //! 🧪️ Shared harness for every `editor::raster` node's tests — mirrors TEMPLATE.md §7.
     use super::super::*;
-    use semio_framework_plugin::{artifact_app_laws as artifact_laws, InvocationResult, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{artifact_app_laws as artifact_laws, InvocationResult, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
     pub type RasterApp = VcsArtifactApp<EditorApp<RasterPlayApp>>;
 
@@ -56,10 +56,39 @@ pub(crate) mod context {
         RasterAppFixture(app)
     }
 
+    /// 🪟️ The view state the runtime always carries: the composite window INSTANCE the action is
+    /// dispatched in. Without it the app publishes no window-scoped chrome and every measure
+    /// projection comes back empty.
+    pub fn raster_view_state() -> ViewModel {
+        let id = "raster-composite";
+        ViewModel {
+            window_id: Some(id.into()),
+            window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: composite::RASTER_PLAY_WINDOW_COMPOSITE.into() }],
+            ..Default::default()
+        }
+    }
+
+    /// 🔌️ A MOUNTED app (`bind_instance_id`) QUEUES every typed command: the dispatch only admits it
+    /// and nothing reaches the document until the host continuation settles it. A test that stopped at
+    /// `dispatch_typed` read an unchanged document, which made every action test below look like a
+    /// silent no-op.
     pub async fn dispatch(app: &mut RasterApp, command: RasterCommand) -> InvocationResult {
-        app.dispatch_typed(command, &artifact_laws::meta("local")).await.expect("dispatch")
+        let mut action = artifact_laws::meta("local");
+        action.view_state = Some(raster_view_state());
+        let mut result = app.dispatch_typed(command, &action).await.expect("dispatch");
+        let settled = artifact_laws::settle_registered_typed_operation(app, artifact_laws::meta("local").instance_id).await.expect("settle the typed operation");
+        result.requested_effects.extend(settled.effects);
+        result
     }
     
+    /// ⏪️ One framework-reserved history verb driven the whole way a shell drives it: the admission
+    /// comes back as a `SpawnJob` receipt the caller must commit before the store ever sees
+    /// `ArtifactCommand::Undo`, and only then does the typed publication settle. Pressing it with a
+    /// bare `handle_action` reads back as a silent no-op on a MOUNTED app.
+    pub async fn history(app: &mut RasterApp, action: &str) {
+        artifact_laws::settle_history_verb(app, action, artifact_laws::meta("local").instance_id).await;
+    }
+
     pub async fn render(app: &mut RasterApp, body_key: &str) -> String {
         render_with_view(app, body_key, &ViewModel::default()).await
     }
@@ -70,14 +99,33 @@ pub(crate) mod context {
     }
     
     pub async fn main_window_measures(app: &mut RasterApp) -> Vec<WindowMeasure> {
-        app.window_measures(&ViewModel::default()).await.remove(composite::RASTER_PLAY_WINDOW_COMPOSITE).unwrap_or_default()
+        app.window_measures(&raster_view_state()).await.remove(composite::RASTER_PLAY_WINDOW_COMPOSITE).unwrap_or_default()
     }
     
+
+    /// 🧹️ A document envelope a test builds only to print a pack is a TERMINAL SHELL: every nested
+    /// owner below it (its `ArtifactVcs`, its history ledger, its initial snapshot — which for a
+    /// raster document owns a populated asset pool) asserts in `Drop` that the bounded protocol ran
+    /// first, and only a store ever runs it. The artifact's own owner catalog retires it instead.
+    pub fn retire_raster_envelope(envelope: store::ArtifactEnvelope<RasterSnapshot, RasterMutation>) {
+        let mut retirement = crate::spr::raster_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled raster owner catalog retires one envelope");
+        // ⛽️ A `RasterOwnedMap` page backing is one 16 KiB allocation released whole.
+        let grant = crate::RASTER_OWNED_MAP_PAGE_BACKING_BYTES;
+        for _ in 0..1_000_000 {
+            if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) {
+                return;
+            }
+            store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, grant).expect("raster test envelope retires within its exact grant");
+        }
+        panic!("raster test envelope did not reach its terminal-empty shell")
+    }
+
     pub async fn semio_app() -> RasterAppFixture {
         let mut app = app().await;
         let document = crate::standards::v1::subsets::any::schema::semio_example_document();
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
         let files = store::print_document_pack(&envelope).await.expect("print document pack");
+        retire_raster_envelope(envelope);
         app.load_document_pack(&files).await.expect("load semio");
         app
     }
@@ -236,8 +284,10 @@ async fn renders_raster_scene() {
 async fn renders_navigator_scene() {
     let mut app = app().await;
     let json = render(&mut app, navigator::RASTER_PLAY_BODY_NAVIGATOR).await;
-    assert!(json.contains("\"componentKind\":\"paint-2d\""));
-    assert!(json.contains("\"viewMode\":\"navigator\""));
+    // 🧾️ A `scene_surface` node publishes its payload as a PACKED document (`"kind":"paint-2d"`,
+    // `"docSchema":"paint-2d@1"`, `doc.bytes`), never as inline tree text.
+    assert!(json.contains("\"kind\":\"paint-2d\""), "{json}");
+    assert!(packed_scene_text(&json).contains("navigator"), "{json}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -302,9 +352,12 @@ async fn raster_labels_resolve_german_locale() {
 async fn composite_scene_syncs_document_and_assets() {
     let mut app = semio_app().await;
     let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
-    assert!(json.contains("\"componentKind\":\"paint-2d\""));
-    assert!(json.contains("\"viewMode\":\"composite\""));
-    assert!(!json.contains("\"assetsJson\":\"{}\""), "semio fixture has embedded assets");
+    // 🧾️ A `scene_surface` node publishes its payload as a PACKED document, so the lanes are read
+    // back out of the packed bytes rather than out of the projected tree text.
+    let text = packed_scene_text(&json);
+    assert!(json.contains("\"kind\":\"paint-2d\""), "{json}");
+    assert!(text.contains("composite"), "{text}");
+    assert!(text.contains("image/png"), "the semio fixture's embedded asset must resolve to real pixels: {text}");
     let document = crate::standards::v1::subsets::any::schema::semio_example_document();
     let sync_json = document_sync_json(&document);
     assert!(!sync_json.contains("\"assets\""), "sync json must omit assets");
@@ -371,10 +424,10 @@ async fn document_tree_binds_the_layers_interaction_domain() {
 async fn set_composite_viewport_feeds_navigator_scene() {
     let mut app = app().await;
     dispatch(&mut app, RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 })).await;
-    let json = render(&mut app, navigator::RASTER_PLAY_BODY_NAVIGATOR).await;
-    assert!(json.contains("compositeViewportJson"));
-    assert!(json.contains(r#"\"width\":640.0"#));
-    assert!(json.contains(r#"\"height\":480.0"#));
+    let text = packed_scene_text(&render(&mut app, navigator::RASTER_PLAY_BODY_NAVIGATOR).await);
+    assert!(text.contains("compositeViewportJson"), "{text}");
+    assert!(text.contains(r#""width":640.0"#), "{text}");
+    assert!(text.contains(r#""height":480.0"#), "{text}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -384,9 +437,9 @@ async fn set_camera_mutates_runtime_and_emits_no_operations() {
     let result = dispatch(&mut app, RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::RasterCamera { x: 4.0, y: 5.0, zoom: 2.0 } })).await;
     assert!(result.mutations.is_empty(), "camera is a view action and emits no operations");
     assert_eq!(app.snapshot().expect("snapshot"), before, "camera never mutates the document");
-    let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
-    assert!(json.contains(r#"\"zoom\":2.0"#), "composite scene camera reflects runtime state: {json}");
-    assert!(json.contains(r#"\"x\":4.0"#), "composite scene camera reflects runtime state: {json}");
+    let text = packed_scene_text(&render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await);
+    assert!(text.contains(r#""zoom":2.0"#), "composite scene camera reflects runtime state: {text}");
+    assert!(text.contains(r#""x":4.0"#), "composite scene camera reflects runtime state: {text}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -395,9 +448,9 @@ async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
     dispatch(&mut app, RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::RasterCamera { x: 4.0, y: 5.0, zoom: 1.0 } })).await;
     let result = dispatch(&mut app, RasterCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { zoom: 3.0 })).await;
     assert!(result.mutations.is_empty(), "camera zoom is a view action and emits no operations");
-    let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
-    assert!(json.contains(r#"\"zoom\":3.0"#), "zoom updated: {json}");
-    assert!(json.contains(r#"\"x\":4.0"#), "pan preserved across zoom-only update: {json}");
+    let text = packed_scene_text(&render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await);
+    assert!(text.contains(r#""zoom":3.0"#), "zoom updated: {text}");
+    assert!(text.contains(r#""x":4.0"#), "pan preserved across zoom-only update: {text}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -408,25 +461,30 @@ async fn add_layer_action_appends_and_undo_removes() {
     let projection = app.snapshot().expect("snapshot");
     assert_eq!(projection.layers.len(), before + 1);
     assert!(matches!(projection.layers.last().unwrap(), RasterLayerNode::Group { .. }));
-    app.handle_action("undo", None, &artifact_app_laws::meta("local")).await.expect("undo");
+    history(&mut app, "undo").await;
     assert_eq!(app.snapshot().expect("snapshot").layers.len(), before);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn patch_layer_renames_and_toggles_visibility_round_trip() {
     let mut app = app().await;
+    // 🌱️ The mounted store boots on the empty shell, so this test plants the layer it addresses.
+    dispatch(&mut app, RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() })).await;
     let layer_id = crate::standards::v1::subsets::any::schema::layer_node_id(&app.snapshot().expect("snapshot").layers[0]).to_string();
     dispatch(&mut app, RasterCommand::PatchLayer(patch_layer::PatchLayer { layer_id: layer_id.clone(), field: "name".into(), value: "Renamed".into() })).await;
     assert_eq!(layer_name(&app.snapshot().expect("snapshot").layers[0]), "Renamed");
     dispatch(&mut app, RasterCommand::ToggleLayerVisible(toggle_layer_visible::ToggleLayerVisible { layer_id })).await;
     assert!(!layer_visible(&app.snapshot().expect("snapshot").layers[0]));
-    app.handle_action("undo", None, &artifact_app_laws::meta("local")).await.expect("undo toggle");
+    history(&mut app, "undo").await;
     assert!(layer_visible(&app.snapshot().expect("snapshot").layers[0]));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn move_layer_into_group() {
     let mut app = app().await;
+    // 🌱️ The mounted store boots on the empty shell: both the group and the pixel it receives are
+    // planted here.
+    dispatch(&mut app, RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() })).await;
     dispatch(&mut app, RasterCommand::AddLayer(add_layer::AddLayer { kind: "group".into() })).await;
     let (group_id, pixel_id) = {
         let projection = app.snapshot().expect("snapshot");
@@ -467,6 +525,7 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     }];
     let base_envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", base, None);
     let base_files = store::print_document_pack(&base_envelope).await.expect("print document pack");
+    context::retire_raster_envelope(base_envelope);
     instance_a.load_document_pack(&base_files).await.expect("load a");
     instance_b.load_document_pack(&base_files).await.expect("load b");
     let background_id = "bg".to_string();
@@ -853,13 +912,18 @@ async fn mounted_boot_replays_the_demo_example_through_the_retained_route() {
     // demo document, whose asset pool now holds the planted emblem: the scene projection must read
     // the populated owned map through its entries (play-grid boot trap, 2026-09-19).
     let composite = packed_scene_text(&render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await);
+    // 🖼️ The pixels themselves, not just the lane: `Paint2dHost` uploads one texture per `assetsJson`
+    // entry, so a boot whose asset pool holds handles WITHOUT their materialization renders an empty
+    // canvas even though every lane, layer row and viewport looks right (play pane measured blank on
+    // :6033, 2026-09-21 — `assetsJson` parsed as `{}`, zero textures uploaded). The scene's own
+    // projection is read here because the published surface carries both JSON lanes out of band.
+    let booted = app.snapshot().expect("snapshot");
+    let scene = raster_scene(&booted, &crate::editor::raster::config::RasterConfig::default(), "brush", "composite");
+    let assets_json = scene.assets_json.clone();
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(booted);
     std::mem::forget(app);
     assert!(composite.contains("composite") && composite.contains("documentSync"), "the composite window publishes its document-sync lane: {composite}");
-    // 🖼️ The pixels themselves, not just the lane: `Paint2dHost` uploads one texture per
-    // `assetsJson` entry, so a boot whose asset pool holds handles WITHOUT their materialization
-    // renders an empty canvas even though every lane, layer row and viewport looks right (play pane
-    // measured blank on :6033, 2026-09-21). `image/png` occurs only in the resolved asset lane.
-    assert!(composite.contains("image/png"), "the composite scene must carry the planted emblem's resolved pixels, not a pixel-less handle pool: {composite}");
+    assert!(assets_json.contains("semio-emblem") && assets_json.contains("image/png"), "the booted document's asset pool must resolve to real pixels, not pixel-less handles: {assets_json}");
 }
 
 /// ↩️ The five-clause bar's undo/redo half on the LIVE document shape: boot the demo carrier, paint

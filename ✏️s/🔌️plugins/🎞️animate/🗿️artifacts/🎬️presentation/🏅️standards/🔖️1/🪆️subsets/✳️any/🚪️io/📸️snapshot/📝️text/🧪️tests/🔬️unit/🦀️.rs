@@ -26,7 +26,10 @@ fn presentation_dsl_round_trips_bundled_default_example() {
     test_support::assert_dsl_pack_equivalence(&deck);
 }
 
+/// 📚️ The committed `demo` example asset IS this crate's own printed `demo_snapshot()` — the app's
+/// `setActiveExample("demo")` loads that snapshot in the guest while the manifest ships this text, so a
+/// drift between the two would serve the pane a different deck than the one the plugin builds.
 #[test]
-fn zz_dump_demo_asset() {
-    std::fs::write("/tmp/animate-demo-asset.txt", print_dsl(&default_presentation_snapshot())).expect("dump");
+fn the_committed_demo_asset_is_the_printers_own_demo_snapshot() {
+    assert_eq!(PRESENTATION_EXAMPLE_TEXT, print_dsl(&crate::demo_presentation_snapshot()), "🖼️assets/🎬️demo: the committed asset must be this crate's own printed output");
 }

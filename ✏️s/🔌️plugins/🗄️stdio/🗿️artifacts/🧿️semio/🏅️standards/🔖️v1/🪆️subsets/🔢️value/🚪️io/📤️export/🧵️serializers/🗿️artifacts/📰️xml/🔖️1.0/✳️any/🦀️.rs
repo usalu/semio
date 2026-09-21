@@ -147,7 +147,7 @@ fn xml_declaration_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioVa
         },
         None => None,
     };
-    Ok(XmlDeclaration { version, encoding, standalone })
+    Ok(XmlDeclaration::new(version, encoding, standalone))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

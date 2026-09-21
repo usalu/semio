@@ -500,6 +500,13 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
     app.ingest_operations(&operations).await.expect("a remote edit lands while the transaction is pending");
     let error = app.transaction_commit("txn-3", &meta("local")).await.expect_err("commit must reject a stale generation");
     assert_eq!(error.code.0, "transaction.generation-mismatch");
+    // ↩️ A rejected commit RESTORES the pending transaction rather than discarding it (contract
+    // §5.8), so the only honest way out of this state is the explicit rollback the refusal invites.
+    app.transaction_rollback("txn-3").await.expect("a rejected commit leaves the transaction pending and explicitly rollback-able");
+    // 🔌️ The sender still holds the near end of the pair; a store whose backbone is attached
+    // retains that channel owner, and its close is `Blocked` until the attachment is released.
+    sender.detach_backbone().await.expect("sender releases its backbone before close");
+    drop(far);
     close_transaction_store_roots(&mut sender);
     close_transaction_store_roots(&mut app);
 }

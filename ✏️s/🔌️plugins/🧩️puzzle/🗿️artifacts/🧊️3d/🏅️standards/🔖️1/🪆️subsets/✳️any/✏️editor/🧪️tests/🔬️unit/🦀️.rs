@@ -1152,6 +1152,33 @@ use super::*;
 /// cannot carry it into the tests. Imported from its owner instead of relying on a re-export.
 use semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID;
 
+//#region 🕹️ActionRoster
+/// 🕹️ Every action DISPATCHABLE in this app, once per id, in declaration order.
+///
+/// 🪪️ App-level actions are no longer CLONED onto every window kind (that made a package descriptor
+/// grow as `apps × window kinds × actions`): `semio_framework::window_kind_actions` resolves a
+/// window's own roster plus every app-level row no window claims, at read time. So
+/// `WindowKindDefinition::actions` alone now holds only the window's OWN declarations — for this app,
+/// the framework-injected interaction verbs — and a law that reads it sees none of the authored
+/// vocabulary. This is the roster the shell offers and `dispatch_action` routes.
+fn dispatchable_actions(definition: &semio_framework_plugin::AppDefinition) -> Vec<&ActionDefinition> {
+    let mut seen = std::collections::BTreeSet::new();
+    definition
+        .window_kinds
+        .iter()
+        .flat_map(|window| semio_framework::window_kind_actions(definition, window))
+        .filter(|action| seen.insert(action.id.clone()))
+        .collect()
+}
+
+/// 🪪️ Every DECLARATION of one action id across the manifest — the app-level roster plus every window
+/// kind's own roster. A verb declared once app-wide and resolved into N windows is still exactly one
+/// declaration, which is what the bijection laws mean by "exactly one manifest declaration".
+fn action_declarations<'a>(definition: &'a semio_framework_plugin::AppDefinition, id: &str) -> Vec<&'a ActionDefinition> {
+    definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).filter(|action| action.id == id).collect()
+}
+//#endregion 🕹️ActionRoster
+
 //#region 🕹️LocalInteractionRead
 /// 🚧️ Runaway guard for the host's own continuation drain. Far above the host's real 4096-turn
 /// budget so a law that fails here fails on the state machine, never on the guard.
@@ -1372,7 +1399,7 @@ fn retained_publication_contracts_are_an_exact_nonempty_tool_bijection() {
     assert_eq!(fixture.get("toolIds"), Some(&Value::Array(PUZZLE3D_RETAINED_TOOL_IDS.iter().map(|id| Value::from(*id)).collect())));
     let manifest = create_puzzle3d_app();
     for tool_id in PUZZLE3D_RETAINED_TOOL_IDS {
-        let actions = manifest.window_kinds.iter().flat_map(|window| &window.actions).filter(|action| action.id == *tool_id).collect::<Vec<_>>();
+        let actions = action_declarations(&manifest, tool_id);
         assert_eq!(actions.len(), 1, "{tool_id} requires exactly one manifest declaration");
         assert_eq!(actions[0].semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{tool_id}");
     }
@@ -1927,7 +1954,7 @@ fn transform_brackets_are_migrated_host_only_routes_that_complete_empty() {
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     for action in ["transformBegin", "transformEnd"] {
         assert!(PUZZLE3D_RETAINED_TOOL_IDS.contains(&action), "{action} must be a retained tool id or no tool job is ever built for it");
-        let declarations = manifest.window_kinds.iter().flat_map(|window| &window.actions).filter(|declared| declared.id == action).collect::<Vec<_>>();
+        let declarations = action_declarations(&manifest, action);
         assert_eq!(declarations.len(), 1, "{action} requires exactly one manifest declaration");
         assert_eq!(declarations[0].semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{action} must pass the UI dispatch gate");
         let contract = contracts.iter().find(|contract| contract.tool_id == action).unwrap_or_else(|| panic!("{action} needs a publication contract"));
@@ -2600,7 +2627,7 @@ async fn every_declared_action_bridges_to_a_command() {
 #[semio_framework_async_macros::async_test]
 async fn every_declared_action_round_trips_through_the_command_enum() {
     let definition = create_puzzle3d_app();
-    for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
+    for action in dispatchable_actions(&definition) {
         let Some(command) = Puzzle3dCommand::from_action(&action.id, None, None) else {
             continue;
         };
@@ -2616,7 +2643,7 @@ async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
     let definition = create_puzzle3d_app();
     let def = &definition;
     let (terminology, locale) = (Terminology::Reuse, Locale::De);
-    let actions = || def.window_kinds.iter().flat_map(|window| window.actions.iter());
+    let actions = || dispatchable_actions(def).into_iter();
     let action = |id: &str| actions().find(|entry| entry.id == id).unwrap_or_else(|| panic!("{id} action declared"));
     assert_eq!(def.modes.iter().find(|entry| entry.id == "edit").expect("edit mode").label.resolve(terminology, locale), "Bearbeiten");
     assert_eq!(def.window_kinds.iter().find(|entry| entry.id == main::WINDOW_KIND_ID).expect("window kind").label.resolve(terminology, locale), "Aggregator");
@@ -2669,7 +2696,7 @@ async fn app_definition_labels_stay_english_native_without_brand_locks() {
     let definition = create_puzzle3d_app();
     let def = &definition;
     let (terminology, locale) = (Terminology::Native, Locale::En);
-    let action = |id: &str| def.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|entry| entry.id == id).unwrap_or_else(|| panic!("{id} action declared"));
+    let action = |id: &str| dispatchable_actions(def).into_iter().find(|entry| entry.id == id).unwrap_or_else(|| panic!("{id} action declared"));
     assert_eq!(def.modes.iter().find(|entry| entry.id == "edit").expect("edit mode").label.resolve(terminology, locale), "Edit");
     assert_eq!(def.window_kinds.iter().find(|entry| entry.id == main::WINDOW_KIND_ID).expect("window kind").label.resolve(terminology, locale), "Puzzle 3D");
     assert_eq!(def.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog").title.resolve(terminology, locale), "Add Object");
@@ -2720,7 +2747,7 @@ async fn tool_registry_declares_fill_tool() {
     let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
     assert_eq!(tool_ids, vec![fill_tool::TOOL_ID]);
     assert_eq!(definition.modes[0].tools, vec![ToolRef::new(fill_tool::TOOL_ID).await]);
-    assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
+    assert!(dispatchable_actions(&definition).iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
 }
 
 /// 🛠️ Wave W-AB, restated by wave B31: an empty `setActiveTool` is a DISARM, so the only verb allowed to
@@ -3300,7 +3327,7 @@ fn the_brush_utility_declares_a_read_only_tool_run_through_the_manifest() {
     for (reason, declared) in BrushSuggestionsRunReason::ALL.iter().zip(&run.reasons) {
         assert_eq!((declared.code, declared.id.as_str(), declared.verdict), (reason.code(), reason.id(), reason.verdict()));
     }
-    let actions: Vec<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|action| action.id.as_str()).collect();
+    let actions: Vec<&str> = dispatchable_actions(&definition).into_iter().map(|action| action.id.as_str()).collect();
     assert!(!actions.contains(&"suggestionsTick"), "the suggestions tick loop is gone");
     assert!(actions.contains(&"targetBrushSuggestions"));
     let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default()).expect("admitted host axis");
@@ -3598,7 +3625,7 @@ const RETIREMENT_RECLAIM_TURNS: usize = semio_framework_plugin::MAINTENANCE_STAG
 async fn camera_actions_are_view_actions_that_emit_no_artifact_mutations() {
     let app_definition = create_puzzle3d_app();
     for action_id in ["setCamera", "setProjection", "setProjectionParam", "focusSelection"] {
-        let def = app_definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("{action_id} declared"));
+        let def = dispatchable_actions(&app_definition).into_iter().find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("{action_id} declared"));
         assert_eq!(def.kind, ActionKind::View, "{action_id} must be a View action — camera is session-only, never a VCS edit");
     }
     let mut live = app().await;
@@ -3792,7 +3819,7 @@ async fn the_fill_tool_declares_its_tool_run_through_the_manifest() {
     for (reason, declared) in FillRunReason::ALL.iter().zip(&run.reasons) {
         assert_eq!((declared.code, declared.id.as_str(), declared.verdict), (reason.code(), reason.id(), reason.verdict()), "{} spells the schema's own code, id and verdict", reason.id());
     }
-    let actions: Vec<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|action| action.id.as_str()).collect();
+    let actions: Vec<&str> = dispatchable_actions(&definition).into_iter().map(|action| action.id.as_str()).collect();
     for retired in ["fillBuildTick", "cancelFillBuild"] {
         assert!(!actions.contains(&retired), "{retired} is a per-plugin run verb the framework tool run replaces");
     }
@@ -4255,7 +4282,7 @@ async fn command_scope_classes_name_the_panels_they_change() {
     let definition = create_puzzle3d_app();
     let mut mutating = 0_usize;
     let mut narrowed = 0_usize;
-    for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
+    for action in dispatchable_actions(&definition) {
         let class = puzzle3d_command_scope_class(&action.id);
         let scope = puzzle3d_scope(class);
         // 🧾️ The declared `ActionKind` is a HISTORY/undo classification, not a paint one. Both
@@ -5749,7 +5776,7 @@ fn context_menu_action_ids(items: &[semio_framework_plugin::ContextMenuItemSpec]
 
 /// 🎯️ Every action id `create_puzzle3d_app()` declares — the set `dispatch_action` can actually route.
 fn declared_action_ids() -> std::collections::BTreeSet<String> {
-    create_puzzle3d_app().window_kinds.iter().flat_map(|window| window.actions.iter()).map(|action| action.id.clone()).collect()
+    dispatchable_actions(&create_puzzle3d_app()).into_iter().map(|action| action.id.clone()).collect()
 }
 
 /// 🖱️ Context-menu rows bypass the registry-validated `Menu::action` builder (they carry
@@ -5820,7 +5847,7 @@ async fn the_add_object_dialog_offers_every_object_kind_of_both_examples() {
         });
     assert!(expected.len() >= 2, "both shipped examples must declare object kinds, got {expected:?}");
     let dialog = definition.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog declared");
-    let standalone = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "addObjectKind").expect("addObjectKind declared").args.clone();
+    let standalone = dispatchable_actions(&definition).into_iter().find(|action| action.id == "addObjectKind").expect("addObjectKind declared").args.clone();
     for (surface, args) in [("dialog", dialog.args.clone()), ("action", standalone)] {
         let arg = args.iter().find(|arg| arg.id == "objectKind").unwrap_or_else(|| panic!("{surface} declares an objectKind arg"));
         let ArgSchema::String { options, .. } = &arg.schema else { panic!("{surface}'s objectKind must stay a select") };
@@ -5844,7 +5871,7 @@ async fn the_add_object_dialog_offers_every_object_kind_of_both_examples() {
 #[semio_framework_async_macros::async_test]
 async fn exactly_one_add_object_row_is_menu_vocabulary_and_it_opens_the_dialog() {
     let definition = create_puzzle3d_app();
-    let actions: Vec<&ActionDefinition> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).collect();
+    let actions: Vec<&ActionDefinition> = dispatchable_actions(&definition);
     let find = |id: &str| *actions.iter().find(|action| action.id == id).unwrap_or_else(|| panic!("{id} declared"));
     let opener = find("openAddObjectDialog");
     let parametrized = find("addObjectKind");
@@ -6361,7 +6388,8 @@ async fn world_relocate_moves_an_unlocked_object_and_refuses_a_locked_one_with_o
     assert_ne!(raised[0], PUZZLE3D_LOCALIZATION_UNSUPPORTED, "the test host declares an authored axis, so the refusal must be real prose");
     assert!(refused.mutations.is_empty(), "a locked relocate must emit no edit: {:?}", refused.mutations);
     assert_eq!(object_origin(&app, &object_id), landed, "a locked object must not move");
-    let declared = create_puzzle3d_app().window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "worldRelocate").map(|action| action.kind).expect("worldRelocate is declared");
+    let definition = create_puzzle3d_app();
+    let declared = dispatchable_actions(&definition).into_iter().find(|action| action.id == "worldRelocate").map(|action| action.kind).expect("worldRelocate is declared");
     assert_eq!(declared, ActionKind::Mutation, "worldRelocate edits the document, so history and undo must see a Mutation");
 }
 
@@ -6475,7 +6503,7 @@ fn file_menu_import_row_opens_the_file_picker() {
     assert!(file.iter().any(|(id, _)| *id == "exportFixture"), "file menu keeps Export: {file:?}");
     assert!(file.iter().any(|(id, in_palette)| *id == "openImportFixture" && *in_palette), "file menu Import is openImportFixture: {file:?}");
     assert!(!file.iter().any(|(id, _)| *id == "importFixture"), "importFixture is the picker completion, not a menu row: {file:?}");
-    let import = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "importFixture").expect("importFixture stays dispatchable");
+    let import = dispatchable_actions(&definition).into_iter().find(|action| action.id == "importFixture").expect("importFixture stays dispatchable");
     assert!(!import.in_palette);
     assert_eq!(import.category.as_deref(), None);
 }

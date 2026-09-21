@@ -66,7 +66,6 @@ async fn observe_refusal(case_id: &str) {
         SpaceMember::close_owned_step(&mut store, 1, 512).expect("close original Store before assertions");
     }
     assert!(SpaceMember::close_owned_terminal_is_empty(&store));
-    eprintln!("[DEBUG] {case_id}: refused={refused} panicked={panicked} descriptor={descriptor_preserved} generation={generation_preserved} backbone={backbone_preserved} payload={payload_preserved} revision={revision_preserved}; original payload length={payload_length} capacity={expected_capacity}; cleanup terminal=true");
     assert_eq!((refused, panicked, descriptor_preserved, generation_preserved, backbone_preserved, payload_preserved, revision_preserved), (true, false, true, true, true, true, true), "{case_id}");
 }
 
