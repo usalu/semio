@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for RemoveSp
     fn inverse(&self, base: &SemioModelSnapshot) -> Vec<SemioModelMutation> {
         agg_inverse(&SemioModelMutation::RemoveSpatialNode(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-spatial-node".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-spatial-node", "Raumknoten entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

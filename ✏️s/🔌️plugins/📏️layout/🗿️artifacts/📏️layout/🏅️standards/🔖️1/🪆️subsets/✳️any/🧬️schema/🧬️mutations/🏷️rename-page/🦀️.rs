@@ -23,8 +23,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for RenamePage {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_rename_page(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename page to \"{}\"", self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename page to \"{}\"", self.new_name), &format!("Seite in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -58,8 +58,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteNodeMut
         vec![super::GltfMutation::DeleteNode(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Delete Node".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Delete Node", "Knoten löschen")
     }
 
     fn target(&self) -> Vec<String> {

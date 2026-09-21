@@ -32,8 +32,8 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for AddAttribute {
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add attribute \"{}\"", self.attribute.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add attribute \"{}\"", self.attribute.key), &format!("Attribut \"{}\" hinzufügen", self.attribute.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.attribute.key.clone()]

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/os/renderer/panel-resize.fixture.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$comment", "widthUiSpacing", "cases"],
+  "properties": {
+    "$comment": { "type": "string", "minLength": 1 },
+    "widthUiSpacing": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["anchor", "handles"],
+        "properties": {
+          "anchor": {
+            "enum": ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"]
+          },
+          "handles": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["edge", "deltaFactor", "nativeSuffix"],
+              "properties": {
+                "edge": { "enum": ["left", "right"] },
+                "deltaFactor": { "enum": [-2, -1, 1, 2] },
+                "nativeSuffix": { "enum": ["inner", "outer"] }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1294,6 +1294,55 @@ impl ToValue for NodeGraphOperatorRecord {
 
 //#region 🔖️NodeGraphScene
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct NodeGraphInteractionDomain {
+    #[serde(deserialize_with = "deserialize_non_empty_interaction_domain_text")]
+    pub id: String,
+    #[serde(deserialize_with = "deserialize_non_empty_interaction_domain_text")]
+    pub node_target_prefix: String,
+    #[serde(deserialize_with = "deserialize_non_empty_interaction_domain_text")]
+    pub edge_target_prefix: String,
+    #[serde(deserialize_with = "deserialize_non_empty_interaction_domain_text")]
+    pub handle_target_prefix: String,
+}
+
+impl ToValue for NodeGraphInteractionDomain {
+    fn to_value(&self) -> DslValue {
+        let mut entries = Vec::new();
+        value_push(&mut entries, "id", &self.id);
+        value_push(&mut entries, "nodeTargetPrefix", &self.node_target_prefix);
+        value_push(&mut entries, "edgeTargetPrefix", &self.edge_target_prefix);
+        value_push(&mut entries, "handleTargetPrefix", &self.handle_target_prefix);
+        DslValue::Object(entries)
+    }
+}
+
+impl FromValue for NodeGraphInteractionDomain {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        let fields = ["id", "nodeTargetPrefix", "edgeTargetPrefix", "handleTargetPrefix"];
+        if let Some((field, _)) = entries.iter().find(|(field, _)| !fields.contains(&field.as_str())) {
+            return Err(ValueError::new(format!("unknown field `{field}`")));
+        }
+        for field in fields {
+            if entries.iter().filter(|(candidate, _)| candidate == field).count() > 1 {
+                return Err(ValueError::new(format!("duplicate field `{field}`")));
+            }
+        }
+        let domain = Self {
+            id: value_decode(&entries, "id")?,
+            node_target_prefix: value_decode(&entries, "nodeTargetPrefix")?,
+            edge_target_prefix: value_decode(&entries, "edgeTargetPrefix")?,
+            handle_target_prefix: value_decode(&entries, "handleTargetPrefix")?,
+        };
+        if domain.id.is_empty() || domain.node_target_prefix.is_empty() || domain.edge_target_prefix.is_empty() || domain.handle_target_prefix.is_empty() {
+            return Err(ValueError::new("node graph interaction domain fields must be non-empty"));
+        }
+        Ok(domain)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeGraphScene {
     #[serde(default)]
@@ -1304,6 +1353,8 @@ pub struct NodeGraphScene {
     pub viewport: Option<Viewport2d>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub editable: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interaction_domain: Option<NodeGraphInteractionDomain>,
     /// 🔌️ DOCUMENT-DERIVED operator records only — one per node this very graph holds, the way the OS
     /// workflow window derives a record per workflow node so the canvas can lay its ports out. The
     /// app's REGISTERED operator catalogue is NOT carried here: it is app-static, ~100 KB with the real
@@ -1357,6 +1408,7 @@ impl NodeGraphScene {
             edges,
             viewport: Some(viewport),
             editable: None,
+            interaction_domain: None,
             operators: Vec::new(),
             find_items: Vec::new(),
             selection: Vec::new(),
@@ -1383,6 +1435,7 @@ impl ToValue for NodeGraphScene {
         value_push(&mut entries, "edges", &self.edges);
         value_push_option(&mut entries, "viewport", &self.viewport);
         value_push_option(&mut entries, "editable", &self.editable);
+        value_push_option(&mut entries, "interactionDomain", &self.interaction_domain);
         value_push_if_nonempty(&mut entries, "operators", &self.operators);
         value_push_if_nonempty(&mut entries, "findItems", &self.find_items);
         value_push_if_nonempty(&mut entries, "selection", &self.selection);
@@ -1410,6 +1463,7 @@ impl FromValue for NodeGraphScene {
             edges: value_decode_default(&entries, "edges", Vec::new)?,
             viewport: value_decode_option(&entries, "viewport")?,
             editable: value_decode_option(&entries, "editable")?,
+            interaction_domain: value_decode_option(&entries, "interactionDomain")?,
             operators: value_decode_default(&entries, "operators", Vec::new)?,
             find_items: value_decode_default(&entries, "findItems", Vec::new)?,
             selection: value_decode_default(&entries, "selection", Vec::new)?,
@@ -2497,8 +2551,56 @@ impl FromValue for Board2dScene {
 //#endregion 🔖️Board2dScene
 
 //#region 🔖️InkCanvasScene
+fn deserialize_non_empty_interaction_domain_text<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = String::deserialize(deserializer)?;
+    if value.is_empty() {
+        return Err(serde::de::Error::custom("interaction domain fields must be non-empty"));
+    }
+    Ok(value)
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct InkCanvasInteractionDomain {
+    #[serde(deserialize_with = "deserialize_non_empty_interaction_domain_text")]
+    pub id: String,
+    #[serde(deserialize_with = "deserialize_non_empty_interaction_domain_text")]
+    pub granularity_id: String,
+}
+
+impl ToValue for InkCanvasInteractionDomain {
+    fn to_value(&self) -> DslValue {
+        let mut entries = Vec::new();
+        value_push(&mut entries, "id", &self.id);
+        value_push(&mut entries, "granularityId", &self.granularity_id);
+        DslValue::Object(entries)
+    }
+}
+
+impl FromValue for InkCanvasInteractionDomain {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        if let Some((field, _)) = entries.iter().find(|(field, _)| field != "id" && field != "granularityId") {
+            return Err(ValueError::new(format!("unknown field `{field}`")));
+        }
+        for field in ["id", "granularityId"] {
+            if entries.iter().filter(|(candidate, _)| candidate == field).count() > 1 {
+                return Err(ValueError::new(format!("duplicate field `{field}`")));
+            }
+        }
+        let domain = Self { id: value_decode(&entries, "id")?, granularity_id: value_decode(&entries, "granularityId")? };
+        if domain.id.is_empty() || domain.granularity_id.is_empty() {
+            return Err(ValueError::new("ink canvas interaction domain fields must be non-empty"));
+        }
+        Ok(domain)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InkCanvasScene {
     pub document_json: String,
     #[serde(default = "ink_canvas_default_selection_json")]
@@ -2509,6 +2611,8 @@ pub struct InkCanvasScene {
     pub view_mode: String,
     #[serde(default)]
     pub interactive: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interaction_domain: Option<InkCanvasInteractionDomain>,
 }
 
 impl SceneDoc for InkCanvasScene {
@@ -2523,7 +2627,7 @@ pub fn ink_canvas_default_selection_json() -> String {
 impl InkCanvasScene {
     /** @emoji 🖊️ Builds an ink canvas scene with the default empty selection. */
     pub fn base(document_json: String, active_utility: String, view_mode: String, interactive: bool) -> Self {
-        Self { document_json, selection_json: ink_canvas_default_selection_json(), hovered_id: None, active_utility, view_mode, interactive }
+        Self { document_json, selection_json: ink_canvas_default_selection_json(), hovered_id: None, active_utility, view_mode, interactive, interaction_domain: None }
     }
 }
 
@@ -2536,6 +2640,7 @@ impl ToValue for InkCanvasScene {
         value_push(&mut entries, "activeUtility", &self.active_utility);
         value_push(&mut entries, "viewMode", &self.view_mode);
         value_push(&mut entries, "interactive", &self.interactive);
+        value_push_option(&mut entries, "interactionDomain", &self.interaction_domain);
         DslValue::Object(entries)
     }
 }
@@ -2550,6 +2655,7 @@ impl FromValue for InkCanvasScene {
             active_utility: value_decode(&entries, "activeUtility")?,
             view_mode: value_decode(&entries, "viewMode")?,
             interactive: value_decode_default(&entries, "interactive", Default::default)?,
+            interaction_domain: value_decode_option(&entries, "interactionDomain")?,
         })
     }
 }

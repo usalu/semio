@@ -9,12 +9,19 @@
     "scene": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["surfaceId", "controllerId", "domainId", "domainGranularityId", "hoverChannel", "selectionJson", "hoveredId"],
+      "required": ["surfaceId", "controllerId", "interactionDomain", "hoverChannel", "selectionJson", "hoveredId"],
       "properties": {
         "surfaceId": { "type": "string", "minLength": 1 },
         "controllerId": { "type": "string", "minLength": 1 },
-        "domainId": { "const": "blocks" },
-        "domainGranularityId": { "const": "block" },
+        "interactionDomain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "granularityId"],
+          "properties": {
+            "id": { "type": "string", "const": "blocks", "minLength": 1 },
+            "granularityId": { "type": "string", "const": "block", "minLength": 1 }
+          }
+        },
         "hoverChannel": { "const": "pointer" },
         "selectionJson": { "type": "string", "minLength": 2 },
         "hoveredId": { "type": "string", "minLength": 1 }

@@ -34,8 +34,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Remove
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Remove holiday {}-{}-{} from annual schedule {}", self.year, self.month, self.day, self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove holiday {}-{}-{} from annual schedule {}", self.year, self.month, self.day, self.id.0), &format!("Feiertag {}-{}-{} aus Jahreszeitplan {} entfernen", self.year, self.month, self.day, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

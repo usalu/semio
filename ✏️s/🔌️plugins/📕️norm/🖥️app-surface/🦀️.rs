@@ -429,6 +429,85 @@ pub fn commit_snapshot_fields<M>(mutations: Vec<M>, description: &str) -> Result
 pub fn selected_check_index_arg(args: Option<&dsl::DslValue>) -> Option<u32> {
     args.and_then(|value| value.get("index")).and_then(dsl::DslValue::as_u64).map(|value| value as u32)
 }
+
+/// 🌉️ Installs the `{action, args}` → typed-`Command` bridge every norm editor needs, for the three
+/// verbs all fifteen declare (`setSnapshot`/`evaluate`/`setSelectedCheckIndex`).
+///
+/// 🩹️ `ArtifactEditor::command_from_action`'s default refuses EVERY id — `app.command.unsupported:
+/// action '…' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand)`
+/// — so an editor that does not override it has an Actions rail whose every row is inert, however
+/// green its `--lib` tests are. Exactly ONE of the fifteen norm editors (🧱️din4108) carried the
+/// bridge, hand-written; the other fourteen were dispatch-dead in every shell. Measured inside the
+/// real `s` host on a spawned `norm-din16798` (ticket 26/09/18, S7 §4 / S8 §4.3): `setSnapshot
+/// refused: dispatch-failed (user window=norm-10::norm-din16798-inputs)`, which S8 attributed to the
+/// HOST's routing. It is not the host: the refusal text is this trait default's own, raised by the
+/// guest, and the fix is the bridge each editor owes.
+///
+/// `$command` is the editor's aggregated command enum; `$decode` is that artifact's own
+/// `decode_<variant>_snapshot_json`. The three payload modules (`evaluate`, `selected_check`,
+/// `set_snapshot`) resolve at the CALL site, which every norm editor already imports.
+#[macro_export]
+macro_rules! norm_command_from_action {
+    // 📝️ The `text` shape. Thirteen norm editors declare `ReplaceSnapshot { snapshot: XSnapshot }`
+    // and decode the shell's camelCase JSON into it; `⚖️en1990` and `⚡️din18599` declare
+    // `ReplaceSnapshot { text: String }` instead, because their snapshot types stopped implementing
+    // `dsl::DslField` when `q_k`/`climate` became composed `ArtifactChild<S>` slots, so their payload
+    // carries the artifact's own `.en1990`/`.din18599` DSL text on one op-text line. S9's macro knew
+    // only the first shape, which is why those two crates failed to check (U3b's 106-crate sweep,
+    // 2026-09-21). This arm MUST precede the `$decode:path` arm — `text` would otherwise match
+    // `$decode:path` and expand into the wrong body.
+    //
+    // The argument is taken verbatim: the handler runs `unescape_op_text_field` over it, which is the
+    // identity for text carrying no backslash escapes, so a caller passing the document's plain DSL
+    // text and a caller passing it in the escaped one-line op-text form both arrive correctly.
+    ($command:ident, text) => {
+        /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into this editor's typed command,
+        /// for the two editors whose `setSnapshot` payload carries DSL TEXT rather than a decoded
+        /// snapshot struct.
+        fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<$command, semio_framework_plugin::Fault> {
+            match action {
+                "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
+                "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),
+                "setSnapshot" => {
+                    let text = args
+                        .and_then(|value| value.get("text").or_else(|| value.get("snapshot")))
+                        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+                        .ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-missing"), "setSnapshot needs a 'text' argument carrying the document's own DSL text"))?;
+                    Ok($command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text }))
+                }
+                other => Err(semio_framework_plugin::Fault::new(
+                    semio_framework_plugin::FaultOrigin::App,
+                    semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
+                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex)"),
+                )),
+            }
+        }
+    };
+    ($command:ident, $decode:path) => {
+        /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into this editor's typed command.
+        /// `setSnapshot` carries the whole compliance document, so its argument is that document's own
+        /// camelCase JSON projection (exactly what the Inputs window renders).
+        fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<$command, semio_framework_plugin::Fault> {
+            match action {
+                "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
+                "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),
+                "setSnapshot" => {
+                    let text = args
+                        .and_then(|value| value.get("snapshot"))
+                        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+                        .ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-missing"), "setSnapshot needs a 'snapshot' argument carrying the document's camelCase JSON"))?;
+                    let snapshot = $decode(&text).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-invalid"), error))?;
+                    Ok($command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot }))
+                }
+                other => Err(semio_framework_plugin::Fault::new(
+                    semio_framework_plugin::FaultOrigin::App,
+                    semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
+                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex)"),
+                )),
+            }
+        }
+    };
+}
 //#endregion 🔖️Commands
 
 //#region 🔖️Views

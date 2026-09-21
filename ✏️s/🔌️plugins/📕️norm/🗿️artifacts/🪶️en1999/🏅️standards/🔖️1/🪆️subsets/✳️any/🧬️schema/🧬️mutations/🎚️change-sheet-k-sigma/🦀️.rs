@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeSheetKSigm
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change sheet plate buckling factor k_sigma to {}", self.new_sheet_k_sigma)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change sheet plate buckling factor k_sigma to {}", self.new_sheet_k_sigma), &format!("Blattplattenknickenfaktork_sigma auf {} ändern", self.new_sheet_k_sigma))
     }
 }
 //#endregion 🔖️ChangeSheetKSigma

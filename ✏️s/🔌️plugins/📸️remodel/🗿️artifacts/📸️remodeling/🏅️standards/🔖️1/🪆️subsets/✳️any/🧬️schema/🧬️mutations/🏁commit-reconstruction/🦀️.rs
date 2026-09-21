@@ -54,8 +54,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CommitRe
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        "Commit reconstruction".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Commit reconstruction", "Rekonstruktion festschreiben")
     }
 }
 //#endregion 🔖️Mutation

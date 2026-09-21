@@ -31,8 +31,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Connec
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Connect referenced model {}", self.target_uri)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Connect referenced model {}", self.target_uri), &format!("referenzierte Modell {} verbinden", self.target_uri))
     }
 
     fn target(&self) -> Vec<String> {

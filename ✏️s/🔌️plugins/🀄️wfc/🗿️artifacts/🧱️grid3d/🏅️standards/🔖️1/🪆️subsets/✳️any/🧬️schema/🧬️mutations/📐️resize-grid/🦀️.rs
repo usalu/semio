@@ -33,8 +33,8 @@ impl MutationKind<Grid3dSnapshot, Grid3dMutation> for ResizeGrid {
     fn inverse(&self, base: &Grid3dSnapshot) -> Vec<Grid3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Resize grid to {}×{}×{}", self.width, self.height, self.depth)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Resize grid to {}×{}×{}", self.width, self.height, self.depth), &format!("Raster auf {}×{}×{} skalieren", self.width, self.height, self.depth))
     }
 }
 //#endregion 🔖️ResizeGrid

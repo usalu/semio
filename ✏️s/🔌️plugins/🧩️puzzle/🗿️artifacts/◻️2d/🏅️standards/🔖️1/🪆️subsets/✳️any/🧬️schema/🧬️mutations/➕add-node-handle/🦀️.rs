@@ -34,8 +34,8 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for AddNodeHandl
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add handle \"{}\" to node \"{}\"", self.handle.id, self.node_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add handle \"{}\" to node \"{}\"", self.handle.id, self.node_id), &format!("Griff \"{}\" zu Knoten \"{}\" hinzufügen", self.handle.id, self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.clone(), self.handle.id.clone()]

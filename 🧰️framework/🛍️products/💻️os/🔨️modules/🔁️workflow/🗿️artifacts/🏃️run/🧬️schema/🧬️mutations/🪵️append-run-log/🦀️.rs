@@ -23,8 +23,8 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for AppendRunLog {
     fn inverse(&self, _base: &RunArtifact) -> Vec<RunMutation> {
         Vec::new()
     }
-    fn label(&self) -> String {
-        format!("Append run log for {}", self.node_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Append run log for {}", self.node_id), &format!("Laufprotokoll für {} anhängen", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["logs".into(), self.node_id.clone()]

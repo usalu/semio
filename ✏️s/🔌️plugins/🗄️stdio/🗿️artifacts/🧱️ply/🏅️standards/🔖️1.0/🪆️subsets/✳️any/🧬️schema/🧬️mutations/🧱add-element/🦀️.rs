@@ -21,8 +21,8 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for AddElement {
     fn inverse(&self, base: &PlySnapshot) -> Vec<PlyMutation> {
         agg_inverse(&PlyMutation::AddElement(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "add-element".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("add-element", "Element hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

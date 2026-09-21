@@ -24,8 +24,8 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveOutputIntent {
         support::output_intent_identifier(base).map(|identifier| PdfVtMutation::SetOutputIntent(SetOutputIntent { identifier })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        "Remove PDF/VT output intent".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove PDF/VT output intent", "PDF/VTausgabenabsicht entfernen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -32,8 +32,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for DeleteCa
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete camera calibration \"{}\"", self.camera_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete camera calibration \"{}\"", self.camera_id), &format!("Kamerakalibrierung \"{}\" löschen", self.camera_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.camera_id.clone()]

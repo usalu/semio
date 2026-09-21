@@ -173,7 +173,7 @@ Both examples assume you cloned this repository to `~/src/semio` and want the as
       "args": [
         "./📜️script.ts", "dev", "mcp", "stdio", "os",
         "--folder", "/Users/you/Documents/my-semio-space",
-        "--scopes", "workspace.read,artifact.open,artifact.create,artifact.write,inference.run,ui.observe,ui.control"
+        "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control"
       ],
       "cwd": "/Users/you/src/semio"
     }
@@ -196,12 +196,24 @@ invoke the built binary by absolute path instead of going through `bun`:
       "args": [
         "stdio",
         "--folder", "/Users/you/Documents/my-semio-space",
-        "--scopes", "workspace.read,artifact.open,artifact.create,artifact.write,inference.run,ui.observe,ui.control"
+        "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control"
       ]
     }
   }
 }
 ```
+
+The `--scopes` names are the left column of `MCP_SCOPE_TABLE` (`🛡️policy/🦀️.rs`) and nothing else:
+`workspace.read`, `artifact.read`, `artifact.write`, `document.read`/`document.write` (aliases),
+`inference.execute`, `ui.observe`, `ui.control`, `ui.raw-control`, `clipboard.read`/`clipboard.write`,
+`host.filesystem.read`/`host.filesystem.write`, `network.external`, `process.spawn`,
+`plugin.install`/`extension.install`, `secrets.use`. **An entry that is not one of these is not
+rejected — it is passed through literally as a `CapabilityId` and silently grants nothing.** That is
+deliberate (a caller may grant a bare capability id such as `fs.read:/tmp/work` directly), and it is
+also why a plausible-looking typo costs you a whole tool family with no error: with
+`--scopes workspace.read,artifact.open,artifact.create,inference.run`, `inference_run` answers
+`PERMISSION_DENIED` because `jobs.spawn` was never granted, while `tools/list` still shows all 27
+tools. Measured against the release binary, ticket 26/09/18 `📓️rb1-release-builds-and-production-posture.md`.
 
 Run `bun nx run @semio-tech/framework-os-mcp-rs:build-release` first so that path exists, and restart
 Claude Desktop after editing the file. If your `semio-os-mcp` lives elsewhere, use that path — the emoji

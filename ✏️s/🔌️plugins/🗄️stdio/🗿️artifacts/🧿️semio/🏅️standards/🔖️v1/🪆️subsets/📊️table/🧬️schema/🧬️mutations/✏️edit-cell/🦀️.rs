@@ -24,8 +24,8 @@ impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for EditCell
     fn inverse(&self, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Edit cell #{} {}", self.row_index, self.column_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Edit cell #{} {}", self.row_index, self.column_name), &format!("Zelle #{} {} bearbeiten", self.row_index, self.column_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.row_index.to_string(), self.column_name.clone()]

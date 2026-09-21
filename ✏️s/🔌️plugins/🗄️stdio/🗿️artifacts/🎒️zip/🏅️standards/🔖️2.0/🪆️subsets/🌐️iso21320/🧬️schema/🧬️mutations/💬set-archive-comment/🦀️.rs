@@ -21,8 +21,8 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for SetArchiveComm
     fn inverse(&self, base: &ZipSnapshot) -> Vec<ZipIso21320Mutation> {
         agg_inverse(&ZipIso21320Mutation::SetArchiveComment(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-archive-comment".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-archive-comment", "Archivkommentar setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

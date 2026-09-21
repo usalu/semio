@@ -22,8 +22,8 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for InsertTrack {
     fn inverse(&self, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {
         agg_inverse(&Mp4Mutation::InsertTrack(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-track".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-track", "Spur einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateReportRecord {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create report record \"{}\"", self.report_record.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create report record \"{}\"", self.report_record.header.name), &format!("Berichtdatensatz \"{}\" erstellen", self.report_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.report_record.header.id.0.clone()]

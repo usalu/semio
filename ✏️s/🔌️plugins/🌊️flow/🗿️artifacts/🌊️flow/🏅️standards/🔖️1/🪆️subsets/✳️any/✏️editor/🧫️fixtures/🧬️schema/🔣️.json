@@ -372,6 +372,14 @@
             }
           ]
         },
+        "bindings": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "accessibility": {
+          "type": "object",
+          "additionalProperties": false
+        },
         "children": {
           "type": "array",
           "maxItems": 32,
@@ -406,7 +414,7 @@
           "const": 384
         },
         "retirementSteps": {
-          "const": 12672
+          "const": 49536
         },
         "retirementProbe": {
           "type": "object",
@@ -425,13 +433,13 @@
               "const": 384
             },
             "childCapacity": {
-              "const": 32
+              "const": 128
             },
             "ownedNodes": {
-              "const": 12257
+              "const": 49025
             },
             "closeSteps": {
-              "const": 12641
+              "const": 49409
             },
             "supersededLimit": {
               "const": 8192
@@ -570,7 +578,7 @@
               "symbols": {
                 "type": "integer",
                 "minimum": 0,
-                "maximum": 1
+                "maximum": 2
               },
               "fields": {
                 "type": "array",
@@ -2313,8 +2321,8 @@
         },
         "trace": {
           "type": "array",
-          "minItems": 4,
-          "maxItems": 4,
+          "minItems": 11,
+          "maxItems": 11,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -2323,7 +2331,8 @@
               "items",
               "bytes",
               "status",
-              "retired"
+              "rootRetired",
+              "terminalEmpty"
             ],
             "properties": {
               "id": {
@@ -2347,7 +2356,10 @@
                   "complete"
                 ]
               },
-              "retired": {
+              "rootRetired": {
+                "type": "boolean"
+              },
+              "terminalEmpty": {
                 "type": "boolean"
               }
             }

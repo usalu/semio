@@ -4,6 +4,7 @@ use ui_wgpu::wgpu::UiPresence;
 
 fn test_scene(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
     UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: "controller".into(),
         component_kind: kind,

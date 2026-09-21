@@ -1376,6 +1376,7 @@ pub struct ScenePass3d {
     pub lighting: SceneLighting3d,
     pub neutral_material: SceneMaterial3d,
     pub shadow: SceneShadow3d,
+    pub procedural_grid: Option<ProceduralGrid3d>,
     pub shadow_draws: Vec<SceneDraw3d>,
     pub draws: Vec<SceneDraw3d>,
     pub line_draws: Vec<LineDraw3d>,
@@ -1387,6 +1388,21 @@ pub struct ScenePass3d {
     pub vector_watermark: usize,
 }
 //#endregion ScenePass
+
+//#region ProceduralGrid
+pub const PROCEDURAL_GRID_CELL_THICKNESS: f32 = 0.6;
+pub const PROCEDURAL_GRID_SECTION_THICKNESS: f32 = 0.0;
+pub const PROCEDURAL_GRID_FADE_STRENGTH: f32 = 1.5;
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ProceduralGrid3d {
+    pub plane_z: f32,
+    pub camera_plane_projection: [f32; 3],
+    pub cell_size: f32,
+    pub fade_distance: f32,
+    pub cell_color: [f32; 3],
+}
+//#endregion ProceduralGrid
 
 //#region LineDraw
 #[derive(Clone, Copy, Debug)]

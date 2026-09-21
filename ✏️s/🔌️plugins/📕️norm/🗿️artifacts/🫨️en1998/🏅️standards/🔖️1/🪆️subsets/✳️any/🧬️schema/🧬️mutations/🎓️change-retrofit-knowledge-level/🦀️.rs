@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeRetrofitKn
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change retrofit knowledge level to \"{}\"", self.new_retrofit_knowledge_level)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change retrofit knowledge level to \"{}\"", self.new_retrofit_knowledge_level), &format!("Sanierungswissenstufe auf \"{}\" ändern", self.new_retrofit_knowledge_level))
     }
 }
 //#endregion 🔖️ChangeRetrofitKnowledgeLevel

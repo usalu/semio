@@ -30,8 +30,8 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveMediaAnnotation {
         support::media_annotation(base, &self.subtype, &self.title).map(|_| PdfVtMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove {} media annotation", self.subtype)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove {} media annotation", self.subtype), &format!("{} Medienanmerkung entfernen", self.subtype))
     }
 
     fn target(&self) -> Vec<String> {

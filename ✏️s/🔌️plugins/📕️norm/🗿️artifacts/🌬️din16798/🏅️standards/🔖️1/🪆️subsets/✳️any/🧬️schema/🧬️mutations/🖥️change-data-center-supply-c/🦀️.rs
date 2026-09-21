@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeDataCe
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change data center supply temperature to {}", self.new_data_center_supply_c)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change data center supply temperature to {}", self.new_data_center_supply_c), &format!("Datenmittelpunktzulufttemperatur auf {} ändern", self.new_data_center_supply_c))
     }
 }
 //#endregion 🔖️ChangeDataCenterSupplyC

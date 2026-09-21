@@ -30,8 +30,8 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for CreateTile {
     fn inverse(&self, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Create Tile".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Create Tile", "Kachel erstellen")
     }
 }
 //#endregion 🔖️CreateTile

@@ -1,6 +1,22 @@
 
 use super::*;
 
+#[test]
+fn retained_document_close_queue_is_bounded_and_same_window_replacement_costs_no_credit() {
+    let mut queue = UiDocumentCloseQueue::default();
+    let mut engine = ui_wgpu::wgpu::Ui::new();
+    for index in 0..ui_wgpu::wgpu::engine::UI_LAYOUT_SURFACE_SLOTS {
+        let window_id = SurfaceId::try_from(format!("close-{index}").as_str()).unwrap();
+        let token = engine.try_admit_surface(window_id.as_ref()).unwrap();
+        assert!(queue.try_upsert(UiDocumentCloseOwner { window_id, token, generation: 1 }));
+    }
+    let token = engine.surface_token("close-0").unwrap();
+    assert!(!queue.try_upsert(UiDocumentCloseOwner { window_id: SurfaceId::try_from("close-overflow").unwrap(), token, generation: 1 }), "a sixty-fifth retained surface close is refused before its owner is lost");
+    assert!(queue.try_upsert(UiDocumentCloseOwner { window_id: SurfaceId::try_from("close-0").unwrap(), token, generation: 2 }), "the same window replaces its stale close generation without another credit");
+    assert_eq!(queue.owners.len(), ui_wgpu::wgpu::engine::UI_LAYOUT_SURFACE_SLOTS);
+    assert_eq!(queue.owners.front().map(|owner| owner.generation), Some(2));
+}
+
 fn ingress_opportunity_document() -> UiDocumentLease {
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🌳️document-tree-reconcile/🔣️.json")).unwrap();
     let source = &fixture["document"];
@@ -287,6 +303,7 @@ fn drop_cancelled_overlay_closed_and_focus_changed_commands_are_explicit_no_ops(
 /// to the sibling `ui_wgpu` crate, so this is a separate copy for this crate's own tests).
 fn component_scene_ui(surface_id: &str, kind: ui_wgpu::wgpu::SurfaceKind) -> UiNode {
     UiNode::ComponentScene(UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: "ctrl".into(),
         component_kind: kind,
@@ -315,21 +332,20 @@ fn component_scene_ui(surface_id: &str, kind: ui_wgpu::wgpu::SurfaceKind) -> UiN
 /// 🌱️ `apply_tree`s a single-child `Stack(scene_node)` into `window_id` and returns the scene
 /// leaf's own `NodeId` — every scene-command test below needs a real, live tree node since
 /// `apply_scene_ui_command` re-fetches it by `(window_id, node)` from `UI_ENGINE`.
-fn seed_scene_window_with(window_id: &str, scene_node: UiNode) -> NodeId {
-    UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![scene_node])));
+fn seed_scene_window_with(window_id: &str, mut scene_node: UiNode) -> NodeId {
+    UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![scene_node.clone()])));
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, test_identity_document(1, "seed"))));
-    UI_ENGINE.with(|cell| {
+    let (child, host_id) = UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
-        let scene = engine.tree(window_id).and_then(|tree| tree.root.and_then(|root| tree.children(root).next()));
-        assert!(scene.is_some());
-    });
-    UI_ENGINE.with(|cell| {
-        let engine = cell.borrow();
-        assert_eq!(engine.surface_generation(window_id), Some(1));
+        let generation = engine.surface_generation(window_id).expect("the test window has a lifetime");
         let tree = engine.tree(window_id).unwrap();
         let child = tree.children(tree.root.unwrap()).next().expect("the ComponentScene child should be in the retained tree");
-        child
-    })
+        let retained = tree.node(child).unwrap();
+        (child, ui_wgpu::wgpu::reconcile::component_scene_host_id(generation, retained.component_generation()))
+    });
+    if let UiNode::ComponentScene(scene) = &mut scene_node { scene.host_id = host_id; }
+    UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![scene_node])));
+    child
 }
 
 fn test_identity_document(generation: u64, key: &str) -> ui_wgpu::wgpu::tree::UiDocumentTree {
@@ -358,6 +374,15 @@ fn seed_scene_window(window_id: &str, surface_id: &str, kind: ui_wgpu::wgpu::Sur
     seed_scene_window_with(window_id, component_scene_ui(surface_id, kind))
 }
 
+fn retained_scene_host_id(window_id: &str, node: NodeId) -> String {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let retained = engine.tree(window_id).and_then(|tree| tree.node(node)).expect("the retained scene node remains mounted");
+        let UiNode::ComponentScene(scene) = &retained.spec.0 else { panic!("the retained node is a ComponentScene") };
+        scene.host_id.clone()
+    })
+}
+
 #[test]
 fn scene_command_dispatches_a_canvas2d_pointer_down_action() {
     let window_id = "apply-ui-commands-scene-canvas2d-pointer-down";
@@ -374,7 +399,7 @@ fn scene_command_dispatches_a_canvas2d_pointer_down_action() {
             rect,
             event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         }],
-        None,
+        Some(ui_render::PointerId(1)),
         &mut input,
     );
 
@@ -406,7 +431,7 @@ fn canvas2d_pointer_payload_is_react_shaped_screen_logical_with_a_world_lane() {
             rect,
             event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 50.0, y: 70.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         }],
-        None,
+        Some(ui_render::PointerId(1)),
         &mut input,
     );
 
@@ -435,7 +460,7 @@ fn scene_command_dispatches_an_ink_canvas_scroll_action() {
     // own fixture (`apply_scene_wheel_dispatches_actions_for_a_previously_dead_surface`).
     let mut scene_node = component_scene_ui("s1", ui_wgpu::wgpu::SurfaceKind::InkCanvas);
     if let UiNode::ComponentScene(scene) = &mut scene_node {
-        scene.ink_canvas = Some(ui_wgpu::wgpu::InkCanvasScene { document_json: "{}".into(), selection_json: "[]".into(), hovered_id: None, active_utility: String::new(), view_mode: "canvas".into(), interactive: true });
+        scene.ink_canvas = Some(ui_wgpu::wgpu::InkCanvasScene { document_json: "{}".into(), selection_json: "[]".into(), hovered_id: None, active_utility: String::new(), view_mode: "canvas".into(), interactive: true, interaction_domain: None });
     }
     let node = seed_scene_window_with(window_id, scene_node);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
@@ -466,6 +491,7 @@ fn ink_editing_scene(law: &Value) -> UiNode {
             active_utility: law["scene"]["inkCanvas"]["activeUtility"].as_str().expect("utility").into(),
             view_mode: law["scene"]["inkCanvas"]["viewMode"].as_str().expect("view mode").into(),
             interactive: law["scene"]["inkCanvas"]["interactive"].as_bool().expect("interactive"),
+            interaction_domain: None,
         });
     }
     scene_node
@@ -642,6 +668,155 @@ fn stale_scene_revision_retires_without_mutation_or_action_publication() {
     assert!(drive_scene_interaction_step(&mut input));
     assert!(crate::collect_fixture_actions(&mut input).is_empty());
     assert!(scene_interaction_terminal_is_empty());
+}
+
+#[test]
+fn closing_window_fences_queued_scene_intent_before_tree_retirement() {
+    let window_id = "closing-window-queued-canvas";
+    let node = seed_scene_window(window_id, "closing-canvas", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
+    let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    apply_scene_ui_command(window_id, node, ui_wgpu::wgpu::SurfaceKind::Canvas2d, rect, &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() }, Some(ui_render::PointerId(1)), &mut input);
+    assert!(!scene_interaction_terminal_is_empty());
+    assert!(request_ui_document_close(window_id));
+    assert!(UI_ENGINE.with(|cell| cell.borrow().tree(window_id).is_some()));
+    assert!(drive_scene_interaction_step(&mut input));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "queued input cannot activate the old scene after its window closes");
+    assert!(scene_interaction_terminal_is_empty());
+}
+
+#[test]
+fn closing_ink_editor_rejects_a_commit_before_its_scene_retires() {
+    let law = ink_editing_law();
+    let window_id = "closing-focused-ink-editor";
+    let surface_id = law["scene"]["surfaceId"].as_str().unwrap();
+    let node = seed_scene_window_with(window_id, ink_editing_scene(&law));
+    let viewport = &law["viewport"];
+    let rect = Rect::new(viewport["x"].as_f64().unwrap() as f32, viewport["y"].as_f64().unwrap() as f32, viewport["width"].as_f64().unwrap() as f32, viewport["height"].as_f64().unwrap() as f32);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    open_ink_editor(window_id, node, surface_id, rect, &law["gestures"]["text"], &mut input);
+    crate::collect_fixture_actions(&mut input);
+    assert!(apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Char("uncommitted".into()), &Default::default(), &mut input));
+    assert!(request_ui_document_close(window_id));
+    assert!(!apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Enter, &Default::default(), &mut input));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+}
+
+#[test]
+fn closing_window_retires_an_unfinished_ink_clipboard_stream_before_reopening() {
+    let law = ink_editing_law();
+    let window_id = "closing-ink-clipboard-stream";
+    let surface_id = law["scene"]["surfaceId"].as_str().unwrap();
+    let node = seed_scene_window_with(window_id, ink_editing_scene(&law));
+    let generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).unwrap();
+    let host_id = retained_scene_host_id(window_id, node);
+    assert_ne!(host_id, surface_id, "the fixture exercises the retained host identity rather than the wire surface id");
+    focus_ink_surface(window_id, generation, node, &host_id, Rect::new(0.0, 0.0, 200.0, 200.0));
+    assert_eq!(start_focused_ink_clipboard_stream(41, false, 100), Ok(true));
+    assert_eq!(push_focused_ink_clipboard_stream(41, "unfinished"), Ok(true));
+    assert!(request_ui_document_close(window_id));
+    assert!(!with_live_ink_surface(&focused_ink_surface().unwrap(), |_| ()).is_some(), "closing immediately revokes the clipboard address");
+    for _ in 0..262_144 { if !ui_document_close_pending() { break; } assert!(close_ui_document_one()); }
+    assert!(!ui_document_close_pending());
+    assert!(INK_CLIPBOARD_STREAMS.with(|cell| cell.borrow().iter().flatten().all(|stream| stream.address.window_id != window_id)));
+    assert!(focused_ink_surface().is_none());
+    seed_scene_window_with(window_id, ink_editing_scene(&law));
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(!commit_focused_ink_clipboard_stream(41, &mut input));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+}
+
+#[test]
+fn closing_one_window_retires_only_its_ink_clipboard_owner() {
+    let law = ink_editing_law();
+    let first_window = "closing-one-ink-owner-a";
+    let second_window = "closing-one-ink-owner-b";
+    let first_node = seed_scene_window_with(first_window, ink_editing_scene(&law));
+    let second_node = seed_scene_window_with(second_window, ink_editing_scene(&law));
+    let first_generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(first_window)).unwrap();
+    let second_generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(second_window)).unwrap();
+    focus_ink_surface(first_window, first_generation, first_node, &retained_scene_host_id(first_window, first_node), Rect::new(0.0, 0.0, 200.0, 200.0));
+    assert_eq!(start_focused_ink_clipboard_stream(142, false, 12), Ok(true));
+    focus_ink_surface(second_window, second_generation, second_node, &retained_scene_host_id(second_window, second_node), Rect::new(0.0, 0.0, 200.0, 200.0));
+    assert_eq!(start_focused_ink_clipboard_stream(143, false, 12), Ok(true));
+
+    assert!(request_ui_document_close(first_window));
+    for _ in 0..262_144 { if !ui_document_close_pending() { break; } assert!(close_ui_document_one()); }
+    assert!(!ui_document_close_pending());
+    INK_CLIPBOARD_STREAMS.with(|cell| {
+        let slots = cell.borrow();
+        assert!(slots.iter().flatten().all(|stream| stream.id != 142));
+        assert!(slots.iter().flatten().any(|stream| stream.id == 143), "closing one document cannot consume a sibling host's stream");
+    });
+    assert!(abort_focused_ink_clipboard_stream(143));
+}
+
+#[test]
+fn a_late_native_clipboard_callback_cannot_complete_a_reused_slot() {
+    let mut arena = ui_wgpu::wgpu::arena::Arena::<()>::new();
+    let node = arena.insert(());
+    let address = |host_id: &str| InkClipboardAddress {
+        window_id: "native-ink-clipboard-aba".into(),
+        window_generation: 1,
+        node,
+        host_id: host_id.into(),
+        rect: Rect::new(0.0, 0.0, 100.0, 100.0),
+    };
+    let stale = reserve_pending_native_ink_clipboard(address("old")).expect("old slot reserves");
+    PENDING_NATIVE_INK_CLIPBOARD.with(|cell| cell.borrow_mut()[usize::from(stale.slot)].mounted = None);
+    let successor_token = reserve_pending_native_ink_clipboard(address("successor")).expect("successor reuses the free slot");
+    assert_eq!(stale.slot, successor_token.slot);
+    assert_ne!(stale.generation, successor_token.generation);
+    complete_pending_native_ink_clipboard(stale, Ok(Some(ui_wgpu::wgpu::ClipboardContent::Text("stale".into()))));
+    PENDING_NATIVE_INK_CLIPBOARD.with(|cell| {
+        let mut slots = cell.borrow_mut();
+        let successor = slots[usize::from(successor_token.slot)].mounted.take().expect("successor slot remains mounted");
+        assert_eq!(successor.address.host_id, "successor");
+        assert!(successor.outcome.is_none(), "the old completion token cannot write through a reused slot index");
+    });
+}
+
+#[test]
+fn window_close_retires_queued_scene_and_capture_owners_before_slot_release() {
+    let window_id = "closing-window-scene-owners";
+    let node = seed_scene_window(window_id, "closing-canvas", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
+    let target = retained_scene_target(window_id, node).unwrap();
+    let generation = target.window_generation;
+    assert!(claim_scene_pointer_owner(target, ui_render::PointerId(1)));
+    let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    apply_scene_ui_command(window_id, node, ui_wgpu::wgpu::SurfaceKind::Canvas2d, rect, &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() }, Some(ui_render::PointerId(1)), &mut input);
+    assert!(request_ui_document_close(window_id));
+    for _ in 0..262_144 {
+        if !ui_document_close_pending() { break; }
+        assert!(close_ui_document_one());
+    }
+    assert!(!ui_document_close_pending());
+    assert!(UI_ENGINE.with(|cell| cell.borrow().surface_token(window_id).is_none()));
+    assert!(scene_interaction_terminal_is_empty(), "the sole window close owner also retires its queued scene work");
+    assert!(SCENE_POINTER_OWNERS.with(|cell| cell.borrow().slots.iter().all(|owner| owner.target.window_id != window_id || owner.target.window_generation != generation)));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+}
+
+#[test]
+fn closing_window_silently_retires_an_active_canvas_gesture() {
+    let window_id = "closing-window-active-canvas";
+    let node = seed_scene_window(window_id, "active-canvas", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    apply_scene_ui_command(window_id, node, ui_wgpu::wgpu::SurfaceKind::Canvas2d, Rect::new(0.0, 0.0, 200.0, 200.0), &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() }, Some(ui_render::PointerId(1)), &mut input);
+    assert!(drive_scene_interaction_step(&mut input));
+    assert_eq!(crate::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown"]);
+    assert!(request_ui_document_close(window_id));
+    crate::scenes::request_canvas_pointer_gesture_cancel_for_window(window_id);
+    drive_scene_interaction_step(&mut input);
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "closing a mounted Canvas cannot publish a synthetic pointer terminal action");
+    for _ in 0..262_144 {
+        if !ui_document_close_pending() { break; }
+        assert!(close_ui_document_one());
+    }
+    assert!(!ui_document_close_pending());
+    assert!(!crate::scenes::cancel_canvas_pointer_gesture_for(ui_render::PointerId(1), &mut input));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
 }
 
 #[test]

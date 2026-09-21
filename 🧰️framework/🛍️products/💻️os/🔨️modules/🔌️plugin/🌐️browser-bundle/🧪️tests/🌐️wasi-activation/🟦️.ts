@@ -2,13 +2,56 @@ import { fileURLToPath as testFileUrlToPath, pathToFileURL } from "node:url";
 const testSourceDirectory = testFileUrlToPath(new URL("../../🧫️fixtures/🌐️wasi-activation/", import.meta.url));
 /** 🧭️ Qualifies isolated browser WASI resources against neutral traces and Preview2. */
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
 import { runExactCargoLawProcess } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
+/** 🗣️ Exercises installed and vendored CLI streams against the neutral fragmented-line trace. */
+export async function testPreview2GuestLogVendoring(repoRoot: string): Promise<void> {
+  const fixture = JSON.parse(readFileSync(join(testSourceDirectory, "🔣️.json"), "utf8"));
+  const { ensurePreview2ShimVendorAt, patchPreview2ShimGuestLogClassification } = await import("../../🏗️materialization/🟦️.ts");
+  const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  assert(artifactBase?.includes("🗑️generated"));
+  mkdirSync(artifactBase, { recursive: true });
+  const vendor = mkdtempSync(join(artifactBase, "preview2-log-vendor-"));
+  const observe = async (path: string, isolated: boolean) => {
+    const module = await import(pathToFileURL(path).href);
+    const cli = isolated ? module.createCli() : module;
+    const calls: { channel: string; text: string; level: string }[] = [];
+    const original = { log: console.log, debug: console.debug, error: console.error };
+    try {
+      for (const level of ["log", "debug", "error"] as const) console[level] = (text: string) => calls.push({ channel: "stderr", text, level });
+      const stream = cli.stderr.getStderr();
+      for (const chunk of fixture.lineBuffer.chunks) {
+        const bytes = new TextEncoder().encode(chunk);
+        assert(stream.checkWrite() >= BigInt(bytes.byteLength));
+        stream.write(bytes);
+      }
+    } finally { Object.assign(console, original); }
+    assert.equal(typeof cli.stdin.getStdin, "function");
+    assert.equal(typeof cli.stdout.getStdout, "function");
+    assert.equal(typeof cli.exit.exit, "function");
+    return calls;
+  };
+  for (const isolated of [false, true]) {
+    const oracle = await observe(join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser/cli.js"), isolated);
+    assert.deepEqual(oracle.map(({ text }) => text), fixture.lineBuffer.hostCalls.map(({ text }: { text: string }) => text));
+  }
+  ensurePreview2ShimVendorAt(vendor, repoRoot);
+  const path = join(vendor, "cli.js"), first = readFileSync(path, "utf8");
+  patchPreview2ShimGuestLogClassification(path);
+  assert.equal(readFileSync(path, "utf8"), first);
+  for (const isolated of [false, true]) assert.deepEqual(await observe(path, isolated), fixture.lineBuffer.hostCalls);
+  const drift = join(vendor, "drift.js");
+  writeFileSync(drift, "export const stderr = {};\n");
+  assert.throws(() => patchPreview2ShimGuestLogClassification(drift), /patch did not match/);
+  console.log("[DEBUG] Preview2 guest log vendoring: installed oracle, fragmented lines, severity, idempotence and drift refusal passed");
+}
+
 export async function testBrowserWasiActivation(repoRoot: string): Promise<void> {
+  await testPreview2GuestLogVendoring(repoRoot);
   const fixture = JSON.parse(readFileSync(join(testSourceDirectory, "🔣️.json"), "utf8"));
   const schemaDocument = JSON.parse(readFileSync(resolve(testSourceDirectory, "../../🧬️schema/🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
@@ -127,6 +170,7 @@ export async function testBrowserWasiActivation(repoRoot: string): Promise<void>
     const io = await import(pathToFileURL(process.argv[2] + "/node_modules/@bytecodealliance/preview2-shim/dist/browser/io.js"));
     const writes = [];
     const output = io.outputStreamCreate({ write(bytes) { writes.push([...bytes]); } });
+    assert(output.checkWrite() >= BigInt(fixture.output.length));
     output.write(new Uint8Array(fixture.output));
     const ready = await io.poll.poll([io.pollableCreate()]);
     assert.deepEqual(writes, [fixture.output]);
@@ -145,7 +189,11 @@ export async function testBrowserWasiActivation(repoRoot: string): Promise<void>
   const preview2Writes = [];
   const io = await import(pathToFileURL(join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser/io.js")).href);
   const preview2 = io.outputStreamCreate({ write(bytes: Uint8Array) { preview2Writes.push(new TextDecoder().decode(bytes)); } });
-  for (const chunk of fixture.lineBuffer.chunks) preview2.write(new TextEncoder().encode(chunk));
+  for (const chunk of fixture.lineBuffer.chunks) {
+    const bytes = new TextEncoder().encode(chunk);
+    assert(preview2.checkWrite() >= BigInt(bytes.byteLength));
+    preview2.write(bytes);
+  }
   assert.equal(preview2Writes.length, fixture.lineBuffer.preview2HostCalls);
 
   console.log(`browser-wasi-activation: AJV=1 TypeScript=1 Preview2=1 actors=2 laws=${fixture.laws.length} resources=${fixture.limits.resources} waiters=${fixture.limits.waiters} evidence=${evidence}`);

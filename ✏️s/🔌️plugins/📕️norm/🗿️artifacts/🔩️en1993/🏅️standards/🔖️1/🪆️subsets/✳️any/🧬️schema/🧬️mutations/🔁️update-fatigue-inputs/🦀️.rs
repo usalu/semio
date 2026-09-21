@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateFatigueInp
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Update EN 1993-1-9 fatigue inputs".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update EN 1993-1-9 fatigue inputs", "EN 1993-1-9 Ermüdungseingaben aktualisieren")
     }
 }
 //#endregion 🔖️Payload

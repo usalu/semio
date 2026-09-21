@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeSiloQNomin
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change silo nominal behaviour factor q to {}", self.new_silo_q_nominal)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change silo nominal behaviour factor q to {}", self.new_silo_q_nominal), &format!("Silonominalverhaltenfaktorq auf {} ändern", self.new_silo_q_nominal))
     }
 }
 //#endregion 🔖️ChangeSiloQNominal

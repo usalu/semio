@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameScenario {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename scenario to \"{}\"", self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename scenario to \"{}\"", self.new_name), &format!("Szenario in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

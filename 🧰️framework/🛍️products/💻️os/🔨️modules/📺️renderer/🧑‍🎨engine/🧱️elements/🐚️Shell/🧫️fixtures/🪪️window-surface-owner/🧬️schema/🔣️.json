@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "previousWindow",
+    "typed",
+    "panel",
+    "focusSequence",
+    "lateBlur",
+    "cases"
+  ],
+  "properties": {
+    "focusSequence": { "type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true, "items": { "enum": ["body", "measures", "actions", "search"] } },
+    "lateBlur": { "enum": ["body", "measures", "actions", "search"] },
+    "panel": {
+      "type": "object", "additionalProperties": false,
+      "required": ["surface", "label"],
+      "properties": { "surface": { "type": "string", "minLength": 1 }, "label": { "type": "string", "minLength": 1 } }
+    },
+    "version": {
+      "const": 1
+    },
+    "previousWindow": {
+      "type": "string",
+      "minLength": 1
+    },
+    "typed": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "window",
+          "surface"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "body",
+              "measures",
+              "actions",
+              "search"
+            ]
+          },
+          "window": {
+            "type": "string",
+            "minLength": 1
+          },
+          "surface": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

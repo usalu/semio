@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeWallThickn
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change wall thickness [mm] to {}", self.new_wall_thickness_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change wall thickness [mm] to {}", self.new_wall_thickness_mm), &format!("Wanddicke [mm] auf {} ändern", self.new_wall_thickness_mm))
     }
 }
 //#endregion 🔖️ChangeWallThicknessMm

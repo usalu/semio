@@ -30,8 +30,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Upda
         crate::standards::v1::subsets::any::schema::mutations::update_camera::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        "Update camera".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update camera", "Kamera aktualisieren")
     }
 }
 //#endregion 🔖️UpdateCamera

@@ -26,8 +26,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateFrame {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_create_frame(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create frame \"{}\"", self.frame.id())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create frame \"{}\"", self.frame.id()), &format!("Rahmen \"{}\" erstellen", self.frame.id()))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame.id().to_string()]

@@ -18,8 +18,8 @@ impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for ReplaceConfig 
     fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> {
         vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Replace Config".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["config".into()]

@@ -20,7 +20,7 @@
 
 use super::schema::{
     DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES,
-    DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEvent, DirectoryEventPageV1,
+    DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEvent, DirectoryEventPageV1,
     DirectorySessionAuthorityV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1,
     DirectorySpaceListEntryV1, DirectorySpaceRole, DirectoryStreamMessage, DocumentBrowserActorSourceV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1,
     DocumentOpenBrowserActorV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanV1,
@@ -1062,6 +1062,34 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         let manifest: DocumentExecutionTargetLeaseFieldsV1 = decode_json_bytes(&response.body)?;
         manifest.validate().map_err(|_| DirectoryClientError::Decode("document execution-target manifest is invalid".into()))?;
         Ok(manifest)
+    }
+
+    /// 🧩️ Fetches the exact authorized COMPONENT bytes for the same protected structural intent —
+    /// the plugin wasm the Hub itself selected for this document. It is the third leg of the same
+    /// chain the browser shell already walks (`open-plan` → `execution-target/{manifest, component,
+    /// descriptor}` → `socket-grants` → the document socket); before this method existed, a
+    /// `--hub`-bound native client had manifest and descriptor and no way to obtain the component,
+    /// so it could only run a plugin it found on a local disk — which a hub-bound agent has none of
+    /// (measured 2026-09-21: every `action_prepare` from the MCP gateway answered `repo root not
+    /// found`). Bounded by the same fixed component ceiling the Hub's own route enforces; the
+    /// declared length and SHA-256 stay the caller's comparison input, exactly as for the descriptor.
+    pub async fn document_execution_target_component(&self, ctx: &OperationContext, intent: &DocumentOpenIntentV1) -> Result<Vec<u8>, DirectoryClientError> {
+        intent.validate().map_err(|_| DirectoryClientError::Decode("document execution-target intent is invalid".into()))?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let path = format!("/spaces/{}/documents/{}/execution-target/component", encode_url_component(&intent.scope.space_id), encode_url_component(&intent.scope.document_id),);
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(crate::os_pack::json::to_json_string(intent).into_bytes())).await?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        match response.status {
+            401 => Err(DirectoryClientError::Unauthorized),
+            200..=299 if response.body.len() <= DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES as usize => Ok(response.body),
+            200..=299 => Err(DirectoryClientError::Decode("document execution-target component exceeded its fixed byte limit".into())),
+            status => Err(DirectoryClientError::Http { status, body: String::new() }),
+        }
     }
 
     /// 📖 Fetches exact descriptor bytes for the same protected structural intent. Raw bytes are

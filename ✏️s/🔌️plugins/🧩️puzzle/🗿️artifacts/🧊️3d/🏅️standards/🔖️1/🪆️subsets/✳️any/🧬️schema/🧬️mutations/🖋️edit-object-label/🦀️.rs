@@ -25,8 +25,8 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for EditObjectLa
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Edit object \"{}\" label", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Edit object \"{}\" label", self.id), &format!("Objekt \"{}\" Beschriftung bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

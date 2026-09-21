@@ -21,8 +21,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeAbbreviation
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         base.nodes.iter().find(|node| node.id == self.id).map(|node| vec![DagMutation::ChangeNodeAbbreviation(Self { id: self.id.clone(), new_abbreviation: node.abbreviation.clone() })]).unwrap_or_default()
     }
-    fn label(&self) -> String {
-        format!("Change node abbreviation {}", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change node abbreviation {}", self.id), &format!("Knotenabkürzung {} ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.id.clone()]

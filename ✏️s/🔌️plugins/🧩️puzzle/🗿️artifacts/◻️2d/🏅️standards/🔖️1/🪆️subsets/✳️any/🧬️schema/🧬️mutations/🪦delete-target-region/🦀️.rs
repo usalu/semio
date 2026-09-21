@@ -30,8 +30,8 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for DeleteTarget
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete target region \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete target region \"{}\"", self.id), &format!("Zielregion \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

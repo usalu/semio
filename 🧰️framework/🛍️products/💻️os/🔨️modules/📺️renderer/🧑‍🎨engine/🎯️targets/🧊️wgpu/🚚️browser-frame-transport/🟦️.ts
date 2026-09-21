@@ -7,6 +7,7 @@ import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, describeBrowserB
 import type { WgpuBootDescriptor, WgpuHostAppearance, WgpuHostPlatform, WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { stampShardWorkerDiagnostics } from "../../../../../../../../🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts";
 import { decodeReferenceImageOnPage, type ReferenceImageDimensions } from "../🖼️reference-image-decode/🟦️.ts";
+import { nextFrameSequence } from "../🧵️frame-turn-scheduler/🟦️.ts";
 
 export const FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
 export const FRAME_WORKER_HUB_DOCUMENT_CAPACITY = 64;
@@ -273,7 +274,7 @@ export type BrowserFrameHostAppearance = { readonly kind: "host-appearance"; rea
 export type BrowserFrameWorkerBatch = {
   readonly kind: "batch";
   readonly lifecycle: number;
-  readonly sequence: number;
+  readonly inputSequence: number;
   readonly generation: number;
   readonly timestampMs: number;
   readonly replaceable: readonly BrowserFrameReplaceableEvent[];
@@ -333,10 +334,11 @@ export type BrowserFrameWorkerMessage =
   | { readonly kind: "boot-phase"; readonly lifecycle: number; readonly phase: string; readonly state: "enter" | "leave"; readonly elapsedMs?: number }
   | { readonly kind: "booted"; readonly lifecycle: number }
   | { readonly kind: "wake"; readonly lifecycle: number }
+  | { readonly kind: "batch-accepted"; readonly lifecycle: number; readonly inputSequence: number; readonly generation: number }
   | {
       readonly kind: "frame";
       readonly lifecycle: number;
-      readonly sequence: number;
+      readonly frameSequence: number;
       readonly generation: number;
       readonly cursor: string;
       readonly fullscreen: boolean | null;
@@ -443,8 +445,9 @@ export class BrowserFrameTransport {
   private readonly hubDocuments = new Map<string, BrowserHubDocumentRemote | null>();
   private nextStreamId = 1;
   private generation = 0;
-  private sequence = 0;
-  private acceptedSequence = 0;
+  private inputSequence = 0;
+  private acceptedInputSequence = 0;
+  private acceptedFrameSequence = 0;
   private inFlight = false;
   private frameRequested = false;
   private rafHandle: number | undefined;
@@ -599,11 +602,12 @@ export class BrowserFrameTransport {
     this.wheel = undefined;
     this.resize = undefined;
     this.frameRequested = this.lossless.length > 0 || this.hubDocuments.size > 0;
-    const sequence = ++this.sequence;
-    this.inFlight = true;
     try {
+      const inputSequence = nextFrameSequence(this.inputSequence);
+      this.inputSequence = inputSequence;
+      this.inFlight = true;
       this.uiTurnClock.enter();
-      this.worker.postMessage({ kind: "batch", lifecycle: this.lifecycle, sequence, generation: this.generation, timestampMs, replaceable, lossless });
+      this.worker.postMessage({ kind: "batch", lifecycle: this.lifecycle, inputSequence, generation: this.generation, timestampMs, replaceable, lossless });
       this.observeUiTurn("frame-transfer", this.uiTurnClock.leave());
       return true;
     } catch (error) {
@@ -937,12 +941,23 @@ export class BrowserFrameTransport {
       this.fail(this.status === "booting" ? "worker-boot-failed" : "worker-runtime-failed", `${message.code}: ${message.detail}`);
       return;
     }
+    if (message.kind === "batch-accepted") {
+      if (message.generation > this.generation || message.inputSequence > this.inputSequence) {
+        this.fail("protocol-violation", `Worker accepted future input ${message.inputSequence}/${message.generation} while UI is ${this.inputSequence}/${this.generation}`);
+        return;
+      }
+      if (message.inputSequence <= this.acceptedInputSequence) return;
+      this.acceptedInputSequence = message.inputSequence;
+      if (message.inputSequence === this.inputSequence) this.inFlight = false;
+      if (this.frameRequested || message.generation < this.generation) this.requestFrame();
+      return;
+    }
     if (message.generation > this.generation) {
       this.fail("protocol-violation", `Worker returned future generation ${message.generation} while UI generation is ${this.generation}`);
       return;
     }
-    if (message.sequence <= this.acceptedSequence) return;
-    this.inFlight = false;
+    if (message.frameSequence <= this.acceptedFrameSequence) return;
+    this.acceptedFrameSequence = message.frameSequence;
     if (message.workerStepVerdict === "sustained-overrun") this.workerStepOverruns++;
     if (message.quarantined) {
       // 🏷️ Every renderer fault code keeps its OWN name. `frame-credits` used to land on
@@ -953,7 +968,6 @@ export class BrowserFrameTransport {
       return;
     }
     if (message.generation === this.generation) {
-      this.acceptedSequence = message.sequence;
       if (!this.runUiHook("directive-hook", () => this.onDirectives?.({ cursor: message.cursor, fullscreen: message.fullscreen, generation: message.generation, workerDurationMs: message.workerDurationMs }))) return;
     }
     if (message.requestFrame || this.frameRequested || message.generation < this.generation) this.requestFrame();

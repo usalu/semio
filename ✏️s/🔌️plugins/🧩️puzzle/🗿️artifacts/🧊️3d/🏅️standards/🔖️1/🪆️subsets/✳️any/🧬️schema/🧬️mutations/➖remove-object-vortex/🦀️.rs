@@ -31,8 +31,8 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for RemoveObject
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove vortex \"{}\" from object \"{}\"", self.vortex_id, self.object_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove vortex \"{}\" from object \"{}\"", self.vortex_id, self.object_id), &format!("Wirbel \"{}\" aus Objekt \"{}\" entfernen", self.vortex_id, self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone(), self.vortex_id.clone()]

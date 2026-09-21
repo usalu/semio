@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeESMpa {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change soil modulus E_s [MPa] to {}", self.new_e_s_mpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change soil modulus E_s [MPa] to {}", self.new_e_s_mpa), &format!("Bodenmodule_s [MPa] auf {} ändern", self.new_e_s_mpa))
     }
 }
 //#endregion 🔖️ChangeESMpa

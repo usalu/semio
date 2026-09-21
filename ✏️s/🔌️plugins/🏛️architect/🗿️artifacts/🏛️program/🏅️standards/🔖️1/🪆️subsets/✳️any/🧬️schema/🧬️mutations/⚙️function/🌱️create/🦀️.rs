@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateFunction {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create function \"{}\"", self.function.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create function \"{}\"", self.function.header.name), &format!("Funktion \"{}\" erstellen", self.function.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.function.header.id.0.clone()]

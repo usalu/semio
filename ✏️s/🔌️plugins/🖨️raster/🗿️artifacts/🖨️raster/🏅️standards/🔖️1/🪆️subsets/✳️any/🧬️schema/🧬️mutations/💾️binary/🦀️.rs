@@ -1539,18 +1539,6 @@ fn raster_clone_owned_string(source: &String) -> Result<String, &'static str> {
     raster_exact_string_from_parts(&[source.as_bytes()])
 }
 
-fn raster_asset_child_id(hash: u64) -> Result<String, &'static str> {
-    const PREFIX: &[u8] = b"raster-asset-";
-    const HEX: &[u8; 16] = b"0123456789abcdef";
-    let mut value = [0u8; 29];
-    value[..PREFIX.len()].copy_from_slice(PREFIX);
-    for index in 0..16 {
-        let shift = (15 - index) * 4;
-        value[PREFIX.len() + index] = HEX[((hash >> shift) & 0xf) as usize];
-    }
-    raster_exact_string_from_parts(&[&value])
-}
-
 struct RasterDslValueCloneAuthority {
     value: std::mem::ManuallyDrop<Option<dsl::DslValue>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
@@ -2279,7 +2267,13 @@ impl RasterSnapshotCloneAuthority {
                     if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
-                    let (key, child) = self.pending_asset.take().expect("Raster pending asset handoff remains exact");
+                    let (key, mut child) = self.pending_asset.take().expect("Raster pending asset handoff remains exact");
+                    // 🪆 A clone rebuilds every handle string into exact-capacity storage, so the
+                    // source child's materialization has to be carried across explicitly — a cloned
+                    // snapshot whose assets lost their pixels renders an empty composite.
+                    if let Some(source_child) = source.assets.get(&key) {
+                        crate::adopt_raster_asset_owner(source_child, &mut child);
+                    }
                     match target.assets.insert_pre_admitted(key, child) {
                         Ok(RasterOwnedMapInsert::Inserted) => {}
                         Ok(RasterOwnedMapInsert::Replaced(mut previous)) => {
@@ -2804,8 +2798,9 @@ struct RasterMutationCandidateAuthority {
     pending_asset: std::mem::ManuallyDrop<Option<(String, RasterAssetChild)>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     retirement_terminal: bool,
-    asset_hasher: Option<std::collections::hash_map::DefaultHasher>,
-    asset_hash: u64,
+    /// 🌉️ The canonical child this apply minted from the payload's real bytes, held between the
+    /// mint step and the handoff that moves its materialization onto the pending handle.
+    asset_mint: Option<RasterAssetChild>,
     asset_field: u8,
     locator: Option<RasterLayerLocator>,
     primary: Option<RasterLayerAddress>,
@@ -2827,8 +2822,7 @@ impl RasterMutationCandidateAuthority {
             pending_asset: std::mem::ManuallyDrop::new(None),
             retirement: std::mem::ManuallyDrop::new(None),
             retirement_terminal: false,
-            asset_hasher: None,
-            asset_hash: 0,
+            asset_mint: None,
             asset_field: 0,
             locator: None,
             primary: None,
@@ -3113,7 +3107,6 @@ impl RasterMutationCandidateAuthority {
                         if value.asset.mime.capacity() > RASTER_OWNED_FIELD_BYTES || value.asset.data.capacity() > RASTER_OWNED_FIELD_BYTES {
                             return Err("raster-store.mutation-asset-capacity");
                         }
-                        self.asset_hasher = Some(std::collections::hash_map::DefaultHasher::new());
                         self.asset_field = 0;
                         self.phase = RasterMutationCandidatePhase::PrepareAsset;
                         return Ok(false);
@@ -3131,25 +3124,22 @@ impl RasterMutationCandidateAuthority {
                 Ok(false)
             }
             RasterMutationCandidatePhase::PrepareAsset => {
-                use std::hash::{Hash, Hasher};
-
                 let RasterMutation::AddLayerAsset(value) = operation else { return Err("raster-store.mutation-asset-variant") };
                 match self.asset_field {
                     0 => {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
-                        value.asset.mime.hash(self.asset_hasher.as_mut().ok_or("raster-store.mutation-asset-hasher")?);
+                        // 🌉️ The SAME funnel the native apply uses (`🔺️diff/📝️text`, `io`'s import
+                        // bridges): the payload's real bytes are decoded into the composed child's own
+                        // content, which both mints the CANONICAL content-addressed child id (a raw
+                        // `(mime, data)` digest minted here would disagree with every other route and
+                        // break `add-layer-asset`'s inverse) and produces the materialization this
+                        // handle must retain — without it the asset pool holds pixel-less handles and
+                        // the composite surface renders nothing.
+                        self.asset_mint = Some(crate::mint_raster_asset_child(&value.asset_id, &value.asset));
                     }
                     1 => {
-                        if !raster_reserve_unit(cx) {
-                            return Ok(false);
-                        }
-                        value.asset.data.hash(self.asset_hasher.as_mut().ok_or("raster-store.mutation-asset-hasher")?);
-                        self.asset_hash = self.asset_hasher.as_ref().ok_or("raster-store.mutation-asset-hasher")?.finish();
-                        self.asset_hasher = None;
-                    }
-                    2 => {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
@@ -3158,14 +3148,14 @@ impl RasterMutationCandidateAuthority {
                             store::ArtifactChild::new(String::new(), store::os_io::ArtifactRef { artifact_id: String::new(), dialect: store::os_io::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } });
                         *self.pending_asset = Some((key, child));
                     }
-                    3 => {
+                    2 => {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
-                        let child_id = raster_asset_child_id(self.asset_hash)?;
+                        let child_id = raster_clone_owned_string(&self.asset_mint.as_ref().ok_or("raster-store.mutation-asset-mint")?.child_id)?;
                         self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1.child_id = child_id;
                     }
-                    4 => {
+                    3 => {
                         let length = value.asset_id.len().checked_add(6).ok_or("raster-store.mutation-asset-id-overflow")?;
                         if length > RASTER_OWNED_FIELD_BYTES || !raster_reserve_unit(cx) {
                             if length > RASTER_OWNED_FIELD_BYTES {
@@ -3176,10 +3166,10 @@ impl RasterMutationCandidateAuthority {
                         let artifact_id = raster_exact_string_from_parts(&[value.asset_id.as_bytes(), b"-image"])?;
                         self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1.target.artifact_id = artifact_id;
                     }
-                    5..=7 => {
+                    4..=6 => {
                         let literal = match self.asset_field {
-                            5 => "s.stdio.semio",
-                            6 => "v1",
+                            4 => "s.stdio.semio",
+                            5 => "v1",
                             _ => "image",
                         };
                         if !raster_reserve_unit(cx) {
@@ -3187,8 +3177,8 @@ impl RasterMutationCandidateAuthority {
                         }
                         let child = &mut self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1;
                         let target = match self.asset_field {
-                            5 => &mut child.target.dialect.artifact_kind,
-                            6 => &mut child.target.dialect.standard,
+                            4 => &mut child.target.dialect.artifact_kind,
+                            5 => &mut child.target.dialect.standard,
                             _ => &mut child.target.dialect.subset,
                         };
                         *target = Self::exact_string(literal)?;
@@ -3206,7 +3196,8 @@ impl RasterMutationCandidateAuthority {
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
-                        let (key, child) = self.pending_asset.take().ok_or("raster-store.mutation-asset-owner")?;
+                        let (key, mut child) = self.pending_asset.take().ok_or("raster-store.mutation-asset-owner")?;
+                        crate::adopt_raster_asset_owner(&self.asset_mint.take().ok_or("raster-store.mutation-asset-mint")?, &mut child);
                         if let Some(slot) = snapshot.assets.get_mut(&value.asset_id) {
                             let previous = std::mem::replace(slot, child);
                             *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key, child: Some(previous) })));
@@ -3355,7 +3346,7 @@ impl RasterMutationCandidateAuthority {
             *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key, child: Some(child) })));
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        if self.asset_hasher.take().is_some() {
+        if self.asset_mint.take().is_some() {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(value) = self.value.take() {
@@ -3367,7 +3358,7 @@ impl RasterMutationCandidateAuthority {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.value.is_none() && self.clone.is_none() && self.layer_clone.is_none() && self.pending_layer.is_none() && self.pending_asset.is_none() && self.retirement.is_none() && !self.retirement_terminal && self.asset_hasher.is_none()
+        self.value.is_none() && self.clone.is_none() && self.layer_clone.is_none() && self.pending_layer.is_none() && self.pending_asset.is_none() && self.retirement.is_none() && !self.retirement_terminal && self.asset_mint.is_none()
     }
 }
 

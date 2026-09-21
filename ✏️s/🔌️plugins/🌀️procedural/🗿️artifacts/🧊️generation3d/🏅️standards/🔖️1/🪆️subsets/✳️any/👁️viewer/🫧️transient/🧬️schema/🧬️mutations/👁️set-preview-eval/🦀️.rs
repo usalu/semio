@@ -24,8 +24,8 @@ impl protocol::MutationKind<Generation3dViewTransient, Generation3dViewTransient
         vec![Self { eval_text: base.preview_eval_text.clone() }.into()]
     }
 
-    fn label(&self) -> String {
-        "Set Preview Eval".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Preview Eval", "Vorschaueval setzen")
     }
 
     fn target(&self) -> Vec<String> {

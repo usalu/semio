@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplacePerformanceCriter
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace performance criterion \"{}\"", self.performance_criterion.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace performance criterion \"{}\"", self.performance_criterion.header.name), &format!("Leistungskriterium \"{}\" ersetzen", self.performance_criterion.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.performance_criterion.header.id.0.clone()]

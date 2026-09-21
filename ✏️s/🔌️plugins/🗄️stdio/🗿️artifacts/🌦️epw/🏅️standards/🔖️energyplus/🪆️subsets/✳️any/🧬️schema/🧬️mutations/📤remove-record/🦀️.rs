@@ -22,8 +22,8 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for RemoveRecord {
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {
         agg_inverse(&EpwMutation::RemoveRecord(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-record".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-record", "Datensatz entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

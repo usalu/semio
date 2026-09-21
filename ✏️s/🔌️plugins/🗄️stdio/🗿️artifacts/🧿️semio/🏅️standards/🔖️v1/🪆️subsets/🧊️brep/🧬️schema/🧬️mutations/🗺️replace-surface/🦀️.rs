@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for ReplaceSur
     fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace surface on face \"{}\"", self.face_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace surface on face \"{}\"", self.face_id), &format!("Oberfläche auf Fläche \"{}\" ersetzen", self.face_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.face_id.clone()]

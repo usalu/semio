@@ -29,8 +29,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Discon
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        "Disconnect the referenced model".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Disconnect the referenced model", "referenzierte Modell trennen")
     }
 }
 //#endregion 🔖️Mutation

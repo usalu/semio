@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeSiloRadius
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change silo radius [m] to {}", self.new_silo_radius_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change silo radius [m] to {}", self.new_silo_radius_m), &format!("Siloradius [m] auf {} ändern", self.new_silo_radius_m))
     }
 }
 //#endregion 🔖️ChangeSiloRadiusM

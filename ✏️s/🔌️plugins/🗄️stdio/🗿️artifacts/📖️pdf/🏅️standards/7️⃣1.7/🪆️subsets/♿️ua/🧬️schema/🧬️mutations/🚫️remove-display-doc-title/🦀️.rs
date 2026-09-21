@@ -27,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveDisplayDocTitle {
         support::catalog_flag(base, "ViewerPreferences", "DisplayDocTitle").map(|display| PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        "Remove PDF/UA title display preference".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove PDF/UA title display preference", "PDF/UAtitelanzeigenpräferenz entfernen")
     }
 
     fn target(&self) -> Vec<String> {

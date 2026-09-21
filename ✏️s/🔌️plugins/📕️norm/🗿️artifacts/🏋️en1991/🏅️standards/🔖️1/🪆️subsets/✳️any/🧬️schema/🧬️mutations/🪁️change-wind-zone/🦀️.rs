@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeWindZone {
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change wind zone to {:?}", self.new_wind_zone)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change wind zone to {:?}", self.new_wind_zone), &format!("Windzone auf {:?} ändern", self.new_wind_zone))
     }
 }
 //#endregion 🔖️Payload

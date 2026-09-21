@@ -19,8 +19,8 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for ReplaceC
     fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> {
         vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Replace Config".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["config".into()]

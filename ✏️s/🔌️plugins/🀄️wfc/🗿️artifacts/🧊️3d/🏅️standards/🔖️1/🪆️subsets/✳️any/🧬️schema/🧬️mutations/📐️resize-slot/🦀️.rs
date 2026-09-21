@@ -30,8 +30,8 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for ResizeSlot {
     fn inverse(&self, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Resize slot \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Resize slot \"{}\"", self.id), &format!("Platz \"{}\" skalieren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

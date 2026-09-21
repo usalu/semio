@@ -24,8 +24,8 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for CreateNode {
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create node \"{}\"", self.node.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create node \"{}\"", self.node.id), &format!("Knoten \"{}\" erstellen", self.node.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node.id.clone()]

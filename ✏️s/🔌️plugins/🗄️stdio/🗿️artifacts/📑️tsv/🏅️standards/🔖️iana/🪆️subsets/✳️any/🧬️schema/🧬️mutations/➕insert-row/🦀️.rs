@@ -22,8 +22,8 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for InsertRow {
     fn inverse(&self, base: &TsvSnapshot) -> Vec<TsvMutation> {
         agg_inverse(&TsvMutation::InsertRow(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-row".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-row", "Zeile einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

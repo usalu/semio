@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorFYkM
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change anchor f yk mpa to {:?}", self.new_anchor_f_yk_mpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change anchor f yk mpa to {:?}", self.new_anchor_f_yk_mpa), &format!("Ankerfykmpa auf {:?} ändern", self.new_anchor_f_yk_mpa))
     }
 }
 //#endregion 🔖️ChangeAnchorFYkMpa

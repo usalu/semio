@@ -22,8 +22,8 @@ impl MutationKind<MiniDoc, MiniMutation> for RenameMini {
     fn inverse(&self, base: &MiniDoc) -> Vec<MiniMutation> {
         vec![Self { new_name: base.name.clone() }.into()]
     }
-    fn label(&self) -> String {
-        format!("Rename mini to \"{}\"", self.new_name)
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Rename mini to \"{}\"", self.new_name), &format!("Mini in \"{}\" umbenennen", self.new_name))
     }
 }
 //#endregion ⚙️Behavior

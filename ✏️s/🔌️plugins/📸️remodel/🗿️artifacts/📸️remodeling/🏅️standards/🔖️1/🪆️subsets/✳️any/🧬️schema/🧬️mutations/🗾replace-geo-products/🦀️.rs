@@ -35,8 +35,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceG
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Replace geo-products".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace geo-products", "Geo-Produkte ersetzen")
     }
 }
 //#endregion 🔖️Mutation

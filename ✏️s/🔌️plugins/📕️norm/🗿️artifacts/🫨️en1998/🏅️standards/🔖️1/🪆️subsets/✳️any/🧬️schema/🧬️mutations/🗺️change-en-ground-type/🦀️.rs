@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeEnGroundTy
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change EN ground type to \"{}\"", self.new_en_ground_type)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change EN ground type to \"{}\"", self.new_en_ground_type), &format!("ENbodentyp auf \"{}\" ändern", self.new_en_ground_type))
     }
 }
 //#endregion 🔖️ChangeEnGroundType

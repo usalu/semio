@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for BindFe
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Bind fenestration {} to glazing construction {}", self.id.0, self.construction_id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Bind fenestration {} to glazing construction {}", self.id.0, self.construction_id.0), &format!("Fenster {} an Verglasungskonstruktion {} binden", self.id.0, self.construction_id.0))
     }
 
     fn target(&self) -> Vec<String> {

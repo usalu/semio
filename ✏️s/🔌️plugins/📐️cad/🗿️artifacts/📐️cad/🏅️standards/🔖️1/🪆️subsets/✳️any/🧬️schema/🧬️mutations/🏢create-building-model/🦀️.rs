@@ -28,8 +28,8 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateBuildingModel {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create building-model child {}", self.child_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create building-model child {}", self.child_id), &format!("Gebäudemodell-Kind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["building_model".to_string()]

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeBetaW {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change correlation factor beta_w to {}", self.new_beta_w)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change correlation factor beta_w to {}", self.new_beta_w), &format!("Korrelationsfaktorbeta_w auf {} ändern", self.new_beta_w))
     }
 }
 //#endregion 🔖️ChangeBetaW

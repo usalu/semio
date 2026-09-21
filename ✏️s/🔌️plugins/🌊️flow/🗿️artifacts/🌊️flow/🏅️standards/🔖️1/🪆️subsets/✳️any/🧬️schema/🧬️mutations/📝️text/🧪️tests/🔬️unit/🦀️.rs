@@ -9,7 +9,9 @@ async fn move_widgets_inverse_restores_base() {
         entries: vec![semio_framework_artifact_flow_flow::FlowLayoutEntry { id: "slider".into(), layout: Some(semio_framework_artifact_flow_flow::WidgetLayout { x: 10.0, y: 20.0 }) }],
     });
     let forward = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
-    assert_eq!(forward.to_host_snapshot().layout.get("slider"), Some(&semio_framework_artifact_flow_flow::WidgetLayout { x: 10.0, y: 20.0 }));
+    let forward_scene = forward.to_host_snapshot();
+    assert_eq!(forward_scene.layout.get("slider"), Some(&semio_framework_artifact_flow_flow::WidgetLayout { x: 10.0, y: 20.0 }));
+    forward_scene.retire_cold();
     let restored = mutation.inverse(&base).iter().fold(forward, |snapshot, inverse| inverse.diff(&snapshot).diff().apply(&snapshot).expect("valid mutation diff"));
     assert_eq!(restored, base);
 }

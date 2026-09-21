@@ -26,8 +26,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetInfo {
         vec![PdfMutation::SetInfo(SetInfo { info: base.info.clone() })]
     }
 
-    fn label(&self) -> String {
-        "Set document info".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set document info", "Dokumentinfo setzen")
     }
 
     fn target(&self) -> Vec<String> {

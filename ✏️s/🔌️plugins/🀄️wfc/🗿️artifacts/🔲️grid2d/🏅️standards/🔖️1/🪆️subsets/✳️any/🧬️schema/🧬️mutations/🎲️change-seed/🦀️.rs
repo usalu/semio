@@ -28,8 +28,8 @@ impl MutationKind<Grid2dSnapshot, Grid2dMutation> for ChangeSeed {
     fn inverse(&self, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change seed to {}", self.seed)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change seed to {}", self.seed), &format!("Startwert auf {} ändern", self.seed))
     }
 }
 //#endregion 🔖️ChangeSeed

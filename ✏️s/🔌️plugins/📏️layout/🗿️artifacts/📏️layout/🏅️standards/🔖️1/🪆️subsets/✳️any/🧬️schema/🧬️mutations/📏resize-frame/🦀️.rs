@@ -25,8 +25,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ResizeFrame {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_resize_frame(self, base)
     }
-    fn label(&self) -> String {
-        format!("Resize frame \"{}\"", self.frame_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Resize frame \"{}\"", self.frame_id), &format!("Rahmen \"{}\" skalieren", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

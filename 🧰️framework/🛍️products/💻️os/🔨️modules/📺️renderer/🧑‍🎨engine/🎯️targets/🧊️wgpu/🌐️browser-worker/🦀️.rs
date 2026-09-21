@@ -51,6 +51,7 @@ struct BrowserTickOutput {
     cursor: &'static str,
     fullscreen: Option<bool>,
     request_frame: bool,
+    continue_frame: bool,
     progress: f32,
     quarantined: bool,
     fault_code: Option<&'static str>,
@@ -346,12 +347,11 @@ impl BrowserRendererWorker {
         let _ = crate::os_host::OsHostRetirement::close_abandoned_step();
         self.ensure_live()?;
         self.flush_hub_document_event();
-        let hub_status_pending = !self.hub_status_events.is_empty();
         if generation != self.latest_generation {
             return Err(js_error("generation-mismatch", "frame tick generation does not match admitted input"));
         }
         if let Some(detail) = self.quarantined.clone() {
-            return encode_tick_timed(generation, BrowserTickOutput { cursor: "default", fullscreen: None, request_frame: false, progress: 1.0, quarantined: true, fault_code: Some("present-failed"), fault_detail: Some(detail) });
+            return encode_tick_timed(generation, BrowserTickOutput { cursor: "default", fullscreen: None, request_frame: false, continue_frame: false, progress: 1.0, quarantined: true, fault_code: Some("present-failed"), fault_detail: Some(detail) });
         }
         let host = self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
         let outcome = host.redraw_offscreen_worker();
@@ -368,6 +368,14 @@ impl BrowserRendererWorker {
         if let Some(detail) = present_fault.clone() {
             self.quarantined = Some(detail);
         }
+        let continue_frame = host.take_cursor_wake_directive().is_some()
+            || host.runtime.has_pending_text_work()
+            || host.runtime.has_pending_world3d_work()
+            || host.runtime.has_pending_asset_decode()
+            || host.runtime.has_pending_settle()
+            || host.runtime.has_pending_applies()
+            || host.frame_build.has_live_session()
+            || host.presenter.has_pending_presentation();
         encode_tick_timed(generation, BrowserTickOutput {
             cursor: cursor_name(outcome.cursor),
             fullscreen: host.platform_fullscreen.take(),
@@ -375,16 +383,10 @@ impl BrowserRendererWorker {
             // frame. Without them a settled browser shell ticks only on input, so a build that needed
             // a second step never got one and a queued `DispatchEvents` was never pumped
             // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
-            request_frame: host.take_cursor_wake_directive().is_some()
-                || host.scheduler.next_deadline().is_some()
-                || host.runtime.has_pending_text_work()
-                || host.runtime.has_pending_world3d_work()
-                || host.runtime.has_pending_asset_decode()
-                || host.runtime.has_pending_settle()
-                || host.runtime.has_pending_applies()
-                || host.frame_build.has_live_session()
-                || host.presenter.has_pending_presentation()
-                || hub_status_pending,
+            request_frame: continue_frame || host.scheduler.next_deadline().is_some(),
+            // 🚏️ The dedicated Worker owns runnable retained work directly. A future shell deadline
+            // remains page-rAF paced and must not create an unbounded MessagePort loop.
+            continue_frame,
             progress: 1.0,
             quarantined: present_fault.is_some(),
             fault_code: present_fault.as_ref().map(|_| fault_code),
@@ -803,7 +805,6 @@ impl BrowserRendererBootstrap {
                 pointer_button: 0,
                 pointer_capture: crate::shell::PointerCapture::default(),
                 modifiers: PointerModifiers::default(),
-                wheel: crate::AppWheel::default(),
                 space_pressed: false,
                 wheel_zoom_deadline_ms: 0.0,
                 caret_blink_at_ms: 0.0,
@@ -824,6 +825,7 @@ impl BrowserRendererBootstrap {
             gpu: self.gpu.take().expect("bootstrap GPU exists"),
             engine: crate::engine_canvas::EngineCanvasPresenter::default(),
             gate: ui_wgpu::wgpu::PreparedRenderGate::default(),
+            runtime: runtime.clone(),
             presentation_authority: runtime.presentation_authority(),
             raster_operation_authority: runtime.raster_operation_authority(),
             window: None,

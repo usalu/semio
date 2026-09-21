@@ -30,8 +30,8 @@ impl MutationKind<BitmapSnapshot, BitmapMutation> for ChangePaletteColor {
     fn inverse(&self, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change palette colour {}", self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change palette colour {}", self.index), &format!("Palettenfarbe {} ändern", self.index))
     }
 }
 //#endregion 🔖️ChangePaletteColor

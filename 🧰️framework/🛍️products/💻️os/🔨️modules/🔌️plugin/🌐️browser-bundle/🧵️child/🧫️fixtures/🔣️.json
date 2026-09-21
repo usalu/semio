@@ -7,6 +7,7 @@
     "outputBytes": 1048576,
     "bootMs": 10000,
     "loadMs": 5000,
+    "loadBytesPerMs": 2048,
     "invokeMs": 2000,
     "wasiOutputBytes": 65536,
     "wasiOutputWrites": 128

@@ -39,7 +39,8 @@
       "deadlineMs": 1000,
       "accepted": true,
       "stage": "contract",
-      "code": "exact-package"
+      "code": "exact-package",
+      "bindings": 1
     },
     {
       "name": "cross-package owner",
@@ -51,7 +52,8 @@
       "deadlineMs": 1000,
       "accepted": false,
       "stage": "domain",
-      "code": "cross-package-owner"
+      "code": "cross-package-owner",
+      "bindings": 0
     },
     {
       "name": "cross-plugin owner",
@@ -63,7 +65,8 @@
       "deadlineMs": 1000,
       "accepted": false,
       "stage": "domain",
-      "code": "cross-plugin-owner"
+      "code": "cross-plugin-owner",
+      "bindings": 0
     },
     {
       "name": "different compiled version",
@@ -75,19 +78,21 @@
       "deadlineMs": 1000,
       "accepted": false,
       "stage": "domain",
-      "code": "compiled-version-differs"
+      "code": "compiled-version-differs",
+      "bindings": 0
     },
     {
-      "name": "unknown native provider",
+      "name": "unlinked package",
       "pluginId": "foreign",
       "packageId": "semio:foreign",
       "version": "0.1.0",
       "cancelled": false,
       "nowMs": 0,
       "deadlineMs": 1000,
-      "accepted": false,
+      "accepted": true,
       "stage": "domain",
-      "code": "unknown-native-provider"
+      "code": "unlinked-package",
+      "bindings": 0
     },
     {
       "name": "cancelled before preview",
@@ -99,7 +104,8 @@
       "deadlineMs": 1000,
       "accepted": false,
       "stage": "contract",
-      "code": "cancelled-before-preview"
+      "code": "cancelled-before-preview",
+      "bindings": 0
     },
     {
       "name": "deadline at preview",
@@ -111,7 +117,8 @@
       "deadlineMs": 1000,
       "accepted": false,
       "stage": "bounds",
-      "code": "deadline-reached"
+      "code": "deadline-reached",
+      "bindings": 0
     },
     {
       "name": "deadline before preview",
@@ -123,7 +130,8 @@
       "deadlineMs": 1000,
       "accepted": false,
       "stage": "bounds",
-      "code": "deadline-passed"
+      "code": "deadline-passed",
+      "bindings": 0
     }
   ]
 }

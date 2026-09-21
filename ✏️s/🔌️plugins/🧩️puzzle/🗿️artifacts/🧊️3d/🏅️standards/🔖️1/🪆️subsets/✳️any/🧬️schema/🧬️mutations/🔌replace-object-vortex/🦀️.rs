@@ -33,8 +33,8 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ReplaceObjec
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace vortex \"{}\" on object \"{}\"", self.vortex_id, self.object_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace vortex \"{}\" on object \"{}\"", self.vortex_id, self.object_id), &format!("Wirbel \"{}\" auf Objekt \"{}\" ersetzen", self.vortex_id, self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone(), self.vortex_id.clone()]

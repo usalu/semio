@@ -20,8 +20,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeClimate 
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change climate to {:?}", self.new_climate)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change climate to {:?}", self.new_climate), &format!("Klima auf {:?} ändern", self.new_climate))
     }
 }
 //#endregion 🔖️Payload

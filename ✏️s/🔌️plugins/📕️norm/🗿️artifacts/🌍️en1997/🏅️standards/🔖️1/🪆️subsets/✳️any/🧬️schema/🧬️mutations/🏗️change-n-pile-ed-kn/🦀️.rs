@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeNPileEdKn 
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change design pile axial load N_Ed [kN] to {}", self.new_n_pile_ed_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change design pile axial load N_Ed [kN] to {}", self.new_n_pile_ed_kn), &format!("Bemessungspfahlaxiallastn_Ed [kN] auf {} ändern", self.new_n_pile_ed_kn))
     }
 }
 //#endregion 🔖️ChangeNPileEdKn

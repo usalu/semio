@@ -21,8 +21,8 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for SetSolidName {
     fn inverse(&self, base: &StlSnapshot) -> Vec<StlMutation> {
         agg_inverse(&StlMutation::SetSolidName(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-solid-name".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-solid-name", "Körpername setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

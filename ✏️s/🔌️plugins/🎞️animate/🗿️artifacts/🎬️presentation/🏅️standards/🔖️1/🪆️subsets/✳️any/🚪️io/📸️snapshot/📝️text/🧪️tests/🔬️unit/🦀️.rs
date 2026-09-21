@@ -25,3 +25,8 @@ fn presentation_dsl_round_trips_bundled_default_example() {
     test_support::assert_dsl_round_trip(&deck);
     test_support::assert_dsl_pack_equivalence(&deck);
 }
+
+#[test]
+fn zz_dump_demo_asset() {
+    std::fs::write("/tmp/animate-demo-asset.txt", print_dsl(&default_presentation_snapshot())).expect("dump");
+}

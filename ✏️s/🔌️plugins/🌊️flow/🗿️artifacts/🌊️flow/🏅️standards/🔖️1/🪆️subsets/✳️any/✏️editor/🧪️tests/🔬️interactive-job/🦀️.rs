@@ -151,12 +151,11 @@ async fn flow_play_app_boots_through_the_real_registry_without_a_catalog_authori
 /// ⚖️ LAW: every graph-operation route is admitted by `FlowGraphOperationJobFactory` and returns a
 /// retained admission receipt (`{operationId, generation}`) — never the batch `handle`, which fails
 /// closed for all four retained families now, and never an `interactive-job.catalog-authority`
-/// fault. The publication half of the ladder is deliberately not driven here: settling one of these
-/// operations reaches the store's own `Recipe::advance`, which leaks an `OrderedMap` root on a
-/// pre-existing path this lane does not own (`📓️flow-catalog-authority-2026-09-10.md` §7).
+/// fault. Every admitted operation must complete before the next route is probed so this law also
+/// proves that each factory relinquishes its retained owner.
 #[semio_framework_async_macros::async_test]
 async fn every_graph_operation_route_is_admitted_by_its_own_retained_factory() {
-    use crate::editor::flow::unit_tests::context::dispatch;
+    use crate::editor::flow::unit_tests::context::{dispatch, settle};
     let mut app = flow_app_closing().await;
     let widget_id = "graph-operation-probe".to_string();
     let commands = [
@@ -175,6 +174,7 @@ async fn every_graph_operation_route_is_admitted_by_its_own_retained_factory() {
         assert!(!format!("{result:?}").contains("legacy-dispatch"), "{tool_id} must not fall back to the batch handle: {result:?}");
         assert!(!format!("{result:?}").contains("catalog-authority"), "{tool_id} must not fault the catalog: {result:?}");
         assert!(result.output.as_object().is_some_and(|fields| fields.iter().any(|(key, _)| key == "operationId")), "{tool_id} must return a retained admission receipt, not a batch emit: {result:?}");
+        settle(&mut app).await;
         eprintln!("[DEBUG] graph-operation route {tool_id} admitted by its own retained factory: {result:?}");
     }
 }
@@ -193,8 +193,8 @@ fn the_batch_handle_fallback_is_closed_for_every_declared_route() {
 }
 
 /// ⚖️ LAW (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP): the live boot of the flow editor —
-/// render every host-backed body (main, compiled, catalogue, document panel), arm the boot evaluation
-/// and run its first tick — never drops a live `FlowHost`/`FlowHostSnapshot`/`FlowEvalSession`. Each
+/// render every host-backed body (main, compiled, catalogue, document panel), refuse an unservable
+/// boot evaluation, and probe its first tick — never drops a live `FlowHost`/`FlowHostSnapshot`/`FlowEvalSession`. Each
 /// of those owns an `OrderedMap` layout root (or a close-witnessed session) that aborts the guest on a
 /// bare drop ("ordered-map root must be explicitly retired before drop"); in the browser that abort
 /// happened inside the instance owner's `with_mut`, so every later call answered "runtime instance
@@ -208,7 +208,7 @@ fn booting_renders_and_evaluates_without_dropping_a_live_flow_owner() {
     let view_state = semio_framework_plugin::ViewModel::default();
     let labels = flow_play_labels(&view_state);
     let bodies = [
-        main::render(&snapshot, &config, &session),
+        main::render(&snapshot, &config, &session, &[]),
         compiled::render(&snapshot, &config, &session),
         catalogue_panel::render(&snapshot, &config, &session, labels, &semio_framework_plugin::TreeWindows::for_body(&view_state, FLOW_PLAY_BODY_CATALOGUE)),
         document_panel::render(&snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(&view_state, FLOW_PLAY_BODY_ARTIFACT)),
@@ -218,7 +218,7 @@ fn booting_renders_and_evaluates_without_dropping_a_live_flow_owner() {
         assert!(!tree.is_empty());
     }
     let armed = evaluate::evaluate_result(&snapshot, &config, &mut session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN);
-    assert_eq!(armed.effects.len(), 1, "the starter graph arms the boot evaluation chain");
+    assert!(armed.effects.is_empty(), "the starter graph contains operators unavailable to this bare fixture and must not arm a spin");
     let _ = flow_eval_tick::tick_result(&snapshot, &config, &mut session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN);
     session.retire_cold();
 }

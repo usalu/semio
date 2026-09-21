@@ -23,8 +23,8 @@ impl CompositeMutationKind<Counter, CounterMutation> for AddCounterThenNotifyFor
         }
         Ok(())
     }
-    fn label(&self) -> String {
-        "Add then notify foreign".into()
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Add then notify foreign", "fremde Danachbenachrichtigung hinzufügen")
     }
 }
 

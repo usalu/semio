@@ -30,8 +30,8 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for ChangeObjectKi
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change object kind icon to {:?}", self.new_icon)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change object kind icon to {:?}", self.new_icon), &format!("Objektartsymbol auf {:?} ändern", self.new_icon))
     }
 }
 //#endregion 🔖️Mutation

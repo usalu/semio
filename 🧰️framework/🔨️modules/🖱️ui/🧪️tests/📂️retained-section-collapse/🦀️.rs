@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::wgpu::component::layout::ActionDescriptor;
-use crate::wgpu::component::ui::{UiButtonNode, UiPresence, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use crate::wgpu::component::ui::{UiButtonNode, UiPresence, UiSectionNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 use crate::wgpu::events::{EventModifiers, PointerButton};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, SceneSlot};
@@ -131,6 +131,53 @@ fn upward_tree() -> UiNode {
     })
 }
 
+fn upward_nested_disclosure() -> UiNode {
+    let mut branch = UiTreeItemNode::base("branch", Label::data("Branch"));
+    branch.default_open = Some(false);
+    branch.items = Some(vec![UiTreeItemNode::base("child", Label::data("Child"))]);
+    let tree = UiNode::Tree(UiTreeNode {
+        sections: vec![UiTreeSectionNode {
+            id: "section".into(),
+            label: Some(Label::data("Section")),
+            default_open: Some(true),
+            presence: UiPresence::default(),
+            items: vec![branch],
+            window: None,
+        }],
+        presence: UiPresence::default(),
+        drop_action: None,
+        menu: None,
+        interaction_domain: None,
+    });
+    UiNode::Stack(UiStackNode {
+        id: Some("panel".into()),
+        direction: "vertical".into(),
+        gap: None,
+        padding: None,
+        presence: UiPresence::default(),
+        activate: None,
+        drop_action: None,
+        drop_overlay: None,
+        menu: None,
+        children: vec![tree],
+    })
+}
+
+fn nested_rows(ui: &Ui) -> (&UiTree, crate::wgpu::arena::NodeId, crate::wgpu::arena::NodeId) {
+    let window = ui.windows.get("fixture").expect("fixture window");
+    let root = window.tree.root.expect("fixture root");
+    let tree = window.tree.children(root).next().expect("tree node");
+    let section = window.tree.explicit_child(tree, "section").expect("section row");
+    let branch = window.tree.explicit_child(section, "branch").expect("branch row");
+    let child = window.tree.explicit_child(branch, "child").expect("child row");
+    (&window.tree, branch, child)
+}
+
+fn nested_child_height(ui: &Ui) -> f32 {
+    let (tree, _, child) = nested_rows(ui);
+    tree.accepted_layout(child).expect("child layout").height
+}
+
 #[test]
 fn closed_open_and_rapidly_reclosed_sections_publish_only_reachable_descendants() {
     let fixture = fixture();
@@ -193,4 +240,85 @@ fn upward_tree_frame_completes_after_empty_nested_and_terminal_cursors() {
     assert!(hits.iter().any(|hit| hit.control_id == "section.chevron.empty-section"), "an empty section header remains in the completed Up frame");
     assert!(hits.iter().any(|hit| hit.control_id == "tree.label.empty-nested"), "an item whose nested list is empty remains in the completed Up frame");
     assert!(hits.iter().any(|hit| hit.control_id == "tree.label.nested-child"), "the walker resumes after the empty nested list and reaches a populated sibling subtree");
+}
+
+/// 🌳️ A nested disclosure invalidates the published frame as well as mounted layout: its Up-flow
+/// header stays on one exact physical row while the child is admitted above it, then the same
+/// physical close retires that hit and collapses the mounted descendant back to zero height.
+#[test]
+fn upward_nested_disclosure_republishes_one_stable_header_and_retires_its_child() {
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
+    ui.apply_tree("fixture", &upward_nested_disclosure());
+    ui.set_window_flow("fixture", ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
+    drive_layout_with(&mut ui, &mut atlas, &pool);
+    drive_frame(&mut ui, &mut atlas);
+
+    let branch_id = "tree.chevron.branch";
+    let child_id = "tree.label.child";
+    let closed_header = ui.window_hit_targets("fixture").iter().find(|hit| hit.control_id == branch_id).expect("closed branch gutter").rect;
+    assert!(!ui.window_hit_targets("fixture").iter().any(|hit| hit.control_id == child_id), "closed branch publishes no child hit");
+    assert_eq!(nested_child_height(&ui), 0.0, "closed branch leaves its mounted child at zero height");
+
+    click(&mut ui, closed_header);
+    let (tree, branch, _) = nested_rows(&ui);
+    assert_eq!(tree.disclosure_open(branch), Some(true), "the first physical gutter click opens the nested branch");
+    drive_layout_with(&mut ui, &mut atlas, &pool);
+    drive_frame(&mut ui, &mut atlas);
+    let open_header = ui.window_hit_targets("fixture").iter().find(|hit| hit.control_id == branch_id).expect("open branch gutter").rect;
+    let child_rect = ui.window_hit_targets("fixture").iter().find(|hit| hit.control_id == child_id).expect("open child hit").rect;
+    assert_eq!(open_header, closed_header, "opening admits children above the exact same Up-flow header row");
+    assert_eq!(child_rect.y + child_rect.h, open_header.y, "the child ends exactly where the stable branch header begins");
+    assert!(nested_child_height(&ui) > 0.0, "open branch gives its mounted child a real row");
+
+    click(&mut ui, open_header);
+    let (tree, branch, _) = nested_rows(&ui);
+    assert_eq!(tree.disclosure_open(branch), Some(false), "the second physical gutter click closes the nested branch");
+    drive_layout_with(&mut ui, &mut atlas, &pool);
+    drive_frame(&mut ui, &mut atlas);
+    let reclosed_header = ui.window_hit_targets("fixture").iter().find(|hit| hit.control_id == branch_id).expect("reclosed branch gutter").rect;
+    assert_eq!(reclosed_header, closed_header, "closing preserves the exact Up-flow header row");
+    assert!(!ui.window_hit_targets("fixture").iter().any(|hit| hit.control_id == child_id), "closing retires the child from the published hit generation");
+    assert_eq!(nested_child_height(&ui), 0.0, "closing returns the mounted child to zero height");
+}
+
+/// 🌲️ The same nested disclosure round trip remains exact in normal Down flow: the child begins
+/// after one stable header row and a second physical gutter click retires both geometry and hit.
+#[test]
+fn downward_nested_disclosure_republishes_one_stable_header_and_retires_its_child() {
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
+    ui.apply_tree("fixture", &upward_nested_disclosure());
+    ui.set_window_flow("fixture", ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Top));
+    drive_layout_with(&mut ui, &mut atlas, &pool);
+    drive_frame(&mut ui, &mut atlas);
+
+    let branch_id = "tree.chevron.branch";
+    let child_id = "tree.label.child";
+    let closed_header = ui.window_hit_targets("fixture").iter().find(|hit| hit.control_id == branch_id).expect("closed branch gutter").rect;
+    assert!(!ui.window_hit_targets("fixture").iter().any(|hit| hit.control_id == child_id), "closed branch publishes no child hit");
+    assert_eq!(nested_child_height(&ui), 0.0, "closed branch leaves its mounted child at zero height");
+
+    click(&mut ui, closed_header);
+    let (tree, branch, _) = nested_rows(&ui);
+    assert_eq!(tree.disclosure_open(branch), Some(true), "the first physical gutter click opens the nested branch");
+    drive_layout_with(&mut ui, &mut atlas, &pool);
+    drive_frame(&mut ui, &mut atlas);
+    let open_header = ui.window_hit_targets("fixture").iter().find(|hit| hit.control_id == branch_id).expect("open branch gutter").rect;
+    let child_rect = ui.window_hit_targets("fixture").iter().find(|hit| hit.control_id == child_id).expect("open child hit").rect;
+    assert_eq!(open_header, closed_header, "opening admits children after the exact same Down-flow header row");
+    assert_eq!(open_header.y + open_header.h, child_rect.y, "the child begins exactly where the stable branch header ends");
+    assert!(nested_child_height(&ui) > 0.0, "open branch gives its mounted child a real row");
+
+    click(&mut ui, open_header);
+    let (tree, branch, _) = nested_rows(&ui);
+    assert_eq!(tree.disclosure_open(branch), Some(false), "the second physical gutter click closes the nested branch");
+    drive_layout_with(&mut ui, &mut atlas, &pool);
+    drive_frame(&mut ui, &mut atlas);
+    let reclosed_header = ui.window_hit_targets("fixture").iter().find(|hit| hit.control_id == branch_id).expect("reclosed branch gutter").rect;
+    assert_eq!(reclosed_header, closed_header, "closing preserves the exact Down-flow header row");
+    assert!(!ui.window_hit_targets("fixture").iter().any(|hit| hit.control_id == child_id), "closing retires the child from the published hit generation");
+    assert_eq!(nested_child_height(&ui), 0.0, "closing returns the mounted child to zero height");
 }

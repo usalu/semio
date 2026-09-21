@@ -27,8 +27,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetMtllib {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::SetMtllib(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-mtllib".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-mtllib", "mtllib setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

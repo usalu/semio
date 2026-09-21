@@ -20,8 +20,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for AddInput {
     fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
         vec![WorkflowMutation::RemoveInput(RemoveInput { input_id: self.input.id.clone() })]
     }
-    fn label(&self) -> String {
-        format!("Add workflow input {}", self.input.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add workflow input {}", self.input.id), &format!("Arbeitsablaufeingabe {} hinzufügen", self.input.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["inputs".into(), self.input.id.clone()]

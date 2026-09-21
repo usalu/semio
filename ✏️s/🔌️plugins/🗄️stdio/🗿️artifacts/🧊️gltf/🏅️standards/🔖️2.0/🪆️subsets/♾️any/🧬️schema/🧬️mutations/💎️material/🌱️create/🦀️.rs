@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateMateria
         vec![super::GltfMutation::CreateMaterial(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Create Material".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Create Material", "Material erstellen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -20,8 +20,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSamplePreci
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
         agg_inverse(&JpgBaselineMutation::SetSamplePrecision(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-sample-precision".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-sample-precision", "Probengenauigkeit setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

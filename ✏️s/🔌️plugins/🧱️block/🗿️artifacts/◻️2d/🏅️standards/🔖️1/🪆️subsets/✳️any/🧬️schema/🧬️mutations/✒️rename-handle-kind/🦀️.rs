@@ -31,8 +31,8 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RenameHandleKi
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename handle kind \"{}\" to \"{}\"", self.id, self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename handle kind \"{}\" to \"{}\"", self.id, self.new_name), &format!("Griffart \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

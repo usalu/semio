@@ -29,8 +29,8 @@ impl MutationKind<Grid2dSnapshot, Grid2dMutation> for ChangeCellSize {
     fn inverse(&self, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change cell size to {} × {}", self.cell_width, self.cell_height)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change cell size to {} × {}", self.cell_width, self.cell_height), &format!("Zellengröße auf {} × {} ändern", self.cell_width, self.cell_height))
     }
 }
 //#endregion 🔖️ChangeCellSize

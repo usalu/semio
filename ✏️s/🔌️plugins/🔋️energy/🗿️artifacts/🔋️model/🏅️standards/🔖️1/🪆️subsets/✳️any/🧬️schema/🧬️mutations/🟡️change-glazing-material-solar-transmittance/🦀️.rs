@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change Glazing Material Solar Transmittance of glazing material {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change Glazing Material Solar Transmittance of glazing material {}", self.id.0), &format!("Verglasungsmaterialsolartransmission von Verglasungsmaterial {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

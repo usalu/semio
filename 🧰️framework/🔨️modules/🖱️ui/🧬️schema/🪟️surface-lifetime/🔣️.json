@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Retained Surface Lifetime",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sequentialMounts",
+    "closedSurfaces",
+    "silentBlurCommit",
+    "sameIdSuccessor"
+  ],
+  "properties": {
+    "sequentialMounts": {
+      "type": "integer",
+      "const": 65
+    },
+    "closedSurfaces": {
+      "type": "integer",
+      "const": 0
+    },
+    "silentBlurCommit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "initialValue",
+        "draft",
+        "actions"
+      ],
+      "properties": {
+        "initialValue": {
+          "type": "string"
+        },
+        "draft": {
+          "type": "string"
+        },
+        "actions": {
+          "type": "integer",
+          "const": 0
+        }
+      }
+    },
+    "sameIdSuccessor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rejectPreviousIdentity",
+        "preserveSuccessor"
+      ],
+      "properties": {
+        "rejectPreviousIdentity": {
+          "const": true
+        },
+        "preserveSuccessor": {
+          "const": true
+        }
+      }
+    }
+  }
+}

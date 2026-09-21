@@ -9,7 +9,7 @@ static NEXT_CONTAINER: AtomicU64 = AtomicU64::new(1);
 
 pub(super) struct Neo4jContainer {
     name: String,
-    uri: String,
+    pub(super) uri: String,
 }
 
 impl Drop for Neo4jContainer {
@@ -182,4 +182,42 @@ async fn credential_writes_and_facts_stay_in_one_transaction() {
     assert_eq!(appended.reason_code.as_deref(), Some("invalid-credentials"));
     assert_eq!(appended.peer_class, "browser");
     assert_eq!(directory.list_auth_audit(64, 0).await.expect("audit after sign-in fact").len(), after_set.len() + 1);
+}
+
+// 🔮️ The backend-neutral share-scope corpus (`🧪️tests/🔮️backend-corpus/`) over a real Neo4j.
+#[tokio::test]
+async fn share_scope_corpus_v1_holds_on_neo4j() {
+    let (directory, _container) = test_directory().await;
+    directory.seed().await.expect("seed");
+    crate::directory::backend_corpus::assert_share_scope_corpus_v1(&directory).await;
+}
+
+// 🏛️ ticket 26/09/18 slice DB3 — the five directory reads `/directory/spaces/{id}` performs, over a real Neo4j.
+#[tokio::test]
+async fn space_administration_read_surface_v1_holds_on_neo4j() {
+    let (directory, _container) = test_directory().await;
+    directory.seed().await.expect("seed");
+    crate::directory::backend_corpus::assert_space_administration_read_surface_v1(&directory).await;
+}
+
+// 🔬️ ticket 26/09/18 slice DB2 — the neo4j twin of the directory format-stamp law.
+#[tokio::test]
+async fn directory_format_stamp_is_written_and_a_foreign_format_is_refused_neo4j() {
+    let (directory, container) = test_directory().await;
+    let mut result = directory.graph.execute(query("MATCH (f:DirectoryFormat {id: 'singleton'}) RETURN f.schema AS schema, f.version AS version")).await.expect("read stamp");
+    let row = result.next().await.expect("stamp row").expect("stamp written on creation");
+    assert_eq!(row.get::<String>("schema").expect("schema"), crate::directory::DIRECTORY_FORMAT_SCHEMA);
+    assert_eq!(row.get::<i64>("version").expect("version"), crate::directory::DIRECTORY_FORMAT_VERSION);
+    drop(result);
+
+    directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.version = $version").param("version", crate::directory::DIRECTORY_FORMAT_VERSION + 1)).await.expect("forge a newer format");
+    let refused = Neo4jDirectory::connect(&container.uri, "neo4j", "semio-test").await.err().map(|error| error.to_string()).unwrap_or_default();
+    assert!(refused.contains("no migration framework"), "a newer format must be refused by name, got {refused:?}");
+
+    directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.schema = 'semio/hub/directory-format/v9', f.version = $version").param("version", crate::directory::DIRECTORY_FORMAT_VERSION)).await.expect("forge an unknown schema");
+    let unknown = Neo4jDirectory::connect(&container.uri, "neo4j", "semio-test").await.err().map(|error| error.to_string()).unwrap_or_default();
+    assert!(unknown.contains("unknown format stamp"), "an unknown schema must be refused by name, got {unknown:?}");
+
+    directory.graph.run(query("MATCH (f:DirectoryFormat {id: 'singleton'}) SET f.schema = $schema, f.version = $version").param("schema", crate::directory::DIRECTORY_FORMAT_SCHEMA).param("version", crate::directory::DIRECTORY_FORMAT_VERSION)).await.expect("restore the stamp");
+    container.connect().await;
 }

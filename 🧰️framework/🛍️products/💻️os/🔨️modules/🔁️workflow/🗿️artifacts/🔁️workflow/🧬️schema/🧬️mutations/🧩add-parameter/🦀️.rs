@@ -21,8 +21,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for AddParameter
     fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
         vec![WorkflowMutation::RemoveParameter(RemoveParameter { parameter_id: workflow_parameter_entity_id(&self.parameter).into() })]
     }
-    fn label(&self) -> String {
-        format!("Add workflow parameter {}", workflow_parameter_entity_id(&self.parameter))
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add workflow parameter {}", workflow_parameter_entity_id(&self.parameter)), &format!("Arbeitsablaufparameter {} hinzufügen", workflow_parameter_entity_id(&self.parameter)))
     }
     fn target(&self) -> Vec<String> {
         vec!["parameters".into(), workflow_parameter_entity_id(&self.parameter).into()]

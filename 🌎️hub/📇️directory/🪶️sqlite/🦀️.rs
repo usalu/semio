@@ -18,8 +18,7 @@ use crate::artifact_authority::creation::{
 };
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
-use crate::directory::{
-    ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, AGENT_DELEGATED_EVENT, AGENT_DELEGATION_PAGE_MAX, AGENT_DELEGATION_REVOKED_EVENT, AGENT_IDENTITY_PROVIDER, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1,
+use crate::directory::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, DirectoryFormatAdmission, admit_directory_format, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, AGENT_DELEGATED_EVENT, AGENT_DELEGATION_PAGE_MAX, AGENT_DELEGATION_REVOKED_EVENT, AGENT_IDENTITY_PROVIDER, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1,
     DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability,
     UNCONTROLLED_PROJECTION_REBUILD, active_capability, admin_operation_effect_receipt_v1, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str,
     directory_projection_rejection_v1, directory_projection_space_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request,
@@ -50,6 +49,12 @@ CREATE TABLE IF NOT EXISTS hub_share_grant (
     revoked_reason TEXT,
     FOREIGN KEY (space_id, document_id) REFERENCES hub_document_descriptor(space_id, document_id) ON DELETE CASCADE
 );
+CREATE TABLE IF NOT EXISTS hub_directory_format (
+    singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+    schema TEXT NOT NULL,
+    version INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS hub_user (
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
@@ -644,6 +649,11 @@ impl SqliteDirectory {
         let conn = Connection::open(path).map_err(backend)?;
         conn.busy_timeout(std::time::Duration::from_secs(2)).map_err(backend)?;
         conn.execute_batch(SCHEMA).map_err(backend)?;
+        let stamp = conn.query_row("SELECT schema, version FROM hub_directory_format WHERE singleton = 1", [], |row| Ok((row.get::<_, String>(0)?, row.get::<_, i64>(1)?))).optional().map_err(backend)?;
+        let events: i64 = conn.query_row("SELECT COUNT(*) FROM hub_directory_event", [], |row| row.get(0)).map_err(backend)?;
+        if admit_directory_format(stamp, events > 0, "SQLite")? == DirectoryFormatAdmission::Stamp {
+            conn.execute("INSERT OR IGNORE INTO hub_directory_format (singleton, schema, version) VALUES (1, ?1, ?2)", rusqlite::params![DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION]).map_err(backend)?;
+        }
         Ok(Self {
             conn: Arc::new(Mutex::new(conn)),
             #[cfg(test)]

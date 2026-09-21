@@ -30,8 +30,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertAnnotation {
         vec![PdfMutation::RemoveAnnotation(super::remove_annotation::RemoveAnnotation { index: self.index, at: self.at })]
     }
 
-    fn label(&self) -> String {
-        format!("Insert annotation at {} on page {}", self.at, self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Insert annotation at {} on page {}", self.at, self.index), &format!("Anmerkung an {} auf Seite {} einfügen", self.at, self.index))
     }
 
     fn target(&self) -> Vec<String> {

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeSectionDep
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change section depth mm to {:?}", self.new_section_depth_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change section depth mm to {:?}", self.new_section_depth_mm), &format!("Abschnitttiefenmm auf {:?} ändern", self.new_section_depth_mm))
     }
 }
 //#endregion 🔖️ChangeSectionDepthMm

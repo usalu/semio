@@ -26,7 +26,7 @@ fn inflate_content(pdf: &[u8]) -> String {
 
 fn demo() -> DrawingSnapshot {
     let source = crate::standards::v1::subsets::any::examples().iter().find(|source| source.id() == "demo").expect("demo example");
-    <DrawingSnapshot as crate::ArtifactDsl>::parse_dsl(source.document_json()).expect("demo parses")
+    <DrawingSnapshot as crate::ArtifactDsl>::parse_dsl(&source.document_json()).expect("demo parses")
 }
 
 #[test]

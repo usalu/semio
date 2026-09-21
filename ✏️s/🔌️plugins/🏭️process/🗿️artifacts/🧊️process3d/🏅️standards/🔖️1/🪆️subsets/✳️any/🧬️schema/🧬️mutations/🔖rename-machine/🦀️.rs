@@ -25,8 +25,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for RenameMach
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Rename machine to \"{}\"", self.new_label)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename machine to \"{}\"", self.new_label), &format!("Maschine in \"{}\" umbenennen", self.new_label))
     }
 
     fn target(&self) -> Vec<String> {

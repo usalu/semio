@@ -227,8 +227,11 @@ where
     /// `NoMutation` sentinel variant — there is no "no-op mutation", only an inverse with nothing
     /// to undo).
     fn inverse(&self, base: &P) -> Vec<Op>;
-    /// @emoji 🏷️ Human undo/history label, e.g. `Rename piece "a" to "b"`.
-    fn label(&self) -> String;
+    /// @emoji 🏷️ Human undo/history label in every shell locale, e.g. `Rename piece "a" to "b"` /
+    /// `Piece "a" in "b" umbenennen`. [`crate::LocalizedLabel::native`] matches on `Locale`
+    /// exhaustively with no catch-all arm, so a locale added to `🖱️ui/🎚️axes/🔣️.json` fails every
+    /// implementor's build until it is translated — the history panel has no English fallback.
+    fn label(&self) -> crate::LocalizedLabel;
     /// ⏱️ Returns the authored clock, or absence when this leaf does not carry one.
     fn timestamp(&self) -> Option<protocol::ids::HybridLogicalTimestamp> {
         None
@@ -259,7 +262,7 @@ pub trait SemanticMutation<P>: Mutation<P> {
     /// This artifact's full kind table, one row per variant — registration/introspection source.
     fn kinds() -> &'static [SemanticDescriptor];
     fn semantics(&self) -> &'static SemanticDescriptor;
-    fn label(&self) -> String;
+    fn label(&self) -> crate::LocalizedLabel;
     fn target(&self) -> Vec<String>;
 }
 //#endregion 🔖️Semantics
@@ -786,7 +789,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
 pub trait CompositeMutationKind<P, Op: Mutation<P>>: MutationLeaf + Clone + protocol::value::ToValue + protocol::value::FromValue {
     const SEMANTICS: SemanticDescriptor;
     fn plan(&self, base: &P, planner: &mut Planner<P, Op>) -> Result<(), PlanError>;
-    fn label(&self) -> String;
+    fn label(&self) -> crate::LocalizedLabel;
     /// ⏱️ Returns only the clock explicitly carried by this composite payload.
     fn timestamp(&self) -> Option<protocol::ids::HybridLogicalTimestamp> {
         None

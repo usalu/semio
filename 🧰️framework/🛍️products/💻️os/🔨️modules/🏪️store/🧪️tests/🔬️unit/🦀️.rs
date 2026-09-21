@@ -7679,7 +7679,7 @@ async fn dispatch_group_validate_all_atomicity_one_bad_member_applies_nothing() 
     let good_op = ValidatedMutation::SetN(ValidatedSetN { n: 5 }).encode_op().expect("encode good op");
     let bad_op = ValidatedMutation::SetN(ValidatedSetN { n: -1 }).encode_op().expect("encode bad op");
     let parent_ops = vec![good_op];
-    let child_dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![bad_op], op_schema: SchemaId("demo/v1".into()), labels: vec!["bad".into()] };
+    let child_dispatch = ChildDispatch { child: child_ref.clone(), ops: vec![bad_op], op_schema: SchemaId("demo/v1".into()), labels: vec![crate::LocalizedLabel::data("bad")] };
     let mut children = [(&mut child_store, child_dispatch)];
 
     let result = coordinator.dispatch_group(&parent_ref, &mut parent_store, &mut children, parent_ops, Vec::new(), GroupMeta::default());
@@ -7918,7 +7918,7 @@ async fn dispatch_peer_group_commits_both_members_with_one_shared_group_id() {
 
     let initiator_ops: Vec<Vec<u8>> = vec![DemoMutation::SetN(SetN { n: 1 }).encode_op().expect("encode initiator op")];
     let peer_op = DemoMutation::SetN(SetN { n: 2 }).encode_op().expect("encode peer op");
-    let peer_dispatch = ChildDispatch { child: peer_ref.clone(), ops: vec![peer_op], op_schema: SchemaId("demo/v1".into()), labels: vec!["peer".into()] };
+    let peer_dispatch = ChildDispatch { child: peer_ref.clone(), ops: vec![peer_op], op_schema: SchemaId("demo/v1".into()), labels: vec![crate::LocalizedLabel::data("peer")] };
     let mut peers = [(&mut peer_store, peer_dispatch)];
 
     let receipt = coordinator.await.dispatch_peer_group(&initiator_ref, &mut initiator_store, &mut peers, initiator_ops, GroupMeta::default()).await.expect("peer transaction dispatch");

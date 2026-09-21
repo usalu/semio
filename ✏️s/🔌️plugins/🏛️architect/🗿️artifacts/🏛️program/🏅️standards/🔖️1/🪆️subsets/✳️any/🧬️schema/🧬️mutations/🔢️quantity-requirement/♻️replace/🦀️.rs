@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceQuantityRequireme
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace quantity requirement \"{}\"", self.quantity_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace quantity requirement \"{}\"", self.quantity_requirement.header.name), &format!("Mengenanforderung \"{}\" ersetzen", self.quantity_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.quantity_requirement.header.id.0.clone()]

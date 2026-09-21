@@ -27,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveDpartMetadata {
         support::dpart_job(base).map(|job| PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        "Remove PDF/VT partition metadata".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove PDF/VT partition metadata", "PDF/VTpartitionsmetadaten entfernen")
     }
 
     fn target(&self) -> Vec<String> {

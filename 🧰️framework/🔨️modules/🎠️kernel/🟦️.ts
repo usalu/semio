@@ -1817,7 +1817,10 @@ export function mergeUiDirtyScopes(first: UiDirtyScope, second: UiDirtyScope): U
 export type HistoryEntry = {
   readonly seq: number;
   readonly actionId: string;
-  readonly label: string;
+  /** @emoji 🏷️ Every locale's text for this row, mirrored from Rust `LocalizedLabel` — the renderer
+   * resolves it with {@link historyEntryLabelText} against the locale it is showing right now, so a
+   * locale switch re-renders the whole ledger instead of leaving logged rows in their dispatch locale. */
+  readonly label: LocalizedLabel;
   readonly kind: string;
   readonly timestamp: string;
   readonly opLines?: readonly string[];
@@ -1825,6 +1828,31 @@ export type HistoryEntry = {
   readonly revertible?: boolean;
   readonly count?: number;
 };
+
+/** @emoji 🏷️ The one text a history row shows on the requested axes. There is deliberately NO
+ * English fallback: `LocalizedLabel` is a `Record<ShellTerminology, Record<ShellLocale, string>>`
+ * that the Rust carrier always fills for every axis, so an axis value the carrier does not carry is
+ * a wire defect and renders as empty — visibly wrong — rather than silently as English. The shell's
+ * `uiTerminology`/`uiLocale` preferences are stringly typed, hence the widened parameters; the same
+ * contract as the neighbouring `resolveManifestLabel`.
+ *
+ * ⚠️ Both axes are read defensively, and the TYPE is not the guarantee here. The locale axis was
+ * already optional-chained; the terminology axis was not, so a carrier that filled neither level
+ * made `label[terminology]` `undefined` and `row[locale]` THREW. This function runs inside a
+ * `useMemo` of `FrameworkOsShellInner`'s render, so that throw did not render one row wrong — it
+ * unmounted the entire shell: measured on 2026-09-21 as `TypeError: Cannot read properties of
+ * undefined (reading 'en')` followed by `plugin-handle.closed` and
+ * `noteShellCommand refused: instance-retired (user window=s-home-main)`, with every window gone and
+ * an empty `document.body`, every time the studio was opened from the command palette while ONE
+ * staged guest still carried the pre-`LocalizedLabel` label shape (ticket 26/09/18 S10 §2.1).
+ * A wire defect in one ledger row must cost that row its text, which is what the paragraph above
+ * promises — never the product. The no-English-fallback law is unchanged: a missing axis is still
+ * empty and still visibly wrong. */
+export function historyEntryLabelText(label: LocalizedLabel, terminology: string, locale: string): string {
+  if (terminology !== "native" && terminology !== "reuse") return "";
+  const row: Readonly<Record<string, string>> | undefined = label?.[terminology];
+  return row?.[locale] ?? "";
+}
 
 /** @emoji 🧾️ Ordered history delta carried with an accepted invocation response. */
 export type HistoryPatch = {

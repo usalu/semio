@@ -4,8 +4,12 @@
 import type { ControlIcon, DockSkeleton, HistoryColumn, IntroductionStepDefinition, ModeWindowDescriptor, PanelDock, PanelDockContextValue, PanelTabNode, PanelTabRowDropTarget, PresenceAppearance, PresenceHsl, PresencePeer, RibbonRow, TreeDataSection, TutorialCameraKeyframe, TutorialClockPort, TutorialDefinition, UiDriver, UiRibbonParentCategory, UiTranslationKey, VirtualFileSystemNode, VirtualFileSystemRow, VirtualFileSystemSchema, WindowLayoutNode } from "../../🎯️targets/⚛️react/🟦️.tsx";
 /** 📐️ Type-only three.js namespace; the runtime `THREE` value arrives through the dependency bag and would shadow this name. */
 import type * as Three from "three";
+import panelResizeFixture from "../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️fixtures/↔️panel-resize/🔣️.json" with { type: "json" };
+import panelResizeFixtureSchema from "../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️fixtures/↔️panel-resize/🧬️schema/🔣️.json" with { type: "json" };
 
 type TestSource = { readonly directory: string; readonly url: string };
+import paneOwnerFixture from "../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🪪️window-surface-owner/🔣️.json" with { type: "json" };
+import paneOwnerSchema from "../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🪪️window-surface-owner/🧬️schema/🔣️.json" with { type: "json" };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🎯️targets/⚛️react/🟦️.tsx"), "App" | "Button" | "CELEBRATE_STAMP_DURATION_MS" | "COMPACT_UI_DRIVER" | "COMPOSE_WINDOW_TEMPLATE_MIME" | "Canvas" | "CanvasPickMenu" | "ContextMenu" | "ContextMenuController" | "DEFAULT_GUMBALL_CONFIG" | "DEFAULT_UI_DRIVER" | "Engagement" | "FlowProvider" | "Footer" | "GLASS_OVERLAY_BOX_CLASS" | "GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP" | "GUMBALL_DEFAULT_SHIFT_SCALE_SNAP" | "GUMBALL_PLANE_OFFSET" | "GUMBALL_PLANE_SIZE" | "GUMBALL_PREVIEW_DISK_RADIUS" | "GUMBALL_PREVIEW_MIN_EXTENT" | "GUMBALL_PREVIEW_RING_RADIUS" | "GUMBALL_RING_RADIUS" | "INTRODUCTION_DEMO_IDLE_THRESHOLD_MS" | "INTRODUCTION_INFO_BOX_GAP_PX" | "Icon" | "Input" | "LEVELS" | "Label" | "Layout" | "LevelProvider" | "MODE_CANVAS_INSET_CLASS" | "Mode" | "Navbar" | "NotFound" | "Pane" | "PaneHost" | "Panel" | "PanelChromeTabBar" | "PanelDockProvider" | "PanelTabBar" | "Popover" | "PopoverContent" | "PopoverTrigger" | "RouteLink" | "Scrollable" | "Search" | "ShellScopeProvider" | "SortableTreeItems" | "Surface" | "TREE_SECTION_REORDER_MIME" | "TextSelectionContextMenuHost" | "Toggle" | "Tree" | "TreeContext" | "TreeItem" | "UIIntroduction" | "UI_CHROME_LOCALE_STORAGE_KEY" | "UI_ELEMENT_REGISTRY" | "Ui" | "UiDriverProvider" | "UiMobileProvider" | "WINDOW_SILHOUETTE_BORDER_KINDS" | "WINDOW_SILHOUETTE_GEOMETRY_SCHEMA" | "WINDOW_SILHOUETTE_PATH_INSET" | "Window" | "WindowChrome" | "WindowMeasureTreeGroup" | "WindowMeasureTreeLeaf" | "WindowMeasuresTree" | "applyAxisGroupLayoutDelta" | "applyModeDrop" | "applyModeJoinCornerResize" | "applySearchSpaceAction" | "beginWindowTemplateDrag" | "beginWindowTemplatePointerDrag" | "borderNormalClass" | "buildTextSelectionContextMenuItems" | "cancelWindowTemplatePointerDrag" | "celebrateAllElements" | "celebrateElement" | "celebrateElements" | "childElementId" | "chromeHostedOpenPanelPositionStyle" | "chromePanelSafeArea" | "chromePanelSafeAreaStyle" | "chromeStatusBorderClass" | "clampIntroductionInfoBoxPosition" | "clampSliderValuesToReady" | "classifyIconSelectorMode" | "cn" | "computeModeDropZone" | "computeModeSplitPreviewInBody" | "computeTabDockDropZone" | "computeTabInsertPreview" | "createDOMEventBinding" | "createEvenWindowLayout" | "createShellScope" | "createWindowSilhouetteGeometry" | "decodeIcon" | "defaultDiagramForceConfig" | "detectShellLocale" | "elementIdSegment" | "elementIdSelector" | "encodeIcon" | "endWindowTemplateDrag" | "engagementActionTokenEquals" | "filterSearchPossibles" | "flowFromAnchor" | "formatNumber" | "glassClass" | "gumballApplyHandleVisualMaterial" | "gumballAxisRotateAngle" | "gumballAxisScaleFactor" | "gumballConfigVisible" | "gumballEffectiveSnapValue" | "gumballHandleAllowedByPlane" | "gumballHandleEnabled" | "gumballHandleKindToTransformMode" | "gumballHandleRaycast" | "gumballHandleVisualState" | "gumballKindFromRaycastObject" | "gumballPlaneScaleCorner" | "gumballPlaneScaleFactors" | "gumballPointerConsumesCanvasEventRef" | "gumballPreviewWorldExtent" | "gumballProjectRayOntoAxis" | "gumballRayAxisParameter" | "gumballRayFromNdc" | "gumballRayPlanePoint" | "gumballRaycastOwnedAtClientPoint" | "gumballResolveDragSnaps" | "gumballResolveHandleVisual" | "gumballScaleAxisOffset" | "gumballScalePlaneAxisIndices" | "gumballSnapScalar" | "iconShotFrameClass" | "iconShotFrameStyle" | "iconSvgMarkup" | "initUiLocaleSync" | "insertWindowAsTabAtCorner" | "insertWindowAtDropZone" | "installElementsSurfaceBrowserDefaultSuppression" | "introductionDemoArcPoint" | "introductionDemoResolveVisual" | "introductionPointRelativeToHost" | "introductionRectRelativeToHost" | "isContextMenuPointerTarget" | "isElementId" | "isPointerEventOnDomTextSelection" | "isSearchSuggestionActionTarget" | "isUiTypingTarget" | "isWindowChromeIntroducedTarget" | "measureWindowSilhouetteMetrics" | "mergeTreeSectionOrder" | "modeCollectWindowIds" | "modeDockChromeGridPlacement" | "modeDockOutLayout" | "modeDockTabLabelClassName" | "modeDockTabsWithInsertPreview" | "modeJoinCornerSpecsForCrossSeparator" | "modeJoinCornerSpecsForSeparator" | "modePerpendicularJoinSeparators" | "modeStackTabsByCorner" | "navigateOwnedRoute" | "ndcToViewportPoint" | "nearestAnchor" | "normalizeEngagementActionText" | "normalizeWindowSilhouetteChips" | "normalizeWindowSilhouetteMetrics" | "parseOwnedRouteTarget" | "parseUiTheme" | "polylinePointAt" | "progressPanelTabSelection" | "publishShellChromePanelBox" | "publishShellNavbarTrailingEndWidthPx" | "rankFuzzyItems" | "reactHostPort" | "readActiveWindowTemplateDragSession" | "readDomTextSelection" | "readResizableJoinCornerSpec" | "readScrollerContentOverflows" | "reconcileWindows" | "referenceMediaKindFromUrl" | "registerIntroductionSurfaceResolver" | "removeWindowFromLayout" | "resolveCatalogIconSvg" | "resolveGumballConfig" | "resolveGumballVisualPalette" | "resolveIntroductionPlacement" | "resolveIntroductionPoint" | "resolveJoinCornerPeerCrossAxes" | "resolveModeSplitSideInBody" | "resolveSliderDraftClear" | "resolveTranslationLabel" | "resolveWindowSilhouetteBorderKind" | "routeWindowSearchEscape" | "routeWindowSearchSpace" | "safeAreaBoxFromRect" | "sampleBezierSegments" | "searchActiveInlineCompletion" | "searchControlledLineV1" | "searchInlineCompletion" | "searchSpaceConfirmsLine" | "semioTheme" | "setActiveUiTheme" | "shellFloorFillClass" | "shellFloorPaints" | "shellNavbarTrailingEndWidthByRoot" | "shouldActivateSearchPossibleOnConfirm" | "shouldRouteKeysToWindowSearch" | "singleTreeLeaf" | "sliderValuesMatch" | "splitIntroductionBodyParagraphs" | "splitWithWindow" | "sunPositionFromAzimuthElevation" | "surfaceClass" | "uiDataLabel" | "uiI18n" | "uiSpacingPx" | "useChromePanelSafeArea" | "useFirstDraggableElementAlias" | "useFlow" | "useIntroductionPointerIdle" | "useLevel" | "usePaneSlot" | "useSurface" | "windowChromeTitleChipClass" | "windowMeasuresDefaultWidthPx" | "windowMeasuresMinWidthPx" | "windowSilhouetteBorderPaint" | "windowSilhouetteContains" | "windowSilhouetteOutline" | "windowSilhouetteOutlineViolations" | "windowSilhouettePath" | "windowTemplatePaletteTreeDragController" | "windowTemplatePointerDragRef"> & Pick<typeof import("../../🧱️elements/🕸️Diagram/🟦️.tsx"), "createDiagramForceSimulation"> & Pick<typeof import("@react-three/drei"), "OrthographicCamera" | "PerspectiveCamera"> & Pick<typeof import("@semio-tech/assets"), "ICONS" | "assertUniqueIconConceptAssignments" | "shortcodeCatalogKey" | "shortcodeEmoji"> & Pick<typeof import("@semio-tech/framework"), "createMemoryStoragePort"> & Pick<typeof import("react-dom/server"), "renderToStaticMarkup"> & { readonly React: typeof import("react") } & { readonly THREE: typeof import("three") }, testSource: TestSource): Promise<void> {
   const { App, Button, CELEBRATE_STAMP_DURATION_MS, COMPACT_UI_DRIVER, COMPOSE_WINDOW_TEMPLATE_MIME, Canvas, CanvasPickMenu, ContextMenu, ContextMenuController, DEFAULT_GUMBALL_CONFIG, DEFAULT_UI_DRIVER, Engagement, FlowProvider, Footer, GLASS_OVERLAY_BOX_CLASS, GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP, GUMBALL_DEFAULT_SHIFT_SCALE_SNAP, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_SIZE, GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_MIN_EXTENT, GUMBALL_PREVIEW_RING_RADIUS, GUMBALL_RING_RADIUS, ICONS, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, INTRODUCTION_INFO_BOX_GAP_PX, Icon, Input, LEVELS, Label, Layout, LevelProvider, MODE_CANVAS_INSET_CLASS, Mode, Navbar, NotFound, OrthographicCamera, Pane, PaneHost, Panel, PanelChromeTabBar, PanelDockProvider, PanelTabBar, PerspectiveCamera, Popover, PopoverContent, PopoverTrigger, React, RouteLink, Scrollable, Search, ShellScopeProvider, SortableTreeItems, Surface, THREE, TREE_SECTION_REORDER_MIME, TextSelectionContextMenuHost, Toggle, Tree, TreeContext, TreeItem, UIIntroduction, UI_CHROME_LOCALE_STORAGE_KEY, UI_ELEMENT_REGISTRY, Ui, UiDriverProvider, UiMobileProvider, WINDOW_SILHOUETTE_BORDER_KINDS, WINDOW_SILHOUETTE_GEOMETRY_SCHEMA, WINDOW_SILHOUETTE_PATH_INSET, Window, WindowChrome, WindowMeasureTreeGroup, WindowMeasureTreeLeaf, WindowMeasuresTree, applyAxisGroupLayoutDelta, applyModeDrop, applyModeJoinCornerResize, applySearchSpaceAction, assertUniqueIconConceptAssignments, beginWindowTemplateDrag, beginWindowTemplatePointerDrag, borderNormalClass, buildTextSelectionContextMenuItems, cancelWindowTemplatePointerDrag, celebrateAllElements, celebrateElement, celebrateElements, childElementId, chromeHostedOpenPanelPositionStyle, chromeStatusBorderClass, clampIntroductionInfoBoxPosition, clampSliderValuesToReady, classifyIconSelectorMode, cn, computeModeDropZone, computeModeSplitPreviewInBody, computeTabDockDropZone, computeTabInsertPreview, createDOMEventBinding, createDiagramForceSimulation, createEvenWindowLayout, createMemoryStoragePort, createShellScope, createWindowSilhouetteGeometry, decodeIcon, defaultDiagramForceConfig, detectShellLocale, elementIdSegment, elementIdSelector, encodeIcon, endWindowTemplateDrag, engagementActionTokenEquals, filterSearchPossibles, flowFromAnchor, formatNumber, glassClass, gumballApplyHandleVisualMaterial, gumballAxisRotateAngle, gumballAxisScaleFactor, gumballConfigVisible, gumballEffectiveSnapValue, gumballHandleAllowedByPlane, gumballHandleEnabled, gumballHandleKindToTransformMode, gumballHandleRaycast, gumballHandleVisualState, gumballKindFromRaycastObject, gumballPlaneScaleCorner, gumballPlaneScaleFactors, gumballPointerConsumesCanvasEventRef, gumballPreviewWorldExtent, gumballProjectRayOntoAxis, gumballRayAxisParameter, gumballRayFromNdc, gumballRayPlanePoint, gumballRaycastOwnedAtClientPoint, gumballResolveDragSnaps, gumballResolveHandleVisual, gumballScaleAxisOffset, gumballScalePlaneAxisIndices, gumballSnapScalar, iconShotFrameClass, iconShotFrameStyle, iconSvgMarkup, initUiLocaleSync, insertWindowAsTabAtCorner, insertWindowAtDropZone, installElementsSurfaceBrowserDefaultSuppression, introductionDemoArcPoint, introductionDemoResolveVisual, introductionPointRelativeToHost, introductionRectRelativeToHost, isContextMenuPointerTarget, isElementId, isPointerEventOnDomTextSelection, isSearchSuggestionActionTarget, isUiTypingTarget, isWindowChromeIntroducedTarget, measureWindowSilhouetteMetrics, mergeTreeSectionOrder, modeCollectWindowIds, modeDockChromeGridPlacement, modeDockOutLayout, modeDockTabLabelClassName, modeDockTabsWithInsertPreview, modeJoinCornerSpecsForCrossSeparator, modeJoinCornerSpecsForSeparator, modePerpendicularJoinSeparators, modeStackTabsByCorner, navigateOwnedRoute, ndcToViewportPoint, nearestAnchor, normalizeEngagementActionText, normalizeWindowSilhouetteChips, normalizeWindowSilhouetteMetrics, parseOwnedRouteTarget, parseUiTheme, polylinePointAt, progressPanelTabSelection, publishShellNavbarTrailingEndWidthPx, rankFuzzyItems, reactHostPort, readActiveWindowTemplateDragSession, readDomTextSelection, readResizableJoinCornerSpec, readScrollerContentOverflows, reconcileWindows, referenceMediaKindFromUrl, registerIntroductionSurfaceResolver, removeWindowFromLayout, renderToStaticMarkup, resolveCatalogIconSvg, resolveGumballConfig, resolveGumballVisualPalette, resolveIntroductionPlacement, resolveIntroductionPoint, resolveJoinCornerPeerCrossAxes, resolveModeSplitSideInBody, resolveSliderDraftClear, resolveTranslationLabel, resolveWindowSilhouetteBorderKind, routeWindowSearchEscape, routeWindowSearchSpace, sampleBezierSegments, searchActiveInlineCompletion, searchControlledLineV1, searchInlineCompletion, searchSpaceConfirmsLine, semioTheme, setActiveUiTheme, shellFloorFillClass, shellFloorPaints, shellNavbarTrailingEndWidthByRoot, shortcodeCatalogKey, shortcodeEmoji, shouldActivateSearchPossibleOnConfirm, shouldRouteKeysToWindowSearch, singleTreeLeaf, sliderValuesMatch, splitIntroductionBodyParagraphs, splitWithWindow, sunPositionFromAzimuthElevation, surfaceClass, uiDataLabel, uiI18n, uiSpacingPx, useFirstDraggableElementAlias, useFlow, useIntroductionPointerIdle, useLevel, usePaneSlot, useSurface, windowChromeTitleChipClass, windowMeasuresDefaultWidthPx, windowMeasuresMinWidthPx, publishShellChromePanelBox, chromePanelSafeArea, chromePanelSafeAreaStyle, safeAreaBoxFromRect, useChromePanelSafeArea, windowSilhouetteBorderPaint, windowSilhouetteContains, windowSilhouetteOutline, windowSilhouetteOutlineViolations, windowSilhouettePath, windowTemplatePaletteTreeDragController, windowTemplatePointerDragRef } = dependencies;
@@ -5907,7 +5911,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("windowTemplatePaletteTreeDragController starts pointer and native template drags", () => {
       const controller = windowTemplatePaletteTreeDragController();
       const encoded = JSON.stringify({ windowKindId: "puzzle-3d-main", templateId: "perspective" });
-      controller.pointerPaletteDrag?.begin(encoded);
+      controller.pointerPaletteDrag?.begin(encoded, [COMPOSE_WINDOW_TEMPLATE_MIME]);
       expect(windowTemplatePointerDragRef.active).toBe(true);
       controller.onDragStart?.({
         items: [],
@@ -6833,6 +6837,110 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(overlay).toBeTruthy();
       fireEvent.click(container.querySelector('[id="framework.window.actionsOnlyWindow.engagement.toggle"]')!);
       expect(screen.getByTestId("adhoc-actions")).toBeTruthy();
+    });
+
+    it("Window pane inputs keep the concrete owner through activation and typing", async () => {
+      const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+      const validate = new Ajv2020({ strict: true }).compile(paneOwnerSchema);
+      expect(validate(paneOwnerFixture), JSON.stringify(validate.errors)).toBe(true);
+      for (const entry of paneOwnerFixture.cases) {
+        const activations: string[] = [];
+        const changes: { window: string; value: string }[] = [];
+        const field = <input aria-label="Pane owner input" onChange={(event) => changes.push({ window: entry.window, value: event.target.value })} />;
+        const { container, unmount } = render(
+          <Window
+            id={entry.window}
+            onActivate={() => activations.push(entry.window)}
+            measures={entry.kind === "measures" ? field : undefined}
+            actionPane={entry.kind === "actions" ? field : undefined}
+            search={entry.kind === "search" ? { input: { id: "pane-owner-input", value: "", placeholder: uiDataLabel("Pane owner input"), onChange: (value: string) => changes.push({ window: entry.window, value }) } } : undefined}
+          >{entry.kind === "body" ? field : <div>Canvas</div>}</Window>
+        );
+        try {
+          const toggleParts = entry.kind === "measures" ? ["measures", "unfold"] : entry.kind === "actions" ? ["engagement", "toggle"] : ["search", "toggle"];
+          if (entry.kind !== "body") {
+            const toggle = container.querySelector(`[id="${childElementId("framework.window", entry.window, ...toggleParts)}"]`);
+            expect(toggle).toBeTruthy();
+            fireEvent.click(toggle!);
+          }
+          const input = await waitFor(() => {
+            const input = container.querySelector("input") as HTMLInputElement | null;
+            expect(input).toBeTruthy();
+            return input!;
+          });
+          activations.length = 0;
+          fireEvent.pointerDown(input, { button: 0, bubbles: true });
+          input.focus();
+          expect(document.activeElement).toBe(input);
+          fireEvent.change(input, { target: { value: paneOwnerFixture.typed } });
+          expect(activations, entry.kind).toEqual([entry.window]);
+          expect(changes, entry.kind).toEqual([{ window: entry.window, value: paneOwnerFixture.typed }]);
+        } finally {
+          unmount();
+        }
+      }
+    });
+
+    it("Window focus follows the shared pane sequence and ignores a late sibling blur", () => {
+      const owner = paneOwnerFixture.cases[0].window;
+      const activations: string[] = [];
+      const field = (kind: string) => <input data-pane-kind={kind} aria-label={kind} />;
+      const view = render(<Window id={owner} onActivate={() => activations.push(owner)}
+        measures={field("measures")} actionPane={field("actions")}
+        search={{ input: { id: "sequence-search", value: "", placeholder: uiDataLabel("sequence-search") } }}
+      >{field("body")}</Window>);
+      try {
+        fireEvent.click(view.container.querySelector(`[id="${childElementId("framework.window", owner, "engagement", "toggle")}"]`)!);
+        fireEvent.click(view.container.querySelector(`[id="${childElementId("framework.window", owner, "measures", "unfold")}"]`)!);
+        const inputFor = (kind: string) => view.container.querySelector(kind === "search" ? 'input[placeholder="sequence-search"]' : `input[data-pane-kind="${kind}"]`) as HTMLInputElement;
+        let previous: HTMLInputElement | undefined;
+        for (const kind of paneOwnerFixture.focusSequence) {
+          const input = inputFor(kind);
+          expect(input, kind).toBeTruthy();
+          fireEvent.pointerDown(input, { button: 0, bubbles: true });
+          input.focus();
+          expect(document.activeElement, kind).toBe(input);
+          if (previous) expect(document.activeElement).not.toBe(previous);
+          previous = input;
+        }
+        fireEvent.blur(inputFor(paneOwnerFixture.lateBlur));
+        expect(document.activeElement).toBe(previous);
+        expect(activations).toEqual(paneOwnerFixture.focusSequence.map(() => owner));
+      } finally {
+        view.unmount();
+      }
+    });
+
+    it("Panel input focus leaves the active Window unchanged and retires on hide", async () => {
+      const activations: string[] = [];
+      const changes: string[] = [];
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({
+        id: paneOwnerFixture.panel.surface, icon: StubIcon, name: paneOwnerFixture.panel.label,
+        tree: { sections: [{ id: "panel-owner-section", label: "", items: [{
+          id: "panel-owner-row", label: "", control: <input aria-label="Panel owner input" onChange={(event) => changes.push(event.target.value)} />
+        }] }] },
+      })];
+      const content = (visible: boolean) => <>
+        <Window id={paneOwnerFixture.previousWindow} active onActivate={() => activations.push(paneOwnerFixture.previousWindow)}><div>Canvas</div></Window>
+        <Panel anchor="bottom-right" visible={visible} tabs={tabs} activeTabPath={[paneOwnerFixture.panel.surface]} />
+      </>;
+      const view = render(content(true));
+      try {
+        const input = view.container.querySelector('input[aria-label="Panel owner input"]') as HTMLInputElement;
+        expect(input).toBeTruthy();
+        fireEvent.pointerDown(input, { button: 0, bubbles: true });
+        input.focus();
+        expect(document.activeElement).toBe(input);
+        fireEvent.change(input, { target: { value: paneOwnerFixture.typed } });
+        expect(changes).toEqual([paneOwnerFixture.typed]);
+        expect(activations).toEqual([]);
+        view.rerender(content(false));
+        expect(document.activeElement).not.toBe(input);
+        expect(view.container.contains(input)).toBe(false);
+      } finally {
+        view.unmount();
+      }
     });
 
     it("Window reveals search on button click and activates on click", async () => {
@@ -11221,7 +11329,33 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(midDrag).toContain('data-slot="panel-empty-drop-zone"');
         expect(midDrag).toContain('data-anchor="bottom-middle"');
       });
-  
+
+      it("Panel realizes the schema-owned resize edge, width token, and drag factor for every anchor", async () => {
+        const { default: Ajv2020 } = await import("ajv/dist/2020");
+        const { render, fireEvent } = await import("@testing-library/react");
+        const validate = new Ajv2020({ strict: true, allErrors: true }).compile(panelResizeFixtureSchema);
+        expect(validate(panelResizeFixture), JSON.stringify(validate.errors)).toBe(true);
+        const StubIcon = (): null => null;
+        const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+        for (const row of panelResizeFixture.cases) {
+          const onSizeChange = vi.fn();
+          const view = render(<Panel anchor={row.anchor as never} visible tabs={tabs} size={300} minSize={100} maxSize={1000} onSizeChange={onSizeChange} />);
+          const handles = [...view.container.querySelectorAll('[data-slot="panel-resize-handle"]')] as HTMLElement[];
+          expect(handles.length, row.anchor).toBe(row.handles.length);
+          for (const expected of row.handles) {
+            const handle = handles.find((candidate) => candidate.className.includes(`${expected.edge}-0`));
+            expect(handle, `${row.anchor}/${expected.edge}`).toBeTruthy();
+            expect(handle!.className).toContain("w-single");
+            onSizeChange.mockClear();
+            fireEvent.pointerDown(handle!, { clientX: 100 });
+            fireEvent.pointerMove(handle!, { clientX: 110 });
+            expect(onSizeChange, `${row.anchor}/${expected.edge}`).toHaveBeenCalledWith(300 + expected.deltaFactor * 10);
+            fireEvent.pointerUp(handle!, { clientX: 110 });
+          }
+          view.unmount();
+        }
+      });
+
       it("Panel's middle anchor centers with translateX(-50%), grows both ways, and gets two independent resize handles", async () => {
         const { render } = await import("@testing-library/react");
         const StubIcon = (): null => null;

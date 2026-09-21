@@ -35,8 +35,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for InsertIfdMutation {
         }
         vec![TiffMutation::RemoveIfd(crate::schema::mutations::RemoveIfdMutation { index: (*index).min(base.ifds.len()) })]
     }
-    fn label(&self) -> String {
-        "insert ifd".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert ifd", "ifd einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-ifd".into()]

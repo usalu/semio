@@ -6,13 +6,14 @@
     "windowId": "flow-main",
     "surfaceId": "flow.play.main",
     "surfaceKind": "node-graph",
-    "reactSelector": "[data-surface-id=\"flow.play.main\"]",
+    "reactSelector": "[data-ui-node-key=\"flow.play.main\"] [data-surface-id=\"window:flow-main\"]",
     "urls": {
       "react": "http://127.0.0.1:6016/?plugin=flow",
       "wgpu": "http://127.0.0.1:6116/?plugin=flow"
     }
   },
   "specimen": {
+    "interactionNodeId": "add",
     "minimumNodes": 3,
     "preferredNodeIds": ["slider", "add", "preview"]
   },
@@ -22,6 +23,26 @@
       "gesture": "primary-click-then-escape",
       "expectedActions": ["interactionSelect", "clearSelection"],
       "consequence": "The clicked node paints selected, publishes its exact node id, and Escape clears that framework selection."
+    },
+    {
+      "id": "connect-free-input",
+      "gesture": "output-handle-to-input-handle",
+      "from": { "id": "slider@number", "direction": "out" },
+      "to": { "id": "add@b", "direction": "in" },
+      "expectedAction": "nodeGraphEdit",
+      "operation": "connect",
+      "expectedPersistedEdge": { "from": "slider", "fromPort": "number", "to": "add", "toPort": "b" },
+      "consequence": "A trusted drag between the two published handle centres creates one narrow connect operation and the actual Flow owner republishes that synapse."
+    },
+    {
+      "id": "disconnect-wired-input",
+      "gesture": "input-handle-to-empty-canvas",
+      "from": { "id": "add@b", "direction": "in" },
+      "emptyCanvasOffset": { "x": 8, "y": 8 },
+      "expectedAction": "nodeGraphEdit",
+      "operation": "disconnect",
+      "expectedPersistedEdge": { "from": "slider", "fromPort": "number", "to": "add", "toPort": "b" },
+      "consequence": "Dragging the now-wired input onto empty canvas publishes the owner-assigned synapse id and the actual Flow owner republishes the graph without that edge."
     },
     {
       "id": "escape-cancels-node-drag",

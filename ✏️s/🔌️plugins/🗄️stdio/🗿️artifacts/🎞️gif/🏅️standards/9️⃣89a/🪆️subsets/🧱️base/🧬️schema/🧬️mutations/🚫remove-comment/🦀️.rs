@@ -21,8 +21,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveComment {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::RemoveComment(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-comment".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-comment", "Kommentar entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -22,7 +22,9 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for ReplaceFlowHostSnapshot {
     fn inverse(&self, base: &FlowHostSnapshot) -> Vec<FlowMutation> {
         vec![FlowMutation::ReplaceFlowHostSnapshot(Self { host_snapshot: base.clone() })]
     }
-    fn label(&self) -> String { "Replace flow fixture".into() }
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Replace flow fixture", "Flussvorrichtung ersetzen")
+    }
     fn target(&self) -> Vec<String> { vec![] }
 }
 

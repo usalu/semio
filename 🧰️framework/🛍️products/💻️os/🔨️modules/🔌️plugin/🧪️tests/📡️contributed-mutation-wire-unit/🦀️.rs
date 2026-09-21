@@ -92,6 +92,6 @@ fn serde_binary_and_composite_plan_match_the_leaf() {
     assert!(matches!(&plan[0], protocol::PlanStep::Local(WireTestMutation::AddValue(AddValue { delta: 5 }))));
     assert_eq!(protocol::fold_plan_diff(&AddValue { delta: 5 }, &base).diff().apply(&base).expect("planned diff"), mutation.diff(&base).diff().apply(&base).expect("direct diff"));
     assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::SEMANTICS.kind, "add-value");
-    assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::label(&AddValue { delta: 5 }), "Add 5 to value");
+    assert_eq!(<AddValue as CompositeMutationKind<WireTestSnapshot, WireTestMutation>>::label(&AddValue { delta: 5 }), protocol::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
 }
 //#endregion 🧪️ContributedMutationWireLaws

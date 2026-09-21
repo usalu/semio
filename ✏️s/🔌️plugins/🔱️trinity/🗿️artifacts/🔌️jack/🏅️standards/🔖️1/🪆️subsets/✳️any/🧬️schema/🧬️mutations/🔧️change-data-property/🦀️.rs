@@ -28,12 +28,20 @@ impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for ChangeDataPr
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&{
         let (kind, id) = match &self.entity {
             EntityRef::Node(id) => ("node", id),
             EntityRef::Edge(id) => ("edge", id),
         };
         format!("Change {kind} \"{id}\" property \"{}\"", self.key)
+        }, &{
+        let (kind, id) = match &self.entity {
+            EntityRef::Node(id) => ("Knoten", id),
+            EntityRef::Edge(id) => ("Kante", id),
+        };
+        format!("{kind} \"{id}\" Eigenschaft \"{}\" ändern", self.key)
+        })
     }
     fn target(&self) -> Vec<String> {
         match &self.entity {

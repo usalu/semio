@@ -28,8 +28,8 @@ impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for RemoveTag {
     fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove tag \"{}\"", self.tag)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove tag \"{}\"", self.tag), &format!("Tag \"{}\" entfernen", self.tag))
     }
     fn target(&self) -> Vec<String> {
         vec![self.tag.clone()]

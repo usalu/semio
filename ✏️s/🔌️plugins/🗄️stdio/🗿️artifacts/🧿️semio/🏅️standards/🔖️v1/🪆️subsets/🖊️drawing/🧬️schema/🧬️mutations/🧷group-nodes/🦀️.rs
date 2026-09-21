@@ -28,8 +28,8 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Grou
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Group {} node(s) in layer #{}", self.indices.len(), self.parent.layer)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Group {} node(s) in layer #{}", self.indices.len(), self.parent.layer), &format!("Gruppe {} Knoten(s) in Ebene #{}", self.indices.len(), self.parent.layer))
     }
     fn target(&self) -> Vec<String> {
         vec![self.parent.layer.to_string()]

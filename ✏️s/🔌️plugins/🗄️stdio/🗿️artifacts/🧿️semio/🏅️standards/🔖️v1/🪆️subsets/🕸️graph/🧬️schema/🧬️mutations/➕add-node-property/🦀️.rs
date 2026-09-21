@@ -25,8 +25,8 @@ impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for AddNodeP
     fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add property to node \"{}\" at #{}", self.node_id.value, self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add property to node \"{}\" at #{}", self.node_id.value, self.index), &format!("Eigenschaft zu Knoten \"{}\" an #{} hinzufügen", self.node_id.value, self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.value.clone(), self.index.to_string()]

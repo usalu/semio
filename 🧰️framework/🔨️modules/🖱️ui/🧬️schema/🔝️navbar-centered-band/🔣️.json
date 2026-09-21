@@ -1,0 +1,254 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/ui/navbar-centered-band-v2.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contract", "occupancy", "bands", "placements", "dockCapMetrics", "exampleControlMetrics", "taskManagerFooter"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "centeredItemNeverCrossesOccupiedChrome",
+        "fullyOccupiedBarKeepsWholeWidth",
+        "emptyFlowChildIsFreeRoom",
+        "itemWiderThanBandStartsAtBandLeft",
+        "topMiddleBelongsToCenteredCluster",
+        "footerTrailingOrder",
+        "mobileNavbarOmitsDesktopCenterControls",
+        "mobileFooterKeepsHubConnection",
+        "dockCapDepthUsesControlAndPadding",
+        "exampleControlWidthUsesRootRem",
+        "exampleControlWidthFeedsReservationAndPaint",
+        "taskManagerLabelUsesPanelToggleVocabulary"
+      ],
+      "properties": {
+        "centeredItemNeverCrossesOccupiedChrome": { "const": true },
+        "fullyOccupiedBarKeepsWholeWidth": { "const": true },
+        "emptyFlowChildIsFreeRoom": { "const": true },
+        "itemWiderThanBandStartsAtBandLeft": { "const": true },
+        "topMiddleBelongsToCenteredCluster": { "const": true },
+        "footerTrailingOrder": { "const": ["presence", "hubConnection", "bottomRight"] },
+        "mobileNavbarOmitsDesktopCenterControls": { "const": true },
+        "mobileFooterKeepsHubConnection": { "const": true },
+        "dockCapDepthUsesControlAndPadding": { "const": true },
+        "exampleControlWidthUsesRootRem": { "const": true },
+        "exampleControlWidthFeedsReservationAndPaint": { "const": true },
+        "taskManagerLabelUsesPanelToggleVocabulary": { "const": true }
+      }
+    },
+    "occupancy": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "childElementCount", "textContent", "occupies"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "childElementCount": { "type": "integer", "minimum": 0 },
+          "textContent": { "type": "string" },
+          "occupies": { "type": "boolean" }
+        }
+      }
+    },
+    "bands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "width", "occupied", "band"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "width": { "type": "number", "exclusiveMinimum": 0 },
+          "occupied": { "type": "array", "items": { "$ref": "#/$defs/Span" } },
+          "band": { "$ref": "#/$defs/Span" }
+        }
+      }
+    },
+    "placements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "width", "band", "contentWidth", "left"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "width": { "type": "number", "exclusiveMinimum": 0 },
+          "band": { "$ref": "#/$defs/Span" },
+          "contentWidth": { "type": "number", "minimum": 0 },
+          "left": { "type": "number" }
+        }
+      }
+    },
+    "dockCapMetrics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "spacing", "navbarHeightUiSpacing", "controlHeightUiSpacing", "paddingUiSpacing", "navbarHeight", "controlHeight", "capDepth"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "spacing": { "type": "number", "exclusiveMinimum": 0 },
+          "navbarHeightUiSpacing": { "type": "number", "exclusiveMinimum": 0 },
+          "controlHeightUiSpacing": { "type": "number", "exclusiveMinimum": 0 },
+          "paddingUiSpacing": { "type": "number", "minimum": 0 },
+          "navbarHeight": { "type": "number", "exclusiveMinimum": 0 },
+          "controlHeight": { "type": "number", "exclusiveMinimum": 0 },
+          "capDepth": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      }
+    },
+    "exampleControlMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controlId", "productionRootRemPixels", "minimumRem", "maximumRem", "forbidPostLayoutXOffset", "cases"],
+      "properties": {
+        "controlId": { "const": "playground.navbar.fixture" },
+        "productionRootRemPixels": { "const": 16 },
+        "minimumRem": { "const": 12 },
+        "maximumRem": { "const": 28 },
+        "forbidPostLayoutXOffset": { "const": true },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "allOf": [
+            { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "minimumDefaultRoot" } } } },
+            { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "maximumDefaultRoot" } } } },
+            { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "minimumCustomRoot" } } } },
+            { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "intermediateCustomRoot" } } } },
+            { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "maximumCustomRoot" } } } }
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "rootRemPixels", "availablePixels", "expectedPixels", "expectedReservationPixels", "expectedPaintPixels"],
+            "properties": {
+              "id": { "enum": ["minimumDefaultRoot", "maximumDefaultRoot", "minimumCustomRoot", "intermediateCustomRoot", "maximumCustomRoot"] },
+              "name": { "type": "string", "minLength": 1 },
+              "rootRemPixels": { "type": "number", "exclusiveMinimum": 0 },
+              "availablePixels": { "type": "number", "minimum": 0 },
+              "expectedPixels": { "type": "number", "exclusiveMinimum": 0 },
+              "expectedReservationPixels": { "type": "number", "exclusiveMinimum": 0 },
+              "expectedPaintPixels": { "type": "number", "exclusiveMinimum": 0 }
+            },
+            "oneOf": [
+              {
+                "properties": {
+                  "id": { "const": "minimumDefaultRoot" },
+                  "rootRemPixels": { "const": 16 },
+                  "availablePixels": { "const": 110.179 },
+                  "expectedPixels": { "const": 192 },
+                  "expectedReservationPixels": { "const": 192 },
+                  "expectedPaintPixels": { "const": 192 }
+                }
+              },
+              {
+                "properties": {
+                  "id": { "const": "maximumDefaultRoot" },
+                  "rootRemPixels": { "const": 16 },
+                  "availablePixels": { "const": 720 },
+                  "expectedPixels": { "const": 448 },
+                  "expectedReservationPixels": { "const": 448 },
+                  "expectedPaintPixels": { "const": 448 }
+                }
+              },
+              {
+                "properties": {
+                  "id": { "const": "minimumCustomRoot" },
+                  "rootRemPixels": { "const": 20 },
+                  "availablePixels": { "const": 110.179 },
+                  "expectedPixels": { "const": 240 },
+                  "expectedReservationPixels": { "const": 240 },
+                  "expectedPaintPixels": { "const": 240 }
+                }
+              },
+              {
+                "properties": {
+                  "id": { "const": "intermediateCustomRoot" },
+                  "rootRemPixels": { "const": 20 },
+                  "availablePixels": { "const": 360 },
+                  "expectedPixels": { "const": 360 },
+                  "expectedReservationPixels": { "const": 360 },
+                  "expectedPaintPixels": { "const": 360 }
+                }
+              },
+              {
+                "properties": {
+                  "id": { "const": "maximumCustomRoot" },
+                  "rootRemPixels": { "const": 20 },
+                  "availablePixels": { "const": 720 },
+                  "expectedPixels": { "const": 560 },
+                  "expectedReservationPixels": { "const": 560 },
+                  "expectedPaintPixels": { "const": 560 }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "taskManagerFooter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "anchor", "order", "iconId", "labels"],
+      "properties": {
+        "id": { "const": "os.task-manager" },
+        "anchor": { "const": "bottomRight" },
+        "order": { "const": 2 },
+        "iconId": { "const": "cpu" },
+        "labels": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["locale", "key", "label"],
+            "properties": {
+              "locale": { "enum": ["en", "de"] },
+              "key": { "const": "ui.panelToggle.taskManager" },
+              "label": { "type": "string", "minLength": 1 }
+            },
+            "oneOf": [
+              {
+                "properties": {
+                  "locale": { "const": "en" },
+                  "key": { "const": "ui.panelToggle.taskManager" },
+                  "label": { "const": "Tasks" }
+                }
+              },
+              {
+                "properties": {
+                  "locale": { "const": "de" },
+                  "key": { "const": "ui.panelToggle.taskManager" },
+                  "label": { "const": "Aufgaben" }
+                }
+              }
+            ]
+          },
+          "allOf": [
+            { "contains": { "type": "object", "required": ["locale"], "properties": { "locale": { "const": "en" } } } },
+            { "contains": { "type": "object", "required": ["locale"], "properties": { "locale": { "const": "de" } } } }
+          ]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["left", "right"],
+      "properties": {
+        "left": { "type": "number" },
+        "right": { "type": "number" }
+      }
+    }
+  }
+}

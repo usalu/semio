@@ -19,8 +19,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeMoisture
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change moisture mu interior to {}", self.new_moisture_mu_interior)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change moisture mu interior to {}", self.new_moisture_mu_interior), &format!("Feuchtenmuinnen auf {} ändern", self.new_moisture_mu_interior))
     }
 }
 //#endregion 🔖️Payload

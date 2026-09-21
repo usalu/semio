@@ -20,8 +20,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetSnapshot 
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {
         agg_inverse(&TiffBaselineMutation::SetSnapshot(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-snapshot".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

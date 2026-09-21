@@ -29,8 +29,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Conn
         crate::standards::v1::subsets::any::schema::mutations::connect_synapse::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Connect synapse \"{}\"", self.synapse.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Connect synapse \"{}\"", self.synapse.id), &format!("Synapse \"{}\" verbinden", self.synapse.id))
     }
 
     fn target(&self) -> Vec<String> {

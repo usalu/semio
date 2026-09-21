@@ -1,0 +1,220 @@
+{
+  "title": "presented input authority follows accepted pixels",
+  "why": "A completed chrome walk is a render candidate, not a presentation. Pointer routing remains owned by the last accepted frame until the successor packet is accepted; aborting a packet must discard its candidate without ever making invisible controls interactive.",
+  "controls": {
+    "presented": {
+      "id": "fixture.presented",
+      "rect": [
+        0,
+        0,
+        10,
+        10
+      ]
+    },
+    "candidate": {
+      "id": "fixture.candidate",
+      "rect": [
+        20,
+        0,
+        10,
+        10
+      ]
+    }
+  },
+  "replacement": {
+    "presented": {
+      "id": "fixture.same",
+      "rect": [
+        40,
+        0,
+        10,
+        10
+      ],
+      "binding": "presented-binding"
+    },
+    "moved": {
+      "id": "fixture.same",
+      "rect": [
+        60,
+        0,
+        10,
+        10
+      ],
+      "binding": "moved-binding"
+    },
+    "overlap": {
+      "id": "fixture.overlap",
+      "rect": [
+        40,
+        0,
+        10,
+        10
+      ],
+      "binding": "overlap-binding"
+    }
+  },
+  "rows": [
+    {
+      "id": "a-completed-chrome-walk-remains-candidate-while-presentation-is-pending",
+      "operations": [
+        "presentInitial",
+        "completeCandidateChrome",
+        "pressCandidate",
+        "pressPresented"
+      ],
+      "expect": {
+        "routed": [
+          "fixture.presented"
+        ],
+        "refused": [
+          "fixture.candidate"
+        ],
+        "presentedGeneration": 1
+      }
+    },
+    {
+      "id": "accepting-the-successor-atomically-replaces-the-input-authority",
+      "operations": [
+        "presentInitial",
+        "completeCandidateChrome",
+        "acceptCandidate",
+        "pressCandidate",
+        "pressPresented"
+      ],
+      "expect": {
+        "routed": [
+          "fixture.candidate"
+        ],
+        "refused": [
+          "fixture.presented"
+        ],
+        "presentedGeneration": 2
+      }
+    },
+    {
+      "id": "aborting-the-successor-preserves-the-old-presented-input-authority",
+      "operations": [
+        "presentInitial",
+        "completeCandidateChrome",
+        "abortCandidate",
+        "pressCandidate",
+        "pressPresented"
+      ],
+      "expect": {
+        "routed": [
+          "fixture.presented"
+        ],
+        "refused": [
+          "fixture.candidate"
+        ],
+        "presentedGeneration": 1
+      }
+    }
+  ],
+  "laws": [
+    "a-completed-chrome-registry-is-not-pointer-authority-before-its-pixels-are-presented",
+    "presentation-acceptance-atomically-replaces-hits-and-their-owner-map",
+    "presentation-abort-never-clears-or-replaces-the-last-presented-input-authority",
+    "a-moved-same-key-control-keeps-its-presented-position-and-binding-until-acceptance",
+    "successive-presentations-at-the-same-input-generation-receive-distinct-candidate-witnesses",
+    "a-pending-select-successor-cannot-open-or-dispatch-from-candidate-semantics",
+    "a-pending-number-stepper-successor-cannot-use-candidate-value-step-or-binding",
+    "keyboard-focus-and-tab-stay-on-the-presented-retained-revision",
+    "accessibility-projection-and-actions-stay-on-the-presented-retained-revision",
+    "presented-input-mutation-invalidates-a-candidate-built-from-an-older-interaction-epoch"
+  ],
+  "retainedControls": {
+    "select": {
+      "presented": {
+        "key": "settings.theme",
+        "rect": [
+          0,
+          20,
+          120,
+          24
+        ],
+        "value": "system",
+        "binding": "setAppearance.presented",
+        "items": [
+          "system",
+          "dark"
+        ],
+        "id": "fixture.select.presented"
+      },
+      "candidate": {
+        "key": "settings.theme",
+        "rect": [
+          140,
+          20,
+          120,
+          24
+        ],
+        "value": "dark",
+        "binding": "setAppearance.candidate",
+        "items": [
+          "dark",
+          "light"
+        ],
+        "id": "fixture.select.candidate"
+      }
+    },
+    "numberStepper": {
+      "presented": {
+        "key": "settings.scale",
+        "rect": [
+          0,
+          56,
+          120,
+          24
+        ],
+        "value": 2,
+        "step": 1,
+        "binding": "setScale.presented",
+        "id": "fixture.numberStepper.presented"
+      },
+      "candidate": {
+        "key": "settings.scale",
+        "rect": [
+          140,
+          56,
+          120,
+          24
+        ],
+        "value": 10,
+        "step": 5,
+        "binding": "setScale.candidate",
+        "id": "fixture.numberStepper.candidate"
+      }
+    },
+    "keyboard": {
+      "presented": {
+        "key": "settings.presented.focus",
+        "binding": "commit.presented",
+        "id": "fixture.keyboard.presented"
+      },
+      "candidate": {
+        "key": "settings.candidate.focus",
+        "binding": "commit.candidate",
+        "id": "fixture.keyboard.candidate"
+      }
+    },
+    "accessibility": {
+      "presented": {
+        "key": "settings.theme",
+        "role": "combobox",
+        "label": "Theme",
+        "value": "system",
+        "binding": "setAppearance.presented",
+        "id": "fixture.accessibility.presented"
+      },
+      "candidate": {
+        "key": "settings.theme",
+        "role": "combobox",
+        "label": "Appearance",
+        "value": "dark",
+        "binding": "setAppearance.candidate",
+        "id": "fixture.accessibility.candidate"
+      }
+    }
+  }
+}

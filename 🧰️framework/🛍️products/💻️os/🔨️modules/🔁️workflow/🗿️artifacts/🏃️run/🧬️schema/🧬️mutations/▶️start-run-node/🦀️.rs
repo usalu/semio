@@ -20,8 +20,8 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for StartRunNode {
     fn inverse(&self, _base: &RunArtifact) -> Vec<RunMutation> {
         Vec::new()
     }
-    fn label(&self) -> String {
-        format!("Start run node {}", self.node_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Start run node {}", self.node_id), &format!("Laufknoten {} starten", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node_id.clone()]

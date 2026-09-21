@@ -41,6 +41,10 @@ pub mod db_index;
 #[path = "../../🗄️storage/🦀️.rs"]
 pub mod db_storage;
 
+#[cfg(all(not(target_arch = "wasm32"), any(feature = "postgres", feature = "neo4j")))]
+#[path = "../../🗄️storage/🧵️driver-runtime/🦀️.rs"]
+pub mod db_storage_driver_runtime;
+
 #[cfg(feature = "postgres")]
 #[path = "../../🗄️storage/🐘️postgres/🦀️.rs"]
 pub mod db_storage_postgres;

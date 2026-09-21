@@ -27,8 +27,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReplaceMac
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Replace capabilities of machine \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace capabilities of machine \"{}\"", self.id), &format!("Fähigkeiten von Maschine \"{}\" ersetzen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

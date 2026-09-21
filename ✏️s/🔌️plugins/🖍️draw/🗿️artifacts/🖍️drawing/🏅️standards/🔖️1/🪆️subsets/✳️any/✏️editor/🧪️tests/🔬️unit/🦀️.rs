@@ -1,9 +1,34 @@
 pub(crate) mod context {
     use super::super::*;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
-    use semio_framework_plugin::{ActionMeta, App, EditorApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type DrawingApp = VcsArtifactApp<EditorApp<DrawingPlayApp>>;
+
+    pub struct DrawingAppFixture(DrawingApp);
+
+    impl std::ops::Deref for DrawingAppFixture {
+        type Target = DrawingApp;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl std::ops::DerefMut for DrawingAppFixture {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for DrawingAppFixture {
+        fn drop(&mut self) {
+            if std::thread::panicking() || self.0.close_terminal_is_empty() {
+                return;
+            }
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
+        }
+    }
 
     /// ✏️ `DrawingPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<DrawingPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -11,8 +36,10 @@ pub(crate) mod context {
     /// `PluginBuilder::editor::<DrawingPlayApp>` builds it.
 
     /// 🧪️ Draw fixtures carry the production manifest and its exact registered factories.
-    pub async fn drawing_app() -> DrawingApp {
-        new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }).await
+    pub async fn drawing_app() -> DrawingAppFixture {
+        let mut app = new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }).await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        DrawingAppFixture(app)
     }
 
     /// 🧰️ Captures the host-owned active utility in one operation's invocation context.
@@ -28,7 +55,7 @@ use crate::schema::{default_drawing_document, layer_id, semio_drawing_example_js
 use crate::DrawingLayerNode;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{artifact_app_laws as artifact_laws, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
-use context::{drawing_app, meta_with_utility, DrawingApp};
+use context::{drawing_app, meta_with_utility, DrawingApp, DrawingAppFixture};
 
 fn canvas_scene(tree: semio_framework_plugin::ComponentTree) -> semio_framework_plugin::Canvas2dScene {
     let decoded = match &tree.root.component {
@@ -55,6 +82,8 @@ fn drawing_envelope_wire() -> Vec<u8> {
     snapshot.assets.insert("image-a".into(), crate::DrawingImageAsset { mime: "image/png".into(), data: "AA==".into(), width: Some(1), height: Some(1) });
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let mutation = DrawingMutation::RenameLayer(crate::mutations::RenameLayer { layer_id: retained_target.clone(), new_name: "Retained Path".into() });
+    let mutation_hex = crate::spr::encode_op(&mutation).expect("Drawing fixture mutation pack").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": DRAWING_DOCUMENT_SCHEMA,
         "id": "drawing-retained-load",
@@ -63,7 +92,7 @@ fn drawing_envelope_wire() -> Vec<u8> {
             "edits": [{
                 "id": "drawing-retained-edit-final",
                 "actor": "drawing-retained-actor",
-                "forwards": [DrawingMutation::RenameLayer(crate::mutations::RenameLayer { layer_id: retained_target.clone(), new_name: "Retained Path".into() })],
+                "forwards": [mutation_hex],
                 "inverse": [],
                 "sequenceNumber": 1,
                 "startedAt": "2026-08-23T00:00:00.000Z"
@@ -126,7 +155,8 @@ async fn drawing_live_envelope_submit_recursive_clone_swap_displaced_store_and_e
     let base_generation = app.artifact_generation_now();
     let handle = admit_drawing_envelope(&mut app, &drawing_envelope_wire());
     assert_eq!(handle.generation, base_generation);
-    assert_eq!(drive_drawing_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    let poll = drive_drawing_load(&mut app, handle);
+    assert_eq!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready, "valid retained Drawing load refusal: {:?}", app.artifact_store_replacement_refusal(handle));
     assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
     let projection = app.snapshot().expect("Drawing retained mutation publication");
     let renamed = crate::schema::find_drawing_layer(&projection, &crate::schema::create_drawing_id("path", b"Path")).expect("retained Drawing target");
@@ -172,9 +202,10 @@ async fn drawing_live_initializer_candidate_container_commit_ack_cancel_stale_pr
 
     let mut app = drawing_app().await;
     let handle = admit_drawing_envelope(&mut app, &drawing_envelope_wire());
-    assert_eq!(drive_drawing_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+    let poll = drive_drawing_load(&mut app, handle);
+    assert_eq!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready, "valid staged Drawing load refusal: {:?}", app.artifact_store_replacement_refusal(handle));
     let stale = semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle { operation: handle.operation, generation: semio_framework_job::Generation(handle.generation.0 + 1) };
-    assert!(app.acknowledge_artifact_store_replacement(stale).is_err(), "stale ACK cannot retire the exact committed owner");
+    assert!(!app.acknowledge_artifact_store_replacement(stale).expect("stale Drawing ACK is refused without retiring the exact owner"));
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("exact staged Drawing ACK"));
     assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate staged Drawing ACK is idempotent"));
 }
@@ -257,8 +288,10 @@ async fn catalogue_panel_lists_boolean_operations() {
 async fn add_layer_action_emits_op_and_appends_path() {
     let mut app = drawing_app().await;
     let before = app.snapshot().unwrap().layers.len();
-    let result = app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &artifact_laws::meta("local")).await.expect("add layer");
-    assert_eq!(result.mutations.len(), 1);
+    let meta = artifact_laws::meta("local");
+    let (result, receipt) = settled(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &meta).await;
+    assert!(result.mutations.is_empty(), "the migrated route retains its operation until publication");
+    assert_one_artifact_publication(&receipt);
     let projection = app.snapshot().unwrap();
     assert_eq!(projection.layers.len(), before + 1);
     assert!(projection.layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Shape(shape) if shape.shape_kind == "rect")));
@@ -268,8 +301,10 @@ async fn add_layer_action_emits_op_and_appends_path() {
 async fn patch_layers_opacity_emits_granular_operation() {
     let mut app = drawing_app().await;
     let id = first_layer_id(&app);
-    let result = app.dispatch_typed(DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &artifact_laws::meta("local")).await.expect("patch");
-    assert_eq!(result.mutations.len(), 1);
+    let meta = artifact_laws::meta("local");
+    let (result, receipt) = settled(&mut app, DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &meta).await;
+    assert!(result.mutations.is_empty(), "the migrated route retains its operation until publication");
+    assert_one_artifact_publication(&receipt);
     let projection = app.snapshot().unwrap();
     assert!((crate::schema::layer_base(&projection.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
 }
@@ -278,8 +313,10 @@ async fn patch_layers_opacity_emits_granular_operation() {
 async fn patch_layer_name_emits_op_and_changes_projection() {
     let mut app = drawing_app().await;
     let id = first_layer_id(&app);
-    let result = app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }), &artifact_laws::meta("local")).await.expect("patch");
-    assert_eq!(result.mutations.len(), 1);
+    let meta = artifact_laws::meta("local");
+    let (result, receipt) = settled(&mut app, DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }), &meta).await;
+    assert!(result.mutations.is_empty(), "the migrated route retains its operation until publication");
+    assert_one_artifact_publication(&receipt);
     assert_eq!(crate::schema::layer_base(&app.snapshot().unwrap().layers[0]).name, "Renamed");
 }
 
@@ -287,7 +324,8 @@ async fn patch_layer_name_emits_op_and_changes_projection() {
 async fn host_utility_change_clears_scratch_and_emits_no_history_entry() {
     let mut app = drawing_app().await;
     let shape_meta = meta_with_utility("shapeRect");
-    app.dispatch_typed(
+    settled(
+        &mut app,
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 10.0,
             y: 10.0,
@@ -303,15 +341,14 @@ async fn host_utility_change_clears_scratch_and_emits_no_history_entry() {
         }),
         &shape_meta,
     )
-    .await
-    .expect("down");
+    .await;
     let before = app.snapshot().unwrap();
     let pen_meta = meta_with_utility("pen");
     let pen_view = pen_meta.view_state.as_ref().expect("host view");
     let tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, pen_view).await.expect("render after utility change");
     artifact_laws::project_and_retire_fixture_tree(tree).expect("retire render tree");
     assert_eq!(app.snapshot().unwrap(), before, "utility switching does not mutate the document");
-    let up = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &pen_meta).await.expect("up");
+    let (up, _) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &pen_meta).await;
     assert!(up.mutations.is_empty(), "the in-progress shape draft was cleared on utility switch");
 }
 
@@ -319,10 +356,13 @@ async fn host_utility_change_clears_scratch_and_emits_no_history_entry() {
 async fn combine_boolean_creates_boolean_layer() {
     let mut app = drawing_app().await;
     let first_id = first_layer_id(&app);
-    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &artifact_laws::meta("local")).await.expect("add rect");
+    let meta = artifact_laws::meta("local");
+    let (_, add_receipt) = settled(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &meta).await;
+    assert_one_artifact_publication(&add_receipt);
     let second_id = last_layer_id(&app);
-    let result = app.dispatch_typed(DrawingCommand::CombineBoolean(combine_boolean::CombineBoolean { operation: "union".into(), ids: vec![first_id, second_id] }), &artifact_laws::meta("local")).await.expect("combine");
-    assert_eq!(result.mutations.len(), 1);
+    let (result, receipt) = settled(&mut app, DrawingCommand::CombineBoolean(combine_boolean::CombineBoolean { operation: "union".into(), ids: vec![first_id, second_id] }), &meta).await;
+    assert!(result.mutations.is_empty(), "the migrated route retains its operation until publication");
+    assert_one_artifact_publication(&receipt);
     assert!(app.snapshot().unwrap().layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Boolean(_))));
 }
 
@@ -364,7 +404,7 @@ async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
     assert!(receipt.effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { utility_id, .. } if utility_id == "selectDirect")), "the canvas returns to select-direct: {:?}", receipt.effects);
     assert_eq!(drawing_active_utility(&ViewModel { active_utility_id: Some("pen".into()), ..Default::default() }), "pen", "the flat field still resolves when no map entry addresses the window");
     assert_eq!(drawing_active_utility(&ViewModel::default()), DRAWING_DEFAULT_UTILITY);
-    artifact_laws::close_registered_fixture_app(&mut app);
+    artifact_laws::close_registered_fixture_app(&mut *app);
 }
 
 /// 📤️ `exportDocument` (palette default `pdf`) hands the host one `DownloadMediaExport` whose base64
@@ -384,14 +424,15 @@ async fn export_document_downloads_a_real_pdf_of_the_document() {
     assert_eq!(read.pages.len(), 1);
     let (_result, receipt) = settled(&mut app, DrawingCommand::ExportDocument(export_document::ExportDocument { format: "svg".into() }), &meta).await;
     assert!(matches!(receipt.effects.as_slice(), [Effect::DownloadMediaExport { mime_type, data, encoding: None, .. }] if mime_type == "image/svg+xml" && data.starts_with("<svg")), "{:?}", receipt.effects);
-    artifact_laws::close_registered_fixture_app(&mut app);
+    artifact_laws::close_registered_fixture_app(&mut *app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
     let mut app = drawing_app().await;
     let utility_meta = meta_with_utility("shapeRect");
-    app.dispatch_typed(
+    settled(
+        &mut app,
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 500.0,
             y: 400.0,
@@ -407,16 +448,16 @@ async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
         }),
         &utility_meta,
     )
-    .await
-    .expect("down");
-    app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, samples: Vec::new() }), &utility_meta).await.expect("move");
-    let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await.expect("up");
-    assert_eq!(result.mutations.len(), 1, "a shape drag commits as one edit adding exactly the layer");
+    .await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, samples: Vec::new() }), &utility_meta).await;
+    let (result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await;
+    assert!(result.mutations.is_empty(), "the migrated gesture retains its operation until publication");
+    assert_one_artifact_publication(&receipt);
     let projection = app.snapshot().unwrap();
     assert!(projection.layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Shape(shape) if shape.shape_kind == "rect")));
     assert!(
         matches!(
-            result.requested_effects.as_slice(),
+            receipt.effects.as_slice(),
             [Effect::SetActiveUtility { window_id, utility_id }] if window_id == DRAWING_PLAY_WINDOW_CANVAS && utility_id == "selectDirect"
         ),
         "the canvas returns to select-direct via a host effect, not a document operation"
@@ -427,7 +468,8 @@ async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
 async fn pen_draft_commits_path_layer_on_enter() {
     let mut app = drawing_app().await;
     let utility_meta = meta_with_utility("pen");
-    app.dispatch_typed(
+    settled(
+        &mut app,
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 400.0,
             y: 300.0,
@@ -443,9 +485,9 @@ async fn pen_draft_commits_path_layer_on_enter() {
         }),
         &utility_meta,
     )
-    .await
-    .expect("p1");
-    app.dispatch_typed(
+    .await;
+    settled(
+        &mut app,
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 500.0,
             y: 300.0,
@@ -461,13 +503,13 @@ async fn pen_draft_commits_path_layer_on_enter() {
         }),
         &utility_meta,
     )
-    .await
-    .expect("p2");
-    let result = app.dispatch_typed(DrawingCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}), &utility_meta).await.expect("commit");
-    assert_eq!(result.mutations.len(), 1, "the draft commits as exactly one AddLayer edit");
+    .await;
+    let (result, receipt) = settled(&mut app, DrawingCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}), &utility_meta).await;
+    assert!(result.mutations.is_empty(), "the migrated gesture retains its operation until publication");
+    assert_one_artifact_publication(&receipt);
     let projection = app.snapshot().unwrap();
     assert!(projection.layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Path(path) if !path.segments.is_empty())));
-    assert!(matches!(result.requested_effects.as_slice(), [Effect::SetActiveUtility { utility_id, .. }] if utility_id == "selectDirect"));
+    assert!(matches!(receipt.effects.as_slice(), [Effect::SetActiveUtility { utility_id, .. }] if utility_id == "selectDirect"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -475,7 +517,8 @@ async fn canvas_escape_cancels_draft_without_committing() {
     let mut app = drawing_app().await;
     let before = app.snapshot().unwrap().layers.len();
     let utility_meta = meta_with_utility("pen");
-    app.dispatch_typed(
+    settled(
+        &mut app,
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
             x: 400.0,
             y: 300.0,
@@ -491,9 +534,8 @@ async fn canvas_escape_cancels_draft_without_committing() {
         }),
         &utility_meta,
     )
-    .await
-    .expect("p1");
-    let result = app.dispatch_typed(DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape {}), &utility_meta).await.expect("escape");
+    .await;
+    let (result, _) = settled(&mut app, DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape {}), &utility_meta).await;
     assert!(result.mutations.is_empty());
     assert_eq!(app.snapshot().unwrap().layers.len(), before);
 }
@@ -501,19 +543,18 @@ async fn canvas_escape_cancels_draft_without_committing() {
 /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C: the `interactionSelect` a gesture emits as
 /// `Effect::ReplayShellCommand` is folded in-reactor by the typed-operation ladder, so these two
 /// selection tests witness the selection snapshot itself instead of the effect. They need what the
-/// plugin host supplies and the bare `drawing_app()` does not: a bound live instance, a `ViewModel`
-/// naming the canvas window (`setCamera` addresses it) with the active utility, and the host's
+/// plugin host supplies: the self-closing `drawing_app()` binds the live instance, while this helper
+/// adds a `ViewModel` naming the canvas window (`setCamera` addresses it) with the active utility and the host's
 /// settle protocol after every dispatch (`settle_registered_typed_operation`) — exactly
 /// `🎚️config/🧪️tests/🔬️window-ownership`'s recipe.
-async fn inline_selection_app() -> (DrawingApp, semio_framework_plugin::ActionMeta) {
+async fn inline_selection_app() -> (DrawingAppFixture, semio_framework_plugin::ActionMeta) {
     use semio_framework_plugin::{ViewWindowInstance, WindowConfigOwner};
-    let mut app = drawing_app().await;
+    let app = drawing_app().await;
     let view = ViewModel {
         window_instances: vec![ViewWindowInstance { id: "drawing-canvas".into(), window_kind_id: crate::editor::drawing::modes::edit::windows::canvas::config::DrawingCanvasWindowConfigOwner::WINDOW_KIND_ID.into() }],
         ..Default::default()
     };
     let meta = semio_framework_plugin::ActionMeta { view_state: Some(view.for_window_instance("drawing-canvas").expect("canvas window instance")), ..artifact_laws::meta("local") };
-    app.bind_instance_id(meta.instance_id).await;
     (app, meta)
 }
 
@@ -524,6 +565,182 @@ async fn settled(app: &mut DrawingApp, command: DrawingCommand, meta: &semio_fra
     let result = app.dispatch_typed(command, meta).await.unwrap_or_else(|fault| panic!("dispatch {command_id}: {fault:?}"));
     let receipt = artifact_laws::settle_registered_typed_operation(app, meta.instance_id).await.unwrap_or_else(|fault| panic!("retained publication of {command_id} settles: {fault:?}"));
     (result, receipt)
+}
+
+fn assert_one_artifact_publication(receipt: &artifact_laws::TypedOperationFixtureReceipt) {
+    assert_artifact_publication_units(receipt, 1);
+}
+
+fn assert_artifact_publication_units(receipt: &artifact_laws::TypedOperationFixtureReceipt, expected_completions: usize) {
+    assert_eq!(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::Artifact).count(), 1, "one retained artifact result page: {:?}", receipt.lanes);
+    assert_eq!(receipt.completions, expected_completions, "every retained component operation reaches one exact terminal witness");
+    assert_eq!(receipt.completion_operations.len(), expected_completions, "every terminal witness names its component operation");
+    assert_eq!(receipt.revisions.len(), expected_completions, "every terminal witness carries its committed revision");
+    let operations = receipt.completion_operations.iter().copied().collect::<std::collections::HashSet<_>>();
+    assert_eq!(operations.len(), expected_completions, "component operation terminal witnesses are distinct: {:?}", receipt.completion_operations);
+}
+
+fn drawing_composite_shape_meta() -> semio_framework_plugin::ActionMeta {
+    use semio_framework_plugin::{ViewSessionIdentity, ViewWindowInstance};
+    let view = ViewModel {
+        active_utility_by_window_id: std::collections::HashMap::from([(DRAWING_PLAY_WINDOW_CANVAS.to_string(), "shapeRect".to_string())]),
+        focused_window_id: Some(DRAWING_PLAY_WINDOW_CANVAS.into()),
+        window_instances: vec![ViewWindowInstance { id: DRAWING_PLAY_WINDOW_CANVAS.into(), window_kind_id: DRAWING_PLAY_WINDOW_CANVAS.into() }],
+        session_identity: Some(ViewSessionIdentity { user_id: "draw-repeat-owner".into(), display_name: "Draw Repeat Owner".into() }),
+        ..Default::default()
+    };
+    semio_framework_plugin::ActionMeta { view_state: view.for_window_instance(DRAWING_PLAY_WINDOW_CANVAS), ..artifact_laws::meta("local") }
+}
+
+fn drawing_gesture_observation(meta: &semio_framework_plugin::ActionMeta, receipt: &artifact_laws::TypedOperationFixtureReceipt) -> String {
+    let view = meta.view_state.as_ref().expect("drawing composite view");
+    format!(
+        "utility={} window={:?} session={:?} operations={:?} revisions={:?} lanes={:?} completions={}",
+        drawing_active_utility(view),
+        view.window_id,
+        view.session_identity,
+        receipt.completion_operations,
+        receipt.revisions,
+        receipt.lanes,
+        receipt.completions
+    )
+}
+
+fn has_direct_select_reset(receipt: &artifact_laws::TypedOperationFixtureReceipt) -> bool {
+    receipt.effects.iter().any(|effect| {
+        matches!(effect, Effect::SetActiveUtility { window_id, utility_id } if window_id == DRAWING_PLAY_WINDOW_CANVAS && utility_id == DRAWING_DEFAULT_UTILITY)
+    })
+}
+
+/// 🖱️ Draw10's real retained-owner order: idle hover, rectangle drag, published revision, a fresh
+/// per-window view rearm, then one non-overlapping rectangle drag through the same production owner.
+#[semio_framework_async_macros::async_test]
+async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct_layers_and_reset_twice() {
+    let mut app = drawing_app().await;
+    let first_meta = drawing_composite_shape_meta();
+    let first_view = first_meta.view_state.as_ref().expect("first drawing-composite view");
+    let initial_tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, first_view).await.expect("initial drawing-composite render");
+    artifact_laws::project_and_retire_fixture_tree(initial_tree).expect("retire initial drawing-composite tree");
+    let before = app.snapshot().expect("initial Drawing snapshot").layers.len();
+    let width = 1587.0;
+    let height = 907.0;
+
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 396.75, y: 317.45, width, height, samples: Vec::new() }), &first_meta).await;
+    settled(
+        &mut app,
+        DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+            x: 396.75,
+            y: 317.45,
+            width,
+            height,
+            shift: false,
+            ctrl: false,
+            meta: false,
+            generation: None,
+            checkpoint_completed_work: None,
+            checkpoint_pending_work: None,
+            ..Default::default()
+        }),
+        &first_meta,
+    )
+    .await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 603.06, y: 453.5, width, height, samples: Vec::new() }), &first_meta).await;
+    let (_first_up, first_receipt) = settled(
+        &mut app,
+        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 603.06, y: 453.5, width, height, shift: false, ctrl: false, meta: false, cancelled: false }),
+        &first_meta,
+    )
+    .await;
+    let first_observation = drawing_gesture_observation(&first_meta, &first_receipt);
+    let first_layer_count = app.snapshot().expect("first published Drawing snapshot").layers.len();
+    let first_reset = has_direct_select_reset(&first_receipt);
+
+    let second_meta = drawing_composite_shape_meta();
+    let second_view = second_meta.view_state.as_ref().expect("fresh post-publication drawing-composite view");
+    let refreshed_tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, second_view).await.expect("post-publication drawing-composite render");
+    artifact_laws::project_and_retire_fixture_tree(refreshed_tree).expect("retire post-publication drawing-composite tree");
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 825.24, y: 317.45, width, height, samples: Vec::new() }), &second_meta).await;
+    settled(
+        &mut app,
+        DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+            x: 825.24,
+            y: 317.45,
+            width,
+            height,
+            shift: false,
+            ctrl: false,
+            meta: false,
+            generation: None,
+            checkpoint_completed_work: None,
+            checkpoint_pending_work: None,
+            ..Default::default()
+        }),
+        &second_meta,
+    )
+    .await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1031.55, y: 453.5, width, height, samples: Vec::new() }), &second_meta).await;
+    let (_second_up, second_receipt) = settled(
+        &mut app,
+        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 1031.55, y: 453.5, width, height, shift: false, ctrl: false, meta: false, cancelled: false }),
+        &second_meta,
+    )
+    .await;
+    let second_observation = drawing_gesture_observation(&second_meta, &second_receipt);
+    let second_reset = has_direct_select_reset(&second_receipt);
+    let second_layer_count = app.snapshot().expect("twice-published Drawing snapshot").layers.len();
+
+    let third_meta = drawing_composite_shape_meta();
+    let third_view = third_meta.view_state.as_ref().expect("fresh identical-geometry drawing-composite view");
+    let third_tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, third_view).await.expect("identical-geometry drawing-composite render");
+    artifact_laws::project_and_retire_fixture_tree(third_tree).expect("retire identical-geometry drawing-composite tree");
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 825.24, y: 317.45, width, height, samples: Vec::new() }), &third_meta).await;
+    settled(
+        &mut app,
+        DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
+            x: 825.24,
+            y: 317.45,
+            width,
+            height,
+            shift: false,
+            ctrl: false,
+            meta: false,
+            generation: None,
+            checkpoint_completed_work: None,
+            checkpoint_pending_work: None,
+            ..Default::default()
+        }),
+        &third_meta,
+    )
+    .await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1031.55, y: 453.5, width, height, samples: Vec::new() }), &third_meta).await;
+    let (_third_up, third_receipt) = settled(
+        &mut app,
+        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 1031.55, y: 453.5, width, height, shift: false, ctrl: false, meta: false, cancelled: false }),
+        &third_meta,
+    )
+    .await;
+    let third_observation = drawing_gesture_observation(&third_meta, &third_receipt);
+    let third_reset = has_direct_select_reset(&third_receipt);
+
+    let projection = app.snapshot().expect("three-times-published Drawing snapshot");
+    artifact_laws::close_registered_fixture_app(&mut *app);
+    assert_eq!(first_layer_count, before + 1, "first rectangle publication: {first_observation}");
+    assert!(first_reset, "first PointerUp returns its exact drawing-composite utility to Direct Select: {first_observation}");
+    assert!(second_reset, "second PointerUp returns its exact drawing-composite utility to Direct Select: {second_observation}");
+    assert_eq!(second_layer_count, before + 2, "two retained-owner gestures publish two layers; first=[{first_observation}] second=[{second_observation}]");
+    assert!(third_reset, "identical-geometry PointerUp returns its exact drawing-composite utility to Direct Select: {third_observation}");
+    assert_eq!(projection.layers.len(), before + 3, "a separate identical-geometry creation still publishes a third layer; second=[{second_observation}] third=[{third_observation}]");
+    let [DrawingLayerNode::Shape(first), DrawingLayerNode::Shape(second), DrawingLayerNode::Shape(third)] = &projection.layers[before..] else {
+        panic!("all retained-owner additions are shape layers; first=[{first_observation}] second=[{second_observation}] third=[{third_observation}]")
+    };
+    let first_rect = first.rect.as_ref().expect("first rectangle geometry");
+    let second_rect = second.rect.as_ref().expect("second rectangle geometry");
+    let third_rect = third.rect.as_ref().expect("identical rectangle geometry");
+    assert_eq!((first.shape_kind.as_str(), second.shape_kind.as_str(), third.shape_kind.as_str()), ("rect", "rect", "rect"));
+    assert_ne!(first.base.id, second.base.id, "two commits own distinct layer identities; first=[{first_observation}] second=[{second_observation}]");
+    assert!(first_rect.x + first_rect.width < second_rect.x, "the two physical coordinate ranges remain non-overlapping; first={first_rect:?} second={second_rect:?}");
+    assert_eq!(second_rect, third_rect, "the third creation intentionally repeats the second geometry");
+    assert_ne!(second.base.id, third.base.id, "separate identical-geometry creations own distinct identities; second=[{second_observation}] third=[{third_observation}]");
 }
 
 fn with_utility(meta: &semio_framework_plugin::ActionMeta, utility: &str) -> semio_framework_plugin::ActionMeta {
@@ -587,27 +804,27 @@ async fn marquee_select_covers_contained_layer_only() {
     assert!(result.mutations.is_empty(), "a pure marquee-select gesture is not a document operation");
     assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);
     assert_eq!(selected_strokes(&app).await, vec![rect_a_id.clone()], "only the contained rect is selected, not the outside ellipse");
-    artifact_laws::close_registered_fixture_app(&mut app);
+    artifact_laws::close_registered_fixture_app(&mut *app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_camera_writes_runtime_and_emits_no_operations() {
-    let mut app = drawing_app().await;
+    let (mut app, meta) = inline_selection_app().await;
     let before = app.snapshot().expect("projection");
-    let result = app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 5.0, y: 5.0, zoom: 2.0 } }), &artifact_laws::meta("local")).await.expect("camera");
+    let (result, _) = settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 5.0, y: 5.0, zoom: 2.0 } }), &meta).await;
     assert!(result.mutations.is_empty(), "camera is a view action and emits no operations");
     assert_eq!(app.snapshot().expect("projection"), before, "camera never mutates the document");
-    let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).await.expect("render"));
+    let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, meta.view_state.as_ref().expect("addressed canvas view")).await.expect("render"));
     assert_eq!([scene.camera_x, scene.camera_y, scene.zoom], [5.0, 5.0, 2.0]);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
-    let mut app = drawing_app().await;
-    app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 4.0, y: 5.0, zoom: 1.0 } }), &artifact_laws::meta("local")).await.expect("set camera");
-    let result = app.dispatch_typed(DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }), &artifact_laws::meta("local")).await.expect("set camera zoom");
+    let (mut app, meta) = inline_selection_app().await;
+    settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 4.0, y: 5.0, zoom: 1.0 } }), &meta).await;
+    let (result, _) = settled(&mut app, DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }), &meta).await;
     assert!(result.mutations.is_empty(), "camera zoom is a view action and emits no operations");
-    let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).await.expect("render"));
+    let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, meta.view_state.as_ref().expect("addressed canvas view")).await.expect("render"));
     assert_eq!([scene.camera_x, scene.camera_y, scene.zoom], [4.0, 5.0, 3.0]);
 }
 
@@ -615,7 +832,7 @@ async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
 async fn add_layer_undo_round_trip_through_wrapper() {
     let mut app = drawing_app().await;
     let before = app.snapshot().unwrap().layers.len();
-    artifact_laws::assert_undo_redo_round_trip(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1).await;
+    artifact_laws::assert_undo_redo_round_trip(&mut *app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -627,8 +844,10 @@ async fn utility_registry_declares_all_canvas_utilities_scoped_to_the_window() {
     assert_eq!(selects, ["selectMarquee", "selectLasso", "selectDirect"]);
     let scene = definition.window_kinds.iter().find(|window| window.id == DRAWING_PLAY_WINDOW_CANVAS).expect("canvas window");
     assert_eq!(scene.utilities.len(), definition.utilities.len(), "every utility is scoped to the canvas window kind");
-    assert!(scene.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));
-    assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == "setActiveUtility" && !matches!(action.kind, ActionKind::View)));
+    let set_active_utility = definition.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility app action");
+    assert!(matches!(set_active_utility.kind, ActionKind::View));
+    assert!(semio_framework::window_kind_actions(&definition, scene).iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
+    assert!(!scene.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "app action stays canonical instead of being copied into the canvas window");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -658,17 +877,20 @@ async fn canvas_pointer_up_direct_pick_selects_inline() {
     assert!(result.mutations.is_empty(), "a direct pick is not a document operation");
     assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);
     assert_eq!(selected_strokes(&app).await, vec![rect_id], "the picked rect is selected inside the carrying operation");
-    artifact_laws::close_registered_fixture_app(&mut app);
+    artifact_laws::close_registered_fixture_app(&mut *app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_selected_opacity_reads_the_framework_interaction_selection() {
-    let mut app = drawing_app().await;
+    let (mut app, meta) = inline_selection_app().await;
     let id = first_layer_id(&app);
     let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAWING_INTERACTION_GRANULARITY, "id": id })]).unwrap();
-    app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" }))), &artifact_laws::meta("local")).await.expect("select");
-    let result = app.dispatch_typed(DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &artifact_laws::meta("local")).await.expect("opacity");
-    assert_eq!(result.mutations.len(), 1);
+    let admission = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&dsl::json::to_dsl_value(&dsl::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" }))), &meta).await.expect("select");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admission).await.expect("selection publication settles");
+    assert_eq!(selected_strokes(&app).await, vec![id.clone()], "the retained opacity command reads the framework-owned selection published for its canvas window");
+    let (result, receipt) = settled(&mut app, DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &meta).await;
+    assert!(result.mutations.is_empty(), "the migrated route retains its operation until publication");
+    assert_artifact_publication_units(&receipt, 2);
     assert!((crate::schema::layer_base(&app.snapshot().unwrap().layers[0]).opacity - 0.25).abs() < f64::EPSILON);
 }
 
@@ -700,7 +922,9 @@ async fn drawing_labels_translate_panels_in_german() {
 #[semio_framework_async_macros::async_test]
 async fn drawing_io_declares_vector_out_and_export_media_covers_both_ports() {
     let mut app = drawing_app().await;
-    app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &artifact_laws::meta("local")).await.expect("add");
+    let meta = artifact_laws::meta("local");
+    let (_, receipt) = settled(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &meta).await;
+    assert_one_artifact_publication(&receipt);
     let projection = app.snapshot().expect("projection");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
@@ -983,14 +1207,23 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
 
     assert_eq!(<DrawingPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), routes.len());
     assert!(<DrawingPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some(), "the artifact lane needs its one-item preparation authority");
-    assert!(<DrawingPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some(), "the config lane needs its one-item preparation authority");
+    assert!(<DrawingPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_none(), "NoConfig owns no document-config publication lane");
+    let mut window_config_owners = semio_framework_plugin::WindowConfigOwnerRegistry::default();
+    <DrawingPlayApp as ArtifactEditor>::register_window_config_owners(&mut window_config_owners).expect("register canvas window config owner");
+    assert!(!window_config_owners.is_empty(), "the canvas window config owns its own retained publication authority");
 
     let definition = create_drawing_app();
     let classified = definition
+        .actions
+        .iter()
+        .map(|action| (action.id.as_str(), action.semantics.execution.interactive_job))
+        .chain(
+            definition
         .window_kinds
         .iter()
         .flat_map(|window| window.actions.iter())
-        .map(|action| (action.id.as_str(), action.semantics.execution.interactive_job))
+        .map(|action| (action.id.as_str(), action.semantics.execution.interactive_job)),
+        )
         .chain(definition.commands.iter().map(|command| (command.id.as_str(), command.semantics.execution.interactive_job)))
         .collect::<Vec<_>>();
     for route in &routes {

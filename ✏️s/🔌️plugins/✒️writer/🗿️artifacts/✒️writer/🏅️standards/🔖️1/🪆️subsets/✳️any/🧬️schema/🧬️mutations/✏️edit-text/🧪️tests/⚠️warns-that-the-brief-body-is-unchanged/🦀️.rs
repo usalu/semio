@@ -24,13 +24,14 @@ const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutat
 const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged/🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged/🎯️outcome/🔣️.json");
 
-/// 📝 The body the committed `document` handle stands for — byte-identical to the payload's own
-/// `text`, which is the whole point of this fixture.
+/// 📝 The body the committed `document` handle stands for, persisted on the committed snapshot's own
+/// `text` payload field — byte-identical to the payload's own `text`, which is the whole point of this
+/// fixture.
 const CACHED_BODY: &str = "# Mission Brief\n\nHold the current draft.\n";
 
 fn before() -> WriterSnapshot {
-    let mut snapshot: WriterSnapshot = dsl::os_pack::json::from_json_str(BEFORE).expect("before writer document decodes");
-    crate::attach_writer_document_text(&mut snapshot.document, CACHED_BODY);
+    let snapshot: WriterSnapshot = dsl::os_pack::json::from_json_str(BEFORE).expect("before writer document decodes");
+    assert_eq!(snapshot.text, CACHED_BODY, "the committed before-snapshot must persist the body its handle stands for");
     snapshot
 }
 fn expected_after() -> WriterSnapshot {

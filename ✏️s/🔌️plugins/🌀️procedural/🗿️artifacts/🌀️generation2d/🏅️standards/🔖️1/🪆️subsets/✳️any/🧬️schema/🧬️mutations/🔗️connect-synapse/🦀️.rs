@@ -32,8 +32,8 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ConnectSynapse
     fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Connect synapse \"{}\" ({} → {})", self.synapse.id, self.synapse.from, self.synapse.to)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Connect synapse \"{}\" ({} → {})", self.synapse.id, self.synapse.from, self.synapse.to), &format!("Synapse \"{}\" ({} → {}) verbinden", self.synapse.id, self.synapse.from, self.synapse.to))
     }
     fn target(&self) -> Vec<String> {
         vec![self.synapse.id.clone()]

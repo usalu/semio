@@ -62,8 +62,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindPrimiti
         vec![super::GltfMutation::UnbindPrimitiveIndices(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Unbind Primitive Indices".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Unbind Primitive Indices", "Primitivindizes lösen")
     }
 
     fn target(&self) -> Vec<String> {

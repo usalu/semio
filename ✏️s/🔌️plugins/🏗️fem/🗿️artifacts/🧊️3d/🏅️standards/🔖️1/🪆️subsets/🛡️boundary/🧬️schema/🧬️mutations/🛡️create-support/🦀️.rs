@@ -24,8 +24,8 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for CreateSupport {
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create support \"{}\"", self.support.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create support \"{}\"", self.support.id), &format!("Auflager \"{}\" erstellen", self.support.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.support.id.clone()]

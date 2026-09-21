@@ -21,8 +21,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertLinetype {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::InsertLinetype(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-linetype".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-linetype", "Linientyp einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

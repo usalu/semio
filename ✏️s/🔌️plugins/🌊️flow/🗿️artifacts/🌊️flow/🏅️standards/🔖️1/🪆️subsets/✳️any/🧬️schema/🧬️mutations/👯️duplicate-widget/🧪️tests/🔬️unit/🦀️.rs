@@ -7,7 +7,7 @@ fn sample() -> DuplicateWidget {
 #[semio_framework_async_macros::async_test]
 async fn label_and_target_are_sensible() {
     let payload = sample();
-    assert_eq!(CompositeMutationKind::label(&payload), "Duplicate widget \"note-1\"");
+    assert_eq!(CompositeMutationKind::label(&payload), protocol::LocalizedLabel::native("Duplicate widget \"note-1\"", "Widget \"note-1\" duplizieren"));
     assert_eq!(CompositeMutationKind::target(&payload), vec!["note-1".to_string(), "note-2".to_string()]);
 }
 

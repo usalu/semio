@@ -13,7 +13,7 @@
 //! re-minting a deck handle for a name that did not move.
 
 use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
-use crate::{cache_presentation_working_scene, default_figure_tile_source, FigureTileDraft, FigureTileFrame, PresentationDiff, PresentationSnapshot};
+use crate::{default_figure_tile_source, FigureTileDraft, FigureTileFrame, PresentationDiff, PresentationSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️rename-tile/🧪️no-ops-when-the-tile-already-has-that-name/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️rename-tile/🧪️no-ops-when-the-tile-already-has-that-name/📸️snapshot/➡️after/🔣️.json");
@@ -36,7 +36,8 @@ fn before() -> PresentationSnapshot {
         panic!("no-ops-when-the-tile-already-has-that-name's committed mutation must be a rename-tile");
     };
     let tile = FigureTileDraft { id: payload.id, name: payload.new_name, crop: FigureTileFrame { x: 0.25, y: 0.25, width: 0.5, height: 0.5 } };
-    cache_presentation_working_scene(&snapshot.presentation.child_id, &default_figure_tile_source(), &[tile]);
+    assert_eq!(snapshot.tiles, vec![tile], "the committed before-snapshot must persist the tile already carrying the payload's new name");
+    assert_eq!(snapshot.source, default_figure_tile_source(), "the committed before-snapshot's persisted source is the plugin's own default figure");
     snapshot
 }
 

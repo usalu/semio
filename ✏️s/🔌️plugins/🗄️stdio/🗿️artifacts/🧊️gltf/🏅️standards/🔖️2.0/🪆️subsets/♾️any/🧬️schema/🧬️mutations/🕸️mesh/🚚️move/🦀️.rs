@@ -62,8 +62,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveMeshMutat
         vec![super::GltfMutation::MoveMesh(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Move Mesh".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Move Mesh", "Netz verschieben")
     }
 
     fn target(&self) -> Vec<String> {

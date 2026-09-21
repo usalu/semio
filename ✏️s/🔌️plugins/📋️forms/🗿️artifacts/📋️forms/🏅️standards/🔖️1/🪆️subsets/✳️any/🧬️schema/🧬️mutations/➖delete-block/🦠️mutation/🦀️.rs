@@ -24,8 +24,8 @@ impl MutationKind<FormsSnapshot, FormMutation> for DeleteBlock {
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_delete_block(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete block \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete block \"{}\"", self.id), &format!("Block \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.id.clone()]

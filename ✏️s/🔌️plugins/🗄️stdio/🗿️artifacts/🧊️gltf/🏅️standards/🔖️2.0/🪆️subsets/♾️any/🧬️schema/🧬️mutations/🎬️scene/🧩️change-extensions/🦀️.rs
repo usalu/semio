@@ -68,8 +68,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeSceneEx
         vec![super::GltfMutation::ChangeSceneExtensionData(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Change Scene Extension Data".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Scene Extension Data", "Szenenerweiterungsdaten ändern")
     }
 
     fn target(&self) -> Vec<String> {

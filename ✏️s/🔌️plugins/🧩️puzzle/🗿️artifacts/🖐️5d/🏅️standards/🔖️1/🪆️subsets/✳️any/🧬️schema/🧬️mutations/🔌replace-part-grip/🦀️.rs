@@ -33,8 +33,8 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ReplacePartG
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace grip \"{}\" on part \"{}\"", self.grip_id, self.part_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace grip \"{}\" on part \"{}\"", self.grip_id, self.part_id), &format!("Griff \"{}\" auf Bauteil \"{}\" ersetzen", self.grip_id, self.part_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.part_id.clone(), self.grip_id.clone()]

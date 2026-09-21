@@ -92,7 +92,7 @@ impl<T: Send + Sync> ErasedSnapshotRetirement for RootRetirement<T> {
             self.domain = (self.retire)(value);
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        self.domain.close_step(1, bytes)
+        self.domain.close_page(1, bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {

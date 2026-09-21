@@ -124,7 +124,12 @@ export function reduceExecutionTargetUiState(current: ExecutionTargetUiState, ac
 
 /** ♿ Bilingual execution-target live region: verification progress announces politely, every
  * integrity, stale, cancellation and renderer-unavailable outcome asserts. The rendered text is the
- * complete UI payload — no origin, path, receipt, grant, digest or user identity. */
+ * complete UI payload — no origin, path, receipt, grant, digest or user identity.
+ *
+ * The stage is published as a data attribute rather than as text: the localized sentence stays one
+ * sentence for a reader, while an operator (and every headless probe) can tell a load that is still
+ * decoding from one that has stopped. It is a stage name from a closed vocabulary and carries no
+ * origin, path or digest either. */
 export function ExecutionTargetStatusNotice({
   status,
   locale,
@@ -135,12 +140,12 @@ export function ExecutionTargetStatusNotice({
   const text = DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1[status.code][locale];
   const role = documentExecutionTargetStatusRoleV1(status.code);
   return role === "status" ? (
-    <section role="status" aria-live="polite" aria-label={text} data-semio-execution-target-status={status.documentId}>
+    <section role="status" aria-live="polite" aria-label={text} data-semio-execution-target-status={status.documentId} {...(status.progress ? { "data-semio-execution-target-stage": status.progress.stage } : {})}>
       <p>{text}</p>
       {status.progress ? <progress aria-label={text} value={status.progress.completedBytes} max={status.progress.totalBytes} /> : null}
     </section>
   ) : (
-    <section role="alert" aria-live="assertive" data-semio-execution-target-status={status.documentId}>{text}</section>
+    <section role="alert" aria-live="assertive" data-semio-execution-target-status={status.documentId} {...(status.diagnostic ? { "data-semio-execution-target-diagnostic": status.diagnostic } : {})}>{text}</section>
   );
 }
 //#endregion 🪪️ExecutionTargetLease

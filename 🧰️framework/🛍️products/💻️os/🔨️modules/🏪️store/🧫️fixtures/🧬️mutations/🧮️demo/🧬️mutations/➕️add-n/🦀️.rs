@@ -25,8 +25,8 @@ impl crate::os_spr::MutationKind<DemoSnapshot, DemoMutation> for AddN {
         }
         vec![DemoMutation::RestoreN(RestoreN { n: base.n })]
     }
-    fn label(&self) -> String {
-        "Add N".into()
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Add N", "N hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["n".into()]

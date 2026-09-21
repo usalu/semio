@@ -29,8 +29,8 @@ impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for CreateArtifact {
     fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create artifact \"{}\"", self.artifact.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create artifact \"{}\"", self.artifact.id), &format!("Artefakt \"{}\" erstellen", self.artifact.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.artifact.id.clone()]

@@ -58,8 +58,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteMeshMut
         vec![super::GltfMutation::DeleteMesh(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Delete Mesh".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Delete Mesh", "Netz löschen")
     }
 
     fn target(&self) -> Vec<String> {

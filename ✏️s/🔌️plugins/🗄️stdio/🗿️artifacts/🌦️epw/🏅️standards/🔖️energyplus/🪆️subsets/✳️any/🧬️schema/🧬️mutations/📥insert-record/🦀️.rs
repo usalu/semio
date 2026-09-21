@@ -23,8 +23,8 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for InsertRecord {
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {
         agg_inverse(&EpwMutation::InsertRecord(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-record".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-record", "Datensatz einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

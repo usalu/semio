@@ -39,8 +39,8 @@ impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for ChangeTitle 
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change playbook title to \"{}\"", self.new_title.clone().unwrap_or_default())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change playbook title to \"{}\"", self.new_title.clone().unwrap_or_default()), &format!("Playbooktitel auf \"{}\" ändern", self.new_title.clone().unwrap_or_default()))
     }
 }
 //#endregion 🔖️Mutation

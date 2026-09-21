@@ -32,7 +32,7 @@ impl ErasedSnapshotRetirement for FlowPresenceRetirement {
             }
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        self.domain.close_step(1, maximum_bytes)
+        self.domain.close_page(1, maximum_bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {

@@ -48,8 +48,8 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for InsertElementMu
         vec![super::SvgMutation::InsertElement(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String {
-        "Insert Element".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Insert Element", "Element einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-element".to_string()]

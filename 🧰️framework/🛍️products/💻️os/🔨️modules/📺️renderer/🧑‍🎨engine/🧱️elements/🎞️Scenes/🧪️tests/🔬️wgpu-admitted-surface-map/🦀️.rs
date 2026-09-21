@@ -72,6 +72,21 @@ fn production_surface_authority_has_no_hash_map_or_structural_deref() {
     assert!(authority.contains("slots: Box<[Option<AdmittedSurfaceEntry<T>>; SCENE_SURFACE_CAPACITY]>"));
 }
 
+#[test]
+fn a_surface_map_cannot_report_terminal_while_an_exact_owner_is_still_retiring() {
+    let mut surfaces = AdmittedSurfaceMap::default();
+    let token = surfaces.try_insert("closing-component".to_string(), String::from("owned-resource")).unwrap();
+    let owner = surfaces.take_exact_to_retirement(token).expect("exact component owner");
+    assert!(surfaces.get_token(token).is_none());
+    surfaces.begin_close();
+    assert!(surfaces.close_step().is_none());
+    assert!(!surfaces.terminal_is_empty(), "an empty registry still owes the component's retirement acknowledgement");
+    assert_eq!(owner.value, "owned-resource");
+    drop(owner);
+    surfaces.acknowledge_retired_owner();
+    assert!(surfaces.terminal_is_empty());
+}
+
 /// 🧱️ The `boxed_fixed_slots` law for this module's fixed slot tables, against the one committed
 /// budget every implementation of it reads (`the committed fixed-slot fixture`).
 ///
@@ -85,7 +100,9 @@ fn production_surface_authority_has_no_hash_map_or_structural_deref() {
 /// payload of a live element and every field added to it moves both numbers — `brush_mesh_run:
 /// Option<WorldBrushMeshRun>` moved the slot from 22 752 to 22 920 bytes and the owner from 48 608 to
 /// 48 944. The bounded camera-fit request/owner/cursor then moved the slot from 23 208 to 23 336
-/// bytes (+128) and the two-slot owner from 49 528 to 49 784 (+256). A mismatch therefore says "the
+/// bytes (+128) and the two-slot owner from 49 528 to 49 784 (+256). The bounded per-instance
+/// interaction granularity map and exact-pair hover key then moved the slot from
+/// 23 464 to 23 536 bytes (+72) and the two-slot owner from 50 040 to 50 184 (+144). A mismatch therefore says "the
 /// payload grew, re-measure and recommit the receipt"; what the
 /// law actually defends is the two invariants around the numbers: the owner stays far smaller than
 /// `capacity × elementSizeBytes` (so the slots live on the heap and not in an inline `[T; N]` field),

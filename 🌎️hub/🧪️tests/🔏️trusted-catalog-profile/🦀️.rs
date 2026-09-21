@@ -129,7 +129,7 @@ pub async fn verified_gis_map_integration_profile(root: &Path) -> Result<Verifie
             "id": GIS_MAP_INTEGRATION_PROFILE_ID,
             "selectedClosure": [package.clone(), stdio_identity.clone()],
             "selectedClosureSha256": "01".repeat(32),
-            "openTarget": { "package": package.clone(), "target": target.clone() },
+            "openTargets": [{ "package": package.clone(), "target": target.clone() }],
             "generationId": "02".repeat(32)
         }],
         "packages": [{
@@ -138,7 +138,7 @@ pub async fn verified_gis_map_integration_profile(root: &Path) -> Result<Verifie
             "component": { "path": "component.wasm", "byteLength": SYNTHETIC_COMPONENT.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
             "descriptor": { "path": "descriptor.semio", "byteLength": descriptor_bytes.len(), "sha256": hex_lower(&Sha256::digest(&descriptor_bytes)) },
             "browserActor": {
-                "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.27.0-jspi.v1",
+                "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.34.0-jspi.v1",
                 "path":"closed-actor.mjs", "byteLength":SYNTHETIC_COMPONENT.len(), "sha256":component_sha256,
                 "sourceComponentSha256":component_sha256, "sourceDescriptorByteSha256":hex_lower(&Sha256::digest(&descriptor_bytes)), "policySha256":"41".repeat(32), "importInterfaces":[]
             },

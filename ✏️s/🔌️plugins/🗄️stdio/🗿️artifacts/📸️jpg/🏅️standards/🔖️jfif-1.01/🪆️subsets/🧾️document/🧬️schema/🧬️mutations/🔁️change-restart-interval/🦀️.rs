@@ -33,8 +33,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeRestartIntervalM
         }
         vec![JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: base.restart_interval })]
     }
-    fn label(&self) -> String {
-        "change restart interval".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("change restart interval", "Neustartintervall ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-restart-interval".into()]

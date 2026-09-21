@@ -99,7 +99,11 @@ enum PreparedDrawTarget {
 fn prepared_draw_scalar_glass_region(draw: &crate::wgpu::draw::DrawList, cursor: DrawMeasureCursor) -> Option<usize> {
     let layer = match cursor {
         DrawMeasureCursor::LayerUi { layer, .. } | DrawMeasureCursor::LayerVector { layer, .. } | DrawMeasureCursor::LayerRaster { layer, .. } => layer,
-        DrawMeasureCursor::PassInstance { pass, .. } | DrawMeasureCursor::PassMaterialInstance { pass, .. } | DrawMeasureCursor::PassLineVertex { pass, .. } | DrawMeasureCursor::PassTexturedInstance { pass, .. } => draw.scene_passes.get(pass)?.layer_index,
+        DrawMeasureCursor::PassInstance { pass, .. }
+        | DrawMeasureCursor::PassMaterialInstance { pass, .. }
+        | DrawMeasureCursor::PassLineVertex { pass, .. }
+        | DrawMeasureCursor::PassTexturedInstance { pass, .. }
+        | DrawMeasureCursor::PassGrid { pass } => draw.scene_passes.get(pass)?.layer_index,
         _ => return None,
     };
     draw.layers.get(layer)?.foreground_of
@@ -111,7 +115,7 @@ fn prepared_draw_scalar_is_glass_foreground(draw: &crate::wgpu::draw::DrawList, 
 }
 
 fn prepared_draw_scalar_uses_world_encoded_attachment(cursor: DrawMeasureCursor) -> bool {
-    matches!(cursor, DrawMeasureCursor::PassInstance { .. } | DrawMeasureCursor::PassMaterialInstance { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassLineVertex { .. })
+    matches!(cursor, DrawMeasureCursor::PassInstance { .. } | DrawMeasureCursor::PassMaterialInstance { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassGrid { .. } | DrawMeasureCursor::PassLineVertex { .. })
 }
 
 /// 🫧 Whether `outer` fully covers `inner` — the containment CSS stacking gives a later
@@ -882,6 +886,12 @@ impl GpuContext {
                 let instance_owner = draw_owner.instances.get(instance).ok_or_else(|| "prepared textured instance cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_textured") });
                 self.pipelines.encode_prepared_world_textured(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, pass_owner, instance_owner).map_err(str::to_owned)?;
+                self.queue.submit(Some(encoder.finish()));
+            }
+            DrawMeasureCursor::PassGrid { pass } => {
+                let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared grid pass cursor was stale".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_grid") });
+                self.pipelines.encode_prepared_world_grid(&self.device, &self.queue, &mut encoder, color_view, depth, pass_owner).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex } if vertex % 2 == 1 => {

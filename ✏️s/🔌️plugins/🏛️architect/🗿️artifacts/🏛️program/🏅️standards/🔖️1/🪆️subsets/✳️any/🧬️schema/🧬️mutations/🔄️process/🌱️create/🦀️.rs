@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateProcess {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create process \"{}\"", self.process.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create process \"{}\"", self.process.header.name), &format!("Prozess \"{}\" erstellen", self.process.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.process.header.id.0.clone()]

@@ -25,8 +25,8 @@ impl MutationKind<CadSnapshot, CadMutation> for ReplaceReferences {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace references for \"{}\"", self.model_definition_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace references for \"{}\"", self.model_definition_id), &format!("Referenzen für \"{}\" ersetzen", self.model_definition_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.model_definition_id.clone()]

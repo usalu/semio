@@ -95,11 +95,16 @@ where
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
-/// `crate::editor::note::create_note_app`'s `🔖️Manifest` region.
+/// `crate::editor::note::create_note_app`'s `🔖️Manifest` region. `id` IS `NOTE_DIALECT
+/// .artifact_kind`: the spec, the dialect every surface id is built from and the activation event
+/// name ONE identity, exactly as `semio_s_artifact_gis_gismap::artifact_kind()` already does. The
+/// former `"2d.note"` spelling was the only place this artifact answered to a second name, and a
+/// hub refuses to open a document kind whose declared spec id differs from its app's dialect
+/// (`validate_descriptor_open_target`, 🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs).
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "2d.note".into(),
-        name: "2D Note".into(),
+        id: NOTE_DIALECT.artifact_kind.into(),
+        name: "Note".into(),
         source_format: "note.document".into(),
         component_kind: "note".into(),
         dimension: "2d".into(),
@@ -469,6 +474,9 @@ fn ink_wire_blocks_from_note(blocks: &mut dsl::DslValue) {
     let dsl::DslValue::Array(items) = blocks else { return };
     for item in items {
         let dsl::DslValue::Object(entries) = item else { continue };
+        if let Some(dsl::DslValue::String(id)) = entry(entries, "id").cloned() {
+            entries.push(("interactionId".into(), dsl::DslValue::String(format!("note-play-block:{id}"))));
+        }
         if is_kind(entries, "text") {
             if let Some(index) = entries.iter().position(|(name, _)| name == "content") {
                 let (_, content) = entries.remove(index);
@@ -491,6 +499,9 @@ fn ink_wire_blocks_from_note(blocks: &mut dsl::DslValue) {
 /// unchanged block keeps its handle); group children recurse.
 pub fn note_block_value_from_ink_wire(block: &mut dsl::DslValue) -> Result<(), String> {
     let dsl::DslValue::Object(entries) = block else { return Err("ink block is not a record".into()) };
+    if let Some(index) = entries.iter().position(|(name, _)| name == "interactionId") {
+        entries.remove(index);
+    }
     if is_kind(entries, "text") && entry(entries, "content").is_none() {
         let id = match entry(entries, "id") {
             Some(dsl::DslValue::String(id)) => id.clone(),

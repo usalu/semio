@@ -32,8 +32,8 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for EditPaintLayer
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Paint on layer {} of object \"{}\"", self.layer_index, self.object_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Paint on layer {} of object \"{}\"", self.layer_index, self.object_id), &format!("auf Ebene {} von Objekt \"{}\" malen", self.layer_index, self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

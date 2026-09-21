@@ -58,8 +58,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteAnimati
         vec![super::GltfMutation::DeleteAnimation(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Delete Animation".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Delete Animation", "Animation löschen")
     }
 
     fn target(&self) -> Vec<String> {

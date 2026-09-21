@@ -1,0 +1,42 @@
+# 🔣️ DB3 throwaway stack — a real PostgreSQL and a real Neo4j for the WHOLE-hub-on-Postgres proof.
+#
+# 🧱️ Named volumes, not a bind mount into 🗑️generated/db3-volumes/: Docker Desktop on this host
+# refuses every bind source under /Users/ueli/Documents
+# ("mkdir /host_mnt/Users/ueli/Documents: operation not permitted", measured by DB2 §8.4), and
+# widening its file-sharing list is a machine-wide setting a slice does not change.
+#
+# 🔌️ Ports are DB3's own so nothing collides with DB2's 5433/7688/7475 or the stray db2-probe
+# container on 5499. Credentials are throwaway and deliberately in the clear: this stack is created
+# and destroyed inside one ticket slice and never holds anything but test data.
+name: semio-db3
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: db3
+      POSTGRES_USER: db3
+      POSTGRES_DB: db3
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - db3-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U db3 -d db3"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/db3passwd
+      NEO4J_server_memory_heap_max__size: 512m
+    ports:
+      - "127.0.0.1:7689:7687"
+      - "127.0.0.1:7476:7474"
+    volumes:
+      - db3-neo4j-data:/data
+      - db3-neo4j-logs:/logs
+volumes:
+  db3-postgres:
+  db3-neo4j-data:
+  db3-neo4j-logs:

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidESMp
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change liquid e s mpa to {:?}", self.new_liquid_e_s_mpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change liquid e s mpa to {:?}", self.new_liquid_e_s_mpa), &format!("Flüssigkeitsesmpa auf {:?} ändern", self.new_liquid_e_s_mpa))
     }
 }
 //#endregion 🔖️ChangeLiquidESMpa

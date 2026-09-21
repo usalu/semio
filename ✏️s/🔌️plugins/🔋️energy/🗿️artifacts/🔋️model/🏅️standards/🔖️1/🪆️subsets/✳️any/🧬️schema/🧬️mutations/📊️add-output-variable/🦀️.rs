@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddOut
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Add output variable \"{}\" for \"{}\"", self.name, self.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add output variable \"{}\" for \"{}\"", self.name, self.key), &format!("Ausgabenvariable \"{}\" für \"{}\" hinzufügen", self.name, self.key))
     }
 
     fn target(&self) -> Vec<String> {

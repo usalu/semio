@@ -3,60 +3,20 @@
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::flow::{flow_graph_selection_domains, host_operations, sync_host_selection, FLOW_INTERACTION_GRAPH};
+use crate::editor::flow::{flow_graph_selection_domains, FLOW_INTERACTION_GRAPH};
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
-//#region 🔖️FlowNodeGraphEditOp
-/// 🎯️ One batched edit inside a `FlowCommand::NodeGraphEdit`/`SpotlightCommit` — the `"setFixture"`/
-/// `"deleteSelection"`/`"connect"` sub-kinds, closed and typed instead of stringly-tagged JSON. Mirrors
-/// `dag_protocol::DagNodeGraphEditOp` exactly.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum)]
-pub enum FlowNodeGraphEditOp {
-    #[dsl(key = "set-snapshot")]
-    SetSnapshot { snapshot_json: String },
-    #[dsl(key = "delete-selection")]
-    DeleteSelection,
-    #[dsl(key = "connect")]
-    Connect { source_node_id: String, source_port_id: String, target_node_id: String, target_port_id: String },
-}
-//#endregion 🔖️FlowNodeGraphEditOp
+pub use crate::editor::flow::commands::node_graph_edit::FlowNodeGraphEditOp;
 
 //#region 🔖️SharedDispatch
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_nodes` is the "graph"
 /// domain's live node selection (read by the caller via `InteractionView`) — no `SetSelection` config
 /// mutation afterwards, the framework auto-prunes deleted ids out of `graph`'s selection via
 /// `interaction_topology`.
-pub fn node_graph_edit_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp], selected_nodes: &[String]) -> Emit<FlowMutation, NoConfigMutation> {
-    let artifact_mutations = host_operations(snapshot, config, session, |host| {
-        let mut changed = false;
-        for sub_operation in operations {
-            match sub_operation {
-                FlowNodeGraphEditOp::SetSnapshot { snapshot_json } => {
-                    let parsed: Option<FlowSnapshot> = serde_json::from_str::<serde_json::Value>(snapshot_json).ok().and_then(|json| dsl::FromValue::from_value(dsl::DslValue::from(json)).ok());
-                    if let Some(parsed) = parsed {
-                        host.begin_change();
-                        host.set_host_snapshot_preserving_history(parsed.to_host_snapshot());
-                        changed = true;
-                    }
-                }
-                FlowNodeGraphEditOp::DeleteSelection => {
-                    sync_host_selection(host, selected_nodes);
-                    if host.delete_selection().is_ok() {
-                        changed = true;
-                    }
-                }
-                FlowNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
-                    if host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).is_ok() {
-                        changed = true;
-                    }
-                }
-            }
-        }
-        changed
-    });
-    Emit::mutations(artifact_mutations)
+pub fn node_graph_edit_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, operations: &[FlowNodeGraphEditOp], selected_nodes: &[String]) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
+    crate::editor::flow::commands::node_graph_edit::node_graph_edit_result(snapshot, config, session, operations, selected_nodes)
 }
 //#endregion 🔖️SharedDispatch
 
@@ -71,12 +31,12 @@ pub struct SpotlightCommit {
 /// it is reachable only through that macro-generated path (`FlowPlayApp::handle` always routes this
 /// command through `apply` below instead) — degrades to treating the selection as empty.
 pub fn handle(payload: &SpotlightCommit, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    Ok(node_graph_edit_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.operations, &[]))
+    node_graph_edit_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.operations, &[])
 }
 
 /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg, session)` has no `interaction` slot (see
 /// `delete_selection::apply`'s doc comment) — `FlowPlayApp::handle` routes this command through `apply`.
 pub fn apply(payload: &SpotlightCommit, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession, interaction: &InteractionView<'_>) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let (nodes, _edges) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
-    Ok(node_graph_edit_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.operations, &nodes))
+    node_graph_edit_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.operations, &nodes)
 }

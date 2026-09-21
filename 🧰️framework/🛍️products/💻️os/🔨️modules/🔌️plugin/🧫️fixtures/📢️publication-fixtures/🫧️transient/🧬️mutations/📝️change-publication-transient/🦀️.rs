@@ -62,7 +62,7 @@ impl MutationKind<PublicationTransient, PublicationTransientMutation> for Change
         vec![Self { revision: base.revision }.into()]
     }
 
-    fn label(&self) -> String {
-        format!("Change publication transient to {}", self.revision)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change publication transient to {}", self.revision), &format!("transiente Veröffentlichung auf {} ändern", self.revision))
     }
 }

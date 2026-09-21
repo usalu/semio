@@ -43,8 +43,8 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetElementNameM
         vec![super::SvgMutation::SetElementName(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String {
-        "Set Element Name".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Element Name", "Elementname setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-element-name".to_string()]

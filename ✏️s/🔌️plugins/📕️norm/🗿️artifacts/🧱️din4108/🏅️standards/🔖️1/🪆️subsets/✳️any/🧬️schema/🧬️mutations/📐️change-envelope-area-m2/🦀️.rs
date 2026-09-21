@@ -19,8 +19,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeEnvelope
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change envelope area m2 to {}", self.new_envelope_area_m2)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change envelope area m2 to {}", self.new_envelope_area_m2), &format!("Hüllenflächenm2 auf {} ändern", self.new_envelope_area_m2))
     }
 }
 //#endregion 🔖️Payload

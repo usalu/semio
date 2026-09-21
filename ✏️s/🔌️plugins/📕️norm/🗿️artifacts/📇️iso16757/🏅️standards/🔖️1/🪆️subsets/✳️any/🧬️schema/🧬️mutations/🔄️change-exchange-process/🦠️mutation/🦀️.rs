@@ -19,8 +19,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for ChangeExchan
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change exchange process to {:?}", self.new_exchange_process)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change exchange process to {:?}", self.new_exchange_process), &format!("Austauschprozess auf {:?} ändern", self.new_exchange_process))
     }
 }
 //#endregion 🔖️Payload

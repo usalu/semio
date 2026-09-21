@@ -20,8 +20,8 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetStandalone {
     fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {
         agg_inverse(&XmlValidMutation::SetStandalone(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-standalone".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-standalone", "eigenständig setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

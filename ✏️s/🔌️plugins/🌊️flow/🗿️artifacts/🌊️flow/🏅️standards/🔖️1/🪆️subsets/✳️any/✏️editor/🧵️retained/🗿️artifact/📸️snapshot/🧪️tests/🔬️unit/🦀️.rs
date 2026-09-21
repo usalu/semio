@@ -65,7 +65,7 @@ mod tests {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🪪️content-identity/🔣️.json")).unwrap();
         for row in fixture["cases"].as_array().unwrap() {
             let (widgets, synapses, layout) = crate::schema::mutations::decode_flow_scene_json(row["canonicalJson"].as_str().unwrap()).unwrap();
-            let content = crate::flow_content_child_handle(&widgets, &synapses, &layout);
+            let content = crate::flow_content_child_handle_and_cache(widgets, synapses, layout);
             let snapshot = Arc::new(FlowSnapshot { schema: crate::FLOW_DOCUMENT_SCHEMA.into(), content });
             let expected_id = format!("{}{}", fixture["childIdPrefix"].as_str().unwrap(), row["expectedSha256"].as_str().unwrap());
             assert_eq!(snapshot.content.child_id, expected_id);

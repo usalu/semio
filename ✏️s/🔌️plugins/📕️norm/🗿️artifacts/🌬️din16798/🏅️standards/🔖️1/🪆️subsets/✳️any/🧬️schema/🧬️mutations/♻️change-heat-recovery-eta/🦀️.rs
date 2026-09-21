@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHeatRe
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change heat recovery efficiency to {}", self.new_heat_recovery_eta)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change heat recovery efficiency to {}", self.new_heat_recovery_eta), &format!("Wärmenrückgewinnungswirkungsgrad auf {} ändern", self.new_heat_recovery_eta))
     }
 }
 //#endregion 🔖️ChangeHeatRecoveryEta

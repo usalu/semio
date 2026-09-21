@@ -23,8 +23,8 @@ impl MutationKind<FormsSnapshot, FormMutation> for DeleteStep {
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_delete_step(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete step \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete step \"{}\"", self.id), &format!("Schritt \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

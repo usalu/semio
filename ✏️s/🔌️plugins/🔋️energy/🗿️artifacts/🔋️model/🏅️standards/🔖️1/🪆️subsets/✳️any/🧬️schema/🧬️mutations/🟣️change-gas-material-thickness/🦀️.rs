@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change Gas Material Thickness of gas material {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change Gas Material Thickness of gas material {}", self.id.0), &format!("Gasmaterialdicke von Gasmaterial {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreatePriorityRecord {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create priority record \"{}\"", self.priority_record.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create priority record \"{}\"", self.priority_record.header.name), &format!("Prioritätsdatensatz \"{}\" erstellen", self.priority_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.priority_record.header.id.0.clone()]

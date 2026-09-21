@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeHrMDot
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change heat recovery mass flow rate to {}", self.new_hr_m_dot_kg_s)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change heat recovery mass flow rate to {}", self.new_hr_m_dot_kg_s), &format!("Wärmenrückgewinnungsmassenflussrate auf {} ändern", self.new_hr_m_dot_kg_s))
     }
 }
 //#endregion 🔖️ChangeHrMDotKgS

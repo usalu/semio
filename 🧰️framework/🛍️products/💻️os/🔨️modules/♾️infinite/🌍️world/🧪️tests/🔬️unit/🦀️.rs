@@ -869,7 +869,7 @@ fn world_marquee_pages_build_one_target_per_grant_and_publish_atomically_fifo() 
     };
     assert_eq!(page_targets(&actions[0]).len(), WORLD_MARQUEE_RESULT_PAGE_CAPACITY);
     assert_eq!(page_targets(&actions[1]).len(), 1);
-    assert_eq!(page_targets(&actions[0])[0]["granularity"], "object", "a marquee release is a pick, so it reports the pick granularity");
+    assert_eq!(page_targets(&actions[0])[0]["granularity"], resolved_domain_granularity_id(&state), "a marquee target uses the scene's declared interaction granularity");
     assert_eq!(job.results.page_len, 0);
     assert_eq!(job.gesture.len, 0);
 }
@@ -1840,6 +1840,7 @@ fn scene_with_selection(selection_json: &str) -> UiComponentSceneNode {
 fn scene_with_selection_and_domain(selection_json: &str, domain: Option<(&str, &str)>) -> UiComponentSceneNode {
     UiComponentSceneNode {
         presence: UiPresence::default(),
+        host_id: "surface-1".into(),
         surface_id: "surface-1".into(),
         controller_id: "controller-1".into(),
         component_kind: SurfaceKind::World3d,
@@ -4589,6 +4590,8 @@ fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
     assert_eq!(resolved_domain_granularity_id(&state), fixture["domainGranularityId"].as_str().expect("granularity"));
     let instance_id = state.draws.get(0).expect("published draw").instances.first().expect("published instance").id.clone();
     assert_eq!(resolved_item_id(&state, &instance_id), instance_id, "a bound app domain addresses the bare channel-qualified id — never `surfaceId/id`");
+    let interaction_id = state.instance_interaction_ids.get(&instance_id).expect("the scene bridge retains the instance's topology target").clone();
+    assert_eq!(interaction_id, "extrude@solid");
 
     // 🎯️ Aim through the fixture camera's own target, which is the centre of the prism's base face
     // — the one point guaranteed both inside the solid and inside the 45° frustum.
@@ -4601,14 +4604,14 @@ fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
     let args = select.args.expect("pick args");
     assert_eq!(args["domainId"].as_str(), fixture["domainId"].as_str());
     assert_eq!(args["targets"][0]["granularity"].as_str(), fixture["domainGranularityId"].as_str());
-    assert_eq!(args["targets"][0]["id"].as_str(), Some(instance_id.as_str()));
+    assert_eq!(args["targets"][0]["id"].as_str(), Some(interaction_id.as_str()));
 
     state.local_hover_id = None;
     let hover = pick_hover_action(&mut state, screen[0], screen[1], bounds).expect("hover emits an action");
     assert_eq!(hover.action, "interactionHover");
     let args = hover.args.expect("hover args");
     assert_eq!(args["domainId"].as_str(), fixture["domainId"].as_str());
-    assert_eq!(args["targets"][0]["id"].as_str(), Some(instance_id.as_str()));
+    assert_eq!(args["targets"][0]["id"].as_str(), Some(interaction_id.as_str()));
 }
 //#endregion 🌉️World3dSceneBridge
 
@@ -5081,6 +5084,95 @@ fn reference_visual_identity_geometry_and_interaction_match_three() {
     let targets = actions[0].args.as_ref().and_then(|args| args.get("targets")).and_then(|value| value.as_str()).and_then(|raw| serde_json::from_str::<Vec<serde_json::Value>>(raw).ok()).expect("reference target JSON");
     assert_eq!(targets[0]["id"], format!("{}/{}", state.surface_id, identity[0]["expectedInteractionId"].as_str().unwrap()));
     assert_eq!(targets[0]["granularity"], "reference");
+}
+
+
+#[test]
+fn reference_visual_geometry_reaches_the_actual_textured_scene_pass() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖼️reference-visual/🔣️.json")).unwrap();
+    let geometry = &fixture["geometry"];
+    let url = fixture["identityCases"][0]["url"].as_str().unwrap();
+    let mut scene = scene_with_selection("{}");
+    scene.world_3d.as_mut().unwrap().references_json = Some(serde_json::json!([{
+        "id": "actual-reference-plane", "url": url, "origin": geometry["origin"],
+        "widthWorld": geometry["widthWorld"], "locked": true, "hidden": false
+    }]).to_string());
+    let bounds = Rect::new(0.0, 0.0, 320.0, 240.0);
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    drive_scene_bridge(&mut state, &scene, bounds);
+    let size = &geometry["sourceNaturalSize"];
+    let _ = state.reference_pixels.insert(url.into(), test_world_scene_raster(size[0].as_u64().unwrap() as u32, size[1].as_u64().unwrap() as u32, 0));
+    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let mut scroll = HashMap::new();
+    let mut collapsed = HashMap::new();
+    let mut selects = HashMap::new();
+    let mut ctx = ui_wgpu::wgpu::widgets::WidgetContext {
+        draw: &mut draw, overlay: None, atlas: &mut atlas, icons: None, input: &mut input, theme: &theme,
+        scroll_offsets: &mut scroll, collapsed_sections: &mut collapsed, open_selects: &mut selects,
+        interaction_maps: None, pick_clip: None, viewport_height: bounds.h,
+    };
+    render_world_3d(&scene, bounds, &mut ctx, &mut state, &mut gpu, World3dShadowProfile::World);
+    let pass = draw.scene_passes.last().expect("real World3d scene pass");
+    assert_eq!(pass.textured_draws.len(), 1);
+    assert_eq!(pass.textured_draws[0].instances.len(), 1);
+    let actual = &pass.textured_draws[0].instances[0];
+    assert_eq!(actual.texture_key, url);
+    for (index, local) in [Vec3::new(-0.5, -0.5, 0.0), Vec3::new(0.5, -0.5, 0.0), Vec3::new(0.5, 0.5, 0.0), Vec3::new(-0.5, 0.5, 0.0)].into_iter().enumerate() {
+        let point = actual.model.transform_point(local).to_array();
+        for axis in 0..3 {
+            assert!((point[axis] - geometry["expectedCorners"][index][axis].as_f64().unwrap() as f32).abs() < 1e-5, "emitted corner {index} axis {axis}");
+        }
+    }
+    retire_bridged_surface(&mut state);
+    println!("[DEBUG] actual reference scene pass retained the texture identity and Three-derived plane corners");
+}
+
+/// 🌐️ LAW: the actual World producer publishes one retained procedural grid scalar and no
+/// finite grid line vertices. The later overlay lanes remain ordinary line geometry.
+#[test]
+fn an_actual_world_grid_is_one_camera_projected_procedural_scalar_without_grid_lines() {
+    let scene = scene_with_selection("{}");
+    let bounds = Rect::new(0.0, 0.0, 320.0, 240.0);
+    let mut state = World3dState::new("surface-grid".into(), "controller-grid".into());
+    state.orbit.target = Vec3::new(7.0, 11.0, 0.0);
+    state.orbit.distance = 59.0;
+    state.orbit.yaw = -0.63;
+    state.orbit.pitch = 0.71;
+    state.lod.show_grid = true;
+    state.lod.grid_datum = Some([3.0, 5.0, 2.0]);
+    drive_scene_bridge(&mut state, &scene, bounds);
+    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let mut scroll = HashMap::new();
+    let mut collapsed = HashMap::new();
+    let mut selects = HashMap::new();
+    let mut ctx = ui_wgpu::wgpu::widgets::WidgetContext {
+        draw: &mut draw, overlay: None, atlas: &mut atlas, icons: None, input: &mut input, theme: &theme,
+        scroll_offsets: &mut scroll, collapsed_sections: &mut collapsed, open_selects: &mut selects,
+        interaction_maps: None, pick_clip: None, viewport_height: bounds.h,
+    };
+
+    let expected_camera = state.orbit.to_camera();
+    let expected_step = lod_grid_step_world(scene_lod(&state), state.lod.grid_factor).expect("positive retained LOD step");
+    let expected_fade = camera_grid_fade_distance(&expected_camera, 2.0, expected_step, bounds.w, bounds.h);
+    render_world_3d(&scene, bounds, &mut ctx, &mut state, &mut gpu, World3dShadowProfile::World);
+    let pass = draw.scene_passes.last().expect("actual World3d scene pass");
+    let grid = pass.procedural_grid.expect("one actual retained procedural grid");
+    assert!((grid.plane_z - 2.001).abs() < 1e-6, "only the rendered plane receives the datum offset");
+    assert_eq!(grid.camera_plane_projection, [expected_camera.position.x, expected_camera.position.y, 2.001], "the infinite plane follows camera position rather than the orbit target");
+    assert!((grid.cell_size - expected_step as f32).abs() < f32::EPSILON, "the retained cell scalar owns the actual LOD step");
+    assert!((grid.fade_distance - expected_fade).abs() < f32::EPSILON, "the fade helper receives the unshifted datum and logical viewport");
+    assert_eq!(grid.cell_color, [theme.text_element.r, theme.text_element.g, theme.text_element.b], "the retained grid owns the linear element token");
+    let retained_line_vertices = pass.line_draws.iter().map(|draw| draw.vertices.len()).sum::<usize>();
+    assert_eq!(retained_line_vertices, 0, "the grid is one procedural scalar, never a camera-target-anchored LineList");
+    retire_bridged_surface(&mut state);
 }
 
 /// 🎨️ LAW: the retained Basic-material appearance follows authored opacity and live theme tokens.

@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::flow::unit_tests::context::{dispatch, flow_app, main_window_measures, FlowApp};
+use crate::editor::flow::unit_tests::context::{dispatch, flow_app, main_window_measures, settle, FlowApp};
 use crate::editor::flow::FlowCommand;
 use semio_framework_plugin::WindowMeasure;
 
@@ -35,8 +35,10 @@ async fn a_bare_toggle_flips_the_current_value() {
     let mut app = flow_app().await;
     assert!(grid_visible(&mut app).await, "grid starts visible");
     dispatch(&mut app, FlowCommand::SetGridVisible(SetGridVisible { pressed: None })).await;
+    settle(&mut app).await;
     assert!(!grid_visible(&mut app).await, "a bare toggle flips it off");
     dispatch(&mut app, FlowCommand::SetGridVisible(SetGridVisible { pressed: None })).await;
+    settle(&mut app).await;
     assert!(grid_visible(&mut app).await, "and back on");
 }
 
@@ -44,7 +46,9 @@ async fn a_bare_toggle_flips_the_current_value() {
 async fn grid_factor_clamps_to_the_slider_range() {
     let mut app = flow_app().await;
     dispatch(&mut app, FlowCommand::SetGridFactor(crate::editor::flow::commands::set_grid_factor::SetGridFactor { value: 1000.0 })).await;
+    settle(&mut app).await;
     assert_eq!(grid_factor(&mut app).await, 50.0);
     dispatch(&mut app, FlowCommand::SetGridFactor(crate::editor::flow::commands::set_grid_factor::SetGridFactor { value: 0.0 })).await;
+    settle(&mut app).await;
     assert_eq!(grid_factor(&mut app).await, 0.5);
 }

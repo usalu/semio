@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change zone equipment {} priority to {:?}", self.id.0, self.new_priority)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change zone equipment {} priority to {:?}", self.id.0, self.new_priority), &format!("Zoneanlage {} Priorität auf {:?} ändern", self.id.0, self.new_priority))
     }
 
     fn target(&self) -> Vec<String> {

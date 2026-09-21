@@ -21,8 +21,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLayer {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::SetLayer(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-layer".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-layer", "Ebene setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

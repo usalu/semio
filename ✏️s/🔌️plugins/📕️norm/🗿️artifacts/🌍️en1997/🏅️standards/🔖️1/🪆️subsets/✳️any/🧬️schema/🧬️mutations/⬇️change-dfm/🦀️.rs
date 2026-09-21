@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeDFM {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change founding depth D_f [m] to {}", self.new_d_f_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change founding depth D_f [m] to {}", self.new_d_f_m), &format!("Gründungstiefend_f [m] auf {} ändern", self.new_d_f_m))
     }
 }
 //#endregion 🔖️ChangeDFM

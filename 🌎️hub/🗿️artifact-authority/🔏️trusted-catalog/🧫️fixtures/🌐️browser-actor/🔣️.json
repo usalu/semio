@@ -1,12 +1,12 @@
 {
   "schema": "semio.hub.trusted-browser-actor-fixture.v1",
   "bodyHex": "616263",
-  "encodingSha256": "ac0d03c78b5a583be33f341b4e526c4d2759669e23cc404a3c76217c9a5548d4",
+  "encodingSha256": "41e1e0f163f884b5546753389be0e7ea2e53fd16bcedf927fbd3584ff8383ed7",
   "noneEncodingSha256": "9506f170afb36fca8c02831b18c88d7247935cae33b932f00eed9c9263e3ab6c",
   "closed": {
     "kind": "closed-browser-actor",
     "schema": "semio.os.closed-browser-actor.v1",
-    "codegenPolicy": "semio.os.browser-jco-1.27.0-jspi.v1",
+    "codegenPolicy": "semio.os.browser-jco-1.34.0-jspi.v1",
     "path": "browser/closed-actor.mjs",
     "byteLength": 3,
     "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",

@@ -21,8 +21,8 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for RemoveComment {
     fn inverse(&self, base: &BcfSnapshot) -> Vec<BcfMutation> {
         agg_inverse(&BcfMutation::RemoveComment(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-comment".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-comment", "Kommentar entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -31,8 +31,8 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for CreateVortexKi
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create vortex kind \"{}\"", self.vortex_kind.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create vortex kind \"{}\"", self.vortex_kind.id), &format!("Wirbelart \"{}\" erstellen", self.vortex_kind.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.vortex_kind.id.clone()]

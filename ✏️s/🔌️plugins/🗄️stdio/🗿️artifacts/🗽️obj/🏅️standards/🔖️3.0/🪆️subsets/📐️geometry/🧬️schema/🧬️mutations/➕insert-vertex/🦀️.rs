@@ -29,8 +29,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for InsertVertex {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::InsertVertex(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-vertex".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-vertex", "Vertex einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

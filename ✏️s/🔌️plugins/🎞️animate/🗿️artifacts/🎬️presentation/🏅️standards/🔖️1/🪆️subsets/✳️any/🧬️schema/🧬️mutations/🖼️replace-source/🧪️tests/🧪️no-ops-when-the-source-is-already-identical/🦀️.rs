@@ -13,7 +13,7 @@
 //! identity across all five fields rather than a lucky match on `src` alone.
 
 use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
-use crate::{cache_presentation_working_scene, PresentationDiff, PresentationSnapshot};
+use crate::{PresentationDiff, PresentationSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️replace-source/🧪️no-ops-when-the-source-is-already-identical/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖼️replace-source/🧪️no-ops-when-the-source-is-already-identical/📸️snapshot/➡️after/🔣️.json");
@@ -35,7 +35,8 @@ fn before() -> PresentationSnapshot {
     let PresentationMutation::ReplaceSource(payload) = mutation() else {
         panic!("no-ops-when-the-source-is-already-identical's committed mutation must be a replace-source");
     };
-    cache_presentation_working_scene(&snapshot.presentation.child_id, &payload.new_source, &[]);
+    assert_eq!(snapshot.source, payload.new_source, "the committed before-snapshot's persisted source must already BE the payload's new source");
+    assert!(snapshot.tiles.is_empty(), "the committed before-snapshot is a tile-less deck");
     snapshot
 }
 

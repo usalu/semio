@@ -20,8 +20,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveStyle {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::RemoveStyle(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-style".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-style", "Stil entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

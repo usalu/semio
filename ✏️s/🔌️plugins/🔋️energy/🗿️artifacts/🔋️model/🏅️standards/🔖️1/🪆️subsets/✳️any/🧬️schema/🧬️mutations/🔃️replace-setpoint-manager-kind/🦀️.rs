@@ -36,8 +36,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Replac
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Replace setpoint manager {} control law with {}", self.id.0, self.new_kind)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace setpoint manager {} control law with {}", self.id.0, self.new_kind), &format!("Sollwertverwalter {} Regelungsgesetz mit {} ersetzen", self.id.0, self.new_kind))
     }
 
     fn target(&self) -> Vec<String> {

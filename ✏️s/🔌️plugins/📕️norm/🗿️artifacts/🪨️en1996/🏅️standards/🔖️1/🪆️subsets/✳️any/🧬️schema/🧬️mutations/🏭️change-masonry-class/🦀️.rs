@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeMasonryCla
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change masonry manufacturing-control class to {:?}", self.new_masonry_class)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change masonry manufacturing-control class to {:?}", self.new_masonry_class), &format!("Mauerwerksfertigungskontrollklasse auf {:?} ändern", self.new_masonry_class))
     }
 }
 //#endregion 🔖️ChangeMasonryClass

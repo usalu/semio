@@ -32,8 +32,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for CreateStep
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Create step \"{}\"", self.step.label)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create step \"{}\"", self.step.label), &format!("Schritt \"{}\" erstellen", self.step.label))
     }
 
     fn target(&self) -> Vec<String> {

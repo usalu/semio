@@ -31,8 +31,8 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ResizeTileCrop
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Resize tile \"{}\" crop", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Resize tile \"{}\" crop", self.id), &format!("Kachel \"{}\" Zuschnitt skalieren", self.id))
     }
 
     fn target(&self) -> Vec<String> {

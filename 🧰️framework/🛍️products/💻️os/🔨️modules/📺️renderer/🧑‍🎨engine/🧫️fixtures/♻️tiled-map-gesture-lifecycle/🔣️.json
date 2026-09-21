@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "owner": {
+    "windowId": "map.window.primary",
+    "windowGeneration": 7,
+    "node": 3,
+    "key": "map.scene.primary",
+    "kind": "tiledMap",
+    "surfaceId": "map.window.primary"
+  },
+  "cases": [
+    {
+      "name": "same-identity-refresh",
+      "next": {
+        "node": 3,
+        "key": "map.scene.primary",
+        "kind": "tiledMap",
+        "surfaceId": "map.window.primary"
+      },
+      "retireOld": false,
+      "preserveGesture": true,
+      "preserveHost": true
+    },
+    {
+      "name": "key-replacement",
+      "next": {
+        "node": 3,
+        "key": "map.scene.successor",
+        "kind": "tiledMap",
+        "surfaceId": "map.window.primary"
+      },
+      "retireOld": true,
+      "preserveGesture": false,
+      "preserveHost": true
+    },
+    {
+      "name": "kind-replacement",
+      "next": {
+        "node": 3,
+        "key": "map.scene.primary",
+        "kind": "world3d",
+        "surfaceId": "map.window.primary"
+      },
+      "retireOld": true,
+      "preserveGesture": false,
+      "preserveHost": false
+    },
+    {
+      "name": "node-removal",
+      "next": null,
+      "retireOld": true,
+      "preserveGesture": false,
+      "preserveHost": false
+    }
+  ],
+  "retirement": {
+    "selectionPublications": 0,
+    "pointerUpPublications": 0,
+    "successorStartsFresh": true,
+    "ordinaryRefreshKeepsCameraAndTiles": true
+  },
+  "ledger": {
+    "capacity": 256,
+    "fullDisposition": "yield-before-mutation",
+    "consumerOrder": [
+      "release-ui-borrow",
+      "retire-map-interaction",
+      "publish-successor-hits"
+    ],
+    "drainPerOpportunity": 1
+  }
+}

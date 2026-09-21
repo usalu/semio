@@ -22,8 +22,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for SetTransform {
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgTinyMutation> {
         agg_inverse(&SvgTinyMutation::SetTransform(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-transform".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-transform", "Transformation setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

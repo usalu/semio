@@ -26,12 +26,20 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStep
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&{
         if self.new_enabled {
             format!("Enable step \"{}\"", self.id)
         } else {
             format!("Disable step \"{}\"", self.id)
         }
+        }, &{
+        if self.new_enabled {
+            format!("Schritt \"{}\" aktivieren", self.id)
+        } else {
+            format!("Schritt \"{}\" deaktivieren", self.id)
+        }
+        })
     }
 
     fn target(&self) -> Vec<String> {

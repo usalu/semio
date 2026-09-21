@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeSigmaEdShe
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change shell design stress [MPa] to {}", self.new_sigma_ed_shell_mpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change shell design stress [MPa] to {}", self.new_sigma_ed_shell_mpa), &format!("Schalenbemessungsspannung [MPa] auf {} ändern", self.new_sigma_ed_shell_mpa))
     }
 }
 //#endregion 🔖️ChangeSigmaEdShellMpa

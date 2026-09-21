@@ -177,7 +177,12 @@
             "id",
             "label",
             "actionPrefix",
-            "expandedKey"
+            "expandedKey",
+            "categorySurfaceId",
+            "formId",
+            "executeId",
+            "resetId",
+            "unexpandedRowId"
           ],
           "properties": {
             "id": {
@@ -194,6 +199,21 @@
             "expandedKey": {
               "type": "string",
               "minLength": 1
+            },
+            "categorySurfaceId": {
+              "const": "command.category.appearance"
+            },
+            "formId": {
+              "const": "command.category.appearance.form"
+            },
+            "executeId": {
+              "const": "command-os.os.setThemeId-execute"
+            },
+            "resetId": {
+              "const": "command-os.os.setThemeId-reset"
+            },
+            "unexpandedRowId": {
+              "const": "shell.commands.os.setThemeId"
             }
           }
         },

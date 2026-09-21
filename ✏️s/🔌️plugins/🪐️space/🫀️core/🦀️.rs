@@ -621,7 +621,7 @@ fn admit_space_retained_mutation<M: ::protocol::OpBinary>(mutation: &M, maximum_
     if retained_bytes > maximum_bytes {
         return Err("s.space.retained.mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes })
+    Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes))
 }
 
 fn prepare_space_retained_one_item<P, M>(base: &P, mutation: M, maximum_bytes: usize) -> Result<(P, Vec<M>, M), String>

@@ -28,6 +28,7 @@ import {
 } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
 import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 import { browserClipboardPasteCandidate } from "../../🎯️targets/🧊️wgpu/🎮️input-wire/🟦️.ts";
+import type { OrderedScrollEvent, OrderedScrollFixture } from "../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧪️tests/🔬️ordered-scroll/🟦️.ts";
 
 /** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
@@ -44,6 +45,7 @@ const TEST_HOST_STORAGE: WgpuHostStorageSnapshot = {};
 type FixtureRow = { readonly id: string; readonly why: string; readonly dom: Record<string, unknown>; readonly wire: Record<string, unknown>; readonly dispatch: Record<string, unknown> | null };
 
 const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json"), "utf8")) as { readonly rows: readonly FixtureRow[] };
+const orderedScroll = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧫️fixtures/🔣️.json"), "utf8")) as OrderedScrollFixture;
 
 /** 🖱️ The fixture's `dom` column minus the `devicePixelRatio` the surface, not the event, owns. */
 function domEvent(row: FixtureRow): { event: BrowserFrameDomEvent; dpr: number } {
@@ -81,6 +83,24 @@ function readyTransport(worker: FakeWorker): BrowserFrameTransport {
 }
 
 describe("wgpu browser input wire", () => {
+  it("keeps physical wheel multiplicity, modifiers and interleaving in a third-party DOM", () => {
+    const modifiers = (event: MouseEvent | KeyboardEvent): OrderedScrollEvent["modifiers"] => ({ shift: event.shiftKey, ctrl: event.ctrlKey, alt: event.altKey, meta: event.metaKey });
+    for (const row of orderedScroll.cases) {
+      const target = document.createElement("div");
+      const observed: OrderedScrollEvent[] = [];
+      target.addEventListener("wheel", (event) => observed.push({ kind: "scroll", x: event.clientX, y: event.clientY, deltaX: event.deltaX, deltaY: event.deltaY, modifiers: modifiers(event) }));
+      target.addEventListener("pointermove", (event) => observed.push({ kind: "pointer-move", x: event.clientX, y: event.clientY, modifiers: modifiers(event) }));
+      target.addEventListener("keydown", (event) => observed.push({ kind: "key-down", key: event.key, modifiers: modifiers(event) }));
+      for (const event of row.physical) {
+        const init = { bubbles: true, clientX: "x" in event ? event.x : 0, clientY: "y" in event ? event.y : 0, shiftKey: event.modifiers.shift, ctrlKey: event.modifiers.ctrl, altKey: event.modifiers.alt, metaKey: event.modifiers.meta };
+        if (event.kind === "scroll") target.dispatchEvent(new WheelEvent("wheel", { ...init, deltaX: event.deltaX, deltaY: event.deltaY }));
+        else if (event.kind === "pointer-move") target.dispatchEvent(new MouseEvent("pointermove", init));
+        else target.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: event.key, shiftKey: event.modifiers.shift, ctrlKey: event.modifiers.ctrl, altKey: event.modifiers.alt, metaKey: event.modifiers.meta }));
+      }
+      expect(observed, row.id).toEqual(row.expectedDom);
+    }
+  });
+
   it("carries an addressed accessibility blur on the bounded lossless lane", () => {
     const worker = new FakeWorker();
     const transport = readyTransport(worker);

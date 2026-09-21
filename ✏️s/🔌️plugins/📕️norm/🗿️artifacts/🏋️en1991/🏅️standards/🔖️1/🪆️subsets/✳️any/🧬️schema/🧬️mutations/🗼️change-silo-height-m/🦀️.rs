@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeSiloHeight
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change silo height to {:?}", self.new_silo_height_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change silo height to {:?}", self.new_silo_height_m), &format!("Silohöhe auf {:?} ändern", self.new_silo_height_m))
     }
 }
 //#endregion 🔖️Payload

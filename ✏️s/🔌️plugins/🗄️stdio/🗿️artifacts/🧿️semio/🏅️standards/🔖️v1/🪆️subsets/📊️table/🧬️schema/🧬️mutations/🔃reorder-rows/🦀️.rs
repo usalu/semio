@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for ReorderR
     fn inverse(&self, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move row #{} to #{}", self.from, self.to)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move row #{} to #{}", self.from, self.to), &format!("Zeile #{} nach #{} verschieben", self.from, self.to))
     }
     fn target(&self) -> Vec<String> {
         vec![self.from.to_string()]

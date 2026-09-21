@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeDfPerc
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change daylight factor to {}", self.new_df_percent)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change daylight factor to {}", self.new_df_percent), &format!("Tageslichtfaktor auf {} ändern", self.new_df_percent))
     }
 }
 //#endregion 🔖️ChangeDfPercent

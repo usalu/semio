@@ -26,8 +26,8 @@ pub mod mutation {
             super::super::inverse::inverse(self, base)
         }
 
-        fn label(&self) -> String {
-            format!("Create layer \"{}\"", crate::standards::v1::subsets::any::schema::layer_name(&self.layer))
+        fn label(&self) -> protocol::LocalizedLabel {
+            protocol::LocalizedLabel::native(&format!("Create layer \"{}\"", crate::standards::v1::subsets::any::schema::layer_name(&self.layer)), &format!("Ebene \"{}\" erstellen", crate::standards::v1::subsets::any::schema::layer_name(&self.layer)))
         }
 
         fn target(&self) -> Vec<String> {

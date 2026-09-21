@@ -49,6 +49,7 @@ export interface InkTextParagraph {
 
 export interface InkItemBase {
   readonly id: string;
+  readonly interactionId?: string;
   readonly name: string;
   readonly x: number;
   readonly y: number;
@@ -977,6 +978,10 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
   const hoveredId = scene?.hoveredId ?? null;
   const isNavigator = scene?.viewMode === "navigator";
   const interactive = scene?.interactive ?? false;
+  const interactionDomain = useMemo(
+    () => (scene?.interactionDomain?.id && scene.interactionDomain.granularityId ? { domainId: scene.interactionDomain.id, granularity: scene.interactionDomain.granularityId } : null),
+    [scene?.interactionDomain],
+  );
 
   useEffect(() => {
     if (!gestureActiveRef.current) setDraftDoc(null);
@@ -1032,6 +1037,31 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
     },
     [node.controllerId, node.surfaceId, onAction],
+  );
+  const publishInteractionSelection = useCallback(
+    (blocks: readonly InkItem[], merge: "replace" | "additive", method: "pick" | "rectangle"): boolean => {
+      if (!interactionDomain) return false;
+      const targets: { readonly granularity: string; readonly id: string }[] = [];
+      for (const block of blocks) {
+        if (!block.interactionId) {
+          if (method === "pick") return false;
+          continue;
+        }
+        targets.push({ granularity: interactionDomain.granularity, id: block.interactionId });
+      }
+      dispatch("interactionSelect", { domainId: interactionDomain.domainId, targets: JSON.stringify(targets), merge, method });
+      return true;
+    },
+    [dispatch, interactionDomain],
+  );
+  const publishInteractionHover = useCallback(
+    (block: InkItem | null): boolean => {
+      if (!interactionDomain || (block && !block.interactionId)) return false;
+      const targets = block ? [{ granularity: interactionDomain.granularity, id: block.interactionId! }] : [];
+      dispatch("interactionHover", { domainId: interactionDomain.domainId, channel: "pointer", targets: JSON.stringify(targets) });
+      return true;
+    },
+    [dispatch, interactionDomain],
   );
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
   const shellContextMenuFallback = useShellContextMenuFallback();
@@ -1148,16 +1178,15 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       const hits = inkItemsAtPoint(doc.blocks, worldX, worldY);
       const top = hits[0];
       if (!top || top.locked) {
-        if (utility === "selectDirect") dispatch(inkCanvasActions.setSelection, { ids: [] });
+        if (utility === "selectDirect" && !top) publishInteractionSelection([], "replace", "pick");
         return;
       }
       if (utility === "selectDirect") {
-        const nextSelection = event.shiftKey ? [...new Set([...selectedIds, top.id])] : [top.id];
-        dispatch(inkCanvasActions.setSelection, { ids: nextSelection });
+        publishInteractionSelection([top], event.shiftKey ? "additive" : "replace", "pick");
         beginMove(event, top.id);
       }
     },
-    [atomicGesture, beginGesture, beginMove, dispatch, doc, interactive, isNavigator, selectedIds, utility],
+    [atomicGesture, beginGesture, beginMove, doc, interactive, isNavigator, publishInteractionSelection, utility],
   );
 
   const handleBlockPointerDown = useCallback(
@@ -1166,11 +1195,10 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       if (!rootRef.current || !doc || !interactive) return;
       const block = findInkItem(doc, blockId);
       if (!block || block.locked) return;
-      const nextSelection = event.shiftKey ? [...new Set([...selectedIds, blockId])] : [blockId];
-      dispatch(inkCanvasActions.setSelection, { ids: nextSelection });
+      publishInteractionSelection([block], event.shiftKey ? "additive" : "replace", "pick");
       if (utility === "selectDirect" || utility === "selectMarquee") beginMove(event, blockId);
     },
-    [beginMove, dispatch, doc, interactive, selectedIds, utility],
+    [beginMove, doc, interactive, publishInteractionSelection, utility],
   );
 
   const handleResizePointerDown = useCallback(
@@ -1195,7 +1223,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
         if (!interactive) return;
         const hits = inkItemsAtPoint(doc.blocks, worldX, worldY);
         const top = hits[0] ?? null;
-        dispatch(inkCanvasActions.setHover, { id: top?.id ?? null });
+        publishInteractionHover(top);
         return;
       }
       if (dragState.kind === "pan") {
@@ -1246,7 +1274,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
         if (events.length) liveGesture(events);
       }
     },
-    [dispatch, doc, dragState, interactive, liveGesture],
+    [dispatch, doc, dragState, interactive, liveGesture, publishInteractionHover],
   );
 
   const handlePointerUp = useCallback(() => {
@@ -1291,12 +1319,13 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       if (screenRect) {
         const camera = doc.camera;
         const worldRect = { x: (screenRect.x - camera.x) / camera.zoom, y: (screenRect.y - camera.y) / camera.zoom, width: screenRect.width / camera.zoom, height: screenRect.height / camera.zoom };
-        dispatch(inkCanvasActions.setSelection, { ids: inkItemsIntersectingRect(doc.blocks, worldRect) });
+        const blocks = inkItemsIntersectingRect(doc.blocks, worldRect).map((id) => findInkItem(doc, id)).filter((block): block is InkItem => block !== null);
+        publishInteractionSelection(blocks, "replace", "rectangle");
       }
     }
     setDragState(null);
     setMarqueePoints([]);
-  }, [commitGesture, dispatch, doc, dragState, flushPendingLive, marqueePoints]);
+  }, [commitGesture, doc, dragState, flushPendingLive, marqueePoints, publishInteractionSelection]);
 
   const handlePointerCancel = useCallback(() => {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
@@ -1340,7 +1369,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       if (top?.kind === "text" && !top.locked) {
         setTableEdit(null);
         setTextEdit({ blockId: top.id });
-        dispatch(inkCanvasActions.setSelection, { ids: [top.id] });
+        publishInteractionSelection([top], "replace", "pick");
         return;
       }
       if (top?.kind === "table" && !top.locked) {
@@ -1348,7 +1377,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
         if (!cell) return;
         setTextEdit(null);
         setTableEdit({ blockId: top.id, row: cell.row, col: cell.col });
-        dispatch(inkCanvasActions.setSelection, { ids: [top.id] });
+        publishInteractionSelection([top], "replace", "pick");
         return;
       }
       if (top) return;
@@ -1357,7 +1386,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       atomicGesture([{ operation: "addBlock", block }], [block.id]);
       setTextEdit({ blockId: block.id, created: true });
     },
-    [atomicGesture, dispatch, doc, interactive, isNavigator],
+    [atomicGesture, doc, interactive, isNavigator, publishInteractionSelection],
   );
 
   //#region ContextMenu
@@ -1371,7 +1400,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       const hitItems = inkItemsAtPoint(doc.blocks, worldX, worldY);
       const top = hitItems[0];
       const selectionIds = top && !selectedSet.has(top.id) ? [top.id] : selectedIds;
-      if (top && !selectedSet.has(top.id)) dispatch(inkCanvasActions.setSelection, { ids: selectionIds });
+      if (top && !selectedSet.has(top.id)) publishInteractionSelection([top], "replace", "pick");
       const hits = hitItems.map((item) => ({ domain: "block", id: item.id }));
       void (async () => {
         const menu = await openSurfaceContextMenu(
@@ -1393,7 +1422,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
         setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
       })();
     },
-    [dispatch, doc, mapContextMenu, node.surfaceId, requestContextMenu, selectedIds, selectedSet, shellContextMenuFallback, windowInstanceId],
+    [doc, mapContextMenu, node.surfaceId, publishInteractionSelection, requestContextMenu, selectedIds, selectedSet, shellContextMenuFallback, windowInstanceId],
   );
   //#endregion ContextMenu
 
@@ -1411,13 +1440,13 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       const plain = inkTextPlainText(paragraphs).trim();
       if (!plain && created) {
         atomicGesture([{ operation: "removeBlock", blockId }]);
-        dispatch(inkCanvasActions.setSelection, { ids: [] });
+        publishInteractionSelection([], "replace", "pick");
       } else {
         atomicGesture([{ operation: "updateBlock", blockId, block: { ...block, paragraphs } }]);
       }
       setTextEdit(null);
     },
-    [atomicGesture, dispatch, doc],
+    [atomicGesture, doc, publishInteractionSelection],
   );
 
   const commitTableEdit = useCallback(

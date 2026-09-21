@@ -20,8 +20,8 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for RenameDocumentEle
     fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {
         agg_inverse(&XmlValidMutation::RenameDocumentElement(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "rename-document-element".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("rename-document-element", "Dokumentelement umbenennen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -208,7 +208,7 @@ fn a_press_in_a_docked_pane_arms_the_activation_the_undo_chord_replays() {
     shell.deferred_actions.clear();
     let (_, body) = shell.dock_window_plan.iter().find(|(window_id, _)| window_id == PERSPECTIVE).cloned().expect("🪟️ the perspective pane is planned");
 
-    assert!(shell.activate_window_under_pointer(body.x + body.w * 0.7, body.y + body.h * 0.45), "🖱️ the probe's own aim point activates the pane it lands in");
+    assert!(shell.activate_window_under_pointer(body.x + body.w * 0.7, body.y + body.h * 0.45, &Theme::light()), "🖱️ the probe's own aim point activates the pane it lands in");
     assert_eq!(shell.active_window_id.as_deref(), Some(PERSPECTIVE));
     shell.arm_window_activation_note();
     let armed = shell.deferred_actions.first().expect("🪟️ a real activation arms exactly one note");
@@ -220,7 +220,7 @@ fn a_press_in_a_docked_pane_arms_the_activation_the_undo_chord_replays() {
     assert!(empty.dock.close_window(TOP) && empty.dock.close_window(PERSPECTIVE));
     plan(&mut empty);
     empty.deferred_actions.clear();
-    assert!(!empty.activate_window_under_pointer(CANVAS.w * 0.7, CANVAS.h * 0.45), "🈳️ an empty dock has no pane to activate — the run-19 state in which `mod+z` carried no `shell.windowActivate`");
+    assert!(!empty.activate_window_under_pointer(CANVAS.w * 0.7, CANVAS.h * 0.45, &Theme::light()), "🈳️ an empty dock has no pane to activate — the run-19 state in which `mod+z` carried no `shell.windowActivate`");
 }
 
 //#endregion 🕒️CapJournals

@@ -21,8 +21,8 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ReplaceCurvePo
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace points for curve \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace points for curve \"{}\"", self.id), &format!("Punkte für Kurve \"{}\" ersetzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

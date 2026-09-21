@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeMultipleRe
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change multiple resisting systems flag to {}", self.new_multiple_resisting_systems)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change multiple resisting systems flag to {}", self.new_multiple_resisting_systems), &format!("tragende Mehrfachsystemenschalter auf {} ändern", self.new_multiple_resisting_systems))
     }
 }
 //#endregion 🔖️ChangeMultipleResistingSystems

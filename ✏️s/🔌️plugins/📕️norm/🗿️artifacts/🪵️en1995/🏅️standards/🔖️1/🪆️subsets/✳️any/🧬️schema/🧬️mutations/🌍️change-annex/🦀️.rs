@@ -31,8 +31,8 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeAnnex {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change national annex to {}", self.new_annex.label())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change national annex to {}", self.new_annex.label()), &format!("Nationalen Anhang auf {} ändern", self.new_annex.label()))
     }
 }
 //#endregion 🔖️ChangeAnnex

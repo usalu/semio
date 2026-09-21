@@ -29,8 +29,8 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for ChangePa
     fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change parameter binding \"{}\"", self.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change parameter binding \"{}\"", self.key), &format!("Parameterbindung \"{}\" ändern", self.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]

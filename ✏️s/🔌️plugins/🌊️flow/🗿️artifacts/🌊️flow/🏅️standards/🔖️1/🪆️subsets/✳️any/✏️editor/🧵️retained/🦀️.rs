@@ -3,7 +3,7 @@
 use super::FlowMutation;
 use flow::neural;
 use semio_framework_artifact_flow_flow::retained::{FlowOwner, FlowRetirement};
-use semio_framework_artifact_flow_flow::{FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, Widget};
+use semio_framework_artifact_flow_flow::{FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, Widget, WidgetLayout};
 use std::collections::LinkedList;
 use std::mem::ManuallyDrop;
 use store::ErasedSnapshotRetirement;
@@ -30,6 +30,7 @@ pub(super) enum Owner {
     Synapses(Vec<neural::Synapse>),
     Gui(FlowGui),
     Nodes(flow::OrderedMap<FlowNodeGui>),
+    Layouts(flow::OrderedMap<WidgetLayout>),
     Previews(Vec<FlowPreviewGui>),
     Layout(Vec<FlowLayoutEntry>),
     Mutation(FlowMutation),
@@ -97,7 +98,7 @@ impl Retirement {
             Owner::Set(value) => self.domain(FlowOwner::Set(value)),
             Owner::Dictionary(value) => self.domain(FlowOwner::Dictionary(value)),
             Owner::Domain(mut owner) => {
-                match owner.close_step(maximum_items, maximum_bytes).expect("typed Flow retirement") {
+                match owner.close_page(maximum_items, maximum_bytes).expect("typed Flow retirement") {
                     store::SnapshotRetirementStep::Pending { released_bytes: bytes, .. } => released_bytes = bytes,
                     store::SnapshotRetirementStep::Complete => {}
                     store::SnapshotRetirementStep::Blocked => unreachable!("positive Flow retirement grant"),
@@ -144,6 +145,7 @@ impl Retirement {
                 self.push(Owner::Previews(value.previews));
             }
             Owner::Nodes(value) => self.domain(FlowOwner::Nodes(value)),
+            Owner::Layouts(value) => self.domain(FlowOwner::Layouts(value)),
             Owner::Previews(mut values) => {
                 let next = values.pop();
                 if !values.is_empty() {

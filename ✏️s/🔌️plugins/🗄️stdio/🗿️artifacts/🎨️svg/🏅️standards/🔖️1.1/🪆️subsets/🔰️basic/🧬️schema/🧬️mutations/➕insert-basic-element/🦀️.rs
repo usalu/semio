@@ -23,8 +23,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertBasicElemen
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
         agg_inverse(&SvgBasicMutation::InsertBasicElement(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-basic-element".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-basic-element", "grundlegende Element einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

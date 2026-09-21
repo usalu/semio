@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for RemoveMark
     fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove mark #{} from run #{}", self.index, self.run_index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove mark #{} from run #{}", self.index, self.run_index), &format!("Marke #{} aus Lauf #{} entfernen", self.index, self.run_index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.run_index.to_string(), self.index.to_string()]

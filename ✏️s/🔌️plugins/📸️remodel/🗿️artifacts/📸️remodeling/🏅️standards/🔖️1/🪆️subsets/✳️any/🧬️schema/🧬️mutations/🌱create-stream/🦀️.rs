@@ -32,8 +32,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CreateSt
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create stream \"{}\"", self.stream.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create stream \"{}\"", self.stream.id), &format!("Strom \"{}\" erstellen", self.stream.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.stream.id.clone()]

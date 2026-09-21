@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeFireCurve 
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change fire curve to {:?}", self.new_fire_curve)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change fire curve to {:?}", self.new_fire_curve), &format!("Brandkurve auf {:?} ändern", self.new_fire_curve))
     }
 }
 //#endregion 🔖️Payload

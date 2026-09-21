@@ -22,8 +22,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetRunText {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::SetRunText(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-run-text".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-run-text", "Lauftext setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

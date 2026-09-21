@@ -30,8 +30,8 @@ impl MutationKind<Grid3dSnapshot, Grid3dMutation> for ChangeTileWeight {
     fn inverse(&self, base: &Grid3dSnapshot) -> Vec<Grid3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change weight of tile \"{}\"", self.tile_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change weight of tile \"{}\"", self.tile_id), &format!("Gewicht von Kachel \"{}\" ändern", self.tile_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.tile_id.clone()]

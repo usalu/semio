@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeSnowZone {
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change snow zone to {:?}", self.new_snow_zone)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change snow zone to {:?}", self.new_snow_zone), &format!("Schneenzone auf {:?} ändern", self.new_snow_zone))
     }
 }
 //#endregion 🔖️Payload

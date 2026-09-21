@@ -23,8 +23,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for EditStory {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_edit_story(self, base)
     }
-    fn label(&self) -> String {
-        format!("Edit story \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Edit story \"{}\"", self.id), &format!("Geschoss \"{}\" bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorCrac
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change anchor cracked to {:?}", self.new_anchor_cracked)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change anchor cracked to {:?}", self.new_anchor_cracked), &format!("gerissene Anker auf {:?} ändern", self.new_anchor_cracked))
     }
 }
 //#endregion 🔖️ChangeAnchorCracked

@@ -29,8 +29,8 @@ impl protocol::MutationKind<WiresSnapshot, WiresMutation> for DisconnectNodes {
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Disconnect edge \"{}\"", self.edge_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Disconnect edge \"{}\"", self.edge_id), &format!("Kante \"{}\" trennen", self.edge_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.edge_id.clone()]

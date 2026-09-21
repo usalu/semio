@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for RenameType {
     fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename type {} to {}", self.id, self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename type {} to {}", self.id, self.new_name), &format!("Typ {} in {} umbenennen", self.id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

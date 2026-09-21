@@ -38,8 +38,8 @@ impl MutationKind<PdfSnapshot, PdfA1Mutation> for ClearPageText {
         vec![PdfA1Mutation::SetPageText(super::SetPageText { text: base.pages[0].text.clone() })]
     }
 
-    fn label(&self) -> String {
-        "clear page text".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("clear page text", "Seitentext leeren")
     }
 
     fn target(&self) -> Vec<String> {

@@ -369,8 +369,11 @@ export function sizeVar(key: keyof typeof STYLING_SIZE_VAR): string {
   return `var(${STYLING_SIZE_VAR[key]})`;
 }
 
-/** @emoji 🔑️ Compact-mode reference root (px) for headless layout math at default 16px root. */
-export const STYLING_COMPACT_ROOT_PX = 16;
+/** @emoji 📐️ DOM layout metrics and root-rem authority from the canonical styling contract. */
+export const STYLING_DOM = STYLING_METRICS.dom;
+
+/** @emoji 🔑️ Compact-mode reference root (px) for headless layout math. */
+export const STYLING_COMPACT_ROOT_PX = STYLING_DOM.rootRemPx;
 
 const COMPACT_UI_SPACING_REM = 0.2;
 
@@ -384,11 +387,8 @@ export function uiSpacingPx(multiplier: number, rootPx = STYLING_COMPACT_ROOT_PX
   return multiplier * COMPACT_UI_SPACING_REM * rootPx;
 }
 
-/** @emoji 📐️ DOM layout multipliers (multiples of `--ui-spacing`) from 🔣️.json. */
-export const STYLING_DOM = STYLING_METRICS.dom;
-
 /** @emoji 📐️ Resolves a DOM metric key to px at the compact reference root. */
-export function domSizePx(key: keyof typeof STYLING_DOM, rootPx = STYLING_COMPACT_ROOT_PX): number {
+export function domSizePx(key: Exclude<keyof typeof STYLING_DOM, "rootRemPx">, rootPx = STYLING_COMPACT_ROOT_PX): number {
   return uiSpacingPx(STYLING_DOM[key], rootPx);
 }
 

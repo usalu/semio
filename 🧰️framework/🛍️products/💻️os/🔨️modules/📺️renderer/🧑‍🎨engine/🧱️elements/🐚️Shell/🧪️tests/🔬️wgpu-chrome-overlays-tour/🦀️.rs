@@ -15,7 +15,7 @@ fn chrome_build_state_moves_across_threads_without_losing_state() {
     // 🎯️ `content_focus` records WHICH node holds focus, not a bare bool (ticket 26/09/17 packet W2k),
     // so the fixture mints a real arena id rather than `true`.
     let mut focus_arena = ui_wgpu::wgpu::Arena::<u8>::default();
-    chrome.content_focus.insert("main".to_string(), Some(focus_arena.insert(0)));
+    chrome.content_focus.insert("main".to_string(), Some(RetainedContentFocus { node: focus_arena.insert(0), key: ui_wgpu::wgpu::NodeKey::Explicit("tour-focus".into()), kind: RetainedNodeFocusKind::Button }));
     chrome.register_tooltip("nav.help", "Help");
     chrome.preferences.theme_id = "mono".to_string();
     let chrome = std::thread::spawn(move || {

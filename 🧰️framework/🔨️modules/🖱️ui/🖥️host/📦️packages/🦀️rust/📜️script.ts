@@ -5,9 +5,16 @@ import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleS
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "source") {
-      if (segments.length !== 1) throw new Error("UI-host source test accepts no arguments");
-      const { testInputAdmissionFixture } = await import("../../📥️input/🎟️admission/🧪️tests/🔬️input-admission/🟦️.ts");
-      testInputAdmissionFixture();
+      const scope = segments[1];
+      if (segments.length > 2 || (scope && scope !== "input-admission" && scope !== "ordered-scroll")) throw new Error("UI-host source test scope must be input-admission or ordered-scroll");
+      if (!scope || scope === "input-admission") {
+        const { testInputAdmissionFixture } = await import("../../📥️input/🎟️admission/🧪️tests/🔬️input-admission/🟦️.ts");
+        testInputAdmissionFixture();
+      }
+      if (!scope || scope === "ordered-scroll") {
+        const { testOrderedScrollFixture } = await import("../../📥️input/🎡️ordered-scroll/🧪️tests/🔬️ordered-scroll/🟦️.ts");
+        testOrderedScrollFixture();
+      }
       return;
     }
     const { rest } = resolveTestLevel(segments);

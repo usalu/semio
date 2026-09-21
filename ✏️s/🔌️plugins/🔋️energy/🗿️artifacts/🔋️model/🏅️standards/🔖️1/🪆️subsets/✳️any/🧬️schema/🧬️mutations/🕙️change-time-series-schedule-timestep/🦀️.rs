@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change Time Series Schedule Timestep of time series schedule {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change Time Series Schedule Timestep of time series schedule {}", self.id.0), &format!("Zeitreihenzeitplanzeitschritt von Zeitreihenzeitplan {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

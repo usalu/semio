@@ -19,8 +19,8 @@ impl MutationKind<TestSnapshot, TestMutation> for SetLabel {
     fn inverse(&self, base: &TestSnapshot) -> Vec<TestMutation> {
         vec![Self { value: base.label.clone() }.into()]
     }
-    fn label(&self) -> String {
-        format!("Set label to {}", self.value)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set label to {}", self.value), &format!("Beschriftung auf {} setzen", self.value))
     }
 }
 

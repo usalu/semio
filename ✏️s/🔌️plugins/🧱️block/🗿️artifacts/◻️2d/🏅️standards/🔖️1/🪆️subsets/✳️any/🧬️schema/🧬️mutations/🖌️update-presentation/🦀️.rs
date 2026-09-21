@@ -35,8 +35,8 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for UpdatePresenta
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Update presentation".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update presentation", "Präsentation aktualisieren")
     }
 }
 //#endregion 🔖️Mutation

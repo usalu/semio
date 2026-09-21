@@ -161,3 +161,27 @@ fn action_invoke_tool_call_commits_a_prepared_capability_end_to_end() {
     assert!(structured["undoToken"].as_str().unwrap().starts_with("undo_"));
 }
 //#endregion 🔖️MutationProtocolToolWiring
+
+//#region 🔖️HubOpenRetry
+/// ⏳️ A hub whose descriptor index is mid-refresh answers a RETRYABLE `PLUGIN_UNAVAILABLE`, and
+/// until ticket 26/09/18 slice M9 nothing retried it: the gateway process exited before
+/// `initialize` (measured live 2026-09-21, M8 §5.4(2)). The law pins the three things that make the
+/// repair a retry and not a hang — a non-retryable failure is never re-attempted, a retryable one is
+/// re-attempted a BOUNDED number of times, and the total wait is finite and small.
+#[test]
+fn a_hub_open_retries_only_what_the_hub_marks_retryable_and_always_terminates() {
+    let refreshing = GatewayError::new(GatewayErrorCode::PluginUnavailable, "authenticated hub descriptor index is refreshing; retry after authority refresh").retryable();
+    let denied = GatewayError::new(GatewayErrorCode::PermissionDenied, "this agent credential is scoped to another space");
+    assert_eq!(crate::root::hub_open_retry_backoff_ms(&denied, 0), None, "a non-retryable failure is returned on its first occurrence");
+    let mut total = 0;
+    let mut previous = 0;
+    for attempts_made in 0..crate::root::HUB_OPEN_RETRY_ATTEMPTS {
+        let backoff = crate::root::hub_open_retry_backoff_ms(&refreshing, attempts_made).expect("a retryable failure inside the bound is re-attempted");
+        assert!(backoff > previous, "the backoff grows with every attempt");
+        previous = backoff;
+        total += backoff;
+    }
+    assert_eq!(crate::root::hub_open_retry_backoff_ms(&refreshing, crate::root::HUB_OPEN_RETRY_ATTEMPTS), None, "the bound ends the retry even while the hub still says retry");
+    assert!(total <= 15_000, "a client's initialize is never held for longer than the bound, found {total} ms");
+}
+//#endregion 🔖️HubOpenRetry

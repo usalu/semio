@@ -47,8 +47,8 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for SetScalarMuta
         vec![super::JsonMutation::SetScalar(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String {
-        "Set Scalar".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Scalar", "Skalar setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-scalar".to_string()]

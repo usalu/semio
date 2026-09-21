@@ -752,6 +752,19 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     for (slot, child_id) in [("document", snapshot.document.child_id.clone())] {
         assert!(app.child_store(slot, &child_id).await.is_some(), "the genesis-derived {slot} member is live after the load");
     }
+    assert!(!crate::writer_text(&snapshot).is_empty(), "the demo example must survive the archive door with its authored body, not an empty document");
+    let derived = crate::genesis_writer_child_pack(&snapshot, "document", &snapshot.document.child_id).expect("the loaded snapshot still derives its own document member");
+    let document = <semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(&derived).expect("the derived document member decodes");
+    let body: String = document
+        .blocks
+        .iter()
+        .filter_map(|block| match block {
+            semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::DocBlock::Code { text, .. } => Some(text.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(body, crate::writer_text(&snapshot), "the genesis-derived document member must carry the loaded document's authored body");
+    assert!(!body.is_empty(), "the genesis-derived document member must not be empty after a member-less archive load");
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🔖️ExampleArchiveLoad

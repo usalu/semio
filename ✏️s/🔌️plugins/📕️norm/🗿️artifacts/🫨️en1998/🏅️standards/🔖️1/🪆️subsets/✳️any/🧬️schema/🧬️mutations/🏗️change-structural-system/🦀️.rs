@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeStructural
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change structural system to \"{}\"", self.new_structural_system)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change structural system to \"{}\"", self.new_structural_system), &format!("Tragsystem auf \"{}\" ändern", self.new_structural_system))
     }
 }
 //#endregion 🔖️ChangeStructuralSystem

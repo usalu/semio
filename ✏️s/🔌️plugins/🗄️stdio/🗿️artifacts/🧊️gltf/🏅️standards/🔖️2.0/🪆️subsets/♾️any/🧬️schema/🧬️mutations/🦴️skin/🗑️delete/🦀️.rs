@@ -58,8 +58,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSkinMut
         vec![super::GltfMutation::DeleteSkin(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Delete Skin".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Delete Skin", "Haut löschen")
     }
 
     fn target(&self) -> Vec<String> {

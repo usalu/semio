@@ -28,8 +28,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetSnapshot {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::SetSnapshot(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-snapshot".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

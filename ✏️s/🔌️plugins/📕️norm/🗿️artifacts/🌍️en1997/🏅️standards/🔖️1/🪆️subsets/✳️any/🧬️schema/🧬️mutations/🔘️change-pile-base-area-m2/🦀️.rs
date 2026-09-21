@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangePileBaseAr
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change pile base area [m2] to {}", self.new_pile_base_area_m2)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change pile base area [m2] to {}", self.new_pile_base_area_m2), &format!("Pfahlbasisfläche [m2] auf {} ändern", self.new_pile_base_area_m2))
     }
 }
 //#endregion 🔖️ChangePileBaseAreaM2

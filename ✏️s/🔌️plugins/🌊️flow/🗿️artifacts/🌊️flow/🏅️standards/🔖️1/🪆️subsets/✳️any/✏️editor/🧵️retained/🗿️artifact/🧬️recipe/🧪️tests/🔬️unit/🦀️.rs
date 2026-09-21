@@ -132,3 +132,30 @@ fn recipe_cancellation_retires_every_partial_frontier_without_losing_original_ro
         }
     }
 }
+
+#[test]
+fn move_recipe_cancellation_after_layout_cursor_creation_retires_both_map_roots() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️artifact-recipes.json")).unwrap();
+    let label = fixture["label"]["unit"].as_str().unwrap().repeat(fixture["label"]["repetitions"].as_u64().unwrap() as usize);
+    let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "move-widget").unwrap();
+    for bytes in fixture["grants"].as_array().unwrap() {
+        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: bytes.as_u64().unwrap() as usize };
+        let root = Arc::new(source(&label));
+        let weak = Arc::downgrade(&root);
+        let mutation = dsl::FromValue::from_value(dsl::DslValue::from(row["mutation"].clone())).unwrap();
+        let mut recipe = Recipe::new(root, Arc::new(mutation));
+        for _ in 0..500_000 {
+            if recipe.state.phase == 23 {
+                break;
+            }
+            recipe.advance(grant).unwrap();
+        }
+        assert_eq!(recipe.state.phase, 23, "the move recipe must reach its live layout cursor");
+        assert!(recipe.state.scene.as_ref().unwrap().layout.is_empty(), "the scene destination must be empty while the cursor owns the next root");
+        assert!(recipe.state.update.is_some(), "phase 22 must retain the layout cursor");
+        assert!(!recipe.state.retirement.is_empty(), "phase 22 must retain the original layout root");
+        assert!(weak.upgrade().is_some());
+        assert!(close(&mut recipe, grant) > 0);
+        assert!(weak.upgrade().is_none());
+    }
+}

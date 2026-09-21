@@ -46,8 +46,8 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for RemoveElementMu
         vec![super::SvgMutation::RemoveElement(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String {
-        "Remove Element".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove Element", "Element entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-element".to_string()]

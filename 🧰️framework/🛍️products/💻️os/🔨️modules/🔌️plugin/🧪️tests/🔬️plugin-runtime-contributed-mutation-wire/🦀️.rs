@@ -46,7 +46,7 @@ mod contributed_mutation_wire_tests {
         assert_eq!(result.mutation_id, mutation_id);
         assert_eq!(result.revision, 42);
         assert_eq!(result.generation, 9);
-        assert_eq!(result.label, "Add 5 to value");
+        assert_eq!(result.label, protocol::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"), "the whole locale matrix crosses the wire, not a pre-resolved string");
         assert!(result.foreign.is_empty());
         assert_eq!(result.owner_ops.len(), 1);
         let op = WireTestMutation::decode_op(&result.owner_ops[0]).expect("owner op decodes");

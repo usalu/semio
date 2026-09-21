@@ -1,4 +1,5 @@
 use super::*;
+use dsl::{DslValue, FromValue, ToValue};
 
 #[semio_framework_async_macros::async_test]
 async fn round_trips_through_to_value_and_from_value() {

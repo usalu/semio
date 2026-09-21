@@ -29,8 +29,8 @@ impl MutationKind<FlowSnapshot, FlowMutation> for ConnectWidgets {
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Connect \"{}\" to \"{}\"", self.from, self.to)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Connect \"{}\" to \"{}\"", self.from, self.to), &format!("\"{}\" mit \"{}\" verbinden", self.from, self.to))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

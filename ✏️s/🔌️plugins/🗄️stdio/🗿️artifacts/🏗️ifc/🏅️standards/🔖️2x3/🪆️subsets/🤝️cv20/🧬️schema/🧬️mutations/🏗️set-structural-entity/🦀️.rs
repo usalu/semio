@@ -21,8 +21,8 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetStructura
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3Cv20Mutation> {
         agg_inverse(&Ifc2x3Cv20Mutation::SetStructuralEntity(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-structural-entity".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-structural-entity", "Tragentität setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

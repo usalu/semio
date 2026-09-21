@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Re
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {
         agg_inverse(&SemioDocumentMutation::RemoveBlock(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-block".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-block", "Block entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

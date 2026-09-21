@@ -28,8 +28,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Chan
         crate::standards::v1::subsets::any::schema::mutations::change_generation_value::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change generation \"{}\" value \"{}\"", self.id, self.question_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change generation \"{}\" value \"{}\"", self.id, self.question_id), &format!("Erzeugung \"{}\" Wert \"{}\" ändern", self.id, self.question_id))
     }
 
     fn target(&self) -> Vec<String> {

@@ -5,6 +5,11 @@ Slice HS1 (session 6, 2026-09-20). Blocker of outcome 3 (two users editing one s
 aborting`, seconds after the hub's first `server.document.socket outcome=ok`
 (C2 §0/§4, captures `🗑️generated/c2-hub-crash-gm1-hold.txt`, `c2-hub-crash-2.txt`).
 
+> **Hub 7611 is UP on the fixed binary.** pid `os-hub-7611` **48489**, holder is the `bun 🐍️ds1-hub-hold.ts`
+> under `📜️hs1-hub-hold.sh`, data root `.🧬semio/🌐hub/gm1-boot`, `/readyz` `status: ready`,
+> `artifactAuthority.ready: true`, `features.openPlan: true`, runId `d8a8fe0d50f30762a4369546fa348a84`.
+> Its document socket was opened, fed 20 client frames and held — no abort (§6 has the restart line).
+
 ## 0. Headline
 
 **It is not a recursion and it is not a leak: it is six frames that together reserve 8.5 MiB on a
@@ -44,7 +49,9 @@ variable IS the workers' budget):
 | 2 MiB (today's default) | **overflow** — `🗑️generated/hs1-hub-hold-gm1.txt` |
 | 4 MiB | **overflow** — `🗑️generated/hs1-stack-4194304.txt` |
 | 8 MiB | **overflow**, total reservation measured at 8,506,832 B — `hs1-stack-8388608.txt` |
-| 16 MiB | **survives**: `Welcome` + `Session` frames, socket held 20 s, hub alive — `hs1-stack-16777216.txt` |
+| 16 MiB | carried the socket session (`Welcome` + `Session`, 20 s, hub alive — `hs1-stack-16777216.txt`), but §4.1b later proved 16 MiB is **still short** of the deepest legitimate turn |
+
+That last row is the trap this slice nearly fell into, and §4.1b is how it was caught.
 
 ## 1. The spawn site and the budget it gives (read, then measured)
 
@@ -219,16 +226,122 @@ printed. Run and passing: `🗑️generated/hs1-pool-stack-law.txt`.
 
 ## 5. Verification
 
-(filling)
+Every row was run; nothing here is reasoned about.
+
+| what | evidence |
+|---|---|
+| the three laws the coordinator set as acceptance are **green** | `🗑️generated/coordinator-hub-nextest-latest-hs1.txt` (23:42 run): `socket_grant_revoke_before_command_admission_has_no_storage_effect`, `checkpoint_publication_route_is_author_owned_actor_fenced_idempotent_and_cancellation_safe`, `checkpoint_publication_route_rejects_stale_or_cross_scope_inputs_before_publication` no longer appear among the failures |
+| the hub suite carries **zero** stack overflows | `grep -c "overflowed its stack" coordinator-hub-nextest-full-hs1.txt` → **0** (was 3 at 22:27 and 3 at 23:15) |
+| suite total | `321 tests run: 318 passed, 3 failed` — from 8 failed before the fix |
+| the document socket opens and stays open on this slice's own hub | `🗑️generated/hs1-socket-repro-fixed.txt`: `Welcome` → `Session`, hub alive |
+| **20 client frames + 5 minutes** | `🗑️generated/hs1-socket-survival.txt`: 20 `Presence` frames sent on the live socket with `/readyz` answered after each, the hub broadcasting a `Presence` roster back, then 300 s with `readyState=1` and `hubAlive=true`; hold log has 0 overflow lines |
+| the same on **hub 7611 / `gm1-boot`**, the data root that crashed | `🗑️generated/hs1-socket-7611.txt`, hold log `hs1-hub-7611.txt` (0 overflows) |
+| the pool-stack law | `🗑️generated/hs1-pool-stack-law.txt` — `1 passed` |
+| scoped type-checks | `semio-framework-async --lib`, `semio-framework-os-kernel-db --lib` and `--all-targets`, `semio-hub --lib`: all green with warnings emitted (proof of real expansion) |
+
+**The three remaining suite failures are not this slice's** — all three were already failing in the
+22:32 baseline run of the untouched tree: `gis_map_approval_committed_event_reaches_actor_frontier_and_public_checkpoint_before_ledger_apply`
+(FAIL), `admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen` (FAIL) and
+`gis_map_abandoned_pre_witness_request_returns_exact_stores_and_document_writer` (SIGABRT at exactly
+30.050 s, i.e. the `quick` profile's `slow-timeout terminate-after = 1`, not a stack overflow —
+the run carries zero overflow lines). `🌎️hub/💡️inference/🏃️runtime/🦀️.rs` was being edited by a peer
+throughout (it broke the hub build at 23:20 with `GisMapAbandonedTurnV1 doesn't implement Debug`),
+which is where all three live.
+
+### What was NOT verified
+
+- **Not a semantic document edit.** The 20 frames are `Presence`, a real `ClientFrame` the hub
+  decodes and broadcasts. A `Commands` batch needs a sealed command envelope; this probe does not
+  build one, so "20 edits" in the slice brief is met as "20 well-formed client frames", no more.
+- **Release profile not measured.** No release `os-hub` exists anywhere in the repo, and building one
+  costs a full optimised link of a 300 MB crate graph. Every figure in this report is **debug**.
+  Release frames are smaller (LLVM overlaps coroutine locals that a debug build gives separate
+  slots), so the debug-sized budget covers release — but that is an argument, not a measurement, and
+  it is the one open number here.
+- **Two concurrent humans** (outcome 3's step 3b) was not run by this slice — that is C2's probe on
+  the serves, now unblocked.
 
 ## 6. Restart command for the collaboration successor (hub 7611)
 
-(filling)
+7611 is already up (top of this report). If it ever needs restarting, this is the line — it uses a
+**copy** of the coordinator's binary, never the coordinator's file in place (that file is rebuilt
+under running processes; an in-place overwrite is a silent `SIGKILL` on macOS):
+
+```sh
+cd /Users/ueli/Documents/semio
+T=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END"
+# 1. refresh the copy ONLY after a coordinator rebuild you want to pick up
+rm -f ".🧬semio/🦑️repo/⚡️cache/hs1/os-hub-7611" \
+  && cp ".🧬semio/🦑️repo/⚡️cache/cargo/target-coordinator-hub/debug/os-hub" ".🧬semio/🦑️repo/⚡️cache/hs1/os-hub-7611" \
+  && codesign -f -s - ".🧬semio/🦑️repo/⚡️cache/hs1/os-hub-7611"
+# 2. kill ONLY a dead holder by pid (`pgrep -P <holder>` empty means its os-hub child is gone)
+# 3. hold it
+HS1_HUB_LOG="$T/🗑️generated/hs1-hub-7611.txt" nohup zsh "$T/📜️hs1-hub-hold.sh" 7611 \
+  "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/hs1/os-hub-7611" \
+  "/Users/ueli/Documents/semio/.🧬semio/🌐hub/gm1-boot" > /dev/null 2>&1 & disown
+# 4. poll — and RETRY the whole step 3 if /readyz never answers (see the boot note in §2)
+curl -s http://127.0.0.1:7611/readyz
+```
+
+`📜️hs1-hub-hold.sh` sets `OS_HUB_CREDENTIAL_SIGN_IN=true`, without which `/auth/sessions` answers 403
+and no browser can sign in. Under fleet load expect one or two boots to die on the hub's own 30 s
+artifact-authority budget before one comes up; the loop in `📜️hs1-stack-bisect.sh` shows the retry
+shape. **`SEMIO_BUILD_BUDGET_MS` does nothing here** — no Rust file reads it (§2).
+
+Then re-run C2's two-context scenario unchanged, against the serves already bound to 7611:
+
+```sh
+bun "$T/🐍️c2-shared-document.mjs" http://127.0.0.1:6191 127.0.0.1:7611
+```
+
+and this slice's cheap single-user check, which needs no browser at all:
+
+```sh
+bun "$T/🐍️hs1-socket-repro.ts" http://127.0.0.1:7611 \
+  01a0c00f-4f3c-7834-a7e6-2ccf9de925db artifact-2fb248125b8b2b4d56de25933d30ed21 \
+  "s.gis.gismap@1/*#editor" 60000 20
+```
 
 ## 7. Honest gaps
 
-(filling)
+- **The last ~7 MiB of the 16 MiB exhaustion is not accounted for frame by frame.** The post-§4.1b
+  crash reports price 9,060,912 B of prologue reservations on a stack `vmRegionInfo` shows as exactly
+  16.0 MiB, fully used. The decoder reads the first 24 instructions of each function, so a second
+  dynamic adjustment further into a body is invisible to it. The budget was therefore settled
+  empirically (§4.2) rather than by closing that gap.
+- **Release is unmeasured** (§5).
+- **`.cargo/config.toml`'s 64 MiB is now load-bearing in two places.** `WORKER_STACK_BYTES` was set to
+  match it deliberately, but they are two independent literals; nothing fails if one moves.
+- **The three remaining suite failures were not investigated** — they are a peer's live edits to
+  `🌎️hub/💡️inference/🏃️runtime/🦀️.rs` and predate this slice's first commit-equivalent edit.
+- **The `📝️wal/🧪️tests/🔬️retained` target does not compile** (`unresolved import semio_framework_pack`,
+  a missing feature). Pre-existing, in files this slice never touched, and it blocks
+  `cargo check -p semio-framework-os-kernel-db --all-targets` from being fully green.
+- **One process-hygiene slip**: the first hub rebuild (22:28) ran `📜️coordinator-hub-run.sh` without
+  the `hs1` tag and overwrote the shared `coordinator-hub-nextest-{latest,full}.txt` the hub-suite
+  workers read. Every run after it is tagged.
 
 ## 8. Files changed
 
-(filling)
+| file | change |
+|---|---|
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs` | `ArtifactBuildFuture`/`ArtifactTurnFuture`/`ArtifactTurn::History`/`ArtifactRunner::engine`/`start_turn` carry `Box<ArtifactEngine<A,V>>`; both `ArtifactAuthority::spawn*` bounds follow (§4.1). `start_turn`'s ten-arm `match` moved OUT of its async block into one boxed coroutine per message kind (§4.1b) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs` | the two mount builders yield `Box::new(engine)` |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs` | the four `ArtifactAuthority::spawn` builders follow the same bound |
+| `🧰️framework/🔨️modules/⏳️async/🦀️.rs` | new `WORKER_STACK_BYTES` (64 MiB) with the measurements in its docstring, `.stack_size(WORKER_STACK_BYTES)` on every pool worker, re-export, and `on_bounded_stack`'s stale "Rust's 2 MiB default" docstring corrected |
+| `🧰️framework/🔨️modules/⏳️async/🧪️tests/🔬️native-pool-unit/🦀️.rs` | new law `native_pool_workers_own_the_stated_worker_stack` (§4.3) |
+
+Ticket folder (not product code): `📜️hs1-hub-hold.sh`, `📜️hs1-stack-bisect.sh`,
+`🐍️hs1-socket-repro.ts`, `🐍️hs1-frame-sizes.py`; captures `🗑️generated/hs1-*.txt` and
+`coordinator-hub-nextest-{latest,full}-hs1.txt`.
+
+## 9. State at hand-off
+
+| what | pid | note |
+|---|---|---|
+| **hub 7611**, data root `gm1-boot`, fixed binary | `os-hub-7611` **48489** | ready, `openPlan: true`; socket verified; **this is the one collaboration needs** |
+| hub 7631, data root `hs1-boot` (a copy), fixed binary | `os-hub-fixed` **45367** | this slice's own; kill by pid when the successor no longer wants a second hub to compare against |
+| `s` serve 6190 / `gis2d` serve 6191 (C2's) | untouched | still bound to 7611 |
+
+Dead holder 83161 (its `os-hub` child had already aborted; `pgrep -P` empty) was killed by pid before
+7611 was rebound. Nothing else of any peer was stopped.

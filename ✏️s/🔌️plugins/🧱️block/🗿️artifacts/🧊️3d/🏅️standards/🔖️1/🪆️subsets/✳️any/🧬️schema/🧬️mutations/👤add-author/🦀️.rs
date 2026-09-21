@@ -32,8 +32,8 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for AddAuthor {
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add author \"{}\"", self.author.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add author \"{}\"", self.author.name), &format!("Autor \"{}\" hinzufügen", self.author.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.author.id.clone()]

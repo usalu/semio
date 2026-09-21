@@ -10,7 +10,7 @@ fn native_openable_provider_consumes_exact_complete_stdio_factory_closure() {
     let provider = NativeOpenableCatalogProviderV1::from_receipts(env!("CARGO_PKG_VERSION"), receipts()).expect("complete provider");
     let bindings = provider.into_bindings();
     assert_eq!(bindings.len(), NATIVE_STDIO_PROVIDER_RECEIPTS);
-    assert!(bindings.iter().all(|binding| !binding.has_genesis()), "headless Stdio codecs must not imply an editor genesis capability");
+    assert!(bindings.iter().all(|binding| binding.codec().pack_schema_hash != [0; 32]), "every headless Stdio codec carries its structural pack schema identity");
 }
 
 struct SelectionControl {
@@ -48,6 +48,11 @@ fn vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_wi
         let result = providers.preview(case["pluginId"].as_str().unwrap(), case["packageId"].as_str().unwrap(), case["version"].as_str().unwrap(), &context);
         assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap(), "{}", case["name"]);
         if let Ok(bindings) = result {
+            assert_eq!(bindings.len(), case["bindings"].as_u64().unwrap() as usize, "{}", case["name"]);
+            assert_eq!(bindings.is_empty(), case["code"] == "unlinked-package", "{}", case["name"]);
+            if bindings.is_empty() {
+                continue;
+            }
             accepted += 1;
             assert_eq!(bindings.len(), fixture["codecCount"].as_u64().unwrap() as usize);
             for (binding, row) in bindings.iter().zip(expected["receipts"].as_array().unwrap()) {
@@ -60,7 +65,7 @@ fn vcs_native_provider_selection_binds_literal_owner_version_and_cancellation_wi
                 assert_eq!(hexadecimal(&receipt.identity().protocol_sha256), row["protocolSha256"]);
                 assert_eq!(binding.codec().pack_schema_hash, receipt.into_codec().unwrap().pack_schema_hash);
                 assert_ne!(binding.codec().pack_schema_hash, [0; 32]);
-                assert!(binding.has_genesis(), "the exact VCS editor receipt must carry its package-owned genesis factory");
+                assert_eq!(binding.artifact_kind(), row["kind"], "the exact VCS receipt binds its own artifact kind");
             }
         }
     }
@@ -201,7 +206,10 @@ mod quick {
                 let bindings = providers.preview(plugin_id, package_id, env!("CARGO_PKG_VERSION"), &context).expect("selected compiled provider");
                 assert_eq!(bindings.len(), count, "{}", profile["name"]);
                 assert!(bindings.iter().all(|binding| binding.package_id() == package_id));
-                assert!(bindings.iter().all(|binding| binding.has_genesis() == (plugin_id != "stdio")), "only exact package editor receipts carry genesis authority");
+                // 🌱️ TC3b: a native binding carries NO creation authority any more — genesis is the
+                // component's, for every package alike, so there is nothing here to distinguish an
+                // editor receipt from an import/export one.
+                assert!(bindings.iter().all(|binding| binding.plugin_id() == plugin_id));
                 requested.push(package_id);
                 receipts += count;
             }
@@ -209,6 +217,8 @@ mod quick {
             assert_eq!(receipts, selected.iter().map(|package| counts.iter().find(|(_, id, _)| id == package).expect("compiled package").2).sum::<usize>());
         }
         assert_eq!(counts.iter().map(|(_, _, count)| count).sum::<usize>(), NATIVE_OPENABLE_PROVIDER_SET_V1_RECEIPTS);
-        assert!(providers.preview("note", "semio:note", env!("CARGO_PKG_VERSION"), &context).is_err());
+        assert!(providers.preview("note", "semio:note", env!("CARGO_PKG_VERSION"), &context).expect("an unlinked package is previewable").is_empty());
+        assert!(providers.preview("note", "semio:gis", env!("CARGO_PKG_VERSION"), &context).is_err());
+        assert!(providers.preview("gis", "semio:note", env!("CARGO_PKG_VERSION"), &context).is_err());
     }
 }

@@ -22,8 +22,8 @@ impl MutationKind<CadSnapshot, CadMutation> for DeleteShapeModel {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Delete shape-model child".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Delete shape-model child", "Formmodell-Kind löschen")
     }
     fn target(&self) -> Vec<String> {
         vec!["shape_model".to_string()]

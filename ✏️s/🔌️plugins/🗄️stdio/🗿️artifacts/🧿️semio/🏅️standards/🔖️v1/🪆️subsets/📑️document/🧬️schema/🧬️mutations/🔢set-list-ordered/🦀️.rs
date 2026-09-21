@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Se
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {
         agg_inverse(&SemioDocumentMutation::SetListOrdered(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-list-ordered".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-list-ordered", "geordnete Liste setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

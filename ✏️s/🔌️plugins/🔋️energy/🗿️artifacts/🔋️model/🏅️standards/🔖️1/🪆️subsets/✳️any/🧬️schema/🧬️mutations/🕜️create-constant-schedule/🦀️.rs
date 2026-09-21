@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Create Constant Schedule {} at index {}", self.id.0, self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create Constant Schedule {} at index {}", self.id.0, self.index), &format!("Konstantenzeitplan {} an Index {} erstellen", self.id.0, self.index))
     }
 
     fn target(&self) -> Vec<String> {

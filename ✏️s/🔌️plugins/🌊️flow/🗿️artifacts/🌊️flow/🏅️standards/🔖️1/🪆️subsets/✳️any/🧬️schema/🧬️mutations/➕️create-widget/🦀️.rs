@@ -24,8 +24,8 @@ impl MutationKind<FlowSnapshot, FlowMutation> for CreateWidget {
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create widget \"{}\"", self.widget.id())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create widget \"{}\"", self.widget.id()), &format!("Widget \"{}\" erstellen", self.widget.id()))
     }
     fn target(&self) -> Vec<String> {
         vec![self.widget.id().clone()]

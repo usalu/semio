@@ -20,7 +20,7 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneMaterialRou
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change material roughness to {}", self.new_roughness)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change material roughness to {}", self.new_roughness), &format!("Materialrauheit auf {} ändern", self.new_roughness))
     }
 }

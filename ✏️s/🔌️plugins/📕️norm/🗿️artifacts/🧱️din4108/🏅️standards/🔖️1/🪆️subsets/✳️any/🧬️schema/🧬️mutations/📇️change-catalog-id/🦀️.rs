@@ -19,8 +19,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeCatalogI
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change catalog id to \"{}\"", self.new_catalog_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change catalog id to \"{}\"", self.new_catalog_id), &format!("Katalogid auf \"{}\" ändern", self.new_catalog_id))
     }
 }
 //#endregion 🔖️Payload

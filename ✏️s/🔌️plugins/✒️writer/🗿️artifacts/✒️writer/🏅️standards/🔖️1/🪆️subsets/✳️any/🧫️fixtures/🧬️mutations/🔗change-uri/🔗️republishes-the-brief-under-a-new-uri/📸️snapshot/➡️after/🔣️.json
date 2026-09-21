@@ -3,6 +3,7 @@
   "id": "brief",
   "languageId": "markdown",
   "uri": "writer://published/brief.md",
+  "text": "# Mission Brief\n\nHold the current draft.\n",
   "document": {
     "childId": "document-fixture-brief-body",
     "target": {

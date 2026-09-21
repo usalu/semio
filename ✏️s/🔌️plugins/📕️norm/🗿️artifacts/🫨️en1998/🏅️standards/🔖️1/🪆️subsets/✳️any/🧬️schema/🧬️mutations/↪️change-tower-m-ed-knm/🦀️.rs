@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerMEdKn
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change tower design moment M_Ed [kNm] to {}", self.new_tower_m_ed_knm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change tower design moment M_Ed [kNm] to {}", self.new_tower_m_ed_knm), &format!("Turmbemessungsmomentm_Ed [kNm] auf {} ändern", self.new_tower_m_ed_knm))
     }
 }
 //#endregion 🔖️ChangeTowerMEdKnm

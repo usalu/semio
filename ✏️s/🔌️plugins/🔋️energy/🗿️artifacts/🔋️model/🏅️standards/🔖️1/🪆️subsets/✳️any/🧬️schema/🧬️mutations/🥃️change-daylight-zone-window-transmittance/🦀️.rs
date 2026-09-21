@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change daylight zone {} window transmittance to {:?}", self.id.0, self.new_window_transmittance)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change daylight zone {} window transmittance to {:?}", self.id.0, self.new_window_transmittance), &format!("Tageslichtzone {} Fenstertransmission auf {:?} ändern", self.id.0, self.new_window_transmittance))
     }
 
     fn target(&self) -> Vec<String> {

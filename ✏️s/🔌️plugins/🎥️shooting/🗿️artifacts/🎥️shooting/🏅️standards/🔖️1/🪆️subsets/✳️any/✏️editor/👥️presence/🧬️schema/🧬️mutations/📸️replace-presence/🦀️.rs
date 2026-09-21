@@ -19,8 +19,8 @@ impl protocol::MutationKind<ShootingPresence, ShootingPresenceMutation> for Repl
     fn inverse(&self, base: &ShootingPresence) -> Vec<ShootingPresenceMutation> {
         vec![ShootingPresenceMutation::ReplacePresence(Self { presence: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Replace Presence".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace Presence", "Präsenz ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["presence".into()]

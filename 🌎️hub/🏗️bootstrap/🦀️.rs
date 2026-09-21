@@ -578,22 +578,79 @@ impl DocumentOpenCatalogAuthorityV1 for VerifiedTrustedCatalog {
     }
 }
 
-async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Option<&dyn NativeCodecProviderSourceV1>, tracer: &Tracer) -> Result<Option<ConfiguredArtifactAuthority>, AuthorityError> {
+/// ⏳️ The fixed budget the startup trusted-catalog load gets. It is a real bound — a catalog that
+/// cannot be verified promptly must not hold the port hostage — but exceeding it is a TRANSIENT
+/// fact about this machine (measured 2026-09-21 by M8: a 612 MB catalog whose page cache was warm,
+/// under fleet CPU contention, twice), not a statement about the catalog, so see
+/// [`StartupArtifactAuthority::BudgetExceeded`] for what it is allowed to do.
+const TRUSTED_CATALOG_STARTUP_BUDGET_MS: u64 = 30_000;
+
+/// 📚️ What the startup trusted-catalog load produced. Three outcomes, not two, because "the load
+/// ran out of budget" and "this data root has no catalog" are different facts and the hub owes an
+/// operator the difference. A structural refusal — a corrupt catalog, a missing provider, a
+/// signature that does not verify — stays an `Err` and still aborts the boot: that one IS a
+/// statement about the data root.
+enum StartupArtifactAuthority {
+    Configured(ConfiguredArtifactAuthority),
+    Absent,
+    /// ⏳️ The load did not finish inside [`TRUSTED_CATALOG_STARTUP_BUDGET_MS`]. Before this variant
+    /// the hub EXITED on it — the opposite of every other gate's behaviour, which is to name a
+    /// reason in `blocked_by` and still bind — so a machine that was merely busy looked exactly
+    /// like a corrupt data root to whoever read the exit.
+    BudgetExceeded,
+}
+
+impl StartupArtifactAuthority {
+    /// 📚️ The loaded authority, or `None` for either of the two "no authority" outcomes — the shape
+    /// every reader that only cares whether a catalog is live wants.
+    fn configured(self) -> Option<ConfiguredArtifactAuthority> {
+        match self {
+            Self::Configured(configured) => Some(configured),
+            Self::Absent | Self::BudgetExceeded => None,
+        }
+    }
+
+    fn is_none(&self) -> bool {
+        matches!(self, Self::Absent | Self::BudgetExceeded)
+    }
+}
+
+/// 🧾️ The reason `artifactAuthority` is closed, from the three facts that decide it. A load that ran
+/// out of budget is NOT "pointer present but not loadable": nothing was found wrong with the
+/// catalog, so the reason must not read as if something had been.
+pub fn artifact_authority_closed_reason(native_artifact_execution: bool, trusted_catalog_budget_exceeded: bool, catalog_pointer_present: bool) -> &'static str {
+    if !native_artifact_execution {
+        "native-artifact-execution-feature-not-compiled"
+    } else if trusted_catalog_budget_exceeded {
+        "trusted-catalog-load-exceeded-its-startup-budget"
+    } else if catalog_pointer_present {
+        "trusted-catalog-pointer-present-but-not-loadable"
+    } else {
+        "trusted-catalog-never-published-in-this-data-root"
+    }
+}
+
+async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Option<&dyn NativeCodecProviderSourceV1>, tracer: &Tracer) -> Result<StartupArtifactAuthority, AuthorityError> {
     if providers.is_none() && data_dir.join("trusted-catalog/current.json").try_exists().map_err(|error| AuthorityError::Catalog(error.to_string()))? {
         return Err(AuthorityError::Catalog("configured trusted catalog requires the native-artifact-execution provider".into()));
     }
     let Some(providers) = providers else {
-        return Ok(None);
+        return Ok(StartupArtifactAuthority::Absent);
     };
     let control = StartupCatalogControl::new(tracer.clone());
     let started = control.now_ms();
-    let context = OperationContext::new(started.saturating_add(30_000), AuthorityLimits::maximum(), &control);
-    let Some(catalog) = TrustedCatalogLoader::load_current(data_dir, providers, &context).await? else {
-        return Ok(None);
+    let context = OperationContext::new(started.saturating_add(TRUSTED_CATALOG_STARTUP_BUDGET_MS), AuthorityLimits::maximum(), &control);
+    let loaded = match TrustedCatalogLoader::load_current(data_dir, providers, &context).await {
+        Ok(loaded) => loaded,
+        Err(AuthorityError::DeadlineExceeded | AuthorityError::Cancelled) => return Ok(StartupArtifactAuthority::BudgetExceeded),
+        Err(error) => return Err(error),
+    };
+    let Some(catalog) = loaded else {
+        return Ok(StartupArtifactAuthority::Absent);
     };
     let catalog = Arc::new(catalog);
     let authority = Arc::new(ValidatingCanonicalArtifactAuthority::new(catalog.clone()));
-    Ok(Some(ConfiguredArtifactAuthority { catalog, authority }))
+    Ok(StartupArtifactAuthority::Configured(ConfiguredArtifactAuthority { catalog, authority }))
 }
 
 //#region 🔖️State
@@ -629,6 +686,55 @@ struct PresenceLeaseSlot {
     /// agent can never hide as a human.
     principal_kind: protocol::PresencePrincipalKind,
     peer: Option<Vec<u8>>,
+}
+
+/// 🪪️ Exactly the roster fields the hub AUTHENTICATED, cloned out of a `PresenceLeaseSlot` so the
+/// canonical identity-only peer can be encoded without holding the presence map across an await.
+/// It is the row a live socket contributes on its own, with every app-owned ephemeral absent —
+/// `refresh_document_presence` stamps these same fields onto a beating peer, so a stripped row and a
+/// beating row differ only in the ephemerals the client owns.
+struct PresenceIdentityV1 {
+    connected_at_ms: i64,
+    label: Option<String>,
+    user_id: Option<String>,
+    role: Option<String>,
+    color: u8,
+    document_surface: Option<String>,
+    principal_kind: protocol::PresencePrincipalKind,
+}
+
+impl PresenceIdentityV1 {
+    fn of(slot: &PresenceLeaseSlot) -> Self {
+        Self {
+            connected_at_ms: slot.connected_at_ms,
+            label: slot.label.clone(),
+            user_id: slot.user_id.clone(),
+            role: slot.role.clone(),
+            color: slot.color,
+            document_surface: slot.document_surface.clone(),
+            principal_kind: slot.principal_kind,
+        }
+    }
+
+    async fn encode(&self, actor: &str) -> Vec<u8> {
+        protocol::encode_presence_peer(&protocol::PresencePeer {
+            actor: actor.to_string(),
+            connected_at_ms: self.connected_at_ms,
+            label: self.label.clone(),
+            user_id: self.user_id.clone(),
+            role: self.role.clone(),
+            color: Some(self.color),
+            surface: self.document_surface.clone(),
+            presence_pack: None,
+            drag_ghost_json: None,
+            interaction: None,
+            views: Vec::new(),
+            ui: None,
+            tool_run: None,
+            principal_kind: Some(self.principal_kind),
+        })
+        .await
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -1924,6 +2030,21 @@ impl HubState {
         self.tracer.emit(record);
     }
 
+    /// @emoji 🚨️ Maps a directory fault to its status the way [`directory_error_status`] does, and
+    /// **records the backend's own message first**.
+    ///
+    /// `DirectoryError::Backend` is the one arm whose payload the status code cannot carry: the
+    /// caller gets a bare `500` and the operator gets nothing at all, so a driver-level fault on a
+    /// read route is indistinguishable from a bug in the handler. That silence cost this ticket a
+    /// whole bisection (26/09/18 slice DB3, the Neo4j space-administration page). Every other arm
+    /// already names itself through its status, so only this one is reported.
+    fn directory_fault(&self, route: &str, error: DirectoryError) -> StatusCode {
+        if let DirectoryError::Backend(ref detail) = error {
+            self.note("server.directory.backend", TraceOutcome::Refused, &format!("route={route} {detail}"));
+        }
+        directory_error_status(error)
+    }
+
     /// @emoji 🎫️ Records one live session in the server-product instance's [`SessionStore`].
     ///
     /// The hub's session **authority** is and stays the directory: it owns the capability digest,
@@ -2003,6 +2124,16 @@ impl HubState {
     fn publish_presence_delta(&self, key: &str, space_id: &str, document_id: &str, snapshot: PresenceSnapshot) {
         let _ = self.fanout_for(key).send(ServerFrame::Presence { peers: snapshot.peers });
         self.directory_service.publish(DirectoryStreamMessage::Presence { space_id: space_id.to_string(), document_id: document_id.to_string(), actors: snapshot.actors });
+    }
+
+    /// 🔁️ Subscribes one joining socket to the document fanout and reads the roster it must start
+    /// from, both under the publication gate `publish_presence_delta`'s callers hold — so the
+    /// replayed roster is never older than the first delta the same socket goes on to receive, and
+    /// a join can never interleave with a delta into a roster neither side ever held.
+    async fn subscribe_with_presence_replay(&self, key: &str) -> Option<(broadcast::Receiver<ServerFrame>, PresenceSnapshot)> {
+        let _publication = tokio::time::timeout(std::time::Duration::from_secs(2), self.presence_publication_gate.lock()).await.ok()?;
+        let receiver = self.fanout_for(key).subscribe();
+        Some((receiver, self.presence_snapshot(key)))
     }
 
     /// 🆕️ Selects one live socket as the actor's current owner without making it visible.
@@ -2089,13 +2220,30 @@ impl HubState {
         }
     }
 
-    /// ⏳️ Hides a due visible peer while retaining the matching live owner slot.
+    /// ⏳️ Strips a due peer back to the identity its socket was ADMITTED with, and re-arms the lease.
+    /// Presence is a property of the open socket, not of the client's willingness to beat: a lapsed
+    /// lease means the app-owned ephemerals (`presence_pack`, `drag_ghost_json`, `interaction`,
+    /// `views`, `ui`, `tool_run`) are stale, never that the human left. Only
+    /// `close_presence_for_live` removes a row. Measured before this law existed (ticket
+    /// 26/09/18 slice PR1, `🗑️generated/pr1-before-hub-socket.txt` run B): with two document sockets
+    /// held open and their clients silent, BOTH rosters were empty 15 s later while neither socket
+    /// had closed — the shape C3 §3.4 saw in two browsers.
     async fn expire_presence_for_live(&self, key: &str, space_id: &str, document_id: &str, actor: &str, socket_live_id: &str, now: tokio::time::Instant) -> PresenceLeaseTransition {
+        let Some(identity) = self.presence.with(&(key.to_string(), actor.to_string()), |slot| {
+            slot.filter(|slot| slot.socket_live_id == socket_live_id && slot.peer.is_some() && now >= slot.expires_at).map(PresenceIdentityV1::of)
+        }) else {
+            return PresenceLeaseTransition::NoChange;
+        };
+        let stripped_peer = identity.encode(actor).await;
         let Ok(_publication) = tokio::time::timeout(std::time::Duration::from_secs(2), self.presence_publication_gate.lock()).await else { return PresenceLeaseTransition::Unavailable };
         let map_key = (key.to_string(), actor.to_string());
         let expired = self.presence.with_mut(&map_key, |slot| {
             let Some(slot) = slot.filter(|slot| slot.socket_live_id == socket_live_id && slot.peer.is_some() && now >= slot.expires_at) else { return false };
-            slot.peer = None;
+            slot.expires_at = now + std::time::Duration::from_millis(PRESENCE_LEASE_TTL_MS);
+            if slot.peer.as_ref() == Some(&stripped_peer) {
+                return false;
+            }
+            slot.peer = Some(stripped_peer);
             true
         });
         if expired {
@@ -2392,6 +2540,30 @@ struct HubFeatureReadinessV1 {
     inference: bool,
 }
 
+/// 🤖️ The sentinel scope the agent-delegation readiness probe reads. It is deliberately not a
+/// well-formed space or user id, so it can never collide with a real row in any data root, and the
+/// probe's answer is therefore always the empty page — what is being read is whether the backend
+/// implements the family at all, never what it holds.
+const AGENT_DELEGATION_READINESS_PROBE_SCOPE: &str = "readiness-probe/mcp-workspace";
+
+/// 🤖️ Whether a headless `semio-os-mcp --hub <url> --space <id> --credential-file <path>` workspace
+/// can be served by THIS hub, as opposed to being compiled into it.
+///
+/// Both halves are what such a gateway actually asks for, in the order it asks:
+/// `POST /auth/agent-sessions` exchanges the human's delegation for the agent's own session — which
+/// needs a directory backend that implements the delegation family at all (sqlite does; postgres and
+/// neo4j carry erroring defaults) — and then the authenticated descriptor/catalog binding resolves
+/// a document open target, which is exactly what `open_plan` already answers for.
+///
+/// 🔒️ Never a constant. It read a hard-coded `false` from the day the field was introduced until
+/// ticket 26/09/18 slice M8, which made a hub that could serve an agent and one that could not
+/// publish the identical body — so `📓️c3-…` scored its "AI agent as third participant" step
+/// **not run** on a hub that was in fact ready for the exchange, and the one honest consumer of the
+/// field had no way to tell the two apart.
+const fn mcp_workspace_ready(agent_delegation_ready: bool, open_plan_ready: bool) -> bool {
+    agent_delegation_ready && open_plan_ready
+}
+
 fn hub_readiness(
     mode: HubMode,
     bind_scope: &'static str,
@@ -2399,6 +2571,7 @@ fn hub_readiness(
     bootstrap_ready: bool,
     artifact_authority_ready: bool,
     open_plan_ready: bool,
+    agent_delegation_ready: bool,
     admin_assets_ready: bool,
     artifact_cas_barrier_ready: bool,
     artifact_cas_sweep_execute: bool,
@@ -2446,7 +2619,13 @@ fn hub_readiness(
         },
         artifact_authority: HubComponentReadinessV1::gate(artifact_authority_ready, artifact_authority_reason),
         admin_assets: HubComponentReadinessV1::gate(admin_assets_ready, "admin-spa-dist-missing-run-os-hub-admin-build"),
-        features: HubFeatureReadinessV1 { open_plan: open_plan_ready, open_plan_exchange: open_plan_ready, rebootstrap: true, mcp_workspace: false, inference: inference_ready },
+        features: HubFeatureReadinessV1 {
+            open_plan: open_plan_ready,
+            open_plan_exchange: open_plan_ready,
+            rebootstrap: true,
+            mcp_workspace: mcp_workspace_ready(agent_delegation_ready, open_plan_ready),
+            inference: inference_ready,
+        },
         blocked_by,
     }
 }
@@ -4968,7 +5147,28 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     drop(_session_authority);
 
     let fanout = state.fanout_for(&key);
-    let mut broadcast_rx = fanout.subscribe();
+    // 🔁️ Join replay: a roster delta is only ever published when SOME peer's bytes change, so a
+    // socket that attaches after the roster settled would stay blind to every peer already on it
+    // until one of them moved. Measured (ticket 26/09/18 slice PR1,
+    // `🗑️generated/pr1-before-hub-socket.txt` run A): two seconds after the late joiner's socket
+    // opened it had received ZERO presence frames while the first human's roster already listed a
+    // peer — C3 §3.4's asymmetry, from the hub's own side. The snapshot is taken under the same
+    // publication gate every delta holds, so this replay can never be older than the first delta
+    // this socket receives, and it is the ONE non-delta roster frame the wire carries.
+    let Some((mut broadcast_rx, replay)) = state.subscribe_with_presence_replay(&key).await else {
+        let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "presence-unavailable".into() }))).await;
+        let _ = state.close_presence_for_live(&key, &space_id, &document_id, &actor.0, &socket_live.id).await;
+        state.release_color(&space_id, &actor.0);
+        return;
+    };
+    if !replay.peers.is_empty() {
+        let replay_frame = encode(&ServerFrame::Presence { peers: replay.peers }).await;
+        if !matches!(tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(replay_frame)).await, Ok(Ok(()))) {
+            let _ = state.close_presence_for_live(&key, &space_id, &document_id, &actor.0, &socket_live.id).await;
+            state.release_color(&space_id, &actor.0);
+            return;
+        }
+    }
     #[cfg(test)]
     if let Some(gate) = &state.live_gate {
         gate.document_subscribed.add_permits(1);
@@ -6417,10 +6617,10 @@ async fn build_directory_space_administration_page_v1(state: &HubState, space_id
         Some(cursor) => Some(space_administration_cursor_decode(&state.space_administration_cursor_key, caller.as_ref(), space_id, cursor)?),
         None => None,
     };
-    let summary = state.directory.list_admin_space_summaries_page(Some(space_id), 0, 1).await.map_err(directory_error_status)?.into_iter().next().ok_or(StatusCode::NOT_FOUND)?;
+    let summary = state.directory.list_admin_space_summaries_page(Some(space_id), 0, 1).await.map_err(|error| state.directory_fault("directory.space-administration", error))?.into_iter().next().ok_or(StatusCode::NOT_FOUND)?;
     let space = admin_space_summary_view(summary)?;
     let role = match caller.as_ref() {
-        Some(caller) => state.directory.get_role(space_id, &caller.user_id).await.map_err(directory_error_status)?.map(role_wire),
+        Some(caller) => state.directory.get_role(space_id, &caller.user_id).await.map_err(|error| state.directory_fault("directory.space-administration", error))?.map(role_wire),
         None => None,
     };
     let access = directory_space_access_decision(space.visibility == DirectorySpaceVisibility::Public, role);
@@ -6441,14 +6641,14 @@ async fn build_directory_space_administration_page_v1(state: &HubState, space_id
     };
     let mut windows = SpaceAdministrationWindows { members: Vec::new(), member_storage_more: false, invites: Vec::new(), invite_storage_more: false, documents: Vec::new(), public_documents: Vec::new(), document_storage_more: false, document_offset };
     if access.is_member() {
-        let mut rows = state.directory.list_space_administration_members_page(space_id, member_after.as_deref(), SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.map_err(directory_error_status)?;
+        let mut rows = state.directory.list_space_administration_members_page(space_id, member_after.as_deref(), SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.map_err(|error| state.directory_fault("directory.space-administration", error))?;
         windows.member_storage_more = rows.len() > SPACE_ADMINISTRATION_PAGE_MAX;
         rows.truncate(SPACE_ADMINISTRATION_PAGE_MAX);
         windows.members = rows.into_iter().map(|row| DirectorySpaceAdministrationMemberRowV1 { owner: row.user_id == space.owner_user_id, user_id: row.user_id, email: row.email, display_name: row.display_name, role: role_wire(row.role) }).collect();
     }
     if matches!(access, DirectorySpaceAccessDecisionV1::Author) {
         let mut rows =
-            state.directory.list_space_administration_invites_page(space_id, invite_after.as_ref().map(|(created_at, invite_id)| (*created_at, invite_id.as_str())), SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.map_err(directory_error_status)?;
+            state.directory.list_space_administration_invites_page(space_id, invite_after.as_ref().map(|(created_at, invite_id)| (*created_at, invite_id.as_str())), SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.map_err(|error| state.directory_fault("directory.space-administration", error))?;
         windows.invite_storage_more = rows.len() > SPACE_ADMINISTRATION_PAGE_MAX;
         rows.truncate(SPACE_ADMINISTRATION_PAGE_MAX);
         windows.invites = rows
@@ -6456,7 +6656,7 @@ async fn build_directory_space_administration_page_v1(state: &HubState, space_id
             .map(|row| DirectorySpaceAdministrationInviteRowV1 { invite_id: row.invite_id, role: role_wire(row.role), created_at_ms: row.created_at_ms, expires_at_ms: row.expires_at_ms, revoked: row.revoked, accepted: row.accepted })
             .collect();
     }
-    let mut descriptors = state.directory.list_document_descriptors_page(Some(space_id), document_offset, SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.map_err(directory_error_status)?;
+    let mut descriptors = state.directory.list_document_descriptors_page(Some(space_id), document_offset, SPACE_ADMINISTRATION_PAGE_FETCH_MAX).await.map_err(|error| state.directory_fault("directory.space-administration", error))?;
     windows.document_storage_more = descriptors.len() > SPACE_ADMINISTRATION_PAGE_MAX;
     descriptors.truncate(SPACE_ADMINISTRATION_PAGE_MAX);
     if access.is_member() {
@@ -10026,7 +10226,9 @@ async fn main() -> Result<(), HubError> {
     // load, the artifact-CAS sweep and the creation-recovery loop all report onto the same tracer the
     // routes later use — a tracer built after them would have silently lost every boot record.
     let tracer = Tracer::from_environment();
-    let artifact_authority = configured_artifact_authority(&data_dir, native_codec_provider, &tracer).await?;
+    let startup_artifact_authority = configured_artifact_authority(&data_dir, native_codec_provider, &tracer).await?;
+    let trusted_catalog_budget_exceeded = matches!(startup_artifact_authority, StartupArtifactAuthority::BudgetExceeded);
+    let artifact_authority = startup_artifact_authority.configured();
     let db = Arc::new(connect_db(&data_dir).await?);
     let directory = connect_directory(&data_dir).await?;
     // 🧹️ Contract §C0: clear crash residue before any real connection lands — a session that never
@@ -10054,6 +10256,11 @@ async fn main() -> Result<(), HubError> {
     let bind_scope = if bind.is_loopback() { "loopback" } else { "network" };
     let artifact_authority_ready = artifact_authority.is_some();
     let open_plan_ready = artifact_authority.as_ref().is_some_and(|configured| configured.catalog.open_target_count() > 0);
+    // 🤖️ One bounded read of the real method, never a declared capability flag beside it: a backend
+    // that carries the family's erroring default answers `Err(Backend)` here and a backend that
+    // implements it answers an empty page, so `features.mcpWorkspace` cannot drift from what
+    // `POST /auth/agent-sessions` would actually do on the next request.
+    let agent_delegation_ready = directory.list_agent_delegations(AGENT_DELEGATION_READINESS_PROBE_SCOPE, AGENT_DELEGATION_READINESS_PROBE_SCOPE, 1).await.is_ok();
     let verified_catalog = artifact_authority.as_ref().map(|configured| configured.catalog.clone());
     #[cfg(feature = "native-artifact-execution")]
     let gis_map_binding = match verified_catalog.as_ref() {
@@ -10108,17 +10315,10 @@ async fn main() -> Result<(), HubError> {
     let inference_ready = inference_runtime.is_some();
     #[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
     let inference_ready = false;
-    let artifact_authority_reason = if cfg!(feature = "native-artifact-execution") {
-        if data_dir.join("trusted-catalog/current.json").try_exists().unwrap_or(false) {
-            "trusted-catalog-pointer-present-but-not-loadable"
-        } else {
-            "trusted-catalog-never-published-in-this-data-root"
-        }
-    } else {
-        "native-artifact-execution-feature-not-compiled"
-    };
+    let artifact_authority_reason =
+        artifact_authority_closed_reason(cfg!(feature = "native-artifact-execution"), trusted_catalog_budget_exceeded, data_dir.join("trusted-catalog/current.json").try_exists().unwrap_or(false));
     let readiness = Arc::new(declare_public_session_issuance(
-        hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute, inference_ready, artifact_authority_reason),
+        hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, agent_delegation_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute, inference_ready, artifact_authority_reason),
         credential_sign_in.is_enabled(),
     ));
     let admin_cursor_key = SessionCapability::mint()?.secret_digest();

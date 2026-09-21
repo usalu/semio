@@ -28,8 +28,8 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for EditRhs 
     fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Edit rhs".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Edit rhs", "rhs bearbeiten")
     }
 }
 //#endregion 🔖️Mutation

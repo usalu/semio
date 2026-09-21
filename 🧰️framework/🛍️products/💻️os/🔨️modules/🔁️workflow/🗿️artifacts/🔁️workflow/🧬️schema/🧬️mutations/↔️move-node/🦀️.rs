@@ -23,8 +23,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for MoveNode {
     fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
         base.graph.nodes.iter().find(|node| node.id == self.node_id).map(|node| vec![WorkflowMutation::MoveNode(MoveNode { node_id: self.node_id.clone(), x: node.x, y: node.y })]).unwrap_or_default()
     }
-    fn label(&self) -> String {
-        format!("Move workflow node {}", self.node_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} verschieben", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node_id.clone()]

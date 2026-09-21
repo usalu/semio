@@ -23,8 +23,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for BindOutput {
             None => vec![WorkflowMutation::UnbindOutput(UnbindOutput { node_id: self.binding.node_id.clone(), port_id: self.binding.port_id.clone() })],
         }
     }
-    fn label(&self) -> String {
-        format!("Bind workflow output {}", self.binding.node_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Bind workflow output {}", self.binding.node_id), &format!("Arbeitsablaufausgabe {} binden", self.binding.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["output-bindings".into(), self.binding.node_id.clone(), self.binding.port_id.clone()]

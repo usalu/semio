@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeWallPhiDeg
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change wall backfill friction angle [deg] to {}", self.new_wall_phi_deg)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change wall backfill friction angle [deg] to {}", self.new_wall_phi_deg), &format!("Wandverfüllungsreibungswinkel [deg] auf {} ändern", self.new_wall_phi_deg))
     }
 }
 //#endregion 🔖️ChangeWallPhiDeg

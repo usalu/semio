@@ -31,8 +31,8 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ScaleNode {
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Scale node \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Scale node \"{}\"", self.id), &format!("Knoten \"{}\" skalieren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeInsulation
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change insulation thickness to {}", self.new_insulation_thickness_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change insulation thickness to {}", self.new_insulation_thickness_mm), &format!("Dämmungsdicke auf {} ändern", self.new_insulation_thickness_mm))
     }
 }
 //#endregion 🔖️Payload

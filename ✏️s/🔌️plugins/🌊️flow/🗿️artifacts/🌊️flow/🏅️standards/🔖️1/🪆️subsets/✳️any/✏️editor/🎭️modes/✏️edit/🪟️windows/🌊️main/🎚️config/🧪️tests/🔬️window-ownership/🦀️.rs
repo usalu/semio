@@ -30,7 +30,8 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                 fn manifest() -> App {
                     App { definition: create_flow_app(), examples: Vec::new() }
                 }
-                async fn drain(app: &mut VcsArtifactApp<EditorApp<FlowPlayApp>>) -> Result<(usize, usize), String> {
+                type FlowRuntime = VcsArtifactApp<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+                async fn drain(app: &mut FlowRuntime) -> Result<(usize, usize), String> {
                     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
                     let mut config = 0;
                     let mut transient = 0;
@@ -56,7 +57,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     }
                     Ok((config, transient))
                 }
-                async fn scene(app: &mut VcsArtifactApp<EditorApp<FlowPlayApp>>, view: &ViewModel) -> Result<semio_framework_plugin::NodeGraphScene, String> {
+                async fn scene(app: &mut FlowRuntime, view: &ViewModel) -> Result<semio_framework_plugin::NodeGraphScene, String> {
                     let tree = app.render(FLOW_PLAY_BODY_MAIN, None, view).await.map_err(|error| format!("{error:?}"))?;
                     let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
                     artifact_app_laws::decode_fixture_scene(&json).map_err(str::to_string)
@@ -77,7 +78,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                 let left = view.for_window_instance(left_id).unwrap();
                 let right = view.for_window_instance(right_id).unwrap();
                 let generation = view.for_window_instance(generation_id).unwrap();
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<FlowPlayApp>>(manifest).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
                 app.bind_instance_id(71).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -87,9 +88,9 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                         (&right, FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: -21.0, y: 5.0, zoom: 0.75 } })),
                         (&right, FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 20.0 })),
                     ] {
-                        app.dispatch_typed(command, &ActionMeta { view_state: Some(context.clone()), ..artifact_app_laws::meta("flow-window-ownership") }).await.map_err(|error| format!("{error:?}"))?;
+                        app.dispatch_typed(command, &ActionMeta { instance_id: 71, view_state: Some(context.clone()), ..artifact_app_laws::meta("flow-window-ownership") }).await.map_err(|error| format!("{error:?}"))?;
                     }
-                    app.dispatch_typed(FlowCommand::AddGeneration(add_generation::AddGeneration {}), &ActionMeta { view_state: Some(generation.clone()), ..artifact_app_laws::meta("flow-window-ownership") }).await.map_err(|error| format!("{error:?}"))?;
+                    app.dispatch_typed(FlowCommand::AddGeneration(add_generation::AddGeneration {}), &ActionMeta { instance_id: 71, view_state: Some(generation.clone()), ..artifact_app_laws::meta("flow-window-ownership") }).await.map_err(|error| format!("{error:?}"))?;
                     if drain(&mut app).await? != (4, 1) { return Err("Flow exact-window publication lane count changed".into()); }
                     let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Flow window publications changed document bytes".into()); }
@@ -127,7 +128,7 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     for context in [&left, &right] {
                         if app.window_config_generation(context).await.map_err(|error| format!("{error:?}"))?.is_none() { return Err("Flow config was lost during same-byte document reload".into()); }
                     }
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<FlowPlayApp>>(manifest).await);
+                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
                     reopened.bind_instance_id(72).await;
                     for pack in config_packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                     let reopened_left = scene(&mut reopened, &left).await?.viewport.ok_or("reopened left Flow viewport missing")?;

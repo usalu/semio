@@ -21,8 +21,8 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for RemoveViewpoint {
     fn inverse(&self, base: &BcfSnapshot) -> Vec<BcfMutation> {
         agg_inverse(&BcfMutation::RemoveViewpoint(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-viewpoint".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-viewpoint", "Blickpunkt entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

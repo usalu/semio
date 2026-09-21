@@ -29,8 +29,8 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for DeleteTiles {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Delete {} tiles", self.ids.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete {} tiles", self.ids.len()), &format!("{} Kacheln löschen", self.ids.len()))
     }
 
     fn target(&self) -> Vec<String> {

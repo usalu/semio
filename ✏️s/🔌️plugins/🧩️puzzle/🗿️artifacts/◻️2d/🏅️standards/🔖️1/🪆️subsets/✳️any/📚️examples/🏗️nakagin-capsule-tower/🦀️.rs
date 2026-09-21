@@ -32,5 +32,8 @@ fn document_json() -> String {
     dsl::json::to_json_string(&dsl::ToValue::to_value(&projection))
 }
 
-/// 📚️ Canonical example source for `App::example_source`.
-pub static SOURCE: LazyLock<ExampleSource> = LazyLock::new(|| ExampleSource::new(ID, label(), document_json(), ICON));
+/// 📚️ Canonical example source for `App::example_source` — DEFERRED: parsing [`DSL_TEXT`] eagerly
+/// here ran while the bundle was assembled, i.e. before `describe()` built anything, and is what
+/// put this package over its own guest epoch (`📓️a3-descriptor-regeneration.md` §3). The descriptor
+/// declares this example by the authored DSL's size and SHA-256, which needs no parse.
+pub static SOURCE: LazyLock<ExampleSource> = LazyLock::new(|| ExampleSource::deferred(ID, label(), ICON, ".dsl.semio", DSL_TEXT.as_bytes(), document_json));

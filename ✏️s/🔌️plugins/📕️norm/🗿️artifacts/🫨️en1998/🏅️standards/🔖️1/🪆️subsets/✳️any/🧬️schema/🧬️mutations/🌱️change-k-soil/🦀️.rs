@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeKSoil {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change soil stiffness k [kN/m] to {}", self.new_k_soil)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change soil stiffness k [kN/m] to {}", self.new_k_soil), &format!("Bodensteifigkeitsk [kN/m] auf {} ändern", self.new_k_soil))
     }
 }
 //#endregion 🔖️ChangeKSoil

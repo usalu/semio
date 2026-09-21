@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeStorag
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change storage loss allowance to {}", self.new_storage_allowance_kwh)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change storage loss allowance to {}", self.new_storage_allowance_kwh), &format!("Speicherverlustzuschlag auf {} ändern", self.new_storage_allowance_kwh))
     }
 }
 //#endregion 🔖️ChangeStorageAllowanceKwh

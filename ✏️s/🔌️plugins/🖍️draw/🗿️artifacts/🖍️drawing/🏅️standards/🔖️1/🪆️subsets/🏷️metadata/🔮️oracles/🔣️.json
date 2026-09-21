@@ -68,7 +68,7 @@
         {
           "id": "set-layer-visible",
           "capability": "drawing-1-metadata-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/👁️set-layer-visible/🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -101,7 +101,7 @@
         {
           "id": "set-layer-locked",
           "capability": "drawing-1-metadata-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔒️set-layer-locked/🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -131,7 +131,7 @@
         {
           "id": "rename-layer",
           "capability": "drawing-1-metadata-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/✏️rename-layer/🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",

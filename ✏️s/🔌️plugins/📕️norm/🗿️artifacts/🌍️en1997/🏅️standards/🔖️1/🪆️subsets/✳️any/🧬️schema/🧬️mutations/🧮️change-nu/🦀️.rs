@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeNu {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change Poisson's ratio nu to {}", self.new_nu)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change Poisson's ratio nu to {}", self.new_nu), &format!("Poisson'sverhältnisnu auf {} ändern", self.new_nu))
     }
 }
 //#endregion 🔖️ChangeNu

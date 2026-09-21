@@ -35,8 +35,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Create daylight zone {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create daylight zone {}", self.id.0), &format!("Tageslichtzone {} erstellen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

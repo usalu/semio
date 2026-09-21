@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeProvidedAx
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change provided axis distance mm to {:?}", self.new_provided_axis_distance_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change provided axis distance mm to {:?}", self.new_provided_axis_distance_mm), &format!("vorhandene Achsenabstandmm auf {:?} ändern", self.new_provided_axis_distance_mm))
     }
 }
 //#endregion 🔖️ChangeProvidedAxisDistanceMm

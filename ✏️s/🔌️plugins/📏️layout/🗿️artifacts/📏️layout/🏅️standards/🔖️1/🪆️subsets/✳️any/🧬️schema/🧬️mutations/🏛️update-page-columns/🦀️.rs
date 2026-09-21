@@ -24,8 +24,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdatePageColumns {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_update_page_columns(self, base)
     }
-    fn label(&self) -> String {
-        format!("Update page \"{}\" columns", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Update page \"{}\" columns", self.id), &format!("Seite \"{}\" Stützen aktualisieren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

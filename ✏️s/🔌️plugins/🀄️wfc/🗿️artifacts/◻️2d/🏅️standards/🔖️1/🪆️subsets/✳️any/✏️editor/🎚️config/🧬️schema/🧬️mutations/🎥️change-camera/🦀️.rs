@@ -22,8 +22,8 @@ impl protocol::MutationKind<Wfc2dConfig, Wfc2dConfigMutation> for ChangeCamera {
     fn inverse(&self, base: &Wfc2dConfig) -> Vec<Wfc2dConfigMutation> {
         vec![Wfc2dConfigMutation::ChangeCamera(ChangeCamera { x: base.camera_x, y: base.camera_y, zoom: base.camera_zoom })]
     }
-    fn label(&self) -> String {
-        "Change Camera".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Camera", "Kamera ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]

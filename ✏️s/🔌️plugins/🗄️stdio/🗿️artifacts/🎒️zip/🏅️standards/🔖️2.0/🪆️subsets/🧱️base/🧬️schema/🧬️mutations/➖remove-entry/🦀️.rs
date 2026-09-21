@@ -22,8 +22,8 @@ impl protocol::MutationKind<ZipSnapshot, ZipMutation> for RemoveEntry {
     fn inverse(&self, base: &ZipSnapshot) -> Vec<ZipMutation> {
         agg_inverse(&ZipMutation::RemoveEntry(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-entry".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-entry", "Eintrag entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

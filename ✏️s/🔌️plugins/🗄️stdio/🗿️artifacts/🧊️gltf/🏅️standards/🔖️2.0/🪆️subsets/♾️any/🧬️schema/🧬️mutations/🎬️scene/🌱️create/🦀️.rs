@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSceneMu
         vec![super::GltfMutation::CreateScene(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Create Scene".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Create Scene", "Szene erstellen")
     }
 
     fn target(&self) -> Vec<String> {

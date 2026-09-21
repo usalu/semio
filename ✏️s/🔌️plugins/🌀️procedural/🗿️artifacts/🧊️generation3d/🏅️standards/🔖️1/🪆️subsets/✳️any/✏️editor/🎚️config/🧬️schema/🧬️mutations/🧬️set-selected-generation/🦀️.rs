@@ -23,8 +23,8 @@ impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for 
         vec![Self { selected_generation_id: base.selected_generation_id.clone() }.into()]
     }
 
-    fn label(&self) -> String {
-        "Set Selected Generation".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Selected Generation", "ausgewählte Erzeugung setzen")
     }
 
     fn target(&self) -> Vec<String> {

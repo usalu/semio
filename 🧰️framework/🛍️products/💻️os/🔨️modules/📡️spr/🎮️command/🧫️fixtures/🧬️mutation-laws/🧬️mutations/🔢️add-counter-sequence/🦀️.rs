@@ -21,8 +21,8 @@ impl CompositeMutationKind<Counter, CounterMutation> for AddCounterSequence {
         }
         Ok(())
     }
-    fn label(&self) -> String {
-        "Add counter sequence".into()
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Add counter sequence", "Zählersequenz hinzufügen")
     }
 }
 

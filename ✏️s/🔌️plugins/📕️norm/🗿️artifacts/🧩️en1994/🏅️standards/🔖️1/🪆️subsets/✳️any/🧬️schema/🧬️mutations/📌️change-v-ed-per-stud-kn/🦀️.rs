@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeVEdPerStud
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change shear per stud V_Ed to {}", self.new_v_ed_per_stud_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change shear per stud V_Ed to {}", self.new_v_ed_per_stud_kn), &format!("Schub pro Ständerv_Ed auf {} ändern", self.new_v_ed_per_stud_kn))
     }
 }
 //#endregion 🔖️Payload

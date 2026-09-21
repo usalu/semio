@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeBedJointTh
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change bed joint thickness [mm] to {}", self.new_bed_joint_thickness_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change bed joint thickness [mm] to {}", self.new_bed_joint_thickness_mm), &format!("Lagerfugedicke [mm] auf {} ändern", self.new_bed_joint_thickness_mm))
     }
 }
 //#endregion 🔖️ChangeBedJointThicknessMm

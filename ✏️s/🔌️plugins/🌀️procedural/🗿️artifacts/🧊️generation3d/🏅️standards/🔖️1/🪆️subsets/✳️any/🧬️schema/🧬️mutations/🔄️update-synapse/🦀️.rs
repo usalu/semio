@@ -29,8 +29,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Upda
         crate::standards::v1::subsets::any::schema::mutations::update_synapse::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Update synapse \"{}\"", self.synapse.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Update synapse \"{}\"", self.synapse.id), &format!("Synapse \"{}\" aktualisieren", self.synapse.id))
     }
 
     fn target(&self) -> Vec<String> {

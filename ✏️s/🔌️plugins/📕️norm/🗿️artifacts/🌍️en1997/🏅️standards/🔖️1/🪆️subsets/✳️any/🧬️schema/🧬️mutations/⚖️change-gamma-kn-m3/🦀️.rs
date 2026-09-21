@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeGammaKnM3 
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change soil unit weight [kN/m3] to {}", self.new_gamma_kn_m3)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change soil unit weight [kN/m3] to {}", self.new_gamma_kn_m3), &format!("Bodeneinheitsgewicht [kN/m3] auf {} ändern", self.new_gamma_kn_m3))
     }
 }
 //#endregion 🔖️ChangeGammaKnM3

@@ -168,12 +168,12 @@
     "TrustedBundleProfileV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "selectedClosure", "selectedClosureSha256", "openTarget", "generationId"],
+      "required": ["id", "selectedClosure", "selectedClosureSha256", "openTargets", "generationId"],
       "properties": {
         "id": { "$ref": "#/$defs/identity" },
         "selectedClosure": { "type": "array", "minItems": 1, "maxItems": 4096, "items": { "$ref": "#/$defs/TrustedBundleIdentityV1" } },
         "selectedClosureSha256": { "$ref": "#/$defs/nonzeroDigest" },
-        "openTarget": { "$ref": "#/$defs/TrustedBundleProfileOpenTargetV1" },
+        "openTargets": { "type": "array", "minItems": 1, "maxItems": 1024, "items": { "$ref": "#/$defs/TrustedBundleProfileOpenTargetV1" } },
         "generationId": { "$ref": "#/$defs/nonzeroDigest" }
       }
     },

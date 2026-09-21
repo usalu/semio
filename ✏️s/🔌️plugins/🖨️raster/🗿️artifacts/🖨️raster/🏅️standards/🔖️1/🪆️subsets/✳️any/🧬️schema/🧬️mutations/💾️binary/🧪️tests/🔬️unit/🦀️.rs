@@ -487,6 +487,52 @@ fn raster_owned_map_removal_returns_exact_pair_and_populated_drop_refuses() {
     assert!(result.is_err(), "populated Raster map ordinary Drop must fail closed");
 }
 
+/// ▶️ Drives one mutation the way the interactive document lane does (`RasterOneItemApply` over
+/// `RasterMutationCandidateAuthority`) and hands back the published post snapshot.
+fn drive_raster_candidate(base: &RasterSnapshot, operation: &RasterMutation, operation_id: u64) -> RasterSnapshot {
+    let operation_id = semio_framework_job::OperationId(operation_id);
+    let generation = semio_framework_job::Generation(1);
+    let cancel = semio_framework_job::root_cancel_token();
+    let mut preview_sequence = 0;
+    let mut authority = RasterMutationCandidateAuthority::new();
+    for _ in 0..200_000 {
+        let mut context = semio_framework_job::StepContext::new(operation_id, generation, semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
+        if authority.step(base, operation, &mut context).expect("retained Raster apply") {
+            let post = authority.take().expect("the candidate publishes its post snapshot");
+            drop(authority);
+            return post;
+        }
+    }
+    panic!("retained Raster apply did not reach a bounded terminal")
+}
+
+/// 🖼️ Play-grid boot regression (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, pane measured
+/// blank on :6033 2026-09-21): the interactive document lane applies `add-layer-asset` through this
+/// candidate authority, and the composite surface reads its pixels back out of the asset pool
+/// through `crate::raster_asset`. The authority minted the handle from a RAW `(mime, data)` digest —
+/// disagreeing with the canonical content-addressed id every other route mints — and inserted it
+/// WITHOUT the decoded content, so the demo booted with `assetsJson == "{}"`; the snapshot clone
+/// every subsequent mutation runs then rebuilt each handle field by field and dropped whatever
+/// materialization was left.
+#[test]
+fn retained_asset_apply_and_snapshot_clone_keep_the_composite_pixels() {
+    let asset = crate::examples::art_raster_demo::emblem_image_asset();
+    let minted = crate::mint_raster_asset_child("semio-emblem", &asset);
+    let base = empty_raster_document();
+    let layer_id = crate::standards::v1::subsets::any::schema::layer_node_id(&base.layers[0]).to_string();
+    let add = RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset });
+    let added = drive_raster_candidate(&base, &add, 880);
+    assert_eq!(added.assets.get("semio-emblem").expect("the retained apply inserts the asset child").child_id, minted.child_id, "the retained apply mints this artifact's own canonical content-addressed child id");
+    assert!(crate::raster_asset(&added.assets, "semio-emblem").is_some(), "the composite reads its pixels back out of the applied asset pool");
+
+    let rename = RasterMutation::RenameLayer(rename_layer::mutation::RenameLayer { layer_id, new_name: "Backdrop".into() });
+    let renamed = drive_raster_candidate(&added, &rename, 881);
+    assert!(crate::raster_asset(&renamed.assets, "semio-emblem").is_some(), "every later mutation clones the snapshot and must carry its materialized assets across");
+    retirement::retire_raster_snapshot(renamed);
+    retirement::retire_raster_snapshot(added);
+    retirement::retire_raster_snapshot(base);
+}
+
 #[test]
 fn raster_empty_asset_map_retirement_has_no_hidden_allocation_release() {
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() };

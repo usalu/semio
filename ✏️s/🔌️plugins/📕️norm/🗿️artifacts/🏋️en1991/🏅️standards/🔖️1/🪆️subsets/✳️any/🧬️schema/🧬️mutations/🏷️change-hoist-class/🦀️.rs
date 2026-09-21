@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeHoistClass
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change hoist class to \"{}\"", self.new_hoist_class)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change hoist class to \"{}\"", self.new_hoist_class), &format!("Hebezeugklasse auf \"{}\" ändern", self.new_hoist_class))
     }
 }
 //#endregion 🔖️Payload

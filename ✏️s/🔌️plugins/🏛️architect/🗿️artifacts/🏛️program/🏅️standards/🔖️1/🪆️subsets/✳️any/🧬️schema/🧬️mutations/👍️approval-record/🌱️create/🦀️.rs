@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateApprovalRecord {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create approval record \"{}\"", self.approval_record.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create approval record \"{}\"", self.approval_record.header.name), &format!("Freigabendatensatz \"{}\" erstellen", self.approval_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.approval_record.header.id.0.clone()]

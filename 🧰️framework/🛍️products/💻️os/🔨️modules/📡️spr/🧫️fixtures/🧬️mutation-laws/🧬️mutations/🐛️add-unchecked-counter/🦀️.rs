@@ -20,8 +20,8 @@ impl MutationKind<i64, CounterMutation> for AddUncheckedCounter {
     fn inverse(&self, _base: &i64) -> Vec<CounterMutation> {
         vec![Self {}.into()]
     }
-    fn label(&self) -> String {
-        "Add to unchecked counter".into()
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Add to unchecked counter", "zu ungeprüfter Zähler hinzufügen")
     }
 }
 //#endregion ⚙️Behavior

@@ -30,8 +30,8 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ResizeSourceFr
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Resize source frame to {:.2}x{:.2}", self.new_frame.width, self.new_frame.height)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Resize source frame to {:.2}x{:.2}", self.new_frame.width, self.new_frame.height), &format!("Quellenrahmen auf {:.2}x{:.2} skalieren", self.new_frame.width, self.new_frame.height))
     }
 
     fn target(&self) -> Vec<String> {

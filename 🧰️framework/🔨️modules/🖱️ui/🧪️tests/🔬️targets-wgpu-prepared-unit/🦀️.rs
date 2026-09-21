@@ -436,6 +436,67 @@ fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
     assert_eq!(order, vec!["shadow", "textured", "material-opaque", "opaque", "lines", "translucent", "material-translucent"], "casters complete before the underlay and every color receiver");
 }
 
+/// 🌐️ LAW: the prepared scalar ladder owns exactly one grid item after textured references
+/// and before opaque geometry, while ordinary overlays retain the line-vertex lane.
+#[test]
+fn a_procedural_grid_is_one_prepared_scalar_between_textures_and_opaque_geometry() {
+    let _guard = prepared_process_guard();
+    use crate::wgpu::kernel_3d_scene::{Instance3d, LineDraw3d, LineVertex3d, ProceduralGrid3d, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d};
+    let instance = Instance3d { id: String::new(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() };
+    let grid = ProceduralGrid3d { plane_z: 0.001, camera_plane_projection: [2.0, -3.0, 0.001], cell_size: 1.0, fade_distance: 8.0, cell_color: [0.2, 0.3, 0.4] };
+    let mut draw = DrawList::default();
+    draw.push_scene_pass(ScenePass3d {
+        procedural_grid: Some(grid),
+        textured_draws: vec![TexturedDraw3d { instances: vec![TexturedInstance3d { texture_key: String::new(), model: instance.model, background: [0.0; 4], appearance: [1.0, 0.0, 0.0, 0.0] }] }],
+        draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance], shadow_role: Default::default() }],
+        line_draws: vec![LineDraw3d { vertices: vec![LineVertex3d { position: [0.0; 3], color: [1.0; 4] }, LineVertex3d { position: [1.0, 0.0, 0.0], color: [1.0; 4] }] }],
+        ..Default::default()
+    });
+    let mut cursor = DrawMeasureCursor::PassHeader(0);
+    let mut measured = Vec::new();
+    for _ in 0..64 {
+        let current = cursor;
+        let Some(usage) = PreparedRenderJob::next_draw_usage(&draw, &mut cursor) else { break };
+        measured.push((current, usage));
+        if matches!(cursor, DrawMeasureCursor::Complete) {
+            break;
+        }
+    }
+    let grid_rows: Vec<_> = measured.iter().enumerate().filter(|(_, (cursor, _))| matches!(cursor, DrawMeasureCursor::PassGrid { pass: 0 })).collect();
+    assert_eq!(grid_rows.len(), 1, "one retained grid becomes exactly one prepared scalar");
+    assert_eq!(grid_rows[0].1.1, PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<ProceduralGrid3d>(), ..Default::default() }, "the grid scalar owns its exact retained bytes in one cancellable step");
+    let textured = measured.iter().position(|(cursor, _)| matches!(cursor, DrawMeasureCursor::PassTexturedInstance { .. })).expect("textured reference scalar");
+    let grid_index = grid_rows[0].0;
+    let opaque = measured.iter().position(|(cursor, _)| matches!(cursor, DrawMeasureCursor::PassInstance { translucent: false, .. })).expect("opaque instance scalar");
+    let line_vertices = measured.iter().filter(|(cursor, _)| matches!(cursor, DrawMeasureCursor::PassLineVertex { .. })).count();
+    assert!(textured < grid_index && grid_index < opaque, "textured references precede the grid and opaque geometry follows it");
+    assert_eq!(line_vertices, 2, "ordinary overlays retain the line-vertex lane");
+}
+
+/// 🖥️ LAW: grid uniforms stay in logical scene units at every device scale; only the
+/// encoder viewport and scissor cross the logical-to-physical boundary.
+#[test]
+fn procedural_grid_uniforms_are_dpr_invariant_while_viewport_and_scissor_scale_physically() {
+    let _guard = prepared_process_guard();
+    use crate::wgpu::draw::{physical_scissor_rect, physical_viewport_rect, World3dGridUniforms};
+    use crate::wgpu::draw_types::ScissorRect;
+    use crate::wgpu::kernel_3d_scene::ProceduralGrid3d;
+    let grid = ProceduralGrid3d { plane_z: 2.001, camera_plane_projection: [7.0, -4.0, 2.001], cell_size: 2.5, fade_distance: 18.0, cell_color: [0.2, 0.3, 0.4] };
+    let at_one = World3dGridUniforms::from_grid(&grid);
+    let at_two = World3dGridUniforms::from_grid(&grid);
+    assert_eq!(size_of::<World3dGridUniforms>(), 256, "one fixed GPU uniform allocation owns the grid scalar");
+    assert_eq!(bytemuck::bytes_of(&at_one), bytemuck::bytes_of(&at_two), "DPR cannot enter logical grid uniforms");
+    assert_eq!(at_one.plane_cell, [2.001, 2.5, 0.6, 18.0]);
+    assert_eq!(at_one.camera_fade, [7.0, -4.0, 2.001, 1.5]);
+    assert_eq!(at_one.cell_color, [0.2, 0.3, 0.4, 0.0]);
+    let viewport = [11.0, 13.0, 120.0, 80.0];
+    assert_eq!(physical_viewport_rect(viewport, 1.0), viewport);
+    assert_eq!(physical_viewport_rect(viewport, 2.0), [22.0, 26.0, 240.0, 160.0]);
+    let scissor = ScissorRect { x: 11, y: 13, w: 120, h: 80 };
+    assert_eq!(physical_scissor_rect(scissor, 1.0), scissor);
+    assert_eq!(physical_scissor_rect(scissor, 2.0), ScissorRect { x: 22, y: 26, w: 240, h: 160 });
+}
+
 #[test]
 fn a_disabled_shadow_never_publishes_a_gpu_shadow_scalar() {
     let _guard = prepared_process_guard();

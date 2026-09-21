@@ -67,7 +67,16 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
   };
 });
 
-import { componentPickMergeMode, WindowInstanceIdContext, World3dHost, world3dSelectionActionArgs } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { componentPickMergeMode, leftoverBrushRetainGuestHoverV1, WindowInstanceIdContext, World3dHost, world3dSelectionActionArgs } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+
+describe("leftover brush guest hover retain", () => {
+  it("keeps the leftover vortex id on an armed brush window", () => {
+    const leftover = { ids: [], hoveredId: "seed-left-001:v0", hoveredDomain: "vortex", gumballActive: false, gumballAnchorId: null, activeUtility: "brush" };
+    expect(leftoverBrushRetainGuestHoverV1("brush", leftover)).toBe("seed-left-001:v0");
+    expect(leftoverBrushRetainGuestHoverV1("select", leftover)).toBeUndefined();
+    expect(leftoverBrushRetainGuestHoverV1("brush", { ...leftover, hoveredId: null })).toBeUndefined();
+  });
+});
 
 const gesture = (id: string): Gesture => {
   const found = fixture.gestures.find((entry) => entry.id === id);
@@ -124,9 +133,9 @@ function expectSelection(entry: Dispatched | undefined, expected: Gesture["expec
   expect(entry!.args.merge).toBe(expected.merge);
   expect(mergeModes.vocabulary, `[DEBUG] merge "${String(entry!.args.merge)}" is outside the ONE schema vocabulary`).toContain(entry!.args.merge);
   expect(entry!.args.method).toBe(expected.method);
-  const targets = JSON.parse(String(entry!.args.targets)) as readonly { readonly id: string }[];
+  const targets = JSON.parse(String(entry!.args.targets)) as readonly { readonly granularity: string; readonly id: string }[];
   expect(targets).toEqual(expected.targets);
-  expect(new Set(targets.map((target) => target.id)).size, `[DEBUG] duplicate topology target in ${JSON.stringify(targets)}`).toBe(targets.length);
+  expect(new Set(targets.map((target) => `${target.granularity}\u0000${target.id}`)).size, `[DEBUG] duplicate topology target pair in ${JSON.stringify(targets)}`).toBe(targets.length);
 }
 
 export function testWorld3dInteraction(): void {
@@ -195,17 +204,20 @@ export function testWorld3dInteraction(): void {
       }
     });
 
-    it("dispatches interactionHover at the scene granularity on an instance pointer move", () => {
-      const spec = gesture("instance-hover");
-      const { dispatched, meshes } = mountHost();
-      const index = fixture.scene.instances.findIndex((instance) => instance.id === spec.instanceId);
-      fireEvent.pointerMove(meshes[index]!);
-      const hovers = only(dispatched, "interactionHover");
-      expect(hovers.length).toBe(1);
-      expect(hovers[0]!.args.domainId).toBe(spec.expect.domainId);
-      expect(hovers[0]!.args.channel).toBe(spec.expect.channel);
-      expect(JSON.parse(String(hovers[0]!.args.targets))).toEqual(spec.expect.targets);
-    });
+    for (const id of ["instance-hover", "instance-hover-override"] as const) {
+      it(`dispatches interactionHover with the resolved target on ${id}`, () => {
+        const spec = gesture(id);
+        const { dispatched, meshes } = mountHost();
+        const index = fixture.scene.instances.findIndex((instance) => instance.id === spec.instanceId);
+        fireEvent.pointerMove(meshes[index]!);
+        const hovers = only(dispatched, "interactionHover");
+        expect(hovers.length).toBe(1);
+        expect(hovers[0]!.args.domainId).toBe(spec.expect.domainId);
+        expect(hovers[0]!.args.channel).toBe(spec.expect.channel);
+        expect(JSON.parse(String(hovers[0]!.args.targets))).toEqual(spec.expect.targets);
+        cleanup();
+      });
+    }
 
     it("clears the domain selection when a click hits no instance", () => {
       const spec = gesture("background-click-clears");

@@ -267,6 +267,7 @@ async fn every_route_declares_the_lane_its_handler_emits() {
             Fem2dCommand::FocusEntity(payload) => focus_entity::handle_window(payload, &doc, &cfg, &view("model-law", model_window::WINDOW_KIND_ID)),
             Fem2dCommand::SetResultAnimation(payload) => set_result_animation::handle_window(payload, &doc, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
             Fem2dCommand::ResultAnimationTick(payload) => result_animation_tick::handle_window(payload, &doc, &cfg, &view("results-law", results_window::WINDOW_KIND_ID)),
+            Fem2dCommand::SetTransformGumballFlag(payload) => crate::editor::fem2d::commands::gumball::set_transform_gumball_flag::handle_window(payload, &view("model-law", model_window::WINDOW_KIND_ID)),
             _ => command.dispatch(&doc, &cfg),
         }
         .unwrap_or_else(|error| panic!("{tool_id} dispatches: {error:?}"));

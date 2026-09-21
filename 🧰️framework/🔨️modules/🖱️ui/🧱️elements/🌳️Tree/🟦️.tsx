@@ -1136,7 +1136,7 @@ export interface TreeDataSection {
 /** @emoji 🖱️ Pointer-driven external drag when native `draggable` does not start inside scroll panels. */
 export interface TreePointerPaletteDragController {
   readEncodedDragPayload: (dragData: Record<string, string>) => string | undefined;
-  begin: (encoded: string) => void;
+  begin: (encoded: string, types: readonly string[]) => void;
   cancel: () => void;
 }
 
@@ -1289,7 +1289,7 @@ export const Catalogue: React.FC<CatalogueProps> = ({ title, items, mime = CATAL
 };
 
 const activeCatalogueDragPayload = ephemeralBox<string | null>("framework.modules.ui.elements.Tree.component.tsx.activeCatalogueDragPayload", null);
-const activeCataloguePointerDragPayload = ephemeralBox<string | null>("framework.modules.ui.elements.Tree.component.tsx.activeCataloguePointerDragPayload", null);
+const activeCataloguePointerDragData = ephemeralBox<{ readonly payload: string; readonly types: readonly string[] } | null>("framework.modules.ui.elements.Tree.component.tsx.activeCataloguePointerDragData", null);
 
 /** @emoji 🖱️ Payload of the catalogue drag currently in flight — native HTML5 `dragover` can't read `dataTransfer` until drop, so drop targets (e.g. a canvas host previewing a fixture drop) read this instead. */
 export function getActiveCatalogueDragPayload(): string | null {
@@ -1297,8 +1297,8 @@ export function getActiveCatalogueDragPayload(): string | null {
 }
 
 /** @emoji 🖱️ Payload owned specifically by the pointer transport, separate from native HTML drag. */
-export function getActiveCataloguePointerDragPayload(): string | null {
-  return activeCataloguePointerDragPayload.current;
+export function getActiveCataloguePointerDragData(): { readonly payload: string; readonly types: readonly string[] } | null {
+  return activeCataloguePointerDragData.current;
 }
 
 /** @emoji 🖱️ {@link TreeDragAndDropController} for catalogue rows carrying encoded payloads. */
@@ -1311,26 +1311,26 @@ export function catalogueTreeDragController(mime: string = CATALOGUE_DRAG_MIME):
   return {
     pointerPaletteDrag: {
       readEncodedDragPayload: readEncoded,
-      begin: (encoded) => {
+      begin: (encoded, types) => {
         pointerRef.active = true;
         activeCatalogueDragPayload.current = encoded;
-        activeCataloguePointerDragPayload.current = encoded;
+        activeCataloguePointerDragData.current = { payload: encoded, types: [...types] };
       },
       cancel: () => {
         pointerRef.active = false;
         activeCatalogueDragPayload.current = null;
-        activeCataloguePointerDragPayload.current = null;
+        activeCataloguePointerDragData.current = null;
       },
     },
     onDragStart: ({ sourceItem }) => {
       const encoded = readEncoded(sourceItem.dragData) ?? null;
       activeCatalogueDragPayload.current = encoded;
-      if (!pointerRef.active) activeCataloguePointerDragPayload.current = null;
+      if (!pointerRef.active) activeCataloguePointerDragData.current = null;
     },
     onDragEnd: () => {
       pointerRef.active = false;
       activeCatalogueDragPayload.current = null;
-      activeCataloguePointerDragPayload.current = null;
+      activeCataloguePointerDragData.current = null;
     },
     handleDrop: ({ data, target, targetKind, dropPosition }) => {
       const encoded = readEncoded(data);
@@ -3596,10 +3596,11 @@ export const Tree = (({
   }, [resolvedSections]);
   const orderedByPreference = reactHostPort.useMemo(() => mergeTreeSectionOrder(sectionOrderIds, resolvedSections), [resolvedSections, sectionOrderIds]);
   const suppressPaletteClickRef = reactHostPort.useRef(false);
-  const palettePointerGestureRef = reactHostPort.useRef<{ pending: boolean; dragging: boolean; encoded: string | null; startX: number; startY: number; target: EventTarget | null }>({
+  const palettePointerGestureRef = reactHostPort.useRef<{ pending: boolean; dragging: boolean; encoded: string | null; types: readonly string[]; startX: number; startY: number; target: EventTarget | null }>({
     pending: false,
     dragging: false,
     encoded: null,
+    types: [],
     startX: 0,
     startY: 0,
     target: null,
@@ -3817,7 +3818,7 @@ export const Tree = (({
         gesture.pending = false;
         gesture.dragging = true;
         suppressPaletteClickRef.current = true;
-        palettePointer.begin(gesture.encoded);
+        palettePointer.begin(gesture.encoded, gesture.types);
         panelGhost?.begin(gesture.target);
         dragAndDropController?.onDragStart?.({ items: [item], sourceItem: item, section });
       };
@@ -3827,7 +3828,7 @@ export const Tree = (({
           suppressPaletteClickRef.current = true;
           panelGhost?.end();
         }
-        palettePointerGestureRef.current = { pending: false, dragging: false, encoded: null, startX: 0, startY: 0, target: null };
+        palettePointerGestureRef.current = { pending: false, dragging: false, encoded: null, types: [], startX: 0, startY: 0, target: null };
       };
       return {
         onPointerDown: (event) => {
@@ -3843,7 +3844,7 @@ export const Tree = (({
             return;
           }
           clearPalettePointerWindowListeners();
-          palettePointerGestureRef.current = { pending: true, dragging: false, encoded, startX: event.clientX, startY: event.clientY, target: event.currentTarget };
+          palettePointerGestureRef.current = { pending: true, dragging: false, encoded, types: Object.keys(dragData), startX: event.clientX, startY: event.clientY, target: event.currentTarget };
           event.preventDefault();
           event.stopPropagation();
           const onWindowPointerMove = (moveEvent: PointerEvent): void => {

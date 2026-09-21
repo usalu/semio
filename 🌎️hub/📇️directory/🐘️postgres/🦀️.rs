@@ -17,8 +17,7 @@ use crate::artifact_authority::creation::{
 };
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
-use crate::directory::{
-    ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1,
+use crate::directory::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, DirectoryFormatAdmission, admit_directory_format, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1,
     HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability, UNCONTROLLED_PROJECTION_REBUILD,
     active_capability, admin_operation_effect_receipt_v1, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str, directory_projection_rejection_v1,
     directory_projection_space_v1, document_genesis_completion_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request,
@@ -40,6 +39,12 @@ use sqlx_postgres::{PgPool, PgPoolOptions};
 // schema changes are edited in place, not migrated). Document persistence and blobs are
 // `db::Database`'s tables, not this schema's.
 const SCHEMA: &str = "
+CREATE TABLE IF NOT EXISTS hub_directory_format (
+    singleton BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (singleton),
+    schema TEXT NOT NULL,
+    version BIGINT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS hub_user (
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
@@ -735,6 +740,16 @@ impl PostgresDirectory {
         let pool = PgPoolOptions::new().max_connections(20).connect(database_url).await.map_err(backend)?;
         for statement in SCHEMA.split(';').map(str::trim).filter(|s| !s.is_empty() && !s.starts_with("--")) {
             sqlx_core::query::query(statement).execute(&pool).await.map_err(backend)?;
+        }
+        let stamp: Option<(String, i64)> = sqlx_core::query_as::query_as("SELECT schema, version FROM hub_directory_format WHERE singleton").fetch_optional(&pool).await.map_err(backend)?;
+        let (events,): (i64,) = sqlx_core::query_as::query_as("SELECT COUNT(*) FROM hub_directory_event").fetch_one(&pool).await.map_err(backend)?;
+        if admit_directory_format(stamp, events > 0, "PostgreSQL")? == DirectoryFormatAdmission::Stamp {
+            sqlx_core::query::query("INSERT INTO hub_directory_format (singleton, schema, version) VALUES (TRUE, $1, $2) ON CONFLICT(singleton) DO NOTHING")
+                .bind(DIRECTORY_FORMAT_SCHEMA)
+                .bind(DIRECTORY_FORMAT_VERSION)
+                .execute(&pool)
+                .await
+                .map_err(backend)?;
         }
         let mut identity = Sha256::new();
         identity.update(b"semio.hub.artifact-cas.barrier-identity.v1\0");
@@ -3092,6 +3107,14 @@ impl HubDirectory for PostgresDirectory {
         .execute(&mut *tx)
         .await
         .map_err(backend)?;
+        sqlx_core::query::query("CREATE TEMP TABLE hub_rebuild_user ON COMMIT DROP AS SELECT id, email, display_name, password_hash, sso_subject, sso_provider, created_at FROM hub_user").execute(&mut *tx).await.map_err(backend)?;
+        sqlx_core::query::query(
+            "CREATE TEMP TABLE hub_rebuild_auth_session ON COMMIT DROP AS SELECT id, selector, secret_digest, user_id, identity_provider, identity_subject_digest, issued_at, expires_at, revoked_at, revoked_reason, authorization_generation, device_instance_id, session_kind FROM hub_auth_session",
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(backend)?;
+        sqlx_core::query::query("CREATE TEMP TABLE hub_rebuild_sync_binding ON COMMIT DROP AS SELECT id, auth_session_id, user_id FROM hub_sync_session").execute(&mut *tx).await.map_err(backend)?;
         sqlx_core::query::query("DELETE FROM hub_artifact_cas_reservation").execute(&mut *tx).await.map_err(backend)?;
         sqlx_core::query::query("DELETE FROM hub_artifact_cas_reference").execute(&mut *tx).await.map_err(backend)?;
         sqlx_core::query::query("DELETE FROM hub_artifact_retention").execute(&mut *tx).await.map_err(backend)?;
@@ -3102,6 +3125,13 @@ impl HubDirectory for PostgresDirectory {
         sqlx_core::query::query("DELETE FROM hub_space_membership").execute(&mut *tx).await.map_err(backend)?;
         sqlx_core::query::query("DELETE FROM hub_space").execute(&mut *tx).await.map_err(backend)?;
         sqlx_core::query::query("DELETE FROM hub_user").execute(&mut *tx).await.map_err(backend)?;
+        sqlx_core::query::query(
+            "INSERT INTO hub_user (id, email, display_name, password_hash, sso_subject, sso_provider, created_at)
+             SELECT id, email, display_name, password_hash, sso_subject, sso_provider, created_at FROM hub_rebuild_user",
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|error| DirectoryError::Backend(format!("PostgreSQL projection rebuild identity restore: {error}")))?;
         let mut replayed = 0u64;
         let mut cursor = 0i64;
         while replayed < total {
@@ -3138,6 +3168,20 @@ impl HubDirectory for PostgresDirectory {
         .execute(&mut *tx)
         .await
         .map_err(backend)?;
+        sqlx_core::query::query(
+            "INSERT INTO hub_auth_session (id, selector, secret_digest, user_id, identity_provider, identity_subject_digest, issued_at, expires_at, revoked_at, revoked_reason, authorization_generation, device_instance_id, session_kind)
+             SELECT id, selector, secret_digest, user_id, identity_provider, identity_subject_digest, issued_at, expires_at, revoked_at, revoked_reason, authorization_generation, device_instance_id, session_kind FROM hub_rebuild_auth_session",
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|error| DirectoryError::Backend(format!("PostgreSQL projection rebuild session restore: {error}")))?;
+        sqlx_core::query::query(
+            "UPDATE hub_sync_session SET auth_session_id = binding.auth_session_id, user_id = binding.user_id
+             FROM hub_rebuild_sync_binding AS binding WHERE hub_sync_session.id = binding.id",
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|error| DirectoryError::Backend(format!("PostgreSQL projection rebuild sync binding restore: {error}")))?;
         type CasLedgerRow = (i64, String, String, Option<String>, Option<Vec<u8>>, Option<i64>, Option<i64>, Option<Vec<u8>>);
         let ledger_rows: Vec<CasLedgerRow> =
             sqlx_core::query_as::query_as("SELECT generation, operation, space_id, document_id, checkpoint_id, write_epoch, expires_at_ms, plan FROM hub_artifact_cas_ledger_journal ORDER BY generation").fetch_all(&mut *tx).await.map_err(backend)?;

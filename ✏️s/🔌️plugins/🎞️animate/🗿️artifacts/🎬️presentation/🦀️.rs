@@ -191,55 +191,22 @@ pub fn animation_child_handle() -> AnimationChild {
 //#endregion 🔖️PresentationBridge
 
 //#region 🔖️WorkingScene
-// 🌱 Ephemeral, process-side working representation of the composed `presentation` child's live
-// `(source, tiles)` content, keyed by `PresentationChild::child_id` and shared across executor
-// threads.
-type PresentationScratch = std::collections::HashMap<String, (FigureTileSource, Vec<FigureTileDraft>)>;
+// 🌱 The composed `presentation` child's live `(source, tiles)` content lives in the parent's own
+// PERSISTED `PresentationSnapshot::source`/`tiles` payload fields (see their doc comments), never in a
+// process-global cache: a cache is invisible to `ArtifactPack`, so every whole-document load through
+// the host's member-less archive door used to derive an EMPTY deck.
 
-static PRESENTATION_SCRATCH: std::sync::OnceLock<std::sync::RwLock<PresentationScratch>> = std::sync::OnceLock::new();
-
-fn presentation_scratch() -> &'static std::sync::RwLock<PresentationScratch> {
-    PRESENTATION_SCRATCH.get_or_init(|| std::sync::RwLock::new(PresentationScratch::new()))
-}
-
-/// 📝 Seeds the scratch cache for a handle's `child_id` — call whenever new `(source, tiles)` content
-/// is about to become a document's `presentation` child (every mutation-diff/fixture builder in this
-/// plugin does, via [`presentation_child_handle_and_cache`]).
-pub fn cache_presentation_working_scene(child_id: &str, source: &FigureTileSource, tiles: &[FigureTileDraft]) {
-    presentation_scratch().write().unwrap_or_else(std::sync::PoisonError::into_inner).insert(child_id.to_string(), (source.clone(), tiles.to_vec()));
-}
-
-/// 🔎 Reads the cached live `(source, tiles)` for a `presentation` child handle — falls back to
-/// `source_tiles_from_presentation_snapshot`'s best-effort (lossy) reconstruction is NOT attempted
-/// here (no live child content is reachable from this pure accessor either — see the region doc
-/// comment); falls back to `default_figure_tile_source()`/no tiles, never a panic, when nothing has
-/// cached this handle yet.
-pub fn presentation_working_scene_for_handle(handle: &PresentationChild) -> (FigureTileSource, Vec<FigureTileDraft>) {
-    presentation_scratch().read().unwrap_or_else(std::sync::PoisonError::into_inner).get(&handle.child_id).cloned().unwrap_or_else(|| (default_figure_tile_source(), Vec::new()))
-}
-
-/// 🔎 Reads the current document's live `(source, tiles)` off its `presentation` child handle — the
-/// single read call site every mutation/render/export/inference path in this plugin uses instead of
-/// the old `snapshot.source`/`snapshot.tiles` field access.
+/// 🔎 Reads the current document's live `(source, tiles)` — the single read call site every
+/// mutation/render/export/inference path in this plugin uses.
 pub fn presentation_working_scene(snapshot: &PresentationSnapshot) -> (FigureTileSource, Vec<FigureTileDraft>) {
-    presentation_working_scene_for_handle(&snapshot.presentation)
+    (snapshot.source.clone(), snapshot.tiles.clone())
 }
 
-/// 🏗️ Mints a new content-addressed `presentation` handle AND seeds the scratch cache with its
-/// `(source, tiles)` in one call — the standard way every mutation-diff/fixture builder in this
-/// plugin creates a `presentation` field value; never construct a handle without also caching, or
-/// [`presentation_working_scene`] will read back the empty default.
-pub fn presentation_child_handle_and_cache(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationChild {
-    let handle = presentation_child_handle(source, tiles);
-    cache_presentation_working_scene(&handle.child_id, source, tiles);
-    handle
-}
-
-/// 🏗️ Builds a full `PresentationSnapshot` from literal `(source, tiles)` — the standard fixture/import
-/// constructor replacing the old 3-field `PresentationSnapshot { schema, source, tiles }` struct literal
-/// now that `presentation`/`animation` are composed child handles, not plain fields.
+/// 🏗️ Builds a full `PresentationSnapshot` from literal `(source, tiles)` — the standard
+/// fixture/import constructor: it persists the payload AND mints the content-addressed `presentation`
+/// handle that payload derives, so the two can never drift apart.
 pub fn presentation_snapshot_with_tiles(source: &FigureTileSource, tiles: &[FigureTileDraft]) -> PresentationSnapshot {
-    PresentationSnapshot { schema: PRESENTATION_DOCUMENT_SCHEMA.into(), presentation: presentation_child_handle_and_cache(source, tiles), animation: animation_child_handle() }
+    PresentationSnapshot { schema: PRESENTATION_DOCUMENT_SCHEMA.into(), source: source.clone(), tiles: tiles.to_vec(), presentation: presentation_child_handle(source, tiles), animation: animation_child_handle() }
 }
 
 /// 🌱️ `ArtifactEditor`/`ArtifactViewer::genesis_child_pack` for the composed `presentation` deck

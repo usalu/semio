@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemovePart {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::RemovePart(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-part".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-part", "Bauteil entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangePileLM {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change pile length [m] to {}", self.new_pile_l_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change pile length [m] to {}", self.new_pile_l_m), &format!("Pfahllänge [m] auf {} ändern", self.new_pile_l_m))
     }
 }
 //#endregion 🔖️ChangePileLM

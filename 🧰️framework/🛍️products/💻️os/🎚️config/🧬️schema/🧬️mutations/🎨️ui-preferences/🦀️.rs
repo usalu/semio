@@ -15,8 +15,8 @@ macro_rules! optional_setting_impl {
             fn inverse(&self, base: &UiPreferences) -> Vec<UiPreferencesConfigMutation> {
                 vec![UiPreferencesConfigMutation::$variant(Self { $field: base.$field.clone() })]
             }
-            fn label(&self) -> String {
-                format!(concat!("Set ", $label, " to {:?}"), self.$field)
+            fn label(&self) -> protocol::LocalizedLabel {
+                protocol::LocalizedLabel::native(&format!(concat!("Set ", $label, " to {:?}"), self.$field), &format!(concat!("Setzen", $label, "zu {:?}"), self.$field))
             }
             fn target(&self) -> Vec<String> {
                 vec![$target.to_string()]
@@ -47,8 +47,8 @@ macro_rules! keyed_setting_impl {
             fn inverse(&self, base: &UiPreferences) -> Vec<UiPreferencesConfigMutation> {
                 vec![UiPreferencesConfigMutation::$variant(Self { $id: self.$id.clone(), $value: base.$map.get(&self.$id).cloned() })]
             }
-            fn label(&self) -> String {
-                format!(concat!("Set ", $label, " {:?}"), self.$id)
+            fn label(&self) -> protocol::LocalizedLabel {
+                protocol::LocalizedLabel::native(&format!(concat!("Set ", $label, " {:?}"), self.$id), &format!(concat!("Setzen", $label, "{:?}"), self.$id))
             }
             fn target(&self) -> Vec<String> {
                 vec![$target.to_string(), self.$id.clone()]

@@ -11,7 +11,7 @@
 
 use super::*;
 use semio_framework_os_kernel::Viewport2d;
-use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, NodeGraphScene, SurfaceKind, UiPresence};
+use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, NodeGraphInteractionDomain, NodeGraphScene, SurfaceKind, UiPresence};
 
 const NODE_GRAPH_SCENE_FIXTURE: &str = include_str!("../../🧫️fixtures/🕸️wgpu-node-graph/🔣️.json");
 
@@ -22,6 +22,7 @@ pub(super) fn hexagonal_mushroom_column_fixture_json() -> String {
 
 pub(super) fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
     UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: "generation3d".into(),
         component_kind: SurfaceKind::NodeGraph,
@@ -33,6 +34,12 @@ pub(super) fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
         world_3d: None,
         node_graph: Some(NodeGraphScene {
             editable: Some(true),
+            interaction_domain: Some(NodeGraphInteractionDomain {
+                id: "graph".into(),
+                node_target_prefix: "flow-play-document.widget.".into(),
+                edge_target_prefix: "flow-play-document.synapse.".into(),
+                handle_target_prefix: "flow-play-document.handle.".into(),
+            }),
             operators: serde_json::from_value(serde_json::from_str::<Value>(NODE_GRAPH_SCENE_FIXTURE).expect("graph fixture")["operators"].clone()).expect("document operator records"),
             host_snapshot_json: Some(hexagonal_mushroom_column_fixture_json()),
             capabilities_json: Some(json!({ "engine": "flow", "spotlight": true }).to_string()),
@@ -220,6 +227,37 @@ fn tutorial_semantic_points_resolve_through_live_graph_geometry() {
 }
 
 #[test]
+fn node_graph_domain_qualifies_every_target_kind_and_absence_suppresses_interaction_actions() {
+    let domain = NodeGraphInteractionDomain {
+        id: "graph".into(),
+        node_target_prefix: "flow-play-document.widget.".into(),
+        edge_target_prefix: "flow-play-document.synapse.".into(),
+        handle_target_prefix: "flow-play-document.handle.".into(),
+    };
+    assert_eq!(
+        node_graph_domain_targets_json(&domain, "node", &["add".into()]).expect("node targets"),
+        r#"[{"granularity":"node","id":"flow-play-document.widget.add"}]"#
+    );
+    assert_eq!(
+        node_graph_domain_targets_json(&domain, "edge", &["wire-1".into()]).expect("edge targets"),
+        r#"[{"granularity":"edge","id":"flow-play-document.synapse.wire-1"}]"#
+    );
+    assert_eq!(
+        node_graph_domain_targets_json(&domain, "handle", &["add@result".into()]).expect("handle targets"),
+        r#"[{"granularity":"handle","id":"flow-play-document.handle.add@result"}]"#
+    );
+    let snapshot = GraphInteractionSnapshot {
+        node_ids: vec!["add".into()],
+        hovered_id: Some("add".into()),
+        hovered_handle: None,
+        viewport: Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 },
+    };
+    let dispatch = graph_interaction_dispatch(PublishedGraphInteraction::default(), snapshot, None).expect("domainless dispatch");
+    assert!(!dispatch.publish_select && !dispatch.publish_hover);
+    assert_eq!(dispatch.item_count(), 1, "the domain-independent viewport remains publishable");
+}
+
+#[test]
 fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
     let _serialized = engine_surface_law_guard();
     let surface_id = "node-graph-attach-pick";
@@ -235,13 +273,13 @@ fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
     assert_eq!(select.controller_id, "generation3d");
     assert_eq!(
         action_fields(select),
-        vec![("domainId".to_owned(), "graph".to_owned()), ("merge".to_owned(), "replace".to_owned()), ("method".to_owned(), "pick".to_owned()), ("targets".to_owned(), r#"[{"granularity":"node","id":"extrude"}]"#.to_owned()),],
+        vec![("domainId".to_owned(), "graph".to_owned()), ("merge".to_owned(), "replace".to_owned()), ("method".to_owned(), "pick".to_owned()), ("targets".to_owned(), r#"[{"granularity":"node","id":"flow-play-document.widget.extrude"}]"#.to_owned()),],
         "byte-identical to React's nodeGraphSelectionActionArgs with nodeIds [extrude]"
     );
     let hover = actions.iter().find(|action| action.action == "interactionHover").expect("pointer-down publishes interactionHover");
     assert_eq!(
         action_fields(hover),
-        vec![("channel".to_owned(), "pointer".to_owned()), ("domainId".to_owned(), "graph".to_owned()), ("targets".to_owned(), r#"[{"granularity":"node","id":"extrude"}]"#.to_owned()),],
+        vec![("channel".to_owned(), "pointer".to_owned()), ("domainId".to_owned(), "graph".to_owned()), ("targets".to_owned(), r#"[{"granularity":"node","id":"flow-play-document.widget.extrude"}]"#.to_owned()),],
         "byte-identical to React's nodeGraphHoverActionArgs(\"extrude\") - a node-body pick carries no channel, so the target stays node-granular"
     );
 
@@ -250,7 +288,7 @@ fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
     let channel_hover = moved.iter().find(|action| action.action == "interactionHover").expect("pointer-move publishes interactionHover");
     assert_eq!(
         action_fields(channel_hover),
-        vec![("channel".to_owned(), "pointer".to_owned()), ("domainId".to_owned(), "graph".to_owned()), ("targets".to_owned(), r#"[{"granularity":"handle","id":"extrude@wire"}]"#.to_owned()),],
+        vec![("channel".to_owned(), "pointer".to_owned()), ("domainId".to_owned(), "graph".to_owned()), ("targets".to_owned(), r#"[{"granularity":"handle","id":"flow-play-document.handle.extrude@wire"}]"#.to_owned()),],
         "byte-identical to React's nodeGraphHoverActionArgs(\"extrude\", \"wire\") - a port pick qualifies the target by channel"
     );
     drop_engine_surface(surface_id);

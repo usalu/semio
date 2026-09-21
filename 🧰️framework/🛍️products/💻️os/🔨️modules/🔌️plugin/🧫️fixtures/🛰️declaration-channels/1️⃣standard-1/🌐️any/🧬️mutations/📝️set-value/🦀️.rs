@@ -20,8 +20,8 @@ impl protocol::MutationKind<Std1AnySnapshot, Std1AnyMutation> for SetValue {
     fn inverse(&self, base: &Std1AnySnapshot) -> Vec<Std1AnyMutation> {
         vec![Std1AnyMutation::SetValue(Self { value: base.value })]
     }
-    fn label(&self) -> String {
-        format!("Set value to {}", self.value)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set value to {}", self.value), &format!("Wert auf {} setzen", self.value))
     }
     fn target(&self) -> Vec<String> {
         vec!["value".into()]

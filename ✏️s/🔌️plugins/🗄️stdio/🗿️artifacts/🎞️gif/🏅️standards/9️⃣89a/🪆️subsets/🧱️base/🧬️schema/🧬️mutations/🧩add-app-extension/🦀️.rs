@@ -23,8 +23,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for AddAppExtension {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::AddAppExtension(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "add-app-extension".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("add-app-extension", "Apperweiterung hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -31,8 +31,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Delete
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Delete Solar Thermal System {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete Solar Thermal System {}", self.id.0), &format!("Solarwärmensystem {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

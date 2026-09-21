@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Connec
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Connect surfaces {} and {}", self.surface_a_id.0, self.surface_b_id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Connect surfaces {} and {}", self.surface_a_id.0, self.surface_b_id.0), &format!("Oberflächen {} und {} verbinden", self.surface_a_id.0, self.surface_b_id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -107,7 +107,7 @@ fn a_cache_from_another_document_is_dropped_rather_than_painted() {
 #[test]
 fn the_rendered_surface_is_non_empty_for_every_example() {
     for source in crate::examples::grid2d::sources() {
-        let document = <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(source.document()).expect("example parses");
+        let document = <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(&source.document()).expect("example parses");
         render(&document, &Grid2dWindowConfig::default()).unwrap_or_else(|error| panic!("{}: the preview pane must render: {error:?}", source.id()));
         assert!(scene(&document, &Grid2dWindowConfig::default()).layers_json.len() > 64, "{}: the canvas carries no layers", source.id());
     }

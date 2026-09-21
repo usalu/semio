@@ -31,8 +31,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ClearF
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Clear fenestration {} glazing construction", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Clear fenestration {} glazing construction", self.id.0), &format!("Fenster {} Verglasungskonstruktion leeren", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

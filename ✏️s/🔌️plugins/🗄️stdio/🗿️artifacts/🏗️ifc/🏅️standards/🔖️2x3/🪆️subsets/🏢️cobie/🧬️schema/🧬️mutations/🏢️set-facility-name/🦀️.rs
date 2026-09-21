@@ -21,8 +21,8 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetFacility
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3CobieMutation> {
         agg_inverse(&Ifc2x3CobieMutation::SetFacilityName(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-facility-name".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-facility-name", "Anlagenname setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

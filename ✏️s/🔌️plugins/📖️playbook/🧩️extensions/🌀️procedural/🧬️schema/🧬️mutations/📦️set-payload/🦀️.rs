@@ -18,8 +18,8 @@ impl protocol::MutationKind<ModuleRenderPayload, ModulePayloadMutation> for SetP
     fn inverse(&self, base: &ModuleRenderPayload) -> Vec<ModulePayloadMutation> {
         vec![ModulePayloadMutation::SetPayload(SetPayload { payload: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Set Payload".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Payload", "Nutzlast setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["payload".into()]

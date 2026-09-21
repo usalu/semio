@@ -62,8 +62,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveSamplerMu
         vec![super::GltfMutation::MoveSampler(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Move Sampler".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Move Sampler", "Sampler verschieben")
     }
 
     fn target(&self) -> Vec<String> {

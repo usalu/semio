@@ -20,8 +20,8 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for UpdateManufact
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Update manufacturer file header (manufacturer=\"{}\")", self.new_manufacturer_file.manufacturer)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Update manufacturer file header (manufacturer=\"{}\")", self.new_manufacturer_file.manufacturer), &format!("Herstellerdateikopf (Hersteller=\"{}\") aktualisieren", self.new_manufacturer_file.manufacturer))
     }
 }
 //#endregion 🔖️Payload

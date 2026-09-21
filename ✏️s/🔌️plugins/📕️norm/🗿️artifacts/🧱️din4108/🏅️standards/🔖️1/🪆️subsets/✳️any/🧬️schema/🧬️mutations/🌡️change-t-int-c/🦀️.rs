@@ -19,8 +19,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeTIntC {
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change t int c to {}", self.new_t_int_c)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change t int c to {}", self.new_t_int_c), &format!("Tintc auf {} ändern", self.new_t_int_c))
     }
 }
 //#endregion 🔖️Payload

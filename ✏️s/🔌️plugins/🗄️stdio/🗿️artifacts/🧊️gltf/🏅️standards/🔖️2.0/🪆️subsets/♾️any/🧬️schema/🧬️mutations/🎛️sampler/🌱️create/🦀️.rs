@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateSampler
         vec![super::GltfMutation::CreateSampler(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Create Sampler".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Create Sampler", "Sampler erstellen")
     }
 
     fn target(&self) -> Vec<String> {

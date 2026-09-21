@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeFireRating
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change fire rating to \"{}\"", self.new_fire_rating)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change fire rating to \"{}\"", self.new_fire_rating), &format!("Brandbewertung auf \"{}\" ändern", self.new_fire_rating))
     }
 }
 //#endregion 🔖️Payload

@@ -49,8 +49,8 @@ impl crate::os_spr::MutationKind<DemoSnapshot, LossyMutation> for SetN {
     fn inverse(&self, _base: &DemoSnapshot) -> Vec<LossyMutation> {
         vec![LossyMutation::SetN(self.clone())]
     }
-    fn label(&self) -> String {
-        "Set N".into()
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Set N", "N setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["n".into()]

@@ -65,8 +65,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveRequiredE
         vec![super::GltfMutation::MoveRequiredExtension(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Move Required Extension".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Move Required Extension", "erforderliche Erweiterung verschieben")
     }
 
     fn target(&self) -> Vec<String> {

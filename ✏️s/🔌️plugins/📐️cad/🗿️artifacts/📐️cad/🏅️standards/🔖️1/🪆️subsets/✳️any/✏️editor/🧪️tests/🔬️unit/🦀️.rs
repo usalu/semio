@@ -21,8 +21,12 @@ pub(crate) mod context {
     /// with `interactive-job.catalog-authority` … `generated_migrated=false`, `migrated={}`. A
     /// registry-less wrapper could not dispatch anything anyway (`admit_command_wire_with_proof`
     /// refuses every verb that has no manifest declaration).
-    pub async fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>> {
-        semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<CadPlayApp>>(cad_app_manifest_for_tests).await
+    ///
+    /// 🧩️ The roster is `SemioMembers`: `CadPlayApp::genesis_child_pack` derives an
+    /// `s.stdio.semio@v1/model` child for every composed pane, and a `NoMembers` store can never open
+    /// that dialect (`derived child dialect … is not declared by this app's member roster`).
+    pub async fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers> {
+        semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests).await
     }
     
     /// ✏️ Adapts `create_cad_app`'s `AppDefinition` (contract §2.4) into the `App { definition,

@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change fenestration {} visible transmittance to {}", self.id.0, self.new_vlt)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change fenestration {} visible transmittance to {}", self.id.0, self.new_vlt), &format!("Fenster {} sichtbare Transmission auf {} ändern", self.id.0, self.new_vlt))
     }
 
     fn target(&self) -> Vec<String> {

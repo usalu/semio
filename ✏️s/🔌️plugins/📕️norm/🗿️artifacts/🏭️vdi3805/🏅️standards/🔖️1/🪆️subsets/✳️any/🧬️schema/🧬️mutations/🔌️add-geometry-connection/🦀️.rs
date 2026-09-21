@@ -21,8 +21,8 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for AddGeometryCon
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add connection \"{}\" to geometry \"{}\"", self.connection.id, self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add connection \"{}\" to geometry \"{}\"", self.connection.id, self.id), &format!("Verbindung \"{}\" zu Geometrie \"{}\" hinzufügen", self.connection.id, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone(), self.connection.id.clone()]

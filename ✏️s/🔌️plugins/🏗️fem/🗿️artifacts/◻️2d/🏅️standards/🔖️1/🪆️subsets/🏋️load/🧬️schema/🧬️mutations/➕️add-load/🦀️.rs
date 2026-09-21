@@ -26,8 +26,8 @@ impl MutationKind<Fem2dSnapshot, Fem2dMutation> for AddLoad {
     fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add load \"{}\" to case \"{}\"", load_id(&self.load), self.case_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add load \"{}\" to case \"{}\"", load_id(&self.load), self.case_id), &format!("Last \"{}\" zu Fall \"{}\" hinzufügen", load_id(&self.load), self.case_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]

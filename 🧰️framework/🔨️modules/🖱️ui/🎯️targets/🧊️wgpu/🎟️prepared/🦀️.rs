@@ -2422,6 +2422,7 @@ pub(crate) enum DrawMeasureCursor {
     PassTextured { pass: usize, draw: usize },
     PassTexturedInstance { pass: usize, draw: usize, instance: usize },
     PassTexturedKey { pass: usize, draw: usize, instance: usize, byte: usize },
+    PassGrid { pass: usize },
     PassMaterial { pass: usize, draw: usize, translucent: bool },
     PassMaterialMeshKey { pass: usize, draw: usize, byte: usize, translucent: bool },
     PassMaterialTextureKey { pass: usize, draw: usize, byte: usize, translucent: bool },
@@ -2745,6 +2746,10 @@ impl PreparedRenderJob {
                 let next = if byte + 1 < key.len() { DrawMeasureCursor::PassTexturedKey { pass, draw: draw_index, instance, byte: byte + 1 } } else { Self::next_textured_instance(draw, pass, draw_index, instance) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
+            DrawMeasureCursor::PassGrid { pass } => {
+                let next = Self::next_after_grid(draw, pass);
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::ProceduralGrid3d>(), ..PreparedRenderUsage::default() }, next)
+            }
             DrawMeasureCursor::PassMaterial { pass, draw: draw_index, translucent } => {
                 let value = &draw.scene_passes[pass].material_draws[draw_index];
                 let next = if !value.mesh_key.is_empty() {
@@ -2977,6 +2982,14 @@ impl PreparedRenderJob {
     /// first is what makes the geometry in front of it actually occlude it (ticket
     /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w7b-presenter-one-frame-per-boot.md` §4).
     fn next_after_textured(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
+        if draw.scene_passes[pass].procedural_grid.is_some() {
+            DrawMeasureCursor::PassGrid { pass }
+        } else {
+            Self::next_after_grid(draw, pass)
+        }
+    }
+
+    fn next_after_grid(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
         if let Some(cursor) = Self::first_material(draw, pass, false) {
             cursor
         } else if !draw.scene_passes[pass].draws.is_empty() {

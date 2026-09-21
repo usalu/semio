@@ -29,7 +29,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// field does not yet wire live (`📓️w1-c-report.md` openQuestion 3) — not a second registration of
 /// the artifact/schema/io itself. `.activation(…)`/`.execution(…)`/`.requests(…)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME E2, `📓️design-abi.md` §3) are this crate's
-/// proof-of-migration: the host activates one instance whenever a `"2d.note"` artifact
+/// proof-of-migration: the host activates one instance whenever an `"s.note.note"` artifact
 /// (`crate::artifacts::note::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
 /// (no publisher trust assumed beyond the sandbox default), and it asks the broker for document
 /// write access to persist edits.

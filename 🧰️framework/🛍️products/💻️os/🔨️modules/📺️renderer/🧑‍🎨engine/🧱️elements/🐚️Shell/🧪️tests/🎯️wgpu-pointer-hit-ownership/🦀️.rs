@@ -18,7 +18,6 @@
 
 use super::*;
 
-const WGPU_RENDERER_SOURCE: &str = include_str!("../../../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
 
 /// 🧾️ The eight leaking steps, each with the hit its press actually resolved to in run 14 — kind and
 /// control id as the live hit ledger published them (`steps.json`'s `detail.id`, and for the caps and
@@ -44,12 +43,13 @@ fn hit(kind: HitKind, control_id: &str) -> HitTarget<ActionDescriptor> {
 /// which is exactly the case pointer capture exists for.
 fn sequence_owners(at_press: PointerHitOwner, under_pointer: PointerHitOwner) -> Vec<PointerHitOwner> {
     let mut capture = PointerCapture::default();
-    let mut owners = vec![capture.owner_of_move(at_press)];
-    owners.push(capture.press(at_press));
+    let pointer = ui_render::PointerId(1);
+    let mut owners = vec![capture.owner_of_move(pointer, at_press)];
+    owners.push(capture.press(pointer, at_press, 10.0, 20.0).expect("capture admitted"));
     for _ in 0..8 {
-        owners.push(capture.owner_of_move(under_pointer));
+        owners.push(capture.owner_of_move(pointer, under_pointer));
     }
-    owners.push(capture.release());
+    owners.push(capture.release(pointer));
     owners
 }
 
@@ -79,11 +79,40 @@ fn a_press_on_the_surface_keeps_the_gesture_on_it_and_releases_it_again() {
     let owners = sequence_owners(PointerHitOwner::Surface, PointerHitOwner::Chrome);
     assert!(owners.iter().all(|owner| *owner == PointerHitOwner::Surface), "🎯️ a captured surface gesture survives the chrome it travels over: {owners:?}");
     let mut capture = PointerCapture::default();
-    capture.press(PointerHitOwner::Surface);
-    assert_eq!(capture.release(), PointerHitOwner::Surface);
-    assert_eq!(capture.holder(), None, "🎯️ the release ENDS the sequence");
-    assert_eq!(capture.owner_of_move(PointerHitOwner::Chrome), PointerHitOwner::Chrome, "🎯️ and the next move is answered by what is under the pointer again");
-    assert_eq!(PointerCapture::default().release(), PointerHitOwner::Surface, "🎯️ a release with no press before it — the pointer entered already down — is the surface's, as it is in the DOM");
+    let pointer = ui_render::PointerId(1);
+    assert_eq!(capture.press(pointer, PointerHitOwner::Surface, 10.0, 20.0), Some(PointerHitOwner::Surface));
+    assert_eq!(capture.release(pointer), PointerHitOwner::Surface);
+    assert_eq!(capture.holder(pointer), None, "🎯️ the release ENDS the sequence");
+    assert_eq!(capture.owner_of_move(pointer, PointerHitOwner::Chrome), PointerHitOwner::Chrome, "🎯️ and the next move is answered by what is under the pointer again");
+    assert_eq!(PointerCapture::default().release(pointer), PointerHitOwner::Surface, "🎯️ a release with no press before it — the pointer entered already down — is the surface's, as it is in the DOM");
+}
+
+#[test]
+fn fixed_pointer_captures_keep_independent_positions_and_release_only_their_owner() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).expect("neutral scene owner fixture");
+    let capacity = fixture["captureCapacity"].as_u64().expect("fixed capture grant") as usize;
+    let press = &fixture["press"];
+    let x = press[0].as_f64().unwrap() as f32;
+    let y = press[1].as_f64().unwrap() as f32;
+    let release = &fixture["release"];
+    let end_x = release[0].as_f64().unwrap() as f32;
+    let end_y = release[1].as_f64().unwrap() as f32;
+    let expected_delta = (fixture["moveDelta"][0].as_f64().unwrap() as f32, fixture["moveDelta"][1].as_f64().unwrap() as f32);
+    let mut capture = PointerCapture::default();
+    for index in 0..capacity {
+        assert_eq!(capture.press(ui_render::PointerId(index as u64), PointerHitOwner::Surface, x, y), Some(PointerHitOwner::Surface));
+    }
+    assert_eq!(capture.press(ui_render::PointerId(capacity as u64), PointerHitOwner::Chrome, 900.0, 900.0), None);
+    assert_eq!(capture.advance(ui_render::PointerId(1), x + 25.0, y - 40.0), Some((25.0, -40.0)));
+    assert_eq!(capture.release(ui_render::PointerId(1)), PointerHitOwner::Surface);
+    assert!(capture.any_active());
+    assert_eq!(capture.advance(ui_render::PointerId(0), end_x, end_y), Some(expected_delta));
+    assert_eq!(capture.advance(ui_render::PointerId(0), end_x + 4.0, end_y - 3.0), Some((4.0, -3.0)));
+    assert_eq!(capture.position(ui_render::PointerId(0)), Some([end_x + 4.0, end_y - 3.0]));
+    assert_eq!(capture.position(ui_render::PointerId(1)), None);
+    assert_eq!(capture.press(ui_render::PointerId(capacity as u64), PointerHitOwner::Chrome, 900.0, 900.0), Some(PointerHitOwner::Chrome));
+    for index in 0..=capacity { capture.release(ui_render::PointerId(index as u64)); }
+    assert!(!capture.any_active());
 }
 
 /// 🌍️ The surface's own body, and a point that hits nothing, still belong to the scene: this is an
@@ -109,7 +138,7 @@ fn an_open_overlay_owns_every_pointer_until_it_closes() {
     let theme = Theme::light();
     let input = InputState::<ActionDescriptor>::default();
     assert!(!shell.pointer_input_is_modal(), "🚧️ a shell with no overlay open is not modal");
-    assert_eq!(shell.pointer_owner_at(400.0, 400.0, &input, &theme), PointerHitOwner::Surface);
+    assert_eq!(shell.pointer_owner_at(400.0, 400.0, &input, &theme), PointerHitOwner::Chrome, "an empty registry publishes no scene owner");
 
     shell.context_menu = Some(ContextMenuState::default());
     assert!(shell.pointer_input_is_modal(), "🚧️ an open context menu is modal");
@@ -140,7 +169,7 @@ fn an_open_panels_whole_box_owns_the_pointer_over_the_pane_it_floats_on() {
     shell.screen_h = 936.0;
     let body = shell.body_rect(&theme);
     let centre = [body.x + body.w / 2.0, body.y + body.h / 2.0];
-    assert_eq!(shell.pointer_owner_at(centre[0], centre[1], &input, &theme), PointerHitOwner::Surface, "📑️ with every anchor folded the body is the pane's");
+    assert_eq!(shell.pointer_owner_at(centre[0], centre[1], &input, &theme), PointerHitOwner::Chrome, "folded anchors do not mint an unregistered scene");
 
     *shell.dock_tabs.tabs_mut(PanelAnchor::TopLeft) = vec![DockTabNode::leaf("framework.panel.artifact", "Artifact", "circle-dot", 0)];
     shell.anchor_state_mut(PanelAnchor::TopLeft).visible = true;
@@ -152,7 +181,7 @@ fn an_open_panels_whole_box_owns_the_pointer_over_the_pane_it_floats_on() {
     assert!(!shell.wheel_reaches_scene_surface(inside[0], inside[1], &input, &theme), "📑️ and the wheel scrolls the panel, never the world under it");
     let outside = [body.x + body.w - 4.0, body.y + body.h - 4.0];
     assert!(!shell.pointer_is_over_open_panel(outside[0], outside[1], &theme), "📑️ the pane beside the panel still owns its own points");
-    assert_eq!(shell.pointer_owner_at(outside[0], outside[1], &input, &theme), PointerHitOwner::Surface);
+    assert_eq!(shell.pointer_owner_at(outside[0], outside[1], &input, &theme), PointerHitOwner::Chrome, "outside a panel still requires published scene provenance");
 }
 
 //#endregion 🚧️OverlayLayers
@@ -166,19 +195,7 @@ fn an_open_panels_whole_box_owns_the_pointer_over_the_pane_it_floats_on() {
 /// a move the chrome owns hands the surface a LEAVE instead.
 #[test]
 fn the_renderer_ingress_routes_every_pointer_phase_through_the_capture() {
-    let press = "let owner = if down { self.pointer_capture.press(self.shell.pointer_owner_at(x, y, &self.input, &self.theme)) } else { self.pointer_capture.release() };";
-    let claim = "let over_world = self.shell.world3d_states.values().any(|state| state.bounds.contains(x, y));";
-    let moves = "let chrome_owns_pointer = self.pointer_capture.owner_of_move(self.shell.pointer_owner_at(x, y, &self.input, &self.theme)) == PointerHitOwner::Chrome;";
-    let leave = "WorldInteractionIntent::pointer_leave(x, y)";
-    let wheel = "let propagates = interaction.shell.wheel_reaches_scene_surface(x, y, &interaction.input, &interaction.theme);";
-    let press_at = WGPU_RENDERER_SOURCE.find(press).expect("🧊️ the press path resolves the pointer's owner through the capture");
-    let claim_at = WGPU_RENDERER_SOURCE[press_at..].find(claim).expect("🧊️ the world3d claim follows it");
-    assert!(claim_at > 0, "🧊️ the ownership question is asked BEFORE any surface may claim the press");
-    let moves_at = WGPU_RENDERER_SOURCE.find(moves).expect("🧊️ the move path asks the capture");
-    let leave_at = WGPU_RENDERER_SOURCE[moves_at..].find(leave).expect("🧊️ and answers a chrome-owned move with a leave");
-    assert!(leave_at > 0);
-    assert!(WGPU_RENDERER_SOURCE.contains(wheel), "🧊️ the wheel is gated by the same ownership answer");
-    assert!(!WGPU_RENDERER_SOURCE.contains("if ShellState::pointer_press_belongs_to_shell_chrome(self.input.hit_at(x, y)) {"), "🧊️ and the per-press predicate it replaces is GONE, not left beside it");
+    super::shell_input_tests::retained_world_sequence_probe("motion-wheel");
 }
 
 //#endregion 🧊️RendererIngress

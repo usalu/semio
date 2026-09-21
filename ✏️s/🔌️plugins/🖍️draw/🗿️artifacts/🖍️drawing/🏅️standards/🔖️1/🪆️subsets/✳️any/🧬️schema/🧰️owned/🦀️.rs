@@ -714,9 +714,6 @@ pub fn drawing_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOw
 const DRAWING_MAXIMUM_NESTED_ITEMS: usize = 4_096;
 const DRAWING_MAXIMUM_NESTED_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 const DRAWING_MAXIMUM_LAYER_DEPTH: usize = 64;
-const DRAWING_MUTATION_AGGREGATE_ITEMS: usize = DRAWING_MAXIMUM_NESTED_ITEMS;
-const DRAWING_MUTATION_AGGREGATE_BYTES: usize = DRAWING_MAXIMUM_NESTED_BYTES;
-const DRAWING_MUTATION_RETAINED_PAGE_ITEMS: usize = 1;
 const DRAWING_MUTATION_RETAINED_PAGE_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 const DRAWING_MUTATION_OVERLAY_PAGE_CAPACITY: usize = 16;
 const DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY: usize = 64;
@@ -732,14 +729,34 @@ struct DrawingMutationArenaOwner {
 }
 
 impl DrawingMutationArenaOwner {
-    fn admitted_totals(&self) -> Result<(usize, usize), &'static str> {
-        let items = self.reverse.capacity().checked_add(self.output.capacity()).and_then(|items| items.checked_add(self.pages.capacity())).and_then(|items| items.checked_add(1)).ok_or("drawing-store.mutation-arena-item-overflow")?;
+    fn configured_totals() -> Result<(usize, usize), &'static str> {
+        let items = DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY
+            .checked_mul(2)
+            .and_then(|items| items.checked_add(DRAWING_MUTATION_OVERLAY_PAGE_CAPACITY))
+            .and_then(|items| items.checked_add(1))
+            .ok_or("drawing-store.mutation-arena-item-overflow")?;
         let bytes = size_of::<Self>()
-            .checked_add(self.reverse.capacity().checked_mul(size_of::<DrawingLayerNode>()).ok_or("drawing-store.mutation-arena-byte-overflow")?)
-            .and_then(|bytes| bytes.checked_add(self.output.capacity().checked_mul(size_of::<DrawingLayerNode>())?))
-            .and_then(|bytes| bytes.checked_add(self.pages.capacity().checked_mul(size_of::<String>())?))
-            .and_then(|bytes| self.pages.iter().try_fold(bytes, |total, page| total.checked_add(page.capacity())))
-            .and_then(|bytes| bytes.checked_add(self.duplicate_id.capacity()))
+            .checked_add(DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY.checked_mul(size_of::<DrawingLayerNode>()).ok_or("drawing-store.mutation-arena-byte-overflow")?)
+            .and_then(|bytes| bytes.checked_add(DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY.checked_mul(size_of::<DrawingLayerNode>())?))
+            .and_then(|bytes| bytes.checked_add(DRAWING_MUTATION_OVERLAY_PAGE_CAPACITY.checked_mul(size_of::<String>())?))
+            .and_then(|bytes| bytes.checked_add(DRAWING_MUTATION_OVERLAY_PAGE_CAPACITY.checked_mul(DRAWING_MUTATION_RETAINED_PAGE_BYTES)?))
+            .and_then(|bytes| bytes.checked_add(DRAWING_DUPLICATE_ID_BYTES))
+            .ok_or("drawing-store.mutation-arena-byte-overflow")?;
+        Ok((items, bytes))
+    }
+
+    fn admitted_totals(&self) -> Result<(usize, usize), &'static str> {
+        Self::retained_totals(&self.reverse, &self.output, &self.pages, &self.duplicate_id)
+    }
+
+    fn retained_totals(reverse: &Vec<DrawingLayerNode>, output: &Vec<DrawingLayerNode>, pages: &Vec<String>, duplicate_id: &String) -> Result<(usize, usize), &'static str> {
+        let items = reverse.capacity().checked_add(output.capacity()).and_then(|items| items.checked_add(pages.capacity())).and_then(|items| items.checked_add(1)).ok_or("drawing-store.mutation-arena-item-overflow")?;
+        let bytes = size_of::<Self>()
+            .checked_add(reverse.capacity().checked_mul(size_of::<DrawingLayerNode>()).ok_or("drawing-store.mutation-arena-byte-overflow")?)
+            .and_then(|bytes| bytes.checked_add(output.capacity().checked_mul(size_of::<DrawingLayerNode>())?))
+            .and_then(|bytes| bytes.checked_add(pages.capacity().checked_mul(size_of::<String>())?))
+            .and_then(|bytes| pages.iter().try_fold(bytes, |total, page| total.checked_add(page.capacity())))
+            .and_then(|bytes| bytes.checked_add(duplicate_id.capacity()))
             .ok_or("drawing-store.mutation-arena-byte-overflow")?;
         Ok((items, bytes))
     }
@@ -1015,7 +1032,7 @@ impl DrawingMutationArenaPoolBootstrap {
 
     fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if cx.should_yield() {
-            return Err("drawing-store.mutation-arena-bootstrap-budget");
+            return Ok(false);
         }
         if let Some(fault) = self.fault {
             return Err(fault);
@@ -1125,9 +1142,10 @@ struct DrawingMutationArenaBootstrapAdmission {
 
 impl DrawingMutationArenaBootstrapAdmission {
     fn fixed() -> Result<Self, &'static str> {
+        let (owner_items, owner_bytes) = DrawingMutationArenaOwner::configured_totals()?;
         Ok(Self {
-            maximum_items: DRAWING_MUTATION_AGGREGATE_ITEMS.checked_mul(DRAWING_MUTATION_ARENA_POOL_CAPACITY).ok_or("drawing-store.mutation-arena-bootstrap-item-claim")?,
-            maximum_bytes: DRAWING_MUTATION_AGGREGATE_BYTES.checked_mul(DRAWING_MUTATION_ARENA_POOL_CAPACITY).ok_or("drawing-store.mutation-arena-bootstrap-byte-claim")?,
+            maximum_items: owner_items.checked_mul(DRAWING_MUTATION_ARENA_POOL_CAPACITY).ok_or("drawing-store.mutation-arena-bootstrap-item-claim")?,
+            maximum_bytes: owner_bytes.checked_mul(DRAWING_MUTATION_ARENA_POOL_CAPACITY).ok_or("drawing-store.mutation-arena-bootstrap-byte-claim")?,
         })
     }
 }
@@ -1683,6 +1701,7 @@ struct DrawingLayerCloneAuthority {
     depth: usize,
     path: [usize; DRAWING_MAXIMUM_LAYER_DEPTH],
     frames: [DrawingTraversalFrame; DRAWING_MAXIMUM_LAYER_DEPTH],
+    mutation_ready: bool,
     terminal: bool,
 }
 
@@ -1703,6 +1722,16 @@ impl DrawingLayerCloneAuthority {
         }
         let mut value = String::new();
         value.try_reserve_exact(source.capacity()).map_err(|_| "drawing-store.initializer-owned-string-admission")?;
+        value.push_str(source);
+        Ok(value)
+    }
+
+    fn clone_mutation_destination(source: &str) -> Result<String, &'static str> {
+        if source.len() > DRAWING_OWNED_FIELD_BYTES {
+            return Err("drawing-store.initializer-field-too-large");
+        }
+        let mut value = String::new();
+        value.try_reserve_exact(DRAWING_OWNED_FIELD_BYTES).map_err(|_| "drawing-store.initializer-mutation-destination-admission")?;
         value.push_str(source);
         Ok(value)
     }
@@ -1748,15 +1777,24 @@ impl DrawingLayerCloneAuthority {
         }
     }
 
-    fn new(source: &DrawingLayerNode) -> Self {
+    fn new_with_mutation_destinations(source: &DrawingLayerNode, mutation_ready: bool) -> Self {
         Self {
             value: std::mem::ManuallyDrop::new(Some(Self::skeleton(source))),
             retirement: std::mem::ManuallyDrop::new(None),
             depth: 0,
             path: [0; DRAWING_MAXIMUM_LAYER_DEPTH],
             frames: [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH],
+            mutation_ready,
             terminal: false,
         }
+    }
+
+    fn new(source: &DrawingLayerNode) -> Self {
+        Self::new_with_mutation_destinations(source, false)
+    }
+
+    fn new_mutation_ready(source: &DrawingLayerNode) -> Self {
+        Self::new_with_mutation_destinations(source, true)
     }
 
     fn source_at<'a>(root: &'a DrawingLayerNode, path: &[usize]) -> Option<&'a DrawingLayerNode> {
@@ -1803,15 +1841,15 @@ impl DrawingLayerCloneAuthority {
         let (source_base, target_base) = Self::bases(source, target);
         let observed: &[u8] = match frame.phase {
             0 => {
-                target_base.id = Self::clone_owned_string(&source_base.id)?;
+                target_base.id = if self.mutation_ready { Self::clone_mutation_destination(&source_base.id)? } else { Self::clone_owned_string(&source_base.id)? };
                 source_base.id.as_bytes()
             }
             1 => {
-                target_base.name = Self::clone_owned_string(&source_base.name)?;
+                target_base.name = if self.mutation_ready { Self::clone_mutation_destination(&source_base.name)? } else { Self::clone_owned_string(&source_base.name)? };
                 source_base.name.as_bytes()
             }
             2 => {
-                target_base.blend_mode = Self::clone_string(&source_base.blend_mode)?;
+                target_base.blend_mode = if self.mutation_ready { Self::clone_mutation_destination(&source_base.blend_mode)? } else { Self::clone_string(&source_base.blend_mode)? };
                 source_base.blend_mode.as_bytes()
             }
             3 => {
@@ -1882,7 +1920,7 @@ impl DrawingLayerCloneAuthority {
                     source.image_key.as_bytes()
                 }
                 (DrawingLayerNode::Boolean(source), DrawingLayerNode::Boolean(target)) => {
-                    target.operation = Self::clone_string(&source.operation)?;
+                    target.operation = if self.mutation_ready { Self::clone_mutation_destination(&source.operation)? } else { Self::clone_string(&source.operation)? };
                     source.operation.as_bytes()
                 }
                 (DrawingLayerNode::Trace(source), DrawingLayerNode::Trace(target)) => {
@@ -1999,6 +2037,173 @@ impl Drop for DrawingLayerCloneAuthority {
     fn drop(&mut self) {
         assert!(self.terminal_is_empty() || std::thread::panicking(), "Drawing layer clone reached Drop before exact handoff or cursor retirement");
     }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct DrawingCloneWorkTotals {
+    items: usize,
+    bytes: usize,
+}
+
+struct DrawingLayerCloneWorkAuthority {
+    depth: usize,
+    path: [usize; DRAWING_MAXIMUM_LAYER_DEPTH],
+    frames: [DrawingTraversalFrame; DRAWING_MAXIMUM_LAYER_DEPTH],
+    items: usize,
+    bytes: usize,
+    terminal: bool,
+}
+
+impl DrawingLayerCloneWorkAuthority {
+    fn new() -> Self {
+        Self { depth: 0, path: [0; DRAWING_MAXIMUM_LAYER_DEPTH], frames: [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH], items: 1, bytes: size_of::<DrawingLayerCloneAuthority>(), terminal: false }
+    }
+
+    fn add(&mut self, items: usize, bytes: usize) -> Result<(), &'static str> {
+        self.items = self.items.checked_add(items).ok_or("drawing-store.mutation-clone-item-overflow")?;
+        self.bytes = self.bytes.checked_add(bytes).ok_or("drawing-store.mutation-clone-byte-overflow")?;
+        if self.items > DRAWING_MAXIMUM_NESTED_ITEMS {
+            return Err("drawing-store.mutation-clone-item-capacity");
+        }
+        if self.bytes > DRAWING_MAXIMUM_NESTED_BYTES {
+            return Err("drawing-store.mutation-clone-byte-capacity");
+        }
+        Ok(())
+    }
+
+    fn string(value: &String) -> (usize, usize) {
+        (1, value.capacity())
+    }
+
+    fn vector<T>(value: &Vec<T>) -> Result<(usize, usize), &'static str> {
+        Ok((1usize.checked_add(value.capacity()).ok_or("drawing-store.mutation-clone-item-overflow")?, value.capacity().checked_mul(size_of::<T>()).ok_or("drawing-store.mutation-clone-byte-overflow")?))
+    }
+
+    fn add_direct(&mut self, layer: &DrawingLayerNode) -> Result<(), &'static str> {
+        let base = crate::schema::layer_base(layer);
+        for value in [&base.id, &base.name, &base.blend_mode] {
+            let (items, bytes) = Self::string(value);
+            self.add(items, bytes)?;
+        }
+        if let Some(FillStyle::LinearGradient { stops, .. } | FillStyle::RadialGradient { stops, .. }) = base.attributes.fill.as_ref() {
+            let (items, bytes) = Self::vector(stops)?;
+            self.add(items, bytes)?;
+        }
+        if let Some(stroke) = base.attributes.stroke.as_ref() {
+            for value in [&stroke.cap, &stroke.join] {
+                let (items, bytes) = Self::string(value);
+                self.add(items, bytes)?;
+            }
+            if let Some(dash) = stroke.dash.as_ref() {
+                let (items, bytes) = Self::vector(dash)?;
+                self.add(items, bytes)?;
+            }
+        }
+        match layer {
+            DrawingLayerNode::Shape(value) => {
+                let (items, bytes) = Self::string(&value.shape_kind);
+                self.add(items, bytes)?;
+                if let Some(polygon) = value.polygon.as_ref() {
+                    let (items, bytes) = Self::vector(&polygon.points)?;
+                    self.add(items, bytes)?;
+                }
+            }
+            DrawingLayerNode::Path(value) => {
+                let (items, bytes) = Self::vector(&value.segments)?;
+                self.add(items, bytes)?;
+            }
+            DrawingLayerNode::Text(value) => {
+                let (items, bytes) = Self::string(&value.content);
+                self.add(items, bytes)?;
+            }
+            DrawingLayerNode::Image(value) => {
+                let (items, bytes) = Self::string(&value.image_key);
+                self.add(items, bytes)?;
+            }
+            DrawingLayerNode::Group(value) => {
+                let (items, bytes) = Self::vector(&value.children)?;
+                self.add(items, bytes)?;
+            }
+            DrawingLayerNode::Boolean(value) => {
+                let (items, bytes) = Self::string(&value.operation);
+                self.add(items, bytes)?;
+                let (items, bytes) = Self::vector(&value.children)?;
+                self.add(items, bytes)?;
+            }
+            DrawingLayerNode::Trace(value) => {
+                let (items, bytes) = Self::string(&value.source_key);
+                self.add(items, bytes)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn step(&mut self, root: &DrawingLayerNode, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        if self.terminal {
+            return Ok(true);
+        }
+        let layer = DrawingSnapshotBoundsAuthority::layer_at(root, &self.path[..self.depth]).ok_or("drawing-store.mutation-clone-work-path")?;
+        let frame = self.frames[self.depth];
+        if frame.phase == 0 {
+            self.add_direct(layer)?;
+            self.frames[self.depth].phase = 1;
+            cx.consume_fuel(1);
+            return Ok(false);
+        }
+        if let DrawingLayerNode::Boolean(value) = layer {
+            if let Some(child) = value.children.get(frame.string) {
+                let (items, bytes) = Self::string(child);
+                self.add(items, bytes)?;
+                self.frames[self.depth].string += 1;
+                cx.consume_fuel(1);
+                return Ok(false);
+            }
+        }
+        if let DrawingLayerNode::Group(value) = layer {
+            if frame.child < value.children.len() {
+                if self.depth + 1 >= DRAWING_MAXIMUM_LAYER_DEPTH {
+                    return Err("drawing-store.mutation-clone-work-depth-capacity");
+                }
+                self.path[self.depth] = frame.child;
+                self.frames[self.depth].child += 1;
+                self.depth += 1;
+                self.frames[self.depth] = DrawingTraversalFrame::EMPTY;
+                cx.consume_fuel(1);
+                return Ok(false);
+            }
+        }
+        if self.depth == 0 {
+            self.terminal = true;
+            Ok(true)
+        } else {
+            self.depth -= 1;
+            cx.consume_fuel(1);
+            Ok(false)
+        }
+    }
+
+    fn totals(&self) -> Option<DrawingCloneWorkTotals> {
+        self.terminal.then_some(DrawingCloneWorkTotals { items: self.items, bytes: self.bytes })
+    }
+}
+
+fn drawing_fill_clone_work_totals(value: &FillStyle) -> Result<DrawingCloneWorkTotals, &'static str> {
+    let (items, bytes) = match value {
+        FillStyle::Solid { .. } => (0, 0),
+        FillStyle::LinearGradient { stops, .. } | FillStyle::RadialGradient { stops, .. } => DrawingLayerCloneWorkAuthority::vector(stops)?,
+    };
+    Ok(DrawingCloneWorkTotals { items, bytes })
+}
+
+fn drawing_stroke_clone_work_totals(value: &StrokeStyle) -> Result<DrawingCloneWorkTotals, &'static str> {
+    let mut items = 2usize;
+    let mut bytes = value.cap.capacity().checked_add(value.join.capacity()).ok_or("drawing-store.mutation-clone-byte-overflow")?;
+    if let Some(dash) = value.dash.as_ref() {
+        let (dash_items, dash_bytes) = DrawingLayerCloneWorkAuthority::vector(dash)?;
+        items = items.checked_add(dash_items).ok_or("drawing-store.mutation-clone-item-overflow")?;
+        bytes = bytes.checked_add(dash_bytes).ok_or("drawing-store.mutation-clone-byte-overflow")?;
+    }
+    Ok(DrawingCloneWorkTotals { items, bytes })
 }
 
 fn clone_drawing_string(source: &str) -> Result<String, &'static str> {
@@ -2166,16 +2371,16 @@ impl DrawingContainerRebuildAuthority {
         pending: Option<DrawingLayerNode>,
         reverse: Vec<DrawingLayerNode>,
         output: Vec<DrawingLayerNode>,
-        reservation: DrawingMutationAggregateReservation,
+        workset: DrawingMutationWorksetPlan,
     ) -> Result<Self, DrawingContainerRebuildRejected> {
         let extra = usize::from(pending.is_some());
         let Some(output_capacity) = source.len().saturating_sub(usize::from(remove_index.is_some())).checked_add(extra) else {
             return Err(DrawingContainerRebuildRejected { source, pending, reverse, output });
         };
         if output_capacity > DRAWING_MAXIMUM_NESTED_ITEMS
-            || source.len().saturating_add(output_capacity) > reservation.container_slots
-            || source.len() > reservation.maximum_container.saturating_add(1)
-            || output_capacity > reservation.maximum_container.saturating_add(1)
+            || source.len().saturating_add(output_capacity) > workset.container_slots
+            || source.len() > workset.maximum_container.saturating_add(1)
+            || output_capacity > workset.maximum_container.saturating_add(1)
             || source.capacity() < output_capacity
             || reverse.capacity() < source.len().max(output_capacity)
             || output.capacity() < output_capacity
@@ -2568,6 +2773,7 @@ impl Drop for DrawingStrokeCloneAuthority {
 struct DrawingSemanticDigestTotals {
     semantic_items: usize,
     semantic_bytes: usize,
+    maximum_field_bytes: usize,
     source_owner_items: usize,
     source_owner_bytes: usize,
     derived_owner_items: usize,
@@ -2577,6 +2783,7 @@ struct DrawingSemanticDigestTotals {
 struct DrawingSemanticDigestCredit {
     items: usize,
     bytes: usize,
+    maximum_field_bytes: usize,
     source_owner_items: usize,
     source_owner_bytes: usize,
     derived_owner_items: usize,
@@ -2590,6 +2797,7 @@ impl Default for DrawingSemanticDigestCredit {
         Self {
             items: 0,
             bytes: 0,
+            maximum_field_bytes: 0,
             source_owner_items: 1,
             source_owner_bytes: size_of::<DrawingMutation>(),
             derived_owner_items: 0,
@@ -2631,10 +2839,7 @@ impl DrawingSemanticDigestCredit {
         self.add_source_owner(1, size_of::<String>() + value.capacity())
     }
 
-    fn derived_string(&mut self, value: &str) -> Result<(), &'static str> {
-        if value.len() > DRAWING_OWNED_FIELD_BYTES {
-            return Err("drawing-store.mutation-derived-string-page-capacity");
-        }
+    fn derived_string(&mut self, _value: &str) -> Result<(), &'static str> {
         self.add_derived_owner(1, 0)
     }
 
@@ -2662,6 +2867,7 @@ impl DrawingSemanticDigestCredit {
         if value.len() > DRAWING_OWNED_FIELD_BYTES {
             return Err("drawing-store.mutation-field-capacity");
         }
+        self.maximum_field_bytes = self.maximum_field_bytes.max(value.len());
         self.items = self.items.checked_add(1).ok_or("drawing-store.mutation-item-overflow")?;
         self.bytes = self.bytes.checked_add(11).and_then(|bytes| bytes.checked_add(value.len())).ok_or("drawing-store.mutation-byte-overflow")?;
         if self.items > DRAWING_MAXIMUM_NESTED_ITEMS {
@@ -2706,6 +2912,7 @@ impl DrawingSemanticDigestCredit {
         self.semantic.is_none().then_some(DrawingSemanticDigestTotals {
             semantic_items: self.items,
             semantic_bytes: self.bytes,
+            maximum_field_bytes: self.maximum_field_bytes,
             source_owner_items: self.source_owner_items,
             source_owner_bytes: self.source_owner_bytes,
             derived_owner_items: self.derived_owner_items,
@@ -3477,37 +3684,22 @@ impl Drop for DrawingMutationDigestAuthority {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct DrawingMutationAggregateReservation {
+struct DrawingMutationWorksetPlan {
     source_items: usize,
-    candidate_items: usize,
-    mutation_source_items: usize,
-    mutation_derived_items: usize,
-    duplicate_candidate_items: usize,
-    authority_items: usize,
-    container_items: usize,
-    page_items: usize,
     source_bytes: usize,
-    candidate_bytes: usize,
-    mutation_source_bytes: usize,
-    mutation_derived_bytes: usize,
-    duplicate_candidate_bytes: usize,
+    mutation_items: usize,
+    mutation_bytes: usize,
+    arena_items: usize,
+    arena_bytes: usize,
+    authority_items: usize,
     authority_bytes: usize,
-    container_bytes: usize,
-    page_bytes: usize,
+    clone_items: usize,
+    clone_bytes: usize,
     maximum_container: usize,
     container_slots: usize,
 }
 
-#[derive(Clone, Copy)]
-struct DrawingMutationBackingCredit {
-    reverse_slots: usize,
-    output_slots: usize,
-    overlay_slots: usize,
-    overlay_bytes: usize,
-    duplicate_id_bytes: usize,
-}
-
-impl DrawingMutationAggregateReservation {
+impl DrawingMutationWorksetPlan {
     fn checked_total(values: &[usize], fault: &'static str) -> Result<usize, &'static str> {
         values.iter().try_fold(0usize, |total, value| total.checked_add(*value).ok_or(fault))
     }
@@ -3515,57 +3707,74 @@ impl DrawingMutationAggregateReservation {
     fn admit(
         source: DrawingSnapshotOwnerTotals,
         mutation: DrawingSemanticDigestTotals,
-        operation: &DrawingMutation,
-        backing: DrawingMutationBackingCredit,
+        arena_items: usize,
+        arena_bytes: usize,
+        container_slots: usize,
     ) -> Result<Self, &'static str> {
-        let DrawingMutationBackingCredit { reverse_slots, output_slots, overlay_slots, overlay_bytes, duplicate_id_bytes } = backing;
-        let container_slots = reverse_slots.checked_add(output_slots).ok_or("drawing-store.mutation-container-credit-overflow")?;
-        let container_items = 2;
-        let container_bytes = container_slots.checked_mul(size_of::<DrawingLayerNode>()).ok_or("drawing-store.mutation-container-credit-overflow")?;
-        let (duplicate_candidate_items, duplicate_candidate_bytes) = if matches!(operation, DrawingMutation::DuplicateLayer(_)) { (1, duplicate_id_bytes) } else { (0, 0) };
-        let authority_items = 1;
-        let authority_bytes = size_of::<DrawingMutationCandidateAuthority>();
-        let reservation = Self {
+        if source.source_items > DRAWING_MAXIMUM_NESTED_ITEMS {
+            return Err("drawing-store.preflight-item-capacity");
+        }
+        if source.source_bytes > DRAWING_MAXIMUM_NESTED_BYTES {
+            return Err("drawing-store.preflight-byte-capacity");
+        }
+        if mutation.source_owner_items > DRAWING_MAXIMUM_NESTED_ITEMS {
+            return Err("drawing-store.mutation-source-owner-item-capacity");
+        }
+        if mutation.source_owner_bytes > DRAWING_MAXIMUM_NESTED_BYTES {
+            return Err("drawing-store.mutation-source-owner-byte-capacity");
+        }
+        if mutation.maximum_field_bytes > DRAWING_OWNED_FIELD_BYTES {
+            return Err("drawing-store.mutation-field-capacity");
+        }
+        Ok(Self {
             source_items: source.source_items,
-            candidate_items: source.candidate_items,
-            mutation_source_items: mutation.source_owner_items,
-            mutation_derived_items: mutation.derived_owner_items,
-            duplicate_candidate_items,
-            authority_items,
-            container_items,
-            page_items: DRAWING_MUTATION_RETAINED_PAGE_ITEMS.checked_add(overlay_slots).ok_or("drawing-store.mutation-overlay-item-overflow")?,
             source_bytes: source.source_bytes,
-            candidate_bytes: source.candidate_bytes,
-            mutation_source_bytes: mutation.source_owner_bytes,
-            mutation_derived_bytes: mutation.derived_owner_bytes,
-            duplicate_candidate_bytes,
-            authority_bytes,
-            container_bytes,
-            page_bytes: DRAWING_MUTATION_RETAINED_PAGE_BYTES.checked_add(overlay_bytes).ok_or("drawing-store.mutation-overlay-byte-overflow")?,
+            mutation_items: mutation.semantic_items,
+            mutation_bytes: mutation.maximum_field_bytes,
+            arena_items,
+            arena_bytes,
+            authority_items: 1,
+            authority_bytes: size_of::<DrawingMutationCandidateAuthority>(),
+            clone_items: 0,
+            clone_bytes: 0,
             maximum_container: source.maximum_container,
             container_slots,
-        };
-        if reservation.total_items()? > DRAWING_MUTATION_AGGREGATE_ITEMS {
-            return Err("drawing-store.mutation-aggregate-item-capacity");
-        }
-        if reservation.total_bytes()? > DRAWING_MUTATION_AGGREGATE_BYTES {
-            return Err("drawing-store.mutation-aggregate-byte-capacity");
-        }
-        Ok(reservation)
+        })
     }
 
-    fn total_items(&self) -> Result<usize, &'static str> {
-        Self::checked_total(
-            &[self.source_items, self.candidate_items, self.mutation_source_items, self.mutation_derived_items, self.duplicate_candidate_items, self.authority_items, self.container_items, self.page_items],
-            "drawing-store.mutation-item-overflow",
-        )
+    fn admit_clone(&mut self, items: usize, bytes: usize) -> Result<(), &'static str> {
+        if items > DRAWING_MAXIMUM_NESTED_ITEMS {
+            return Err("drawing-store.mutation-clone-item-capacity");
+        }
+        if bytes > DRAWING_MAXIMUM_NESTED_BYTES {
+            return Err("drawing-store.mutation-clone-byte-capacity");
+        }
+        self.clone_items = items;
+        self.clone_bytes = bytes;
+        self.workset_items()?;
+        self.workset_bytes()?;
+        Ok(())
     }
 
-    fn total_bytes(&self) -> Result<usize, &'static str> {
-        Self::checked_total(
-            &[self.source_bytes, self.candidate_bytes, self.mutation_source_bytes, self.mutation_derived_bytes, self.duplicate_candidate_bytes, self.authority_bytes, self.container_bytes, self.page_bytes],
-            "drawing-store.mutation-byte-overflow",
-        )
+    fn workset_items(&self) -> Result<usize, &'static str> {
+        Self::checked_total(&[self.arena_items, self.authority_items, self.clone_items], "drawing-store.mutation-workset-item-overflow")
+    }
+
+    fn workset_bytes(&self) -> Result<usize, &'static str> {
+        Self::checked_total(&[self.arena_bytes, self.authority_bytes, self.clone_bytes], "drawing-store.mutation-workset-byte-overflow")
+    }
+
+    fn simultaneous_bytes(&self) -> Result<usize, &'static str> {
+        Self::checked_total(&[self.source_bytes, self.mutation_bytes, self.workset_bytes()?], "drawing-store.mutation-simultaneous-byte-overflow")
+    }
+
+    fn architectural_maximum_bytes(&self) -> Result<usize, &'static str> {
+        DRAWING_MAXIMUM_NESTED_BYTES
+            .checked_mul(2)
+            .and_then(|bytes| bytes.checked_add(DRAWING_OWNED_FIELD_BYTES))
+            .and_then(|bytes| bytes.checked_add(self.arena_bytes))
+            .and_then(|bytes| bytes.checked_add(self.authority_bytes))
+            .ok_or("drawing-store.mutation-architectural-byte-overflow")
     }
 }
 
@@ -3745,6 +3954,7 @@ impl DrawingDuplicateRewriteAuthority {
                     self.id_len = 0;
                     self.name_len = 0;
                     self.hash_cursor = 0;
+                    self.frames[self.depth].phase = 14;
                     cx.consume_fuel(1);
                 }
                 _ => unreachable!(),
@@ -3808,10 +4018,12 @@ impl Drop for DrawingDuplicateRewriteAuthority {
 enum DrawingMutationCandidatePhase {
     PreflightSource,
     PreflightMutation,
+    LocateCloneSource,
+    PrepareOwnedValue,
+    PlanOwnedValue,
     BindOverlay,
     LocatePrimary,
     LocateSecondary,
-    PrepareOwnedValue,
     Apply,
     RebuildSource,
     LocateDestination,
@@ -3868,12 +4080,13 @@ struct DrawingMutationCandidateAuthority {
     preflight_source: Option<DrawingSnapshotBoundsAuthority>,
     preflight_mutation: std::mem::ManuallyDrop<Option<DrawingMutationDigestAuthority>>,
     preflight_digest: Option<store::ArtifactStoreInitializationDigest>,
-    reservation: Option<DrawingMutationAggregateReservation>,
+    workset: Option<DrawingMutationWorksetPlan>,
     overlay: Option<DrawingMutationOverlayPatch>,
     locator: Option<DrawingLayerLocator>,
     primary: Option<DrawingLayerAddress>,
     secondary: Option<DrawingLayerAddress>,
     layer_clone: std::mem::ManuallyDrop<Option<Box<DrawingLayerCloneAuthority>>>,
+    clone_work: Option<DrawingLayerCloneWorkAuthority>,
     fill_clone: std::mem::ManuallyDrop<Option<DrawingFillCloneAuthority>>,
     stroke_clone: std::mem::ManuallyDrop<Option<DrawingStrokeCloneAuthority>>,
     duplicate_rewrite: Option<DrawingDuplicateRewriteAuthority>,
@@ -3916,12 +4129,13 @@ impl DrawingMutationCandidateAuthority {
             preflight_source: Some(DrawingSnapshotBoundsAuthority::new()),
             preflight_mutation: std::mem::ManuallyDrop::new(Some(DrawingMutationDigestAuthority::new())),
             preflight_digest: Some(store::ArtifactStoreInitializationDigest::new(b"drawing.mutation-preflight")),
-            reservation: None,
+            workset: None,
             overlay: None,
             locator: None,
             primary: None,
             secondary: None,
             layer_clone: std::mem::ManuallyDrop::new(None),
+            clone_work: None,
             fill_clone: std::mem::ManuallyDrop::new(None),
             stroke_clone: std::mem::ManuallyDrop::new(None),
             duplicate_rewrite: None,
@@ -4072,7 +4286,7 @@ impl DrawingMutationCandidateAuthority {
     }
 
     fn start_rebuild(&mut self, source: &mut DrawingSnapshot, parent: Option<DrawingLayerAddress>, remove_index: Option<usize>, insert_index: Option<usize>, role: DrawingContainerRebuildRole) -> Result<(), &'static str> {
-        let reservation = self.reservation.ok_or("drawing-store.mutation-reservation-missing")?;
+        let workset = self.workset.ok_or("drawing-store.mutation-workset-missing")?;
         if self.container_reverse.is_none() {
             return Err("drawing-store.mutation-reverse-arena-missing");
         }
@@ -4084,7 +4298,7 @@ impl DrawingMutationCandidateAuthority {
         let pending = self.pending_layer.take();
         let reverse = self.container_reverse.take().expect("validated Drawing reverse arena remains retained");
         let output = self.container_output.take().expect("validated Drawing output arena remains retained");
-        match DrawingContainerRebuildAuthority::new(source, remove_index, insert_index, pending, reverse, output, reservation) {
+        match DrawingContainerRebuildAuthority::new(source, remove_index, insert_index, pending, reverse, output, workset) {
             Ok(rebuild) => {
                 *self.rebuild = Some(rebuild);
                 self.rebuild_target = Some(parent);
@@ -4150,24 +4364,57 @@ impl DrawingMutationCandidateAuthority {
                 let output_slots = self.container_output.as_ref().ok_or("drawing-store.mutation-output-arena-missing")?.capacity();
                 let overlay_pages = self.overlay_pages.as_ref().ok_or("drawing-store.mutation-overlay-arena-missing")?;
                 let overlay_slots = overlay_pages.capacity();
-                if mutation_credit.derived_owner_items > overlay_slots {
+                let required_overlay_slots = usize::from(matches!(
+                    mutation,
+                    DrawingMutation::SetLayerBlendMode(_) | DrawingMutation::RenameLayer(_) | DrawingMutation::SetLayerBooleanOperation(_) | DrawingMutation::DuplicateLayer(_)
+                ));
+                if required_overlay_slots > overlay_slots {
                     return Err("drawing-store.mutation-overlay-slot-capacity");
                 }
-                let overlay_bytes = overlay_pages
-                    .iter()
-                    .try_fold(overlay_slots.checked_mul(size_of::<String>()).ok_or("drawing-store.mutation-overlay-byte-overflow")?, |total, page| total.checked_add(page.capacity()).ok_or("drawing-store.mutation-overlay-byte-overflow"))?;
-                let duplicate_id_bytes = self.duplicate_id_owner.as_ref().map_or(0, |value| size_of::<String>().saturating_add(value.capacity()));
-                self.reservation = Some(DrawingMutationAggregateReservation::admit(source_credit, mutation_credit, mutation, DrawingMutationBackingCredit { reverse_slots, output_slots, overlay_slots, overlay_bytes, duplicate_id_bytes })?);
+                let duplicate_id = self.duplicate_id_owner.as_ref().ok_or("drawing-store.mutation-duplicate-id-arena-missing")?;
+                let (arena_items, arena_bytes) = DrawingMutationArenaOwner::retained_totals(
+                    self.container_reverse.as_ref().ok_or("drawing-store.mutation-reverse-arena-missing")?,
+                    self.container_output.as_ref().ok_or("drawing-store.mutation-output-arena-missing")?,
+                    overlay_pages,
+                    duplicate_id,
+                )?;
+                let container_slots = reverse_slots.checked_add(output_slots).ok_or("drawing-store.mutation-container-credit-overflow")?;
+                self.workset = Some(DrawingMutationWorksetPlan::admit(source_credit, mutation_credit, arena_items, arena_bytes, container_slots)?);
                 drop(self.preflight_mutation.take());
                 self.preflight_source = None;
                 self.preflight_digest = None;
-                self.phase = DrawingMutationCandidatePhase::BindOverlay;
+                if matches!(mutation, DrawingMutation::DuplicateLayer(_)) {
+                    self.locator = Some(DrawingLayerLocator::new());
+                    self.phase = DrawingMutationCandidatePhase::LocateCloneSource;
+                } else if matches!(mutation, DrawingMutation::CreateLayer(_) | DrawingMutation::ReplaceLayerFill(_) | DrawingMutation::ReplaceLayerStroke(_)) {
+                    self.phase = DrawingMutationCandidatePhase::PrepareOwnedValue;
+                } else {
+                    self.phase = DrawingMutationCandidatePhase::BindOverlay;
+                }
+                Ok(false)
+            }
+            DrawingMutationCandidatePhase::LocateCloneSource => {
+                let locator = self.locator.as_mut().ok_or("drawing-store.mutation-clone-locator-missing")?;
+                if !locator.step(source, Self::target(mutation), cx)? {
+                    return Ok(false);
+                }
+                self.primary = locator.found();
+                self.locator = None;
+                if self.primary.is_none() {
+                    return Err("drawing-store.mutation-target-missing");
+                }
+                self.phase = DrawingMutationCandidatePhase::PrepareOwnedValue;
                 Ok(false)
             }
             DrawingMutationCandidatePhase::BindOverlay => {
+                self.clone_work = None;
                 self.overlay = Some(DrawingMutationOverlayPatch::bind(source));
-                self.locator = Some(DrawingLayerLocator::new());
-                self.phase = DrawingMutationCandidatePhase::LocatePrimary;
+                if matches!(mutation, DrawingMutation::DuplicateLayer(_)) {
+                    self.phase = DrawingMutationCandidatePhase::Apply;
+                } else {
+                    self.locator = Some(DrawingLayerLocator::new());
+                    self.phase = DrawingMutationCandidatePhase::LocatePrimary;
+                }
                 cx.consume_fuel(1);
                 Ok(false)
             }
@@ -4186,12 +4433,12 @@ impl DrawingMutationCandidateAuthority {
                         self.locator = Some(DrawingLayerLocator::new());
                         self.phase = DrawingMutationCandidatePhase::LocateSecondary;
                     } else {
-                        self.phase = DrawingMutationCandidatePhase::PrepareOwnedValue;
+                        self.phase = DrawingMutationCandidatePhase::Apply;
                     }
                 } else if self.primary.is_none() {
                     return Err("drawing-store.mutation-target-missing");
                 } else {
-                    self.phase = DrawingMutationCandidatePhase::PrepareOwnedValue;
+                    self.phase = DrawingMutationCandidatePhase::Apply;
                 }
                 Ok(false)
             }
@@ -4207,7 +4454,7 @@ impl DrawingMutationCandidateAuthority {
                 if !matches!(DrawingLayerLocator::node_at(source, address), Some(DrawingLayerNode::Group(_))) {
                     return Err("drawing-store.mutation-parent-not-group");
                 }
-                self.phase = DrawingMutationCandidatePhase::PrepareOwnedValue;
+                self.phase = DrawingMutationCandidatePhase::Apply;
                 Ok(false)
             }
             DrawingMutationCandidatePhase::PrepareOwnedValue => {
@@ -4224,6 +4471,7 @@ impl DrawingMutationCandidateAuthority {
                         }
                         *self.pending_layer = clone.take();
                         drop(self.layer_clone.take());
+                        self.clone_work = Some(DrawingLayerCloneWorkAuthority::new());
                     }
                     DrawingMutation::DuplicateLayer(_) => {
                         let duplicate_source = DrawingLayerLocator::node_at(source, self.primary.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-duplicate-source")?;
@@ -4254,6 +4502,7 @@ impl DrawingMutationCandidateAuthority {
                         *self.duplicate_id_owner = Some(id_owner);
                         pages.push(name_owner);
                         drop(self.duplicate_rewrite.take());
+                        self.clone_work = Some(DrawingLayerCloneWorkAuthority::new());
                     }
                     DrawingMutation::ReplaceLayerFill(value) => {
                         if let Some(source) = value.fill.as_ref() {
@@ -4265,6 +4514,9 @@ impl DrawingMutationCandidateAuthority {
                             if !self.fill_clone.as_mut().expect("Drawing fill clone remains retained").step(source, cx)? {
                                 return Ok(false);
                             }
+                            let cloned = self.fill_clone.as_ref().and_then(|clone| clone.value.as_ref()).ok_or("drawing-store.fill-clone-work-missing")?;
+                            let totals = drawing_fill_clone_work_totals(cloned)?;
+                            self.workset.as_mut().ok_or("drawing-store.mutation-workset-missing")?.admit_clone(totals.items, totals.bytes)?;
                         }
                     }
                     DrawingMutation::ReplaceLayerStroke(value) => {
@@ -4277,11 +4529,26 @@ impl DrawingMutationCandidateAuthority {
                             if !self.stroke_clone.as_mut().expect("Drawing stroke clone remains retained").step(source, cx)? {
                                 return Ok(false);
                             }
+                            let cloned = self.stroke_clone.as_ref().and_then(|clone| clone.value.as_ref()).ok_or("drawing-store.stroke-clone-work-missing")?;
+                            let totals = drawing_stroke_clone_work_totals(cloned)?;
+                            self.workset.as_mut().ok_or("drawing-store.mutation-workset-missing")?.admit_clone(totals.items, totals.bytes)?;
                         }
                     }
                     _ => {}
                 }
-                self.phase = DrawingMutationCandidatePhase::Apply;
+                self.phase = if self.clone_work.is_some() { DrawingMutationCandidatePhase::PlanOwnedValue } else { DrawingMutationCandidatePhase::BindOverlay };
+                Ok(false)
+            }
+            DrawingMutationCandidatePhase::PlanOwnedValue => {
+                let pending = self.pending_layer.as_ref().ok_or("drawing-store.mutation-clone-work-owner-missing")?;
+                let work = self.clone_work.as_mut().ok_or("drawing-store.mutation-clone-work-missing")?;
+                if !work.step(pending, cx)? {
+                    return Ok(false);
+                }
+                let totals = work.totals().ok_or("drawing-store.mutation-clone-work-false-terminal")?;
+                self.workset.as_mut().ok_or("drawing-store.mutation-workset-missing")?.admit_clone(totals.items, totals.bytes)?;
+                self.preflight_digest = None;
+                self.phase = DrawingMutationCandidatePhase::BindOverlay;
                 Ok(false)
             }
             DrawingMutationCandidatePhase::Apply => {
@@ -4500,7 +4767,8 @@ impl DrawingMutationCandidateAuthority {
         }
         self.preflight_source = None;
         self.preflight_digest = None;
-        self.reservation = None;
+        self.workset = None;
+        self.clone_work = None;
         if !self.overlay.as_ref().is_some_and(|overlay| overlay.committed) {
             return None;
         }
@@ -4512,7 +4780,13 @@ impl DrawingMutationCandidateAuthority {
         let role = self.rebuild_role.ok_or("Drawing mutation rebuild role missing")?;
         let target = self.rebuild_target.ok_or("Drawing mutation rebuild target missing")?;
         let rebuild = self.rebuild.as_mut().ok_or("Drawing mutation rebuild missing")?;
-        let ready = if role == DrawingContainerRebuildRole::CloseSourceUndo { rebuild.close_forward_step()? } else { rebuild.rollback_step()? };
+        let ready = if self.rebuild_close_phase > 0 {
+            true
+        } else if role == DrawingContainerRebuildRole::CloseSourceUndo {
+            rebuild.close_forward_step()?
+        } else {
+            rebuild.rollback_step()?
+        };
         if !ready {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -4610,6 +4884,7 @@ impl DrawingMutationCandidateAuthority {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
         }
+        self.clone_work = None;
         if let Some(layer) = self.layer_clone.as_mut() {
             return match layer.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if layer.terminal_is_empty() => {
@@ -4652,7 +4927,8 @@ impl DrawingMutationCandidateAuthority {
         }
         self.preflight_source = None;
         self.preflight_digest = None;
-        self.reservation = None;
+        self.workset = None;
+        self.clone_work = None;
         self.overlay = None;
         self.terminal = true;
         Ok(store::SnapshotRetirementStep::Complete)
@@ -4663,11 +4939,12 @@ impl DrawingMutationCandidateAuthority {
             && self.preflight_source.is_none()
             && self.preflight_mutation.is_none()
             && self.preflight_digest.is_none()
-            && self.reservation.is_none()
+            && self.workset.is_none()
             && self.arena_pool.is_none()
             && self.arena_return_phase == 4
             && self.overlay.is_none()
             && self.layer_clone.is_none()
+            && self.clone_work.is_none()
             && self.fill_clone.is_none()
             && self.stroke_clone.is_none()
             && self.duplicate_rewrite.is_none()
@@ -5061,7 +5338,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if self.initial_layer_clone.is_none() {
-                    *self.initial_layer_clone = Some(Box::new(DrawingLayerCloneAuthority::new(layer)));
+                    *self.initial_layer_clone = Some(Box::new(DrawingLayerCloneAuthority::new_mutation_ready(layer)));
                     cx.consume_fuel(1);
                     return semio_framework_job::StepOutcome::Yield;
                 }

@@ -21,8 +21,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for SetSharedString {
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {
         agg_inverse(&XlsxMutation::SetSharedString(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-shared-string".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-shared-string", "geteilte Zeichenkette setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

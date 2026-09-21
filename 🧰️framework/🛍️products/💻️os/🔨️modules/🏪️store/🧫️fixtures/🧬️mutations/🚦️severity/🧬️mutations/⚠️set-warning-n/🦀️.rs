@@ -24,8 +24,8 @@ impl crate::os_spr::MutationKind<DemoSnapshot, SeverityMutation> for SetWarningN
     fn inverse(&self, base: &DemoSnapshot) -> Vec<SeverityMutation> {
         vec![SeverityMutation::RestoreN(RestoreN { n: base.n })]
     }
-    fn label(&self) -> String {
-        "Set Warning N".into()
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Set Warning N", "Warnungsn setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["n".into()]

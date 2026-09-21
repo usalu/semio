@@ -458,6 +458,101 @@ fn fixed_file_page_exact_max_plus_one_matches_system_oracle_and_preserves_last_v
 }
 //#endregion 📄️FixedFilePageTests
 
+//#region 📚️RetainedFixedFileDocumentTests
+#[cfg(not(target_arch = "wasm32"))]
+fn finish_fixed_file_document_write(documents: &mut RetainedFixedFileDocuments, token: FixedFileDocumentWriteToken, expected_steps: usize) {
+    let mut steps = 0;
+    loop {
+        let outcome = documents.write_step(token).expect("the exact retained owner advances one bounded step");
+        steps += 1;
+        assert!(outcome.written_bytes <= STORAGE_FIXED_FILE_PAGE_BYTES);
+        if outcome.ready_to_publish {
+            break;
+        }
+    }
+    assert_eq!(steps, expected_steps);
+    documents.publish(token).expect("the complete exact owner publishes atomically");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn fixed_file_document_temporary(directory: &std::path::Path, destination: &std::path::Path) -> std::path::PathBuf {
+    std::fs::read_dir(directory)
+        .expect("document directory")
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .find(|path| path != destination)
+        .expect("one inactive document")
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn retained_fixed_file_document_preserves_exact_owner_cancellation_supersession_and_atomic_publication() {
+    assert_eq!(STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES, 64 * 1024);
+    assert_eq!(STORAGE_FIXED_FILE_DOCUMENT_MAX_WRITE_STEPS, 4);
+    assert_eq!(STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES, STORAGE_FIXED_FILE_PAGE_BYTES * STORAGE_FIXED_FILE_DOCUMENT_MAX_WRITE_STEPS);
+
+    let directory = std::env::temp_dir().join(format!("semio-fixed-file-document-{}-{:?}", std::process::id(), std::thread::current().id()));
+    let path = directory.join("semio.os.config.field");
+    let mut documents = RetainedFixedFileDocuments::default();
+    let prior = br#"{"version":1,"preferences":{},"namedLayouts":{},"dockLayouts":{"apps":{}},"dockUi":{"apps":{}},"windowPanes":{"apps":{}}}"#.to_vec();
+    let prior_token = documents.begin_write(&path, 7, 1, prior.clone(), STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("the prior document is admitted");
+    finish_fixed_file_document_write(&mut documents, prior_token, 1);
+    assert_eq!(documents.read(&path, STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("the prior document is readable"), prior);
+
+    let exact = vec![0x5au8; STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES];
+    let exact_token = documents.begin_write(&path, 7, 2, exact.clone(), STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("the exact document is admitted");
+    for _ in 0..STORAGE_FIXED_FILE_DOCUMENT_MAX_WRITE_STEPS {
+        let outcome = documents.write_step(exact_token).expect("the exact owner advances");
+        assert_eq!(outcome.written_bytes, STORAGE_FIXED_FILE_PAGE_BYTES);
+        assert_eq!(documents.read(&path, STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("an inactive write keeps the committed document visible"), prior);
+    }
+    documents.publish(exact_token).expect("four complete steps publish");
+    assert_eq!(documents.read(&path, STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("the exact document is readable"), exact);
+    assert_eq!(std::fs::read(&path).expect("the system-file oracle reads the same single value"), exact);
+    assert!(documents.begin_write(&path, 8, 2, vec![0x29u8; STORAGE_FIXED_FILE_PAGE_BYTES], STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).is_err(), "the published generation remains stale for every owner");
+
+    let oversized = vec![0xa5u8; STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES + 1];
+    assert!(documents.begin_write(&path, 7, 3, oversized, STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).is_err());
+    assert_eq!(documents.read(&path, STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("plus one preserves the committed document"), exact);
+
+    let cancelled = documents.begin_write(&path, 7, 4, vec![0xc3u8; STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES], STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("the cancellable document is admitted");
+    for _ in 0..2 {
+        documents.write_step(cancelled).expect("the exact cancellable owner advances");
+    }
+    documents.cancel(cancelled).expect("the exact owner cancels");
+    assert!(documents.publish(cancelled).is_err());
+    assert!(documents.cancel_step(cancelled).expect("bounded cancellation drains"));
+    assert!(documents.write_step(cancelled).is_err(), "a terminal token stays stale");
+    assert!(documents.begin_write(&path, 7, 4, vec![0x47u8; STORAGE_FIXED_FILE_PAGE_BYTES], STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).is_err(), "the cancelled generation remains stale for its owner");
+    assert!(documents.begin_write(&path, 8, 4, vec![0x48u8; STORAGE_FIXED_FILE_PAGE_BYTES], STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).is_err(), "the cancelled generation remains stale for every owner");
+    assert_eq!(documents.read(&path, STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("cancellation preserves the committed document"), exact);
+
+    let stale = documents.begin_write(&path, 7, 5, vec![0xd4u8; STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES], STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("the first writer is admitted");
+    documents.write_step(stale).expect("the first writer advances once");
+    assert!(documents.begin_write(&path, 8, 5, vec![0xd5u8; STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES], STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).is_err(), "a different owner cannot reuse the current generation");
+    let replacement_bytes = vec![0xe5u8; STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES];
+    let replacement = documents.begin_write(&path, 7, 6, replacement_bytes.clone(), STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("a newer generation supersedes the prior writer");
+    assert!(documents.write_step(stale).is_err());
+    assert!(documents.publish(stale).is_err());
+    finish_fixed_file_document_write(&mut documents, replacement, STORAGE_FIXED_FILE_DOCUMENT_MAX_WRITE_STEPS);
+    assert_eq!(documents.read(&path, STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("only the replacement is visible"), replacement_bytes);
+
+    for (generation, trailing_bytes) in [(7, 0u64), (8, 1u64)] {
+        let hostile = documents.begin_write(&path, 7, generation, vec![0xf6u8; STORAGE_FIXED_FILE_PAGE_BYTES], STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("hostile owner admitted");
+        documents.write_step(hostile).expect("hostile owner completes its page");
+        let temporary = fixed_file_document_temporary(&directory, &path);
+        std::fs::OpenOptions::new().write(true).open(&temporary).expect("hostile temporary").set_len(if trailing_bytes == 0 { (STORAGE_FIXED_FILE_PAGE_BYTES - 1) as u64 } else { STORAGE_FIXED_FILE_PAGE_BYTES as u64 + trailing_bytes }).expect("mutate temporary length");
+        assert!(documents.publish(hostile).is_err(), "a truncated or trailing temporary refuses publication");
+        documents.cancel(hostile).expect("hostile owner cancels");
+        assert!(documents.cancel_step(hostile).expect("hostile temporary drains"));
+        assert_eq!(documents.read(&path, STORAGE_FIXED_FILE_DOCUMENT_MAX_BYTES).expect("integrity refusal preserves prior"), replacement_bytes);
+    }
+
+    assert!(documents.publish(FixedFileDocumentWriteToken::new(9, 1)).is_err(), "a non-owner token cannot publish");
+    let _ = std::fs::remove_dir_all(directory);
+}
+//#endregion 📚️RetainedFixedFileDocumentTests
+
 //#region 💾️StorageSchedulerTests
 /// 💾️ `ManualRuntime`'s dispatch would run synchronously, in-line, so nothing can ever be
 /// genuinely QUEUED behind it — a real `TokioHostRuntime` is required here to make the priority

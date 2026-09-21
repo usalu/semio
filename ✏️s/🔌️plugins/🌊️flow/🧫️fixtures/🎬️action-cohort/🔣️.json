@@ -2,13 +2,15 @@
   "schema": "semio.flow-note.action-cohort.v1",
   "owner": "FlowPlayApp",
   "source": "🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-  "routeCount": 37,
+  "routeCount": 34,
   "retainedRoutes": [
-    "removeWidget",
-    "deleteSelection",
-    "disconnect",
-    "moveMediaNode",
-    "patchFlowWidgets",
+    "connectMediaPorts",
+    "reorganize",
+    "renameFlowWidget",
+    "nodeGraphEdit",
+    "spotlightCommit",
+    "runExtensionAction",
+    "focusSelection",
     "nodeGraphViewport",
     "setLodMode",
     "setProximityDistance",
@@ -18,6 +20,18 @@
     "setPreviewOff",
     "setCatalogueSections",
     "toggleExtension",
+    "addGeneration",
+    "removeGeneration",
+    "selectGeneration",
+    "renameGeneration",
+    "updateGenerationValues",
+    "duplicateWidget",
+    "addWidget",
+    "removeWidget",
+    "deleteSelection",
+    "disconnect",
+    "moveMediaNode",
+    "patchFlowWidgets",
     "evaluate",
     "contextMenuAt",
     "openSpotlight",
@@ -28,48 +42,68 @@
   "frameworkOwnedRoutes": [],
   "groups": [
     {
-      "status": "batch-only-pending-rewrite",
+      "status": "migrated",
       "lanes": [
         "artifact"
       ],
       "routes": [
-        "addWidget",
         "connectMediaPorts",
         "reorganize",
         "renameFlowWidget",
         "nodeGraphEdit",
         "spotlightCommit",
         "runExtensionAction"
-      ],
-      "blocker": "No bounded retained Flow job yet owns persistent per-feature artifact preparation, root retirement, ACK, cancellation, freshness, and incremental close; the live Store authority transfer is being completed in the framework."
+      ]
     },
     {
-      "status": "batch-only-pending-rewrite",
+      "status": "migrated",
       "lanes": [
         "config"
       ],
       "routes": [
-        "duplicateWidget",
-        "setContributions",
         "focusSelection",
+        "nodeGraphViewport",
+        "setLodMode",
+        "setProximityDistance",
+        "setGridVisible",
+        "setGridSnapEnabled",
+        "setGridFactor",
+        "setPreviewOff",
+        "setCatalogueSections",
+        "toggleExtension"
+      ]
+    },
+    {
+      "status": "migrated",
+      "lanes": [
+        "transient"
+      ],
+      "routes": [
         "addGeneration",
         "removeGeneration",
         "selectGeneration",
         "renameGeneration",
         "updateGenerationValues"
-      ],
-      "blocker": "No bounded retained Flow job yet owns persistent per-feature config preparation, ACK, cancellation, freshness, and incremental close."
+      ]
     },
     {
-      "status": "batch-only-pending-rewrite",
+      "status": "migrated",
       "lanes": [
-        "config",
+        "child",
+        "transient"
+      ],
+      "routes": [
+        "duplicateWidget"
+      ]
+    },
+    {
+      "status": "migrated",
+      "lanes": [
         "child"
       ],
       "routes": [
-        "duplicateWidgetStep"
-      ],
-      "blocker": "The legacy step reducer publishes config and child items without a retained app-owned factory that prepares both lanes, persists its semantic cursor, retires roots, and closes incrementally."
+        "addWidget"
+      ]
     },
     {
       "status": "migrated",
@@ -82,23 +116,6 @@
         "disconnect",
         "moveMediaNode",
         "patchFlowWidgets"
-      ]
-    },
-    {
-      "status": "migrated",
-      "lanes": [
-        "config"
-      ],
-      "routes": [
-        "nodeGraphViewport",
-        "setLodMode",
-        "setProximityDistance",
-        "setGridVisible",
-        "setGridSnapEnabled",
-        "setGridFactor",
-        "setPreviewOff",
-        "setCatalogueSections",
-        "toggleExtension"
       ]
     },
     {

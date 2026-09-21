@@ -20,8 +20,8 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for CreateObject {
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create object \"{}\"", self.object.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create object \"{}\"", self.object.name), &format!("Objekt \"{}\" erstellen", self.object.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object.id.clone()]

@@ -115,28 +115,33 @@ socket.addEventListener("message", (event) => {
 socket.addEventListener("error", () => say("WS-ERROR"));
 socket.addEventListener("close", (event) => say(`WS-CLOSE code=${event.code} reason=${event.reason}`));
 
-const deadline = Date.now() + holdMs;
 let alive = true;
-while (Date.now() < deadline) {
-  await Bun.sleep(1_000);
-  if (socket.readyState === WebSocket.CLOSED) {
-    alive = false;
-    break;
-  }
-  const probe = await fetch(`${origin}/readyz`, { signal: AbortSignal.timeout(3_000) }).catch(() => undefined);
-  if (probe === undefined) {
-    say("HUB-GONE /readyz did not answer — the process is down");
+// ⏳️ The upgrade is still in flight here: without this the frame loop below sees `CONNECTING` and
+// sends nothing while still reporting success.
+for (let wait = 0; wait < 100 && socket.readyState === WebSocket.CONNECTING; wait += 1) await Bun.sleep(50);
+// 🖊️ Well-formed client frames on the live socket, sent BEFORE the hold: the hub's session token
+// expires this connection at ~30 s with `4401 unauthorized`, so anything that must run on an open
+// socket runs first. `Presence` is a real `ClientFrame` the hub decodes and broadcasts — this is not
+// a semantic document edit (that needs a sealed `Commands` batch), and the report says so.
+for (let index = 0; index < edits && socket.readyState === WebSocket.OPEN; index += 1) {
+  socket.send(encodeClientFrame({ Presence: { peer: [...new Uint8Array(8).fill(index + 1)] } }, "command"));
+  await Bun.sleep(100);
+  const beat = await fetch(`${origin}/readyz`, { signal: AbortSignal.timeout(3_000) }).catch(() => undefined);
+  if (beat === undefined) {
+    say(`HUB-GONE after client frame ${index + 1}`);
     alive = false;
     break;
   }
 }
-for (let index = 0; index < edits && alive && socket.readyState === WebSocket.OPEN; index += 1) {
-  socket.send(new Uint8Array([0]));
-  await Bun.sleep(250);
-  const probe = await fetch(`${origin}/readyz`, { signal: AbortSignal.timeout(3_000) }).catch(() => undefined);
+if (edits > 0 && alive) say(`WS-FRAMES-SENT ${edits} presence frames, hub answered /readyz after each`);
+const deadline = Date.now() + holdMs;
+while (alive && Date.now() < deadline) {
+  await Bun.sleep(5_000);
+  const probe = await fetch(`${origin}/readyz`, { signal: AbortSignal.timeout(5_000) }).catch(() => undefined);
   if (probe === undefined) {
-    say(`HUB-GONE after edit ${index + 1}`);
+    say("HUB-GONE /readyz did not answer — the process is down");
     alive = false;
+    break;
   }
 }
 say(`RESULT opened=${opened} frames=${frames} readyState=${socket.readyState} hubAlive=${alive}`);

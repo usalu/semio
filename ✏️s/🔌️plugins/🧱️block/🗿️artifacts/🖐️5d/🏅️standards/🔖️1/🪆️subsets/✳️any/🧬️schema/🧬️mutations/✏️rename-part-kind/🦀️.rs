@@ -30,8 +30,8 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for RenamePartKind
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename part kind to \"{}\"", self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename part kind to \"{}\"", self.new_name), &format!("Bauteilart in \"{}\" umbenennen", self.new_name))
     }
 }
 //#endregion 🔖️Mutation

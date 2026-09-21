@@ -28,8 +28,8 @@ impl protocol::MutationKind<RewritingSnapshot, RewriteRuleMutation> for RemovePa
     fn inverse(&self, base: &RewritingSnapshot) -> Vec<RewriteRuleMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove parameter binding \"{}\"", self.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove parameter binding \"{}\"", self.key), &format!("Parameterbindung \"{}\" entfernen", self.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]

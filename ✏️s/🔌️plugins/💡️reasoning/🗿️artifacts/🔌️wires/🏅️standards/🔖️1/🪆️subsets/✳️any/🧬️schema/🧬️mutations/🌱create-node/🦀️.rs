@@ -31,8 +31,8 @@ impl protocol::MutationKind<WiresSnapshot, WiresMutation> for CreateNode {
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add node \"{}\"", entity_id(&self.node, "id").unwrap_or("?"))
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add node \"{}\"", entity_id(&self.node, "id").unwrap_or("?")), &format!("Knoten \"{}\" hinzufügen", entity_id(&self.node, "id").unwrap_or("?")))
     }
     fn target(&self) -> Vec<String> {
         entity_id(&self.node, "id").map(|id| vec![id.to_string()]).unwrap_or_default()

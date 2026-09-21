@@ -25,8 +25,8 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for CreateElement {
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create element \"{}\"", element_id(&self.element))
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create element \"{}\"", element_id(&self.element)), &format!("Element \"{}\" erstellen", element_id(&self.element)))
     }
     fn target(&self) -> Vec<String> {
         vec![element_id(&self.element).to_string()]

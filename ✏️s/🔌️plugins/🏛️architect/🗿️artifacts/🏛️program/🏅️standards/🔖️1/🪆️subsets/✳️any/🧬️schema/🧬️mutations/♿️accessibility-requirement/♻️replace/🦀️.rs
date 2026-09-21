@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceAccessibilityRequ
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace accessibility requirement \"{}\"", self.accessibility_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace accessibility requirement \"{}\"", self.accessibility_requirement.header.name), &format!("Barrierefreiheitsanforderung \"{}\" ersetzen", self.accessibility_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.accessibility_requirement.header.id.0.clone()]

@@ -42,8 +42,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ResizePage {
         vec![PdfMutation::ResizePage(ResizePage { index: self.index, width: base.pages[self.index].width, height: base.pages[self.index].height })]
     }
 
-    fn label(&self) -> String {
-        "resize page".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("resize page", "Seite skalieren")
     }
 
     fn target(&self) -> Vec<String> {

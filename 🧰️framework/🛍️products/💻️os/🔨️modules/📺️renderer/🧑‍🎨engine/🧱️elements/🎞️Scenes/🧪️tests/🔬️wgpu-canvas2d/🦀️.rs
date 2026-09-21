@@ -1,7 +1,42 @@
 use super::*;
 
+#[test]
+fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_the_successor() {
+    let mut owner = crate::interpreter::fixture_scene_pointer_target("nested-close-window", "nested-close-surface", "old-mount");
+    owner.kind = SurfaceKind::Canvas2d;
+    assert!(mount_scene_identity(&owner));
+    SCENE_STATE.with(|cell| {
+        let mut states = cell.borrow_mut();
+        let state = states.get_mut(&owner.surface_id).unwrap();
+        state.ink_overrides.insert("retiring-block".into(), json!({"children": [{"text": "retained nested payload"}, [1, 2, 3]]}));
+        state.selected_ids.insert("selected".into());
+        state.vfs_expanded_ids.insert("folder".into());
+        state.scroll_offsets.insert("column".into(), 20.0);
+        state.map_marquee_points.push((1.0, 2.0));
+    });
+    assert!(retire_scene_identity(&owner));
+    assert_eq!(SCENE_STATE.with(|cell| cell.borrow().external_reservations), 1);
+    let mut successor = owner.clone();
+    successor.component_generation += 1;
+    assert!(!mount_scene_identity(&successor));
+    assert!(close_retired_scene_surface_one());
+    assert_eq!(SCENE_STATE.with(|cell| cell.borrow().external_reservations), 1);
+    for _ in 0..262_144 {
+        if !close_retired_scene_surface_one() { break; }
+    }
+    assert!(SCENE_SURFACE_RETIREMENT.with(|cell| cell.borrow().is_none()));
+    assert_eq!(SCENE_STATE.with(|cell| cell.borrow().external_reservations), 0);
+    assert!(mount_scene_identity(&successor));
+    assert!(!retire_scene_identity(&owner));
+    assert_eq!(SCENE_STATE.with(|cell| cell.borrow().get(&successor.surface_id).and_then(|state| state.mount_owner.clone())), Some(successor.clone()));
+    assert!(retire_scene_identity(&successor));
+    for _ in 0..262_144 { if !close_retired_scene_surface_one() { break; } }
+    assert!(!SCENE_STATE.with(|cell| cell.borrow().contains_key(&owner.surface_id)));
+}
+
 fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
     UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: "controller".into(),
         component_kind: SurfaceKind::Canvas2d,
@@ -27,11 +62,20 @@ fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
     }
 }
 
+fn canvas_camera_gesture_fixture() -> Value {
+    serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).expect("shared Canvas2d camera gesture fixture")
+}
+
+fn fixture_camera(value: &Value) -> Viewport {
+    Viewport { x: value["x"].as_f64().unwrap() as f32, y: value["y"].as_f64().unwrap() as f32, zoom: value["zoom"].as_f64().unwrap() as f32 }
+}
+
 fn seed_catalogue_hover(scene: &UiComponentSceneNode) {
     CANVAS_CATALOGUE_HOVER.with(|cell| {
         *cell.borrow_mut() = Some(CanvasCatalogueHover {
             window_id: "canvas-catalogue-terminal-window".into(),
             document_generation: 7,
+            host_id: scene.host_id.clone(),
             surface_id: scene.surface_id.clone(),
             controller_id: scene.controller_id.clone(),
             last_x: 0.0,
@@ -188,12 +232,165 @@ fn canvas2d_wheel_schedules_a_settled_camera_dispatch_without_firing_immediately
     let immediate = sweep_expired_scene_camera_dispatches(crate::app_now_ms());
     assert!(
         immediate.iter().all(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) != Some(surface_id)),
-        "sweeping immediately (before the ~350ms settle window) must not yet report this surface"
+        "sweeping immediately must not yet report this surface"
     );
-    let due = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
+    let due = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + canvas_camera_gesture_fixture()["wheel"]["settleDelayMs"].as_f64().unwrap());
     let matched = due.iter().find(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) == Some(surface_id)).expect("this surface's setCamera fires once its deadline has passed");
     assert_eq!(matched.controller_id, "controller");
     assert_eq!(matched.action, "setCamera");
+}
+
+#[test]
+fn canvas2d_wheel_uses_the_react_factors_limits_and_exact_cursor_anchor() {
+    let fixture = canvas_camera_gesture_fixture();
+    let wheel = &fixture["wheel"];
+    let surface = &fixture["surface"];
+    let surface_id = surface["id"].as_str().unwrap();
+    let node = canvas_scene(surface_id, "[]".to_string());
+    let bounds = Rect::new(0.0, 0.0, surface["width"].as_f64().unwrap() as f32, surface["height"].as_f64().unwrap() as f32);
+    let anchor_x = wheel["anchor"]["x"].as_f64().unwrap() as f32;
+    let anchor_y = wheel["anchor"]["y"].as_f64().unwrap() as f32;
+    let initial = fixture_camera(&wheel["initialCamera"]);
+    let world_x = (anchor_x - bounds.w * 0.5) / initial.zoom + initial.x;
+    let world_y = (anchor_y - bounds.h * 0.5) / initial.zoom + initial.y;
+    mutate_scene_state(surface_id, |state| state.viewport = initial);
+    assert!(canvas_wheel_into(&node, bounds, anchor_x, anchor_y, wheel["zoomInDeltaY"].as_f64().unwrap() as f32));
+    let zoomed_in = scene_state(surface_id).viewport;
+    assert_eq!(zoomed_in.zoom, initial.zoom * wheel["zoomInFactor"].as_f64().unwrap() as f32);
+    assert_eq!((anchor_x - bounds.w * 0.5) / zoomed_in.zoom + zoomed_in.x, world_x, "wheel zoom keeps the exact world x under the off-centre cursor");
+    assert_eq!((anchor_y - bounds.h * 0.5) / zoomed_in.zoom + zoomed_in.y, world_y, "wheel zoom keeps the exact world y under the off-centre cursor");
+
+    mutate_scene_state(surface_id, |state| state.viewport = initial);
+    assert!(canvas_wheel_into(&node, bounds, anchor_x, anchor_y, wheel["zoomOutDeltaY"].as_f64().unwrap() as f32));
+    assert_eq!(scene_state(surface_id).viewport.zoom, initial.zoom * wheel["zoomOutFactor"].as_f64().unwrap() as f32);
+    let minimum = wheel["zoomMinimum"].as_f64().unwrap() as f32;
+    mutate_scene_state(surface_id, |state| state.viewport = Viewport { zoom: minimum, ..initial });
+    assert!(canvas_wheel_into(&node, bounds, anchor_x, anchor_y, wheel["zoomOutDeltaY"].as_f64().unwrap() as f32));
+    assert_eq!(scene_state(surface_id).viewport.zoom, minimum);
+    let maximum = wheel["zoomMaximum"].as_f64().unwrap() as f32;
+    mutate_scene_state(surface_id, |state| state.viewport = Viewport { zoom: maximum, ..initial });
+    assert!(canvas_wheel_into(&node, bounds, anchor_x, anchor_y, wheel["zoomInDeltaY"].as_f64().unwrap() as f32));
+    assert_eq!(scene_state(surface_id).viewport.zoom, maximum);
+}
+
+fn assert_canvas_pan_case(case_id: &str) {
+    let fixture = canvas_camera_gesture_fixture();
+    let surface = &fixture["surface"];
+    let row = fixture["panCases"].as_array().unwrap().iter().find(|row| row["id"] == case_id).unwrap();
+    let surface_id = format!("{}-{case_id}", surface["id"].as_str().unwrap());
+    let layers = json!([{ "role": "meta", "utility": row["activeUtility"] }]);
+    let node = canvas_scene(&surface_id, layers.to_string());
+    let bounds = Rect::new(0.0, 0.0, surface["width"].as_f64().unwrap() as f32, surface["height"].as_f64().unwrap() as f32);
+    let initial = fixture_camera(&fixture["wheel"]["initialCamera"]);
+    mutate_scene_state(&surface_id, |state| state.viewport = initial);
+    SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().clear());
+    CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
+    let start_x = row["start"]["x"].as_f64().unwrap() as f32;
+    let start_y = row["start"]["y"].as_f64().unwrap() as f32;
+    let end_x = row["end"]["x"].as_f64().unwrap() as f32;
+    let end_y = row["end"]["y"].as_f64().unwrap() as f32;
+    let button = row["button"].as_i64().unwrap() as i16;
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(canvas_pointer_button_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, start_x, start_y, true, button, SceneModifiers::default(), &mut input).unwrap());
+    assert!(canvas_pointer_move_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, end_x, end_y, &mut input).unwrap());
+    assert!(canvas_pointer_button_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, end_x, end_y, false, button, SceneModifiers::default(), &mut input).unwrap());
+    let actions = catalogue_actions(&mut input);
+    assert_eq!(
+        actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(),
+        row["expectedActions"].as_array().unwrap().iter().map(|action| action.as_str().unwrap()).collect::<Vec<_>>(),
+        "{case_id} publishes exactly React's document-action sequence"
+    );
+    let expected = fixture_camera(&row["expectedCamera"]);
+    let actual = scene_state(&surface_id).viewport;
+    assert_eq!((actual.x, actual.y, actual.zoom), (expected.x, expected.y, expected.zoom), "{case_id} owns React's exact camera");
+    let camera_actions = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
+    assert_eq!(camera_actions.iter().any(|action| action.action == fixture["wheel"]["expectedAction"].as_str().unwrap() && action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) == Some(surface_id.as_str())), row["expectedCameraAction"].as_bool().unwrap());
+}
+
+#[test]
+fn canvas2d_primary_drag_with_the_active_pan_utility_changes_only_the_camera() {
+    assert_canvas_pan_case("primary-active-pan");
+}
+
+#[test]
+fn canvas2d_middle_drag_changes_only_the_camera() {
+    assert_canvas_pan_case("middle-button-pan");
+}
+
+#[test]
+fn canvas2d_right_drag_remains_a_document_gesture_and_does_not_pan() {
+    assert_canvas_pan_case("right-button-gesture");
+}
+
+#[test]
+fn canvas2d_middle_pan_cancellation_retires_locally_without_a_document_action() {
+    let node = canvas_scene("canvas2d-middle-pan-cancel", "[]".to_string());
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let pointer = ui_render::PointerId(17);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
+
+    assert!(canvas_pointer_button_into(&node, bounds, pointer, "canvas2d-middle-pan-window", 1, 40.0, 50.0, true, 1, SceneModifiers::default(), &mut input).unwrap());
+    assert!(canvas_state_snapshot(&node.surface_id).1);
+    assert!(cancel_canvas_pointer_gesture_for(pointer, &mut input));
+    assert!(catalogue_actions(&mut input).is_empty(), "React cancels a local camera pan without a document pointer action");
+    assert!(!canvas_state_snapshot(&node.surface_id).1);
+    assert!(CANVAS_GESTURE.with(|cell| cell.borrow().get(pointer).is_none()));
+}
+
+#[test]
+fn foreign_pointer_cancel_preserves_the_canvas_gesture_owner() {
+    let node = canvas_scene("canvas2d-pointer-owner", "[]".to_string());
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let owner = ui_render::PointerId(77);
+    let foreign = ui_render::PointerId(78);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
+
+    assert!(canvas_pointer_button_into(&node, bounds, owner, "canvas2d-owner-window", 1, 40.0, 50.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(!cancel_canvas_pointer_gesture_for(foreign, &mut input));
+    assert!(CANVAS_GESTURE.with(|cell| cell.borrow().get(owner).is_some()));
+    assert!(canvas_pointer_move_into(&node, bounds, owner, "canvas2d-owner-window", 1, 80.0, 90.0, &mut input).unwrap());
+    assert!(canvas_pointer_button_into(&node, bounds, owner, "canvas2d-owner-window", 1, 80.0, 90.0, false, 0, SceneModifiers::default(), &mut input).unwrap());
+    assert_eq!(catalogue_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp"]);
+}
+
+#[test]
+fn two_canvas_documents_keep_independent_pointer_gestures() {
+    let first = canvas_scene("canvas2d-pointer-first", "[]".to_string());
+    let second = canvas_scene("canvas2d-pointer-second", "[]".to_string());
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let first_pointer = ui_render::PointerId(77);
+    let second_pointer = ui_render::PointerId(78);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
+
+    assert!(canvas_pointer_button_into(&first, bounds, first_pointer, "canvas2d-first-window", 1, 40.0, 50.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(canvas_pointer_button_into(&second, bounds, second_pointer, "canvas2d-second-window", 1, 140.0, 150.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(cancel_canvas_pointer_gesture_for(second_pointer, &mut input));
+    assert!(CANVAS_GESTURE.with(|cell| cell.borrow().get(first_pointer).is_some()));
+    assert!(CANVAS_GESTURE.with(|cell| cell.borrow().get(second_pointer).is_none()));
+    assert!(canvas_pointer_move_into(&first, bounds, first_pointer, "canvas2d-first-window", 1, 80.0, 90.0, &mut input).unwrap());
+    assert!(canvas_pointer_button_into(&first, bounds, first_pointer, "canvas2d-first-window", 1, 80.0, 90.0, false, 0, SceneModifiers::default(), &mut input).unwrap());
+
+    let actions = catalogue_actions(&mut input);
+    let addressed = actions
+        .iter()
+        .map(|action| {
+            let args = Value::from(action.args.as_ref().unwrap());
+            (args["surfaceId"].as_str().unwrap().to_string(), action.action.clone(), args["cancelled"].as_bool().unwrap_or(false))
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        addressed,
+        [
+            ("canvas2d-pointer-first".into(), "canvasPointerDown".into(), false),
+            ("canvas2d-pointer-second".into(), "canvasPointerDown".into(), false),
+            ("canvas2d-pointer-second".into(), "canvasPointerUp".into(), true),
+            ("canvas2d-pointer-first".into(), "canvasPointerMove".into(), false),
+            ("canvas2d-pointer-first".into(), "canvasPointerUp".into(), false),
+        ]
+    );
 }
 
 /// 🕒️ A Canvas2d pan-drag (`SceneDragMode::PanViewport`) gets the identical settle-then-dispatch
@@ -227,9 +424,9 @@ fn scene_camera_deadlines_saturate_before_ownership_and_close_cursor_restores_on
     SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().clear());
     SCENE_CAMERA_DISPATCH_FAULT.with(|cell| *cell.borrow_mut() = None);
     for index in 0..SCENE_CAMERA_DISPATCH_CAPACITY {
-        schedule_scene_camera_dispatch(&format!("surface-{index}"));
+        schedule_scene_camera_dispatch(&format!("surface-{index}"), &format!("surface-{index}"));
     }
-    schedule_scene_camera_dispatch("overflow");
+    schedule_scene_camera_dispatch("overflow", "overflow");
     let mut cursor = SceneCameraDispatchCursor::begin(crate::app_now_ms());
     assert!(matches!(cursor.step(), SceneCameraDispatchStep::Fault("scene camera deadline credits exceeded")));
     for remaining in (0..SCENE_CAMERA_DISPATCH_CAPACITY).rev() {

@@ -20,8 +20,8 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetData {
     fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {
         agg_inverse(&WavMutation::SetData(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-data".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-data", "Daten setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

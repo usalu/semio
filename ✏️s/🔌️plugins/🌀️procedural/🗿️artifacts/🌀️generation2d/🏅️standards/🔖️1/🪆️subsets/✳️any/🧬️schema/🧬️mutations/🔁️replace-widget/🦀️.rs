@@ -26,8 +26,8 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ReplaceWidget 
     fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace widget \"{}\"", widget_id(&self.widget))
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace widget \"{}\"", widget_id(&self.widget)), &format!("Widget \"{}\" ersetzen", widget_id(&self.widget)))
     }
     fn target(&self) -> Vec<String> {
         vec![widget_id(&self.widget).to_string()]

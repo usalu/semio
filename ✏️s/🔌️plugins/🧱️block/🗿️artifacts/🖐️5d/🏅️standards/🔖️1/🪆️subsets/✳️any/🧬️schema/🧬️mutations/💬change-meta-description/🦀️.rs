@@ -30,8 +30,8 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeMetaDesc
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Change meta description".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change meta description", "Metabeschreibung ändern")
     }
 }
 //#endregion 🔖️Mutation

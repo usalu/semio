@@ -26,8 +26,8 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for SetInfoAuthor {
         vec![PdfHMutation::SetInfoAuthor(SetInfoAuthor { author: base.info.author.clone().unwrap_or_default() })]
     }
 
-    fn label(&self) -> String {
-        format!("Set PDF/H author \"{}\"", self.author)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set PDF/H author \"{}\"", self.author), &format!("PDF/Hautor \"{}\" setzen", self.author))
     }
 
     fn target(&self) -> Vec<String> {

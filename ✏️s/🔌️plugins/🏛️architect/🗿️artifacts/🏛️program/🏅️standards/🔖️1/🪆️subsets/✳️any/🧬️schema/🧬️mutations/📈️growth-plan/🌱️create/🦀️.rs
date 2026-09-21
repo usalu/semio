@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateGrowthPlan {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create growth plan \"{}\"", self.growth_plan.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create growth plan \"{}\"", self.growth_plan.header.name), &format!("Wachstumsplan \"{}\" erstellen", self.growth_plan.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.growth_plan.header.id.0.clone()]

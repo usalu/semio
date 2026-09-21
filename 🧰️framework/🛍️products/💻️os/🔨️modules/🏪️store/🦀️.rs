@@ -217,6 +217,10 @@ impl SnapshotReadLeaseRegistry {
         self.returned.load(std::sync::atomic::Ordering::Acquire) != 0
     }
 
+    fn occupied_count(&self) -> usize {
+        self.state.try_lock().map_or(SNAPSHOT_READ_LEASE_CAPACITY, |state| SNAPSHOT_READ_LEASE_CAPACITY - state.free_len)
+    }
+
     fn try_take_one_returned<T: Send + Sync + 'static>(&self) -> Result<Option<Arc<T>>, String> {
         let mut state = match self.state.try_lock() {
             Ok(state) => state,
@@ -1763,6 +1767,14 @@ impl ArtifactStoreDisplacedRetirements {
         self.owners.is_empty() && self.owner_reservations.iter().all(Option::is_none)
     }
 
+    /// 🔭️ Why this queue is not terminal — a queued owner the closer is draining, or a RESERVED
+    /// slot no owner ever filled. The two answer `Blocked` from the same arm and need different
+    /// cures, so the census names them apart.
+    fn witness(&self) -> String {
+        let reserved = self.owner_reservations.iter().flatten().map(|(_, count)| *count).sum::<usize>();
+        format!("owners={}/reserved={}", self.owners.len(), reserved)
+    }
+
     fn under_pressure(&self) -> bool {
         self.owners.len() >= ARTIFACT_STORE_DISPLACED_PRESSURE_OCCUPANCY
     }
@@ -1885,6 +1897,13 @@ where
     fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool;
     fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, String>;
     fn uninstalled_terminal_is_empty(&self) -> bool;
+
+    /// 🔭️ Which owner family this disposer is currently draining. `close_step` answers only
+    /// `Pending`/`Blocked`/`Complete`, so a store that will not close cannot otherwise say WHICH of
+    /// its cursor phases refuses.
+    fn close_phase_witness(&self) -> String {
+        "unknown".to_string()
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2133,6 +2152,10 @@ where
 
     fn uninstalled_terminal_is_empty(&self) -> bool {
         !self.started && self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none()
+    }
+
+    fn close_phase_witness(&self) -> String {
+        format!("{:?}/started={}/active={}", self.phase, self.started, self.active.is_some())
     }
 }
 
@@ -10291,6 +10314,11 @@ pub type ArtifactCodecApplyFuture<'a> = std::pin::Pin<Box<dyn std::future::Futur
 #[cfg(target_arch = "wasm32")]
 pub type ArtifactCodecApplyFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + 'a>>;
 
+/// 🧺️ Close-cursor step ceiling for the throwaway store `ArtifactCodec::apply_ops_binary` builds.
+/// Every `Pending` step releases at least one retained item, and a codec's store is bounded by one
+/// parsed document pack, so this is a liveness ceiling rather than a work budget.
+pub const ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS: usize = 1 << 20;
+
 #[derive(Clone)]
 pub struct ArtifactCodec {
     pub schema: String,
@@ -10413,7 +10441,40 @@ impl ArtifactCodec {
                     store
                 };
                 store.dispatch_apply_exact(mutations, None).await?;
-                let files = print_document_pack(&store.envelope).await?;
+                let printed = print_document_pack(&store.envelope).await;
+                // 🧺️ `ArtifactStore`'s `Drop` asserts an exact terminal-empty shallow shell, and this
+                // thunk is the one place in the tree that builds a store, uses it and lets it fall out
+                // of scope in the same expression. Letting it drop live aborted the process — an
+                // `encode_ops_vec(&[])` batch decodes to zero mutations, so `dispatch_apply_exact`
+                // retires nothing and every owner is still installed at the end of the turn. The close
+                // cursor is the same one the hub's own document lanes run (`close_owned_step` until
+                // `Complete`, then `close_owned_terminal_is_empty`), so an empty batch and a full one
+                // leave by the identical path.
+                let mut closed = Err(VcsError::ValidationFailed("artifact codec store did not reach terminal emptiness within its bounded close budget".into()));
+                for _ in 0..ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS {
+                    match store.close_owned_step(1, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES) {
+                        Ok(SnapshotRetirementStep::Complete) => {
+                            closed = if store.close_owned_terminal_is_empty() {
+                                Ok(())
+                            } else {
+                                Err(VcsError::ValidationFailed("artifact codec store reported close completion without terminal emptiness".into()))
+                            };
+                            break;
+                        }
+                        Ok(SnapshotRetirementStep::Pending { .. }) => continue,
+                        Ok(SnapshotRetirementStep::Blocked) => {
+                            closed = Err(VcsError::ValidationFailed("artifact codec store close is blocked by an outstanding snapshot read lease".into()));
+                            break;
+                        }
+                        Err(error) => {
+                            closed = Err(VcsError::ValidationFailed(error));
+                            break;
+                        }
+                    }
+                }
+                drop(store);
+                closed?;
+                let files = printed?;
                 Ok((files.pack, files.spr, files.ops))
             })
         }
@@ -15931,6 +15992,18 @@ where
         self.displaced_retirements.under_pressure()
     }
 
+    /// 🔭️ Which cursor phase the installed store disposer is draining right now.
+    pub fn close_owned_phase_witness(&self) -> String {
+        self.owned_disposer.as_ref().map_or_else(|| "uninstalled".to_string(), |disposer| disposer.close_phase_witness())
+    }
+
+    /// 🔭️ Why a close that refuses in its displaced-owner phase cannot finish: the queue census
+    /// plus the staged-group root that holds its reservation open.
+    pub fn close_displaced_witness(&self) -> String {
+        let group = self.durable_group_root.as_ref().map_or("none", |root| if root.adopted { "adopted" } else { "staged" });
+        format!("{}/group={group}", self.displaced_retirements.witness())
+    }
+
     /// 🧹️ Advances the exact store disposer under the caller's retirement grant.
     pub fn close_owned_store_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         if self.owned_disposer_terminal {
@@ -15983,8 +16056,15 @@ where
         let Some(factory) = (*self.initial_snapshot_retirement_factory).clone() else {
             return Err(VcsError::ValidationFailed("returned snapshot read requires its exact owned-snapshot retirement factory".into()));
         };
-        let owner = self.snapshot_read_leases.try_take_one_returned::<P>().map_err(VcsError::ValidationFailed)?;
-        Ok(owner.map(|owner| Box::new(ReturnedSnapshotReadRetirement::new(owner, factory)) as Box<dyn ErasedSnapshotRetirement>))
+        for _ in 0..=SNAPSHOT_READ_LEASE_CAPACITY {
+            if let Some(owner) = self.snapshot_read_leases.try_take_one_returned::<P>().map_err(VcsError::ValidationFailed)? {
+                return Ok(Some(Box::new(ReturnedSnapshotReadRetirement::new(owner, factory.clone())) as Box<dyn ErasedSnapshotRetirement>));
+            }
+            if !self.snapshot_read_leases.has_returned() {
+                return Ok(None);
+            }
+        }
+        Err(VcsError::ValidationFailed("returned snapshot read cursor could not reach a returned lease within one full registry sweep".into()))
     }
 
     fn close_take_history_mutation_at(&mut self, edit_index: usize) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError> {
@@ -16221,6 +16301,16 @@ where
     /// every one of them keeps a whole document root alive.
     pub fn returned_snapshot_read_count(&self) -> usize {
         self.snapshot_read_leases.returned.load(std::sync::atomic::Ordering::Acquire)
+    }
+
+    /// 🔬️ Leases still OUT — issued and not yet returned. A close cursor in its `ReturnedReads`
+    /// phase answers `Blocked` on exactly this: it has nothing returned to retire and the registry
+    /// is not terminal, so it waits for a holder that only the holder can release. `Blocked` is
+    /// therefore permanent for the closer, never transient, and a caller that retries it spins for
+    /// ever. This names the count so a refusal can say whether a live reader or an unreclaimed
+    /// returned lease is the owner.
+    pub fn outstanding_snapshot_read_count(&self) -> usize {
+        self.snapshot_read_leases.occupied_count().saturating_sub(self.returned_snapshot_read_count())
     }
 
     pub fn owned_roots_terminal_is_empty(&self) -> bool {
@@ -20826,7 +20916,7 @@ pub struct ChildDispatch {
     pub child: crate::os_io::ArtifactRef,
     pub ops: Vec<Vec<u8>>,
     pub op_schema: SchemaId,
-    pub labels: Vec<String>,
+    pub labels: Vec<crate::LocalizedLabel>,
 }
 
 /// @emoji 🌱️ One new child to create in this same composite gesture: which parent-relative `slot`,

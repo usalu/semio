@@ -28,8 +28,8 @@ impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeNotes {
     fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change notes to \"{}\"", self.new_notes)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change notes to \"{}\"", self.new_notes), &format!("Notizen auf \"{}\" ändern", self.new_notes))
     }
 }
 //#endregion 🔖️Mutation

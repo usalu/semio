@@ -1,0 +1,202 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/renderer/tiled-map-gesture-lifecycle-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "owner",
+    "cases",
+    "retirement",
+    "ledger"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "owner": {
+      "$ref": "#/definitions/owner"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/definitions/case"
+      }
+    },
+    "retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selectionPublications",
+        "pointerUpPublications",
+        "successorStartsFresh",
+        "ordinaryRefreshKeepsCameraAndTiles"
+      ],
+      "properties": {
+        "selectionPublications": {
+          "const": 0
+        },
+        "pointerUpPublications": {
+          "const": 0
+        },
+        "successorStartsFresh": {
+          "const": true
+        },
+        "ordinaryRefreshKeepsCameraAndTiles": {
+          "const": true
+        }
+      }
+    },
+    "ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capacity",
+        "fullDisposition",
+        "consumerOrder",
+        "drainPerOpportunity"
+      ],
+      "properties": {
+        "capacity": {
+          "const": 256
+        },
+        "fullDisposition": {
+          "const": "yield-before-mutation"
+        },
+        "consumerOrder": {
+          "type": "array",
+          "items": [
+            {
+              "const": "release-ui-borrow"
+            },
+            {
+              "const": "retire-map-interaction"
+            },
+            {
+              "const": "publish-successor-hits"
+            }
+          ],
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "drainPerOpportunity": {
+          "const": 1
+        }
+      }
+    }
+  },
+  "definitions": {
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "key",
+        "kind",
+        "surfaceId"
+      ],
+      "properties": {
+        "node": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "tiledMap",
+            "world3d"
+          ]
+        },
+        "surfaceId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "windowId",
+        "windowGeneration",
+        "node",
+        "key",
+        "kind",
+        "surfaceId"
+      ],
+      "properties": {
+        "windowId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "windowGeneration": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "node": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "tiledMap",
+            "world3d"
+          ]
+        },
+        "surfaceId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "next",
+        "retireOld",
+        "preserveGesture",
+        "preserveHost"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "same-identity-refresh",
+            "key-replacement",
+            "kind-replacement",
+            "node-removal"
+          ]
+        },
+        "next": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/scene"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retireOld": {
+          "type": "boolean"
+        },
+        "preserveGesture": {
+          "type": "boolean"
+        },
+        "preserveHost": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

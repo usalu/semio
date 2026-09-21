@@ -23,8 +23,8 @@ impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for InsertLi
     fn inverse(&self, base: &SemioValueSnapshot) -> Vec<SemioValueMutation> {
         agg_inverse(&SemioValueMutation::InsertListItem(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-list-item".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-list-item", "Listenelement einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

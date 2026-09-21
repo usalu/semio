@@ -26,8 +26,8 @@ impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for CreateNode {
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create node \"{}\"", self.node.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create node \"{}\"", self.node.id), &format!("Knoten \"{}\" erstellen", self.node.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node.id.clone()]

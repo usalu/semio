@@ -31,8 +31,8 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for CreateHandleKi
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create handle kind \"{}\"", self.handle_kind.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create handle kind \"{}\"", self.handle_kind.id), &format!("Griffart \"{}\" erstellen", self.handle_kind.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.handle_kind.id.clone()]

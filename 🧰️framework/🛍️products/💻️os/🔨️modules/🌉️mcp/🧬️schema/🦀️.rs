@@ -451,7 +451,7 @@ pub fn artifact_open_input_schema() -> serde_json::Value {
 pub fn artifact_open_output_shape() -> serde_json::Value {
     serde_json::json!({
         "type": "object",
-        "properties": { "artifactId": { "type": "string" }, "kind": { "type": ["string", "null"] }, "revision": nullable_revision_stamp_shape(), "sizeBytes": { "type": ["integer", "null"] } },
+        "properties": { "artifactId": { "type": "string" }, "kind": { "type": ["string", "null"] }, "artifactKind": { "type": ["string", "null"] }, "revision": nullable_revision_stamp_shape(), "sizeBytes": { "type": ["integer", "null"] } },
     })
 }
 

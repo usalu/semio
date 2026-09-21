@@ -23,8 +23,8 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetRowProperty {
     fn inverse(&self, base: &PlySnapshot) -> Vec<PlyMutation> {
         agg_inverse(&PlyMutation::SetRowProperty(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-row-property".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-row-property", "Zeileneigenschaft setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

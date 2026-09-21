@@ -33,8 +33,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ReplaceAssetPayload {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace asset \"{}\"", self.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace asset \"{}\"", self.key), &format!("Asset \"{}\" ersetzen", self.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]

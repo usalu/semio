@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for DeleteRequirement {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete requirement \"{}\"", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete requirement \"{}\"", self.id.0), &format!("Anforderung \"{}\" löschen", self.id.0))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.0.clone()]

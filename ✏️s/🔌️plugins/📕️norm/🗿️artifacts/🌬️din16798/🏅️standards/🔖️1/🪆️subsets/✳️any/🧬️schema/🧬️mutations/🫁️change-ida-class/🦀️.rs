@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeIdaCla
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change indoor air quality class to \"{}\"", self.new_ida_class)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change indoor air quality class to \"{}\"", self.new_ida_class), &format!("Innenluftqualitätsklasse auf \"{}\" ändern", self.new_ida_class))
     }
 }
 //#endregion 🔖️ChangeIdaClass

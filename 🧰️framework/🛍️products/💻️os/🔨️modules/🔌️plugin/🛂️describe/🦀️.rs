@@ -32,12 +32,6 @@ use semio_framework::{
 /// size and SHA-256 of the body it replaces.
 pub const DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES: usize = 256 * 1024;
 
-/// 🏷️ One asset name component: everything outside `[0-9A-Za-z._-]` folds to `-` so a dialect
-/// coordinate (`s.puzzle.5d@1/*`) and an example id yield a single stable path segment.
-fn asset_name_segment(raw: &str) -> String {
-    raw.chars().map(|character| if character.is_ascii_alphanumeric() || character == '.' || character == '_' || character == '-' { character } else { '-' }).collect()
-}
-
 /// 📦️ Moves every example body over [`DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES`] out of the manifest and
 /// into `assets` as a referenced declaration, leaving the row itself (id, label, icon, dialect)
 /// intact so every picker still resolves it. The declaration's media type is the owning app's own
@@ -57,13 +51,7 @@ fn externalize_oversized_example_bodies(manifest: &mut PluginManifest, assets: &
         }
         let body = std::mem::take(&mut example.artifact_json);
         let media_type = media_types.iter().find(|(dialect, _)| *dialect == example.dialect).map_or(MediaType { class: MediaClass::Text, form: MediaForm::Any }, |(_, media_type)| *media_type);
-        let name = format!(
-            "📚️examples/{}.{}.{}/{}.json",
-            asset_name_segment(&example.dialect.artifact_kind),
-            asset_name_segment(&example.dialect.standard),
-            asset_name_segment(&example.dialect.subset),
-            asset_name_segment(&example.id)
-        );
+        let name = semio_framework::example_body_asset_name(&example.dialect, &example.id, ".json");
         let declaration = AssetDeclaration { name, media_type, size_bytes: body.len() as u64, sha256: semio_framework_hash::sha256_hex(body.as_bytes()) };
         if let Some(existing) = assets.iter().position(|asset| asset.name == declaration.name) {
             assets[existing] = declaration;

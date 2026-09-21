@@ -80,7 +80,7 @@
         {
           "id": "create-layer",
           "capability": "drawing-1-structure-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/➕️create-layer/🦠️mutation/🦀️.rs#CreateLayer",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -112,7 +112,7 @@
         {
           "id": "duplicate-layer",
           "capability": "drawing-1-structure-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/📋️duplicate-layer/🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -144,7 +144,7 @@
         {
           "id": "delete-layer",
           "capability": "drawing-1-structure-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🗑️delete-layer/🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "rejected"
@@ -176,7 +176,7 @@
         {
           "id": "reorder-layer",
           "capability": "drawing-1-structure-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔃reorder-layer/🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",

@@ -49,6 +49,7 @@ fn encode_writer_snapshot_binary(s: &WriterSnapshot) -> Vec<u8> {
     write_str_lp(&mut out, &s.id);
     write_str_lp(&mut out, &s.language_id);
     write_str_lp(&mut out, &s.uri);
+    write_str_lp(&mut out, &s.text);
     write_child(&mut out, &s.document);
     out
 }
@@ -64,7 +65,9 @@ fn decode_writer_snapshot_binary(bytes: &[u8]) -> Result<WriterSnapshot, String>
     snapshot.id = read_str_lp(&mut reader)?;
     snapshot.language_id = read_str_lp(&mut reader)?;
     snapshot.uri = read_str_lp(&mut reader)?;
+    snapshot.text = read_str_lp(&mut reader)?;
     snapshot.document = read_child(&mut reader)?;
+    crate::attach_writer_document_text(&mut snapshot.document, &snapshot.text.clone());
     Ok(snapshot)
 }
 //#endregion 🔖️BinaryPrimitives

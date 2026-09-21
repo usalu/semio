@@ -68,7 +68,7 @@
         {
           "id": "update-layer-transform",
           "capability": "drawing-1-transform-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔄️update-layer-transform/🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -101,7 +101,7 @@
         {
           "id": "set-layer-boolean-operation",
           "capability": "drawing-1-transform-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -135,7 +135,7 @@
         {
           "id": "update-layer-trace-params",
           "capability": "drawing-1-transform-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🔍️update-layer-trace-params/🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",

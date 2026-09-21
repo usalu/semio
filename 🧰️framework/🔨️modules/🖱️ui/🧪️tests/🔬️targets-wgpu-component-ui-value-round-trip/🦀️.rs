@@ -118,6 +118,7 @@ mod value_round_trip_tests {
     #[semio_framework_async_macros::async_test]
     async fn ui_component_scene_node_round_trips() {
         let value = UiComponentSceneNode {
+            host_id: String::new(),
             surface_id: "surface-1".into(),
             controller_id: "ctrl-1".into(),
             component_kind: SurfaceKind::World3d,

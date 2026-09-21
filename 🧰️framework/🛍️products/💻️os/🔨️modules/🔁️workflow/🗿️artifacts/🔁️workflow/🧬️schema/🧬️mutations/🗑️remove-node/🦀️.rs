@@ -30,8 +30,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveNode {
             ops
         }
     }
-    fn label(&self) -> String {
-        format!("Remove workflow node {}", self.node_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove workflow node {}", self.node_id), &format!("Arbeitsablaufknoten {} entfernen", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node_id.clone()]

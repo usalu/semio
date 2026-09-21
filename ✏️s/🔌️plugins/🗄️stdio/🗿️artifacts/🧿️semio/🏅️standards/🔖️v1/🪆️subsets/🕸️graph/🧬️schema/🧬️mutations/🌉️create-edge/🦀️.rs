@@ -28,8 +28,8 @@ impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for CreateEd
     fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create edge \"{}\" ({} -> {})", self.id.value, self.source.value, self.target.value)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create edge \"{}\" ({} -> {})", self.id.value, self.source.value, self.target.value), &format!("Kante \"{}\" ({} -> {}) erstellen", self.id.value, self.source.value, self.target.value))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.value.clone()]

@@ -34,8 +34,8 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for CreateTarget
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create target region \"{}\"", self.target_region.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create target region \"{}\"", self.target_region.id), &format!("Zielregion \"{}\" erstellen", self.target_region.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.target_region.id.clone()]

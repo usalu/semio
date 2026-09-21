@@ -33,8 +33,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeReEncodeQualityM
         }
         vec![JpgMutation::ChangeReEncodeQuality(ChangeReEncodeQualityMutation { quality: base.re_encode_quality })]
     }
-    fn label(&self) -> String {
-        "change re encode quality".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("change re encode quality", "Rekodierungsqualität ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-re-encode-quality".into()]

@@ -34,8 +34,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Create shading surface \"{}\"", self.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create shading surface \"{}\"", self.name), &format!("Verschattungsoberfläche \"{}\" erstellen", self.name))
     }
 
     fn target(&self) -> Vec<String> {

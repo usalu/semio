@@ -32,8 +32,8 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveLang {
         }
     }
 
-    fn label(&self) -> String {
-        "Remove PDF/UA language".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove PDF/UA language", "PDF/UAsprache entfernen")
     }
 
     fn target(&self) -> Vec<String> {

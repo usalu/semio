@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangePeriodRati
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change period ratio to {}", self.new_period_ratio)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change period ratio to {}", self.new_period_ratio), &format!("Periodenverhältnis auf {} ändern", self.new_period_ratio))
     }
 }
 //#endregion 🔖️ChangePeriodRatio

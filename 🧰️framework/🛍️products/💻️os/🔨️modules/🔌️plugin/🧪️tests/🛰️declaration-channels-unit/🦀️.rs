@@ -1,5 +1,5 @@
 //! 🧪️ Shared declaration-channel laws run by each genuine leaf owner.
-use protocol::{FromValue, Mutation, MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation, ToValue};
+use protocol::{FromValue, LocalizedLabel, Mutation, MutationDiff, MutationLeaf, OpBinary, OpText, SemanticMutation, ToValue};
 use std::fmt::Debug;
 
 fn cases() -> serde_json::Value {
@@ -22,7 +22,7 @@ where
     assert_eq!(L::DESCRIPTOR.text_opcode, None);
     assert_eq!(L::DESCRIPTOR.binary_tag, None);
     assert_eq!(operation(-1).semantics().kind, "set-value");
-    assert_eq!(operation(-1).label(), "Set value to -1");
+    assert_eq!(operation(-1).label(), LocalizedLabel::native("Set value to -1", "Wert auf -1 setzen"));
     assert_eq!(operation(-1).target(), ["value"]);
     assert_eq!(operation(0).timestamp(), None);
     let provenance = L::PROVENANCE;

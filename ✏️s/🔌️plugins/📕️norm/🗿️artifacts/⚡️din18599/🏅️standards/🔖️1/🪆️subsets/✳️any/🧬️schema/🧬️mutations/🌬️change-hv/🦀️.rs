@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeHV {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change ventilation heat transfer coefficient H_V [W/K] to {}", self.new_h_v)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change ventilation heat transfer coefficient H_V [W/K] to {}", self.new_h_v), &format!("Lüftungswärmenübertragungskoeffizienth_V [W/K] auf {} ändern", self.new_h_v))
     }
 }
 //#endregion 🔖️ChangeHV

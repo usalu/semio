@@ -37,23 +37,16 @@ fn hit(kind: HitKind, control_id: &str) -> HitTarget<ActionDescriptor> {
 
 //#region 🎡WheelReachesTheScene
 
-/// ⚖️ LAW: a point the shell's chrome does not own, inside a live scene surface's rect, is that
-/// surface's — whatever non-chrome row happens to be topmost there and however its id is spelled.
-///
-/// 🩸️ The window's body registers a `HitKind::ScrollRegion` over its whole rect BEFORE the scene node
-/// inside it registers its `HitKind::World3d`, so a frame that published no scene row left a chrome
-/// scroll region on top and the wheel was refused. Measured live: after `window-cap-close` →
-/// `window-reopen` the topmost row at the pane centre was a `ScrollRegion` with an EMPTY control id
-/// and the whole `zoom-wheel` step journalled `interactionHover` alone.
+/// 🛡️ Bounds and a suggestive control name never replace published scene provenance.
 #[test]
-fn a_wheel_over_a_live_pane_reaches_the_scene_under_any_non_chrome_row() {
+fn a_wheel_over_a_live_pane_requires_the_published_scene_hit() {
     let shell = shell_with_pane();
     let theme = Theme::default();
-    for row in [hit(HitKind::ScrollRegion, ""), hit(HitKind::ScrollRegion, "puzzle3d-main-perspective"), hit(HitKind::World3d, "puzzle3d-main-perspective"), hit(HitKind::Generic, "puzzle3d-main-perspective")] {
+    for row in [hit(HitKind::ScrollRegion, ""), hit(HitKind::ScrollRegion, "puzzle3d-main-perspective.pane"), hit(HitKind::World3d, "puzzle3d-main-perspective"), hit(HitKind::Generic, "puzzle3d-main-perspective")] {
         let mut input = InputState::<ActionDescriptor>::default();
         input.register_hit(row.clone());
         input.publish_hits();
-        assert!(shell.wheel_reaches_scene_surface(AIM.0, AIM.1, &input, &theme), "🎡 a notch over the pane reaches it under {:?}/{:?}", row.kind, row.control_id);
+        assert!(!shell.wheel_reaches_scene_surface(AIM.0, AIM.1, &input, &theme), "{:?}/{:?} has no published scene identity", row.kind, row.control_id);
     }
 }
 
@@ -201,14 +194,14 @@ fn a_press_inside_a_window_body_activates_that_window_and_notes_it() {
     shell.arm_window_activation_note();
     shell.deferred_actions.clear();
 
-    assert!(shell.activate_window_under_pointer(AIM.0, AIM.1), "🪟️ the probe's aim point is inside the perspective pane's window box");
+    assert!(shell.activate_window_under_pointer(AIM.0, AIM.1, &Theme::light()), "🪟️ the probe's aim point is inside the perspective pane's window box");
     assert_eq!(shell.active_window_id.as_deref(), Some("puzzle3d-main-perspective"));
     shell.arm_window_activation_note();
     let notes = shell.deferred_actions.iter().filter(|action| action.action == "noteShellCommand").count();
     assert_eq!(notes, 1, "🪟️ one real activation arms exactly one history note");
 
     shell.deferred_actions.clear();
-    assert!(!shell.activate_window_under_pointer(AIM.0 + 1.0, AIM.1 + 1.0), "🪟️ a second press in the SAME window changes nothing");
+    assert!(!shell.activate_window_under_pointer(AIM.0 + 1.0, AIM.1 + 1.0, &Theme::light()), "🪟️ a second press in the SAME window changes nothing");
     shell.arm_window_activation_note();
     assert!(shell.deferred_actions.is_empty(), "🪟️ so it notes nothing — React's `activateWindow` returns early on an unchanged id");
 }
@@ -223,12 +216,12 @@ fn a_modal_layer_or_an_unnamed_dock_row_activates_no_window() {
     shell.overlay_state = OverlayState::Dropdown("example".into());
     shell.open_selects.insert("example".into(), true);
     assert!(shell.pointer_input_is_modal());
-    assert!(!shell.activate_window_under_pointer(AIM.0, AIM.1), "🚧️ a modal layer owns every pointer, wherever it lands");
+    assert!(!shell.activate_window_under_pointer(AIM.0, AIM.1, &Theme::light()), "🚧️ a modal layer owns every pointer, wherever it lands");
     assert!(shell.active_window_id.is_none());
 
     let mut shell = shell_with_escape_binding();
     shell.dock_window_plan = vec![(String::new(), Rect::new(PANE.0, PANE.1, PANE.2, PANE.3))];
-    assert!(!shell.activate_window_under_pointer(AIM.0, AIM.1), "🕳️ the dock's unnamed window row is not a window");
+    assert!(!shell.activate_window_under_pointer(AIM.0, AIM.1, &Theme::light()), "🕳️ the dock's unnamed window row is not a window");
     assert!(shell.active_window_id.is_none());
 }
 
@@ -236,23 +229,10 @@ fn a_modal_layer_or_an_unnamed_dock_row_activates_no_window() {
 
 //#region 🧊️IngressAnchors
 
-/// ⚖️ LAW (source anchor): a PLAIN secondary press over a world pane opens the shell's menu **and**
-/// reaches the surface — React's `onContextMenu` fires off the host `<div>` while the same
-/// `pointerdown` still reaches the `<canvas>` under it, where R3F answers it with the selection
-/// `plan_world3d_non_primary_press_pick` is the twin of.
-///
-/// 🩸️ The ingress used to `return` after the shell menu, so the pane received no press at all and
-/// React's `context-menu` step journalled an `interactionSelect` the wgpu pane never did
-/// (`🗑️generated/w12c-parity-run-19/steps.json` step 23). Pinned as a source anchor because the
-/// routing decision lives in the renderer's own `handle_pointer_button`, which owns a GPU device and
-/// an async runtime no unit fixture can build.
+/// 🖱️ A real secondary press opens the menu and reaches only its captured World.
 #[test]
 fn a_plain_secondary_press_over_a_pane_opens_the_menu_and_still_presses_the_surface() {
-    let menu = "if over_world && button == 2 && !modifiers.shift && !modifiers.alt && !modifiers.meta {";
-    let menu_at = WGPU_RENDERER_SOURCE.find(menu).expect("🧊️ the plain secondary press is routed to the shell");
-    let tail = &WGPU_RENDERER_SOURCE[menu_at..];
-    let claim_at = tail.find("if over_world {").expect("🧊️ and the world claim follows it");
-    assert!(!tail[..claim_at].contains("            return;\n"), "🧊️ with NO early return between them — the menu opens and the surface is pressed, in the order the DOM delivers them");
+    super::shell_input_tests::retained_world_sequence_probe("secondary");
 }
 
 /// ⚖️ LAW (source anchor + oracle): a modal layer OPENING hands every surface that still publishes a

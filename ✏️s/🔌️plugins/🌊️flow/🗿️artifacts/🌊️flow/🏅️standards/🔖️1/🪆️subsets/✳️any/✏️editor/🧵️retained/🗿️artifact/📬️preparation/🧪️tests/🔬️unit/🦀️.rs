@@ -33,7 +33,12 @@ async fn semantic_artifact_prepare_publish_retry_cancel_and_close_use_production
                     }
                     let outcome = store.advance_apply_batch(&mut publication, grant).unwrap();
                     let bytes = publication.progress().completed_bytes;
-                    assert!(bytes >= previous && bytes - previous <= grant.maximum_bytes as u64);
+                    assert!(
+                        bytes >= previous && bytes - previous <= grant.maximum_bytes as u64,
+                        "case={} grant={} cancel={cancel:?} step={step} preparation progress changed from {previous} to {bytes}",
+                        row["id"].as_str().unwrap(),
+                        grant.maximum_bytes,
+                    );
                     previous = bytes;
                     if matches!(outcome, store::ArtifactStoreOneItemAdvance::Published(_)) {
                         assert!(publication.retry());

@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateMeshMut
         vec![super::GltfMutation::CreateMesh(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Create Mesh".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Create Mesh", "Netz erstellen")
     }
 
     fn target(&self) -> Vec<String> {

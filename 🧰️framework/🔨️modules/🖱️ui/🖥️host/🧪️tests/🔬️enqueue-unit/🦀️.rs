@@ -19,16 +19,107 @@ fn pointer_move_storm_coalesces_to_one_sample() {
     assert_eq!(drained.pointer_move.map(|sample| sample.modifiers.shift), Some(false), "the latest modifier snapshot replaces a stale held modifier");
 }
 
-#[test]
-fn scroll_storm_accumulates_delta_rather_than_overwriting() {
+fn ordered_scroll_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../📥️input/🎡️ordered-scroll/🧫️fixtures/🔣️.json")).unwrap()
+}
+
+fn fixture_modifiers(value: &serde_json::Value) -> EventModifiers {
+    EventModifiers {
+        shift: value["shift"].as_bool().unwrap(),
+        ctrl: value["ctrl"].as_bool().unwrap(),
+        alt: value["alt"].as_bool().unwrap(),
+        meta: value["meta"].as_bool().unwrap(),
+    }
+}
+
+fn fixture_event(value: &serde_json::Value) -> DispatchEvent {
+    let number = |field: &str| value[field].as_f64().unwrap() as f32;
+    match value["kind"].as_str().unwrap() {
+        "scroll" => DispatchEvent::Scroll {
+            x: number("x"),
+            y: number("y"),
+            delta_x: number("deltaX"),
+            delta_y: number("deltaY"),
+            modifiers: fixture_modifiers(&value["modifiers"]),
+        },
+        "pointer-move" => DispatchEvent::PointerMove { pointer: pointer(), x: number("x"), y: number("y"), modifiers: fixture_modifiers(&value["modifiers"]) },
+        "key-down" => DispatchEvent::KeyDown { key: value["key"].as_str().unwrap().to_string(), modifiers: fixture_modifiers(&value["modifiers"]) },
+        kind => panic!("unknown ordered Scroll fixture event {kind}"),
+    }
+}
+
+fn assert_ordered_scroll_case(id: &str) {
+    let fixture = ordered_scroll_fixture();
+    let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == id).unwrap();
     let mut queue = EventQueue::new();
     let ui = UiThreadToken::mint();
-    for _ in 0..10 {
-        queue.enqueue(ui, DispatchEvent::Scroll { x: 0.0, y: 0.0, delta_x: 0.0, delta_y: 1.0, modifiers: EventModifiers { ctrl: true, ..Default::default() } });
+    for event in row["physical"].as_array().unwrap() {
+        assert_eq!(queue.enqueue(ui, fixture_event(event)), EnqueueOutcome::Accepted);
     }
-    let drained = queue.drain_page(WorkerContext::new(queue.current_generation()));
-    assert_eq!(drained.scroll.map(|sample| sample.delta_y), Some(10.0), "10 wheel ticks of 1.0 each must sum, not overwrite");
-    assert_eq!(drained.scroll.map(|sample| sample.modifiers.ctrl), Some(true), "the wheel modifier snapshot survives accumulation");
+    let expected = row["expectedQueue"].as_array().unwrap();
+    let expected = expected.iter().map(fixture_event).collect::<Vec<_>>();
+    let mut actual = Vec::new();
+    while !queue.is_empty() {
+        let drained = queue.drain_page(WorkerContext::new(queue.current_generation()));
+        let mut page = drained.discrete.into_iter().flatten().map(|event| (event.generation, event.event)).collect::<Vec<_>>();
+        if let Some(sample) = drained.pointer_move {
+            page.push((sample.generation, DispatchEvent::PointerMove { pointer: sample.pointer, x: sample.x, y: sample.y, modifiers: sample.modifiers }));
+        }
+        page.sort_by_key(|(generation, _)| *generation);
+        actual.extend(page.into_iter().map(|(_, event)| event));
+    }
+    assert_eq!(actual, expected, "{id}: ordered input and the retained pointer merge by their original generation across bounded pages");
+}
+
+#[test]
+fn same_point_scrolls_keep_event_local_deltas_and_modifiers() {
+    assert_ordered_scroll_case("same-point-modifier-snapshots");
+}
+
+#[test]
+fn opposite_scrolls_remain_two_ordered_events() {
+    assert_ordered_scroll_case("opposite-sign-scrolls");
+}
+
+#[test]
+fn scroll_key_and_replaceable_pointer_keep_ingress_sequence() {
+    assert_ordered_scroll_case("scroll-key-and-replaceable-pointer");
+}
+
+#[test]
+fn retained_pointer_waits_for_every_older_ordered_page() {
+    let fixture = ordered_scroll_fixture();
+    let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "retained-pointer-after-an-older-page").unwrap();
+    let mut queue = EventQueue::new();
+    let ui = UiThreadToken::mint();
+    for event in row["physical"].as_array().unwrap() {
+        assert_eq!(queue.enqueue(ui, fixture_event(event)), EnqueueOutcome::Accepted);
+    }
+    let first = queue.drain_page(WorkerContext::new(queue.current_generation()));
+    assert!(first.pointer_move.is_none(), "a retained pointer sample cannot overtake older ordered input waiting beyond this fixed page");
+    assert_eq!(first.discrete.into_iter().flatten().count(), DISCRETE_DRAIN_PAGE_CAPACITY);
+}
+
+#[test]
+fn scroll_overflow_refuses_without_mutating_the_admitted_queue() {
+    let fixture = ordered_scroll_fixture();
+    let row = &fixture["overflow"];
+    let mut queue = EventQueue::new();
+    let ui = UiThreadToken::mint();
+    for _ in 0..row["fillCount"].as_u64().unwrap() {
+        assert_eq!(queue.enqueue(ui, fixture_event(&row["fill"])), EnqueueOutcome::Accepted);
+    }
+    let generation = queue.current_generation();
+    assert_eq!(queue.enqueue(ui, fixture_event(&row["candidate"])), EnqueueOutcome::Overflow);
+    assert_eq!(queue.current_generation(), generation);
+    assert_eq!(queue.overflow_count(), row["expectedOverflowCount"].as_u64().unwrap());
+    assert_eq!(queue.pending_discrete_len(), row["expectedPreservedCount"].as_u64().unwrap() as usize);
+    let mut preserved = 0;
+    while !queue.is_empty() {
+        let drained = queue.drain_page(WorkerContext::new(queue.current_generation()));
+        preserved += drained.discrete.into_iter().flatten().count();
+    }
+    assert_eq!(preserved, row["expectedPreservedCount"].as_u64().unwrap() as usize);
 }
 
 #[test]

@@ -7595,6 +7595,31 @@ impl Drop for DatabaseMountFutureLiveGuardV1 {
     }
 }
 
+static DATABASE_POOL_USE_MOUNT_WAIT_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+static DATABASE_POOL_USE_CHECKPOINT_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// 🔬️ One live BARE `require_open_use` clone that never reaches a registered owner. `mount_document`
+/// and `checkpoint_document` clone the Database's use into a plain local and hold it across their
+/// awaits: the mount waiter parks on another caller's `Opening` slot, the checkpoint parks on the
+/// version graph. Neither clone is in any slot table, in any `live_*` struct family or in a mount
+/// future, so both are invisible to every other census family while they pin the use. `require_open_use`
+/// has exactly four call sites; the other two hand their clone to a counted future, so these two
+/// guards close the census over every carrier of `Database::pool_use`.
+struct DatabasePoolUseSiteGuardV1(&'static std::sync::atomic::AtomicUsize);
+
+impl DatabasePoolUseSiteGuardV1 {
+    fn new(site: &'static std::sync::atomic::AtomicUsize) -> Self {
+        site.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        Self(site)
+    }
+}
+
+impl Drop for DatabasePoolUseSiteGuardV1 {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+    }
+}
+
 static DATABASE_CAPABILITY_OPEN_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 static DATABASE_CATALOG_READ_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 static DATABASE_CATALOG_BOOTSTRAP_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
@@ -7645,6 +7670,9 @@ struct DatabaseRetainedPoolUseCensus {
     live_catalog_bootstrap: usize,
     live_create_catalog: usize,
     live_mount_future: usize,
+    live_sync_hello: usize,
+    mount_wait: usize,
+    checkpoint: usize,
 }
 
 impl DatabaseRetainedPoolUseCensus {
@@ -7664,6 +7692,9 @@ impl DatabaseRetainedPoolUseCensus {
             live_catalog_bootstrap: DATABASE_CATALOG_BOOTSTRAP_LIVE.load(std::sync::atomic::Ordering::Acquire),
             live_create_catalog: DATABASE_CREATE_CATALOG_LIVE.load(std::sync::atomic::Ordering::Acquire),
             live_mount_future: DATABASE_MOUNT_FUTURE_LIVE.load(std::sync::atomic::Ordering::Acquire),
+            live_sync_hello: db_sync::database_sync_hello_live_states(),
+            mount_wait: DATABASE_POOL_USE_MOUNT_WAIT_LIVE.load(std::sync::atomic::Ordering::Acquire),
+            checkpoint: DATABASE_POOL_USE_CHECKPOINT_LIVE.load(std::sync::atomic::Ordering::Acquire),
         }
     }
 }
@@ -8597,6 +8628,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
 
     async fn mount_document(&self, document: protocol::ArtifactId, policy: DatabaseDocumentMountPolicy) -> Result<ArtifactHandle, DatabaseDocumentOpenRejected> {
         let pool_use = self.require_open_use()?;
+        let _pool_use_site = DatabasePoolUseSiteGuardV1::new(&DATABASE_POOL_USE_MOUNT_WAIT_LIVE);
         let catalog_known = self.catalog.lock().expect("db_engine: catalog mutex poisoned").entries.iter().any(|entry| entry.document == document);
         let create_config = self.document_engine_config();
         let open_config = self.document_engine_config();
@@ -8892,6 +8924,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     /// Errs `Unimplemented` if the `vcs` feature is disabled (no `VersionGraph` configured).
     pub async fn checkpoint_document(&self, document: &protocol::ArtifactId, message: String, authors: &[protocol::ActorId]) -> Result<String, DbError> {
         let _pool_use = self.require_open_use()?;
+        let _pool_use_site = DatabasePoolUseSiteGuardV1::new(&DATABASE_POOL_USE_CHECKPOINT_LIVE);
         let core_document = to_core_document_id(document).await;
         let core_authors = authors.iter().map(to_core_actor_id).collect();
         self.version_graph.checkpoint(&core_document, CheckpointRequest { parent_checkpoint: None, change_ids: Vec::new(), message, authors: core_authors, timestamp_ms: now_ms().await }).await

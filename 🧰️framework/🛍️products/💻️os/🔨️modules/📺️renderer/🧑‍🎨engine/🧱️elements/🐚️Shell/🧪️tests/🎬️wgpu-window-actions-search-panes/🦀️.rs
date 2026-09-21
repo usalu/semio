@@ -144,7 +144,7 @@ fn the_mounted_actions_tree_keeps_fixed_rows_clips_the_terminal_row_and_scrolls_
     assert!(!input.hits().iter().any(|hit| hit.control_id.as_deref().is_some_and(|control| control.ends_with(terminal_id))), "the terminal Actions row is clipped below the initial viewport");
 
     let pointer = (clear.rect.x + clear.rect.w * 0.5, clear.rect.y + clear.rect.h * 0.5);
-    assert!(shell.handle_pointer_wheel(pointer.0, pointer.1, scroll_delta / 24.0, &mut input), "the retained Actions viewport owns wheel input");
+    assert!(shell.handle_pointer_wheel(pointer.0, pointer.1, 0.0, scroll_delta, &mut input), "the retained Actions viewport owns wheel input");
     let draw = publish_dense_actions_chrome(&mut shell, &mut input);
     assert!(input.hits().iter().any(|hit| hit.kind == HitKind::TreeItem && hit.control_id.as_deref().is_some_and(|control| control.ends_with(terminal_id))), "the retained viewport publication reveals the terminal Actions row");
     let abort = row(terminal_id, &input);
@@ -156,15 +156,16 @@ fn the_mounted_actions_tree_keeps_fixed_rows_clips_the_terminal_row_and_scrolls_
     let _ = crate::collect_fixture_actions(&mut input);
     assert!(shell.retained_hit_window(&abort).is_some(), "the terminal row remains addressed to its retained Actions body");
     let mut capture = PointerCapture::default();
-    let owner = capture.press(shell.pointer_owner_at(pointer.0, pointer.1, &input, &Theme::light()));
+    let pointer_id = ui_render::PointerId(1);
+    let owner = capture.press(pointer_id, shell.pointer_owner_at(pointer.0, pointer.1, &input, &Theme::light()), pointer.0, pointer.1).expect("capture admitted");
     assert_eq!(owner, PointerHitOwner::Chrome, "the retained Actions row owns PointerDown above the scene under its pane");
     semio_framework_async::block_on(shell.handle_pointer_button(pointer.0, pointer.1, true, 0, &mut input, &Theme::light())).expect("scrolled Abort row press");
     let _ = publish_dense_actions_chrome(&mut shell, &mut input);
-    assert_eq!(capture.release(), PointerHitOwner::Chrome, "the retained Actions row keeps the captured release across its repaint");
+    assert_eq!(capture.release(pointer_id), PointerHitOwner::Chrome, "the retained Actions row keeps the captured release across its repaint");
     semio_framework_async::block_on(shell.handle_pointer_button(pointer.0, pointer.1, false, 0, &mut input, &Theme::light())).expect("scrolled Abort row release");
     let actions = crate::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), vec![terminal_id.strip_prefix("action.").expect("terminal action id")], "the painted scrolled row dispatches its own action exactly once");
-    assert!(shell.handle_pointer_wheel(pointer.0, pointer.1, -scroll_delta / 24.0, &mut input), "reverse wheel remains owned by the retained viewport");
+    assert!(shell.handle_pointer_wheel(pointer.0, pointer.1, 0.0, -scroll_delta, &mut input), "reverse wheel remains owned by the retained viewport");
     let _ = publish_dense_actions_chrome(&mut shell, &mut input);
     assert!((row(first_id, &input).rect.h - row_height).abs() < 0.01, "reverse wheel restores the initial fixed row");
     assert!(!input.hits().iter().any(|hit| hit.control_id.as_deref().is_some_and(|control| control.ends_with(terminal_id))), "reverse wheel clips the terminal row again");

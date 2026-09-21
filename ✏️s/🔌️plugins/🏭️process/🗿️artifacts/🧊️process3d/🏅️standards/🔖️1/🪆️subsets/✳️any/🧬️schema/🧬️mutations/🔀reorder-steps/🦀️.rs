@@ -28,8 +28,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReorderSte
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Reorder step \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Reorder step \"{}\"", self.id), &format!("Schritt \"{}\" umordnen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

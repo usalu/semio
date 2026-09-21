@@ -30,8 +30,8 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for ChangeTileWeight {
     fn inverse(&self, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Change Tile Weight".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Tile Weight", "Kachelgewicht ändern")
     }
 }
 //#endregion 🔖️ChangeTileWeight

@@ -27,8 +27,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for UpdatePageMargins {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_update_page_margins(self, base)
     }
-    fn label(&self) -> String {
-        format!("Update page \"{}\" margins", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Update page \"{}\" margins", self.id), &format!("Seite \"{}\" Ränder aktualisieren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

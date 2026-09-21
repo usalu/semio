@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeSelfWeight
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change self-weight material to \"{}\"", self.new_self_weight_material)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change self-weight material to \"{}\"", self.new_self_weight_material), &format!("Eigengewichtsmaterial auf \"{}\" ändern", self.new_self_weight_material))
     }
 }
 //#endregion 🔖️Payload

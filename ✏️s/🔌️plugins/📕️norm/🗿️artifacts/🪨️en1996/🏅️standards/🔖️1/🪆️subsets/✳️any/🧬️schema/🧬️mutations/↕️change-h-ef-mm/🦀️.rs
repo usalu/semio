@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeHEfMm {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change effective height h_ef [mm] to {}", self.new_h_ef_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change effective height h_ef [mm] to {}", self.new_h_ef_mm), &format!("Effektivhöheh_ef [mm] auf {} ändern", self.new_h_ef_mm))
     }
 }
 //#endregion 🔖️ChangeHEfMm

@@ -32,8 +32,8 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ReplaceTiles {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Replace tiles with {} tiles", self.new_tiles.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace tiles with {} tiles", self.new_tiles.len()), &format!("Kacheln mit {} Kacheln ersetzen", self.new_tiles.len()))
     }
 
     fn target(&self) -> Vec<String> {

@@ -15,7 +15,7 @@ export type DocumentBrowserActorSourceV1 = Readonly<{ componentSha256: string; d
 export type DocumentClosedBrowserActorV1 = Readonly<{
   kind: "closed-browser-actor";
   schema: "semio.os.closed-browser-actor.v1";
-  codegenPolicy: "semio.os.browser-jco-1.27.0-jspi.v1";
+  codegenPolicy: "semio.os.browser-jco-1.34.0-jspi.v1";
   sha256: string;
   sourceComponentSha256: string;
   sourceDescriptorByteSha256: string;
@@ -70,7 +70,7 @@ function parse(value: unknown, source: DocumentBrowserActorSourceV1, renderer: u
     return Object.freeze({ kind: "none" });
   }
   const keys = ["kind", "schema", "codegenPolicy", "sha256", "sourceComponentSha256", "sourceDescriptorByteSha256", "policySha256", "importInterfaces", ...(lease ? ["byteLength"] : [])];
-  if (row.kind !== "closed-browser-actor" || renderer !== "wasm" || row.schema !== "semio.os.closed-browser-actor.v1" || row.codegenPolicy !== "semio.os.browser-jco-1.27.0-jspi.v1" || Object.keys(row).length !== keys.length || !keys.every(key => Object.hasOwn(row, key))) return deny();
+  if (row.kind !== "closed-browser-actor" || renderer !== "wasm" || row.schema !== "semio.os.closed-browser-actor.v1" || row.codegenPolicy !== "semio.os.browser-jco-1.34.0-jspi.v1" || Object.keys(row).length !== keys.length || !keys.every(key => Object.hasOwn(row, key))) return deny();
   const component = digest(row.sourceComponentSha256), descriptor = digest(row.sourceDescriptorByteSha256);
   if (component !== source.componentSha256 || descriptor !== source.descriptorByteSha256) return deny();
   return Object.freeze({ kind: row.kind, schema: row.schema, codegenPolicy: row.codegenPolicy, sha256: digest(row.sha256), sourceComponentSha256: component, sourceDescriptorByteSha256: descriptor, policySha256: digest(row.policySha256), importInterfaces: interfaces(row.importInterfaces), ...(lease ? { byteLength: length(row.byteLength) } : {}) });

@@ -82,14 +82,14 @@ os-hub credential set --email ada@example.com --display-name "Ada"   # password 
 OS_HUB_MODE=production \
 OS_HUB_BIND=127.0.0.1 \
 OS_HUB_CREDENTIAL_SIGN_IN=true \
-OS_HUB_ADMIN_SUBJECTS=semio.hub.credential:ada@example.com \
+OS_HUB_ADMIN_SUBJECTS=credential.password.v1:ada@example.com \
 os-hub
 
 # on a network interface: the allowlist and the proxy statement are both mandatory
 OS_HUB_MODE=production \
 OS_HUB_BIND=10.0.0.4 \
 OS_HUB_CREDENTIAL_SIGN_IN=true \
-OS_HUB_ADMIN_SUBJECTS=semio.hub.credential:ada@example.com \
+OS_HUB_ADMIN_SUBJECTS=credential.password.v1:ada@example.com \
 OS_HUB_ALLOWED_ORIGINS=https://s.example.com \
 OS_HUB_TRUSTED_FORWARDING=proxy \
 os-hub
@@ -98,8 +98,15 @@ os-hub
 The startup line reports the three postures it resolved:
 `[INFO] bind scope network (10.0.0.4:8787), cross-origin policy allowlist, trusted forwarding proxy`.
 
-> Production mode has never been run by anyone. The boot rules are unit-tested; the process is not
-> yet observed. See "Known gaps".
+> Production mode has been run, on a network bind, against a release binary. 2026-09-21: the
+> `dist/build/os-hub` release binary, started as a plain process on `192.168.178.70:7661` with
+> exactly the variables above, answered `/healthz` and `/readyz` (`status: ready`, every gate open),
+> refused the same requests `403 x-semio-refusal: insecure-transport` without `X-Forwarded-Proto`,
+> admitted a credential sign-in and refused a wrong password, closed a held socket cleanly on
+> `SIGTERM` and exited `0`, restarted onto the same sqlite root as the same user, and adopted a
+> trusted catalog a different binary had published (9/9 resolved). Transcript: ticket 26/09/18,
+> `📓️rb1-release-builds-and-production-posture.md`. What is still unobserved is everything *behind*
+> a real reverse proxy — the proxy itself is simulated here by sending the headers it would send.
 
 ### As the dev loop (development mode)
 
@@ -127,7 +134,7 @@ loading and no schema/validation layer. Defaults are the literal fallbacks in th
 | `OS_HUB_MODE` | inferred: `development` if the bind is loopback, else `production` | `development` \| `production`. Any other value fails boot. `production` is a plain process; `development` needs the launcher's fd 3. |
 | `OS_HUB_TRUSTED_FORWARDING` | `none` | `none` \| `proxy`. `proxy` states that a TLS-terminating reverse proxy is the only thing that can reach this socket, which makes `X-Forwarded-Proto`/`X-Forwarded-Host` trustworthy and **enforced** — a request the proxy reports as cleartext is refused `403 x-semio-refusal: insecure-transport`. Required for a non-loopback production bind. Any other value fails boot. |
 | `OS_HUB_DATA` | `./.🧬semio/🌐hub/` (relative to cwd) | The server-owned data root. Give it an absolute path. `trusted-catalog publish` *requires* an absolute one. |
-| `OS_HUB_ADMIN_SUBJECTS` | empty | Comma-separated `provider:subject` identities granted the admin surface; max 64, duplicates rejected. Required in production mode. |
+| `OS_HUB_ADMIN_SUBJECTS` | empty | Comma-separated `provider:subject` identities granted the admin surface; max 64, duplicates rejected. Required in production mode. For a password credential the provider is literally `credential.password.v1` (`🔐️auth/🦀️.rs`, `CREDENTIAL_IDENTITY_PROVIDER`) and the subject is the email `credential set` was given, e.g. `credential.password.v1:ada@example.com`. A mismatched provider string still boots — the admin routes simply answer `401` for everyone. |
 | `OS_HUB_ADMIN_DIR` | the admin SPA's built `📤️dist` next to the crate | Static asset root for the admin SPA. Set it when the binary is not co-located with its source tree. |
 | `OS_HUB_EXTENSIONS_DIR` | `{OS_HUB_DATA}/extension-modules` | Extension module root; created at boot. |
 | `OS_HUB_MERGE_POLICY` | `normal` | `laissez-faire` \| `normal` \| `vigilant`, read once at startup. An unknown value warns and falls back — it does not fail boot. |
@@ -147,6 +154,31 @@ Read twice — once for the document store, once for the artifact chunk CAS — 
 | `OS_HUB_NEO4J_USER` | `neo4j` | Neo4j user. |
 | `OS_HUB_NEO4J_PASSWORD` | empty string | Neo4j password. |
 
+#### How a `postgres`/`neo4j` document store is actually driven
+
+`sqlx` and `neo4rs` are bound to a Tokio runtime and demand its thread-local context **every time one
+of their futures is polled**, not merely when a pool is constructed. The hub's document store does not
+run on the server's `#[tokio::main]` runtime: every call becomes a typed task on `Lane::Io` of the one
+process `WorkerPool`, whose workers are deliberately plain `std::thread`s with no runtime context at
+all (`🧰️framework/🔨️modules/⏳️async` — "No `tokio` in this crate"). Polling a driver future there
+aborted the whole process on first use with `this functionality requires a Tokio context`.
+
+So the storage layer owns **one bounded runtime of its own**, and that is the only place such a driver
+is ever polled: `db_storage_driver_runtime` (`🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧵️driver-runtime/`),
+reached through the `db_storage::DbIoAsyncDriverRuntime` interface. A driver future is handed to it and
+what `Lane::Io` polls instead is a repo-owned `semio_framework_async::oneshot` rendezvous, which is safe
+on any thread. Two consequences for an operator:
+
+| variable | default | meaning |
+|---|---|---|
+| `SEMIO_DB_IO_DRIVER_THREADS` | `2` | Worker threads in that runtime, clamped to `1..=8`. It drives database sockets and timers only — CPU work stays on the `WorkerPool`. Raise it only if a profile shows the driver threads saturated. |
+
+The runtime is created on first use and is **never shut down**: a detached driver turn holds the
+storage backend's executor for its whole duration, so tearing the runtime down under it would destroy
+state the backend registry owns. Its threads are named `semio-db-io-driver-N`, so a crash report or a
+`sample` names them. The **directory** halves (`OS_HUB_DIRECTORY_BACKEND=postgres|neo4j`) are different:
+they are awaited directly on the server's own `#[tokio::main]` runtime and never touch this seam.
+
 ### Directory / identity store (`OS_HUB_DIRECTORY_BACKEND`)
 
 Chosen independently of the document store.
@@ -158,6 +190,13 @@ Chosen independently of the document store.
 | `OS_HUB_DIRECTORY_NEO4J_URI` | — | **Required** when the directory backend is `neo4j`. |
 | `OS_HUB_DIRECTORY_NEO4J_USER` | `neo4j` | Neo4j user. |
 | `OS_HUB_DIRECTORY_NEO4J_PASSWORD` | empty string | Neo4j password. |
+
+Launching both halves on PostgreSQL in development: `bun nx run os-hub:dev-postgres` (launch rows
+`🛠️dev🐘️os-hub🗄️postgres` / `📦️build-dev🐘️os-hub🗄️postgres`). It stages its own binary with the
+`postgres,neo4j` features into `dist/build-dev-postgres`, requires `OS_HUB_DATABASE_URL`, and points the
+directory at the same database unless `OS_HUB_DIRECTORY_BACKEND`/`OS_HUB_DIRECTORY_DATABASE_URL` say
+otherwise. The live lanes behind `bun nx run os-hub:directory-live-lanes` exercise both databases for
+real (they start their own containers and need a running Docker daemon).
 
 The SQLite directory path is **not** configurable: it is always `{OS_HUB_DATA}/directory.db`, and
 its parent is created at boot.
@@ -191,6 +230,16 @@ $OS_HUB_DATA/
 With `OS_HUB_STORAGE_BACKEND=sqlite`, `db/` is replaced by `db.sqlite3` (or `OS_HUB_DB_SQLITE`).
 With a `postgres`/`neo4j` backend the corresponding tree lives in that database instead and is
 **not** covered by the file-copy backup below.
+
+What a `postgres` document store moves into the database, measured on a live boot: `db_wal_segment`,
+`db_snapshot_generation`, `db_payload`, `db_catalog_root`, `db_index_run`, `db_lease`, and the whole
+artifact chunk CAS (`hub_artifact_cas_*`, `hub_artifact_checkpoint*`, `hub_artifact_retention`). What
+stays on the filesystem under `OS_HUB_DATA` **on every backend** is the four server-product stores the
+hub instance owns — `instance/{authority,projections,blobs,sessions}` — plus `trusted-catalog/` and
+`extension-modules/`. Those four have no database lane at all: they are opened from
+`StorageProfile::Embedded { data_dir }` and stamped with `format.json` (`🗄️stores/🦀️.rs`), which is why
+a `postgres` hub still needs a durable `OS_HUB_DATA` directory and why a data root and its database must
+be backed up and restored **together**.
 
 ## First user
 
@@ -426,22 +475,125 @@ address, so every client shares one bucket. Rate-limit at the proxy as well.
 
 ## Container image
 
-`🌎️hub/Dockerfile` and `🌎️hub/compose.yaml` exist and are **unbuilt** — they were authored against
-the real build commands on a machine with no Docker, and neither has ever been built or started.
-Read them before you trust them.
+`🌎️hub/Dockerfile` and `🌎️hub/compose.yaml` build the **production** topology: a binary-only runtime
+image with no repository, no Rust toolchain, no `bun` and no Nx in it. `docker build --check` passes
+with no warnings and `docker compose config` resolves (Docker 29.5, buildx 0.34), but the image has
+**not been built**: the builder stage compiles the hub's full release dependency graph. The binary
+it would produce has been run outside a container in exactly this posture — release profile, plain
+process, network bind, allowlist + proxy trust, credential sign-in, SIGTERM drain.
 
 ```bash
-docker build -f 🌎️hub/Dockerfile -t semio/os-hub:dev .          # context = repository root
-docker run --rm -p 127.0.0.1:8787:8787 -v semio-hub-data:/srv/semio-hub/data semio/os-hub:dev
+docker build -f 🌎️hub/Dockerfile -t semio/os-hub .              # context = repository root
+
+# seed the first user into the volume — no server needed, and there is no sign-up
+docker run --rm -it -v semio-hub-data:/srv/semio-hub/data semio/os-hub \
+  credential set --email ada@example.com --display-name Ada
+
+docker run --rm -p 127.0.0.1:8787:8787 -v semio-hub-data:/srv/semio-hub/data \
+  -e OS_HUB_ADMIN_SUBJECTS=credential.password.v1:ada@example.com \
+  -e OS_HUB_ALLOWED_ORIGINS=https://s.example.com \
+  -e OS_HUB_TRUSTED_FORWARDING=proxy \
+  --stop-timeout 30 semio/os-hub
+
 docker compose -f 🌎️hub/compose.yaml up --build
 docker compose -f 🌎️hub/compose.yaml --profile postgres up --build
 ```
 
-The image carries the repository, not just a binary, for the reason at the top of this page: the
-binary needs the launcher's inherited fd 3, so `bun nx run os-hub:dev` is the entrypoint. The
-builder stage stages both `dist/build` (release) and `dist/build-dev` (what the launcher execs)
-plus the admin SPA, so the runtime stage needs neither `cargo` nor a Rust toolchain. `OS_HUB_DATA`
-is the single writable volume and the whole backup unit.
+The entrypoint is `os-hub` itself under `tini`. Inside the container the bind is `0.0.0.0` — that is
+the container's own interface, and a loopback bind inside a container makes `-p` unreachable — so
+the production network-bind rules apply and the container **refuses to start** until you state the
+allowlist and the proxy. That refusal is the design, not a bug: publish the port on the host's
+loopback and put the TLS terminator in front of it.
+
+Two things the image needs that a source checkout does not: `OS_HUB_ADMIN_DIR`, because the admin
+SPA's compile-time default path points into the crate's source tree, which this image does not
+carry; and a `HEALTHCHECK` that sends `X-Forwarded-Proto: https`, because with
+`OS_HUB_TRUSTED_FORWARDING=proxy` the transport-security layer is outermost on the whole router and
+refuses `/healthz` and `/readyz` too. `OS_HUB_DATA` is the single writable volume and the whole
+backup unit.
+
+An earlier revision of this file carried the whole repository and ran `bun nx run os-hub:dev`,
+because production mode was then unreachable and development mode needs the launcher's inherited
+fd 3. That is still the right shape for a *development* container and the wrong one for a server.
+
+## For the people who will use this hub
+
+An operator's last job is telling users how to reach the hub they just started. There are two
+clients, and each needs one thing from you: the origin `s` is served from (which must also be in
+`OS_HUB_ALLOWED_ORIGINS`), and, for an AI client, a credential file.
+
+### A browser
+
+Give them the URL of the `s` bundle, not of the hub. `s` asks for the hub URL on first run and signs
+in against `POST /auth/sessions` with the email and password `os-hub credential set` minted. Serve
+the release bundle (`bun nx run @semio-tech/framework-os-dev:build-s-react-release`, output
+`🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/build-s-react-release`)
+from any static web server, put its origin in `OS_HUB_ALLOWED_ORIGINS`, and put both behind the same
+TLS-terminating proxy.
+
+### An AI client (Claude Desktop, Claude Code, or any MCP client)
+
+semio ships an MCP server, `semio-os-mcp`, that hands a user's own AI client semio's capabilities —
+open and create artifacts, prepare and invoke actions, snapshot, undo/redo, transactions,
+inference — either against a folder on their disk (`--folder`) or against a space on this hub
+(`--hub`). No model and no model provider is part of this repository; the client the user already
+pays for is the model.
+
+Build the binary once:
+
+```bash
+bun nx run @semio-tech/framework-os-mcp-rs:build-release
+# → 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp
+```
+
+**Claude Code** — `.mcp.json` in the project the user wants the server available from:
+
+```json
+{
+  "mcpServers": {
+    "semio": {
+      "type": "stdio",
+      "command": "/Users/you/src/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp",
+      "args": [
+        "stdio",
+        "--folder", "/Users/you/Documents/my-semio-space",
+        "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control"
+      ]
+    }
+  }
+}
+```
+
+**Claude Desktop** — `claude_desktop_config.json` (macOS
+`~/Library/Application Support/Claude/claude_desktop_config.json`, Windows
+`%APPDATA%\Claude\claude_desktop_config.json`). Desktop passes no `cwd`, so the absolute binary
+path is the only form that works — the emoji directory names are literal and must be copied exactly:
+
+```json
+{
+  "mcpServers": {
+    "semio": {
+      "command": "/Users/you/src/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp",
+      "args": [
+        "stdio",
+        "--folder", "/Users/you/Documents/my-semio-space",
+        "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control"
+      ]
+    }
+  }
+}
+```
+
+To point that same server at a space on **this** hub instead of a local folder, replace
+`"--folder", "<dir>"` with `"--hub", "https://hub.example.com", "--space", "<space id>",
+"--credential-file", "/Users/you/.config/semio/agent.json"`. The credential file is not something an
+operator hands out: a signed-in user creates it themselves in the *Agent delegations* panel of their
+`s` window, which `POST /auth/agent-delegations` answers with a downloadable file. It carries a
+scoped, expiring delegation of that user's own authority, so an agent can never exceed the person who
+delegated to it.
+
+Every tool, the approval model for destructive capabilities and configs for the other clients are in
+[the MCP README](../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/README.md).
 
 ## Distribution tarball
 
@@ -451,7 +603,9 @@ bun ./📜️script.ts publish os-mcp     # the end-user MCP binary, same shape
 ```
 
 Each slice runs its project's `publish` target, which depends on that project's release build and
-writes `<name>-<version>-<platform>-<arch>.tar.gz` with a sibling `.sha256`. The version is the
+writes `<name>-<version>-<platform>-<arch>.tar.gz` with a sibling `.sha256`. Both have been produced
+for real (2026-09-21, darwin-arm64): `os-hub-0.1.0-darwin-arm64.tar.gz` (23 182 368 bytes) and
+`semio-os-mcp-0.1.0-darwin-arm64.tar.gz` (11 682 122 bytes), each with its checksum file. The version is the
 workspace's `[workspace.package] version`. **Nothing is uploaded or pushed anywhere** — where the
 tarball goes next is a deployment decision this repository does not take, and `.github/workflows/`
 is still empty.
@@ -477,7 +631,7 @@ Group=semio
 Environment=OS_HUB_DATA=/srv/semio-hub/data
 Environment=OS_HUB_MODE=production
 Environment=OS_HUB_CREDENTIAL_SIGN_IN=true
-Environment=OS_HUB_ADMIN_SUBJECTS=semio.hub.credential/v1:ada@example.com
+Environment=OS_HUB_ADMIN_SUBJECTS=credential.password.v1:ada@example.com
 Environment=OS_HUB_SESSION_TTL_SECONDS=43200
 
 # Loopback, with the reverse proxy on this same host. To answer on a network interface
@@ -535,21 +689,24 @@ An operator should know these before putting anything real into a hub:
   proxy reports; it cannot detect a missing proxy.
 - **No external IdP.** `IdentityAssertionVerifier` has no implementation in this repository, so
   production identity means the hub's own password credentials and nothing else.
-- **Production mode has never been run.** The gate that used to make it unreachable is gone and the
-  new rules are unit-tested (`startup_auth_policy_fails_closed_without_owned_adapters`,
-  `a_production_hub_boots_on_its_own_credential_authority_without_any_external_idp`,
-  `a_network_bind_is_admitted_only_with_an_allowlist_and_a_declared_tls_terminating_proxy`,
-  `a_production_posture_hub_signs_a_browser_in_over_its_declared_proxy`), but no one has yet started
-  a real `OS_HUB_MODE=production` process and signed in against it. Expect to be the first.
+- **No real reverse proxy has ever fronted this hub.** Production mode itself has now been run on a
+  network bind (see "Run it"), but the TLS terminator was simulated by sending the headers Caddy or
+  nginx would send. The Caddy/nginx/systemd examples below remain correct-by-construction against
+  the router's real socket routes, not configs anyone has loaded.
 - **No metrics, no request tracing.** `/readyz` and stdout are the whole observability surface.
 - **No cross-version *migration*.** Each durable store now stamps its format version on creation and
   refuses a data root written by a different one with a named error, so an upgrade cannot corrupt
   history silently — but there is still nothing that converts an old root into a new one.
 - **No CI.** `.github/workflows/` is empty; `os-hub:publish` produces a local tarball and nothing
   uploads it anywhere.
-- **The container image is unbuilt.** `Dockerfile`/`compose.yaml` in this directory were authored
-  against the real build commands but have never been built or run — there is no Docker on the
-  machine this was written on.
-- **Never proven at release profile.** `os-hub:build` (the `--release` target) has compiled in CI
-  nowhere and has not been observed producing a running hub; every hub boot recorded so far used
-  `build-dev`.
+- **The container image is unbuilt.** `Dockerfile`/`compose.yaml` now pass `docker build --check`
+  (no warnings) and `docker compose config`, and they target the production topology, but no image
+  has been built: the builder stage compiles the hub's full release dependency graph, ~40 min on a
+  warm cache and considerably more in a cold container.
+- **A published trusted catalog does not survive a codegen-policy change.** A generation is stamped
+  with the jco version of the binary that materialized it, and a binary carrying a different policy
+  refuses the whole root at boot —
+  `ArtifactAuthority(Catalog("trusted browser actor identity differs from its package or renderer"))`,
+  observed 2026-09-21 with a jco-1.27 root and a jco-1.34 binary. There is no migration and no
+  partial republish: a policy bump costs a full materialize-and-publish. Reuse across restarts of
+  the *same* build is instant and is proven.

@@ -3,6 +3,457 @@ use super::*;
 use crate::dock::DockNode;
 
 #[test]
+fn the_topmost_retained_world_owns_the_press_and_release_outside_its_bounds() {
+    retained_world_sequence_probe("captured");
+}
+
+#[test]
+fn captured_world_movement_and_wheel_never_fan_out_to_an_overlapping_peer() {
+    retained_world_sequence_probe("motion-wheel");
+}
+
+#[test]
+fn cancelled_world_capture_cannot_manufacture_a_successful_release() {
+    retained_world_sequence_probe("cancel");
+}
+
+#[test]
+fn a_modal_layer_blocks_actual_world_pointer_ingress() {
+    retained_world_sequence_probe("modal");
+}
+
+#[test]
+fn a_scene_refresh_preserves_the_exact_captured_owner_until_outside_release() {
+    retained_world_sequence_probe("refresh");
+}
+
+#[test]
+fn a_replacement_scene_cannot_inherit_the_previous_keys_capture() {
+    retained_world_sequence_probe("replacement");
+}
+
+#[test]
+fn another_pointers_chrome_release_preserves_the_captured_scene_drag() {
+    retained_world_sequence_probe("foreign-release");
+}
+
+#[test]
+fn another_pointers_cancellation_preserves_the_captured_scene_drag() {
+    retained_world_sequence_probe("foreign-cancel");
+}
+
+#[test]
+fn replaced_scene_pointer_slots_release_the_fixed_capture_grant() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
+    let capacity = fixture["captureCapacity"].as_u64().unwrap();
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
+    shell.dock_tabs = ShellDock::default();
+    let scene = ui_wgpu::wgpu::World3dScene::base(serde_json::json!({ "position": [4.0, 4.0, 4.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
+    let window = "scene-capture-capacity";
+    let bounds = Rect::new(0.0, 0.0, 300.0, 200.0);
+    let mut first = shell.publish_surface_records(window, vec![world3d_pointer_record(1, "original", &scene)]).unwrap();
+    let input = paint_tree_pointer_document(&mut shell, window, &first, bounds);
+    let target = shell.scene_pointer_target_at(100.0, 100.0, &input, &Theme::default()).unwrap();
+    let admitted: Vec<_> = (0..capacity).map(|pointer| crate::interpreter::claim_scene_pointer_owner(target.clone(), ui_render::PointerId(pointer + 100))).collect();
+    let overflow = crate::interpreter::claim_scene_pointer_owner(target.clone(), ui_render::PointerId(999));
+    let mut successor = shell.publish_surface_records(window, vec![world3d_pointer_record(1, "successor", &scene)]).unwrap();
+    let input = paint_tree_pointer_document(&mut shell, window, &successor, bounds);
+    let target = shell.scene_pointer_target_at(100.0, 100.0, &input, &Theme::default()).unwrap();
+    let old_live: Vec<_> = (0..capacity).map(|pointer| crate::interpreter::captured_scene_pointer(ui_render::PointerId(pointer + 100)).is_some()).collect();
+    let fresh = crate::interpreter::claim_scene_pointer_owner(target, ui_render::PointerId(999));
+    for pointer in 0..capacity { crate::interpreter::release_scene_pointer(ui_render::PointerId(pointer + 100)); }
+    crate::interpreter::release_scene_pointer(ui_render::PointerId(999));
+    shell.sync_engine_surface_states();
+    for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
+        if shell.retired_world3d_states.is_empty() { break; }
+        shell.advance_world3d_retirement_step();
+    }
+    while !first.close_step() {}
+    while !successor.close_step() {}
+    assert!(admitted.iter().all(|value| *value), "every funded pointer owns a slot");
+    assert!(!overflow, "live captures cannot exceed the fixed grant");
+    assert!(old_live.iter().all(|value| !value), "a replaced key retires every old receiver");
+    assert!(fresh, "stale targets must release their fixed grant before a successor claims it");
+    println!("[DEBUG] exact retained replacement reclaimed its fixed pointer capture grant");
+}
+
+fn pointer_interaction(shell: ShellState, input: InputState<ActionDescriptor>) -> crate::AppInteractionState {
+    crate::AppInteractionState {
+        shell, input, theme: Theme::default(), theme_dark: false,
+        last_pointer_x: 0.0, last_pointer_y: 0.0, pointer_down: false, pointer_button: 0,
+        pointer_capture: PointerCapture::default(), modifiers: PointerModifiers::default(),
+        space_pressed: false, wheel_zoom_deadline_ms: 0.0,
+        caret_blink_at_ms: 0.0, caret_blink_visible: true, text_streams: std::array::from_fn(|_| None),
+        text_fault: None, frame_fault: None, text_cancel_pending: false,
+        #[cfg(not(target_arch = "wasm32"))]
+        last_sync_pump_ms: 0.0,
+    }
+}
+
+pub(super) fn retained_world_sequence_probe(scenario: &str) {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
+    shell.dock_tabs = ShellDock::default();
+    let mut documents = Vec::new();
+    let mut rows = Vec::new();
+    let scene = ui_wgpu::wgpu::World3dScene::base(serde_json::json!({ "position": [4.0, 4.0, 4.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
+    for row in fixture["surfaces"].as_array().unwrap() {
+        let window = row["windowId"].as_str().unwrap();
+        let surface = row["surfaceId"].as_str().unwrap();
+        let bounds = row["bounds"].as_array().unwrap();
+        let bounds = Rect::new(bounds[0].as_f64().unwrap() as f32, bounds[1].as_f64().unwrap() as f32, bounds[2].as_f64().unwrap() as f32, bounds[3].as_f64().unwrap() as f32);
+        let document = shell.publish_surface_records(window, vec![world3d_pointer_record(1, "world", &scene)]).unwrap();
+        let _ = paint_tree_pointer_document(&mut shell, window, &document, bounds);
+        let state = shell.world3d_states.get_mut(surface).expect("painted world retains its actual interaction owner");
+        let before = infinite_world::world::enqueue_world3d_event(state, WorldInteractionIntent::pointer_leave(-1.0, -1.0)).unwrap();
+        documents.push(document);
+        rows.push((window.to_string(), surface.to_string(), bounds, before));
+    }
+    let mut input = InputState::<ActionDescriptor>::default();
+    shell.retained_hit_windows_staging.clear();
+    shell.retained_scene_hits_staging.clear();
+    for (window, _, bounds, _) in &rows {
+        shell.register_retained_body_hits(window, *bounds, &mut input);
+    }
+    shell.publish_retained_hit_registry(&mut input);
+    shell.dock_window_plan = rows.iter().map(|(window, _, bounds, _)| (window.clone(), *bounds)).collect();
+    let mut interaction = pointer_interaction(shell, input);
+    let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == scenario).unwrap();
+    let point = |name: &str| (fixture[name][0].as_f64().unwrap() as f32, fixture[name][1].as_f64().unwrap() as f32);
+    for step in case["steps"].as_array().unwrap() {
+        match step.as_str().unwrap() {
+            "press" | "release" | "secondaryPress" | "secondaryRelease" => {
+                let down = matches!(step.as_str().unwrap(), "press" | "secondaryPress");
+                let (x, y) = point(if down { "press" } else { "release" });
+                let button = if step.as_str().unwrap().starts_with("secondary") { 2 } else { 0 };
+                semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(77), x, y, down, button, PointerModifiers::default()));
+            }
+            "move" => {
+                let (x, y) = point("release");
+                semio_framework_async::block_on(interaction.handle_pointer_move(ui_render::PointerId(77), x, y, true, 0, PointerModifiers::default()));
+            }
+            "wheel" => {
+                let (x, y) = point("press");
+                let target = interaction.shell.scene_pointer_target_at(x, y, &interaction.input, &interaction.theme).unwrap();
+                interaction.apply_scene_wheel(&target, x, y, 1.0, &PointerModifiers::default()).unwrap();
+            }
+            "chrome" => {
+                let hits = interaction.input.hits().to_vec();
+                for hit in hits { interaction.input.register_hit(hit); }
+                interaction.input.register_hit(HitTarget { rect: rows.last().unwrap().2, event: None, control_id: Some("shell.fixture.chrome".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+                interaction.input.publish_hits();
+            }
+            "modal" => interaction.shell.context_menu = Some(ContextMenuState::default()),
+            "cancel" => interaction.handle_pointer_cancel(ui_render::PointerId(77)),
+            "foreignPress" | "foreignRelease" => {
+                let (x, y) = point("release");
+                semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(78), x, y, step == "foreignPress", 0, PointerModifiers::default()));
+            }
+            "foreignCancel" => interaction.handle_pointer_cancel(ui_render::PointerId(78)),
+            "refresh" | "replace" => {
+                let (window, _, bounds, _) = rows.last().unwrap();
+                let key = if step == "replace" { "replacement-world" } else { "world" };
+                let refreshed = ui_wgpu::wgpu::World3dScene::base(serde_json::json!({ "position": [5.0, 5.0, 5.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
+                let document = interaction.shell.publish_surface_records(window, vec![world3d_pointer_record(1, key, &refreshed)]).unwrap();
+                let _ = paint_tree_pointer_document(&mut interaction.shell, window, &document, *bounds);
+                interaction.shell.retained_hit_windows_staging.clear();
+                interaction.shell.retained_scene_hits_staging.clear();
+                for (window, _, bounds, _) in &rows {
+                    interaction.shell.register_retained_body_hits(window, *bounds, &mut interaction.input);
+                }
+                interaction.shell.publish_retained_hit_registry(&mut interaction.input);
+                documents.push(document);
+            }
+            _ => unreachable!(),
+        }
+    }
+    let menu_open = interaction.shell.context_menu.is_some();
+    let active_window = interaction.shell.active_window_id.clone();
+    let mut observed = Vec::new();
+    for (_, surface, _, before) in &rows {
+        let state = interaction.shell.world3d_states.get_mut(surface).unwrap();
+        let after = infinite_world::world::enqueue_world3d_event(state, WorldInteractionIntent::pointer_leave(-1.0, -1.0)).unwrap();
+        observed.push((surface.clone(), after - before - 1));
+    }
+    let fault = interaction.input.take_action_step().err();
+    interaction.shell.dock_window_plan.clear();
+    interaction.shell.sync_engine_surface_states();
+    for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
+        if interaction.shell.retired_world3d_states.is_empty() { break; }
+        interaction.shell.advance_world3d_retirement_step();
+    }
+    for mut document in documents { while !document.close_step() {} }
+    assert!(fault.is_none(), "pointer admission fault: {fault:?}");
+    for (surface, count) in observed {
+        let expected = if Some(surface.as_str()) == fixture["expectedOwner"].as_str() { case["events"].as_array().unwrap().len() as u64 } else { 0 };
+        assert_eq!(count, expected, "{surface}: exact retained owner receives the actual press and captured release");
+    }
+    assert_eq!(menu_open, case["menuOpen"].as_bool().unwrap(), "{scenario} context menu state");
+    let expected_window = if case["steps"].as_array().unwrap().iter().any(|step| step == "modal") { None } else { fixture["expectedOwner"].as_str() };
+    assert_eq!(active_window.as_deref(), expected_window, "{scenario} activates the exact receiving window");
+    assert!(crate::interpreter::captured_scene_pointer(ui_render::PointerId(77)).is_none(), "{scenario} released its captured owner");
+    println!("[DEBUG] real retained World sequence {scenario} preserved exact owner, edge count, capture close, and menu state");
+}
+
+
+#[test]
+fn retained_pane_actions_address_the_concrete_window_before_guest_admission() {
+    let fixture = pane_owner_fixture();
+    for case in fixture["cases"].as_array().unwrap() {
+        let owner = case["window"].as_str().unwrap();
+        let surface = case["surface"].as_str().unwrap();
+        let mut shell = super::panel_anchor_model_tests::host_test_shell();
+        let controller_id = shell.session.as_ref().unwrap().app.controller_id.clone();
+        shell.plugins.clear();
+        let result = semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor {
+            controller_id,
+            action: semio_framework::SET_ACTIVE_UTILITY_ACTION_ID.into(),
+            args: crate::action_args_json!({ "windowId": surface, "utilityId": "owner-brush" }),
+        }));
+        assert_eq!(result.unwrap_err(), "action program missing", "fixture stops at guest admission");
+        assert_eq!(shell.active_utility_for_window(owner), Some("owner-brush"), "{} canonical host utility scope", case["kind"]);
+        assert_eq!(shell.active_utility_by_window.len(), 1, "{} one concrete owner", case["kind"]);
+        if surface != owner {
+            assert!(!shell.active_utility_by_window.contains_key(surface), "{} pane identity never becomes an application window", case["kind"]);
+        }
+    }
+    println!("[DEBUG] pane actions reached the concrete host window before guest admission");
+}
+
+
+fn pane_owner_select_records() -> Vec<ui_contract::UiNodeRecord> {
+    pane_owner_select_records_with("pane-owner-select", "system")
+}
+
+fn pane_owner_select_records_with(key: &str, value: &str) -> Vec<ui_contract::UiNodeRecord> {
+    serde_json::from_value(serde_json::json!([{
+        "id": 1, "key": key,
+        "component": { "type": "select", "value": value, "items": [{ "value": "system", "label": "System" }, { "value": "dark", "label": "Dark" }] },
+        "layout": { "kind": "leaf", "width": "fill", "height": "hug" },
+        "style": {}, "activity": "idle", "accessibility": { "label": "Pane selection" },
+        "bindings": [{ "trigger": "change", "action": { "scope": "framework", "name": "setAppearance", "version": 1 } }]
+    }])).unwrap()
+}
+
+fn pane_owner_input_records_with(key: &str) -> Vec<ui_contract::UiNodeRecord> {
+    serde_json::from_value(serde_json::json!([{
+        "id": 1, "key": key,
+        "component": { "type": "input", "kind": "text", "value": "", "commit": "enter" },
+        "layout": { "kind": "leaf", "width": "fill", "height": "hug" },
+        "style": {}, "activity": "idle", "accessibility": { "label": "Replacement input" },
+        "bindings": [{ "trigger": "commit", "action": { "scope": "framework", "name": "setReplacementInput", "version": 1 } }]
+    }])).unwrap()
+}
+
+fn retained_focus_panel_shell(surface: &str) -> ShellState {
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    shell.dock_tabs = ShellDock::default();
+    shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
+    shell.dock_tabs.tabs_mut(PanelAnchor::BottomRight).push(DockTabNode::leaf(surface, "Preferences", "settings", 0));
+    *shell.anchor_state_mut(PanelAnchor::BottomRight) = PanelAnchorState { visible: true, size: 300.0, path: vec![surface.into()] };
+    shell
+}
+
+#[test]
+fn retained_panel_focus_routes_keyboard_without_activating_an_application_window() {
+    let fixture = pane_owner_fixture();
+    let surface = fixture["panel"]["surface"].as_str().unwrap();
+    let previous = fixture["previousWindow"].as_str().unwrap();
+    let mut shell = retained_focus_panel_shell(surface);
+    shell.active_window_id = Some(previous.into());
+    let mut document = shell.publish_surface_records(surface, pane_owner_select_records()).unwrap();
+    let mut input = paint_tree_pointer_document(&mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
+    let target = ui_render::AccessibilityTarget { window_id: surface.into(), window_generation: 1, node_id: 1, node_key: "pane-owner-select".into() };
+    let focused = semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap();
+    let active = shell.active_window_id.clone();
+    let open_focus = shell.retained_keyboard_focus().map(|(surface, _)| surface);
+    shell.anchor_state_mut(PanelAnchor::BottomRight).visible = false;
+    let hidden_focus = shell.retained_keyboard_focus();
+    semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    let hidden_actions = crate::collect_fixture_actions(&mut input);
+    shell.anchor_state_mut(PanelAnchor::BottomRight).visible = true;
+    assert!(shell.retained_keyboard_focus().is_some(), "the same visible retained owner recovers without a synthetic focus event");
+    crate::interpreter::begin_accessibility_visible_documents();
+    crate::interpreter::publish_accessibility_visible_documents();
+    let closed_focus = shell.retained_keyboard_focus();
+    semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    let closed_actions = crate::collect_fixture_actions(&mut input);
+    while !document.close_step() {}
+    assert!(focused);
+    assert_eq!(active.as_deref(), Some(previous));
+    assert_eq!(open_focus.as_deref(), Some(surface));
+    assert!(hidden_focus.is_none(), "a hidden panel cannot receive keyboard input");
+    assert!(hidden_actions.is_empty(), "a hidden panel dispatches no retained keyboard action");
+    assert!(closed_focus.is_none(), "a closed surface cannot receive keyboard input");
+    assert!(closed_actions.is_empty(), "a closed surface dispatches no retained keyboard action");
+    println!("[DEBUG] open panel owned keyboard without app activation and relinquished it when hidden or closed");
+}
+
+#[test]
+fn same_surface_keyed_successor_retains_keyboard_focus_without_a_synthetic_focus_event() {
+    let surface = "focus-lifecycle-keyed-successor";
+    let mut shell = retained_focus_panel_shell(surface);
+    let mut initial = shell.publish_surface_records(surface, pane_owner_select_records_with("stable-select", "system")).expect("initial keyed document publishes");
+    let mut input = paint_tree_pointer_document(&mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
+    let target = ui_render::AccessibilityTarget { window_id: surface.into(), window_generation: 1, node_id: 1, node_key: "stable-select".into() };
+    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
+    let before = shell.retained_keyboard_focus().expect("the initial keyed node owns keyboard focus");
+
+    let mut successor = shell.publish_surface_records(surface, pane_owner_select_records_with("stable-select", "dark")).expect("same-surface successor publishes");
+    input = paint_tree_pointer_document(&mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
+    let after = shell.retained_keyboard_focus().expect("the keyed successor retains keyboard focus");
+    assert_eq!(after, before, "key reconciliation preserves the exact focused node identity");
+    semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "the retained Select opens before commit");
+    semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    assert_eq!(crate::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setAppearance"]);
+    while !initial.close_step() {}
+    while !successor.close_step() {}
+}
+
+#[test]
+fn successor_that_removes_the_focused_key_cannot_receive_retained_keyboard_input() {
+    let surface = "focus-lifecycle-removed-key";
+    let mut shell = retained_focus_panel_shell(surface);
+    let mut initial = shell.publish_surface_records(surface, pane_owner_select_records_with("retired-select", "system")).expect("initial removable document publishes");
+    let mut input = paint_tree_pointer_document(&mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
+    let target = ui_render::AccessibilityTarget { window_id: surface.into(), window_generation: 1, node_id: 1, node_key: "retired-select".into() };
+    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
+    assert!(shell.retained_keyboard_focus().is_some());
+
+    let mut successor = shell.publish_surface_records(surface, pane_owner_select_records_with("replacement-select", "dark")).expect("replacement document publishes");
+    input = paint_tree_pointer_document(&mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
+    assert!(shell.chrome_build.content_has_focus(surface), "the shell receives no invented blur command");
+    assert!(shell.retained_keyboard_focus().is_none(), "the removed focused node generation cannot route into its replacement");
+    semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "the replacement receives no keyboard action without its own focus event");
+    while !initial.close_step() {}
+    while !successor.close_step() {}
+}
+
+#[test]
+fn same_key_changed_control_kind_cannot_inherit_retained_keyboard_focus() {
+    let surface = "focus-lifecycle-changed-kind";
+    let mut shell = retained_focus_panel_shell(surface);
+    let mut initial = shell.publish_surface_records(surface, pane_owner_select_records_with("polymorphic-control", "system")).expect("initial Select document publishes");
+    let mut input = paint_tree_pointer_document(&mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
+    let target = ui_render::AccessibilityTarget { window_id: surface.into(), window_generation: 1, node_id: 1, node_key: "polymorphic-control".into() };
+    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
+    assert!(shell.retained_keyboard_focus().is_some());
+
+    let mut successor = shell.publish_surface_records(surface, pane_owner_input_records_with("polymorphic-control")).expect("same-key Input successor publishes");
+    input = paint_tree_pointer_document(&mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
+    assert!(shell.chrome_build.content_has_focus(surface), "document reconciliation emits no synthetic blur");
+    assert!(shell.retained_keyboard_focus().is_none(), "a same-key replacement control kind cannot inherit its predecessor's focus");
+    semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Enter, &PointerModifiers::default(), &mut input)).unwrap();
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "the replacement Input receives no Enter commit without its own focus event");
+    while !initial.close_step() {}
+    while !successor.close_step() {}
+}
+
+
+#[test]
+fn retained_pane_focus_follows_the_last_focus_event_and_ignores_an_old_surface_blur() {
+    let fixture = pane_owner_fixture();
+    let cases = fixture["cases"].as_array().unwrap();
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let mut documents = Vec::new();
+    for row in cases {
+        let surface = row["surface"].as_str().unwrap();
+        let document = shell.publish_surface_records(surface, pane_owner_select_records()).unwrap();
+        let _ = paint_tree_pointer_document(&mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
+        documents.push(document);
+    }
+    crate::interpreter::begin_accessibility_visible_documents();
+    for row in cases {
+        crate::interpreter::note_accessibility_visible_document(row["surface"].as_str().unwrap());
+    }
+    crate::interpreter::publish_accessibility_visible_documents();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut observations = Vec::new();
+    let mut previous: Option<String> = None;
+    for kind in fixture["focusSequence"].as_array().unwrap() {
+        let row = cases.iter().find(|row| &row["kind"] == kind).unwrap();
+        let surface = row["surface"].as_str().unwrap();
+        let target = ui_render::AccessibilityTarget { window_id: surface.into(), window_generation: 1, node_id: 1, node_key: "pane-owner-select".into() };
+        let accepted = semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap();
+        observations.push((accepted, shell.active_window_id.clone(), shell.retained_keyboard_focus().map(|(surface, _)| surface), previous.as_ref().is_some_and(|old| shell.chrome_build.content_has_focus(old))));
+        previous = Some(surface.into());
+    }
+    let blurred = cases.iter().find(|row| row["kind"] == fixture["lateBlur"]).unwrap()["surface"].as_str().unwrap();
+    let target = ui_render::AccessibilityTarget { window_id: blurred.into(), window_generation: 1, node_id: 1, node_key: "pane-owner-select".into() };
+    semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Blur, &mut input)).unwrap();
+    let final_focus = shell.retained_keyboard_focus().map(|(surface, _)| surface);
+    for mut document in documents {
+        while !document.close_step() {}
+    }
+    for (kind, (accepted, owner, focus, old_has_focus)) in fixture["focusSequence"].as_array().unwrap().iter().zip(observations) {
+        let row = cases.iter().find(|row| &row["kind"] == kind).unwrap();
+        assert!(accepted);
+        assert_eq!(owner.as_deref(), row["window"].as_str(), "{kind} concrete owner");
+        assert_eq!(focus.as_deref(), row["surface"].as_str(), "{kind} latest focused surface");
+        assert!(!old_has_focus, "{kind} clears its previously focused sibling");
+    }
+    assert_eq!(final_focus, previous, "an old surface blur cannot clear the newest focused surface");
+    println!("[DEBUG] retained focus followed the newest pane event and ignored late sibling blur");
+}
+
+fn pane_owner_fixture() -> Value {
+    serde_json::from_str(include_str!("../../🧫️fixtures/🪪️window-surface-owner/🔣️.json")).expect("window surface ownership fixture")
+}
+
+#[test]
+fn retained_pane_pointer_activation_preserves_the_concrete_window_owner() {
+    let fixture = pane_owner_fixture();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        let owner = case["window"].as_str().unwrap();
+        let surface = case["surface"].as_str().unwrap();
+        let previous = fixture["previousWindow"].as_str().unwrap();
+        shell.dock.root = DockNode::Row(vec![
+            (DockNode::Stack { windows: vec![DockStackTab::new(previous)], active: previous.into() }, 1.0),
+            (DockNode::Stack { windows: vec![DockStackTab::new(owner)], active: owner.into() }, 1.0),
+        ]);
+        shell.dock.sync_active_window(previous);
+        shell.active_window_id = Some(previous.into());
+        let mut input = InputState::<ActionDescriptor>::default();
+        semio_framework_async::block_on(shell.route_retained_pointer_press(surface, Rect::new(0.0, 0.0, 320.0, 120.0), 15.0, 15.0, true, 0, HitKind::Input, None, ui_render::PointerId(1), &mut input)).unwrap();
+        assert_eq!(shell.active_window_id.as_deref(), Some(owner), "{} shell owner", case["kind"]);
+        assert_eq!(shell.dock.active_window_id.as_deref(), Some(owner), "{} dock owner", case["kind"]);
+        assert_eq!(shell.dock.active_stack, Some(vec![1]), "{} active stack", case["kind"]);
+    }
+    println!("[DEBUG] all retained pane pointer presses activated their concrete window and dock stack");
+}
+
+#[test]
+fn retained_pane_accessibility_and_keyboard_focus_keep_surface_and_window_distinct() {
+    let fixture = pane_owner_fixture();
+    for case in fixture["cases"].as_array().unwrap() {
+        let owner = case["window"].as_str().unwrap();
+        let surface = case["surface"].as_str().unwrap();
+        let records = pane_owner_select_records();
+        let mut shell = super::panel_anchor_model_tests::host_test_shell();
+        let mut document = shell.publish_surface_records(surface, records).expect("pane document publishes");
+        let mut input = paint_tree_pointer_document(&mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
+        shell.active_window_id = Some(fixture["previousWindow"].as_str().unwrap().into());
+        let target = ui_render::AccessibilityTarget { window_id: surface.into(), window_generation: 1, node_id: 1, node_key: "pane-owner-select".into() };
+        let focused = semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap();
+        let active = shell.active_window_id.clone();
+        let keyboard_surface = shell.retained_keyboard_focus().map(|(surface, _)| surface);
+        let select_owns_keyboard = shell.retained_select_owns_keyboard();
+        while !document.close_step() {}
+        assert!(focused, "{} accessibility focus dispatch", case["kind"]);
+        assert_eq!(active.as_deref(), Some(owner), "{} active window", case["kind"]);
+        assert_eq!(keyboard_surface.as_deref(), Some(surface), "{} keyboard surface", case["kind"]);
+        assert!(select_owns_keyboard, "{} Select keyboard ownership", case["kind"]);
+    }
+    println!("[DEBUG] pane accessibility focus preserved concrete window activation and exact keyboard surface");
+}
+
+
+#[test]
 fn retained_key_mapper_separates_select_typeahead_and_space_from_input_text() {
     let modifiers = PointerModifiers::default();
     assert!(matches!(ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Char("d".into()), &modifiers, true), Some(ui_wgpu::wgpu::UiEvent::KeyDown { key, .. }) if key == "d"));
@@ -148,7 +599,7 @@ fn paint_tree_pointer_document(shell: &mut ShellState, surface: &str, document: 
     let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
-    let mut world3d_states = AdmittedSurfaceMap::default();
+    let mut world3d_states = std::mem::take(&mut shell.world3d_states);
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut cursor = UiDocumentFrameCursor::default();
     let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
@@ -159,6 +610,7 @@ fn paint_tree_pointer_document(shell: &mut ShellState, surface: &str, document: 
         done
     });
     assert!(complete, "the tree pointer document painted within its opportunity ceiling");
+    shell.world3d_states = world3d_states;
     crate::interpreter::begin_accessibility_visible_documents();
     shell.register_retained_body_hits(surface, body, &mut input);
     shell.publish_retained_hit_registry(&mut input);
@@ -535,26 +987,27 @@ fn ui_event_from_key_action_has_no_mapping_for_space() {
 }
 
 #[test]
-fn content_focus_tracker_defaults_unfocused_and_tracks_focus_changed_commands() {
+fn content_focus_tracker_defaults_unfocused_and_clears_a_typed_focus_record() {
     let mut chrome = ShellChromeBuildState::default();
     let window_id = "w2-input-wiring-test-window-a";
     assert!(!chrome.content_has_focus(window_id));
     let mut arena: ui_wgpu::wgpu::Arena<()> = ui_wgpu::wgpu::Arena::new();
     let node_id = arena.insert(());
-    chrome.note_content_focus_commands(&[ui_wgpu::wgpu::UiCommand::FocusChanged { window_id: window_id.to_string(), node: Some(node_id) }]);
+    chrome.content_focus.insert(window_id.into(), Some(RetainedContentFocus { node: node_id, key: ui_wgpu::wgpu::NodeKey::Explicit("typed-focus".into()), kind: RetainedNodeFocusKind::Input }));
+    chrome.focused_retained_surface = Some(window_id.into());
     assert!(chrome.content_has_focus(window_id));
     chrome.note_content_focus_commands(&[ui_wgpu::wgpu::UiCommand::FocusChanged { window_id: window_id.to_string(), node: None }]);
     assert!(!chrome.content_has_focus(window_id));
 }
 
 #[test]
-fn content_focus_tracker_ignores_commands_for_other_windows() {
+fn content_focus_tracker_keeps_a_typed_record_scoped_to_its_window() {
     let mut chrome = ShellChromeBuildState::default();
     let window_id = "w2-input-wiring-test-window-b";
     let other_window_id = "w2-input-wiring-test-window-c";
     let mut arena: ui_wgpu::wgpu::Arena<()> = ui_wgpu::wgpu::Arena::new();
     let node_id = arena.insert(());
-    chrome.note_content_focus_commands(&[ui_wgpu::wgpu::UiCommand::FocusChanged { window_id: other_window_id.to_string(), node: Some(node_id) }]);
+    chrome.content_focus.insert(other_window_id.into(), Some(RetainedContentFocus { node: node_id, key: ui_wgpu::wgpu::NodeKey::Explicit("other-focus".into()), kind: RetainedNodeFocusKind::Input }));
     assert!(!chrome.content_has_focus(window_id));
     assert!(chrome.content_has_focus(other_window_id));
 }
@@ -593,6 +1046,50 @@ fn finish_dock_drag_persists_layout_and_clears_drag_state_on_successful_drop() {
     assert!(shell.dock_drag.is_none(), "the transient drag state is always taken");
 }
 
+/// 🛰️ A browser-normalized press and move preserve Chrome capture and promote the exact dock-tab
+/// grip after the five-pixel threshold, before any release mutates the committed dock.
+#[test]
+fn normalized_dock_tab_pointer_sequence_promotes_the_drag_before_release() {
+    let stack = |window_id: &str| DockNode::Stack {
+        windows: vec![DockStackTab::instance(window_id, "main", WindowStackCorner::TopLeft)],
+        active: window_id.to_string(),
+    };
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    shell.dock.root = DockNode::Row(vec![(stack("top"), 0.5), (stack("perspective"), 0.5)]);
+    shell.dock.mobile = false;
+    let rect = Rect::new(80.0, 35.0, 18.0, 23.0);
+    let mut input = InputState::<ActionDescriptor>::default();
+    input.register_hit(HitTarget {
+        rect,
+        event: None,
+        control_id: Some("dock.tab.0.top.drag".into()),
+        kind: HitKind::Button,
+        drag_axis: None,
+        drag_data: None,
+    });
+    input.publish_hits();
+    let mut interaction = pointer_interaction(shell, input);
+    let pointer = ui_render::PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: Some(0.5), tilt: None };
+    let start = (rect.x + rect.w * 0.5, rect.y + rect.h * 0.5);
+    semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(
+        &mut interaction,
+        ui_render::DispatchEvent::PointerDown { pointer, x: start.0, y: start.1, button: ui_render::PointerButton::Primary, modifiers: ui_render::EventModifiers::default() },
+    ));
+    assert!(interaction.shell.pending_dock_drag.as_ref().is_some_and(|(payload, origin)| payload.kind == DockDragKind::Tab && payload.window_id == "top" && *origin == start));
+    assert_eq!(interaction.pointer_capture.holder(pointer.id), Some(PointerHitOwner::Chrome));
+
+    semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(
+        &mut interaction,
+        ui_render::DispatchEvent::PointerMove { pointer, x: start.0 + 6.0, y: start.1, modifiers: ui_render::EventModifiers::default() },
+    ));
+    assert!(interaction.shell.pending_dock_drag.is_none());
+    assert!(interaction.shell.dock_drag.as_ref().is_some_and(|drag| drag.payload.kind == DockDragKind::Tab && drag.payload.window_id == "top"));
+    assert_eq!(interaction.shell.dock.collect_window_ids(), vec!["top".to_string(), "perspective".to_string()], "promotion derives a ghost without mutating the committed dock");
+
+    interaction.handle_pointer_cancel(pointer.id);
+    assert!(interaction.shell.pending_dock_drag.is_none() && interaction.shell.dock_drag.is_none());
+}
+
 #[test]
 fn context_menu_point_resolves_the_exact_concrete_window_instance() {
     let mut shell = ShellState::new(Vec::new(), String::new());
@@ -619,17 +1116,18 @@ fn a_retained_body_press_activates_its_own_window_so_the_keyboard_follows_it() {
     let opened_with = "procedural-main";
     let pressed = "generation3d-generations";
     shell.active_window_id = Some(opened_with.into());
-    let mut arena: ui_wgpu::wgpu::Arena<()> = ui_wgpu::wgpu::Arena::new();
-    let node_id = arena.insert(());
-    shell.chrome_build.note_content_focus_commands(&[ui_wgpu::wgpu::UiCommand::FocusChanged { window_id: pressed.to_string(), node: Some(node_id) }]);
+    let mut document = shell.publish_surface_records(pressed, pane_owner_select_records_with("body-focus", "system")).expect("pressed window document publishes");
+    let body = Rect::new(3.0, 54.0, 315.0, 814.0);
+    let mut input = paint_tree_pointer_document(&mut shell, pressed, &document, body);
+    let target = ui_render::AccessibilityTarget { window_id: pressed.into(), window_generation: 1, node_id: 1, node_key: "body-focus".into() };
+    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
     assert!(!shell.chrome_build.content_has_focus(opened_with), "sanity: the window the keyboard used to follow never had content focus");
 
-    let mut input = InputState::<ActionDescriptor>::default();
-    let body = Rect::new(3.0, 54.0, 315.0, 814.0);
     semio_framework_async::block_on(shell.route_retained_pointer_press(pressed, body, 255.0, 90.0, true, 0, HitKind::Input, None, ui_render::PointerId(1), &mut input)).expect("a retained body press routes");
 
     assert_eq!(shell.active_window_id.as_deref(), Some(pressed), "the pressed window is the active one");
     assert!(shell.chrome_build.content_has_focus(shell.active_window_id.as_deref().expect("an active window")), "…so the keyboard's own predicate now answers for the window whose content holds focus");
+    while !document.close_step() {}
     println!("[DEBUG] retained body press moved the active window {opened_with} -> {pressed}");
 }
 
@@ -766,7 +1264,7 @@ fn cancelled_display_transfer_retires_capture_without_creating_a_window() {
     semio_framework_async::block_on(fixture.shell.handle_pointer_button(x, y, true, 0, &mut fixture.input, &fixture.theme)).expect("Display transfer press");
     fixture.shell.handle_pointer_move(800.0, 500.0, true, &mut fixture.input, &fixture.theme);
     fixture.shell.handle_pointer_cancel(&mut fixture.input);
-    assert!(crate::interpreter::retained_pointer_capture_window().is_none());
+    assert!(crate::interpreter::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     assert!(fixture.shell.dock_drag.is_none() && fixture.shell.pending_dock_drag.is_none());
     assert!(!fixture.input.pointer_down && !fixture.input.drag.active);
     semio_framework_async::block_on(fixture.shell.handle_pointer_button(800.0, 500.0, false, 0, &mut fixture.input, &fixture.theme)).expect("late release stays inert");
@@ -850,7 +1348,7 @@ fn actual_display_release_refuses_item_and_byte_credit_before_dock_mutation() {
     assert!(item_error.contains("ItemCredits"));
     assert_eq!(item.shell.dock.root, item_root);
     assert!(item.shell.window_topology_publications.is_empty());
-    assert!(crate::interpreter::retained_pointer_capture_window().is_none(), "a refused physical release still retires capture");
+    assert!(crate::interpreter::retained_pointer_capture_window(ui_render::PointerId(1)).is_none(), "a refused physical release still retires capture");
     assert!(item.shell.pending_dock_drag.is_none() && item.shell.dock_drag.is_none());
     assert_eq!(refusals[0]["dockMutation"], "none");
     close_display_transfer_host_fixture(item);
@@ -876,7 +1374,7 @@ fn actual_display_release_refuses_item_and_byte_credit_before_dock_mutation() {
     assert!(byte_error.contains("ByteCredits"));
     assert_eq!(bytes.shell.dock.root, byte_root);
     assert!(bytes.shell.window_topology_publications.is_empty());
-    assert!(crate::interpreter::retained_pointer_capture_window().is_none());
+    assert!(crate::interpreter::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     assert!(bytes.shell.pending_dock_drag.is_none() && bytes.shell.dock_drag.is_none());
     assert_eq!(refusals[1]["dockMutation"], "none");
     close_display_transfer_host_fixture(bytes);
@@ -946,7 +1444,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     assert_eq!(shell.window_topology_publications.len(), 1);
     assert!(shell.window_topology_publications[0].journal_token.is_some());
     assert!(shell.deferred_actions.is_empty(), "the guest journal cannot run before the new window body is published");
-    assert!(crate::interpreter::retained_pointer_capture_window().is_none(), "the hitless release retires retained capture");
+    assert!(crate::interpreter::retained_pointer_capture_window(ui_render::PointerId(1)).is_none(), "the hitless release retires retained capture");
     assert!(shell.pending_dock_drag.is_none() && shell.dock_drag.is_none());
     semio_framework_async::block_on(shell.handle_pointer_button(800.0, 500.0, false, 0, &mut input, &theme)).expect("a duplicate release is inert");
     assert_eq!(shell.dock.window_instances().len(), 1, "one gesture cannot create a second window");
@@ -955,7 +1453,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     shell.handle_pointer_move(1000.0, 700.0, true, &mut input, &theme);
     semio_framework_async::block_on(shell.handle_pointer_button(1000.0, 700.0, false, 0, &mut input, &theme)).expect("an outside release cancels cleanly");
     assert_eq!(shell.dock.window_instances().len(), 1, "an outside drop does not create a window");
-    assert!(crate::interpreter::retained_pointer_capture_window().is_none());
+    assert!(crate::interpreter::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     assert!(shell.pending_dock_drag.is_none() && shell.dock_drag.is_none());
 
     let scene = ui_wgpu::wgpu::World3dScene::base(
@@ -1001,8 +1499,15 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     assert!(painted, "the canonical Shell window walk consumes the created instance's initial body");
     assert!(shell.world3d_states.contains_key("main-2"), "the published body registers a live World3d owner before any example switch");
     assert!(body_input.staged_hits().iter().any(|hit| hit.kind == HitKind::World3d), "the canonical window walk stages the new instance's physical World3d hit target");
-    body_input.publish_hits();
+    shell.publish_retained_hit_registry(&mut body_input);
     assert!(body_input.hits().iter().any(|hit| hit.kind == HitKind::World3d), "the new instance publishes a physical World3d hit target");
+    let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🛟️panel-window-reservation/🔣️.json")).unwrap();
+    let world_hit = body_input.hits().iter().find(|hit| hit.kind == HitKind::World3d).unwrap();
+    assert!(shell.retained_hit_window(world_hit).is_some(), "the actual retained publication registers this scene's body ownership");
+    let point = (world_hit.rect.x + world_hit.rect.w * 0.5, world_hit.rect.y + world_hit.rect.h * 0.5);
+    let owner = shell.pointer_owner_at(point.0, point.1, &body_input, &theme);
+    assert_eq!(if owner == PointerHitOwner::Surface { "surface" } else { "chrome" }, fixture["retainedWorld"]["owner"].as_str().unwrap());
+    assert_eq!(shell.wheel_reaches_scene_surface(point.0, point.1, &body_input, &theme), fixture["retainedWorld"]["wheel"].as_bool().unwrap());
 
     let world_token = shell.world3d_states.token("main-2").expect("the live World3d owner has generation identity");
     assert!(shell.close_dock_window("main-2"));
@@ -1095,6 +1600,15 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
 /// and the host's retained down/move/up ingress preserves the generation-owned transfer between them.
 #[test]
 fn two_published_table_surfaces_transfer_through_the_shell_host() {
+    table_transfer_through_the_shell_host(false);
+}
+
+#[test]
+fn a_published_table_transfer_survives_a_same_host_document_refresh() {
+    table_transfer_through_the_shell_host(true);
+}
+
+fn table_transfer_through_the_shell_host(refresh: bool) {
     crate::scenes::cancel_scene_list_transfer();
     let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json"))).expect("shared transfer fixture");
     let source_fixture = &fixture["table"]["source"];
@@ -1131,16 +1645,20 @@ fn two_published_table_surfaces_transfer_through_the_shell_host() {
             (destination_id, destination_fixture["dropAction"]["controllerId"].as_str().expect("destination controller"), &destination_document, destination_body),
         ],
     );
+    let source_owner = crate::interpreter::retained_scene_target_at(source_id, source_body.w * 0.5, source_body.h * 0.5).expect("source component host");
+    let destination_owner = crate::interpreter::retained_scene_target_at(destination_id, destination_body.w * 0.5, destination_body.h * 0.5).expect("destination component host");
+    let source_control = format!("{}.row.asset-7", source_owner.host_id);
+    let destination_control = format!("{}.row.destination", destination_owner.host_id);
     let source_row = input
         .hits()
         .iter()
-        .find(|hit| hit.control_id.as_deref() == Some("table-shell-source.row.asset-7"))
+        .find(|hit| hit.control_id.as_deref() == Some(source_control.as_str()))
         .expect("source row paints from the decoded Component::Surface")
         .rect;
     let destination_row = input
         .hits()
         .iter()
-        .find(|hit| hit.control_id.as_deref() == Some("table-shell-destination.row.destination"))
+        .find(|hit| hit.control_id.as_deref() == Some(destination_control.as_str()))
         .expect("destination row paints from the decoded Component::Surface")
         .rect;
     let theme = Theme::default();
@@ -1151,15 +1669,26 @@ fn two_published_table_surfaces_transfer_through_the_shell_host() {
     assert_eq!(input.hit_at(destination_point.0, destination_point.1).map(|hit| hit.kind), Some(HitKind::ComponentScene), "the published semantic surface owns the physical drop point");
 
     semio_framework_async::block_on(shell.handle_pointer_button(source_point.0, source_point.1, true, 0, &mut input, &theme)).expect("Shell routes Table source down");
+    let mut refreshed_document = if refresh {
+        let document = shell.publish_surface_records(source_id, vec![table_pointer_record(1, "source-table", &source_scene)]).expect("the source refresh publishes");
+        input = paint_component_pointer_documents(&mut shell, &[
+            (source_id, "controller.table-a", &document, source_body),
+            (destination_id, destination_fixture["dropAction"]["controllerId"].as_str().unwrap(), &destination_document, destination_body),
+        ]);
+        let refreshed_owner = crate::interpreter::retained_scene_target_at(source_id, source_body.w * 0.5, source_body.h * 0.5).expect("refreshed component host");
+        assert!(source_owner.same_component_host(&refreshed_owner), "ordinary publication preserves the mounted Table owner");
+        Some(document)
+    } else { None };
     shell.handle_pointer_move(destination_point.0, destination_point.1, true, &mut input, &theme);
     semio_framework_async::block_on(shell.handle_pointer_button(destination_point.0, destination_point.1, false, 0, &mut input, &theme)).expect("Shell routes Table destination up");
     let actions = crate::collect_fixture_actions(&mut input);
     assert_eq!(actions.len(), 1, "one physical transfer emits exactly one destination action");
     assert_eq!(serde_json::to_value(&actions[0]).expect("action wire"), fixture["table"]["expectedAction"]);
-    assert!(crate::interpreter::retained_pointer_capture_window().is_none(), "release retires retained capture");
+    assert!(crate::interpreter::retained_pointer_capture_window(ui_render::PointerId(1)).is_none(), "release retires retained capture");
     assert!(!crate::scenes::cancel_scene_list_transfer(), "release retires the scene transfer authority");
     while !source_document.close_step() {}
     while !destination_document.close_step() {}
+    if let Some(document) = refreshed_document.as_mut() { while !document.close_step() {} }
 }
 
 /// ⚖️ LAW: the physical Shell route preserves Canvas2d's full modifier chord and gives every
@@ -1209,7 +1738,7 @@ fn published_canvas_pointer_capture_preserves_modifiers_and_cancels_exactly_once
     let outside_actions = crate::collect_fixture_actions(&mut input);
     assert_eq!(outside_actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown", "canvasPointerUp"]);
     assert_eq!(canvas_action_args(&outside_actions[1])["cancelled"], true);
-    assert!(crate::interpreter::retained_pointer_capture_window().is_none());
+    assert!(crate::interpreter::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     semio_framework_async::block_on(shell.handle_pointer_button(outside.0, outside.1, false, 0, &mut input, &theme)).expect("duplicate release stays inert");
     assert!(crate::collect_fixture_actions(&mut input).is_empty(), "a retired gesture cannot emit a second terminal action");
     semio_framework_async::block_on(shell.handle_pointer_button(x, y, true, 0, &mut input, &theme)).expect("explicit cancellation gesture arms");
@@ -1218,9 +1747,186 @@ fn published_canvas_pointer_capture_preserves_modifiers_and_cancels_exactly_once
     let actions = crate::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown", "canvasPointerUp"]);
     assert_eq!(canvas_action_args(&actions[1])["cancelled"], true);
-    assert!(crate::interpreter::retained_pointer_capture_window().is_none());
+    assert!(crate::interpreter::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     assert!(!input.pointer_down && !input.drag.active);
     while !document.close_step() {}
+}
+
+#[test]
+fn renderer_canvas_surface_routes_the_retained_pointer_sequence() {
+    renderer_canvas_pointer_sequence(false);
+}
+
+#[test]
+fn renderer_foreign_pointer_cancel_preserves_the_retained_canvas_sequence() {
+    renderer_canvas_pointer_sequence(true);
+}
+
+fn renderer_canvas_pointer_sequence(foreign_cancel: bool) {
+    crate::scenes::cancel_canvas_pointer_gesture(&mut InputState::default());
+    let fixture = canvas_input_fixture();
+    let surface = fixture["surface"]["id"].as_str().unwrap();
+    let controller = fixture["surface"]["controllerId"].as_str().unwrap();
+    let body = Rect::new(17.0, 31.0, fixture["surface"]["width"].as_f64().unwrap() as f32, fixture["surface"]["height"].as_f64().unwrap() as f32);
+    let scene = ui_wgpu::wgpu::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let mut document = shell.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas", &scene)]).unwrap();
+    let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
+    let mut interaction = pointer_interaction(shell, input);
+    let x = body.x + fixture["pointer"]["down"]["x"].as_f64().unwrap() as f32;
+    let y = body.y + fixture["pointer"]["down"]["y"].as_f64().unwrap() as f32;
+    semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(77), x, y, true, 0, PointerModifiers::default()));
+    let down = crate::collect_fixture_actions(&mut interaction.input);
+    if foreign_cancel { interaction.handle_pointer_cancel(ui_render::PointerId(78)); }
+    let after_foreign_cancel = crate::collect_fixture_actions(&mut interaction.input);
+    semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(77), body.x + body.w + 20.0, body.y + body.h + 20.0, false, 0, PointerModifiers::default()));
+    let up = crate::collect_fixture_actions(&mut interaction.input);
+    crate::scenes::cancel_canvas_pointer_gesture(&mut interaction.input);
+    crate::interpreter::release_scene_pointer(ui_render::PointerId(77));
+    while !document.close_step() {}
+    assert_eq!(down.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown"], "actual renderer dispatch reaches the retained Canvas2d owner");
+    assert!(after_foreign_cancel.is_empty(), "another pointer must not finish the captured Canvas gesture");
+    assert_eq!(up.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerUp"]);
+    assert_eq!(canvas_action_args(&up[0])["cancelled"], true);
+    println!("[DEBUG] actual renderer Canvas sequence foreign_cancel={foreign_cancel} delivered one down and one terminal outside release");
+}
+
+#[test]
+fn renderer_canvas_secondary_drag_reaches_the_document_gesture_before_opening_its_context_menu() {
+    crate::scenes::cancel_canvas_pointer_gesture(&mut InputState::default());
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let row = fixture["panCases"].as_array().unwrap().iter().find(|row| row["id"] == "right-button-gesture").unwrap();
+    let surface = fixture["surface"]["id"].as_str().unwrap();
+    let controller = fixture["surface"]["controllerId"].as_str().unwrap();
+    let body = Rect::new(17.0, 31.0, fixture["surface"]["width"].as_f64().unwrap() as f32, fixture["surface"]["height"].as_f64().unwrap() as f32);
+    let initial = &fixture["wheel"]["initialCamera"];
+    let layers = serde_json::json!([{ "role": "meta", "utility": row["activeUtility"] }]).to_string();
+    let scene = ui_wgpu::wgpu::Canvas2dScene::base(initial["x"].as_f64().unwrap(), initial["y"].as_f64().unwrap(), initial["zoom"].as_f64().unwrap(), layers);
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let mut document = shell.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas", &scene)]).unwrap();
+    let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
+    let mut interaction = pointer_interaction(shell, input);
+    let start = (body.x + row["start"]["x"].as_f64().unwrap() as f32, body.y + row["start"]["y"].as_f64().unwrap() as f32);
+    let end = (body.x + row["end"]["x"].as_f64().unwrap() as f32, body.y + row["end"]["y"].as_f64().unwrap() as f32);
+    let button = row["button"].as_i64().unwrap() as i16;
+    semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(77), start.0, start.1, true, button, PointerModifiers::default()));
+    semio_framework_async::block_on(interaction.handle_pointer_move(ui_render::PointerId(77), end.0, end.1, true, button, PointerModifiers::default()));
+    semio_framework_async::block_on(interaction.handle_pointer_button(ui_render::PointerId(77), end.0, end.1, false, button, PointerModifiers::default()));
+    let actions = crate::collect_fixture_actions(&mut interaction.input);
+    let action_ids = actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>();
+    let context_menu_open = interaction.shell.context_menu.is_some();
+    crate::scenes::cancel_canvas_pointer_gesture(&mut interaction.input);
+    crate::interpreter::release_scene_pointer(ui_render::PointerId(77));
+    while !document.close_step() {}
+    assert_eq!(
+        action_ids,
+        row["expectedActions"].as_array().unwrap().iter().map(|action| action.as_str().unwrap()).collect::<Vec<_>>(),
+        "the actual App/Shell route preserves the neutral Canvas2d secondary document gesture"
+    );
+    assert!(context_menu_open, "the document gesture preserves Canvas2d's secondary-click context menu");
+}
+
+#[test]
+fn a_published_canvas_hit_cannot_retarget_a_same_key_successor() {
+    let surface = "canvas-secondary-successor";
+    let controller = "controller.canvas-secondary-successor";
+    let body = Rect::new(17.0, 31.0, 100.0, 100.0);
+    let point = (body.x + body.w * 0.5, body.y + body.h * 0.5);
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let initial_scene = ui_wgpu::wgpu::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into());
+    let mut initial = shell.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas-owner", &initial_scene)]).unwrap();
+    let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &initial, body)]);
+    let hit = input.hit_at(point.0, point.1).expect("the initial Canvas2d publication owns its body point").clone();
+    let old_target = shell.retained_scene_hits.get(surface).expect("the published generic Canvas hit carries exact scene provenance").1.clone();
+    let old_scene_hits = shell.retained_scene_hits.clone();
+    let old_hit_windows = shell.retained_hit_windows.clone();
+
+    let removed_record = tree_pointer_record(
+        1,
+        "canvas-owner",
+        ui_contract::Component::Container(ui_contract::ContainerProps {
+            role: Default::default(),
+            label: None,
+            description: None,
+            required: None,
+            error: None,
+            default_open: None,
+            drop_overlay: None,
+        }),
+        &[],
+        None,
+    );
+    let mut removed = shell.publish_surface_records(surface, vec![removed_record]).unwrap();
+    let _removed_input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &removed, body)]);
+    assert!(crate::interpreter::retained_scene_target_at(surface, point.0 - body.x, point.1 - body.y).is_none(), "the intermediate publication retires the mounted Canvas owner");
+
+    let successor_scene = ui_wgpu::wgpu::Canvas2dScene::base(0.0, 0.0, 2.0, "[]".into());
+    let mut successor = shell.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas-owner", &successor_scene)]).unwrap();
+    let _successor_input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &successor, body)]);
+    let successor_target = crate::interpreter::retained_scene_target_at(surface, point.0 - body.x, point.1 - body.y).expect("the successor Canvas2d scene is live");
+    assert_eq!(old_target.surface_id, successor_target.surface_id);
+    assert_eq!(old_target.key, successor_target.key, "the regression keeps the exact same retained key");
+    assert_ne!(old_target, successor_target, "the successor still has a distinct generation-qualified identity");
+
+    shell.retained_scene_hits = old_scene_hits;
+    shell.retained_hit_windows = old_hit_windows;
+    assert!(shell.retained_canvas2d_hit_window(&hit, point.0, point.1).is_none(), "an old published hit cannot inherit a same-surface same-key successor");
+    while !initial.close_step() {}
+    while !removed.close_step() {}
+    while !successor.close_step() {}
+}
+
+#[test]
+fn renderer_canvas_wheel_burst_preserves_each_zoom_in_event() {
+    renderer_canvas_wheel_burst("two-zoom-in-events");
+}
+
+#[test]
+fn renderer_canvas_first_wheel_uses_the_authored_camera() {
+    renderer_canvas_wheel_burst("authored-camera");
+}
+
+#[test]
+fn renderer_canvas_opposite_wheel_events_preserve_the_react_camera() {
+    renderer_canvas_wheel_burst("zoom-in-then-out-events");
+}
+
+fn renderer_canvas_wheel_burst(case_id: &str) {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let case = if case_id == "authored-camera" {
+        serde_json::json!({ "deltas": [fixture["wheel"]["zoomInDeltaY"]], "expectedFactors": [fixture["wheel"]["zoomInFactor"]], "expectedActionCount": 1 })
+    } else {
+        fixture["wheelBursts"].as_array().unwrap().iter().find(|case| case["id"] == case_id).unwrap().clone()
+    };
+    let surface = format!("renderer-canvas-{case_id}");
+    let controller = fixture["surface"]["controllerId"].as_str().unwrap();
+    let body = Rect::new(17.0, 31.0, fixture["surface"]["width"].as_f64().unwrap() as f32, fixture["surface"]["height"].as_f64().unwrap() as f32);
+    let initial = &fixture["wheel"]["initialCamera"];
+    let scene = ui_wgpu::wgpu::Canvas2dScene::base(initial["x"].as_f64().unwrap(), initial["y"].as_f64().unwrap(), initial["zoom"].as_f64().unwrap(), "[]".into());
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let mut document = shell.publish_surface_records(&surface, vec![canvas_pointer_record(1, "canvas", &scene)]).unwrap();
+    let mut input = paint_component_pointer_documents(&mut shell, &[(&surface, controller, &document, body)]);
+    let x = body.x + fixture["wheel"]["anchor"]["x"].as_f64().unwrap() as f32;
+    let y = body.y + fixture["wheel"]["anchor"]["y"].as_f64().unwrap() as f32;
+    let mut interaction = pointer_interaction(shell, input);
+    for delta in case["deltas"].as_array().unwrap() {
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::Scroll {
+            x, y, delta_x: 0.0, delta_y: delta.as_f64().unwrap() as f32, modifiers: ui_render::EventModifiers::default(),
+        }));
+    }
+    let actions = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
+    let actions: Vec<_> = actions.iter().filter(|action| action.controller_id == controller && canvas_action_args(action)["surfaceId"] == surface).collect();
+    let expected_zoom = case["expectedFactors"].as_array().unwrap().iter().fold(initial["zoom"].as_f64().unwrap() as f32, |zoom, factor| (zoom * factor.as_f64().unwrap() as f32).clamp(0.05, 32.0));
+    while !document.close_step() {}
+    assert_eq!(actions.len(), case["expectedActionCount"].as_u64().unwrap() as usize, "the burst publishes one settled camera");
+    let camera = &canvas_action_args(actions[0])["camera"];
+    let zoom = camera["zoom"].as_f64().unwrap() as f32;
+    assert_eq!(zoom, expected_zoom, "every admitted wheel event contributes its own React factor");
+    let relative_x = x - body.x - body.w * 0.5;
+    let relative_y = y - body.y - body.h * 0.5;
+    assert!((relative_x / zoom + camera["x"].as_f64().unwrap() as f32 - (relative_x / initial["zoom"].as_f64().unwrap() as f32 + initial["x"].as_f64().unwrap() as f32)).abs() < 0.0001);
+    assert!((relative_y / zoom + camera["y"].as_f64().unwrap() as f32 - (relative_y / initial["zoom"].as_f64().unwrap() as f32 + initial["y"].as_f64().unwrap() as f32)).abs() < 0.0001);
+    println!("[DEBUG] actual renderer wheel burst {case_id} published settled zoom {zoom}");
 }
 
 /// ⚖️ LAW: a real retained Tree drag reaches a real published Canvas2d leaf through Shell move/drop
@@ -1281,7 +1987,7 @@ fn retained_catalogue_item_drags_and_drops_into_a_published_canvas() {
     assert_json_number_eq(&drop["height"], &fixture["surface"]["height"], "drop height");
     assert_eq!(drop["dragData"], raw_payload);
     assert!(crate::interpreter::active_retained_drag_sessions().is_empty());
-    assert!(crate::interpreter::retained_pointer_capture_window().is_none());
+    assert!(crate::interpreter::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     semio_framework_async::block_on(shell.handle_pointer_button(destination_point.0, destination_point.1, false, 0, &mut input, &theme)).expect("duplicate drop release stays inert");
     assert!(crate::collect_fixture_actions(&mut input).is_empty(), "a retired retained drag cannot drop twice");
 
@@ -1293,7 +1999,7 @@ fn retained_catalogue_item_drags_and_drops_into_a_published_canvas() {
     let cancelled = crate::collect_fixture_actions(&mut input);
     assert_eq!(cancelled.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasDragOver", "canvasDragLeave"]);
     assert!(crate::interpreter::active_retained_drag_sessions().is_empty());
-    assert!(crate::interpreter::retained_pointer_capture_window().is_none());
+    assert!(crate::interpreter::retained_pointer_capture_window(ui_render::PointerId(1)).is_none());
     while !source_document.close_step() {}
     while !destination_document.close_step() {}
 }
@@ -1399,3 +2105,322 @@ fn escape_closes_the_palette_rather_than_committing_its_query_field() {
     assert_eq!(input.focused_id, None);
 }
 //#endregion 🔎️QuickSearchPaletteKeyboard
+
+
+/// 🪟️ Closing a Dock window retires its exact Canvas owner before a pending camera can settle.
+#[test]
+fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let surface = "renderer-canvas-closed-window";
+    let controller = fixture["surface"]["controllerId"].as_str().unwrap();
+    let body = Rect::new(17.0, 31.0, 400.0, 300.0);
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    shell.dock.root = DockNode::Stack { windows: vec![DockStackTab::new(surface)], active: surface.into() };
+    shell.dock.sync_active_window(surface);
+    shell.active_window_id = Some(surface.into());
+    let scene = ui_wgpu::wgpu::Canvas2dScene::base(12.0, -8.0, 2.0, "[]".into());
+    let document = shell.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas-owner", &scene)]).unwrap();
+    let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
+    let owner = crate::interpreter::retained_scene_target_at(surface, 200.0, 150.0).unwrap();
+    shell.window_ui.insert(surface.into(), document);
+    let mut interaction = pointer_interaction(shell, input);
+    semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::Scroll {
+        x: body.x + 200.0,
+        y: body.y + 150.0,
+        delta_x: 0.0,
+        delta_y: -120.0,
+        modifiers: ui_render::EventModifiers::default(),
+    }));
+
+    assert!(interaction.shell.close_dock_window(surface));
+    let actions: Vec<_> = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0)
+        .into_iter()
+        .filter(|action| canvas_action_args(action)["surfaceId"] == surface)
+        .collect();
+    assert_eq!(actions.len(), fixture["sameKeySceneRemount"]["retiredDeadlineActions"].as_u64().unwrap() as usize, "a Dock close fences the pending camera before retained-layout reconciliation");
+    interaction.shell.retire_documents_outside(&[], true).expect("the closed Dock body reaches its canonical document retirement lane");
+    assert!(interaction.shell.settle_pump_pending(), "the retained close owns a runtime wake until its exact document is retired");
+    for _ in 0..262_144 {
+        if !crate::interpreter::ui_document_close_pending() {
+            break;
+        }
+        assert!(crate::interpreter::close_ui_document_one(), "each admitted close opportunity advances one bounded unit");
+    }
+    assert!(!crate::interpreter::ui_document_close_pending(), "the bounded runtime close reaches terminal");
+    let target_after_close = crate::interpreter::retained_scene_target_at(surface, 200.0, 150.0);
+
+    let removed_record = tree_pointer_record(1, "canvas-owner", ui_contract::Component::Container(ui_contract::ContainerProps { role: Default::default(), label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }), &[], None);
+    let mut cleanup = interaction.shell.publish_surface_records(surface, vec![removed_record]).unwrap();
+    let _ = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, &cleanup, body)]);
+    crate::scenes::retire_scene_identity(&owner);
+    while !cleanup.close_step() {}
+
+    assert!(target_after_close.is_none(), "the complete window close retires the retained component target");
+}
+
+#[test]
+fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let surface = "renderer-canvas-reopened-window";
+    let controller = fixture["surface"]["controllerId"].as_str().unwrap();
+    let body = Rect::new(17.0, 31.0, 400.0, 300.0);
+    let scene = ui_wgpu::wgpu::Canvas2dScene::base(12.0, -8.0, 2.0, "[]".into());
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    shell.dock.root = DockNode::Stack { windows: vec![DockStackTab::new(surface)], active: surface.into() };
+    shell.dock.sync_active_window(surface);
+    let old = shell.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas-owner", &scene)]).unwrap();
+    let _ = paint_component_pointer_documents(&mut shell, &[(surface, controller, &old, body)]);
+    let old_owner = crate::interpreter::retained_scene_target_at(surface, 200.0, 150.0).unwrap();
+    shell.window_ui.insert(surface.into(), old);
+    assert!(shell.close_dock_window(surface));
+    shell.retire_documents_outside(&[], true).unwrap();
+    assert!(crate::interpreter::ui_document_close_pending());
+    assert!(!crate::interpreter::scene_pointer_target_is_live(&old_owner), "a requested close is no longer an interactive live owner");
+
+    shell.dock.root = DockNode::Stack { windows: vec![DockStackTab::new(surface)], active: surface.into() };
+    shell.dock.sync_active_window(surface);
+    let mut successor = shell.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas-owner", &scene)]).unwrap();
+    let mut cursor = UiDocumentFrameCursor::default();
+    let (mut draw, mut atlas, icons, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), InputState::<ActionDescriptor>::default(), Theme::default());
+    let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
+    let mut world3d_states = AdmittedSurfaceMap::default();
+    let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+    let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
+    let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
+    assert!(!render_ui_document_step(&mut cursor, &successor, body, &mut ctx, surface, controller, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts));
+    assert_eq!(cursor.phase_name(), "ingress", "the successor cannot enter the old retained generation while its close is pending");
+
+    for _ in 0..262_144 {
+        if !crate::interpreter::ui_document_close_pending() {
+            break;
+        }
+        assert!(crate::interpreter::close_ui_document_one());
+    }
+    assert!(!crate::interpreter::ui_document_close_pending());
+    let _ = paint_component_pointer_documents(&mut shell, &[(surface, controller, &successor, body)]);
+    let successor_owner = crate::interpreter::retained_scene_target_at(surface, 200.0, 150.0).unwrap();
+    assert_ne!(successor_owner, old_owner, "the reopened same-ID window receives a fresh exact generation");
+    assert!(crate::interpreter::scene_pointer_target_is_live(&successor_owner));
+
+    let removed_record = tree_pointer_record(1, "canvas-owner", ui_contract::Component::Container(ui_contract::ContainerProps { role: Default::default(), label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }), &[], None);
+    let mut cleanup = shell.publish_surface_records(surface, vec![removed_record]).unwrap();
+    let _ = paint_component_pointer_documents(&mut shell, &[(surface, controller, &cleanup, body)]);
+    while !successor.close_step() {}
+    while !cleanup.close_step() {}
+}
+
+/// 🪟️ Sibling components retain independent cameras while sharing their document action address.
+#[test]
+fn sibling_canvas_components_mount_under_one_document_without_sharing_their_camera() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let law = &fixture["siblingWindowLifetime"];
+    let surface = "sibling-canvas-document";
+    let controller = "sibling-canvas-controller";
+    let body = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    shell.dock.root = DockNode::Stack { windows: vec![DockStackTab::new(surface)], active: surface.into() };
+    shell.dock.sync_active_window(surface);
+    let scene = |index: usize| {
+        let camera = &law["cameras"][index];
+        ui_wgpu::wgpu::Canvas2dScene::base(camera["x"].as_f64().unwrap(), camera["y"].as_f64().unwrap(), camera["zoom"].as_f64().unwrap(), "[]".into())
+    };
+    let root = |children: &[u64]| {
+        let mut record = tree_pointer_record(1, "root", ui_contract::Component::Container(ui_contract::ContainerProps { role: Default::default(), label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }), children, None);
+        record.layout = ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { axis: ui_contract::Axis::Horizontal, grow: true, ..Default::default() });
+        record
+    };
+    let child = |id, key: &str, scene: &ui_wgpu::wgpu::Canvas2dScene| {
+        let mut record = canvas_pointer_record(id, key, scene);
+        record.layout = ui_contract::LayoutSpec::Stack(ui_contract::StackLayout { grow: true, ..Default::default() });
+        record
+    };
+    let mut document = shell.publish_surface_records(surface, vec![root(&[2, 3]), child(2, "left-canvas", &scene(0)), child(3, "right-canvas", &scene(1))]).unwrap();
+    let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
+    let mut rects: Vec<_> = input.hits().iter().filter(|hit| hit.kind == ui_wgpu::wgpu::HitKind::ComponentScene).map(|hit| hit.rect).collect();
+    assert_eq!(rects.len(), 2);
+    rects.sort_by(|a, b| a.x.total_cmp(&b.x));
+    assert!(rects.iter().all(|rect| rect.w > 0.0 && rect.h > 0.0));
+    let targets: Vec<_> = rects.iter().map(|rect| crate::interpreter::retained_scene_target_at(surface, rect.x + rect.w * 0.5, rect.y + rect.h * 0.5).unwrap()).collect();
+    assert_ne!(targets[0].host_id, targets[1].host_id);
+    assert_eq!(targets[0].surface_id, targets[1].surface_id);
+    let mut interaction = pointer_interaction(shell, input);
+    for (index, rect) in rects.iter().enumerate() {
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::Scroll {
+            x: rect.x + rect.w * 0.5, y: rect.y + rect.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default(),
+        }));
+        let actions = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
+        let cameras: Vec<_> = actions.iter().filter(|action| action.controller_id == controller).map(canvas_action_args).collect();
+        assert_eq!(cameras.len(), 1);
+        assert_eq!(cameras[0]["surfaceId"], surface);
+        assert!((cameras[0]["camera"]["zoom"].as_f64().unwrap() - law["expectedZooms"][index].as_f64().unwrap()).abs() < 0.0001);
+    }
+    let mut successor = interaction.shell.publish_surface_records(surface, vec![root(&[3]), child(3, "right-canvas", &scene(1))]).unwrap();
+    interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, &successor, body)]);
+    assert!(!crate::interpreter::scene_pointer_target_is_live(&targets[0]));
+    let survivor = interaction.input.hits().iter().find(|hit| hit.kind == ui_wgpu::wgpu::HitKind::ComponentScene).unwrap().rect;
+    semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::Scroll {
+        x: survivor.x + survivor.w * 0.5, y: survivor.y + survivor.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default(),
+    }));
+    let actions = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
+    let camera = actions.iter().find(|action| action.controller_id == controller).map(canvas_action_args).unwrap();
+    assert!((camera["camera"]["zoom"].as_f64().unwrap() - law["survivingZoom"].as_f64().unwrap()).abs() < 0.0001);
+    assert!(crate::interpreter::request_ui_document_close(surface));
+    for _ in 0..262_144 { if !crate::interpreter::close_ui_document_one() { break; } }
+    assert!(!crate::interpreter::ui_document_close_pending_for(surface));
+    while !document.close_step() {}
+    while !successor.close_step() {}
+}
+
+/// 🪟️ Closing each distinct window returns its retained capacity before the next window opens.
+#[test]
+fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let law = &fixture["sequentialWindowLifetime"];
+    let mount_count = law["mountCount"].as_u64().unwrap() as usize;
+    assert!(mount_count > ui_wgpu::wgpu::engine::UI_LAYOUT_SURFACE_SLOTS);
+    assert!(mount_count > crate::scenes::SCENE_SURFACE_CAPACITY);
+    let controller = fixture["surface"]["controllerId"].as_str().unwrap();
+    let body = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let scene = ui_wgpu::wgpu::Canvas2dScene::base(12.0, -8.0, 2.0, "[]".into());
+    let mut interaction = pointer_interaction(super::panel_anchor_model_tests::host_test_shell(), InputState::default());
+    for index in 0..mount_count {
+        let surface = format!("sequential-canvas-window-{index}");
+        interaction.shell.dock.root = DockNode::Stack { windows: vec![DockStackTab::new(&surface)], active: surface.clone() };
+        interaction.shell.dock.sync_active_window(&surface);
+        let document = interaction.shell.publish_surface_records(&surface, vec![canvas_pointer_record(1, "canvas-owner", &scene)]).unwrap();
+        interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(&surface, controller, &document, body)]);
+        assert!(crate::interpreter::retained_scene_target_at(&surface, 200.0, 150.0).is_some(), "window {index} mounts after earlier windows have closed");
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::Scroll {
+            x: 200.0, y: 150.0, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default(),
+        }));
+        let actions = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
+        let camera = actions.iter().find(|action| action.controller_id == controller && canvas_action_args(action)["surfaceId"] == surface).map(|action| canvas_action_args(action)["camera"].clone()).expect("each admitted mount retains a working camera");
+        assert_eq!(camera["x"].as_f64(), Some(12.0));
+        assert_eq!(camera["y"].as_f64(), Some(-8.0));
+        assert!(camera["zoom"].as_f64().unwrap() > 2.0);
+        interaction.shell.window_ui.insert(surface.clone(), document);
+        assert_eq!(interaction.shell.window_ui.len(), law["maximumLiveWindows"].as_u64().unwrap() as usize);
+        assert!(interaction.shell.close_dock_window(&surface));
+        interaction.shell.retire_documents_outside(&[], true).unwrap();
+        for _ in 0..262_144 {
+            if !crate::interpreter::ui_document_close_pending() {
+                break;
+            }
+            assert!(crate::interpreter::close_ui_document_one());
+        }
+        assert!(!crate::interpreter::ui_document_close_pending(), "window {index} closes within the bounded opportunity ceiling");
+        assert!(crate::interpreter::retained_scene_target_at(&surface, 200.0, 150.0).is_none());
+        assert_eq!(interaction.shell.window_ui.len(), law["liveWindowsAfterClose"].as_u64().unwrap() as usize);
+    }
+}
+
+/// 🪪️ A retained camera survives an authored refresh and remounts with a replacement key.
+#[test]
+fn renderer_canvas_camera_obeys_the_mounted_component_identity() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let surface = "renderer-canvas-mount-lifetime";
+    let controller = fixture["surface"]["controllerId"].as_str().unwrap();
+    let body = Rect::new(17.0, 31.0, 400.0, 300.0);
+    let mut interaction = pointer_interaction(super::panel_anchor_model_tests::host_test_shell(), InputState::default());
+    let mut documents = Vec::new();
+    let mut actual = Vec::new();
+    for step in fixture["mountLifetime"]["steps"].as_array().unwrap() {
+        let scene = ui_wgpu::wgpu::Canvas2dScene::base(12.0, -8.0, step["authoredZoom"].as_f64().unwrap(), "[]".into());
+        let document = interaction.shell.publish_surface_records(surface, vec![canvas_pointer_record(1, step["key"].as_str().unwrap(), &scene)]).unwrap();
+        interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, &document, body)]);
+        semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, ui_render::DispatchEvent::Scroll {
+            x: body.x + body.w * 0.5, y: body.y + body.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: ui_render::EventModifiers::default(),
+        }));
+        let actions = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
+        let camera = actions.iter().find(|action| action.controller_id == controller && canvas_action_args(action)["surfaceId"] == surface).map(|action| canvas_action_args(action)["camera"].clone());
+        actual.push(camera);
+        documents.push(document);
+    }
+    for document in &mut documents { while !document.close_step() {} }
+    for (actual, expected) in actual.iter().zip(fixture["mountLifetime"]["steps"].as_array().unwrap()) {
+        let camera = actual.as_ref().expect("each mounted wheel settles its camera");
+        assert!((camera["zoom"].as_f64().unwrap() - expected["expectedZoom"].as_f64().unwrap()).abs() < 0.00001, "{actual:?}");
+        assert_eq!(camera["x"].as_f64(), Some(12.0));
+        assert_eq!(camera["y"].as_f64(), Some(-8.0));
+    }
+    println!("[DEBUG] mounted Canvas camera retained local refresh and seeded the replacement key: {actual:?}");
+}
+
+/// 🕒️ A checked-out old deadline cannot publish the replacement component's camera.
+#[test]
+fn renderer_canvas_retired_deadline_cannot_publish_a_successor() {
+    renderer_canvas_retirement_probe(true, false, false);
+    renderer_canvas_retirement_probe(true, true, false);
+}
+
+/// 🧹️ Removing a Canvas2d component retires its pending settled camera action.
+#[test]
+fn renderer_canvas_removal_retires_its_pending_camera() {
+    renderer_canvas_retirement_probe(false, false, false);
+    renderer_canvas_retirement_probe(false, true, false);
+}
+
+/// 🔁️ A removed and remounted Canvas owns its camera even when its retained key is reused.
+#[test]
+fn renderer_canvas_same_key_remount_retires_checked_out_camera() {
+    renderer_canvas_retirement_probe(true, false, true);
+    renderer_canvas_retirement_probe(true, true, true);
+}
+
+fn renderer_canvas_retirement_probe(replace: bool, close: bool, remount: bool) {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
+    let lifetime = &fixture["sameKeySceneRemount"];
+    let key = if remount { lifetime["key"].as_str().unwrap() } else { "original" };
+    let surface_id = format!("renderer-canvas-retirement-{replace}-{close}-{remount}");
+    let surface = surface_id.as_str();
+    let controller = fixture["surface"]["controllerId"].as_str().unwrap();
+    let body = Rect::new(17.0, 31.0, 400.0, 300.0);
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let scene = ui_wgpu::wgpu::Canvas2dScene::base(12.0, -8.0, 2.0, "[]".into());
+    let mut original = shell.publish_surface_records(surface, vec![canvas_pointer_record(1, key, &scene)]).unwrap();
+    let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &original, body)]);
+    let original_owner = crate::interpreter::retained_scene_target_at(surface, 200.0, 150.0).unwrap();
+    let mut interaction = pointer_interaction(shell, input);
+    let scroll = || ui_render::DispatchEvent::Scroll { x: body.x + 200.0, y: body.y + 150.0, delta_x: 0.0, delta_y: -120.0, modifiers: ui_render::EventModifiers::default() };
+    semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, scroll()));
+    let mut deadline = crate::scenes::SceneCameraDispatchCursor::begin(crate::app_now_ms() + 400.0);
+    let container = |key| tree_pointer_record(1, key, ui_contract::Component::Container(ui_contract::ContainerProps { role: Default::default(), label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }), &[], None);
+    let mut removed = if remount { Some(interaction.shell.publish_surface_records(surface, vec![container(key)]).unwrap()) } else { None };
+    if let Some(removed) = removed.as_ref() {
+        interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, removed, body)]);
+        assert!(crate::interpreter::retained_scene_target_at(surface, 200.0, 150.0).is_none());
+    }
+    let next_scene = ui_wgpu::wgpu::Canvas2dScene::base(12.0, -8.0, if remount { lifetime["remountAuthoredZoom"].as_f64().unwrap() } else { 3.0 }, "[]".into());
+    let record = if replace { canvas_pointer_record(1, if remount { key } else { "successor" }, &next_scene) } else { container("removed") };
+    let mut successor = interaction.shell.publish_surface_records(surface, vec![record]).unwrap();
+    interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, &successor, body)]);
+    if replace { semio_framework_async::block_on(crate::winit_app::dispatch_normalized_event(&mut interaction, scroll())); }
+    let mut actions = Vec::new();
+    if close {
+        while !deadline.close_step() {}
+    } else {
+        loop {
+            match deadline.step() {
+                crate::scenes::SceneCameraDispatchStep::Action(action) => { if canvas_action_args(&action)["surfaceId"] == surface { actions.push(action); } }
+                crate::scenes::SceneCameraDispatchStep::Pending => {}
+                crate::scenes::SceneCameraDispatchStep::Complete => break,
+                crate::scenes::SceneCameraDispatchStep::Fault(fault) => panic!("{fault}"),
+            }
+        }
+    }
+    assert!(deadline.terminal_is_empty());
+    crate::scenes::retire_scene_identity(&original_owner);
+    let settled: Vec<_> = crate::scenes::sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0).into_iter().filter(|action| canvas_action_args(action)["surfaceId"] == surface).collect();
+    while !original.close_step() {}
+    if let Some(removed) = removed.as_mut() { while !removed.close_step() {} }
+    while !successor.close_step() {}
+    let expected = if remount { lifetime["retiredDeadlineActions"].as_u64().unwrap() as usize } else { fixture["mountLifetime"][if replace { "retiredDeadlineActions" } else { "removedCameraActions" }].as_u64().unwrap() as usize };
+    assert_eq!(actions.len(), expected, "a retired Canvas camera cannot publish after replacement/removal");
+    assert_eq!(settled.len(), if remount { lifetime["remountedCameraActions"].as_u64().unwrap() as usize } else { usize::from(replace) }, "only the live successor retains its camera deadline");
+    if replace {
+        let camera = canvas_action_args(&settled[0])["camera"].clone();
+        let expected_zoom = if remount { lifetime["expectedRemountZoom"].as_f64().unwrap() } else { fixture["mountLifetime"]["steps"][2]["expectedZoom"].as_f64().unwrap() };
+        assert!((camera["zoom"].as_f64().unwrap() - expected_zoom).abs() < 0.00001);
+    }
+    println!("[DEBUG] Canvas retirement replace={replace} close={close} remount={remount} emitted {} stale actions and {} successor actions", actions.len(), settled.len());
+}

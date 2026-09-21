@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeWallHRdKn 
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change wall horizontal resistance H_Rd [kN] to {}", self.new_wall_h_rd_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change wall horizontal resistance H_Rd [kN] to {}", self.new_wall_h_rd_kn), &format!("Wandhorizontalwiderstandh_Rd [kN] auf {} ändern", self.new_wall_h_rd_kn))
     }
 }
 //#endregion 🔖️ChangeWallHRdKn

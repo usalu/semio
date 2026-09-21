@@ -3,6 +3,7 @@ use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, TableScene};
 
 fn table_scene(surface_id: &str, table: TableScene) -> UiComponentSceneNode {
     UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: "controller".into(),
         component_kind: SurfaceKind::Table,
@@ -304,16 +305,17 @@ fn shared_fixture_table_transfer_crosses_windows_and_revalidates_mime_payload_an
     let (x, y) = (handle.x + handle.w * 0.5, handle.y + handle.h * 0.5);
     let mut input = InputState::<ActionDescriptor>::default();
 
-    passive_scene_pointer_button(&source, bounds, x, y, true, 0, SceneModifiers::default(), "window-a", 7, UiDriverDrag::Handle, &mut input).expect("source down");
-    passive_scene_pointer_move(&source, bounds, x + theme.control_height, y, "window-a", 7, UiDriverDrag::Handle);
-    passive_scene_pointer_button(&destination, bounds, 20.0, row_center_y(0), false, 0, SceneModifiers::default(), "window-b", 3, UiDriverDrag::Handle, &mut input).expect("destination up");
+    passive_scene_pointer_button(&source, bounds, ui_render::PointerId(1), x, y, true, 0, SceneModifiers::default(), "window-a", 7, UiDriverDrag::Handle, &mut input).expect("source down");
+    assert!(!cancel_scene_list_transfer_for_pointer(ui_render::PointerId(2)), "a foreign pointer cannot retire the transfer owner");
+    passive_scene_pointer_move(&source, bounds, ui_render::PointerId(1), x + theme.control_height, y, "window-a", 7, UiDriverDrag::Handle);
+    passive_scene_pointer_button(&destination, bounds, ui_render::PointerId(1), 20.0, row_center_y(0), false, 0, SceneModifiers::default(), "window-b", 3, UiDriverDrag::Handle, &mut input).expect("destination up");
     let actions = drain_actions(&mut input);
     assert_eq!(actions.len(), 1);
     assert_eq!(serde_json::to_value(&actions[0]).expect("action json"), fixture["table"]["expectedAction"]);
 
-    passive_scene_pointer_button(&source, bounds, x, y, true, 0, SceneModifiers::default(), "window-a", 8, UiDriverDrag::Handle, &mut input).expect("source down");
-    passive_scene_pointer_move(&source, bounds, x + theme.control_height, y, "window-a", 9, UiDriverDrag::Handle);
-    passive_scene_pointer_button(&destination, bounds, 20.0, row_center_y(0), false, 0, SceneModifiers::default(), "window-b", 3, UiDriverDrag::Handle, &mut input).expect("stale destination up");
+    passive_scene_pointer_button(&source, bounds, ui_render::PointerId(1), x, y, true, 0, SceneModifiers::default(), "window-a", 8, UiDriverDrag::Handle, &mut input).expect("source down");
+    passive_scene_pointer_move(&source, bounds, ui_render::PointerId(1), x + theme.control_height, y, "window-a", 9, UiDriverDrag::Handle);
+    passive_scene_pointer_button(&destination, bounds, ui_render::PointerId(1), 20.0, row_center_y(0), false, 0, SceneModifiers::default(), "window-b", 3, UiDriverDrag::Handle, &mut input).expect("stale destination up");
     assert!(drain_actions(&mut input).is_empty(), "a changed source document generation retires the transfer before release");
 }
 //#endregion TableRowTransferTests

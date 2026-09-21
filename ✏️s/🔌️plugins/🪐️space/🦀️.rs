@@ -259,6 +259,12 @@ mod surface_tests;
 mod space_index_projection_tests;
 //#endregion 🧪️SpaceIndexProjectionTests
 
+//#region 🧪️RetainedStoreFootprintTests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️retained-store-footprint/🦀️.rs"]
+mod retained_store_footprint_tests;
+//#endregion 🧪️RetainedStoreFootprintTests
+
 //#region 🧪️InteractiveJobCatalogTests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️interactive-job-catalog/🦀️.rs"]

@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateScenario {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create scenario \"{}\"", self.scenario.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create scenario \"{}\"", self.scenario.header.name), &format!("Szenario \"{}\" erstellen", self.scenario.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.scenario.header.id.0.clone()]

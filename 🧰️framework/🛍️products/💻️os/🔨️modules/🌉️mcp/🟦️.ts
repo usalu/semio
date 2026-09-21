@@ -630,8 +630,18 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    dispatches one request at a time, and abandoning a call client-side does not free the
     //    server — so one cold 202 MB component (`gis`) wedges every later step behind it. One
     //    plugin per journey is also one cold component compile per journey.
+    const beforeSnapshot = await session.call("artifact_snapshot", { artifactId: typedArtifactId });
+    const packBefore = String(beforeSnapshot.structuredContent?.packBase64 ?? "");
+
     const prepared = await session.call("action_prepare", { capabilityId: CLIENT_E2E_PINNED_CAPABILITY_ID, input });
     const baselineRevision = revisionOf(prepared);
+    // 🗿️ ONE artifact identity across the whole journey. `RevisionStamp.artifactId` used to carry
+    //    the PLUGIN id (`🌉️mcp/🏠️workspace/🦀️.rs` stamped `entry.plugin_id`), so `artifact_create`,
+    //    `action_invoke` and `artifact_snapshot` named two different things for one document and
+    //    `artifact_snapshot(revisionAfter.artifactId)` answered `no such artifact: note`
+    //    (`📓️ce1-…` §8 gap 4). Ticket 26/09/18 slice M8 binds the channel's session document to the
+    //    artifact this workspace created from the plugin's genesis; this row is what holds it there.
+    announce(steps, { step: "os: the prepared revision names the ARTIFACT, not the plugin", ok: baselineRevision?.artifactId === typedArtifactId, detail: `revision.artifactId=${baselineRevision?.artifactId ?? "<none>"} artifact_create used ${typedArtifactId} (pinned plugin is ${CLIENT_E2E_PINNED_PLUGIN_ID})`, wire: baselineRevision });
     announce(steps, { step: "os: action_prepare", ok: prepared.isError !== true, detail: prepared.isError === true ? `${CLIENT_E2E_PINNED_CAPABILITY_ID} input=${JSON.stringify(input)}: ${JSON.stringify(prepared.structuredContent).slice(0, 260)}` : `handle=${prepared.structuredContent?.preparedHandle} baseline=${stampText(baselineRevision)}`, wire: prepared.structuredContent });
     if (prepared.isError === true) return steps;
 
@@ -659,17 +669,16 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     const unsubscribed = await session.request("resources/unsubscribe", { uri: watchedUri });
     announce(steps, { step: "os: resources/unsubscribe", ok: !unsubscribed.error, detail: unsubscribed.error ? JSON.stringify(unsubscribed.error) : `unsubscribed from ${watchedUri}`, wire: unsubscribed.result });
 
-    // 📦️ The snapshot is taken of the artifact this journey CREATED, by the id it created it with.
-    //    It deliberately no longer follows `revisionAfter.artifactId`: in the headless lane that
-    //    field is the PLUGIN ID (`🌉️mcp/🏠️workspace/🦀️.rs:1793` stamps `entry.plugin_id`), because
-    //    `action_prepare`/`action_invoke` drive the plugin's own live session document while
-    //    `artifact_create` persists a separate folder artifact seeded from it. Snapshotting `note`
-    //    answered `no such artifact: note` and said nothing about either document. The statement
-    //    that the MUTATION landed is the `os: live head advanced` row below/above — a fresh
-    //    `ReadHistory` against the document the mutation actually went to, which is the only
-    //    revision oracle this lane has. §"honest gaps" of `📓️ce1-…` carries the identity defect.
+    // 📦️ The snapshot is taken of the artifact this journey created, by the SAME id
+    //    `action_prepare` stamped and `action_invoke` mutated — one identity, asserted above. It is
+    //    read from the live guest session the mutation went to, not from the row frozen at create
+    //    time, so the bytes MUST differ across the commit: a snapshot that cannot show the change
+    //    the agent just made is worse than no snapshot, and the shipped `mutate-safely` prompt
+    //    tells an agent to confirm exactly this way.
     const afterSnapshot = await session.call("artifact_snapshot", { artifactId: typedArtifactId });
-    announce(steps, { step: "os: artifact_snapshot (the created artifact)", ok: afterSnapshot.isError !== true && Number(afterSnapshot.structuredContent?.packBytes ?? 0) > 0, detail: afterSnapshot.isError === true ? `${typedArtifactId}: ${JSON.stringify(afterSnapshot.structuredContent).slice(0, 300)}` : `artifactId=${typedArtifactId} packBytes=${afterSnapshot.structuredContent?.packBytes} sprBytes=${afterSnapshot.structuredContent?.sprBytes}`, wire: { ...afterSnapshot.structuredContent, packBase64: `${String(afterSnapshot.structuredContent?.packBase64 ?? "").slice(0, 32)}…` } });
+    const packAfter = String(afterSnapshot.structuredContent?.packBase64 ?? "");
+    announce(steps, { step: "os: artifact_snapshot (the created artifact)", ok: afterSnapshot.isError !== true && Number(afterSnapshot.structuredContent?.packBytes ?? 0) > 0, detail: afterSnapshot.isError === true ? `${typedArtifactId}: ${JSON.stringify(afterSnapshot.structuredContent).slice(0, 300)}` : `artifactId=${typedArtifactId} packBytes=${afterSnapshot.structuredContent?.packBytes} sprBytes=${afterSnapshot.structuredContent?.sprBytes}`, wire: { ...afterSnapshot.structuredContent, packBase64: `${packAfter.slice(0, 32)}…` } });
+    announce(steps, { step: "os: the snapshot shows the mutation", ok: packBefore.length > 0 && packAfter.length > 0 && packAfter !== packBefore, detail: packBefore.length === 0 ? `the pre-mutation snapshot answered no bytes: ${JSON.stringify(beforeSnapshot.structuredContent).slice(0, 200)}` : packAfter === packBefore ? `${typedArtifactId} is byte-identical across the commit (${packAfter.length} base64 chars) — the snapshot is reading a frozen row, not the document the mutation went to` : `${packBefore.length} → ${packAfter.length} base64 chars across the commit`, wire: { before: packBefore.slice(0, 24), after: packAfter.slice(0, 24) } });
 
     const headAfterInvoke = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
     announce(steps, { step: "os: live head advanced", ok: headAfterInvoke !== undefined && headAfterInvoke.headEditId === revisionAfter?.headEditId && headAfterInvoke.headEditId !== baselineRevision?.headEditId, detail: `re-read head ${stampText(headAfterInvoke)} (baseline ${stampText(baselineRevision)}, invoke reported ${stampText(revisionAfter)})`, wire: headAfterInvoke });
@@ -730,7 +739,12 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     session.notify("notifications/cancelled", { requestId: inferenceEnvelope.id ?? 0, reason: "client-e2e cancellation probe" });
     const stillAlive = await session.request("ping", {});
     announce(steps, { step: "os: notifications/cancelled is accepted and unanswered", ok: !stillAlive.error, detail: stillAlive.error ? `the server stopped answering after notifications/cancelled: ${JSON.stringify(stillAlive.error)}` : "cancelled accepted with no response; ping still answers", wire: stillAlive.result });
-    const jobId = inference.structuredContent?.jobId as string | undefined;
+    // 🏃️ A REFUSED inference still minted a job — the gateway registers the row before it dispatches
+    //    and reports it back inside the error's own `details` — so the job rows below are read from
+    //    whichever of the two places the reply carries it. Reading only the success shape made
+    //    `job_get`/`job_cancel` unreachable the moment the plugin refused, which is exactly when a
+    //    client most needs them to work.
+    const jobId = (inference.structuredContent?.jobId ?? (inference.structuredContent?.details as Record<string, unknown> | undefined)?.jobId) as string | undefined;
     announce(steps, { step: "os: inference_run", ok: inference.isError !== true, detail: inference.isError === true ? JSON.stringify(inference.structuredContent).slice(0, 300) : `jobId=${jobId} status=${inference.structuredContent?.status} complete=${inference.structuredContent?.complete} bytes=${inference.structuredContent?.payloadBytes ?? 0}`, wire: inference.structuredContent });
 
     if (jobId) {

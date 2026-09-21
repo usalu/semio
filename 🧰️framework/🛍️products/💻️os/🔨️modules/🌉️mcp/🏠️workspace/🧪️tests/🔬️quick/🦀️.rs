@@ -300,23 +300,51 @@ fn resolve_plugin_for_capability_routes_note_and_cad_to_different_plugins() {
     assert_eq!(workspace.resolve_plugin_for_capability("cad.editor.addObject").expect("cad-owned"), "cad");
 }
 
+/// 🗿️ A routing channel with no artifact bound to any plugin — the shape every routing test below
+/// asserts against, since none of them creates an artifact.
+fn unbound_plugin_artifacts() -> Arc<Mutex<HashMap<String, PluginArtifactBinding>>> {
+    Arc::new(Mutex::new(HashMap::new()))
+}
+
+/// 🗿️ The stamp a routed command answers names the ARTIFACT this workspace bound to the plugin, and
+/// a channel with none bound says so in a form no client can mistake for an artifact id. Before
+/// ticket 26/09/18 slice M8 it was the bare plugin id, so `artifact_snapshot(revision.artifactId)`
+/// answered `no such artifact: note` (`📓️ce1-client-e2e-pinning-and-puzzle-bound.md` §8 gap 4).
+#[test]
+fn a_routed_channel_resolves_the_artifact_its_plugin_session_document_is() {
+    let bound = unbound_plugin_artifacts();
+    let router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), Arc::clone(&bound));
+    assert_eq!(router.session_artifact_for("note"), None, "nothing bound yet");
+    bound
+        .lock()
+        .expect("binding map")
+        .insert("journey-note-typed".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string() });
+    assert_eq!(router.session_artifact_for("note").as_deref(), Some("journey-note-typed"));
+    assert_eq!(router.session_artifact_for("cad"), None, "a plugin with no bound artifact stays unnamed");
+    bound
+        .lock()
+        .expect("binding map")
+        .insert("journey-note-second".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string() });
+    assert_eq!(router.session_artifact_for("note"), None, "two artifacts on one plugin: no single stamp could name either truthfully");
+}
+
 #[test]
 fn routing_artifact_channel_purecommand_unknown_capability_is_not_found_before_opening_any_channel() {
-    let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string());
+    let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts());
     let fault = router.exchange(0, vec![AppCommand::PureCommand { capability_id: "totally.unknown.capability".to_string(), input: serde_json::json!({}) }]).expect_err("unknown capability must not route to any plugin");
     assert_eq!(fault.code, "capability.not-found");
 }
 
 #[test]
 fn routing_artifact_channel_purecommand_gateway_owned_capability_is_plugin_unavailable() {
-    let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string());
+    let mut router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts());
     let fault = router.exchange(0, vec![AppCommand::PureCommand { capability_id: "capabilities.search".to_string(), input: serde_json::json!({}) }]).expect_err("a gateway-owned capability names no plugin channel");
     assert_eq!(fault.code, "plugin.unavailable");
 }
 
 #[test]
 fn routing_artifact_channel_exchange_on_an_unrouted_instance_without_a_purecommand_is_plugin_unavailable() {
-    let mut router = RoutingArtifactChannel::new(empty_catalog(), None, "agent:test#sess".to_string());
+    let mut router = RoutingArtifactChannel::new(empty_catalog(), None, "agent:test#sess".to_string(), unbound_plugin_artifacts());
     let fault = router.exchange(0, vec![AppCommand::ReadHistory]).expect_err("no known plugin for this instance and no PureCommand to derive one from");
     assert_eq!(fault.code, "plugin.unavailable");
 }
@@ -356,7 +384,7 @@ fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_ope
     let catalog = note_and_cad_catalog();
     let note_instance = plugin_instance_slot(&catalog, "note").expect("note is in the fixture catalog");
     let cad_instance = plugin_instance_slot(&catalog, "cad").expect("cad is in the fixture catalog");
-    let mut router = RoutingArtifactChannel::new(catalog, Some(repo_root), "agent:routing-test#sess".to_string());
+    let mut router = RoutingArtifactChannel::new(catalog, Some(crate::workspace::PluginComponentSource::Repo(repo_root)), "agent:routing-test#sess".to_string(), unbound_plugin_artifacts());
 
     let note_result = router.exchange(note_instance, vec![AppCommand::PureCommand { capability_id: "note.editor.setGridVisible".to_string(), input: serde_json::json!({}) }]);
     assert_ne!(note_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "note.editor.setGridVisible must route to a real note channel: {note_result:?}");

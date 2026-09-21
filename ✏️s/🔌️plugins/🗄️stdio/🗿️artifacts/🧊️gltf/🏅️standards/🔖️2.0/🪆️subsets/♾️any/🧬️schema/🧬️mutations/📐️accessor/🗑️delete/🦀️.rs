@@ -58,8 +58,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteAccesso
         vec![super::GltfMutation::DeleteAccessor(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Delete Accessor".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Delete Accessor", "Accessor löschen")
     }
 
     fn target(&self) -> Vec<String> {

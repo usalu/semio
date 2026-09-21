@@ -23,8 +23,8 @@ impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutati
         vec![Self { value: base.show_mode.clone() }.into()]
     }
 
-    fn label(&self) -> String {
-        "Set Show Mode".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Show Mode", "Anzeigenmodus setzen")
     }
 
     fn target(&self) -> Vec<String> {

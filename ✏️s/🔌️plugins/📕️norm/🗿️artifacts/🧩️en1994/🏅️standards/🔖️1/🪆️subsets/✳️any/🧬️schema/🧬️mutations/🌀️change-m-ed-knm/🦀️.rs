@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeMEdKnm {
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change design moment M_Ed to {}", self.new_m_ed_knm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change design moment M_Ed to {}", self.new_m_ed_knm), &format!("Bemessungsmomentm_Ed auf {} ändern", self.new_m_ed_knm))
     }
 }
 //#endregion 🔖️Payload

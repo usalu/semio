@@ -29,8 +29,8 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ChangeDomain
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change domain to \"{}\"", self.new_domain)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change domain to \"{}\"", self.new_domain), &format!("Domäne auf \"{}\" ändern", self.new_domain))
     }
 }
 //#endregion 🔖️Mutation

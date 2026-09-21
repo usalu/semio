@@ -215,7 +215,7 @@ mod panel_kit_tests {
         let entry = |seq: u64| CommandView {
             seq,
             action_id: "translateSelection".into(),
-            label: format!("Move {seq}"),
+            label: LocalizedLabel::data(format!("Move {seq}")),
             kind: ActionKind::Mutation,
             timestamp: "0".into(),
             edit_id: Some(format!("edit-{seq}")),
@@ -625,7 +625,7 @@ mod panel_kit_tests {
         let entry = |seq: u64| CommandView {
             seq,
             action_id: "translateSelection".into(),
-            label: format!("Move {seq}"),
+            label: LocalizedLabel::data(format!("Move {seq}")),
             kind: ActionKind::Mutation,
             timestamp: "0".into(),
             edit_id: Some(format!("edit-{seq}")),

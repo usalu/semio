@@ -37,8 +37,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for InsertTextChunkMutatio
             vec![PngMutation::RemoveTextChunk(crate::schema::mutations::RemoveTextChunkMutation { index: (*index).min(base.text_chunks.len()) })]
         }
     }
-    fn label(&self) -> String {
-        "insert text chunk".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert text chunk", "Textchunk einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-text-chunk".into()]

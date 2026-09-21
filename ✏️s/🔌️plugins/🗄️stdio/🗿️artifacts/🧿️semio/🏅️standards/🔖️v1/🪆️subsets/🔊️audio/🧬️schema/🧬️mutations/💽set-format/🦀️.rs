@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetForma
     fn inverse(&self, base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
         agg_inverse(&SemioAudioMutation::SetFormat(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-format".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-format", "Format setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

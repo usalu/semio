@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Repl
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace path in layer #{}", self.at.layer)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace path in layer #{}", self.at.layer), &format!("Pfad in Ebene #{} ersetzen", self.at.layer))
     }
     fn target(&self) -> Vec<String> {
         vec![self.at.layer.to_string()]

@@ -167,7 +167,29 @@ pub(crate) fn draft_preview_segments(utility: &str, points: &UiFixedList<[f64; 2
 
 /// 🔷️ Emits the operations that commit a shape drag (add the shape layer + return to direct-select);
 /// empty when the drag is too small to commit.
-fn commit_shape_drag(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawingMutation> {
+fn shape_drag_id(utility: &str, geometry: [f64; 4], layer_ordinal: usize, operation: Option<&semio_framework_plugin::AppOperationContext>) -> String {
+    let mut identity = Vec::with_capacity(1 + 4 + 8 + operation.map_or(0, |operation| operation.parent_document_id.len() + 60) + 32);
+    identity.push(match utility {
+        "shapeLine" => 1,
+        "shapeEllipse" => 2,
+        _ => 0,
+    });
+    if let Some(operation) = operation {
+        identity.extend_from_slice(&operation.app_instance_id.to_be_bytes());
+        identity.extend_from_slice(&(operation.parent_document_id.len() as u64).to_be_bytes());
+        identity.extend_from_slice(operation.parent_document_id.as_bytes());
+        identity.extend_from_slice(&operation.operation_id.to_be_bytes());
+        identity.extend_from_slice(&operation.generation.to_be_bytes());
+        identity.extend_from_slice(&operation.canonical_base_revision);
+    }
+    identity.extend_from_slice(&(layer_ordinal as u64).to_be_bytes());
+    for value in geometry {
+        identity.extend_from_slice(&value.to_bits().to_be_bytes());
+    }
+    crate::schema::create_drawing_id("shape", &identity)
+}
+
+fn commit_shape_drag(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end: [f64; 2], operation: Option<&semio_framework_plugin::AppOperationContext>) -> Vec<DrawingMutation> {
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
@@ -175,18 +197,16 @@ fn commit_shape_drag(doc: &DrawingSnapshot, utility: &str, start: [f64; 2], end:
     if width < 1.0 && height < 1.0 {
         return Vec::new();
     }
+    let (name, shape_kind, geometry) = match utility {
+        "shapeLine" => ("Line", "line", [start[0], start[1], end[0], end[1]]),
+        "shapeEllipse" => ("Ellipse", "ellipse", [x + width / 2.0, y + height / 2.0, width / 2.0, height / 2.0]),
+        _ => ("Rectangle", "rect", [x, y, width, height]),
+    };
+    let mut base = crate::schema::default_layer_base(name);
+    base.id = shape_drag_id(utility, geometry, doc.layers.len(), operation);
     let layer = DrawingLayerNode::Shape(crate::DrawingShapeBody {
-        base: crate::schema::default_layer_base(match utility {
-            "shapeLine" => "Line",
-            "shapeEllipse" => "Ellipse",
-            _ => "Rectangle",
-        }),
-        shape_kind: match utility {
-            "shapeLine" => "line",
-            "shapeEllipse" => "ellipse",
-            _ => "rect",
-        }
-        .into(),
+        base,
+        shape_kind: shape_kind.into(),
         rect: if utility == "shapeRect" { Some(crate::DrawingRect { x, y, width, height }) } else { None },
         ellipse: if utility == "shapeEllipse" { Some(crate::DrawingEllipse { cx: x + width / 2.0, cy: y + height / 2.0, rx: width / 2.0, ry: height / 2.0 }) } else { None },
         circle: None,
@@ -942,7 +962,14 @@ impl DrawingSession {
         DrawingGesturePreview { sequence: self.preview_seq, phase, context: self.gesture.context.clone() }
     }
 
-    pub(crate) fn step_gesture_retained(&mut self, command_id: &'static str, event: drawing_gesture::Event, document: &DrawingSnapshot, _config: &NoConfig) -> Option<Emit<DrawingMutation, NoConfigMutation>> {
+    pub(crate) fn step_gesture_retained(
+        &mut self,
+        command_id: &'static str,
+        event: drawing_gesture::Event,
+        document: &DrawingSnapshot,
+        _config: &NoConfig,
+        operation: &semio_framework_plugin::AppOperationContext,
+    ) -> Option<Emit<DrawingMutation, NoConfigMutation>> {
         let mut sink: Vec<fsm::Command<drawing_gesture::DrawingGesture>> = Vec::new();
         fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
         self.preview_seq = self.preview_seq.wrapping_add(1);
@@ -966,7 +993,7 @@ impl DrawingSession {
                     return None;
                 }
                 GestureEffect::CommitShape { utility, start, end } => {
-                    operations.extend(commit_shape_drag(document, &utility, start, end));
+                    operations.extend(commit_shape_drag(document, &utility, start, end, Some(operation)));
                     commit_description = Some("Add shape");
                 }
                 GestureEffect::CommitDraft { utility, points } => {
@@ -998,7 +1025,7 @@ impl DrawingSession {
             let fsm::Command::Effect(effect) = command else { continue };
             match effect {
                 GestureEffect::CommitShape { utility, start, end } => {
-                    operations.extend(commit_shape_drag(document, &utility, start, end));
+                    operations.extend(commit_shape_drag(document, &utility, start, end, None));
                     commit_description = Some("Add shape");
                 }
                 GestureEffect::CommitMarquee { .. } | GestureEffect::CommitDraft { .. } | GestureEffect::CommitTrace { .. } | GestureEffect::PickPoint { .. } => {}

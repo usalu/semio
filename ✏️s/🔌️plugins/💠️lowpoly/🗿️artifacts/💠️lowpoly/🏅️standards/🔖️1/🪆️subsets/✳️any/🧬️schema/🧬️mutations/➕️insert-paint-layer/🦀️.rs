@@ -22,8 +22,8 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for InsertPaintLay
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Insert paint layer \"{}\"", self.layer.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Insert paint layer \"{}\"", self.layer.name), &format!("Farbenebene \"{}\" einfügen", self.layer.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

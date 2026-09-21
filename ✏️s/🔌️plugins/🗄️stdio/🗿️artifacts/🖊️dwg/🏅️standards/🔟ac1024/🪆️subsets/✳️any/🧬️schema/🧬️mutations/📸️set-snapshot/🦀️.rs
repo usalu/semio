@@ -28,8 +28,8 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetSnapshot {
     fn inverse(&self, base: &DwgSnapshot) -> Vec<DwgMutation> {
         agg_inverse(&DwgMutation::SetSnapshot(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-snapshot".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

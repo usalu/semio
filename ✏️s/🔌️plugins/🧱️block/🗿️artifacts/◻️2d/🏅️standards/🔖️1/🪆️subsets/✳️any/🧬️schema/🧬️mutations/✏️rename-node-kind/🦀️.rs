@@ -30,8 +30,8 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for RenameNodeKind
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename node kind to \"{}\"", self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename node kind to \"{}\"", self.new_name), &format!("Knotenart in \"{}\" umbenennen", self.new_name))
     }
 }
 //#endregion 🔖️Mutation

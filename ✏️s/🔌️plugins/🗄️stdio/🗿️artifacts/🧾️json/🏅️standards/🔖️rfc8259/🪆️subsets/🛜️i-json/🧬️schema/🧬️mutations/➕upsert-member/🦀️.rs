@@ -22,8 +22,8 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for UpsertMember {
     fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
         agg_inverse(&JsonIJsonMutation::UpsertMember(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "upsert-member".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("upsert-member", "Glied einfügen oder aktualisieren")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

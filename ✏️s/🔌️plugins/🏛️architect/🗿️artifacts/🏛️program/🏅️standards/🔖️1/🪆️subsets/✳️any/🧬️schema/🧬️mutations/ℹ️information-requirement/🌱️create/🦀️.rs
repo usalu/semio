@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateInformationRequire
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create information requirement \"{}\"", self.information_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create information requirement \"{}\"", self.information_requirement.header.name), &format!("Informationsanforderung \"{}\" erstellen", self.information_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.information_requirement.header.id.0.clone()]

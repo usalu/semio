@@ -33,8 +33,8 @@ impl MutationKind<WriterSnapshot, WriterMutation> for ChangeUri {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change document URI to \"{}\"", self.new_uri)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change document URI to \"{}\"", self.new_uri), &format!("DokumentuRI auf \"{}\" ändern", self.new_uri))
     }
 }
 //#endregion 🔖️Mutation

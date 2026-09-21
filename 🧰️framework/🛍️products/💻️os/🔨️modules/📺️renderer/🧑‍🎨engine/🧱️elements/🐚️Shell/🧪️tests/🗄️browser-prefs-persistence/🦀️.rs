@@ -327,6 +327,25 @@ fn the_tour_answer_is_written_where_reacts_next_boot_reads_it() {
 
 //#region 🚪️Wiring
 
+/// 📚️ Native keeps the complete `semio.os.config` value on the retained 64 KiB document lane while
+/// every standalone durable field stays on the existing 4 KiB one-page lane.
+#[test]
+fn native_config_uses_the_document_lane_and_flat_fields_keep_the_fixed_page_lane() {
+    let shell = wgpu_shell_source();
+    let read = shell.split("fn native_pref_read_page").nth(1).expect("native read route");
+    let read = &read[..read.find("fn native_pref_write_page").expect("native write route follows")];
+    assert!(read.contains("key == OS_SHELL_CONFIG_STORAGE_KEY") && read.contains("storage_worker_read_fixed_file_document"));
+    assert!(read.contains("storage_worker_read_fixed_file_page") && read.contains("SHELL_CHROME_IO_FIELD_BYTES"));
+
+    let write = shell.split("fn native_pref_write_page").nth(1).expect("native write route");
+    let write = &write[..write.find("fn raw_prefs_get").expect("raw preference route follows")];
+    assert!(write.contains("key == OS_SHELL_CONFIG_STORAGE_KEY") && write.contains("NATIVE_PREF_DOCUMENTS"));
+    assert!(write.contains("storage_worker_write_fixed_file_page") && write.contains("SHELL_CHROME_IO_FIELD_BYTES"));
+    assert!(shell.contains("Mutex<semio_framework_os_services::RetainedFixedFileDocuments>"));
+    assert!(shell.contains("const OS_SHELL_CONFIG_MAX_BYTES: usize = 64 * 1024;"));
+    assert!(shell.contains("const SHELL_CHROME_IO_FIELD_BYTES: usize = 4 * 1024;"));
+}
+
 /// 🧪️ The browser preference lane IS the page door — there is no Worker-local store left to fall back
 /// to, and the two flat keys are read flat. Source-read, because every assertion here is about a
 /// `cfg(target_arch = "wasm32")` arm that a native test binary never compiles.

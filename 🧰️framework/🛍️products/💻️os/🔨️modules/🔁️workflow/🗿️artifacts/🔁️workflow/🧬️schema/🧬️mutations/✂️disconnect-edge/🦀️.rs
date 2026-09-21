@@ -21,8 +21,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for DisconnectEd
     fn inverse(&self, base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
         base.graph.edges.iter().find(|edge| edge.id == self.edge_id).map(|edge| vec![WorkflowMutation::ConnectPorts(ConnectPorts { edge: edge.clone() })]).unwrap_or_default()
     }
-    fn label(&self) -> String {
-        format!("Disconnect workflow edge {}", self.edge_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Disconnect workflow edge {}", self.edge_id), &format!("Arbeitsablaufkante {} trennen", self.edge_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["edges".into(), self.edge_id.clone()]

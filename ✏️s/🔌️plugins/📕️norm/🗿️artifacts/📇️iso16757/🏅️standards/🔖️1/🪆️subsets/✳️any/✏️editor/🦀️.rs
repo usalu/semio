@@ -115,6 +115,8 @@ impl ArtifactEditor for Iso16757PlayApp {
         command.command_id()
     }
 
+    semio_s_artifact_norm_contract::norm_command_from_action!(Iso16757Command, crate::standards::v1::subsets::any::schema::snapshot::decode_iso16757_snapshot_json);
+
     fn handle(
         command: &Iso16757Command,
         doc: &ArtifactView<'_, Iso16757Snapshot>,

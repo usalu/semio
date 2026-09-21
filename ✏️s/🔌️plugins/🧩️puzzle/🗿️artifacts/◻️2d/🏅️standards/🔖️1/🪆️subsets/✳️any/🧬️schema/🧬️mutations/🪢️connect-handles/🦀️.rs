@@ -65,8 +65,8 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ConnectHandl
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Connect \"{}\" to \"{}\"", self.source, self.target)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Connect \"{}\" to \"{}\"", self.source, self.target), &format!("\"{}\" mit \"{}\" verbinden", self.source, self.target))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

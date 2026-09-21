@@ -41,8 +41,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ReplacePageText {
         vec![PdfMutation::ReplacePageText(ReplacePageText { index: self.index, text: base.pages[self.index].text.clone() })]
     }
 
-    fn label(&self) -> String {
-        "replace page text".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("replace page text", "Seitentext ersetzen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -28,11 +28,18 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeCurs
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&{
         match self.new_resolved_up_to {
             Some(cursor) => format!("Move cursor to step {cursor}"),
             None => "Clear cursor".to_string(),
         }
+        }, &{
+        match self.new_resolved_up_to {
+            Some(cursor) => format!("Cursor nach Schritt {cursor} verschieben"),
+            None => "Cursor leeren".to_string(),
+        }
+        })
     }
 }
 //#endregion 🔖️ChangeCursor

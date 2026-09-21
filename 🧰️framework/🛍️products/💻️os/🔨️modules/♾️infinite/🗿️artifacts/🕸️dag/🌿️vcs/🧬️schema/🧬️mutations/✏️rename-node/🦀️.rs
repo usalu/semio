@@ -34,8 +34,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for RenameNode {
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         base.nodes.iter().find(|node| node.id == self.id).map(|_| vec![DagMutation::RenameNode(Self { id: self.new_id.clone(), new_id: self.id.clone() })]).unwrap_or_default()
     }
-    fn label(&self) -> String {
-        format!("Rename node {}", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename node {}", self.id), &format!("Knoten {} umbenennen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.id.clone()]

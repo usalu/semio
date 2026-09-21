@@ -19,8 +19,8 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for ChangeCorrecti
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change correction-as-of to {}-{:02}", self.new_correction_as_of.year, self.new_correction_as_of.month)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change correction-as-of to {}-{:02}", self.new_correction_as_of.year, self.new_correction_as_of.month), &format!("Korrektur- als - von auf {}-{:02} ändern", self.new_correction_as_of.year, self.new_correction_as_of.month))
     }
 }
 //#endregion 🔖️Payload

@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for SetDpartRoot {
         vec![PdfVtMutation::RemoveDpartRoot(RemoveDpartRoot {})]
     }
 
-    fn label(&self) -> String {
-        format!("Set PDF/VT document partition {}", self.job)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set PDF/VT document partition {}", self.job), &format!("PDF/VTdokumentpartition {} setzen", self.job))
     }
 
     fn target(&self) -> Vec<String> {

@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateVert
     fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create vertex \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create vertex \"{}\"", self.id), &format!("Vertex \"{}\" erstellen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

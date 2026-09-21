@@ -305,6 +305,14 @@ impl ShellArtifactChannel {
         self
     }
 
+    /// 🎯️ The same pin, per exchange — for `ShellRoutedArtifactChannel`, which serves EVERY plugin
+    /// of a session and therefore cannot name one at construction. It resolves the owner the way the
+    /// headless lane already does (the command's capability, else the instance slot `prepare_action`
+    /// minted) and hands it over here, so both lanes answer "which instance is this?" identically.
+    pub fn pin_plugin(&mut self, plugin_id: Option<String>) {
+        self.plugin = plugin_id;
+    }
+
     #[must_use]
     pub fn with_timeout(mut self, timeout: Duration) -> Self {
         self.timeout = timeout;

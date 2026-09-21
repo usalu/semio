@@ -1,5 +1,17 @@
 {
   "schema": "animate.presentation",
+  "source": {
+    "src": "/🖼️bauteilbörse.png",
+    "kind": "figure",
+    "frame": {
+      "x": 0.125,
+      "y": 0.125,
+      "width": 0.75,
+      "height": 0.75
+    },
+    "sourceAspect": 1.3638392857142858
+  },
+  "tiles": [],
   "presentation": {
     "childId": "presentation-resize-source-frame-identical",
     "target": {

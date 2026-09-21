@@ -3025,7 +3025,7 @@ pub mod ui {
         canvas2d_snapshot_terminal_is_empty, canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, decode as decode_surface_doc, encode as encode_surface_doc, world3d_snapshot_abort_write, world3d_snapshot_abort_write_step,
         world3d_snapshot_admit_page, world3d_snapshot_begin, world3d_snapshot_begin_close, world3d_snapshot_claim_draw_permit, world3d_snapshot_close_step, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page,
         world3d_snapshot_write_terminal_is_empty, BlockListScene, Board2dScene, Canvas2dRejectedSnapshotPage, Canvas2dScene, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken,
-        DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
+        DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasInteractionDomain, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
         NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dRejectedSnapshotPage, World3dScene, World3dSnapshotDescriptor,
         World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken, WORLD3D_SNAPSHOT_PAGE_CAPACITY,
         WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
@@ -3236,6 +3236,10 @@ pub mod ui {
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
     pub struct UiComponentSceneNode {
+        /// 🪪️ Mounted component identity for native hosts; the document remains the action address.
+        #[serde(skip)]
+        #[value(skip)]
+        pub host_id: String,
         pub surface_id: String,
         pub controller_id: String,
         pub component_kind: SurfaceKind,
@@ -3584,6 +3588,7 @@ pub mod ui {
     ) -> UiNode {
         UiNode::ComponentScene(UiComponentSceneNode {
             menu: None,
+            host_id: String::new(),
             surface_id: surface_id.into(),
             controller_id: controller_id.into(),
             component_kind,

@@ -28,8 +28,8 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateEnergyModel {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create energy-model child {}", self.child_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create energy-model child {}", self.child_id), &format!("Energiemodell-Kind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["energy_model".to_string()]

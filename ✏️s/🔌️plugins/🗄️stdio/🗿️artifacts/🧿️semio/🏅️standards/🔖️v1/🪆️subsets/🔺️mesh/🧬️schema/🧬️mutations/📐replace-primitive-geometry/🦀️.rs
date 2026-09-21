@@ -26,8 +26,8 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ReplacePri
     fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace primitive \"{}\" geometry in mesh \"{}\"", self.primitive_id, self.mesh_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace primitive \"{}\" geometry in mesh \"{}\"", self.primitive_id, self.mesh_id), &format!("Primitiv \"{}\" Geometrie in Netz \"{}\" ersetzen", self.primitive_id, self.mesh_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.primitive_id.clone()]

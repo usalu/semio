@@ -35,8 +35,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Update
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Update site to {:.4}, {:.4}", self.latitude_deg, self.longitude_deg)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Update site to {:.4}, {:.4}", self.latitude_deg, self.longitude_deg), &format!("Standort auf {:.4}, {:.4} aktualisieren", self.latitude_deg, self.longitude_deg))
     }
 }
 //#endregion 🔖️Mutation

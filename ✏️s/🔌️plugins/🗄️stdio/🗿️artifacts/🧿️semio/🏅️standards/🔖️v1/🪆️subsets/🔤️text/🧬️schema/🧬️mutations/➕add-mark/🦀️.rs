@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for AddMark {
     fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add mark to run #{} at #{}", self.run_index, self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add mark to run #{} at #{}", self.run_index, self.index), &format!("Marke zu Lauf #{} an #{} hinzufügen", self.run_index, self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.run_index.to_string(), self.index.to_string()]

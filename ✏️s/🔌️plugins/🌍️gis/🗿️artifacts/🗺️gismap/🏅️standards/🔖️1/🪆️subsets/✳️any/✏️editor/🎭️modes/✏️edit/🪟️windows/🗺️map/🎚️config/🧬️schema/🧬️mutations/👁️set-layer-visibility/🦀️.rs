@@ -33,8 +33,8 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetLayerVisibili
     fn inverse(&self, base: &MapWindowConfig) -> Vec<MapWindowConfigMutation> {
         vec![Self { layer_id: self.layer_id.clone(), visible: base.layer_visibility.get(&self.layer_id).copied() }.into()]
     }
-    fn label(&self) -> String {
-        format!("Set layer visibility {}", self.layer_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set layer visibility {}", self.layer_id), &format!("Ebenensichtbarkeit {} setzen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["layerVisibility".into(), self.layer_id.clone()]

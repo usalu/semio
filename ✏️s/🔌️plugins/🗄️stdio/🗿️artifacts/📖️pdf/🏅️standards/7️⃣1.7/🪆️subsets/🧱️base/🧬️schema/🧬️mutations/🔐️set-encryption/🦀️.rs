@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetEncryption {
         vec![PdfMutation::SetEncryption(SetEncryption { encryption: base.encryption.clone() })]
     }
 
-    fn label(&self) -> String {
-        "Set encryption".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set encryption", "Verschlüsselung setzen")
     }
 
     fn target(&self) -> Vec<String> {

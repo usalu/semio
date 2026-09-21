@@ -23,8 +23,8 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for MoveVertex
     fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move vertex {} of primitive \"{}\" in mesh \"{}\" to ({}, {}, {})", self.vertex_index, self.primitive_id, self.mesh_id, self.new_point.x, self.new_point.y, self.new_point.z)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move vertex {} of primitive \"{}\" in mesh \"{}\" to ({}, {}, {})", self.vertex_index, self.primitive_id, self.mesh_id, self.new_point.x, self.new_point.y, self.new_point.z), &format!("Vertex {} von Primitiv \"{}\" in Netz \"{}\" nach ({}, {}, {}) verschieben", self.vertex_index, self.primitive_id, self.mesh_id, self.new_point.x, self.new_point.y, self.new_point.z))
     }
     fn target(&self) -> Vec<String> {
         vec![format!("{}:{}:{}", self.mesh_id, self.primitive_id, self.vertex_index)]

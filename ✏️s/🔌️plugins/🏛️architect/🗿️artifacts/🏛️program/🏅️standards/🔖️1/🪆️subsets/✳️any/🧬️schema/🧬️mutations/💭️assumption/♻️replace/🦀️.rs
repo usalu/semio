@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceAssumption {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace assumption \"{}\"", self.assumption.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace assumption \"{}\"", self.assumption.header.name), &format!("Annahme \"{}\" ersetzen", self.assumption.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.assumption.header.id.0.clone()]

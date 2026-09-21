@@ -19,8 +19,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeRhInt {
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change rh int to {}", self.new_rh_int)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change rh int to {}", self.new_rh_int), &format!("Rhint auf {} ändern", self.new_rh_int))
     }
 }
 //#endregion 🔖️Payload

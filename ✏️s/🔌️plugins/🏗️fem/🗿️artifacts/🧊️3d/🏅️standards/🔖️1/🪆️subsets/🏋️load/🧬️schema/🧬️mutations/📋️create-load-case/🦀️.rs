@@ -25,8 +25,8 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for CreateLoadCase {
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create load case \"{}\"", self.load_case.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create load case \"{}\"", self.load_case.id), &format!("Lastfall \"{}\" erstellen", self.load_case.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.load_case.id.clone()]

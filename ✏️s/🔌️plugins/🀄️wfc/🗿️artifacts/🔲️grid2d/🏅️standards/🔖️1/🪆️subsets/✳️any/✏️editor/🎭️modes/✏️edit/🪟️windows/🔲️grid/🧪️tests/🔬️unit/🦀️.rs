@@ -42,7 +42,7 @@ fn this_pane_owns_both_spellings_of_its_surface() {
 #[test]
 fn every_bundled_example_renders_one_cell_layer_per_cell() {
     for source in crate::examples::grid2d::sources() {
-        let document = <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(source.document()).expect("example parses");
+        let document = <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(&source.document()).expect("example parses");
         assert_eq!(layers(&document).len(), (document.width as usize) * (document.height as usize), "{}", source.id());
     }
 }
@@ -99,7 +99,7 @@ fn the_scene_camera_is_the_one_the_pick_inverts() {
 #[test]
 fn the_rendered_surface_is_non_empty_for_every_example() {
     for source in crate::examples::grid2d::sources() {
-        let document = <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(source.document()).expect("example parses");
+        let document = <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(&source.document()).expect("example parses");
         render(&document, &Grid2dWindowConfig::default(), UTILITY_SELECT).unwrap_or_else(|error| panic!("{}: the grid pane must render: {error:?}", source.id()));
         let published = scene(&document, &Grid2dWindowConfig::default(), UTILITY_SELECT);
         assert!(published.layers_json.len() > 64, "{}: the canvas carries no cells", source.id());

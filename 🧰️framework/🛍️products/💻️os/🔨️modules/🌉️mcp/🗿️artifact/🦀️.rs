@@ -187,10 +187,23 @@ fn require_field<'a>(arguments: &'a serde_json::Value, field: &str) -> Result<&'
 /// schema-describe command for it yet). Built ONLY from the public `read_resource` API
 /// (`semio://artifact/{id}/schema`) — never a second decoder for `🏠️workspace`'s own resource body.
 fn resolve_artifact_schema_id(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str) -> Option<String> {
+    artifact_schema_resource_field(workspace, artifact_id, "schema")
+}
+
+/// 🪢 The owning app's dialect coordinate (`s.gis.gismap`) — the id space `capabilities_search`'s
+/// `artifactKind` filter and every capability row's own `artifactKind` are spelled in, which is NOT
+/// the pack schema (`gis.map`) [`resolve_artifact_schema_id`] answers. They are two vocabularies of
+/// one document; a workspace that knows only one of them answers `None` for the other rather than
+/// passing the wrong one off as it.
+fn resolve_artifact_kind_id(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str) -> Option<String> {
+    artifact_schema_resource_field(workspace, artifact_id, "artifactKind")
+}
+
+fn artifact_schema_resource_field(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str, field: &str) -> Option<String> {
     let contents = workspace.read_resource(&format!("semio://artifact/{artifact_id}/schema")).ok()?;
     let text = contents.first()?.text.as_ref()?;
     let value: serde_json::Value = serde_json::from_str(text).ok()?;
-    value.get("schema")?.as_str().map(str::to_string)
+    value.get(field)?.as_str().map(str::to_string)
 }
 
 /// 🔎️ Best-effort real `RevisionStamp` for `artifact_id`, derived from the same `appliedEditIds`
@@ -252,6 +265,7 @@ fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: 
             let structured = serde_json::json!({
                 "artifactId": artifact_id,
                 "kind": resolve_artifact_schema_id(workspace, &artifact_id),
+                "artifactKind": resolve_artifact_kind_id(workspace, &artifact_id),
                 "revision": resolve_artifact_revision(workspace, &artifact_id),
                 "sizeBytes": pack.len() + spr.len(),
             });

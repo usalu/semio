@@ -80,6 +80,10 @@ pub enum UiDocumentReconcileFault {
     /// 🌱️ A planned child's parent never mounted — structurally impossible on a pre-order plan, so
     /// this can only mean the arena was mutated under the cursor.
     Detached,
+    /// 🎬️ The retained node exhausted its component-mount identity counter.
+    ComponentGeneration,
+    /// 🪙 The presented document could not acquire an independently credited candidate record.
+    DocumentCredits,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -87,6 +91,18 @@ pub enum UiDocumentReconcileStep {
     Pending,
     Complete,
     Fault(UiDocumentReconcileFault),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct UiRetiredComponentScene {
+    pub host_id: String,
+    pub window_id: String,
+    pub window_generation: u64,
+    pub component_generation: u64,
+    pub node: NodeId,
+    pub key: NodeKey,
+    pub kind: SurfaceKind,
+    pub surface_id: String,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -142,6 +158,28 @@ pub struct UiDocumentReconcileCursor {
 }
 
 impl UiDocumentReconcileCursor {
+    /// 🧹️ Retires one reconcile index before releasing its fixed-lifetime window owner.
+    pub(crate) fn close_step(&mut self) -> bool {
+        if self.plan.pop().is_some() || self.planned_ids.pop().is_some() || self.stack.pop().is_some() {
+            return false;
+        }
+        if self.plan.capacity() > 0 {
+            self.plan = Vec::new();
+            return false;
+        }
+        if self.planned_ids.capacity() > 0 {
+            self.planned_ids = Vec::new();
+            return false;
+        }
+        if self.stack.capacity() > 0 {
+            self.stack = Vec::new();
+            return false;
+        }
+        self.phase = UiDocumentReconcilePhase::Complete;
+        self.fault = None;
+        true
+    }
+
     /// 🔁️ Rearms the cursor for `generation`, discarding any half-finished pass for an older one.
     pub fn rearm(&mut self, generation: u64) {
         if self.generation == generation && !matches!(self.phase, UiDocumentReconcilePhase::Complete | UiDocumentReconcilePhase::Fault) {
@@ -423,6 +461,11 @@ fn merge_scene_lanes<T: ui_scene::SceneDoc>(document: &UiDocumentTree, record: &
     }
 }
 
+/// 🪪️ Addresses one mounted component independently of its owning document and sibling hosts.
+pub fn component_scene_host_id(window_generation: u64, component_generation: u64) -> String {
+    format!("scene.{window_generation}.{component_generation}")
+}
+
 /// 🗺️ Projects one `Component::Surface` record onto the `UiComponentSceneNode` every engine-surface
 /// host already reads — the Rust twin of the React Interpreter's `surfacePropsToComponentSceneNode`,
 /// including its identity rule (`surfaceHostIdentityV1`): `surface_id` is the OWNING DOCUMENT's
@@ -435,6 +478,7 @@ fn merge_scene_lanes<T: ui_scene::SceneDoc>(document: &UiDocumentTree, record: &
 /// "an unrecognised `doc_schema` must never reject the surrounding patch" rule.
 fn surface_scene_node(document: &UiDocumentTree, record: &UiNodeRecord, props: &ui_contract::SurfaceProps, surface: &str, controller: &str) -> UiComponentSceneNode {
     let mut node = UiComponentSceneNode {
+        host_id: String::new(),
         surface_id: surface.to_string(),
         controller_id: controller.to_string(),
         component_kind: surface_kind(props.kind),
@@ -904,7 +948,8 @@ impl UiTree {
     /// own this bit at runtime for popups the document knows nothing about, so a
     /// re-mount must not drop an open Select's hit-test priority.
     pub fn step_document_reconcile(&mut self, cursor: &mut UiDocumentReconcileCursor, surface: &str, controller: &str) -> UiDocumentReconcileStep {
-        self.step_document_reconcile_preserving(cursor, surface, controller, None)
+        let mut component_mount_generation = self.document_bindings().iter().filter_map(|(_, node)| self.node(*node).map(Node::component_generation)).max().unwrap_or(0);
+        self.step_document_reconcile_preserving(cursor, surface, controller, None, 0, None, &mut component_mount_generation, &mut |_| true)
     }
 
     /// 🔒️ Reconciles while preserving the synthesized rows owned by the Select whose option has
@@ -916,6 +961,10 @@ impl UiTree {
         surface: &str,
         controller: &str,
         preserved_composite_owner: Option<NodeId>,
+        window_generation: u64,
+        presented: Option<&UiTree>,
+        component_mount_generation: &mut u64,
+        retire_scene: &mut impl FnMut(UiRetiredComponentScene) -> bool,
     ) -> UiDocumentReconcileStep {
         match cursor.phase {
             UiDocumentReconcilePhase::Complete => return UiDocumentReconcileStep::Complete,
@@ -985,15 +1034,69 @@ impl UiTree {
                     cursor.phase = UiDocumentReconcilePhase::Retire;
                     return UiDocumentReconcileStep::Pending;
                 };
-                let (key, spec, layout_spec, intent) = {
+                let (key, mut spec, layout_spec, intent) = {
                     let Some(document) = self.document() else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
                     let Some(record) = document.record(planned.id) else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
                     (NodeKey::Explicit(record.key.as_str().to_string()), WidgetSpec(ui_node_from_record(document, record, surface, controller)), record.layout.clone(), record_intent_bindings(record, surface, document.revision().0))
                 };
                 let routing = layout_routing_flags(&layout_spec);
+                let presented_scene = match &spec.0 {
+                    UiNode::ComponentScene(next) => presented.and_then(|tree| {
+                        let node = tree.document_node(planned.id)?;
+                        let retained = tree.node(node)?;
+                        let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
+                        (retained.key == key && scene.component_kind == next.component_kind && scene.surface_id == next.surface_id)
+                            .then(|| (scene.host_id.clone(), retained.component_generation()))
+                    }),
+                    _ => None,
+                };
                 let node = match self.document_node(planned.id).filter(|node| self.contains(*node)) {
                     Some(node) => {
+                        let Some((retirement, candidate_scene)) = self.node(node).map(|existing| {
+                            let old_scene = match &existing.spec.0 {
+                                UiNode::ComponentScene(scene) => Some(scene),
+                                _ => None,
+                            };
+                            let survives = matches!(
+                                (old_scene, &spec.0),
+                                (Some(old_scene), UiNode::ComponentScene(next_scene))
+                                    if existing.key == key && old_scene.component_kind == next_scene.component_kind && old_scene.surface_id == next_scene.surface_id
+                            );
+                            let retirement = old_scene.filter(|_| !survives).map(|old_scene| UiRetiredComponentScene {
+                                host_id: old_scene.host_id.clone(),
+                                window_id: surface.to_owned(),
+                                window_generation,
+                                component_generation: existing.component_generation(),
+                                node,
+                                key: existing.key.clone(),
+                                kind: old_scene.component_kind,
+                                surface_id: old_scene.surface_id.clone(),
+                            });
+                            let candidate_scene = survives.then(|| (old_scene.expect("surviving scene").host_id.clone(), existing.component_generation()));
+                            (retirement, candidate_scene)
+                        }) else { return cursor.refuse(UiDocumentReconcileFault::Detached) };
+                        let scene_identity = if matches!(&spec.0, UiNode::ComponentScene(_)) {
+                            match presented_scene.or(candidate_scene) {
+                                Some(identity) => Some(identity),
+                                None => {
+                                    let Some(generation) = component_mount_generation.checked_add(1) else { return cursor.refuse(UiDocumentReconcileFault::ComponentGeneration) };
+                                    *component_mount_generation = generation;
+                                    Some((component_scene_host_id(window_generation, generation), generation))
+                                }
+                            }
+                        } else {
+                            None
+                        };
+                        if let UiNode::ComponentScene(scene) = &mut spec.0 {
+                            scene.host_id = scene_identity.as_ref().expect("scene mount identity").0.clone();
+                        }
+                        if retirement.is_some_and(|retirement| !retire_scene(retirement)) {
+                            return UiDocumentReconcileStep::Pending;
+                        }
                         if let Some(existing) = self.node_mut(node) {
+                            if let Some((_, generation)) = scene_identity {
+                                existing.component_generation = generation;
+                            }
                             if existing.key != key {
                                 existing.key = key;
                             }
@@ -1006,7 +1109,25 @@ impl UiTree {
                         node
                     }
                     None => {
+                        let scene_identity = if matches!(&spec.0, UiNode::ComponentScene(_)) {
+                            match presented_scene {
+                                Some(identity) => Some(identity),
+                                None => {
+                                    let Some(generation) = component_mount_generation.checked_add(1) else { return cursor.refuse(UiDocumentReconcileFault::ComponentGeneration) };
+                                    *component_mount_generation = generation;
+                                    Some((component_scene_host_id(window_generation, generation), generation))
+                                }
+                            }
+                        } else {
+                            None
+                        };
+                        if let (UiNode::ComponentScene(scene), Some((host_id, _))) = (&mut spec.0, scene_identity.as_ref()) {
+                            scene.host_id = host_id.clone();
+                        }
                         let mut mounted = Node::new(key, spec);
+                        if let Some((_, generation)) = scene_identity {
+                            mounted.component_generation = generation;
+                        }
                         mounted.layout_spec = Some(layout_spec);
                         mounted.intent = Some(intent);
                         let node = self.insert_detached(mounted);
@@ -1044,6 +1165,22 @@ impl UiTree {
                 };
                 if cursor.planned_ids.binary_search(&id).is_ok() {
                     cursor.sweep += 1;
+                    return UiDocumentReconcileStep::Pending;
+                }
+                let retirement = self.node(node).and_then(|existing| {
+                    let UiNode::ComponentScene(scene) = &existing.spec.0 else { return None };
+                    Some(UiRetiredComponentScene {
+                        host_id: scene.host_id.clone(),
+                        window_id: surface.to_owned(),
+                        window_generation,
+                        component_generation: existing.component_generation(),
+                        node,
+                        key: existing.key.clone(),
+                        kind: scene.component_kind,
+                        surface_id: scene.surface_id.clone(),
+                    })
+                });
+                if retirement.is_some_and(|retirement| !retire_scene(retirement)) {
                     return UiDocumentReconcileStep::Pending;
                 }
                 self.unbind_document_node_at(cursor.sweep);

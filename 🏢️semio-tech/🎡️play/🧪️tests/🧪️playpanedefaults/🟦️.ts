@@ -15,8 +15,9 @@ function pluginDescriptorReader(repoRoot: string): (cratePath: string) => any | 
 
 /** @emoji 📚️ Plugins whose examples never reach a navbar picker, so a pane of theirs boots its app's own
  * default document: the framework's own `NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS`, minus `stdio` — that
- * one is exempt there because only one of its 18 shipped document apps publishes an example, while the
- * one pane play shows of it is exactly that app (`s.stdio.md@commonmark/*#editor`). */
+ * one is exempt there because only one of its 18 shipped document apps publishes an example, while play
+ * gives each of those apps its OWN pane, so the single publishing app (`s.stdio.md@commonmark/*#editor`)
+ * is the only stdio pane that can name a curated example and the other eight name none. */
 const EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS: readonly string[] = ["demonstrator", "flow", "norm"];
 
 /** @emoji 🕳️ The only plugins that commit no descriptor at all, so no manifest states which examples
@@ -88,6 +89,7 @@ const PANES_WHOSE_APP_CANNOT_SWITCH_EXAMPLES: Readonly<Record<string, string>> =
   dag: "dag — committed descriptor predates the action its editor Rust already declares",
   imperative: "imperative — committed descriptor predates the action its editor Rust already declares",
   "trinity-rewriting": "trinity — committed descriptor predates the action its editor Rust already declares",
+  stdio: "stdio — md editor declares no setActiveExample",
 };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, repoRoot: string): Promise<void> {

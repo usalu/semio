@@ -125,6 +125,12 @@ Let me walk you through 🚶️
 
 > Do you wonder how compose is interoperable? The reason is a shared [specification](#-requirements-) 🪢️
 
+> **Status, plainly.** This repository is the source, not a distribution. There is no installer, no
+> published container image, no package on any registry and no hosted instance; `.github/workflows/`
+> is empty and nothing is uploaded anywhere. Everything below is built from this checkout after
+> `npm run setup`, and every release binary named below lands under its own product's `dist/`.
+
+
 ## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
 
 [sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for compose🖱️
@@ -133,11 +139,48 @@ It is the digital pencil for sketching plans and digital scalpel for building mo
 
 ![sketchpad demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/💻️applications/✏️sketchpad/🎞️sketchpad-demo.gif)
 
+**Getting started** — the browser shell, hosting every plugin in one window:
+
+```bash
+npm run setup                                                    # once, after cloning
+
+export SEMIO_RENDERER=react NX_DAEMON=false
+bun nx run @semio-tech/framework-os-dev:activate-s-react-dev     # stages and compiles the components
+
+cd 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript
+S_OS_PORT=6060 bun ./📜️script.ts serve s react dev              # → http://127.0.0.1:6060
+```
+
+The first activation compiles every plugin to WebAssembly and takes tens of minutes; serving
+afterwards takes seconds. Put a single plugin's name where `s` is (`activate-draw-react-dev`, then
+`serve draw react dev`) for a first look that activates in a fraction of the time. Keep activation
+and serving as two commands rather than using `bun nx run @semio-tech/framework-os-dev:dev s` — `dev`
+watches the whole repository and re-activates, taking the running server down with it, on any edit.
+
+
 ## 👥️ studio [↑](#%EF%B8%8F-products-)
 
 A studio is a synchronous collaboriation environment for teams to work together in compose 🤝️
 
 ![compose studio Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/💻️applications/👥️studio-demo.png)
+
+**Getting started** — two people in one document needs the hub, the server half of semio:
+
+```bash
+bun nx run os-hub:dev-secure-suite   # hub + React `s` + native + MCP children, one credential each
+bun nx run os-hub:dev                # the hub alone, loopback, data root ./.🧬semio/🌐hub
+```
+
+That is the *development* topology: supervised, loopback-only, and it will not start as a bare
+process. For a server — a network bind, a reverse proxy, the first user, backups — build the release
+binary and read [`🌎️hub/README.md`](🌎️hub/README.md) from the top; its opening table is the gate that
+decides whether your hub boots at all.
+
+```bash
+bun nx run os-hub:build              # → 🌎️hub/📦️packages/🦀️rust/dist/build/os-hub
+bun ./📜️script.ts publish os-hub     # → dist/publish/os-hub-<version>-<platform>-<arch>.tar.gz
+```
+
 
 ## ☁️ cloud [↑](#%EF%B8%8F-products-)
 
@@ -145,11 +188,83 @@ Use any file-hosting platform as an asynchronous Common-Data-Environment 📁️
 
 ![Cloud Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/💻️applications/☁️cloud-demo.png)
 
+**Getting started** — storage *is* the hub's own store; there is no second service to run. One
+directory, `OS_HUB_DATA`, holds the event-sourced documents, the artifact chunk store, the identity
+database and the published trusted catalog:
+
+```bash
+export OS_HUB_DATA=/srv/semio-hub/data
+tar -czf hub-backup.tgz -C "$OS_HUB_DATA" .   # with the hub stopped, this is the whole backup
+```
+
+The document store (`OS_HUB_STORAGE_BACKEND`) is `fs` by default and may be `sqlite`, `postgres` or
+`neo4j`; the identity store (`OS_HUB_DIRECTORY_BACKEND`) is `sqlite` by default and chosen
+independently. Every connection variable, and which of them a given backend requires, is in
+[`🌎️hub/README.md`](🌎️hub/README.md).
+
+
 ## 🤖️ assistant [↑](#%EF%B8%8F-products-)
 
 The assistant helps you on every step in the design process with compose ✍️
 
 ![compose assistant Demo](🧰️framework/🔨️modules/🖼️assets/🖼️images/💻️applications/🤖️assistant-demo.png)
+
+**Getting started** — the assistant is *your own* AI client. This project ships no model and calls no
+model provider; it ships an MCP server that hands your client semio's own capabilities — open and
+create artifacts, prepare and invoke actions, snapshot, undo/redo, transactions, inference — against
+a folder of your work or against a hub space, and bridges them into a semio window you already have
+open.
+
+```bash
+bun nx run @semio-tech/framework-os-mcp-rs:build-release
+# → 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp
+```
+
+**Claude Code** — a `.mcp.json` in the project you want it available from (the repo checkout is the
+`cwd`; the folder is *your* work, anywhere on disk):
+
+```json
+{
+  "mcpServers": {
+    "semio": {
+      "type": "stdio",
+      "command": "/Users/you/src/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp",
+      "args": [
+        "stdio",
+        "--folder", "/Users/you/Documents/my-semio-space",
+        "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control"
+      ]
+    }
+  }
+}
+```
+
+**Claude Desktop** — `claude_desktop_config.json` (macOS
+`~/Library/Application Support/Claude/claude_desktop_config.json`, Windows
+`%APPDATA%\Claude\claude_desktop_config.json`). Desktop takes no `cwd`, so the absolute binary path
+is the only form that works:
+
+```json
+{
+  "mcpServers": {
+    "semio": {
+      "command": "/Users/you/src/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp",
+      "args": [
+        "stdio",
+        "--folder", "/Users/you/Documents/my-semio-space",
+        "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control"
+      ]
+    }
+  }
+}
+```
+
+Change the two paths, restart the client, and ask it to list semio's capabilities. To work in a hub
+space instead of a folder, swap `--folder <dir>` for `--hub <url> --space <id> --credential-file
+<path>`, where the credential file is the one the *Agent delegations* panel of a signed-in semio
+window downloads for you. Both shapes, every tool, the approval model and the other clients are in
+[the MCP README](🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/README.md).
+
 
 ## 🦗️ [🦗️compose.gh](https://docs.semio-tech.com/manual/grasshopper) [↑](#%EF%B8%8F-products-)
 

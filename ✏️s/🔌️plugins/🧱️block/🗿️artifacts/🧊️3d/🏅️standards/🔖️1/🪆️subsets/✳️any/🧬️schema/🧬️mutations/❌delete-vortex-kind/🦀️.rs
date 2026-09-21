@@ -30,8 +30,8 @@ impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for DeleteVortexKi
     fn inverse(&self, base: &Block3dSnapshot) -> Vec<Block3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete vortex kind \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete vortex kind \"{}\"", self.id), &format!("Wirbelart \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

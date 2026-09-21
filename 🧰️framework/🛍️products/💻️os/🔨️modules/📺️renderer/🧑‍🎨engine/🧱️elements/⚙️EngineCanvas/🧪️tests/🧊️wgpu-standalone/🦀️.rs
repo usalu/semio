@@ -355,7 +355,7 @@ pub fn tiled_map_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f3
 #[test]
 fn saturated_map_action_queue_preserves_host_revision_and_camera() {
     let surface_id = "map-plan-saturation";
-    ensure_engine_surface(surface_id, 800, 600);
+    ensure_engine_surface(surface_id, surface_id, 800, 600);
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(surface_id).unwrap().map_host = Some(MapHost::new()));
     let before = with_map_host(surface_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
     let mut input = ui_wgpu::wgpu::InputState::default();
@@ -373,14 +373,14 @@ fn saturated_map_action_queue_preserves_host_revision_and_camera() {
 #[cfg(test)]
 #[test]
 fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
-    fn saturate(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
-        for _ in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
+    fn saturate(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, remaining_items: usize) {
+        for _ in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY.saturating_sub(remaining_items) {
             input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
         }
     }
 
     let graph_id = "graph-plan-saturation";
-    ensure_engine_surface(graph_id, 800, 600);
+    ensure_engine_surface(graph_id, graph_id, 800, 600);
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(graph_id).unwrap().node_graph = Some(NodeGraphEngine::Dag(GraphHost::default())));
     let graph_before = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
@@ -388,7 +388,7 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
         [host.dag.host_snapshot.camera.x, host.dag.host_snapshot.camera.y, host.dag.host_snapshot.camera.zoom]
     });
     let mut graph_input = ui_wgpu::wgpu::InputState::default();
-    saturate(&mut graph_input);
+    saturate(&mut graph_input, 0);
     assert_eq!(node_graph_wheel_into(graph_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, false, &mut graph_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
     let graph_after = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
@@ -410,11 +410,11 @@ fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
     assert_eq!(graph_selection_after, graph_selection_before);
 
     let board_id = "board-plan-saturation";
-    ensure_engine_surface(board_id, 800, 600);
+    ensure_engine_surface(board_id, board_id, 800, 600);
     ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).unwrap().board_host = Some(ManuallyDrop::new(infinite_canvas::BoardHost::default())));
     let board_before = with_board_host(board_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
     let mut board_input = ui_wgpu::wgpu::InputState::default();
-    saturate(&mut board_input);
+    saturate(&mut board_input, 1);
     assert_eq!(puzzle_board_wheel_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, &mut board_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
     let board_after = with_board_host(board_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
     assert_eq!(board_after, board_before);

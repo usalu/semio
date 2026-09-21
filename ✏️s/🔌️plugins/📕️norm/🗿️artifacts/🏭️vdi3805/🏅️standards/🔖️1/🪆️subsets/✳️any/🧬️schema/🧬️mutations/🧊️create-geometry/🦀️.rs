@@ -19,8 +19,8 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for CreateGeometry
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create geometry \"{}\"", self.geometry.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create geometry \"{}\"", self.geometry.id), &format!("Geometrie \"{}\" erstellen", self.geometry.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.geometry.id.clone()]

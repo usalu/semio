@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeThetaE
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change outdoor design temperature to {}", self.new_theta_e_c)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change outdoor design temperature to {}", self.new_theta_e_c), &format!("Außenbemessungstemperatur auf {} ändern", self.new_theta_e_c))
     }
 }
 //#endregion 🔖️ChangeThetaEC

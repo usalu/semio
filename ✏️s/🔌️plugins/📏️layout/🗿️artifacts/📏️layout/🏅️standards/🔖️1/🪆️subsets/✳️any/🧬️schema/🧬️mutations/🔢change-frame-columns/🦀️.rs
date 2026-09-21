@@ -24,8 +24,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameColumns {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_frame_columns(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change frame \"{}\" columns", self.frame_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change frame \"{}\" columns", self.frame_id), &format!("Rahmen \"{}\" Stützen ändern", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

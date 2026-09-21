@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for ChangeRepres
     fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Re-pin representation at #{}", self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Re-pin representation at #{}", self.index), &format!("Repräsentation bei #{} neu anheften", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

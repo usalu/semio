@@ -23,7 +23,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameMeta {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename document to \"{}\"", self.new_title)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename document to \"{}\"", self.new_title), &format!("Dokument in \"{}\" umbenennen", self.new_title))
     }
 }

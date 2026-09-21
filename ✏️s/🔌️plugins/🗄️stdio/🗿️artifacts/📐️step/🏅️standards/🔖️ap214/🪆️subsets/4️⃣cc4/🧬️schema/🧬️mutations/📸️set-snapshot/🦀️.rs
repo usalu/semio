@@ -23,8 +23,8 @@ impl protocol::MutationKind<StepSnapshot, StepCc4Mutation> for SetSnapshot {
     fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc4Mutation> {
         vec![StepCc4Mutation::SetSnapshot(SetSnapshot { snapshot: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Set the whole CC4 snapshot".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set the whole CC4 snapshot", "ganze CC4 Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -25,8 +25,8 @@ impl protocol::MutationKind<StepSnapshot, StepCc6Mutation> for SetShapeRepresent
     fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc6Mutation> {
         class_inverse(base, &ClassEdit::Representation { id: self.id, row: self.representation.clone() })
     }
-    fn label(&self) -> String {
-        format!("Set shape representation #{}", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set shape representation #{}", self.id), &format!("Formrepräsentation #{} setzen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string()]

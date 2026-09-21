@@ -1030,7 +1030,7 @@ fn hover_id_reaches_the_board_scene_for_every_granularity_and_pane() {
 /// previewed index is the shared slot index — one mechanism, not two.
 #[test]
 fn suggestion_popup_publishes_the_shared_candidate_page_and_the_previewed_index() {
-    let fixture: Value = serde_json::from_str(crate::examples::puzzle2d::concrete_forest::SOURCE.document_json()).expect("concrete forest json");
+    let fixture: Value = serde_json::from_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json()).expect("concrete forest json");
     let handle_id = first_free_handle_id(&fixture).expect("concrete forest offers a free handle");
     let runtime = crate::editor::puzzle2d::config::Puzzle2dPlayRuntime {
         suggestion_menu: Some(crate::editor::puzzle2d::config::Puzzle2dSuggestionMenu { x: 12.0, y: 34.0, window_id: overview::WINDOW_KIND_ID.into(), handle_id: handle_id.clone() }),
@@ -1056,7 +1056,7 @@ fn suggestion_popup_publishes_the_shared_candidate_page_and_the_previewed_index(
 /// 💡️ LAW: a closed popup publishes nothing, so no pane renders a stale menu.
 #[test]
 fn a_closed_suggestion_popup_publishes_no_menu() {
-    let fixture: Value = serde_json::from_str(crate::examples::puzzle2d::concrete_forest::SOURCE.document_json()).expect("concrete forest json");
+    let fixture: Value = serde_json::from_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json()).expect("concrete forest json");
     let envelope = Puzzle2dScene { fixture, runtime: Default::default(), active_utility: "select".into(), interaction: Puzzle2dInteractionSnapshot::default() };
     assert!(edit::puzzle2d_board_scene("{}", &envelope, overview::WINDOW_KIND_ID).suggestion_menu_json.is_none());
 }

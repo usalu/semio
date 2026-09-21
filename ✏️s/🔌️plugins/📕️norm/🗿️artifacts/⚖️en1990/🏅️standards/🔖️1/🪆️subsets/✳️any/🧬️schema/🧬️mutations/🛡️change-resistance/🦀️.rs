@@ -20,8 +20,8 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeResistance
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change resistance to {} kN", self.new_resistance_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change resistance to {} kN", self.new_resistance_kn), &format!("Widerstand auf {} kN ändern", self.new_resistance_kn))
     }
 }
 //#endregion 🔖️Payload

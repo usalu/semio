@@ -652,10 +652,19 @@ pub struct PointerCallbacks {
 /// hit-tested at another.
 #[derive(Clone, Debug, PartialEq)]
 #[cfg(feature = "wgpu-engine")]
+pub struct RetainedSceneHit {
+    pub surface_id: String,
+    pub kind: crate::wgpu::component::ui::SurfaceKind,
+}
+
+/// 🎬️ Retained pointer geometry and the canonical scene identity that produced it.
+#[derive(Clone, Debug, PartialEq)]
+#[cfg(feature = "wgpu-engine")]
 pub struct RetainedHitRegistration {
     pub node: crate::wgpu::arena::NodeId,
     pub rect: Rect,
     pub overlay: bool,
+    pub scene: Option<RetainedSceneHit>,
     pub kind: HitKind,
     pub control_id: String,
     pub action: Option<ActionDescriptor>,
@@ -728,7 +737,7 @@ pub fn retained_hit_registration(
     if !node.spec.0.presence().visible() || rect.w <= 0.0 || rect.h <= 0.0 {
         return None;
     }
-    let entry = |kind: HitKind, control_id: String, action: Option<ActionDescriptor>, rect: Rect| Some(RetainedHitRegistration { node: id, rect, overlay: false, kind, control_id, action, drag_axis: None, drag_data: None });
+    let entry = |kind: HitKind, control_id: String, action: Option<ActionDescriptor>, rect: Rect| Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind, control_id, action, drag_axis: None, drag_data: None });
     match &node.spec.0 {
         UiNode::Stack(stack) => match retained_tree_row(tree, id) {
             Some(RetainedTreeRow::Section(section)) => {
@@ -749,6 +758,7 @@ pub fn retained_hit_registration(
                     node: id,
                     rect: band,
                     overlay: false,
+                    scene: None,
                     kind: HitKind::TreeItem,
                     control_id: format!("tree.label.{}", item.id),
                     action: stack.activate.clone().or_else(|| item.action.clone()),
@@ -764,23 +774,25 @@ pub fn retained_hit_registration(
         },
         UiNode::Section(section) if section.label.is_some() => {
             let band = Rect::new(rect.x, rect.y, rect.w, crate::wgpu::flex::SECTION_HEADER_HEIGHT.min(rect.h));
-            (band.h > 0.0).then(|| RetainedHitRegistration { node: id, rect: band, overlay: false, kind: HitKind::Toggle, control_id: section.id.clone(), action: None, drag_axis: None, drag_data: None })
+            (band.h > 0.0).then(|| RetainedHitRegistration { node: id, rect: band, overlay: false, scene: None, kind: HitKind::Toggle, control_id: section.id.clone(), action: None, drag_axis: None, drag_data: None })
         }
         UiNode::Button(button) => entry(HitKind::Button, button.id.clone().unwrap_or_else(|| button.action.action.clone()), Some(button.action.clone()), rect),
         UiNode::Input(input) => entry(HitKind::Input, input.id.clone(), None, rect),
         UiNode::Select(select) => entry(HitKind::Select, select.id.clone(), None, rect),
         UiNode::Toggle(toggle) => entry(HitKind::Toggle, toggle.id.clone(), None, rect),
-        UiNode::Slider(slider) => Some(RetainedHitRegistration { node: id, rect, overlay: false, kind: HitKind::Slider, control_id: slider.id.clone(), action: None, drag_axis: Some(DragAxis::Horizontal), drag_data: None }),
+        UiNode::Slider(slider) => Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::Slider, control_id: slider.id.clone(), action: None, drag_axis: Some(DragAxis::Horizontal), drag_data: None }),
         // 🎛️ The three kinds a retained body used to register NOTHING for — so a press on a
         // generation's stepper, ring or icon field resolved the WINDOW beneath it and the retained
         // router never saw the gesture at all, which is half of why those kinds could not commit
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gap #6).
         UiNode::NumberStepper(stepper) => entry(HitKind::NumberStepper, stepper.id.clone(), None, rect),
-        UiNode::Ring(ring) => Some(RetainedHitRegistration { node: id, rect, overlay: false, kind: HitKind::Ring, control_id: ring.id.clone(), action: None, drag_axis: Some(DragAxis::Both), drag_data: None }),
+        UiNode::Ring(ring) => Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::Ring, control_id: ring.id.clone(), action: None, drag_axis: Some(DragAxis::Both), drag_data: None }),
         UiNode::IconSelect(select) => entry(HitKind::IconSelect, select.id.clone(), None, rect),
         UiNode::ComponentScene(scene) => {
             let (kind, control_id) = retained_scene_hit(scene);
-            entry(kind, control_id, None, rect)
+            let mut registration = entry(kind, control_id, None, rect)?;
+            registration.scene = Some(RetainedSceneHit { surface_id: scene.surface_id.clone(), kind: scene.component_kind });
+            Some(registration)
         }
         _ => None,
     }
@@ -802,6 +814,7 @@ pub fn retained_tree_chevron_registration(
         node: id,
         rect,
         overlay: false,
+        scene: None,
         kind: HitKind::TreeItem,
         control_id: format!("tree.chevron.{}", item.id),
         action: None,
@@ -839,6 +852,7 @@ pub fn retained_tree_drag_handle_registration(
         node: id,
         rect: handle,
         overlay: false,
+        scene: None,
         kind: HitKind::TreeDragHandle,
         control_id: format!("tree.drag.{}.{}", if role == TreeDragRole::Transfer { "transfer" } else { "sort" }, item.id),
         action: None,

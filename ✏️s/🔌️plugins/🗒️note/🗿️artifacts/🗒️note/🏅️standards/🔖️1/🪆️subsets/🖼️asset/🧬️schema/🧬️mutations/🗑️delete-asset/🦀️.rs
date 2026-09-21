@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DeleteAsset {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete asset \"{}\"", self.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete asset \"{}\"", self.key), &format!("Asset \"{}\" löschen", self.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.key.clone()]

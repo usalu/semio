@@ -11,8 +11,13 @@ mod document_contract_tests;
 
 //#region 🔖️Artifact
 /// 🧬️ cad document artifact state.
+///
+/// 🛡️ `deny_unknown_fields`: a cad document is exactly these keys. The retired inline pane state
+/// (`objects`, `shapeGeometry`, `activeModelDefinitionId` — replaced by the composed child slots and
+/// by window config) must FAIL to decode instead of being silently dropped, which is the law
+/// `🧫️fixtures/🪪️document-contract`'s `invalidDocuments` rows state.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadArtifact {
     #[state(artifact)]

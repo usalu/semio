@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeUseFem {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change use fem to {:?}", self.new_use_fem)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change use fem to {:?}", self.new_use_fem), &format!("Nutzungsfem auf {:?} ändern", self.new_use_fem))
     }
 }
 //#endregion 🔖️ChangeUseFem

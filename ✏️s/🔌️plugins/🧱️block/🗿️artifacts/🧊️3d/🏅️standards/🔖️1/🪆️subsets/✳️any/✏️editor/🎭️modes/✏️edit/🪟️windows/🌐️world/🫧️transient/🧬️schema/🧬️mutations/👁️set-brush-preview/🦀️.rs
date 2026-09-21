@@ -24,8 +24,8 @@ impl protocol::MutationKind<Block3dWorldWindowTransient, Block3dWorldWindowTrans
         vec![Self { preview: base.brush_preview.clone() }.into()]
     }
 
-    fn label(&self) -> String {
-        "Set World Window Brush Preview".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set World Window Brush Preview", "Weltfensterpinselvorschau setzen")
     }
 
     fn target(&self) -> Vec<String> {

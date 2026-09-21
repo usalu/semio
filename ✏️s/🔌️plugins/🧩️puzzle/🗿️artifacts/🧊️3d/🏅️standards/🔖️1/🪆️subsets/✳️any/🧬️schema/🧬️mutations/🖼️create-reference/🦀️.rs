@@ -32,8 +32,8 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for CreateRefere
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create reference \"{}\"", self.reference.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create reference \"{}\"", self.reference.id), &format!("Referenz \"{}\" erstellen", self.reference.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.reference.id.clone()]

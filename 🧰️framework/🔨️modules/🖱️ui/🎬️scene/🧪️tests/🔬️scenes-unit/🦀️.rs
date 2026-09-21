@@ -34,6 +34,37 @@ fn node_graph_hover_port_id_round_trips_as_camel_case_and_omits_when_none() {
 }
 
 #[test]
+fn node_graph_interaction_domain_is_closed_non_empty_and_identical_on_both_encoders() {
+    let mut scene = NodeGraphScene::base(Vec::new(), Vec::new(), Viewport2d::default());
+    scene.interaction_domain = Some(NodeGraphInteractionDomain {
+        id: "graph".into(),
+        node_target_prefix: "flow-play-document.widget.".into(),
+        edge_target_prefix: "flow-play-document.synapse.".into(),
+        handle_target_prefix: "flow-play-document.handle.".into(),
+    });
+    let json = serde_json::to_value(&scene).expect("serialize");
+    assert_eq!(
+        json["interactionDomain"],
+        serde_json::json!({
+            "id": "graph",
+            "nodeTargetPrefix": "flow-play-document.widget.",
+            "edgeTargetPrefix": "flow-play-document.synapse.",
+            "handleTargetPrefix": "flow-play-document.handle."
+        })
+    );
+    assert_eq!(serde_json::from_value::<NodeGraphScene>(json).expect("serde round trip"), scene);
+    assert_eq!(NodeGraphScene::from_value(scene.to_value()).expect("value round trip"), scene);
+    assert!(serde_json::to_value(NodeGraphScene::base(Vec::new(), Vec::new(), Viewport2d::default())).expect("serialize bare").get("interactionDomain").is_none());
+    for invalid in [
+        serde_json::json!({ "id": "graph", "nodeTargetPrefix": "", "edgeTargetPrefix": "edge.", "handleTargetPrefix": "handle." }),
+        serde_json::json!({ "id": "graph", "nodeTargetPrefix": "node.", "edgeTargetPrefix": "edge." }),
+        serde_json::json!({ "id": "graph", "nodeTargetPrefix": "node.", "edgeTargetPrefix": "edge.", "handleTargetPrefix": "handle.", "legacyPrefix": "legacy." }),
+    ] {
+        assert!(serde_json::from_value::<NodeGraphInteractionDomain>(invalid).is_err());
+    }
+}
+
+#[test]
 fn node_graph_scene_highlighted_round_trips_and_omits_when_empty() {
     let viewport = semio_framework_ui_viewport::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     let mut scene = NodeGraphScene { highlighted: vec!["a".into(), "b@out".into()], ..NodeGraphScene::base(Vec::new(), Vec::new(), viewport.clone()) };
@@ -445,7 +476,8 @@ fn tiledmap_scene_splits_into_the_declared_lanes_and_merges_back() {
 /// nothing read, and the document silently vanished.
 #[test]
 fn ink_canvas_document_payload_is_document_json_on_both_encoders() {
-    let scene = InkCanvasScene::base("{\"items\":[]}".into(), "selectDirect".into(), "composite".into(), true);
+    let mut scene = InkCanvasScene::base("{\"items\":[]}".into(), "selectDirect".into(), "composite".into(), true);
+    scene.interaction_domain = Some(InkCanvasInteractionDomain { id: "blocks".into(), granularity_id: "block".into() });
     let json = serde_json::to_value(&scene).expect("serialize");
     assert_eq!(json.get("documentJson").and_then(Value::as_str), Some("{\"items\":[]}"), "serde must spell React's own key");
     assert!(json.get("snapshotJson").is_none(), "the camelCase holdout must be gone from the serde wire");
@@ -457,6 +489,28 @@ fn ink_canvas_document_payload_is_document_json_on_both_encoders() {
     assert!(entries.iter().any(|(key, _)| key == "documentJson"), "ToValue must spell the same key as serde: {:?}", entries.iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>());
     assert!(!entries.iter().any(|(key, _)| key == "snapshotJson"));
     assert_eq!(InkCanvasScene::from_value(value).expect("value round trip"), scene);
+    assert_eq!(json["interactionDomain"], serde_json::json!({ "id": "blocks", "granularityId": "block" }));
+    assert_eq!(serde_json::from_value::<InkCanvasScene>(json).expect("serde round trip"), scene);
+
+    let bare = InkCanvasScene::base("{}".into(), "selectDirect".into(), "composite".into(), true);
+    assert!(serde_json::to_value(&bare).expect("serialize bare").get("interactionDomain").is_none());
+    for invalid in [
+        serde_json::json!({ "id": "blocks" }),
+        serde_json::json!({ "granularityId": "block" }),
+        serde_json::json!({ "id": "", "granularityId": "block" }),
+        serde_json::json!({ "id": "blocks", "granularityId": "" }),
+        serde_json::json!({ "id": "blocks", "granularityId": "block", "domainId": "legacy" }),
+    ] {
+        assert!(serde_json::from_value::<InkCanvasInteractionDomain>(invalid).is_err());
+    }
+    for invalid in [
+        DslValue::Object(vec![("id".into(), DslValue::String("blocks".into()))]),
+        DslValue::Object(vec![("id".into(), DslValue::String(String::new())), ("granularityId".into(), DslValue::String("block".into()))]),
+        DslValue::Object(vec![("id".into(), DslValue::String("blocks".into())), ("granularityId".into(), DslValue::String("block".into())), ("domainId".into(), DslValue::String("legacy".into()))]),
+        DslValue::Object(vec![("id".into(), DslValue::String("blocks".into())), ("id".into(), DslValue::String("duplicate".into())), ("granularityId".into(), DslValue::String("block".into()))]),
+    ] {
+        assert!(InkCanvasInteractionDomain::from_value(invalid).is_err());
+    }
 }
 
 //#region 🚚️Paint2dSceneLanes

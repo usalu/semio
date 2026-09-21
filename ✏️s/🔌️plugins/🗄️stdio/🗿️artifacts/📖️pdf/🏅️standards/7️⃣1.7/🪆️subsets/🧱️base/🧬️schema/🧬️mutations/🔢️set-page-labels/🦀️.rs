@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageLabels {
         vec![PdfMutation::SetPageLabels(SetPageLabels { labels: base.page_labels.clone() })]
     }
 
-    fn label(&self) -> String {
-        format!("Set {} page label ranges", self.labels.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set {} page label ranges", self.labels.len()), &format!("{} Seitenbeschriftungsbereiche setzen", self.labels.len()))
     }
 
     fn target(&self) -> Vec<String> {

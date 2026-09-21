@@ -20,8 +20,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetSnapshot {
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxStrictMutation> {
         agg_inverse(&XlsxStrictMutation::SetSnapshot(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-snapshot".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

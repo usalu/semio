@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Update
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        "Update ground temperatures".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update ground temperatures", "Bodentemperaturen aktualisieren")
     }
 }
 //#endregion 🔖️Mutation

@@ -29,10 +29,22 @@ impl NativeCodecProviderSetV1 {
         Self { entries: &[NativeCodecProviderEntryV1 { plugin_id: "stdio", package_id: "semio:stdio", preview: preview_stdio_bindings }, NativeCodecProviderEntryV1 { plugin_id: "gis", package_id: "semio:gis", preview: preview_gis_bindings }, NativeCodecProviderEntryV1 { plugin_id: "vcs", package_id: "semio:vcs", preview: preview_vcs_bindings }] }
     }
 
+    /// 🔎️ Answers the compiled bindings of one package. Three outcomes, not two: an exact
+    /// entry yields its closure; a package this binary links nothing for yields an EMPTY closure, so
+    /// the trusted loader binds the component's own codec instead (ticket 26/09/18 slice TC3b —
+    /// refusing here is what made a fourth package structurally unloadable); and a claim that pairs
+    /// one linked half with another entry's half is refused, because that is a corrupted owner
+    /// identity rather than an unlinked package.
     pub(crate) fn preview(&self, plugin_id: &str, package_id: &str, version: &str, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
         context.checkpoint()?;
         let mut matches = self.entries.iter().filter(|entry| entry.plugin_id == plugin_id && entry.package_id == package_id);
-        let selected = matches.next().ok_or_else(|| provider_error("selected package has no compiled native provider"))?;
+        let Some(selected) = matches.next() else {
+            if self.entries.iter().any(|entry| entry.plugin_id == plugin_id || entry.package_id == package_id) {
+                return Err(provider_error("compiled native provider identity is owned by a different package"));
+            }
+            context.checkpoint()?;
+            return Ok(Vec::new());
+        };
         if matches.next().is_some() {
             return Err(provider_error("compiled native provider identity is duplicated"));
         }
@@ -82,12 +94,12 @@ fn preview_gis_bindings(version: &str, context: &OperationContext<'_>) -> Result
         {
             return Err(rejected());
         }
-        let (codec, genesis) = receipt.into_codec_and_genesis().map_err(|_| rejected())?;
+        let codec = receipt.into_codec().map_err(|_| rejected())?;
         if codec.schema != identity.schema || codec.extension != identity.extension || codec.pack_schema_hash != identity.pack_schema_hash {
             return Err(rejected());
         }
         context.checkpoint()?;
-        bindings.push(NativeCodecBinding::with_genesis(identity.plugin_id, identity.package_id, identity.artifact_kind, codec, genesis));
+        bindings.push(NativeCodecBinding::new(identity.plugin_id, identity.package_id, identity.artifact_kind, codec));
     }
     Ok(bindings)
 }
@@ -110,12 +122,12 @@ fn preview_vcs_bindings(version: &str, context: &OperationContext<'_>) -> Result
             || identity.pack_schema_hash == [0; 32] || !factories.insert(identity.factory_id) || !artifacts.insert((identity.artifact_kind, identity.schema)) {
             return Err(rejected());
         }
-        let (codec, genesis) = receipt.into_codec_and_genesis().map_err(|_| rejected())?;
+        let codec = receipt.into_codec().map_err(|_| rejected())?;
         if codec.schema != identity.schema || codec.extension != identity.extension || codec.pack_schema_hash != identity.pack_schema_hash {
             return Err(rejected());
         }
         context.checkpoint()?;
-        bindings.push(NativeCodecBinding::with_genesis(identity.plugin_id, identity.package_id, identity.artifact_kind, codec, genesis));
+        bindings.push(NativeCodecBinding::new(identity.plugin_id, identity.package_id, identity.artifact_kind, codec));
     }
     if factories.len() != NATIVE_VCS_PROVIDER_RECEIPTS || artifacts.len() != NATIVE_VCS_PROVIDER_RECEIPTS {
         return Err(rejected());

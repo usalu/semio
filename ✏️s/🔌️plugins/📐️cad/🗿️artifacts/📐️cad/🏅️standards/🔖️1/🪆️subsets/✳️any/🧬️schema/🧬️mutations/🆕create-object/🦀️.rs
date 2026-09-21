@@ -34,8 +34,8 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateObject {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create object \"{}\"", self.object.label)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create object \"{}\"", self.object.label), &format!("Objekt \"{}\" erstellen", self.object.label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object.id.clone()]

@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for RemoveNode
     fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
         agg_inverse(&SemioFlowMutation::RemoveNode(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-node".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-node", "Knoten entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

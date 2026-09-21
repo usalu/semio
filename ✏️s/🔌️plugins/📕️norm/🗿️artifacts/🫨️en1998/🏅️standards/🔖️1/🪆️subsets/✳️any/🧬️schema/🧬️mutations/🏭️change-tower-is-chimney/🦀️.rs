@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerIsChi
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change tower-is-chimney flag to {}", self.new_tower_is_chimney)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change tower-is-chimney flag to {}", self.new_tower_is_chimney), &format!("Turm- -Schornsteinschalter auf {} ändern", self.new_tower_is_chimney))
     }
 }
 //#endregion 🔖️ChangeTowerIsChimney

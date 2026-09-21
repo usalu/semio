@@ -135,7 +135,7 @@ pub fn intent_is_stale(recorded: u64, current: u64) -> bool {
 
 /// 🔢️ Renderer-monotonic per surface — the `seq` a fired intent carries, minted once per gesture so
 /// the receiving side can order and de-duplicate independently of transport delivery order.
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct UiIntentSequencer {
     surfaces: Vec<(String, u64)>,
 }
@@ -156,6 +156,26 @@ impl UiIntentSequencer {
 
     pub fn last(&self, surface: &str) -> u64 {
         self.surfaces.iter().find(|(name, _)| name == surface).map_or(0, |(_, seq)| *seq)
+    }
+
+    /// 🧹️ Retires one surface-name scalar without minting an intent.
+    pub(crate) fn close_step(&mut self) -> bool {
+        if let Some((name, _)) = self.surfaces.last_mut() {
+            if name.pop().is_some() {
+                return false;
+            }
+            if name.capacity() > 0 {
+                *name = String::new();
+                return false;
+            }
+            self.surfaces.pop();
+            return false;
+        }
+        if self.surfaces.capacity() > 0 {
+            self.surfaces = Vec::new();
+            return false;
+        }
+        true
     }
 }
 //#endregion 🎬️Intent

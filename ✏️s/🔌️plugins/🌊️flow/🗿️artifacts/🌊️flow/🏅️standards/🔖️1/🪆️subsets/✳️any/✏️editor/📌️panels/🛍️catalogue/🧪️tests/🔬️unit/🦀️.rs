@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::flow::unit_tests::context::{flow_app, render as render_body};
+use crate::editor::flow::unit_tests::context::{flow_app, render as render_body, render_with_view};
 
 #[semio_framework_async_macros::async_test]
 async fn flow_widget_drag_json_wraps_descriptor_under_drag_mime() {
@@ -27,7 +27,11 @@ async fn catalogue_items_export_flow_widget_drag_payload() {
 #[semio_framework_async_macros::async_test]
 async fn every_built_in_extension_is_listed_in_the_installed_section() {
     let mut app = flow_app().await;
-    let json = render_body(&mut app, FLOW_PLAY_BODY_CATALOGUE).await;
+    let view = semio_framework_plugin::ViewModel {
+        tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: FLOW_PLAY_BODY_CATALOGUE.into(), node_key: "flow-play-extensions.installed".into(), open: Some(true), offset: 0, rows: FLOW_AUTOMATIONS.len() as u32 }],
+        ..Default::default()
+    };
+    let json = render_with_view(&mut app, FLOW_PLAY_BODY_CATALOGUE, &view).await;
     for (id, ..) in FLOW_AUTOMATIONS {
         assert!(json.contains(&format!("flow-play-extensions.{id}")), "extension {id} missing: {json}");
     }

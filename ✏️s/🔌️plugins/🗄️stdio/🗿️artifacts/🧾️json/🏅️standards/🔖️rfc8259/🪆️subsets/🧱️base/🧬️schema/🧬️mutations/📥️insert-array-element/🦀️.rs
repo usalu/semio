@@ -50,8 +50,8 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for InsertArrayEl
         vec![super::JsonMutation::InsertArrayElement(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String {
-        "Insert Array Element".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Insert Array Element", "Arrayelement einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-array-element".to_string()]

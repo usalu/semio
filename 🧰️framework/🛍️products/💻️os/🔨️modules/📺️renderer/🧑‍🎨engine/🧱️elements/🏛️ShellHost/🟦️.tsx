@@ -82,6 +82,7 @@ import {
   FRAMEWORK_PANEL_TAB_TOOL_RUN_ID,
   type Effect,
   type HistoryEntry,
+  historyEntryLabelText,
   type HistoryPatch,
   type IntroductionInteraction,
   CLEAR_SELECTION_ACTION_ID,
@@ -525,6 +526,7 @@ import {
   panelAnchorForGroup,
   panelJsonFromState,
   panelTabDefinitionToNode,
+  presenceEphemeralSnapshotWithinBoundV1,
   createTreeWindowSchedulerV1,
   type PanelTreeConfigCacheV1,
   type TreeWindowHostV1,
@@ -647,6 +649,7 @@ import { guestIngressGenerationV1, isPluginInstanceRetiredV1, onPluginInstancesL
 import { documentBackboneEffectV1, type ActorDocumentMessagePortV1 } from "../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
 import { BrowserActorActionMailboxV1, browserActorActionRefusalReasonV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
+import { documentOpeningDeadlineMs } from "../../../../🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
 import { publishBrowserActorHostEffectsV1 } from "../../../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
 import { InferencePortOpeningMailboxV1 } from "../../../../💡️inference/🚪️opening/🟦️.ts";
 import { isShardLostError } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
@@ -3073,6 +3076,11 @@ function FrameworkOsShellInner({
           dispatch({ type: "SET_SESSION", value: (current) => current ?? discarded });
         }
         setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "snapshot-replaced", documentId: message.scope.documentId, scope: message.scope }));
+        // 🪪️ The execution-target live region describes the INSTALL, and the install is over: this
+        // message is the verified component mounted and painted. It used to be cleared only when the
+        // document detached, so a document that opened correctly kept announcing "Verifying document
+        // component…" under a live surface for the rest of the session.
+        setExecutionTargetUiByDocument((current) => reduceExecutionTargetUiState(current, { kind: "execution-target-cleared", documentId: message.scope.documentId, scope: message.scope }));
         setBrowserActorUiVersion((current) => current + 1);
         return;
       }
@@ -5239,6 +5247,17 @@ function FrameworkOsShellInner({
         ...nextSession.viewState,
         locale: uiLocale,
         terminology: uiTerminology,
+        // 🪪️ The signed-in human, stamped at plugin-call time from the live ref — the same field, from
+        // the same source, as `resolvedTargetViewState`. It is NOT optional chrome: a program that
+        // names the human renders a different surface without it, and the refresh pass is where every
+        // window body of every app is built. `🪐️space`'s Home reads
+        // `crate::home_session_identity(view_state)` and renders its EMPTY case (`No studios yet`) on
+        // `None` — a signed-out state, not a fault — so the studios table of a fully signed-in shell
+        // sat empty for the whole session over a hub that held the human's studio, with the directory
+        // bootstrap green, the receipt byte-exact and the ACK published (ticket 26/09/18, S9 §2;
+        // measured live on serve 6190 → hub 7611, and named by the guest's own
+        // `s.home.session-identity-required` on the dispatch twin below).
+        sessionIdentity: identityRef.current ? { userId: identityRef.current.userId, displayName: identityRef.current.displayName } : undefined,
         windowInstances: windowInstances.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
         activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
         toolRunTraceCursorByWindowId: toolRunTraceCursorViewState(windowInstances.map((instance) => instance.id)),
@@ -6700,7 +6719,7 @@ function FrameworkOsShellInner({
       void socketActor?.catch(() => {});
       const uri = `actor://${runtimeKey}`;
       const committed = await runDocumentOpeningAttemptV1({
-        deadlineMs: 60_000,
+        deadlineMs: documentOpeningDeadlineMs(),
         current: () => openDocumentSessionsRef.current.get(runtimeKey) === entry && entry.creationMount?.current() !== false,
         socket: async () => {
           worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
@@ -7360,6 +7379,14 @@ function FrameworkOsShellInner({
           ...targetSession.viewState,
           locale: uiLocale,
           terminology: uiTerminology,
+          // 🪪️ The same stamp as the refresh pass (`runUiRefreshPass`'s `viewState`) and
+          // `resolvedTargetViewState`: a dispatch carries the signed-in human, because a verb that
+          // names the owner cannot be resolved without one. Measured live on serve 6190 → hub 7611
+          // (ticket 26/09/18, S9 §2): Home's own Actions rail answered `createStudio refused:
+          // dispatch-failed (user window=s-home-main) — retained command reducer rejected operation:
+          // app.message s.home.session-identity-required` on a shell that had been signed in for 90 s,
+          // because this projection is rebuilt per call from refs and never carried the identity.
+          sessionIdentity: identityRef.current ? { userId: identityRef.current.userId, displayName: identityRef.current.displayName } : undefined,
           windowInstances: sessionWindowInstances(targetSession.app, dispatchExtraInstances).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
           activeUtilityByWindowId: guestActiveUtilityByWindowIdV1(activeUtilityByWindowIdRef.current, targetSpawnedId, spawnedIdsRef.current),
           focusedWindowId: guestWindowIdV1(activeWindowIdRef.current, spawnedIdsRef.current),
@@ -8085,7 +8112,18 @@ function FrameworkOsShellInner({
           const worker = backboneWorkerRef.current;
           const entry = openDocumentSessionsRef.current.get(runtimeKey);
           if (!worker || !entry) return;
-          const snapshot = await entry.plugin.ephemeralSnapshot?.(entry.session.instanceId);
+          // 💓️ The beat is the shell's liveness signal for the HUMAN, not for the document
+          // component, so it can never be hostage to one. `ephemeralSnapshot` reaches into the
+          // plugin — in the browser through the nested browser-actor child — and a document whose
+          // component is wedged answers it never: awaiting it bare left `latestWins`' single flight
+          // permanently in flight, so this document never beat again and the hub's
+          // `PRESENCE_LEASE_TTL_MS` lease lapsed under a socket that was still open. That is the
+          // decay C3 §3.4 read as an empty roster in both browsers, reproduced deterministically on
+          // the hub's own sockets in ticket 26/09/18 slice PR1
+          // (`🗑️generated/pr1-before-hub-socket.txt` run B). Past the bound the peer beats with no
+          // app-owned pack — present, with stale ephemerals dropped, which is exactly what the hub
+          // publishes for a lapsed lease anyway.
+          const snapshot = await presenceEphemeralSnapshotWithinBoundV1(entry.plugin, entry.session.instanceId);
           if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== entry.clientInstanceId) return;
           const request: BackboneWorkerRequest = {
             kind: "send",
@@ -9778,7 +9816,7 @@ function FrameworkOsShellInner({
             label: historyPanelText("commands", uiLocale),
             items: entries.map((entry) => ({
               id: `framework.history.entry.${entry.seq}`,
-              label: entry.count && entry.count > 1 ? `${entry.label} ×${entry.count}` : entry.label,
+              label: entry.count && entry.count > 1 ? `${historyEntryLabelText(entry.label, uiTerminology, uiLocale)} ×${entry.count}` : historyEntryLabelText(entry.label, uiTerminology, uiLocale),
               description: entry.opLines?.join(" · "),
               dimmed: entry.applied === false,
               // 🕰️ The shell's ONLY revert-to-command affordance. It was an id-less glyph button, so
@@ -10616,10 +10654,28 @@ function FrameworkOsShellInner({
   useEffect(() => {
     const deferred = agentDeferredPlansRef.current;
     agentArtifactRouteRef.current = async (request): Promise<readonly ShellAppFrameV1[]> => {
-      const live = sessionRef.current;
-      if (!live) return [shellAppFault("plugin.unavailable", "no plugin session is established in this shell — open an artifact here before driving it from an agent")];
-      if (request.instanceId !== String(live.instanceId)) {
-        return [shellAppFault("plugin.unavailable", `this shell's live instance is \`${live.instanceId}\`, not \`${request.instanceId}\` — the agent addressed an instance this shell has closed`)];
+      const session = sessionRef.current;
+      if (!session) return [shellAppFault("plugin.unavailable", "no plugin session is established in this shell — open an artifact here before driving it from an agent")];
+      /** 🗿️🪟️ The program this request addresses: the session, or any SPAWNED program of it.
+       *
+       * 🧯️ This route bound `sessionRef.current` and refused every other instance by name — the LAST
+       * of the session-only decision sites S5 started on (five), S6 continued (the agent census) and
+       * §3 finished (progress). With it, an MCP client could reach only the landing app of the shell
+       * whose whole purpose is hosting every other plugin's artifacts: measured on the live gate
+       * against `s` with a spawned `note` editor as
+       * `this shell's live instance is \`1\`, not \`3\` — the agent addressed an instance this shell
+       * has closed`, where instance 3 was exactly the editor the human was looking at. */
+      const spawnedTarget = spawnedAppsRef.current.find((entry) => String(entry.instanceId) === request.instanceId);
+      const spawnedTargetApp = spawnedTarget ? loadedPluginsRef.current.find((entry) => entry.handle.pluginId === spawnedTarget.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawnedTarget.appId) : undefined;
+      const live =
+        request.instanceId === String(session.instanceId)
+          ? { pluginId: session.pluginId, instanceId: session.instanceId, app: session.app }
+          : spawnedTarget && spawnedTargetApp
+            ? { pluginId: spawnedTarget.pluginId, instanceId: spawnedTarget.instanceId, app: spawnedTargetApp }
+            : null;
+      if (!live) {
+        const open = [`${session.pluginId}:${session.app.id}:${session.instanceId}`, ...spawnedAppsRef.current.map((entry) => `${entry.pluginId}:${entry.appId}:${entry.instanceId}`)].join(", ");
+        return [shellAppFault("plugin.unavailable", `this shell has no open instance \`${request.instanceId}\` — the agent addressed an instance this shell has closed (open: ${open})`)];
       }
       const readHistory = async (): Promise<ShellAppFrameV1> => {
         const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === live.pluginId)?.handle;
@@ -11830,7 +11886,7 @@ function FrameworkOsShellInner({
              a gateway reading `expectedRevision.artifactId` off `action_prepare` can resolve its
              session straight onto this element. */
           data-semio-artifact-id={agentBridgeInstances[0]?.artifactRef}
-          data-history-json={JSON.stringify(shellHistoryCursorDomV1(historyProjection))}
+          data-history-json={JSON.stringify(shellHistoryCursorDomV1(historyProjection, { terminology: uiTerminology, locale: uiLocale }))}
         >
           {hubEnv && hubSessionCapability !== null && verifiedSessionAuthority === null ? <SessionAuthorityNotice state={identityOffline ? "unavailable" : "pending"} locale={uiLocale} onCancel={cancelSessionAuthorityBootstrap} /> : null}
           {Object.values(bootstrapUiByDocument).length > 0 ? (

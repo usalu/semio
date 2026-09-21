@@ -113,7 +113,7 @@ function fixture(): Fixture {
   assert.equal(parsed.targets.note.surfaceKind, "ink-canvas");
   assert.equal(parsed.targets.note.surfaceId, "note.play.composite");
   assert.equal(parsed.targets.note.controllerId, "s.note.note@1/*#editor");
-  assert.deepEqual(parsed.drawCases.map(({ id }) => id), ["primary-draw", "primary-select", "selection-modifiers", "escape-cancel", "double-click-commit"]);
+  assert.deepEqual(parsed.drawCases.map(({ id }) => id), ["primary-draw", "primary-select", "selection-modifiers", "repeated-geometry-creation", "escape-cancel", "double-click-commit"]);
   assert.deepEqual(parsed.inkCases.map(({ id }) => id), ["selected-block-copy", "structured-text-paste", "plain-text-paste", "tiny-rgba-paste", "editor-priority", "exact-pointer-cancel"]);
   assert.equal(new Set([...parsed.drawCases, ...parsed.inkCases].map(({ id }) => id)).size, parsed.drawCases.length + parsed.inkCases.length);
   assert.deepEqual(parsed.cancellation.address, ["windowId", "surfaceGeneration", "pointerId"]);
@@ -704,7 +704,9 @@ async function runDraw(page: Page): Promise<Record<string, unknown>[]> {
   };
   const checkActions = async (cursor: number, id: string): Promise<ActionRow[]> => {
     const expected = contract.drawCases.find((row) => row.id === id)!.expectedActions!;
-    return waitUntil(() => actionsAfter(page, cursor), (rows) => expected.every((action) => rows.some((row) => row.action === action)), `${id} action sequence`);
+    const rows = await waitUntil(() => actionsAfter(page, cursor), (rows) => expected.every((action) => rows.some((row) => row.action === action)) && (renderer === "wgpu" || rows.filter(row => expected.includes(row.action)).every(row => Boolean(row.outcome))), `${id} settled action sequence`);
+    if (renderer === "react") for (const row of rows.filter(row => expected.includes(row.action))) assert.equal((row.outcome as any)?.kind, "applied", `${id} ${row.action}: ${JSON.stringify(row.outcome)}`);
+    return rows;
   };
   const utility = async (id: string): Promise<string> => {
     const controlId = renderer === "react" ? id : `framework.utility.toggle.${id}`;
@@ -725,7 +727,7 @@ async function runDraw(page: Page): Promise<Record<string, unknown>[]> {
     const p = point(x, y);
     await page.mouse.click(p.x, p.y);
   };
-  const drawRectangle = async (x: number, name: string): Promise<Record<string, unknown>> => {
+  const drawRectangle = async (x: number, name: string, caseId = "primary-draw"): Promise<Record<string, unknown>> => {
     await utility("shapeRect");
     const count = await waitUntil(layerCount, (value) => value !== null, "live Draw layer count");
     const rows = await layerRows();
@@ -738,14 +740,14 @@ async function runDraw(page: Page): Promise<Record<string, unknown>[]> {
     await page.mouse.down();
     await page.mouse.move(end.x, end.y, { steps: 3 });
     await page.mouse.up();
-    const actions = await checkActions(cursor, "primary-draw");
+    const actions = await checkActions(cursor, caseId);
     const afterCount = await waitUntil(layerCount, (value) => value === count! + 1, "one committed rectangle");
     const nextRows = await waitUntil(layerRows, (value) => value.some(({ id }) => !rowIds.has(id)), "committed rectangle layer row");
     const layerId = nextRows.find(({ id }) => !rowIds.has(id))!.id;
     const after = await capture(`${name}-after`);
-    assert.notEqual(after, before, "committed rectangle changes the Canvas2d pixels");
+    if (caseId === "primary-draw") assert.notEqual(after, before, "committed rectangle changes the Canvas2d pixels");
     if (renderer === "react") await waitUntil(() => page.locator('[id="selectDirect"]').getAttribute("aria-pressed"), value => value === "true", "Draw one-shot rectangle returns to Direct Select");
-    return { beforeCount: count, afterCount, before, after, actions, layerId };
+    return { beforeCount: count, afterCount, before, after, actions, layerId, start, end };
   };
   await clickControl(page, ["framework.window.drawingComposite.engagement.toggle"]);
   await waitUntil(layerCount, value => value !== null, "Draw Actions layer count");
@@ -802,6 +804,11 @@ async function runDraw(page: Page): Promise<Record<string, unknown>[]> {
     renamedAfterSubtract: subtractName,
     actions: [...multiSubmit, ...subtractSubmit],
   });
+  const repeatedRectangle = await drawRectangle(0.52, "rectangle-three", "repeated-geometry-creation");
+  assert.deepEqual(repeatedRectangle.start, secondRectangle.start, "repeated creation uses the same physical start");
+  assert.deepEqual(repeatedRectangle.end, secondRectangle.end, "repeated creation uses the same physical end");
+  assert.notEqual(repeatedRectangle.layerId, secondLayerId, "distinct creation operations retain distinct layer identities");
+  results.push({ id: "repeated-geometry-creation", status: "passed", originalLayerId: secondLayerId, ...repeatedRectangle });
   await utility("pen");
   const countBeforeCancel = await layerCount();
   const beforeDraft = await capture("draft-before");
@@ -889,7 +896,14 @@ async function captureLayoutSurface(page: Page, name: string): Promise<{ file: s
   const rect = await surfaceRect(page);
   assert.ok(rect, `${name} has the canonical Layout Canvas2d surface`);
   const file = `${name}.png`;
-  const bytes = await page.screenshot({ clip: rect, path: join(outputDirectory, file) });
+  let bytes: Buffer;
+  if (renderer === "react") {
+    const data = await page.locator(target.reactSelector).evaluate(canvas => (canvas as HTMLCanvasElement).toDataURL("image/png"));
+    assert.ok(data.startsWith("data:image/png;base64,"), `${name} exports the actual Canvas2d bitmap`);
+    bytes = Buffer.from(data.slice("data:image/png;base64,".length), "base64");
+    writeFileSync(join(outputDirectory, file), bytes);
+    await page.screenshot({ clip: rect, path: join(outputDirectory, `${name}.visible.png`) });
+  } else bytes = await page.screenshot({ clip: rect, path: join(outputDirectory, file) });
   return { file, hash: createHash("sha256").update(bytes).digest("hex"), rect };
 }
 
@@ -979,6 +993,7 @@ async function runLayout(page: Page): Promise<Record<string, unknown>[]> {
     const retired = await waitUntil(() => captureLayoutSurface(page, `${row.id}-retired`), (capture) => capture.hash === before.hash, `${row.id} leave retirement`);
     assert.equal(leaveRows.some(({ action }) => action === contract.layoutCatalogue.dropAction), false, `${row.id} leave does not synthesize a drop`);
     assert.equal(await layoutCollectionCount(page, row.createdCollection), beforeCount, `${row.id} leave preserves the document`);
+    const leaveActions = await settledLayoutActions(page, leaveDrag.cursor);
 
     await openLayoutPanel(page, contract.layoutCatalogue.catalogueTabId);
     const dropDrag = await beginLayoutCatalogueDrag(page, row);
@@ -994,9 +1009,17 @@ async function runLayout(page: Page): Promise<Record<string, unknown>[]> {
       `${row.id} exact created ${row.createdCollection}`,
     );
     const committed = await captureLayoutSurface(page, `${row.id}-committed`);
-    results.push({ id: row.id, status: "passed", kind: row.kind, sourceId: row.sourceId, beforeCount, afterCount, before, preview, retired, committed, leaveActions: leaveRows, dropActions: dropped });
+    const dropActions = await settledLayoutActions(page, dropDrag.cursor);
+    results.push({ id: row.id, status: "passed", kind: row.kind, sourceId: row.sourceId, beforeCount, afterCount, before, preview, retired, committed, leaveActions, dropActions });
   }
   return results;
+}
+
+async function settledLayoutActions(page: Page, cursor: number): Promise<ActionRow[]> {
+  const names: readonly string[] = [contract.layoutCatalogue.previewAction, contract.layoutCatalogue.leaveAction, contract.layoutCatalogue.dropAction];
+  const rows = await waitUntil(() => actionsAfter(page, cursor), rows => renderer === "wgpu" || rows.filter(row => names.includes(row.action)).every(row => Boolean(row.outcome)), "Layout transfer terminal outcomes");
+  if (renderer === "react") for (const row of rows.filter(row => names.includes(row.action))) assert.equal((row.outcome as any)?.kind, "applied", `${row.action}: ${JSON.stringify(row.outcome)}`);
+  return rows;
 }
 
 async function run(): Promise<void> {

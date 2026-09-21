@@ -35,8 +35,8 @@ impl MutationKind<GisMapSnapshot, GisMapMutation> for ReplacePositionData {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Replace position \"{}\" data", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace position \"{}\" data", self.id), &format!("Position \"{}\" Daten ersetzen", self.id))
     }
 }
 //#endregion 🔹Payload

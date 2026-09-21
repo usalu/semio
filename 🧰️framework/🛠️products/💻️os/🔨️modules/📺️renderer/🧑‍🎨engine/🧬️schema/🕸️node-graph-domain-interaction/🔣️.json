@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/renderer/node-graph-domain-interaction-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "interactionDomain", "identity", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "interactionDomain": { "$ref": "#/definitions/domain" },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["incomingPaintIds", "missingDomain", "prefixExactlyOnce"],
+      "properties": {
+        "incomingPaintIds": { "const": "raw" },
+        "missingDomain": { "const": "publish-no-interaction" },
+        "prefixExactlyOnce": { "const": true }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/definitions/case" }
+    }
+  },
+  "definitions": {
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "nodeTargetPrefix", "edgeTargetPrefix", "handleTargetPrefix"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "nodeTargetPrefix": { "type": "string", "minLength": 1 },
+        "edgeTargetPrefix": { "type": "string", "minLength": 1 },
+        "handleTargetPrefix": { "type": "string", "minLength": 1 }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nodeIds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "edgeIds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "handleIds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "nodeId": { "type": ["string", "null"] },
+        "portId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "args": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domainId", "targets"],
+      "properties": {
+        "domainId": { "type": "string", "minLength": 1 },
+        "channel": { "const": "pointer" },
+        "targets": { "type": "string" },
+        "merge": { "const": "replace" },
+        "method": { "const": "pick" }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "input", "action", "args"],
+      "properties": {
+        "id": { "enum": ["mixed-selection", "node-hover", "handle-hover", "hover-clear"] },
+        "input": { "$ref": "#/definitions/input" },
+        "action": { "enum": ["interactionSelect", "interactionHover"] },
+        "args": { "$ref": "#/definitions/args" }
+      }
+    }
+  }
+}

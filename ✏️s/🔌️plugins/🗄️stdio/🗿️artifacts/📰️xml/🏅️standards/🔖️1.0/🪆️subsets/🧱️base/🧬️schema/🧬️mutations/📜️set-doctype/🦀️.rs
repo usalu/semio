@@ -46,8 +46,8 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutat
         vec![super::XmlMutation::SetDoctype(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Set Doctype".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Doctype", "Dokumenttyp setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-doctype".to_string()]

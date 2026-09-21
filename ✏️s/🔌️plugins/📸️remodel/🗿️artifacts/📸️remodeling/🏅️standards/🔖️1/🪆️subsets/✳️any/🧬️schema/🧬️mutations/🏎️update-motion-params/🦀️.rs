@@ -33,8 +33,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for UpdateMo
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Update motion params".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update motion params", "Bewegungsparameter aktualisieren")
     }
 }
 //#endregion 🔖️Mutation

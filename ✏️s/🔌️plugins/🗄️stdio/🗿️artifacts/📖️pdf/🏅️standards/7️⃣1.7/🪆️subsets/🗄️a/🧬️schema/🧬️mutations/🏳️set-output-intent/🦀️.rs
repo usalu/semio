@@ -33,8 +33,8 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for SetOutputIntent {
         }
     }
 
-    fn label(&self) -> String {
-        format!("Set PDF/A output intent \"{}\"", self.identifier)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set PDF/A output intent \"{}\"", self.identifier), &format!("PDF/ Ausgabenabsicht \"{}\" setzen", self.identifier))
     }
 
     fn target(&self) -> Vec<String> {

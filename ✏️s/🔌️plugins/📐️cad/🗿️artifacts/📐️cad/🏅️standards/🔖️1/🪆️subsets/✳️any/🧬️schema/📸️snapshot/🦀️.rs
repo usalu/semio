@@ -13,8 +13,12 @@ use std::collections::BTreeMap;
 /// `s.stdio.semio.model` CHILD slots — one per `CadPaneId` — plus a forward `drawings` composition
 /// slot per the design map's `cad | engineering assembly | model, drawing` row. `#[child(...)]`
 /// drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
+///
+/// 🛡️ `deny_unknown_fields` closes that replacement: a snapshot still carrying the retired inline
+/// `objects`/`shapeGeometry`/`activeModelDefinitionId` keys must FAIL to decode, never decode with
+/// them silently dropped (`🧫️fixtures/🪪️document-contract`'s `invalidDocuments`).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.cad.cad")]
 pub struct CadSnapshot {
     #[state(artifact)]

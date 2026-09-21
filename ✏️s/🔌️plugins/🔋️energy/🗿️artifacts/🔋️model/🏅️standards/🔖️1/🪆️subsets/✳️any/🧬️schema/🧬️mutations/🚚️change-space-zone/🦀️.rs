@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Move space {} to zone {}", self.id.0, self.new_zone_id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move space {} to zone {}", self.id.0, self.new_zone_id.0), &format!("Raum {} nach Zone {} verschieben", self.id.0, self.new_zone_id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for CreateProper
     fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create properties child {}", self.child_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create properties child {}", self.child_id), &format!("Eigenschaftenkind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["properties".to_string()]

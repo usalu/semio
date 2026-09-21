@@ -11,6 +11,7 @@ import { loadPluginModule, pluginHandleForBridge, primeContributionManifest } fr
 import { createLazyPluginInstallDoor } from "./🧩️lazy-install/🟦️.ts";
 import { meshAssetTransportUrl } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
 import { concatenateReferenceImageSource, decodeReferenceImage, referenceImageBitmapForStage, referenceImageSourceDigest, referenceImageSourceDimensions, referenceImageTargetSize, streamReferenceImageBitmapRows, type ReferenceImageDimensions } from "../🖼️reference-image-decode/🟦️.ts";
+import { FrameTurnScheduler, WorkerTurnTaskQueue, nextFrameSequence } from "../🧵️frame-turn-scheduler/🟦️.ts";
 
 //#region 🔖️Bindings
 /** @emoji 🔢️ `generation` and `sequence` are `u64` on the renderer's own `#[wasm_bindgen]` exports
@@ -277,6 +278,10 @@ let lifecycle = 0;
 let runtime: BrowserRendererWorkerHandle | undefined;
 let bindings: RendererBindings | undefined;
 let interactiveJobs: InteractiveWorkerScheduler | undefined;
+let frameTurns: FrameTurnScheduler | undefined;
+let frameTurnTasks: WorkerTurnTaskQueue | undefined;
+let frameInput: { readonly timestampMs: number; readonly generation: number } | undefined;
+let frameSequence = 0;
 let closed = false;
 let closing = false;
 let failed = false;
@@ -358,24 +363,36 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
     fault("worker-not-booted", "frame batch arrived before renderer boot completed");
     return;
   }
-  const startedAt = performance.now();
-  let outcome: TurnOutcome | undefined;
   try {
-    const result = ownedStep("frame-step", () => {
-      runtime!.enqueueBatch(JSON.stringify({ replaceable: message.replaceable, lossless: message.lossless }), BigInt(message.generation));
-      return JSON.parse(runtime!.tick(message.timestampMs, BigInt(message.sequence), BigInt(message.generation))) as Omit<Extract<BrowserFrameWorkerMessage, { kind: "frame" }>, "kind" | "lifecycle" | "sequence" | "generation" | "workerDurationMs">;
-    });
-    outcome = lastStepOutcome;
+    ownedStep("frame-ingress", () => runtime!.enqueueBatch(JSON.stringify({ replaceable: message.replaceable, lossless: message.lossless }), BigInt(message.generation)));
+    frameInput = { timestampMs: message.timestampMs, generation: message.generation };
+    post({ kind: "batch-accepted", lifecycle, inputSequence: message.inputSequence, generation: message.generation });
+    frameTurns?.request();
+  } catch (error) {
+    fault("frame-runtime-fault", error instanceof Error ? error.message : String(error));
+  }
+}
+
+function runFrameTurn(): boolean {
+  if (!runtime || !frameInput || closed || closing || failed || quarantined) return false;
+  const startedAt = performance.now();
+  try {
+    frameSequence = nextFrameSequence(frameSequence);
+    const input = frameInput;
+    const result = ownedStep("frame-step", () => JSON.parse(runtime!.tick(input.timestampMs, BigInt(frameSequence), BigInt(input.generation)))) as Omit<Extract<BrowserFrameWorkerMessage, { kind: "frame" }>, "kind" | "lifecycle" | "frameSequence" | "generation" | "workerDurationMs"> & { readonly continueFrame: boolean };
+    const outcome = lastStepOutcome;
     lastFrame = { cursor: result.cursor, fullscreen: result.fullscreen };
     if (pageImageDecode && runtime && !runtime.assetResponseCurrent()) cancelPageImageDecode();
     if (result.quarantined) quarantined = { code: result.faultCode ?? "renderer-quarantine", detail: result.faultDetail ?? "renderer quarantined its own frame step" };
     const sustained = outcome?.verdict === "sustained-overrun";
     const degrade = quarantined ?? (sustained ? { code: "worker-step-overrun", detail: `frame step executed ${outcome!.executingMs.toFixed(3)} ms for ${outcome!.consecutive} consecutive steps` } : undefined);
-    post({ kind: "frame", lifecycle, sequence: message.sequence, generation: message.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
+    post({ kind: "frame", lifecycle, frameSequence, generation: input.generation, cursor: result.cursor, fullscreen: result.fullscreen, requestFrame: result.requestFrame, progress: result.progress, workerDurationMs: performance.now() - startedAt, workerExecutingMs: outcome?.executingMs ?? 0, workerStepVerdict: outcome?.verdict ?? "clock-fault", quarantined: degrade !== undefined, faultCode: degrade?.code, faultDetail: degrade?.detail });
     if (quarantined) requestFault(quarantined.code, quarantined.detail);
     else scheduleAssetPump();
+    return result.continueFrame;
   } catch (error) {
     fault("frame-runtime-fault", error instanceof Error ? error.message : String(error));
+    return false;
   }
 }
 
@@ -418,11 +435,13 @@ async function closeRuntime(): Promise<void> {
         closeOwner = "runtime";
       }
     });
-    if (runtimeCloseComplete && jobsCloseComplete) break;
+    if (runtimeCloseComplete && jobsCloseComplete && (frameTurns?.terminalIsEmpty() ?? true)) break;
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
   }
   if (pendingFault) post({ kind: "fault", lifecycle, code: pendingFault.code, detail: pendingFault.detail });
   post({ kind: "closed", lifecycle });
+  frameTurnTasks?.close();
+  frameTurnTasks = undefined;
   closed = true;
   scope.close();
 }
@@ -433,6 +452,7 @@ function beginClose(): void {
   failed = pendingFault !== undefined;
   runtimeCloseComplete = runtime === undefined;
   jobsCloseComplete = interactiveJobs === undefined;
+  frameTurns?.beginClose();
   assetAbort?.abort();
   assetAbort = undefined;
   cancelPageImageDecode();
@@ -572,7 +592,7 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     })));
     if (plugins.length === 0) throw new Error(`no wasm plugin modules found for variant ${message.descriptor.pluginVariant}`);
     progress("renderer-runtime", 0.65);
-    let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })), suspensionLedger);
+    let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => frameTurns?.request()), suspensionLedger);
     while (true) {
       await macrotask();
       const step = declaredStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()) as BrowserRendererBootStep, suspensionLedger);
@@ -585,6 +605,11 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
       if (step.complete) break;
     }
     runtime = declaredStep("renderer-finish", () => bootstrap.finish(), suspensionLedger);
+    frameTurnTasks = declaredStep("frame-turn-task-owner", () => new WorkerTurnTaskQueue(), suspensionLedger);
+    frameTurns = declaredStep("frame-turn-scheduler", () => new FrameTurnScheduler(frameTurnTasks!.schedule, runFrameTurn, () => {
+      frameInput = undefined;
+      return true;
+    }), suspensionLedger);
     interactiveJobs = declaredStep("interactive-job-registry", () => new InteractiveWorkerScheduler(lifecycle, INTERACTIVE_WORKER_DESCRIPTORS, post, (callback) => setTimeout(callback, 0), () => performance.now(), (detail) => fault("interactive-job-fault", detail)), suspensionLedger);
     progress("ready", 1);
     bootDeclarationsOpen = false;

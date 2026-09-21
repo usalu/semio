@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreatePerformanceCriteri
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create performance criterion \"{}\"", self.performance_criterion.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create performance criterion \"{}\"", self.performance_criterion.header.name), &format!("Leistungskriterium \"{}\" erstellen", self.performance_criterion.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.performance_criterion.header.id.0.clone()]

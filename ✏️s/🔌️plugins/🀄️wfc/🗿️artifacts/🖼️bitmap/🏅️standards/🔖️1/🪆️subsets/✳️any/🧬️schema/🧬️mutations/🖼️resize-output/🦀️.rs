@@ -32,8 +32,8 @@ impl MutationKind<BitmapSnapshot, BitmapMutation> for ResizeOutput {
     fn inverse(&self, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Resize output to {}×{}", self.width, self.height)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Resize output to {}×{}", self.width, self.height), &format!("Ausgabe auf {}×{} skalieren", self.width, self.height))
     }
 }
 //#endregion 🔖️ResizeOutput

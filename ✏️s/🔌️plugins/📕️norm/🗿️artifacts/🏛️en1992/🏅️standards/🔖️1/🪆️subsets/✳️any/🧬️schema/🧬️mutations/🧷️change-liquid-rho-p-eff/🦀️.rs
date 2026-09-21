@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidRhoP
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change liquid rho p eff to {:?}", self.new_liquid_rho_p_eff)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change liquid rho p eff to {:?}", self.new_liquid_rho_p_eff), &format!("Flüssigkeitsrhopeff auf {:?} ändern", self.new_liquid_rho_p_eff))
     }
 }
 //#endregion 🔖️ChangeLiquidRhoPEff

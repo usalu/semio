@@ -23,8 +23,8 @@ impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutati
         vec![Self { json: base.sun_json.clone() }.into()]
     }
 
-    fn label(&self) -> String {
-        "Set Sun".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Sun", "Sonne setzen")
     }
 
     fn target(&self) -> Vec<String> {

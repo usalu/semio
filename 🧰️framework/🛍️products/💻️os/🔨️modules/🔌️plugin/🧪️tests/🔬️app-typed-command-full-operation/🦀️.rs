@@ -1174,7 +1174,13 @@ mod typed_command_full_operation_tests {
         let mut wire = row["wire"].as_str().unwrap().as_bytes().to_vec();
         wire.resize(wire.len() + row["paddingBytes"].as_u64().unwrap() as usize, b' ');
         let wire_bytes = wire.len();
-        let mut child = ChildEmit { slot: "slot".into(), child_id: "child".into(), ops: vec![wire], op_schema: SchemaId("demo.member.json-number".into()), labels: vec!["ä🧩".into()] };
+        let mut child = ChildEmit {
+            slot: "slot".into(),
+            child_id: "child".into(),
+            ops: vec![wire],
+            op_schema: SchemaId("demo.member.json-number".into()),
+            labels: vec![LocalizedLabel::native("ä🧩", "ß🎯")],
+        };
         assert_eq!(child.close_one(0, TYPED_OPERATION_RESULT_PAGE_BYTES), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         assert_eq!(child.ops[0].len(), wire_bytes);
         let mut bytes = 0;

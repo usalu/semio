@@ -116,6 +116,9 @@ pub struct Theme {
     pub panel_header_height: f32,
     pub control_height: f32,
     pub control_height_small: f32,
+    /// 📐️ Logical pixels in one CSS root-em unit. This is a layout authority independent from
+    /// typography and device density, matching React's computed root `font-size` contract.
+    pub root_rem_pixels: f32,
     /// 🌳️ The ONE row pitch every tree presentation lays out, paints and hit-tests on —
     /// `dom.treeRowUiSpacing` (7.5 × `--ui-spacing`), the same `--size-workbench` React's
     /// `Tree` rows carry as `h-workbench`. See `layout::TreeRowMetrics`.
@@ -267,6 +270,7 @@ fn from_chrome(chrome: &ChromePalette, outcome: &OutcomePalette, diagram: &Diagr
         panel_header_height: chrome_px(chrome_metrics::PANEL_HEADER_HEIGHT_UI_SPACING),
         control_height: chrome_px(chrome_metrics::CONTROL_HEIGHT_UI_SPACING),
         control_height_small: chrome_px(chrome_metrics::CONTROL_HEIGHT_SMALL_UI_SPACING),
+        root_rem_pixels: dom::ROOT_REM_PX as f32,
         tree_row_height: chrome_px(dom::TREE_ROW_UI_SPACING),
         tree_indent_per_level: chrome_px(dom::TREE_INDENT_PER_LEVEL_UI_SPACING),
         tree_toggle_width: chrome_px(dom::TREE_TOGGLE_UI_SPACING),

@@ -19,8 +19,8 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Dele
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete layer {}", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete layer {}", self.id), &format!("Ebene {} löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

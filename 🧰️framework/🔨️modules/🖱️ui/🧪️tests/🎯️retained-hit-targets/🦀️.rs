@@ -111,6 +111,7 @@ fn ui_node(value: &Value) -> UiNode {
             interaction_domain: None,
         }),
         "surface" => UiNode::ComponentScene(UiComponentSceneNode {
+            host_id: value["surfaceId"].as_str().expect("surface id").to_string(),
             surface_id: value["surfaceId"].as_str().expect("surface id").to_string(),
             controller_id: value["controllerId"].as_str().unwrap_or_default().to_string(),
             component_kind: match value["surfaceKind"].as_str().expect("surface kind") {
@@ -272,6 +273,14 @@ fn every_fixture_case_registers_resolves_and_orders_on_the_live_registry() {
     for case in law["cases"].as_array().expect("cases") {
         let name = case["name"].as_str().expect("case name");
         let (ui, input, window_id, _body) = mount(case);
+        for registration in ui.window_hit_targets(&window_id) {
+            let authored = &ui.tree(&window_id).unwrap().node(registration.node).unwrap().spec.0;
+            let expected_scene = match authored {
+                UiNode::ComponentScene(scene) => Some(super::RetainedSceneHit { surface_id: scene.surface_id.clone(), kind: scene.component_kind }),
+                _ => None,
+            };
+            assert_eq!(registration.scene, expected_scene, "{name}: scene routing provenance comes from the mounted component");
+        }
         let published: Vec<(String, &'static str, Option<String>, [f32; 4])> = ui
             .window_hit_targets(&window_id)
             .iter()

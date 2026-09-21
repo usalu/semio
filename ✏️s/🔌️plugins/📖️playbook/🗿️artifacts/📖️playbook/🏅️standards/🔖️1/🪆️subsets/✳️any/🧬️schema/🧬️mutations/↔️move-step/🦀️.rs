@@ -36,8 +36,8 @@ impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for MoveStep {
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move step \"{}\"", self.step_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move step \"{}\"", self.step_id), &format!("Schritt \"{}\" verschieben", self.step_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step_id.clone()]

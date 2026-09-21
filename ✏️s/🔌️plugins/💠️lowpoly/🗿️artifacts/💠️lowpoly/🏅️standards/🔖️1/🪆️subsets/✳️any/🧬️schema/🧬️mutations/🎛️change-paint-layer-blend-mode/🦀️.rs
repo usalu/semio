@@ -25,8 +25,8 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ChangePaintLay
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Set paint layer blend mode to \"{}\"", self.new_blend_mode)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set paint layer blend mode to \"{}\"", self.new_blend_mode), &format!("Farbenebenenmischungsmodus auf \"{}\" setzen", self.new_blend_mode))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

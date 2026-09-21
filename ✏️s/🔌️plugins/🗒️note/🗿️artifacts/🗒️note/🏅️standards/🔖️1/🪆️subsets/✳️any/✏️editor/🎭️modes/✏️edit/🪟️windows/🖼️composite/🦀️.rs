@@ -3,7 +3,7 @@
 use crate::editor::note::modes::edit::windows::composite::options;
 use crate::editor::note::terminology::NotePlayLabels;
 use crate::{NoteCamera, NoteSnapshot};
-use semio_framework_plugin::{BuiltNode, InkCanvasScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{BuiltNode, InkCanvasInteractionDomain, InkCanvasScene, InteractionView, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
 pub const NOTE_PLAY_WINDOW_COMPOSITE: &str = "note-composite";
@@ -82,13 +82,19 @@ pub fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement_input
 /// 🖱️ Builds the ink-canvas scene payload shared by both the composite and navigator windows —
 /// `view_mode` picks which one. Camera is session-only runtime state, never part of `NoteSnapshot` —
 /// merged into the wire payload here so the ink-canvas host still gets a `camera` key to render/pan/zoom
-/// against. 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactEditor::render` is not
-/// threaded an `InteractionView`, so selection/hover are no longer stamped into the scene here — the
-/// "blocks" domain's presence is a known gap for canvas surfaces this wave (matches lowpoly/gis2d's
-/// `render` precedent), left at `InkCanvasScene::base`'s empty defaults.
+/// against.
 pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, surface_id: &str, view_mode: &str) -> UiAssemblyResult<BuiltNode> {
     let document_json = crate::note_canvas_document_json(document, camera);
     semio_framework_plugin::scene_surface(surface_id, semio_framework_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, active_utility.into(), view_mode.into(), view_mode == "composite"))
+}
+
+pub fn render_with_interaction(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, interaction: &InteractionView<'_>) -> UiAssemblyResult<BuiltNode> {
+    let mut scene = InkCanvasScene::base(crate::note_canvas_document_json(document, camera), active_utility.into(), "composite".into(), true);
+    scene.interaction_domain = Some(InkCanvasInteractionDomain { id: crate::editor::note::NOTE_INTERACTION_BLOCKS.into(), granularity_id: "block".into() });
+    let selection: Vec<String> = interaction.selection(crate::editor::note::NOTE_INTERACTION_BLOCKS).ids.iter().filter_map(|id| crate::schema::block_id_from_tree_row_id(id)).collect();
+    scene.selection_json = serde_json::to_string(&selection).expect("note interaction selection is JSON-safe");
+    scene.hovered_id = interaction.hover(crate::editor::note::NOTE_INTERACTION_BLOCKS, "pointer").ids.first().and_then(|id| crate::schema::block_id_from_tree_row_id(id));
+    semio_framework_plugin::scene_surface(NOTE_PLAY_SURFACE_COMPOSITE, semio_framework_ui_contract::SurfaceKind::InkCanvas, &scene)
 }
 
 pub fn render(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str) -> UiAssemblyResult<BuiltNode> {

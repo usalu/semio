@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddEle
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Add battery {} to electrical load center {}", self.battery_id.0, self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add battery {} to electrical load center {}", self.battery_id.0, self.id.0), &format!("Batterie {} zu elektrische Lastmittelpunkt {} hinzufügen", self.battery_id.0, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

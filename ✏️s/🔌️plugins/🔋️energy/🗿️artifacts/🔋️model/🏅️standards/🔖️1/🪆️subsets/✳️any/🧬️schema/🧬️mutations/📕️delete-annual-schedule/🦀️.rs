@@ -31,8 +31,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Delete
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Delete annual schedule {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete annual schedule {}", self.id.0), &format!("Jahreszeitplan {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

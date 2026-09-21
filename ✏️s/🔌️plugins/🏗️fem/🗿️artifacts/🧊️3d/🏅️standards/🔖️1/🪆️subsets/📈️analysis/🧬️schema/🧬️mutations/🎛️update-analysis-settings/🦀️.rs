@@ -27,8 +27,8 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for UpdateAnalysisSettings {
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Update analysis settings".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update analysis settings", "Analyseeinstellungen aktualisieren")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

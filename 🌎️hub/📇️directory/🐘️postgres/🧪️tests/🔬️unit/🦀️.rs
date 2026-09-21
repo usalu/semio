@@ -10,7 +10,7 @@ static NEXT_CONTAINER: AtomicU64 = AtomicU64::new(1);
 
 pub(super) struct PostgresContainer {
     name: String,
-    url: String,
+    pub(super) url: String,
 }
 
 impl Drop for PostgresContainer {
@@ -315,4 +315,61 @@ async fn credential_writes_and_facts_stay_in_one_transaction() {
     assert_eq!(appended.reason_code.as_deref(), Some("invalid-credentials"));
     assert_eq!(appended.peer_class, "browser");
     assert_eq!(directory.list_auth_audit(64, 0).await.expect("audit after sign-in fact").len(), after_set.len() + 1);
+}
+
+// 🔮️ The backend-neutral share-scope corpus (`🧪️tests/🔮️backend-corpus/`) over a real PostgreSQL.
+#[tokio::test]
+async fn share_scope_corpus_v1_holds_on_postgres() {
+    let (directory, _container) = test_directory().await;
+    directory.seed().await.expect("seed");
+    crate::directory::backend_corpus::assert_share_scope_corpus_v1(&directory).await;
+}
+
+// 🧵️ ticket 26/09/18 slice DB3 — the D4 regression, on the SAME live PostgreSQL the directory lanes
+// use. `OS_HUB_STORAGE_BACKEND=postgres` used to abort the whole hub with sqlx's
+// `this functionality requires a Tokio context` the first time a document call reached the driver:
+// `db_storage`'s async-native backends are driven from `Lane::Io` of the process `WorkerPool`, whose
+// workers are deliberately tokio-free, and `sqlx` needs its runtime's context at POLL time. Opening a
+// `PostgresStorage` runs real DDL through exactly that path, and opening a `db::Database` over it runs
+// the catalog read the same way, so this law fails by process abort if the driver runtime seam
+// (`db_storage::DbIoAsyncDriverRuntime`) is ever bypassed again.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn document_storage_opens_over_real_postgres_off_the_pool_workers() {
+    let (_directory, container) = test_directory().await;
+    let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
+    let storage = db::storage_postgres::PostgresStorage::connect(pool.clone(), &container.url).await.expect("a PostgreSQL document store must open through the WorkerPool I/O lane");
+    let database = db::Database::open(pool.clone(), db::DbConfig::for_profile(db::Profile::Prod), std::sync::Arc::new(db::storage::DbBackend::Postgres(storage))).await;
+    assert!(database.is_ok(), "a db::Database over PostgreSQL must open: {:?}", database.err());
+    drop(database);
+    pool.shutdown();
+}
+
+// 🏛️ ticket 26/09/18 slice DB3 — the five directory reads `/directory/spaces/{id}` performs, over a real PostgreSQL.
+#[tokio::test]
+async fn space_administration_read_surface_v1_holds_on_postgres() {
+    let (directory, _container) = test_directory().await;
+    directory.seed().await.expect("seed");
+    crate::directory::backend_corpus::assert_space_administration_read_surface_v1(&directory).await;
+}
+
+// 🔬️ ticket 26/09/18 slice DB2 — the directory format stamp is written on creation and a database
+// stamped with a different format is refused rather than folded over (`📇️directory/🦀️.rs`
+// `admit_directory_format`). There is no migration framework, so silence here is the worst answer.
+#[tokio::test]
+async fn directory_format_stamp_is_written_and_a_foreign_format_is_refused_postgres() {
+    let (directory, container) = test_directory().await;
+    let (schema, version): (String, i64) = sqlx_core::query_as::query_as("SELECT schema, version FROM hub_directory_format WHERE singleton").fetch_one(&directory.pool).await.expect("stamp written on creation");
+    assert_eq!(schema, crate::directory::DIRECTORY_FORMAT_SCHEMA);
+    assert_eq!(version, crate::directory::DIRECTORY_FORMAT_VERSION);
+
+    sqlx_core::query::query("UPDATE hub_directory_format SET version = $1 WHERE singleton").bind(crate::directory::DIRECTORY_FORMAT_VERSION + 1).execute(&directory.pool).await.expect("forge a newer format");
+    let refused = PostgresDirectory::connect(&container.url).await.err().map(|error| error.to_string()).unwrap_or_default();
+    assert!(refused.contains("no migration framework"), "a newer format must be refused by name, got {refused:?}");
+
+    sqlx_core::query::query("UPDATE hub_directory_format SET schema = 'semio/hub/directory-format/v9' , version = $1 WHERE singleton").bind(crate::directory::DIRECTORY_FORMAT_VERSION).execute(&directory.pool).await.expect("forge an unknown schema");
+    let unknown = PostgresDirectory::connect(&container.url).await.err().map(|error| error.to_string()).unwrap_or_default();
+    assert!(unknown.contains("unknown format stamp"), "an unknown schema must be refused by name, got {unknown:?}");
+
+    sqlx_core::query::query("UPDATE hub_directory_format SET schema = $1, version = $2 WHERE singleton").bind(crate::directory::DIRECTORY_FORMAT_SCHEMA).bind(crate::directory::DIRECTORY_FORMAT_VERSION).execute(&directory.pool).await.expect("restore the stamp");
+    container.connect().await;
 }

@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateConflict {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create conflict \"{}\"", self.conflict.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create conflict \"{}\"", self.conflict.header.name), &format!("Konflikt \"{}\" erstellen", self.conflict.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.conflict.header.id.0.clone()]

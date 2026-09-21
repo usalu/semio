@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyAudio {
     fn inverse(&self, base: &SemioSnapshot) -> Vec<SemioMutation> {
         agg_inverse(&SemioMutation::ApplyAudio(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "audio".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("audio", "Audio")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

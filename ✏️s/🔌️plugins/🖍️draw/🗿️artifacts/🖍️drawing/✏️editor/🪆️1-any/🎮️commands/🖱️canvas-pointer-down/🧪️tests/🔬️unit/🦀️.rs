@@ -1,5 +1,21 @@
 use super::*;
 
+#[test]
+fn shape_identity_is_replay_stable_and_scoped_to_the_durable_app_operation() {
+    let operation = semio_framework_plugin::AppOperationContext {
+        app_instance_id: 7,
+        parent_document_id: "drawing-document".into(),
+        operation_id: 11,
+        generation: 13,
+        canonical_base_revision: [17; 32],
+    };
+    let geometry = [10.0, 20.0, 30.0, 40.0];
+    let first = shape_drag_id("shapeRect", geometry, 3, Some(&operation));
+    assert_eq!(first, shape_drag_id("shapeRect", geometry, 3, Some(&operation)), "replaying the same admitted operation is deterministic");
+    assert_ne!(first, shape_drag_id("shapeRect", geometry, 3, Some(&semio_framework_plugin::AppOperationContext { app_instance_id: 8, ..operation.clone() })), "a different live app instance cannot collide at the same document revision and local operation ordinal");
+    assert_ne!(first, shape_drag_id("shapeRect", geometry, 4, Some(&operation)), "a second same-geometry creation in the same document uses its document-local ordinal");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn trace_pointer_step_consumes_at_most_the_fixed_work_budget() {
     let mut document = crate::schema::default_drawing_document("bounded-trace", None);

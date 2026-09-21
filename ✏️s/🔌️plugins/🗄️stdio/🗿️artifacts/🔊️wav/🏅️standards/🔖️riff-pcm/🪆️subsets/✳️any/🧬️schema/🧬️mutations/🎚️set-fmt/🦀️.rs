@@ -20,8 +20,8 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetFmt {
     fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {
         agg_inverse(&WavMutation::SetFmt(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-fmt".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-fmt", "fmt setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

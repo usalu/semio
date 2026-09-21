@@ -33,8 +33,8 @@ impl MutationKind<GisTerrainSnapshot, GisTerrainMutation> for ChangeImportedFeat
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        "Change imported terrain features".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change imported terrain features", "importierte Geländenmerkmale ändern")
     }
 }
 //#endregion 🔹Payload

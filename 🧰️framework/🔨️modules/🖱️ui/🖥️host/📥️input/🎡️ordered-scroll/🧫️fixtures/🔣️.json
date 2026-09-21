@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "capacity": 256,
+  "cases": [
+    {
+      "id": "same-point-modifier-snapshots",
+      "physical": [
+        { "kind": "scroll", "x": 10, "y": 20, "deltaX": 1, "deltaY": 4, "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "scroll", "x": 10, "y": 20, "deltaX": -2, "deltaY": 6, "modifiers": { "shift": true, "ctrl": false, "alt": false, "meta": false } }
+      ],
+      "expectedDom": [
+        { "kind": "scroll", "x": 10, "y": 20, "deltaX": 1, "deltaY": 4, "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "scroll", "x": 10, "y": 20, "deltaX": -2, "deltaY": 6, "modifiers": { "shift": true, "ctrl": false, "alt": false, "meta": false } }
+      ],
+      "expectedQueue": [
+        { "kind": "scroll", "x": 10, "y": 20, "deltaX": 1, "deltaY": 4, "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "scroll", "x": 10, "y": 20, "deltaX": -2, "deltaY": 6, "modifiers": { "shift": true, "ctrl": false, "alt": false, "meta": false } }
+      ]
+    },
+    {
+      "id": "opposite-sign-scrolls",
+      "physical": [
+        { "kind": "scroll", "x": 31, "y": 41, "deltaX": 0, "deltaY": 120, "modifiers": { "shift": false, "ctrl": false, "alt": true, "meta": false } },
+        { "kind": "scroll", "x": 31, "y": 41, "deltaX": 0, "deltaY": -120, "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } }
+      ],
+      "expectedDom": [
+        { "kind": "scroll", "x": 31, "y": 41, "deltaX": 0, "deltaY": 120, "modifiers": { "shift": false, "ctrl": false, "alt": true, "meta": false } },
+        { "kind": "scroll", "x": 31, "y": 41, "deltaX": 0, "deltaY": -120, "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } }
+      ],
+      "expectedQueue": [
+        { "kind": "scroll", "x": 31, "y": 41, "deltaX": 0, "deltaY": 120, "modifiers": { "shift": false, "ctrl": false, "alt": true, "meta": false } },
+        { "kind": "scroll", "x": 31, "y": 41, "deltaX": 0, "deltaY": -120, "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } }
+      ]
+    },
+    {
+      "id": "scroll-key-and-replaceable-pointer",
+      "physical": [
+        { "kind": "scroll", "x": 5, "y": 6, "deltaX": 3, "deltaY": 8, "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "pointer-move", "x": 40, "y": 50, "modifiers": { "shift": true, "ctrl": false, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "K", "modifiers": { "shift": false, "ctrl": false, "alt": true, "meta": false } },
+        { "kind": "pointer-move", "x": 70, "y": 80, "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } }
+      ],
+      "expectedDom": [
+        { "kind": "scroll", "x": 5, "y": 6, "deltaX": 3, "deltaY": 8, "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "pointer-move", "x": 40, "y": 50, "modifiers": { "shift": true, "ctrl": false, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "K", "modifiers": { "shift": false, "ctrl": false, "alt": true, "meta": false } },
+        { "kind": "pointer-move", "x": 70, "y": 80, "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } }
+      ],
+      "expectedQueue": [
+        { "kind": "scroll", "x": 5, "y": 6, "deltaX": 3, "deltaY": 8, "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "K", "modifiers": { "shift": false, "ctrl": false, "alt": true, "meta": false } },
+        { "kind": "pointer-move", "x": 70, "y": 80, "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } }
+      ]
+    },
+    {
+      "id": "retained-pointer-after-an-older-page",
+      "physical": [
+        { "kind": "scroll", "x": 11, "y": 12, "deltaX": 2, "deltaY": 3, "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "pointer-move", "x": 20, "y": 21, "modifiers": { "shift": true, "ctrl": false, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "A", "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "B", "modifiers": { "shift": false, "ctrl": false, "alt": true, "meta": false } },
+        { "kind": "key-down", "key": "C", "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } },
+        { "kind": "key-down", "key": "D", "modifiers": { "shift": true, "ctrl": false, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "E", "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "pointer-move", "x": 90, "y": 91, "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } }
+      ],
+      "expectedDom": [
+        { "kind": "scroll", "x": 11, "y": 12, "deltaX": 2, "deltaY": 3, "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "pointer-move", "x": 20, "y": 21, "modifiers": { "shift": true, "ctrl": false, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "A", "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "B", "modifiers": { "shift": false, "ctrl": false, "alt": true, "meta": false } },
+        { "kind": "key-down", "key": "C", "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } },
+        { "kind": "key-down", "key": "D", "modifiers": { "shift": true, "ctrl": false, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "E", "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "pointer-move", "x": 90, "y": 91, "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } }
+      ],
+      "expectedQueue": [
+        { "kind": "scroll", "x": 11, "y": 12, "deltaX": 2, "deltaY": 3, "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "A", "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "B", "modifiers": { "shift": false, "ctrl": false, "alt": true, "meta": false } },
+        { "kind": "key-down", "key": "C", "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } },
+        { "kind": "key-down", "key": "D", "modifiers": { "shift": true, "ctrl": false, "alt": false, "meta": false } },
+        { "kind": "key-down", "key": "E", "modifiers": { "shift": false, "ctrl": true, "alt": false, "meta": false } },
+        { "kind": "pointer-move", "x": 90, "y": 91, "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": true } }
+      ]
+    }
+  ],
+  "overflow": {
+    "fill": { "kind": "key-down", "key": "x", "modifiers": { "shift": false, "ctrl": false, "alt": false, "meta": false } },
+    "fillCount": 256,
+    "candidate": { "kind": "scroll", "x": 91, "y": 92, "deltaX": 7, "deltaY": 9, "modifiers": { "shift": true, "ctrl": true, "alt": false, "meta": false } },
+    "expectedOutcome": "overflow",
+    "expectedOverflowCount": 1,
+    "expectedPreservedCount": 256
+  }
+}

@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeLAeqDb
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change equivalent sound pressure level to {}", self.new_l_aeq_db)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change equivalent sound pressure level to {}", self.new_l_aeq_db), &format!("äquivalente Schalldruckstufe auf {} ändern", self.new_l_aeq_db))
     }
 }
 //#endregion 🔖️ChangeLAeqDb

@@ -21,8 +21,8 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetLoadGroup 
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3SavMutation> {
         agg_inverse(&Ifc2x3SavMutation::SetLoadGroup(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-load-group".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-load-group", "Lastgruppe setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

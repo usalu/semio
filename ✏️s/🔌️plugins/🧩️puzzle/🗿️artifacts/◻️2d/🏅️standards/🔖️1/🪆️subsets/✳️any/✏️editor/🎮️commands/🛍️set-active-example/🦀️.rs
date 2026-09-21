@@ -7,8 +7,8 @@ use crate::Puzzle2dSnapshot;
 use std::sync::LazyLock;
 
 static EMPTY: LazyLock<Puzzle2dSnapshot> = LazyLock::new(Puzzle2dSnapshot::default);
-static CONCRETE_FOREST: LazyLock<Puzzle2dSnapshot> = LazyLock::new(|| dsl::json::from_json_str(crate::examples::puzzle2d::concrete_forest::SOURCE.document_json()).expect("concrete forest example json must match Puzzle2dSnapshot"));
-static NAKAGIN: LazyLock<Puzzle2dSnapshot> = LazyLock::new(|| dsl::json::from_json_str(crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE.document_json()).expect("nakagin example json must match Puzzle2dSnapshot"));
+static CONCRETE_FOREST: LazyLock<Puzzle2dSnapshot> = LazyLock::new(|| dsl::json::from_json_str(&crate::examples::puzzle2d::concrete_forest::SOURCE.document_json()).expect("concrete forest example json must match Puzzle2dSnapshot"));
+static NAKAGIN: LazyLock<Puzzle2dSnapshot> = LazyLock::new(|| dsl::json::from_json_str(&crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE.document_json()).expect("nakagin example json must match Puzzle2dSnapshot"));
 
 pub fn warm_examples() {
     LazyLock::force(&EMPTY);

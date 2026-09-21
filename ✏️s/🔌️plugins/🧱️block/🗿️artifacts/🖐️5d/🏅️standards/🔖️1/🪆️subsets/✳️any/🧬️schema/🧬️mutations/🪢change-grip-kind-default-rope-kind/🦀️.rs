@@ -31,8 +31,8 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangeGripKind
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change grip kind \"{}\" default rope kind to \"{}\"", self.id, self.new_default_rope_kind)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change grip kind \"{}\" default rope kind to \"{}\"", self.id, self.new_default_rope_kind), &format!("Griffart \"{}\" Standardseilart auf \"{}\" ändern", self.id, self.new_default_rope_kind))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

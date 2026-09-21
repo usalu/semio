@@ -1,0 +1,62 @@
+# 🐘️ DB2 live-lane databases — ticket 26/09/18, slice DB2.
+#
+# Throwaway Postgres + Neo4j for (a) booting an `os-hub` on a real Postgres directory and document
+# store, and (b) hand-driving the same schemas the lane fixtures create. The lane UNIT tests do NOT
+# use this file: `🌎️hub/📇️directory/🐘️postgres/🧪️tests/🔬️unit/🦀️.rs` and its neo4j twin each start
+# their own disposable `docker run --detach --rm` container on an ephemeral port, so they are
+# self-contained and only need a live daemon.
+#
+# Ports are deliberately off the defaults so a developer's own Postgres/Neo4j is never touched:
+# Postgres 5433 (not 5432), Neo4j bolt 7688 (not 7687) and HTTP 7475 (not 7474).
+#
+#   docker compose -f .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🔣️db2-compose.yaml up -d
+#   docker compose -f … down -v
+#
+# Credentials are throwaway and loopback-only by construction: both services publish on 127.0.0.1.
+#
+# 🗄️ Named volumes, not a bind mount into the ticket folder. Docker Desktop on this Mac refuses to
+# bind any path under `/Users/ueli/Documents` (`error while creating mount source path … mkdir
+# /host_mnt/Users/ueli/Documents: operation not permitted` — measured 2026-09-21), and widening its
+# file-sharing list is a machine-wide setting this ticket does not get to change. `down -v` disposes
+# of them; nothing durable is expected to outlive a lane run.
+
+name: semio-hub-db2
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: semio
+      POSTGRES_PASSWORD: semio-db2
+      POSTGRES_DB: semio_hub_db2
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - db2-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username=semio --dbname=semio_hub_db2"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/semio-db2-password
+      NEO4J_server_memory_heap_max__size: 512m
+    ports:
+      - "127.0.0.1:7688:7687"
+      - "127.0.0.1:7475:7474"
+    volumes:
+      - db2-neo4j-data:/data
+      - db2-neo4j-logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p semio-db2-password 'RETURN 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+
+volumes:
+  db2-postgres:
+  db2-neo4j-data:
+  db2-neo4j-logs:

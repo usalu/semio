@@ -2,7 +2,7 @@
  * installed infinite-canvas session seam owns pointer/cancel/double-click events. Both must publish
  * the shared language-neutral fixture without changing MIME text, coordinates, or modifiers. */
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
-import { createElement, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { createElement, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧫️fixtures/🖱️input-contract/🔣️.json" with { type: "json" };
 
@@ -14,7 +14,9 @@ import catalogueTerminal from "../../../../../../../../../🔨️modules/🖱️
 import catalogueTerminalSchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🛒️canvas-catalogue-terminal/🔣️.json" with { type: "json" };
 import cataloguePointerTransfer from "../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🛒️canvas-catalogue-pointer-transfer/🔣️.json" with { type: "json" };
 import cataloguePointerTransferSchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🛒️canvas-catalogue-pointer-transfer/🔣️.json" with { type: "json" };
-import { Catalogue, catalogueTreeDragController } from "@semio-tech/ui-react";
+import cameraGestures from "../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🧭️canvas2d-camera-gestures/🔣️.json" with { type: "json" };
+import cameraGesturesSchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🧭️canvas2d-camera-gestures/🔣️.json" with { type: "json" };
+import { Tree, catalogueTreeDragController, getActiveCataloguePointerDragData } from "@semio-tech/ui-react";
 
 const seam = vi.hoisted(() => ({ sessions: [] as any[] }));
 
@@ -41,9 +43,17 @@ vi.mock("@semio-tech/infinite-canvas-react-renderer", async (importOriginal) => 
           const [x, y] = local(event);
           session.pointerDown(x, y, event.button, false, { shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey, alt: event.altKey });
         },
+        onPointerMove: (event: ReactPointerEvent<HTMLCanvasElement>) => {
+          const [x, y] = local(event);
+          session.pointerMove(x, y);
+        },
         onPointerUp: (event: ReactPointerEvent<HTMLCanvasElement>) => {
           const [x, y] = local(event);
           session.pointerUp(x, y, { shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey, alt: event.altKey });
+        },
+        onWheel: (event: ReactWheelEvent<HTMLCanvasElement>) => {
+          const [x, y] = local(event);
+          session.wheel(x, y, event.deltaY);
         },
         onPointerCancel: () => session.pointerCancel(),
         onDoubleClick: (event: ReactMouseEvent<HTMLCanvasElement>) => {
@@ -55,7 +65,7 @@ vi.mock("@semio-tech/infinite-canvas-react-renderer", async (importOriginal) => 
   };
 });
 
-import { Canvas2dHost } from "../../🟦️.tsx";
+import { Canvas2dHost, wheelCameraAtScreen } from "../../🟦️.tsx";
 
 const bounds = { x: 0, y: 0, left: 0, top: 0, right: fixture.surface.width, bottom: fixture.surface.height, width: fixture.surface.width, height: fixture.surface.height, toJSON: () => ({}) } as DOMRect;
 
@@ -64,7 +74,8 @@ type HostAction = { readonly controllerId: string; readonly action: string; read
 function mountedHost(
   surface = fixture.surface,
   dispatchAction?: (action: HostAction) => void | Promise<unknown>,
-  catalogueSource?: { readonly mime: string; readonly rawPayload: string },
+  catalogueSource?: { readonly mime: string; readonly rawPayload: string; readonly types: readonly string[] },
+  camera = { x: 0, y: 0, zoom: 1 },
 ) {
   const actions: HostAction[] = [];
   const left = "left" in surface ? surface.left : 0;
@@ -76,7 +87,7 @@ function mountedHost(
         surfaceId: surface.id,
         controllerId: surface.controllerId,
         componentKind: "canvas-2d",
-        canvas2d: { cameraX: 0, cameraY: 0, zoom: 1, layersJson: "[]" },
+        canvas2d: { cameraX: camera.x, cameraY: camera.y, zoom: camera.zoom, layersJson: "[]" },
       },
       onAction: (action: HostAction) => {
         actions.push(action);
@@ -88,10 +99,9 @@ function mountedHost(
       ? createElement(
           "div",
           null,
-          createElement(Catalogue, {
-            title: "Catalogue",
-            mime: catalogueSource.mime,
-            items: [{ id: "catalogue-pointer-source", label: "Source", payload: JSON.parse(catalogueSource.rawPayload) as Record<string, unknown> }],
+          createElement(Tree, {
+            sections: [{ id: "catalogue", label: "Catalogue", items: [{ id: "catalogue-pointer-source", label: "Source", draggable: true, dragData: Object.fromEntries(catalogueSource.types.map(type => [type, type === catalogueSource.mime ? catalogueSource.rawPayload : ""])) }] }],
+            dragAndDropController: catalogueTreeDragController(catalogueSource.mime),
           }),
           canvasHost,
         )
@@ -101,7 +111,7 @@ function mountedHost(
   const canvas = view.container.querySelector('[data-testid="canvas-input"]') as HTMLCanvasElement;
   host.getBoundingClientRect = () => surfaceBounds;
   canvas.getBoundingClientRect = () => surfaceBounds;
-  return { actions, host, canvas };
+  return { actions, host, canvas, unmount: view.unmount };
 }
 
 async function settle(): Promise<void> {
@@ -218,10 +228,282 @@ describe("🖱️ Canvas2d mounted input contract", () => {
     expect(new Ajv2020({ strict: true }).compile(cataloguePointerTransferSchema)(cataloguePointerTransfer)).toBe(true);
   });
 
+  it("validates the renderer-neutral Canvas2d camera gesture fixture", () => {
+    expect(new Ajv2020({ strict: true }).compile(cameraGesturesSchema)(cameraGestures)).toBe(true);
+  });
+
+  it("keeps the exact world point under an off-centre wheel anchor and clamps both zoom limits", () => {
+    const { initialCamera, anchor, zoomInDeltaY, zoomOutDeltaY, zoomInFactor, zoomOutFactor, zoomMinimum, zoomMaximum } = cameraGestures.wheel;
+    const { width, height } = cameraGestures.surface;
+    const world = {
+      x: (anchor.x - width * 0.5) / initialCamera.zoom + initialCamera.x,
+      y: (anchor.y - height * 0.5) / initialCamera.zoom + initialCamera.y,
+    };
+    const zoomedIn = wheelCameraAtScreen(initialCamera, anchor.x, anchor.y, zoomInDeltaY, width, height);
+    expect(zoomedIn.zoom).toBe(initialCamera.zoom * zoomInFactor);
+    expect((anchor.x - width * 0.5) / zoomedIn.zoom + zoomedIn.x).toBe(world.x);
+    expect((anchor.y - height * 0.5) / zoomedIn.zoom + zoomedIn.y).toBe(world.y);
+    expect(wheelCameraAtScreen(initialCamera, anchor.x, anchor.y, zoomOutDeltaY, width, height).zoom).toBe(initialCamera.zoom * zoomOutFactor);
+    expect(wheelCameraAtScreen({ ...initialCamera, zoom: zoomMinimum }, anchor.x, anchor.y, zoomOutDeltaY, width, height).zoom).toBe(zoomMinimum);
+    expect(wheelCameraAtScreen({ ...initialCamera, zoom: zoomMaximum }, anchor.x, anchor.y, zoomInDeltaY, width, height).zoom).toBe(zoomMaximum);
+  });
+
+  it("publishes the mounted host's exact cursor-anchored wheel camera once after settling", async () => {
+    vi.useFakeTimers();
+    try {
+      const { initialCamera, anchor, zoomInDeltaY, expectedAction } = cameraGestures.wheel;
+      const { actions, canvas } = mountedHost(cameraGestures.surface, undefined, undefined, initialCamera);
+      seam.sessions.at(-1)?.setSize(cameraGestures.surface.width, cameraGestures.surface.height, 1);
+      canvas.dispatchEvent(new WheelEvent("wheel", { bubbles: true, clientX: anchor.x, clientY: anchor.y, deltaY: zoomInDeltaY }));
+      expect(actions).toEqual([]);
+      await vi.advanceTimersByTimeAsync(cameraGestures.wheel.settleDelayMs - 1);
+      expect(actions).toEqual([]);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(actions).toEqual([{
+        controllerId: cameraGestures.surface.controllerId,
+        action: expectedAction,
+        args: {
+          surfaceId: cameraGestures.surface.id,
+          camera: wheelCameraAtScreen(initialCamera, anchor.x, anchor.y, zoomInDeltaY, cameraGestures.surface.width, cameraGestures.surface.height),
+        },
+      }]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each(cameraGestures.wheelBursts)("applies every $id wheel event in order and publishes one settled camera", async row => {
+    vi.useFakeTimers();
+    try {
+      const { initialCamera, anchor, expectedAction } = cameraGestures.wheel;
+      const { width, height } = cameraGestures.surface;
+      const expected = row.deltas.reduce((camera, deltaY) => wheelCameraAtScreen(camera, anchor.x, anchor.y, deltaY, width, height), initialCamera);
+      expect(expected.zoom).toBe(initialCamera.zoom * row.expectedFactors[0] * row.expectedFactors[1]);
+      if (row.id === "zoom-in-then-out-events") expect(expected.zoom).not.toBe(initialCamera.zoom);
+      const { actions, canvas } = mountedHost(cameraGestures.surface, undefined, undefined, initialCamera);
+      seam.sessions.at(-1)?.setSize(width, height, 1);
+      for (const deltaY of row.deltas) {
+        canvas.dispatchEvent(new WheelEvent("wheel", { bubbles: true, clientX: anchor.x, clientY: anchor.y, deltaY }));
+      }
+      expect(actions).toEqual([]);
+      await vi.advanceTimersByTimeAsync(120);
+      const cameraActions = actions.filter(({ action }) => action === expectedAction);
+      expect(cameraActions).toHaveLength(row.expectedActionCount);
+      expect(cameraActions[0]?.args?.camera).toEqual(expected);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("releases every sequentially closed Canvas window beyond the retained surface capacity", async () => {
+    vi.useFakeTimers();
+    try {
+      const law = cameraGestures.sequentialWindowLifetime;
+      const retiredActions: HostAction[][] = [];
+      for (let index = 0; index < law.mountCount; index += 1) {
+        const surface = { ...cameraGestures.surface, id: `sequential-canvas-window-${index}` };
+        const { actions, canvas, unmount } = mountedHost(surface, undefined, undefined, cameraGestures.wheel.initialCamera);
+        expect(document.querySelectorAll(".semio-canvas-2d-host")).toHaveLength(law.maximumLiveWindows);
+        canvas.dispatchEvent(new WheelEvent("wheel", { bubbles: true, clientX: surface.width / 2, clientY: surface.height / 2, deltaY: cameraGestures.wheel.zoomInDeltaY }));
+        retiredActions.push(actions);
+        unmount();
+        expect(document.querySelectorAll(".semio-canvas-2d-host")).toHaveLength(law.liveWindowsAfterClose);
+      }
+      await vi.advanceTimersByTimeAsync(120);
+      expect(retiredActions.flat().filter(({ action }) => action === cameraGestures.wheel.expectedAction)).toHaveLength(law.retiredDeadlineActions);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps sibling Canvas cameras independent under one document surface identity", async () => {
+    vi.useFakeTimers();
+    try {
+      const law = cameraGestures.siblingWindowLifetime;
+      const mounted = law.cameras.map(camera => mountedHost(cameraGestures.surface, undefined, undefined, camera));
+      for (const session of seam.sessions) session.setSize(cameraGestures.surface.width, cameraGestures.surface.height, 1);
+      const wheel = (canvas: HTMLCanvasElement) => canvas.dispatchEvent(new WheelEvent("wheel", { bubbles: true, clientX: 200, clientY: 150, deltaY: cameraGestures.wheel.zoomInDeltaY }));
+      for (const { canvas } of mounted) wheel(canvas);
+      await vi.advanceTimersByTimeAsync(120);
+      mounted.forEach(({ actions }, index) => {
+        expect(actions).toHaveLength(1);
+        expect(actions[0]?.args?.camera).toEqual({ ...law.cameras[index], zoom: law.expectedZooms[index] });
+      });
+      mounted[0]!.actions.length = 0;
+      mounted[0]!.unmount();
+      wheel(mounted[1]!.canvas);
+      await vi.advanceTimersByTimeAsync(120);
+      expect(mounted[0]!.actions).toHaveLength(law.retiredActions);
+      expect((mounted[1]!.actions.at(-1)?.args?.camera as { zoom: number }).zoom).toBeCloseTo(law.survivingZoom);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("silently retires an active Canvas gesture when its window unmounts", async () => {
+    const law = cameraGestures.sequentialWindowLifetime;
+    const { actions, canvas, unmount } = mountedHost();
+    fireEvent.pointerDown(canvas, { clientX: 10, clientY: 10, button: 0 });
+    await settle();
+    expect(actions.map(({ action }) => action)).toEqual(law.activeGestureActions);
+    actions.length = 0;
+    unmount();
+    fireEvent.pointerCancel(canvas);
+    fireEvent.pointerUp(canvas, { clientX: 10, clientY: 10, button: 0 });
+    await settle();
+    expect(actions).toHaveLength(law.closedGestureActions);
+  });
+
+  it("keeps same-key camera ownership and retires every replaced or removed debounce", async () => {
+    vi.useFakeTimers();
+    try {
+      const [initial, refreshed, replacement] = cameraGestures.mountLifetime.steps;
+      const actionsA: HostAction[] = [];
+      const actionsB: HostAction[] = [];
+      const onActionA = (action: HostAction) => {
+        actionsA.push(action);
+        return Promise.resolve();
+      };
+      const onActionB = (action: HostAction) => {
+        actionsB.push(action);
+        return Promise.resolve();
+      };
+      const host = (key: string, authoredZoom: number, onAction: (action: HostAction) => Promise<void>) =>
+        createElement(Canvas2dHost, {
+          key,
+          node: {
+            type: "componentScene",
+            surfaceId: cameraGestures.surface.id,
+            controllerId: cameraGestures.surface.controllerId,
+            componentKind: "canvas-2d",
+            canvas2d: { cameraX: 0, cameraY: 0, zoom: authoredZoom, layersJson: "[]" },
+          },
+          onAction,
+        } as never);
+      const view = render(host(initial.key, initial.authoredZoom, onActionA));
+      const canvas = () => view.container.querySelector('[data-testid="canvas-input"]') as HTMLCanvasElement;
+      const wheel = () => {
+        canvas().getBoundingClientRect = () => bounds;
+        canvas().dispatchEvent(new WheelEvent("wheel", { bubbles: true, clientX: fixture.surface.width / 2, clientY: fixture.surface.height / 2, deltaY: cameraGestures.wheel.zoomInDeltaY }));
+      };
+
+      wheel();
+      view.rerender(host(refreshed.key, refreshed.authoredZoom, onActionA));
+      await vi.advanceTimersByTimeAsync(120);
+      expect((actionsA.at(-1)?.args?.camera as { readonly zoom: number }).zoom).toBeCloseTo(initial.expectedZoom, 12);
+
+      wheel();
+      await vi.advanceTimersByTimeAsync(120);
+      expect((actionsA.at(-1)?.args?.camera as { readonly zoom: number }).zoom).toBeCloseTo(refreshed.expectedZoom, 12);
+
+      wheel();
+      const retiredCount = actionsA.length;
+      view.rerender(host(replacement.key, replacement.authoredZoom, onActionB));
+      await vi.advanceTimersByTimeAsync(120);
+      expect(actionsA.length - retiredCount).toBe(cameraGestures.mountLifetime.retiredDeadlineActions);
+
+      wheel();
+      await vi.advanceTimersByTimeAsync(120);
+      expect((actionsB.at(-1)?.args?.camera as { readonly zoom: number }).zoom).toBeCloseTo(replacement.expectedZoom, 12);
+
+      wheel();
+      const removedCount = actionsB.length;
+      view.unmount();
+      await vi.advanceTimersByTimeAsync(120);
+      expect(actionsB.length - removedCount).toBe(cameraGestures.mountLifetime.removedCameraActions);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("preserves a same-key scene refresh and resets that key after a real component remount", async () => {
+    vi.useFakeTimers();
+    try {
+      const law = cameraGestures.sameKeySceneRemount;
+      const actions: HostAction[] = [];
+      const onAction = (action: HostAction) => {
+        actions.push(action);
+        return Promise.resolve();
+      };
+      const host = (authoredZoom: number) =>
+        createElement(Canvas2dHost, {
+          key: law.key,
+          node: {
+            type: "componentScene",
+            surfaceId: cameraGestures.surface.id,
+            controllerId: cameraGestures.surface.controllerId,
+            componentKind: "canvas-2d",
+            canvas2d: { cameraX: 0, cameraY: 0, zoom: authoredZoom, layersJson: "[]" },
+          },
+          onAction,
+        } as never);
+      const view = render(host(law.initialAuthoredZoom));
+      const wheel = () => {
+        const canvas = view.container.querySelector('[data-testid="canvas-input"]') as HTMLCanvasElement;
+        canvas.getBoundingClientRect = () => bounds;
+        canvas.dispatchEvent(new WheelEvent("wheel", { bubbles: true, clientX: fixture.surface.width / 2, clientY: fixture.surface.height / 2, deltaY: cameraGestures.wheel.zoomInDeltaY }));
+      };
+
+      wheel();
+      await vi.advanceTimersByTimeAsync(120);
+      view.rerender(host(law.refreshAuthoredZoom));
+      wheel();
+      await vi.advanceTimersByTimeAsync(120);
+      expect((actions.at(-1)?.args?.camera as { readonly zoom: number }).zoom).toBeCloseTo(law.expectedRefreshZoom, 12);
+
+      wheel();
+      const retiredCount = actions.length;
+      view.rerender(createElement("div", { key: law.key, "data-component": law.intermediateComponent }));
+      await vi.advanceTimersByTimeAsync(120);
+      expect(actions.length - retiredCount).toBe(law.retiredDeadlineActions);
+
+      view.rerender(host(law.remountAuthoredZoom));
+      const remountedCount = actions.length;
+      wheel();
+      await vi.advanceTimersByTimeAsync(120);
+      expect(actions.length - remountedCount).toBe(law.remountedCameraActions);
+      expect((actions.at(-1)?.args?.camera as { readonly zoom: number }).zoom).toBeCloseTo(law.expectedRemountZoom, 12);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each(cameraGestures.panCases.filter(({ id }) => id !== "primary-active-pan"))("matches the mounted React $id button contract", async row => {
+    vi.useFakeTimers();
+    try {
+      const { actions, canvas } = mountedHost(cameraGestures.surface, undefined, undefined, cameraGestures.wheel.initialCamera);
+      fireEvent.pointerDown(canvas, { clientX: row.start.x, clientY: row.start.y, button: row.button });
+      fireEvent.pointerMove(canvas, { clientX: row.end.x, clientY: row.end.y, button: row.button });
+      fireEvent.pointerUp(canvas, { clientX: row.end.x, clientY: row.end.y, button: row.button });
+      await settle();
+      expect(actions.filter(({ action }) => action !== cameraGestures.wheel.expectedAction).map(({ action }) => action)).toEqual(row.expectedActions);
+      await vi.advanceTimersByTimeAsync(120);
+      const cameraActions = actions.filter(({ action }) => action === cameraGestures.wheel.expectedAction);
+      expect(cameraActions).toHaveLength(row.expectedCameraAction ? 1 : 0);
+      if (row.expectedCameraAction) expect(cameraActions[0]?.args?.camera).toEqual(row.expectedCamera);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("owns the declared MIME roster until pointer cancellation and keeps native drag separate", () => {
+    const row = cataloguePointerTransfer.cases[0]!;
+    const controller = catalogueTreeDragController(cataloguePointerTransfer.mime);
+    const types = [...row.types];
+    controller.pointerPaletteDrag?.begin(row.rawPayload, types);
+    types.length = 0;
+    expect(getActiveCataloguePointerDragData()).toEqual({ payload: row.rawPayload, types: row.types });
+    controller.pointerPaletteDrag?.cancel();
+    expect(getActiveCataloguePointerDragData()).toBeNull();
+    controller.onDragStart?.({ items: [], section: { id: "catalogue" }, sourceItem: { id: "source", dragData: { [cataloguePointerTransfer.mime]: row.rawPayload } } });
+    expect(getActiveCataloguePointerDragData()).toBeNull();
+    controller.onDragEnd?.({ items: [], section: { id: "catalogue" }, sourceItem: { id: "source" } });
+  });
+
   it.each(cataloguePointerTransfer.cases)("routes $id pointer catalogue ownership through the mounted canvas host", async row => {
     const { actions } = mountedHost(cataloguePointerTransfer.surface);
     const controller = catalogueTreeDragController(cataloguePointerTransfer.mime);
-    controller.pointerPaletteDrag?.begin(row.rawPayload);
+    controller.pointerPaletteDrag?.begin(row.rawPayload, row.types);
     for (const point of row.moves) {
       fireEvent.pointerMove(window, { clientX: point.x, clientY: point.y, pointerId: 7 });
     }
@@ -242,7 +524,7 @@ describe("🖱️ Canvas2d mounted input contract", () => {
         y: (firstInside?.y ?? 0) - cataloguePointerTransfer.surface.top,
         width: cataloguePointerTransfer.surface.width,
         height: cataloguePointerTransfer.surface.height,
-        types: [cataloguePointerTransfer.mime],
+        types: row.types,
       });
     }
     const drop = actions.find(action => action.action === "canvasDrop");
@@ -261,7 +543,7 @@ describe("🖱️ Canvas2d mounted input contract", () => {
   it("preserves preview-before-terminal order when the real Catalogue threshold move reaches Canvas first", async () => {
     const row = cataloguePointerTransfer.cases[0]!;
     const point = row.moves[0]!;
-    const { actions } = mountedHost(cataloguePointerTransfer.surface, undefined, { mime: cataloguePointerTransfer.mime, rawPayload: row.rawPayload });
+    const { actions } = mountedHost(cataloguePointerTransfer.surface, undefined, { mime: cataloguePointerTransfer.mime, rawPayload: row.rawPayload, types: row.types });
     const handle = document.querySelector('#catalogue-pointer-source [data-slot="drag-handle"]') as HTMLElement | null;
     expect(handle).not.toBeNull();
     fireEvent.pointerDown(handle!, { button: 0, clientX: 8, clientY: 8, pointerId: 7 });
@@ -275,7 +557,7 @@ describe("🖱️ Canvas2d mounted input contract", () => {
       y: point.y - cataloguePointerTransfer.surface.top,
       width: cataloguePointerTransfer.surface.width,
       height: cataloguePointerTransfer.surface.height,
-      types: [cataloguePointerTransfer.mime],
+      types: row.types,
     });
     expect(actions[2]?.args).toEqual({
       surfaceId: cataloguePointerTransfer.surface.id,

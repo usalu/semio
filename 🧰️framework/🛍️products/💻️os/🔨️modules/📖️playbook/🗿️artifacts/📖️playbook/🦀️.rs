@@ -943,6 +943,7 @@ pub mod builder_kit {
     /// scene, handed off to the dedicated `block-list-host.tsx` React host for drag-and-drop.
     pub fn render_playbook_builder(surface_id: &str, spec: &PlaybookSpec, palette: &[BlockPaletteEntry], selected_id: Option<&str>, config: &PlaybookBuilderConfig) -> UiNode {
         UiNode::ComponentScene(UiComponentSceneNode {
+            host_id: String::new(),
             surface_id: surface_id.into(),
             controller_id: config.controller_id.into(),
             component_kind: SurfaceKind::BlockList,

@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeN50HIn
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change n50 air change rate to {}", self.new_n50_h_inv)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change n50 air change rate to {}", self.new_n50_h_inv), &format!("n50 Luftänderungsrate auf {} ändern", self.new_n50_h_inv))
     }
 }
 //#endregion 🔖️ChangeN50HInv

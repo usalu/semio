@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeCKpa {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change cohesion c [kPa] to {}", self.new_c_kpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change cohesion c [kPa] to {}", self.new_c_kpa), &format!("Kohäsionsc [kPa] auf {} ändern", self.new_c_kpa))
     }
 }
 //#endregion 🔖️ChangeCKpa

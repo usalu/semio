@@ -89,36 +89,42 @@
     "cases": [
       {
         "action": "setAppearance",
+        "publicationLane": "dispatch",
         "controlId": "framework.settings.appearance",
         "initialValue": "system",
         "nextValue": "dark"
       },
       {
         "action": "setLocale",
+        "publicationLane": "maintenance",
         "controlId": "framework.settings.language",
         "initialValue": "en",
         "nextValue": "de"
       },
       {
         "action": "setLayout",
+        "publicationLane": "dispatch",
         "controlId": "framework.settings.layout",
         "initialValue": "desktop",
         "nextValue": "tablet"
       },
       {
         "action": "setTerminology",
+        "publicationLane": "dispatch",
         "controlId": "framework.settings.terminology",
         "initialValue": "native",
         "nextValue": "de"
       },
       {
         "action": "setMergePolicy",
+        "publicationLane": "dispatch",
         "controlId": "framework.settings.mergePolicy",
         "initialValue": "Normal",
         "nextValue": "Vigilant"
       },
       {
         "action": "setDriver",
+        "publicationLane": "dispatch",
         "controlId": "framework.settings.driver",
         "initialValue": "default",
         "nextValue": "compact"

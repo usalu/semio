@@ -92,8 +92,31 @@ mod tests;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(RasterSnapshot, RasterMutation), String> {
     let snapshot: RasterSnapshot = dsl::os_pack::json::from_json_str(snapshot_json).map_err(|error| format!("the committed raster snapshot JSON does not decode: {error}"))?;
-    let mutation: RasterMutation = dsl::os_pack::json::from_json_str(mutation_json).map_err(|error| format!("the committed raster mutation JSON does not decode: {error}"))?;
-    Ok((snapshot, mutation))
+    // 🧹️ A decoded before-document owns two fixed-capacity maps (`assets`, every adjustment's
+    // `params`) whose `Drop` fails closed, so the snapshot cannot simply fall off this frame when
+    // the mutation beside it does not decode — every committed before-document of this artifact is
+    // populated.
+    match dsl::os_pack::json::from_json_str::<RasterMutation>(mutation_json) {
+        Ok(mutation) => Ok((snapshot, mutation)),
+        Err(error) => {
+            retire_bridge_snapshot(snapshot);
+            Err(format!("the committed raster mutation JSON does not decode: {error}"))
+        }
+    }
+}
+
+/// 🧹️ The bridge's own retirement seam for a displaced document — the artifact's real
+/// `retire_raster_snapshot`, named once here so every bridge frame retires the same way.
+fn retire_bridge_snapshot(snapshot: RasterSnapshot) {
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+}
+
+/// 🧹️ Cold-retires a batch of operations nobody will apply — a `create-layer` inverse can carry a
+/// whole subtree whose adjustment layers own populated `params` maps.
+fn retire_bridge_mutations(mutations: Vec<RasterMutation>) {
+    for mutation in mutations {
+        protocol::Mutation::retire_cold(mutation);
+    }
 }
 
 /// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
@@ -101,9 +124,13 @@ fn bridge_decode_pair(snapshot_json: &str, mutation_json: &str) -> Result<(Raste
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(RasterSnapshot, Vec<String>), String> {
     use protocol::{Mutation, MutationDiff};
-    let outcome = <RasterMutation as Mutation<RasterSnapshot>>::diff(mutation, snapshot);
-    let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    // 🧹️ The outcome's diff is an owner too (a whole replacement artifact, or the layers an
+    // insertion carries), so it is cold-retired here rather than dropped.
+    let (diff, raised) = <RasterMutation as Mutation<RasterSnapshot>>::diff(mutation, snapshot).into_parts();
+    let messages: Vec<String> = raised.iter().map(|message| message.code.0.clone()).collect();
+    let applied = MutationDiff::apply(&diff, snapshot);
+    <crate::diff::RasterDiff as MutationDiff<RasterSnapshot>>::retire_cold(diff);
+    match applied {
         Ok(next) => Ok((next, messages)),
         Err(error) => Err(format!("{error:?}")),
     }
@@ -130,8 +157,13 @@ fn bridge_render(snapshot: &RasterSnapshot, messages: Vec<String>) -> String {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
     let (snapshot, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let (applied, messages) = bridge_step(&snapshot, &mutation)?;
-    Ok(bridge_render(&applied, messages))
+    let stepped = bridge_step(&snapshot, &mutation);
+    retire_bridge_snapshot(snapshot);
+    protocol::Mutation::retire_cold(mutation);
+    let (applied, messages) = stepped?;
+    let rendered = bridge_render(&applied, messages);
+    retire_bridge_snapshot(applied);
+    Ok(rendered)
 }
 
 /// ↩️ Applies one committed mutation payload and then EVERY step of its own computed inverse,
@@ -142,13 +174,41 @@ pub fn apply_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> R
 pub fn undo_raster_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
     use protocol::Mutation;
     let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <RasterMutation as Mutation<RasterSnapshot>>::inverse(&mutation, &base) {
-        let (next, raised) = bridge_step(&current, &undo)?;
-        current = next;
-        messages.extend(raised);
+    let inverse = <RasterMutation as Mutation<RasterSnapshot>>::inverse(&mutation, &base);
+    let stepped = bridge_step(&base, &mutation);
+    Mutation::retire_cold(mutation);
+    retire_bridge_snapshot(base);
+    let (mut current, mut messages) = match stepped {
+        Ok(pair) => pair,
+        Err(error) => {
+            retire_bridge_mutations(inverse);
+            return Err(error);
+        }
+    };
+    let mut pending = inverse.into_iter();
+    let mut refusal = None;
+    while let Some(undo) = pending.next() {
+        let stepped = bridge_step(&current, &undo);
+        Mutation::retire_cold(undo);
+        match stepped {
+            Ok((next, raised)) => {
+                retire_bridge_snapshot(std::mem::replace(&mut current, next));
+                messages.extend(raised);
+            }
+            Err(error) => {
+                refusal = Some(error);
+                break;
+            }
+        }
     }
-    Ok(bridge_render(&current, messages))
+    if let Some(error) = refusal {
+        retire_bridge_mutations(pending.collect());
+        retire_bridge_snapshot(current);
+        return Err(error);
+    }
+    let rendered = bridge_render(&current, messages);
+    retire_bridge_snapshot(current);
+    Ok(rendered)
 }
 
 /// 🔁️ Parses the committed `.dsl.semio` example, prints it back and parses that, answering

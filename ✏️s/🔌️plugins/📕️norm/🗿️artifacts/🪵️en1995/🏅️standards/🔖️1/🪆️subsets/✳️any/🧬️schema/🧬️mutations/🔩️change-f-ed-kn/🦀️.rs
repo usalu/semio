@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeFEdKn {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change f ed kn to {:?}", self.new_f_ed_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change f ed kn to {:?}", self.new_f_ed_kn), &format!("Fedkn auf {:?} ändern", self.new_f_ed_kn))
     }
 }
 //#endregion 🔖️ChangeFEdKn

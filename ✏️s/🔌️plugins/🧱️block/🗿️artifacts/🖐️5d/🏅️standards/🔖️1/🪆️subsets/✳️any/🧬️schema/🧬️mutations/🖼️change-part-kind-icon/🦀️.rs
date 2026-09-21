@@ -30,8 +30,8 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ChangePartKind
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change part kind icon to {:?}", self.new_icon)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change part kind icon to {:?}", self.new_icon), &format!("Bauteilartsymbol auf {:?} ändern", self.new_icon))
     }
 }
 //#endregion 🔖️Mutation

@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeGenera
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change generation energy reference to {}", self.new_generation_reference_kwh)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change generation energy reference to {}", self.new_generation_reference_kwh), &format!("Erzeugungsenergienreferenz auf {} ändern", self.new_generation_reference_kwh))
     }
 }
 //#endregion 🔖️ChangeGenerationReferenceKwh

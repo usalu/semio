@@ -20,8 +20,8 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeConsequenc
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change consequence class to CC{}", self.new_consequence_class)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change consequence class to CC{}", self.new_consequence_class), &format!("Folgenklasse auf CC{} ändern", self.new_consequence_class))
     }
 }
 //#endregion 🔖️Payload

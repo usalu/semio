@@ -19,8 +19,8 @@ impl protocol::MutationKind<PlaybookConfig, PlaybookConfigMutation> for SetContr
     fn inverse(&self, base: &PlaybookConfig) -> Vec<PlaybookConfigMutation> {
         vec![PlaybookConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Set Contributions".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["contributions".into()]

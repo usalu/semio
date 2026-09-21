@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeShellTMm {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change shell thickness t [mm] to {}", self.new_shell_t_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change shell thickness t [mm] to {}", self.new_shell_t_mm), &format!("Schalendickent [mm] auf {} ändern", self.new_shell_t_mm))
     }
 }
 //#endregion 🔖️ChangeShellTMm

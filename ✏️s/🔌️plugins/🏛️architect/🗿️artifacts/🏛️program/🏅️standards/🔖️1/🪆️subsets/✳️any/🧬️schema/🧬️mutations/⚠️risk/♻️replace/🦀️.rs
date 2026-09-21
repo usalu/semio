@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceRisk {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace risk \"{}\"", self.risk.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace risk \"{}\"", self.risk.header.name), &format!("Risiko \"{}\" ersetzen", self.risk.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.risk.header.id.0.clone()]

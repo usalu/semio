@@ -192,6 +192,16 @@
       },
       "outputs": []
     },
+    "hub-agent-participant-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts hub-agent-participant-check"
+      },
+      "outputs": []
+    },
     "schema-mirror": {
       "executor": "nx:run-commands",
       "cache": true,

@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreatePrivacyRequirement
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create privacy requirement \"{}\"", self.privacy_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create privacy requirement \"{}\"", self.privacy_requirement.header.name), &format!("Datenschutzanforderung \"{}\" erstellen", self.privacy_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.privacy_requirement.header.id.0.clone()]

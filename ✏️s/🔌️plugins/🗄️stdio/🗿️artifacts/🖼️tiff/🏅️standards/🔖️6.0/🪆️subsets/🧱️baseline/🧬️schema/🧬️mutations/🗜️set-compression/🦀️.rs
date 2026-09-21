@@ -20,8 +20,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetCompressi
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {
         agg_inverse(&TiffBaselineMutation::SetCompression(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-compression".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-compression", "Kompression setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

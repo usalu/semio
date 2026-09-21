@@ -92,7 +92,7 @@ describe("browser keyboard scope", () => {
     document.body.append(root);
     const events: BrowserKeyboardEvent[] = [];
     const projection = [{ windowId: "reopened-world", windowGeneration: 8, nodes: [{ nodeId: 3, key: "world", role: "treeitem", depth: 0, live: "off", focusable: true, focused: true }] }];
-    const mirror = createAccessibilityMirror(root, { enqueueLossless: () => {}, introspect: async () => JSON.stringify({ windows: projection }) }, "en");
+    const mirror = createAccessibilityMirror(root, { enqueueLossless: () => {}, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
     cleanups.push(mirror.dispose, wireBrowserKeyboard(root, canvas, event => events.push(event)));
     canvas.focus();
     mirror.refresh();
@@ -108,6 +108,33 @@ describe("browser keyboard scope", () => {
     expect(events).toHaveLength(disposedCount);
   });
 
+  for (const row of fixture.retirementCases) it(row.id, async () => {
+    vi.useFakeTimers();
+    const root = document.createElement("main");
+    const canvas = document.createElement("canvas");
+    canvas.tabIndex = 0;
+    root.append(canvas);
+    document.body.append(root);
+    const events: BrowserKeyboardEvent[] = [];
+    let projection = [{ windowId: "shell.chrome", windowGeneration: 1, nodes: [
+      { nodeId: 1, key: "ui.search.dialog", role: "dialog", depth: 0, live: "off" },
+      { nodeId: 2, key: row.retiredNodeKey, role: "combobox", depth: 1, live: "off", focusable: true, focused: true, editable: true },
+    ] }];
+    const mirror = createAccessibilityMirror(root, { enqueueLossless: () => {}, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
+    cleanups.push(mirror.dispose, wireBrowserKeyboard(root, canvas, event => events.push(event)));
+    canvas.focus();
+    mirror.refresh();
+    await vi.runAllTimersAsync();
+    expect((document.activeElement as HTMLElement).dataset.nodeKey).toBe(row.retiredNodeKey);
+    projection = [];
+    mirror.refresh();
+    await vi.runAllTimersAsync();
+    expect(document.activeElement).toBe(canvas);
+    canvas.dispatchEvent(new KeyboardEvent("keydown", { key: row.reopenKey, metaKey: row.modifiers.meta, bubbles: true, cancelable: true }));
+    canvas.dispatchEvent(new KeyboardEvent("keyup", { key: row.reopenKey, metaKey: row.modifiers.meta, bubbles: true, cancelable: true }));
+    expect(events.slice(-2).map(event => [event.type, event.key, event.meta])).toEqual([["keydown", row.reopenKey, true], ["keyup", row.reopenKey, true]]);
+  });
+
   it("projects an editable combobox with a resolved listbox and active descendant while keeping Select a button", async () => {
     vi.useFakeTimers();
     const root = document.createElement("main");
@@ -121,7 +148,7 @@ describe("browser keyboard scope", () => {
       { nodeId: 4, key: "studio.undo", role: "option", depth: 2, live: "off", label: "Undo", selected: true },
       { nodeId: 5, key: "settings.theme.select", role: "combobox", depth: 0, live: "off", focusable: true, valueText: "dark" },
     ] }];
-    const mirror = createAccessibilityMirror(root, { enqueueLossless: () => {}, introspect: async () => JSON.stringify({ windows: projection }) }, "en");
+    const mirror = createAccessibilityMirror(root, { enqueueLossless: () => {}, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
     cleanups.push(mirror.dispose);
     mirror.refresh();
     await vi.runAllTimersAsync();

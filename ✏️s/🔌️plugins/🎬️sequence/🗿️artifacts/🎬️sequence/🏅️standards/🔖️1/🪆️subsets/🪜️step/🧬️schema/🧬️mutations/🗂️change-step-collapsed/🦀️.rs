@@ -31,8 +31,8 @@ impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for ChangeStepCo
     fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("{} step \"{}\"", if self.collapsed { "Collapse" } else { "Expand" }, self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("{} step \"{}\"", if self.collapsed { "Collapse" } else { "Expand" }, self.id), &format!("{} Schritt \"{}\"", if self.collapsed { "Einklappen" } else { "Aufklappen" }, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

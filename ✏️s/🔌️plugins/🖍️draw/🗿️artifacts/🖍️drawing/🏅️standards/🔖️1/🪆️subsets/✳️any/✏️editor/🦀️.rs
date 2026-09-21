@@ -610,9 +610,10 @@ impl DrawingInstanceOperationOwner {
                     canvas_pointer_down::drawing_gesture::Event::PointerUp { utility: session.active_utility_id.clone(), world: [world_x, world_y], shift: payload.shift, ctrl: payload.ctrl, meta: payload.meta },
                     snapshot,
                     config,
+                    &operation,
                 ))
             }
-            DrawingCommand::CanvasDoubleClick(_) | DrawingCommand::CanvasCommitDraft(_) => Some(session.step_gesture_retained(command.command_id(), canvas_pointer_down::drawing_gesture::Event::CommitDraft, snapshot, config)),
+            DrawingCommand::CanvasDoubleClick(_) | DrawingCommand::CanvasCommitDraft(_) => Some(session.step_gesture_retained(command.command_id(), canvas_pointer_down::drawing_gesture::Event::CommitDraft, snapshot, config, &operation)),
             _ => None,
         };
         if let Some(retained_emit) = retained_emit {

@@ -61,8 +61,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderImages
         vec![super::GltfMutation::ReorderImages(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Reorder Images".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Reorder Images", "Bilder umordnen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -21,8 +21,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ReorderShots {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Reorder shot \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Reorder shot \"{}\"", self.id), &format!("Aufnahme \"{}\" umordnen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

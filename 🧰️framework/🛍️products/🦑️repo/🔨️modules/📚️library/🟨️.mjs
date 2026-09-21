@@ -1058,7 +1058,11 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
     result[name] = {
       cache: true,
       outputs: [buildOutput],
-      inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*", transitive: true }, { runtime: `bun ${JSON.stringify(nxPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
+      // 🌐️ `S_HUB_URL` and `S_DATA_DIR` are baked into the bundle at Vite `define` time
+      // (`🏗️builder/🌐️vite/🟦️.ts:237`, `import.meta.env.VITE_S_HUB_URL`), so two bundles that differ
+      // only by which hub they sign in against are DIFFERENT artifacts. Without these env inputs the
+      // cache key ignores them and a cached bundle silently answers for the wrong hub.
+      inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*", transitive: true }, { env: "S_HUB_URL" }, { env: "S_DATA_DIR" }, { runtime: `bun ${JSON.stringify(nxPath(relative(workspaceRoot, resolve(workspaceRoot, projectRoot, "../../🚚️distribution/📜️script.ts"))))} inputs` }],
       dependsOn: [...result[`prepare-${playground.variant}-react-release`].dependsOn, "@semio-tech/assets:build"],
       options: { command: `bun ../../🚚️distribution/📜️script.ts build ${playground.variant} react release`, forwardAllArgs: true },
     };

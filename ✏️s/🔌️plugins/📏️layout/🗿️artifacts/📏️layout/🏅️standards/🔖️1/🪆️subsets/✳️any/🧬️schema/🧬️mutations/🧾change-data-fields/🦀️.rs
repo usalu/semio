@@ -23,8 +23,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeDataFields {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_data_fields(self, base)
     }
-    fn label(&self) -> String {
-        "Change data fields".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change data fields", "Datenfelder ändern")
     }
 }
 //#endregion 🧾ChangeDataFields

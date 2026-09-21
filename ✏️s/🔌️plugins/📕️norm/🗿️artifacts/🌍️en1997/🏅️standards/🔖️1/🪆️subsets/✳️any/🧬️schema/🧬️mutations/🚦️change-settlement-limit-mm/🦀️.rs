@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeSettlement
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change settlement limit [mm] to {}", self.new_settlement_limit_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change settlement limit [mm] to {}", self.new_settlement_limit_mm), &format!("Setzungsgrenzwert [mm] auf {} ändern", self.new_settlement_limit_mm))
     }
 }
 //#endregion 🔖️ChangeSettlementLimitMm

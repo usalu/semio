@@ -21,8 +21,8 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetTypeAssi
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3CobieMutation> {
         agg_inverse(&Ifc2x3CobieMutation::SetTypeAssignment(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-type-assignment".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-type-assignment", "Typzuordnung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

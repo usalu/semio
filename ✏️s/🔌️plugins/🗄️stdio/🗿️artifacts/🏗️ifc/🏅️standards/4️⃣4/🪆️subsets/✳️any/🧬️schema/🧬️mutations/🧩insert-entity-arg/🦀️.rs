@@ -23,8 +23,8 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for InsertEntityArg {
     fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {
         agg_inverse(&IfcMutation::InsertEntityArg(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-entity-arg".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-entity-arg", "Entitätsargument einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

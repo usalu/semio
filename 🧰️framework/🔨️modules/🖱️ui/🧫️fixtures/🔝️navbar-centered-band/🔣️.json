@@ -1,4 +1,5 @@
 {
+  "schemaVersion": 2,
   "contract": {
     "centeredItemNeverCrossesOccupiedChrome": true,
     "fullyOccupiedBarKeepsWholeWidth": true,
@@ -8,7 +9,10 @@
     "footerTrailingOrder": ["presence", "hubConnection", "bottomRight"],
     "mobileNavbarOmitsDesktopCenterControls": true,
     "mobileFooterKeepsHubConnection": true,
-    "dockCapDepthUsesControlAndPadding": true
+    "dockCapDepthUsesControlAndPadding": true,
+    "exampleControlWidthUsesRootRem": true,
+    "exampleControlWidthFeedsReservationAndPaint": true,
+    "taskManagerLabelUsesPanelToggleVocabulary": true
   },
   "occupancy": [
     { "name": "a filler renders nothing, so its box is free room", "childElementCount": 0, "textContent": "", "occupies": false },
@@ -125,5 +129,69 @@
       "controlHeight": 24,
       "capDepth": 40
     }
-  ]
+  ],
+  "exampleControlMetrics": {
+    "controlId": "playground.navbar.fixture",
+    "productionRootRemPixels": 16,
+    "minimumRem": 12,
+    "maximumRem": 28,
+    "forbidPostLayoutXOffset": true,
+    "cases": [
+      {
+        "id": "minimumDefaultRoot",
+        "name": "default root rem clamps the short fixture label to React's 192 pixel minimum",
+        "rootRemPixels": 16,
+        "availablePixels": 110.179,
+        "expectedPixels": 192,
+        "expectedReservationPixels": 192,
+        "expectedPaintPixels": 192
+      },
+      {
+        "id": "maximumDefaultRoot",
+        "name": "default root rem clamps a long fixture label to React's 448 pixel maximum",
+        "rootRemPixels": 16,
+        "availablePixels": 720,
+        "expectedPixels": 448,
+        "expectedReservationPixels": 448,
+        "expectedPaintPixels": 448
+      },
+      {
+        "id": "minimumCustomRoot",
+        "name": "custom root rem scales the same constraint before reservation and paint",
+        "rootRemPixels": 20,
+        "availablePixels": 110.179,
+        "expectedPixels": 240,
+        "expectedReservationPixels": 240,
+        "expectedPaintPixels": 240
+      },
+      {
+        "id": "intermediateCustomRoot",
+        "name": "custom root rem preserves a responsive width between its scaled bounds",
+        "rootRemPixels": 20,
+        "availablePixels": 360,
+        "expectedPixels": 360,
+        "expectedReservationPixels": 360,
+        "expectedPaintPixels": 360
+      },
+      {
+        "id": "maximumCustomRoot",
+        "name": "custom root rem scales React's maximum before reservation and paint",
+        "rootRemPixels": 20,
+        "availablePixels": 720,
+        "expectedPixels": 560,
+        "expectedReservationPixels": 560,
+        "expectedPaintPixels": 560
+      }
+    ]
+  },
+  "taskManagerFooter": {
+    "id": "os.task-manager",
+    "anchor": "bottomRight",
+    "order": 2,
+    "iconId": "cpu",
+    "labels": [
+      { "locale": "en", "key": "ui.panelToggle.taskManager", "label": "Tasks" },
+      { "locale": "de", "key": "ui.panelToggle.taskManager", "label": "Aufgaben" }
+    ]
+  }
 }

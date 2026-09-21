@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent } from "react";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
-import { ContextMenuController, CATALOGUE_DRAG_MIME, getActiveCataloguePointerDragPayload, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
+import { ContextMenuController, CATALOGUE_DRAG_MIME, getActiveCataloguePointerDragData, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
 import { currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
@@ -802,6 +802,13 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   }, [dispatch]);
 
   useEffect(() => {
+    return () => {
+      if (cameraSyncTimeoutRef.current) clearTimeout(cameraSyncTimeoutRef.current);
+      cameraSyncTimeoutRef.current = null;
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
     sessionRef.current?.syncLayersJson();
   }, [scene?.layersJson]);
 
@@ -910,16 +917,16 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   }, [dispatch]);
 
   const publishCatalogueDropAt = useCallback(
-    (clientX: number, clientY: number, raw: string, ensurePointerPreview = false) => {
+    (clientX: number, clientY: number, raw: string, pointerTypes?: readonly string[]) => {
       const hadPreview = dragOverStateRef.current !== null;
       dragOverStateRef.current = null;
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const previewArgs = { x: clientX - rect.left, y: clientY - rect.top, width: rect.width, height: rect.height, types: [CATALOGUE_DRAG_MIME] };
+      const previewArgs = { x: clientX - rect.left, y: clientY - rect.top, width: rect.width, height: rect.height, types: pointerTypes ? [...pointerTypes] : [] };
       const args = { x: clientX - rect.left, y: clientY - rect.top, width: rect.width, height: rect.height, dragData: raw };
       void (async () => {
         try {
-          if (ensurePointerPreview && !hadPreview) await dispatch("canvasDragOver", previewArgs);
+          if (pointerTypes && !hadPreview) await dispatch("canvasDragOver", previewArgs);
         } finally {
           try {
             await dispatch("canvasDragLeave");
@@ -949,19 +956,19 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
       dispatch("canvasDragLeave");
     };
     const onPointerMove = (event: PointerEvent) => {
-      const raw = getActiveCataloguePointerDragPayload();
-      if (!raw) {
+      const data = getActiveCataloguePointerDragData();
+      if (!data) {
         retirePointerPreview();
         return;
       }
-      if (!publishCatalogueDragOverAt(event.clientX, event.clientY, [CATALOGUE_DRAG_MIME])) retirePointerPreview();
+      if (!publishCatalogueDragOverAt(event.clientX, event.clientY, data.types)) retirePointerPreview();
     };
     const onPointerUp = (event: PointerEvent) => {
-      const raw = getActiveCataloguePointerDragPayload();
-      if (!raw) return;
+      const data = getActiveCataloguePointerDragData();
+      if (!data) return;
       const rect = containerRef.current?.getBoundingClientRect();
       if (rect && clientPointOverRect(event.clientX, event.clientY, rect)) {
-        publishCatalogueDropAt(event.clientX, event.clientY, raw, true);
+        publishCatalogueDropAt(event.clientX, event.clientY, data.payload, data.types);
       } else {
         retirePointerPreview();
       }

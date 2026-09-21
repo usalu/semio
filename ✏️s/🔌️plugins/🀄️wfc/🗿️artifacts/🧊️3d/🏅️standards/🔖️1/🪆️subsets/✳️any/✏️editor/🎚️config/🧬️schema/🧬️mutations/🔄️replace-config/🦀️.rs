@@ -19,8 +19,8 @@ impl protocol::MutationKind<Wfc3dConfig, Wfc3dConfigMutation> for ReplaceConfig 
     fn inverse(&self, base: &Wfc3dConfig) -> Vec<Wfc3dConfigMutation> {
         vec![Wfc3dConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Replace Config".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["config".into()]

@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceSustainabilityReq
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace sustainability requirement \"{}\"", self.sustainability_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace sustainability requirement \"{}\"", self.sustainability_requirement.header.name), &format!("Nachhaltigkeitsanforderung \"{}\" ersetzen", self.sustainability_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.sustainability_requirement.header.id.0.clone()]

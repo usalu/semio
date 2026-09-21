@@ -5,7 +5,7 @@
   "closed": {
     "kind": "closed-browser-actor",
     "schema": "semio.os.closed-browser-actor.v1",
-    "codegenPolicy": "semio.os.browser-jco-1.27.0-jspi.v1",
+    "codegenPolicy": "semio.os.browser-jco-1.34.0-jspi.v1",
     "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
     "sourceComponentSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "sourceDescriptorByteSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",

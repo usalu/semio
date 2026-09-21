@@ -33,6 +33,9 @@ impl WriterDiff {
             if let Some(uri) = &self.uri {
                 next.uri = uri.clone();
             }
+            if let Some(text) = &self.text {
+                next.text = text.clone();
+            }
             if let Some(document) = &self.document {
                 next.document = document.clone();
             }
@@ -60,6 +63,9 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
             if let Some(uri) = &self.uri {
                 next.uri = uri.clone();
             }
+            if let Some(text) = &self.text {
+                next.text = text.clone();
+            }
             if let Some(document) = &self.document {
                 next.document = document.clone();
             }
@@ -83,6 +89,9 @@ impl MutationDiff<WriterSnapshot> for WriterDiff {
         if other.uri.is_some() {
             self.uri = other.uri;
         }
+        if other.text.is_some() {
+            self.text = other.text;
+        }
         if other.document.is_some() {
             self.document = other.document;
         }
@@ -100,7 +109,7 @@ pub fn diff_set_snapshot(snapshot: &WriterSnapshot) -> WriterDiff {
 /// construction, never apply-then-capture. `id`/`language_id` come from `base` since the handle's
 /// target/content both need them.
 pub fn diff_set_text(text: &str, id: &str, language_id: &str) -> WriterDiff {
-    WriterDiff { document: Some(document_child_handle_with_text(id, text, language_id)), ..Default::default() }
+    WriterDiff { text: Some(text.to_string()), document: Some(document_child_handle_with_text(id, text, language_id)), ..Default::default() }
 }
 //#endregion 🔖️Builders
 

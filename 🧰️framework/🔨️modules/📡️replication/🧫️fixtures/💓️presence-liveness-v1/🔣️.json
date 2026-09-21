@@ -1,0 +1,36 @@
+{
+  "schema": "semio.presence.liveness/v1",
+  "note": "The presence beat/eviction contract, shared by the hub (Rust) and the OS shell (TypeScript). Ticket 26/09/18 slice PR1. Measured before it existed in 🗑️generated/pr1-before-hub-socket.txt: run A shows a late joiner holding an open socket with ZERO presence frames while the other peer's roster already listed one, and run B shows BOTH rosters empty 15 s after the clients went silent, with neither socket closed.",
+  "constants": {
+    "heartbeatIntervalMs": 5000,
+    "ephemeralSnapshotDeadlineMs": 2000,
+    "leaseTtlMs": 15000
+  },
+  "laws": [
+    {
+      "name": "snapshot-deadline-fits-inside-one-beat",
+      "statement": "A beat never waits for the document component past its own interval: ephemeralSnapshotDeadlineMs < heartbeatIntervalMs.",
+      "holds": true
+    },
+    {
+      "name": "lease-outlives-three-beats",
+      "statement": "The hub's lease tolerates at least three consecutive missed beats before it strips a row: leaseTtlMs >= 3 * heartbeatIntervalMs.",
+      "missedBeatsTolerated": 3,
+      "holds": true
+    },
+    {
+      "name": "a-live-socket-is-always-a-row",
+      "statement": "Only closing the socket removes a peer from the roster. A lapsed lease drops the app-owned ephemerals (presencePack, dragGhostJson, interaction, views, ui, toolRun) and keeps the admitted identity (actor, userId, label, role, color, surface, principalKind).",
+      "removesRow": ["socket-close"],
+      "stripsEphemeralsOnly": ["lease-lapse"],
+      "strippedFields": ["presencePack", "dragGhostJson", "interaction", "views", "ui", "toolRun"],
+      "retainedFields": ["actor", "userId", "label", "role", "color", "surface", "principalKind"]
+    },
+    {
+      "name": "a-joiner-starts-from-the-settled-roster",
+      "statement": "A roster delta is published only when some peer's bytes change, so an attaching socket is handed the current roster once, before any delta, as the ONE non-delta roster frame the wire carries.",
+      "replayFramesPerJoin": 1,
+      "replayedWhenRosterEmpty": false
+    }
+  ]
+}

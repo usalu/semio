@@ -20,8 +20,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxTransitionalMutation> for SetDrawi
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxTransitionalMutation> {
         agg_inverse(&PptxTransitionalMutation::SetDrawingNamespace(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-drawing-namespace".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-drawing-namespace", "Zeichnungsnamensraum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

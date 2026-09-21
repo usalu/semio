@@ -65,3 +65,11 @@ SEMIO_DOCK_BOOT_MS=180000 bun '.🧬semio/🦑️repo/🎫️tickets/🎆️26/�
 ```
 
 Those app runs were intentionally not executed while checkpoint 16 owned activation. The green result above validates the fixture, schema, type boundary, and trusted browser mechanics; it is not a React/WGPU physical parity claim.
+
+## Checkpoint 18 WGPU continuation audit
+
+All eight failed WGPU receipts under `🗑️generated/astra-runtime/checkpoint-18-dock/wgpu` captured the same stale boot census: generation 1, 43 controls, and `dragging:false`. The seven drag logs recorded the exact normalized down on `dock.tab.0.puzzle3d-main-top.drag` and every normalized move through x=666. The template log recorded the exact down/up on `framework.category.display`. No later chrome census was published in any case.
+
+Current source resolves the exact `.drag` hit into `begin_pending_dock_drag`, promotes a non-mobile pointer after squared distance exceeds 25, and routes `framework.category.display` through the panel-tab Toggle action. A new native law, `normalized_dock_tab_pointer_sequence_promotes_the_drag_before_release`, drives the real normalized down/move entry points against a two-stack Dock, requires the exact Tab payload, Chrome capture, promotion, unchanged pre-release topology, and cancellation cleanup. Native94 passed that law.
+
+The checkpoint evidence isolates a post-input continuation/repaint stall in the old bundle rather than a missing Dock hit or promotion branch. No Dock production behavior was changed from this receipt. A fresh browser checkpoint after the worker-wake bundle is still required for physical acceptance.

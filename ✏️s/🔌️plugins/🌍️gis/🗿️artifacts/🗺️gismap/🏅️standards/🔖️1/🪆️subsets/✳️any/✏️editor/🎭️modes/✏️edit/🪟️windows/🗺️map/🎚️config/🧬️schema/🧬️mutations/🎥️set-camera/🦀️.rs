@@ -26,8 +26,8 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetCamera {
     fn inverse(&self, base: &MapWindowConfig) -> Vec<MapWindowConfigMutation> {
         vec![Self { camera_json: base.camera_json.clone() }.into()]
     }
-    fn label(&self) -> String {
-        "Set camera".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set camera", "Kamera setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["cameraJson".into()]

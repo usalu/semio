@@ -37,8 +37,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for RemoveQuantTableMutati
             None => Vec::new(),
         }
     }
-    fn label(&self) -> String {
-        "remove quant table".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove quant table", "Quantisierungstabelle entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-quant-table".into()]

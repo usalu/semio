@@ -31,8 +31,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change energy model version to \"{}\"", self.new_version)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change energy model version to \"{}\"", self.new_version), &format!("Energienmodellversion auf \"{}\" ändern", self.new_version))
     }
 }
 //#endregion 🔖️Mutation

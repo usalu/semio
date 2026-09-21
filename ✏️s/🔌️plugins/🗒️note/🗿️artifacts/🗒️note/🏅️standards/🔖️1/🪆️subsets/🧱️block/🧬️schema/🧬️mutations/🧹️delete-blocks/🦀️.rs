@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DeleteBlocks {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete {} blocks", self.ids.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete {} blocks", self.ids.len()), &format!("{} Blöcke löschen", self.ids.len()))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()

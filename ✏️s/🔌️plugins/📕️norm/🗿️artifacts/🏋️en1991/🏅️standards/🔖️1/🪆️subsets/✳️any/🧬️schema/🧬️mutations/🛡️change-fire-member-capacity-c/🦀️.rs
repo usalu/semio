@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeFireMember
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change fire member capacity factor to {:?}", self.new_fire_member_capacity_c)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change fire member capacity factor to {:?}", self.new_fire_member_capacity_c), &format!("Brandgliedkapazitätsfaktor auf {:?} ändern", self.new_fire_member_capacity_c))
     }
 }
 //#endregion 🔖️Payload

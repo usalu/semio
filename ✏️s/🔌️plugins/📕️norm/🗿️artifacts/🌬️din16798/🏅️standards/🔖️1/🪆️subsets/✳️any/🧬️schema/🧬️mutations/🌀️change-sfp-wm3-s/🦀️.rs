@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeSfpWM3
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change specific fan power to {}", self.new_sfp_w_m3_s)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change specific fan power to {}", self.new_sfp_w_m3_s), &format!("Spezifischventilatorleistung auf {} ändern", self.new_sfp_w_m3_s))
     }
 }
 //#endregion 🔖️ChangeSfpWM3S

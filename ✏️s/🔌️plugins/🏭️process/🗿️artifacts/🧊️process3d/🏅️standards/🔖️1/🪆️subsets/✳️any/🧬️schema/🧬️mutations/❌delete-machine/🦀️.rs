@@ -25,8 +25,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for DeleteMach
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Delete machine \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete machine \"{}\"", self.id), &format!("Maschine \"{}\" löschen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

@@ -22,8 +22,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for MoveFrame {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::MoveFrame(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "move-frame".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("move-frame", "Rahmen verschieben")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -25,8 +25,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeMach
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change icon of machine \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change icon of machine \"{}\"", self.id), &format!("Symbol von Maschine \"{}\" ändern", self.id))
     }
 
     fn target(&self) -> Vec<String> {

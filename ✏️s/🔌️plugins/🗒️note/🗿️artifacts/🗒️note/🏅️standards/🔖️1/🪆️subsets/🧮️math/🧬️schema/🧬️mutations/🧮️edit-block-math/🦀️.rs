@@ -32,8 +32,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for EditBlockMath {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Edit block \"{}\" math", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Edit block \"{}\" math", self.id), &format!("Block \"{}\" Mathematik bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

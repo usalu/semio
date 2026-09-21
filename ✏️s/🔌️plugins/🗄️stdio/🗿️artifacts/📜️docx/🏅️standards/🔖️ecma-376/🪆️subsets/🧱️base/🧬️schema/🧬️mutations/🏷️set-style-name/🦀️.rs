@@ -21,8 +21,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetStyleName {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::SetStyleName(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-style-name".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-style-name", "Stilname setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

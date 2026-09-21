@@ -21,8 +21,8 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for RemoveEntity {
     fn inverse(&self, base: &StepSnapshot) -> Vec<StepMutation> {
         agg_inverse(&StepMutation::RemoveEntity(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-entity".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-entity", "Entität entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

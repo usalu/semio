@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOpenAction {
         vec![PdfMutation::SetOpenAction(SetOpenAction { action: base.open_action.clone() })]
     }
 
-    fn label(&self) -> String {
-        "Set open-action".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set open-action", "Öffnen-Aktion setzen")
     }
 
     fn target(&self) -> Vec<String> {

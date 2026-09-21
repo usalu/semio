@@ -12,10 +12,10 @@
  *                        delivered to the joined peer, and the connection leaving the hub's own
  *                        connection roster when the socket closes
  *
- * Usage: `bun 🐍️h1b-hub-runtime-probe.ts [--binary PATH] [--port N] [--skip-expiry]`. Every step prints one line;
+ * Usage: `bun 🐍️h1b-hub-runtime-probe.ts [--binary PATH] [--port N] [--data DIR] [--skip-expiry]`. Every step prints one line;
  * a failed expectation exits non-zero naming the observed value, so this file is a gate, not a log. */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 function findRepoRoot(start: string): string {
@@ -44,7 +44,8 @@ const skipExpiry = argv.includes("--skip-expiry");
 const origin = `http://127.0.0.1:${port}`;
 /** 🌱️ A canonical (non-symlinked) parent: a data root under macOS's `/var/folders` `TMPDIR` is
  * refused by the hub's own server-owned-root walk (`📓️h1-hub-build-and-boot.md` §6.1). */
-const dataRoot = mkdtempSync("/private/tmp/h1b-hub-data-");
+const dataArg = argv.indexOf("--data");
+const dataRoot = dataArg >= 0 ? (mkdirSync(argv[dataArg + 1], { recursive: true, mode: 0o700 }), argv[dataArg + 1]) : mkdtempSync("/private/tmp/h1b-hub-data-");
 /** ⏳️ The hub's own floor (`🔐️auth/🦀️.rs:54 MIN_SESSION_TTL_SECS`); the expiry step waits it out. */
 const SESSION_TTL_SECS = 60;
 

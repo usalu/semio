@@ -114,7 +114,12 @@
       "id": "command.os.os.setThemeId",
       "label": "Set Theme…",
       "actionPrefix": "command-form:",
-      "expandedKey": "os:os.setThemeId"
+      "expandedKey": "os:os.setThemeId",
+      "categorySurfaceId": "command.category.appearance",
+      "formId": "command.category.appearance.form",
+      "executeId": "command-os.os.setThemeId-execute",
+      "resetId": "command-os.os.setThemeId-reset",
+      "unexpandedRowId": "shell.commands.os.setThemeId"
     },
     "localizedCommands": [
       {

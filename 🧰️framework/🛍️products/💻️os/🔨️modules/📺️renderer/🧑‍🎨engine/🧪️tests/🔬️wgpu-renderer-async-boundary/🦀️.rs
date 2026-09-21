@@ -743,16 +743,20 @@ fn manifest_has_no_retired_direct_edges() {
 }
 
 #[test]
-fn runtime_dispatch_cursor_preserves_coalesced_then_discrete_order() {
-    let pointer = ui_host::PointerMoveSample { pointer: ui_render::PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None }, x: 1.0, y: 2.0, modifiers: ui_render::EventModifiers { shift: true, ..Default::default() }, generation: ui_host::InputGeneration(1) };
-    let scroll = ui_host::ScrollSample { x: 3.0, y: 4.0, delta_x: 5.0, delta_y: 6.0, modifiers: ui_render::EventModifiers { ctrl: true, ..Default::default() }, generation: ui_host::InputGeneration(2) };
-    let discrete = ui_host::DiscreteEvent { event: ui_render::DispatchEvent::KeyDown { key: "A".to_string(), modifiers: ui_render::EventModifiers::default() }, generation: ui_host::InputGeneration(3) };
-    let mut events = ui_host::DrainedEvents { pointer_move: Some(pointer), scroll: Some(scroll), ..Default::default() };
-    events.discrete[0] = Some(discrete);
+fn runtime_dispatch_cursor_merges_retained_pointer_by_input_generation() {
+    let pointer = ui_host::PointerMoveSample { pointer: ui_render::PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None }, x: 1.0, y: 2.0, modifiers: ui_render::EventModifiers { shift: true, ..Default::default() }, generation: ui_host::InputGeneration(2) };
+    let scroll = ui_host::DiscreteEvent {
+        event: ui_render::DispatchEvent::Scroll { x: 3.0, y: 4.0, delta_x: 5.0, delta_y: 6.0, modifiers: ui_render::EventModifiers { ctrl: true, ..Default::default() } },
+        generation: ui_host::InputGeneration(1),
+    };
+    let key = ui_host::DiscreteEvent { event: ui_render::DispatchEvent::KeyDown { key: "A".to_string(), modifiers: ui_render::EventModifiers::default() }, generation: ui_host::InputGeneration(3) };
+    let mut events = ui_host::DrainedEvents { pointer_move: Some(pointer), ..Default::default() };
+    events.discrete[0] = Some(scroll);
+    events.discrete[1] = Some(key);
     let mut cursor = RuntimeDispatchCursor::new(events);
 
-    assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::PointerMove { .. })));
     assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::Scroll { .. })));
+    assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::PointerMove { .. })));
     assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::KeyDown { .. })));
     assert!(cursor.take_next().is_none());
     assert!(cursor.terminal_is_empty());
@@ -973,7 +977,6 @@ fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMainten
         pointer_button: 0,
         pointer_capture: shell::PointerCapture::default(),
         modifiers: PointerModifiers::default(),
-        wheel: crate::AppWheel::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
         caret_blink_at_ms: 0.0,
@@ -985,6 +988,32 @@ fn frame_maintenance_test_owner(generation: u64, actions: usize) -> FrameMainten
         last_sync_pump_ms: 0.0,
     };
     FrameMaintenanceOwner { interaction: Some(interaction), cursor: Some(FrameDeferredCursor::new(action_owners, true, true, true, false, generation, semio_framework_job::root_cancel_token())), deadline_ms: Some(u64::MAX) }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn an_incomplete_text_stream_waits_for_external_ingress_without_a_worker_self_wake() {
+    let mut interaction = frame_maintenance_test_owner(83, 0).interaction.take().expect("text interaction owner");
+    assert!(!interaction.has_pending_text_work(), "an empty text authority has no runnable work");
+    interaction.start_text_operation(71, 6).expect("text stream admission");
+    assert!(!interaction.has_pending_text_work(), "a reserved stream awaiting its first page is externally blocked");
+    interaction.push_text_operation(71, "abc".to_string()).expect("first text page");
+    assert!(!interaction.has_pending_text_work(), "a partial stream awaits its next ingress page without self-waking");
+    interaction.push_text_operation(71, "def".to_string()).expect("final text page");
+    interaction.commit_text_operation(71).expect("text stream commit");
+    assert!(interaction.has_pending_text_work(), "a committed stream owns runnable text-buffer work");
+
+    for _ in 0..128 {
+        if !interaction.has_pending_text_work() {
+            break;
+        }
+        interaction.drive_text_operation();
+    }
+    assert!(!interaction.has_pending_text_work(), "the committed stream reaches an idle direct-continuation state");
+
+    interaction.start_text_operation(72, 3).expect("cancelled text stream admission");
+    interaction.cancel_text_operations();
+    assert!(interaction.has_pending_text_work(), "explicit cancellation remains runnable while it retires the reserved owner");
 }
 
 #[cfg(not(target_arch = "wasm32"))]

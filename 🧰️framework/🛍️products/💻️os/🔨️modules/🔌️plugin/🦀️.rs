@@ -187,6 +187,36 @@ pub mod owned_abi {
         pub state: Vec<u8>,
     }
 
+    /// 🧬️ Input of the owned `codec` core exports. `document_id` is only read by `genesis`, `ops`
+    /// only by `apply-ops`, and the pair only by `print-mirror`/`apply-ops` — one shape for all four
+    /// keeps the owned ABI's JSON envelope single-valued per export, exactly as `RestoreInput` does.
+    #[derive(Deserialize, FromValue, Serialize, ToValue)]
+    pub struct CodecInput {
+        pub artifact_schema: String,
+        #[serde(default)]
+        pub document_id: String,
+        #[serde(default)]
+        pub pack: Vec<u8>,
+        #[serde(default)]
+        pub spr: Vec<u8>,
+        #[serde(default)]
+        pub ops: Vec<u8>,
+    }
+
+    /// 📦️ Output of the owned `codec.genesis`/`codec.apply-ops` core exports.
+    #[derive(Deserialize, FromValue, Serialize, ToValue)]
+    pub struct CodecPair {
+        pub pack: Vec<u8>,
+        pub spr: Vec<u8>,
+    }
+
+    /// 📥️ Output of the owned `codec.print-mirror` core export.
+    #[derive(Deserialize, FromValue, Serialize, ToValue)]
+    pub struct CodecMirror {
+        pub dsl: String,
+        pub ops: String,
+    }
+
     #[derive(Deserialize, FromValue, Serialize, ToValue)]
     #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
     #[value(tag = "kind", rename_all = "camelCase")]
@@ -354,6 +384,9 @@ pub mod app {
     use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `AsyncTask`'s boxed `run` closure/future.
     use std::future::Future;
+    /// 🧵️ Used only by `artifact_app_laws`' spawned-task shape, so a plain `cargo check` reports it
+    /// unused while `--all-targets` needs it — do not remove on the strength of that warning.
+    #[allow(unused_imports)]
     use std::pin::Pin;
     /// 🚪️ `os_io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
     /// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
@@ -4527,7 +4560,7 @@ pub mod app {
     #[derive(Clone, Debug, PartialEq)]
     pub struct ContributedMutationPlanOutput {
         pub owner_ops: Vec<Vec<u8>>,
-        pub label: String,
+        pub label: LocalizedLabel,
         pub foreign: Vec<::protocol::ForeignStep>,
     }
 
@@ -4592,7 +4625,7 @@ pub mod app {
         pub revision: u64,
         pub generation: u64,
         pub owner_ops: Vec<Vec<u8>>,
-        pub label: String,
+        pub label: LocalizedLabel,
         pub foreign: Vec<::protocol::ForeignStep>,
     }
 
@@ -7214,6 +7247,8 @@ pub mod app {
             pub events: Vec<semio_framework::kernel::AppEvent>,
             pub ui_scope: Option<semio_framework::kernel::UiDirtyScope>,
             pub completions: usize,
+            pub completion_operations: Vec<u64>,
+            pub revisions: Vec<u64>,
         }
 
         /// 🎚️ Projects current config from the concrete window registry, including its applied event history.
@@ -7224,7 +7259,7 @@ pub mod app {
         /// 🔁️ Drives the same bounded continuation and exact ACK protocol as the plugin host.
         pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32) -> Result<TypedOperationFixtureReceipt, super::Fault> {
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-            let mut receipt = TypedOperationFixtureReceipt { lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, completions: 0 };
+            let mut receipt = TypedOperationFixtureReceipt { lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, completions: 0, completion_operations: Vec::new(), revisions: Vec::new() };
             let mut publication_fault = None;
             while app.has_pending_typed_operations() {
                 if std::time::Instant::now() >= deadline {
@@ -7268,8 +7303,10 @@ pub mod app {
                 // `has_pending_typed_operations` counts — leaving it undrained spun this loop until
                 // its 30 s deadline for every operation that produced no lane page at all
                 // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-                while app.take_typed_operation_completion().await?.is_some() {
+                while let Some(completion) = app.take_typed_operation_completion().await? {
                     receipt.completions += 1;
+                    receipt.completion_operations.push(completion.operation);
+                    receipt.revisions.push(completion.revision);
                 }
                 while let Some(reply) = app.take_local_interaction_query_reply() {
                     if let protocol::LocalInteractionQueryReply::Page { page } = reply {
@@ -7350,13 +7387,18 @@ pub mod app {
         pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A) {
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
             let mut pending_authority = None;
+            let mut close_turn = 0usize;
             while std::time::Instant::now() < deadline {
                 if app.close_terminal_is_empty() {
                     return;
                 }
                 match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("registered fixture close") {
                     super::PluginCloseStep::Pending { released_items, released_bytes } => {
-                        assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+                        assert!(
+                            released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,
+                            "registered fixture close turn {close_turn} exceeded its exact grant: released {released_items} items / {released_bytes} bytes against 1 item / {} bytes",
+                            store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES
+                        );
                         if released_items == 0 && released_bytes == 0 {
                             std::thread::yield_now();
                         }
@@ -7367,6 +7409,7 @@ pub mod app {
                     }
                     super::PluginCloseStep::Complete => break,
                 }
+                close_turn = close_turn.saturating_add(1);
             }
             assert!(app.close_terminal_is_empty(), "registered fixture did not reach its exact terminal-empty witness{}", pending_authority.map(|reason| format!(", last pending close authority: {reason}")).unwrap_or_default());
         }
@@ -8075,6 +8118,24 @@ pub mod app {
     include!("🧪️tests/🔬️app-app-builder/🦀️.rs");
 
     //#region 📚️ExampleSource
+    /// 📚️ How an example leaf carries its document body. `Inline` is a body that already exists as a
+    /// string when the bundle is assembled; `Deferred` is a body that is DERIVED from authored
+    /// fixture bytes by a producer the leaf hands over, and is therefore never materialised unless
+    /// something actually asks for the document.
+    ///
+    /// 🐛️ `📓️a3-descriptor-regeneration.md` §3 / `📓️ce1-client-e2e-pinning-and-puzzle-bound.md` §4:
+    /// `🧩️puzzle`'s `capsule-dream` leaf parsed 3 035 200 B of DSL and re-serialised it to JSON
+    /// inside a `LazyLock` that the subset's `examples()` dereferenced — so the parse ran while the
+    /// bundle was being ASSEMBLED, before `describe()` had built anything, and `describe` could not
+    /// finish inside its 1 800 s guest epoch. A `Deferred` body moves that work behind the producer
+    /// and declares the example by the identity of the bytes the author actually wrote, which needs
+    /// no parse: `source.len()` and `sha256(source)`.
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum ExampleSourceBody {
+        Inline(String),
+        Deferred { produce: fn() -> String, source_suffix: &'static str, source: &'static [u8] },
+    }
+
     /// 📚️ Value type exported by an example definition leaf (`📚️examples/<slug>/🦀️.rs`):
     /// stable id, localized label, icon, and document/payload accessors — converts into
     /// [`ExampleDefinition`] for [`PluginManifest::examples`].
@@ -8083,13 +8144,23 @@ pub mod app {
         id: String,
         label: LocalizedLabel,
         icon_id: IconName,
-        document_json: String,
+        body: ExampleSourceBody,
     }
 
     impl ExampleSource {
         /// 🧱 Builds an example source from id, label, document payload, and icon.
         pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, document_json: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
-            Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), document_json: document_json.into() }
+            Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), body: ExampleSourceBody::Inline(document_json.into()) }
+        }
+
+        /// 🧱 Builds an example source whose body is DERIVED from authored fixture bytes: `produce`
+        /// is a non-capturing producer the leaf owns (typically "parse the DSL, re-serialise it to
+        /// JSON"), `source` are those authored bytes and `source_suffix` their own file extension
+        /// (`".dsl.semio"`, `".json"`, …). Nothing calls `produce` until a consumer asks for the
+        /// document — the manifest row and the descriptor's `AssetDeclaration` are both answered
+        /// from `source` alone. See [`ExampleSourceBody`] for the measured defect this exists for.
+        pub fn deferred(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>, source_suffix: &'static str, source: &'static [u8], produce: fn() -> String) -> Self {
+            Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), body: ExampleSourceBody::Deferred { produce, source_suffix, source } }
         }
 
         /// 🏷️ Stable example id (navbar picker / `setActiveExample`).
@@ -8107,19 +8178,44 @@ pub mod app {
             self.icon_id
         }
 
-        /// 📄️ Document JSON payload registered on the manifest.
-        pub fn document_json(&self) -> &str {
-            &self.document_json
+        /// 📚️ How this leaf carries its body — see [`ExampleSourceBody`].
+        pub fn body(&self) -> &ExampleSourceBody {
+            &self.body
+        }
+
+        /// 📄️ Document JSON payload registered on the manifest. A deferred body is produced HERE and
+        /// nowhere else, so a caller that only wants the example's identity never pays for it.
+        pub fn document_json(&self) -> String {
+            match &self.body {
+                ExampleSourceBody::Inline(document_json) => document_json.clone(),
+                ExampleSourceBody::Deferred { produce, .. } => produce(),
+            }
         }
 
         /// 📄️ Alias of [`Self::document_json`] for leaf call sites that speak in document terms.
-        pub fn document(&self) -> &str {
-            &self.document_json
+        pub fn document(&self) -> String {
+            self.document_json()
         }
 
         /// 📒️ Alias of [`Self::document_json`] for leaf call sites that speak in payload terms.
-        pub fn payload(&self) -> &str {
-            &self.document_json
+        pub fn payload(&self) -> String {
+            self.document_json()
+        }
+
+        /// 📦️ The descriptor-side declaration of a DEFERRED body: name, media type, exact size and
+        /// SHA-256 of the AUTHORED bytes the producer derives the document from. `None` for an
+        /// inline body — those are declared, if they need to be, by
+        /// `describe::externalize_oversized_example_bodies` from the body it actually holds.
+        pub fn deferred_body_asset(&self, dialect: &ArtifactDialect, media_type: semio_framework::MediaType) -> Option<semio_framework::AssetDeclaration> {
+            let ExampleSourceBody::Deferred { source_suffix, source, .. } = &self.body else {
+                return None;
+            };
+            Some(semio_framework::AssetDeclaration {
+                name: semio_framework::example_body_asset_name(dialect, &self.id, source_suffix),
+                media_type,
+                size_bytes: source.len() as u64,
+                sha256: semio_framework_hash::sha256_hex(source),
+            })
         }
 
         /// 🧬️ Converts into a manifest [`ExampleDefinition`] for `dialect` — the coordinate the
@@ -8127,8 +8223,16 @@ pub mod app {
         /// `AppDefinition.dialect` (see `Plugin::register_app_factory`). There is deliberately no
         /// `From<ExampleSource> for ExampleDefinition`: a source alone cannot know its dialect, and
         /// an unstamped definition would be a manifest row no picker can resolve.
+        ///
+        /// A DEFERRED body leaves `artifact_json` empty, exactly as an externalized oversized body
+        /// does: the row keeps its identity so every picker resolves it, and the body travels as the
+        /// `AssetDeclaration` [`Self::deferred_body_asset`] declares.
         pub fn into_example_definition(self, dialect: ArtifactDialect) -> ExampleDefinition {
-            ExampleDefinition { id: self.id, label: self.label, icon_id: self.icon_id, artifact_json: self.document_json, dialect }
+            let artifact_json = match self.body {
+                ExampleSourceBody::Inline(document_json) => document_json,
+                ExampleSourceBody::Deferred { .. } => String::new(),
+            };
+            ExampleDefinition { id: self.id, label: self.label, icon_id: self.icon_id, artifact_json, dialect }
         }
     }
 
@@ -10453,7 +10557,7 @@ pub mod app {
     /// 🧾️ Inputs for one appended session command before its sequence and timestamp are assigned.
     struct CommandLogAppend<'a> {
         action_id: &'a str,
-        label: String,
+        label: LocalizedLabel,
         kind: ActionKind,
         edit_id: Option<String>,
         config_edit_id: Option<String>,
@@ -10468,7 +10572,7 @@ pub mod app {
     pub struct CommandLogEntry {
         pub seq: u64,
         pub action_id: String,
-        pub label: String,
+        pub label: LocalizedLabel,
         pub kind: ActionKind,
         pub timestamp: String,
         /// @emoji 🔗️ Set iff this command created/amended a DOCUMENT VCS edit — `None` for pure cursor
@@ -10510,7 +10614,7 @@ pub mod app {
     pub struct CommandView {
         pub seq: u64,
         pub action_id: String,
-        pub label: String,
+        pub label: LocalizedLabel,
         pub kind: ActionKind,
         pub timestamp: String,
         pub edit_id: Option<String>,
@@ -10654,7 +10758,8 @@ pub mod app {
         let windows = TreeWindows::for_body(view, FRAMEWORK_HISTORY_BODY_KEY);
         let revert_action = ActionId::try_v1(controller_id, REVERT_TO_COMMAND_ACTION_ID).ok_or_else(|| ui_assembly_error("history-panel.row-action-id"))?;
         let commands_section = tree_window_section(&windows, "framework.history.commands", ui_label(if is_de { "Befehle" } else { "Commands" }, "history-panel.commands-label")?, true, &command_rows, |entry| {
-            let label = if entry.count > 1 { UiText::clipped(&format!("{} x{}", entry.label, entry.count)) } else { UiText::clipped(&entry.label) };
+            let entry_label = entry.label.resolve(Terminology::Native, if is_de { Locale::De } else { Locale::En });
+            let label = if entry.count > 1 { UiText::clipped(&format!("{entry_label} x{}", entry.count)) } else { UiText::clipped(entry_label) };
             let id = UiText::try_format(format_args!("framework.history.entry.{}", entry.seq)).ok_or_else(|| ui_assembly_error("history-panel.command-id"))?;
             let mut builder = ui::tree_item(Label(label)).icon(ui_text(history_panel_icon_id(entry.kind).as_str(), "history-panel.command-icon")?);
             builder = builder.try_id(&id).map_err(|_| ui_assembly_error("history-panel.command-id"))?;
@@ -11018,7 +11123,7 @@ pub mod app {
         pub child_id: String,
         pub ops: Vec<Vec<u8>>,
         pub op_schema: SchemaId,
-        pub labels: Vec<String>,
+        pub labels: Vec<LocalizedLabel>,
     }
 
     impl ChildEmit {
@@ -11037,13 +11142,19 @@ pub mod app {
                 self.ops.pop();
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
-            let value = if let Some(label) = self.labels.last_mut() {
-                if label.is_empty() {
+            if let Some(label) = self.labels.last_mut() {
+                let Some(value) = label.texts_mut().find(|value| !value.is_empty()) else {
                     self.labels.pop();
                     return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                };
+                let bytes = value.chars().next_back().expect("retained child label cell is nonempty").len_utf8();
+                if bytes > maximum_bytes {
+                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
                 }
-                label
-            } else if !self.op_schema.0.is_empty() {
+                value.pop();
+                return PluginCloseStep::Pending { released_items: 0, released_bytes: bytes };
+            }
+            let value = if !self.op_schema.0.is_empty() {
                 &mut self.op_schema.0
             } else if !self.child_id.is_empty() {
                 &mut self.child_id
@@ -11075,7 +11186,7 @@ pub mod app {
         where
             M: protocol::SemanticMutation<S> + ::protocol::OpBinary,
         {
-            let mut labels: Vec<String> = Vec::with_capacity(ops.len());
+            let mut labels: Vec<LocalizedLabel> = Vec::with_capacity(ops.len());
             for op in ops.iter() {
                 labels.push(protocol::SemanticMutation::label(op));
             }
@@ -12643,6 +12754,23 @@ pub mod app {
         /// {@link store::ArtifactPackFiles} (pack-encoded initial snapshot plus the same `ops` op-log
         /// text — the op grammar is format-invariant) via `store::print_document_pack`.
         async fn document_pack(&self) -> Result<store::ArtifactPackFiles, Fault>;
+        /// 🧬️ Structural fingerprint of this app's snapshot record shape — the same 32 bytes
+        /// `store::ArtifactCodec::pack_schema_hash` carries, read straight off the app's own
+        /// `Snapshot::record_spec()`. `None` when the snapshot is a hand-written `ArtifactPack` with
+        /// no `RecordSpec`, exactly as the native codec table reports `[0; 32]` for that case.
+        async fn artifact_pack_schema_hash(&self) -> Option<[u8; 32]>;
+        /// 🌱️ The canonical empty document of this app's kind at `document_id`: this app's initial
+        /// snapshot, its own dialect, and an exactly zero history (no edits, changes, checkpoints or
+        /// alternatives, and an empty cursor). It is a pure function of `(Self, document_id)` — the
+        /// instance's own live document is neither read nor replaced.
+        async fn artifact_genesis_pair(&self, document_id: &str) -> Result<store::ArtifactPackFiles, Fault>;
+        /// 📥️ `(pack, spr) -> (dsl, ops)` mirror of a pair belonging to this app's kind, without
+        /// loading it into this instance. A host uses it as the pair-validation fence for a package
+        /// whose codec it does not link.
+        async fn artifact_print_mirror(&self, pack: &[u8], spr: &[u8]) -> Result<store::ArtifactTextFiles, Fault>;
+        /// 🧩️ Applies one `os_spr::encode_ops_vec` batch to a pair of this app's kind and returns the
+        /// next pair, again without touching this instance's own document.
+        async fn artifact_apply_ops(&self, pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<store::ArtifactPackFiles, Fault>;
         /// @emoji 📦️ Binary-pack counterpart to {@link Self::load_document_text}.
         async fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault>;
         async fn attach_backbone(&mut self, backbone: store::Backbones) -> Result<(), Fault>;
@@ -14131,6 +14259,16 @@ pub mod app {
     /// 🏃️ Publication units one continuation unit may run before it hands its turn back, the exact twin of
     /// [`INTERACTIVE_TURN_WORKER_PUMPS`] for the publication ladder.
     pub const TYPED_OPERATION_PUBLICATION_PUMPS: usize = 256;
+    /// 🩺️ Consecutive unchanged publication units before one stalled typed operation is named on the
+    /// diagnostic channel — far above any legitimate multi-unit ladder step, so a healthy operation
+    /// never prints.
+    const TYPED_OPERATION_STALL_WITNESS_FLOOR: u64 = 64;
+    /// 🛑️ Unchanged `Publishing`-stage units before the operation is terminated with
+    /// `interactive-job.publication-stalled` rather than left spinning. A power of two so the stall
+    /// trace's own streak rule names it on the way past.
+    const TYPED_OPERATION_STALL_FAULT_CEILING: u64 = 4_096;
+    /// 🩺️ The stage code [`ArtifactApp::typed_operation_stall_witness`] gives a `Publishing` operation.
+    const TYPED_OPERATION_STALL_PUBLISHING_STAGE: u8 = 1;
     const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
     const TYPED_OPERATION_FAULT_BYTES: usize = 256;
 
@@ -18168,12 +18306,12 @@ pub mod app {
     }
 
     impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
-        fn drive_worker_step(&mut self, pool: &semio_framework_async::WorkerPool) -> Result<PluginCloseStep, Fault> {
+        fn drive_worker_step(&mut self, pool: &semio_framework_async::WorkerPool, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             if self.stage != MountedTypedCommandFullOperationStage::Worker {
                 return Ok(PluginCloseStep::Blocked { reason: "typed command awaits its bounded revision-validated publication or ACK turn" });
             }
             if let Some(rejected) = self.session_rejected.as_mut() {
-                let step = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let step = rejected.close_step(1, maximum_bytes.min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES));
                 if rejected.terminal_is_empty() {
                     self.session_rejected = None;
                     self.stage = MountedTypedCommandFullOperationStage::Publishing;
@@ -18199,7 +18337,7 @@ pub mod app {
                 });
             }
             if let Some(outcome) = self.terminal_outcome.as_mut() {
-                let step = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let step = outcome.close_step(1, maximum_bytes.min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES));
                 if !outcome.terminal_is_empty() {
                     return Ok(match step {
                         semio_framework_job::JobPayloadCloseStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
@@ -18217,7 +18355,7 @@ pub mod app {
             }
             let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-session"), "typed operation lost its persistent worker session before publication"))?;
             if self.terminal_seen {
-                let step = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                let step = session.close_step(1, maximum_bytes.min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES));
                 if session.terminal_is_empty() {
                     self.session = None;
                     self.stage = MountedTypedCommandFullOperationStage::Publishing;
@@ -18861,7 +18999,7 @@ pub mod app {
                     break;
                 }
                 if app.tool_operations.get(next_id).unwrap().stage == MountedTypedCommandFullOperationStage::Worker {
-                    app.tool_operations.get_mut(next_id).unwrap().drive_worker_step(&pool).unwrap();
+                    app.tool_operations.get_mut(next_id).unwrap().drive_worker_step(&pool, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES).unwrap();
                 } else {
                     app.advance_typed_operation_publication_one().await.unwrap();
                 }
@@ -23922,7 +24060,7 @@ pub mod app {
             } else {
                 self.config_store.envelope().vcs.edits.last().map(|edit| (edit.id.clone(), edit.description.clone()))
             };
-            let Some((edit_id, description)) = edit else { return };
+            let Some((edit_id, _description)) = edit else { return };
             let already_logged = self.command_log.iter().any(|entry| {
                 if artifact_lane {
                     entry.edit_id.as_deref() == Some(edit_id.as_str())
@@ -23950,7 +24088,7 @@ pub mod app {
             let kind = self.typed_operation_command_kind(&mounted.verb, artifact_lane);
             let verb = mounted.verb.clone();
             if artifact_lane {
-                self.record_command(&verb, kind, description, Some(edit_id), None, None);
+                self.record_command(&verb, kind, None, Some(edit_id), None, None);
             } else {
                 self.record_command(&verb, kind, None, None, Some(edit_id), None);
             }
@@ -24058,7 +24196,7 @@ pub mod app {
                 MountedTypedCommandFullOperationStage::Worker => {
                     let pool =
                         semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
-                    operation.drive_worker_step(&pool)?
+                    operation.drive_worker_step(&pool, maximum_bytes)?
                 }
                 MountedTypedCommandFullOperationStage::Publishing => {
                     operation.stage = MountedTypedCommandFullOperationStage::Retiring;
@@ -24401,16 +24539,18 @@ pub mod app {
         /// `inverse` (computed from state BEFORE this dispatch) is only stored on a FRESH row — a folded
         /// row keeps its original inverse, since inverse on a folded "×N" row must undo the whole run,
         /// not just the last dispatch that folded into it.
-        fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<String>, edit_id: Option<String>, config_edit_id: Option<String>, inverse: Option<InverseAction>) {
-            // 🚧️ Same locale-context gap as `Menu::action_with_args` — history log entries are recorded
-            // without a `ViewModel`, so a fallback label resolves native/English pending a protocol change.
+        fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<LocalizedLabel>, edit_id: Option<String>, config_edit_id: Option<String>, inverse: Option<InverseAction>) {
+            // 🌐️ The row keeps the action's FULL locale matrix — no resolve happens here, so the
+            // History panel renders every row in whatever locale the shell is showing right now.
+            // A row with no declaring definition falls back to its `action_id`, which is
+            // locale-invariant data, not untranslated English.
             let label = match label {
                 Some(label) => label,
                 None => match self.registry.get(action_id) {
-                    Some(def) => def.label.resolve(Terminology::Native, Locale::En).to_string(),
+                    Some(def) => def.label.clone(),
                     None => match self.registry.get_command(action_id) {
-                        Some(def) => def.label.resolve(Terminology::Native, Locale::En).to_string(),
-                        None => action_id.to_string(),
+                        Some(def) => def.label.clone(),
+                        None => LocalizedLabel::data(action_id),
                     },
                 },
             };
@@ -24433,7 +24573,7 @@ pub mod app {
             // 🌉️ Hoisted out of a `.map()` closure into an explicit loop (sync — `Iterator::map`
             // cannot take an async closure, and `OpText::print_op` is genuinely async) — see
             // `build_history_view`'s sibling comment for the same pattern.
-            let mut missing: Vec<(String, String, String)> = Vec::new();
+            let mut missing: Vec<(String, LocalizedLabel, String)> = Vec::new();
             for edit in self.store.envelope().vcs.edits.iter().filter(|edit| !logged.contains(edit.id.as_str())) {
                 let label = match edit.description.clone() {
                     Some(description) => description,
@@ -24442,7 +24582,7 @@ pub mod app {
                         None => edit.id.clone(),
                     },
                 };
-                missing.push((edit.id.clone(), label, edit.started_at.clone()));
+                missing.push((edit.id.clone(), LocalizedLabel::data(label), edit.started_at.clone()));
             }
             for (edit_id, label, timestamp) in missing {
                 self.push_log_entry(CommandLogAppend { action_id: "apply", label, kind: ActionKind::Mutation, edit_id: Some(edit_id), config_edit_id: None, timestamp: Some(timestamp), inverse: None });
@@ -24450,7 +24590,7 @@ pub mod app {
             // 🧮️ Same backfill, for the CONFIG store's own edits — a config edit reached via `seed`/
             // `load_config_pack`/ingest never passes through `dispatch_emit` either.
             let logged_config: HashSet<&str> = self.command_log.iter().flat_map(|entry| entry.config_edit_ids.iter().map(String::as_str)).collect();
-            let mut missing_config: Vec<(String, String, String)> = Vec::new();
+            let mut missing_config: Vec<(String, LocalizedLabel, String)> = Vec::new();
             for edit in self.config_store.envelope().vcs.edits.iter().filter(|edit| !logged_config.contains(edit.id.as_str())) {
                 let label = match edit.description.clone() {
                     Some(description) => description,
@@ -24459,7 +24599,7 @@ pub mod app {
                         None => edit.id.clone(),
                     },
                 };
-                missing_config.push((edit.id.clone(), label, edit.started_at.clone()));
+                missing_config.push((edit.id.clone(), LocalizedLabel::data(label), edit.started_at.clone()));
             }
             for (config_edit_id, label, timestamp) in missing_config {
                 self.push_log_entry(CommandLogAppend { action_id: "configApply", label, kind: ActionKind::Mutation, edit_id: None, config_edit_id: Some(config_edit_id), timestamp: Some(timestamp), inverse: None });
@@ -24567,7 +24707,7 @@ pub mod app {
                 }
                 // 🪞️ Mirrors `store::ArtifactStore::edit_is_local` (private to that crate): an edit
                 // with no recorded actor is treated as local, same as a real undo would.
-                let applied = entry.edit_id.as_deref().is_some_and(|edit_id| applied_ids.contains(edit_id));
+                let document_applied = entry.edit_id.as_deref().is_some_and(|edit_id| applied_ids.contains(edit_id));
                 let latest_config_edit_id = entry.config_edit_ids.last().map(String::as_str);
                 let config_edit = latest_config_edit_id.and_then(|edit_id| config_edits_by_id.get(edit_id).copied());
                 let config_applied = latest_config_edit_id.is_some_and(|edit_id| config_applied_ids.contains(edit_id));
@@ -24576,7 +24716,17 @@ pub mod app {
                 // for the old memory-only "View"-kind inverse), or memory-only (a stored
                 // `InverseAction`, the remaining `🐚️Shell`-kind `noteShellCommand` path).
                 let child_applied = entry.child_edit_ids.iter().any(|edit_id| child_applied_tails.contains(edit_id));
-                let revertible = (applied && edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == local_actor))
+                // ✅️ `applied` is "this row's edit is live somewhere", and a row publishes into
+                // exactly one of THREE lanes — the parent document store, the config store, or a
+                // composed child's store. Asking only the first made every `Child`- and `Config`-lane
+                // row report `applied: false`, which the host reads as UNDONE: the History panel
+                // dimmed the row and `uncommittedEditCount` (`#s-checkin`) never counted it. That is
+                // one root under three kinds — 🌊️flow's `addWidget` and 🎬️sequence's `addStep` are
+                // `Child`, 🌀️procedural's `generate` is `Config` — each of which moved its document
+                // and still read `edits 0` (ticket 26/09/18 S10; PB3 §3.6 named the child half).
+                // `revertible` below already consulted all three; this is the same law for `applied`.
+                let applied = document_applied || config_applied || child_applied;
+                let revertible = (document_applied && edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == local_actor))
                     || (config_applied && config_edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == config_local_actor))
                     || child_applied
                     || (entry.inverse.is_some() && !self.shell_undone.contains(&entry.seq));
@@ -25048,6 +25198,14 @@ pub mod app {
                 self.draft_store.dispatch(ArtifactCommand::Apply { mutations: draft_mutations, description: None }).await.map_err(|error| error.into_fault())?;
             }
 
+            // 🚦️ Kind discipline, enforced where the operations actually arrive: a migrated dispatch hands
+            // the reducer to a worker, so the `View`/`🐚️Shell`-kind refusal `ArtifactApp::command_id`'s own
+            // doc promises can only be made against the published emit, never against the admission receipt.
+            let declared_kind = self.declared_dispatch_kind(verb);
+            if !artifact_mutations.is_empty() {
+                self.require_operation_emitting_kind(verb, declared_kind)?;
+            }
+
             // 🧮️ Config side dispatches first, independent of whether this verb ALSO touches the document
             // — captures the resulting (possibly amended) config edit id for the command-log row below.
             let mut config_edit_id: Option<String> = None;
@@ -25114,7 +25272,7 @@ pub mod app {
                 // orbit tick. A `View` action that reaches the document or the shared config store still
                 // logs — `select`, whose emission is a config op, is unaffected.
                 if !(published_window_config && config_edit_id.is_none() && matches!(kind, ActionKind::View)) {
-                    self.record_command(verb, kind, description.clone(), None, config_edit_id, None);
+                    self.record_command(verb, kind, description.clone().map(LocalizedLabel::data), None, config_edit_id, None);
                 }
                 return Ok(Self::empty_result(verb, meta, effects, events, ui_scope).await);
             }
@@ -25125,7 +25283,7 @@ pub mod app {
             // instead, the offsets are moot (checked via edit identity, not reused blindly).
             let before_edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
             let (before_forwards_len, before_backwards_len) = self.store.edit_mutations().map_or((0, 0), |(f, b, _)| (f.len(), b.len()));
-            let log_label = description.clone();
+            let log_label = description.clone().map(LocalizedLabel::data);
             let vcs_command = match coalesce_key {
                 Some(key) => ArtifactCommand::AmendLast { mutations: artifact_mutations, coalesce_key: Some(key) },
                 None => ArtifactCommand::Apply { mutations: artifact_mutations, description },
@@ -25210,6 +25368,29 @@ pub mod app {
         /// reversal mechanism for a child member is `CompositionCoordinator::undo_group` calling
         /// `undo()` directly on the live child store (driven by `inverse_group.member_edits`, not by
         /// replaying these bytes).
+        /// @emoji 🚦️ Kind discipline where the operations actually arrive. A migrated dispatch hands its
+        /// reducer to a worker, so the `View`/`🐚️Shell`-kind refusal `ArtifactApp::command_id`'s own doc
+        /// promises can only be made against the published emit, never against the admission receipt the
+        /// caller gets back. An unresolved verb (registry-less construction, an ad-hoc port id) is not a
+        /// declared `View`, so it is not refused here.
+        // 🚫️async: E1 pure classification over an already-resolved kind
+        fn require_operation_emitting_kind(&self, verb: &str, declared_kind: Option<ActionKind>) -> Result<(), Fault> {
+            match declared_kind {
+                Some(kind @ (ActionKind::View | ActionKind::Shell)) => Err(Fault::from(format!("{kind:?}-kind command '{verb}' must not emit operations"))),
+                _ => Ok(()),
+            }
+        }
+
+        /// @emoji 🏷️ The kind a verb dispatches under: the in-flight invocation's own kind when one is
+        /// mounted, otherwise the action declaration, otherwise the command declaration.
+        // 🚫️async: E1 pure registry lookup
+        fn declared_dispatch_kind(&self, verb: &str) -> Option<ActionKind> {
+            match self.invocation_kind {
+                Some(kind) => Some(kind),
+                None => self.registry.get(verb).map(|definition| definition.kind).or_else(|| self.registry.get_command(verb).map(|command| command.kind)),
+            }
+        }
+
         #[allow(clippy::too_many_arguments)]
         async fn dispatch_emit_group(
             &mut self,
@@ -25223,6 +25404,9 @@ pub mod app {
             config_edit_id: Option<String>,
             meta: &ActionMeta,
         ) -> Result<InvocationResult, Fault> {
+            if !artifact_mutations.is_empty() {
+                self.require_operation_emitting_kind(verb, self.declared_dispatch_kind(verb))?;
+            }
             let touched_child_count = child_emits.iter().filter(|child| !child.ops.is_empty()).count();
             let child_publication_generation = (touched_child_count != 0).then(|| self.admit_child_content_publication()).transpose()?;
             let parent_id = self.store.envelope().id.clone();
@@ -25412,7 +25596,7 @@ pub mod app {
             // `config_edit_ids` precedent (see `CommandLogEntry::child_edit_ids`'s own doc comment).
             let parent_edit_id = receipt.member_edits.iter().find(|(reference, _)| reference.artifact_id == parent_id).map(|(_, edit_id)| edit_id.clone());
             let kind = self.registry.get(verb).map_or(ActionKind::Mutation, |def| def.kind);
-            self.record_command(verb, kind, (*description).clone(), parent_edit_id, config_edit_id, None);
+            self.record_command(verb, kind, description.clone().map(LocalizedLabel::data), parent_edit_id, config_edit_id, None);
             if let Some(last) = self.command_log.last_mut() {
                 last.child_edit_ids = child_edit_ids;
             }
@@ -26740,7 +26924,7 @@ pub mod app {
                         semio_framework_async::yield_once().await;
                     }
                     self.cache = None;
-                    self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None, None, None);
+                    self.record_command(action, ActionKind::History, None, None, None, None);
                     Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await)
                 }
                 Some((None, Some(config_edit_id), _, _)) => {
@@ -26761,7 +26945,7 @@ pub mod app {
                         semio_framework_async::yield_once().await;
                     }
                     self.cache = None;
-                    self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None, None, None);
+                    self.record_command(action, ActionKind::History, None, None, None, None);
                     Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await)
                 }
                 Some((None, None, ActionKind::Shell, Some(inverse))) => Ok(Self::empty_result(action, meta, vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }], Vec::new(), UiDirtyScope::None).await),
@@ -26865,7 +27049,7 @@ pub mod app {
                     .and_then(DslValue::as_str)
                     .map(|inverse_command_id| InverseAction { action_id: inverse_command_id.to_string(), args: args.and_then(|value| value.get("inverseArgs")).cloned().or(detail) });
                 self.validate_framework_reserved_commit(action, permit).await?;
-                self.record_command(command_id, ActionKind::Shell, Some(label), None, None, inverse);
+                self.record_command(command_id, ActionKind::Shell, Some(LocalizedLabel::data(label)), None, None, inverse);
                 return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await);
             }
             if action == RECORD_TUTORIAL_ACTION_ID {
@@ -27119,7 +27303,7 @@ pub mod app {
                 if operation.stage != MountedTypedCommandFullOperationStage::Worker {
                     return Ok(());
                 }
-                let step = operation.drive_worker_step(&pool)?;
+                let step = operation.drive_worker_step(&pool, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)?;
                 #[cfg(target_arch = "wasm32")]
                 if let Some(now_ms) = semio_framework_job::default_now_ms() {
                     pool.pump(now_ms);
@@ -27193,7 +27377,98 @@ pub mod app {
             })
         }
 
+        /// 🩺️ What the publication cursor is about to advance, as the three facts that decide which ladder
+        /// arm runs: the operation it selected, that operation's stage, and the ownership flags the arms
+        /// branch on. Compared before and after one unit by [`Self::typed_operation_stall_streak`].
+        // 🚫️async: E1 pure census over an already-owned fixed table — see R9.
+        fn typed_operation_stall_witness(&self) -> Option<(u64, u8, u8)> {
+            let (_, operation_id) = self.next_advanceable_typed_operation()?;
+            let operation = self.tool_operations.get(operation_id)?;
+            let stage = match operation.stage {
+                MountedTypedCommandFullOperationStage::Worker => 0,
+                MountedTypedCommandFullOperationStage::Publishing => 1,
+                MountedTypedCommandFullOperationStage::AwaitingAck => 2,
+                MountedTypedCommandFullOperationStage::Retiring => 3,
+            };
+            let flags = u8::from(operation.session.is_some())
+                | u8::from(operation.session_rejected.is_some()) << 1
+                | u8::from(operation.completion.is_some()) << 2
+                | u8::from(operation.publication.is_some()) << 3
+                | u8::from(operation.pending_artifact_publication.is_some()) << 4
+                | u8::from(operation.terminal_outcome.is_some()) << 5
+                | u8::from(operation.terminal_seen) << 6
+                | u8::from(operation.result_page.is_some()) << 7;
+            Some((operation_id, stage, flags))
+        }
+
+        /// 🩺️ How many consecutive publication units advanced the SAME operation without changing any of
+        /// [`Self::typed_operation_stall_witness`]'s three facts — `Some(streak)` only on a power of two at
+        /// or above [`TYPED_OPERATION_STALL_WITNESS_FLOOR`], so one stalled operation costs at most a
+        /// handful of lines however long it spins.
+        ///
+        /// 🐛️ A mounted operation that never publishes its terminal keeps the actor in `MoreWork` with no
+        /// effect, no patch and no fault, which every other instrument reads as silence: the host's own
+        /// drain polls forever, the reactor's more-work streak names only `typed_operation` as its source,
+        /// and nothing says WHICH arm of the publication ladder is not moving. Measured 2026-09-20 on the
+        /// signed-in `s` Home, whose `applyDirectoryEventPage` operation spun for the whole session
+        /// (ticket 26/09/18 S8).
+        fn typed_operation_stall_streak(before: (u64, u8, u8), after: (u64, u8, u8)) -> Option<u64> {
+            static WITNESS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
+            static STREAK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+            let key = after.0.wrapping_shl(16) | u64::from(after.1).wrapping_shl(8) | u64::from(after.2);
+            if before != after || WITNESS.swap(key, std::sync::atomic::Ordering::Relaxed) != key {
+                STREAK.store(0, std::sync::atomic::Ordering::Relaxed);
+                return None;
+            }
+            let streak = STREAK.fetch_add(1, std::sync::atomic::Ordering::Relaxed).saturating_add(1);
+            (streak >= TYPED_OPERATION_STALL_WITNESS_FLOOR && streak.is_power_of_two()).then_some(streak)
+        }
+
         async fn advance_typed_operation_publication_one(&mut self) -> Result<(), Fault> {
+            let before = self.typed_operation_stall_witness();
+            let advanced = self.advance_typed_operation_publication_unit().await;
+            if let (Some(before), Some(after)) = (before, self.typed_operation_stall_witness()) {
+                if let Some(streak) = Self::typed_operation_stall_streak(before, after) {
+                    let verb = self.tool_operations.get(after.0).map_or("<released>", |operation| operation.verb.as_str());
+                    crate::plugin_runtime::debug_runtime_line(format_args!("[DEBUG] typed-operation {verb} advanced {streak} units with no change: operation={} stage={} flags={:#010b}", after.0, after.1, after.2));
+                    if after.1 == TYPED_OPERATION_STALL_PUBLISHING_STAGE && streak >= TYPED_OPERATION_STALL_FAULT_CEILING {
+                        self.fault_stalled_typed_operation_publication(after.0, streak)?;
+                    }
+                }
+            }
+            advanced
+        }
+
+        /// 🛑️ Terminates a `Publishing`-stage operation whose ladder has not moved for
+        /// [`TYPED_OPERATION_STALL_FAULT_CEILING`] units with a real fault page instead of leaving it to
+        /// spin. The publication ladder's non-advancing answers are all `Ok(())` by design — a completion
+        /// that is not ready yet, and `ArtifactStoreOneItemAdvance::Blocked` from a store owner that
+        /// refuses the granted page — so an owner that can NEVER advance pins its actor in `MoreWork`
+        /// with no effect, no patch and no fault, which no instrument reads as a failure.
+        ///
+        /// Only the `Publishing` stage is bounded this way: a `Worker`-stage operation's progress is its
+        /// own job's business and a long tool run legitimately leaves this witness unchanged for as long
+        /// as it runs. Measured first on the signed-in `s` Home, whose `applyDirectoryEventPage` config
+        /// publication answered `Blocked` on every unit (ticket 26/09/18 S8).
+        fn fault_stalled_typed_operation_publication(&mut self, operation_id: u64, streak: u64) -> Result<(), Fault> {
+            let Some(mounted) = self.tool_operations.get_mut(operation_id) else { return Ok(()) };
+            if mounted.stage != MountedTypedCommandFullOperationStage::Publishing || mounted.result_page.is_some() {
+                return Ok(());
+            }
+            let fault = ArtifactBoundedToolFault::from_fault(&Fault::new(
+                FaultOrigin::Framework,
+                FaultCode::new("interactive-job.publication-stalled"),
+                format!("typed operation '{}' advanced {streak} publication units without moving its ladder", mounted.verb),
+            ));
+            if let Some(lease) = mounted.cancellation_lease.as_ref() {
+                lease.cancel();
+            }
+            let page = TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, fault.as_bytes())?;
+            mounted.terminal_fault = Some(fault);
+            mounted.queue_page(page)
+        }
+
+        async fn advance_typed_operation_publication_unit(&mut self) -> Result<(), Fault> {
             if !self.latest_wins_commands.is_empty() && (self.latest_wins_turn || self.tool_operations.is_empty()) {
                 self.latest_wins_turn = false;
                 return self.advance_latest_wins_command_one().await;
@@ -27875,6 +28150,9 @@ pub mod app {
                     {
                         return Err(plugin_sdk_fault("typed-operation emitted a store lane absent from its exact factory publication contract"));
                     }
+                    if !emit.artifact_mutations.is_empty() {
+                        self.require_operation_emitting_kind(&mounted.verb, self.declared_dispatch_kind(&mounted.verb))?;
+                    }
                     if emit.child_emits.is_empty() && !emit.artifact_mutations.is_empty() {
                         // 🧺️ ONE gesture is ONE batched publication: the whole artifact lane is drained
                         // into a single staged `Edit` (one history ledger slot, one undo step), instead
@@ -28232,6 +28510,34 @@ pub mod app {
                 None => None,
             };
             let window_transient_authority = self.window_transient_store.capture(targeted_window_transient_view.as_ref().or(meta.view_state.as_ref()))?;
+            // 👥️🫧️ `ArtifactApp::ephemeral`'s own contract: "Called on every dispatched command, right
+            // before `handle`", "applied unconditionally and cannot fail". The migrated route hands the
+            // reducer to a worker, so the only place the hook can still run BEFORE the reducer — with the
+            // document, config, presence and transient roots this dispatch captured — is here, and the
+            // two lanes are applied directly (the same `apply` the framework-reserved clipboard route
+            // uses), never through the job's declared publication lanes: the hook is not the reducer and
+            // its lanes have no op log, no undo group and no failure mode.
+            let ephemeral_emission = {
+                let presence_local = self.presence_store.local_read().map_err(Fault::from)?;
+                let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&children));
+                let cfg = ConfigView { snapshot: config.as_ref(), window: window_config_authority.as_ref().map(|authority| &authority.snapshot) };
+                let presence_view = PresenceView { local: presence_local.get(), peers: PresencePeersView { root: presence_peers.as_ref() } };
+                let transient_view = TransientView { snapshot: transient.as_ref(), window: window_transient_authority.as_ref().map(|authority| &authority.snapshot) };
+                let emission = A::ephemeral(command.as_ref(), &doc, &cfg, &presence_view, &transient_view).await;
+                presence_local.return_to_registry();
+                emission
+            };
+            if !ephemeral_emission.window_transient.is_empty() {
+                return Err(plugin_sdk_fault("ephemeral hook emitted a window-transient mutation, which only a tool job's own completion may publish"));
+            }
+            let (transient, presence_generation, transient_generation) = if ephemeral_emission.presence.is_empty() && ephemeral_emission.transient.is_empty() {
+                (transient, presence_generation, transient_generation)
+            } else {
+                drop(transient);
+                self.presence_store.apply(&ephemeral_emission.presence).await.map_err(|error| Fault::from(error.to_string()))?;
+                self.transient_store.apply(&ephemeral_emission.transient).await.map_err(|error| Fault::from(error.to_string()))?;
+                (self.transient_store.current_root(), self.presence_store.generation().await, self.transient_store.generation().await)
+            };
             let parent_document_id = self.store.envelope().id.clone();
             let seed_handle = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tool_job_controller_id, base_revision.0)).await;
             let operation = semio_framework_job::Operation::new(operation_id, base_revision, generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
@@ -28390,7 +28696,7 @@ pub mod app {
             );
             if let Some(active) = self.tool_operations.get_mut(operation_id.0) {
                 self.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
-                let _ = active.drive_worker_step(&pool)?;
+                let _ = active.drive_worker_step(&pool, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)?;
             }
             let mut started = Self::empty_result(&verb, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await;
             started.output = DslValue::Object(vec![("operationId".into(), DslValue::String(operation_id.0.to_string())), ("generation".into(), DslValue::String(generation.0.to_string()))]);
@@ -28705,8 +29011,13 @@ pub mod app {
                     drop(entry.child_edit_ids.pop());
                     return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                 }
-                for field in [&mut entry.action_id, &mut entry.label, &mut entry.timestamp] {
+                for field in [&mut entry.action_id, &mut entry.timestamp] {
                     if let Some(step) = Self::close_retained_string_page(field, maximum_bytes) {
+                        return step;
+                    }
+                }
+                for cell in entry.label.texts_mut() {
+                    if let Some(step) = Self::close_retained_string_page(cell, maximum_bytes) {
                         return step;
                     }
                 }
@@ -29070,7 +29381,7 @@ pub mod app {
                         .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "typed operation authority changed during one fixed maintenance step"))?;
                     let step = match operation.stage {
                         MountedTypedCommandFullOperationStage::Retiring => unreachable!("the retiring stage is released by its one exact retirement site"),
-                        MountedTypedCommandFullOperationStage::Worker => operation.drive_worker_step(&pool)?,
+                        MountedTypedCommandFullOperationStage::Worker => operation.drive_worker_step(&pool, maximum_bytes)?,
                         MountedTypedCommandFullOperationStage::Publishing => PluginCloseStep::Pending { released_items: 0, released_bytes: 0 },
                         MountedTypedCommandFullOperationStage::AwaitingAck => PluginCloseStep::AwaitingInput { reason: "typed operation awaits its exact host result ACK" },
                     };
@@ -30396,9 +30707,17 @@ pub mod app {
         /// discipline, the command log, undo grouping and `AsyncTask` spawning apply unchanged.
         async fn handle_intent_frame(&mut self, intent: &UiIntent, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let verb = intent.action.name.as_str();
-            let proof = self.qualified_tool_proof(verb)?;
-            let _ = (proof, meta);
-            Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.intent-raw-owner-required"), format!("UI intent '{verb}' has no retained raw-page owner; application intent parsing is not admitted")))
+            if intent.action.version != 1 {
+                return Err(Fault::new(
+                    FaultOrigin::App,
+                    FaultCode::new("app.intent.version-mismatch"),
+                    format!("intent action '{verb}' targets version {} but the intent bridge only resolves version-1 actions", intent.action.version),
+                ));
+            }
+            let _ = self.qualified_tool_proof(verb)?;
+            let merged = merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).await?;
+            let command = A::command_from_action(verb, merged.as_ref()).await?;
+            self.dispatch_typed(command, meta).await
         }
 
         /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: decodes each lane's wire ops back into this
@@ -30522,7 +30841,7 @@ pub mod app {
             self.store.stamp_tail_group_id(&txn_id).await.map_err(|error| Self::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
             self.store.stamp_tail_origin(origin).await.map_err(|error| Self::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
             let edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default();
-            self.record_command(&format!("transaction:{txn_id}"), ActionKind::Mutation, description, Some(edit_id.clone()), None, None);
+            self.record_command(&format!("transaction:{txn_id}"), ActionKind::Mutation, description.map(LocalizedLabel::data), Some(edit_id.clone()), None, None);
             Ok(edit_id)
         }
 
@@ -30881,6 +31200,29 @@ pub mod app {
 
         async fn document_pack(&self) -> Result<store::ArtifactPackFiles, Fault> {
             store::print_document_pack(self.store.envelope()).await.map_err(|error| error.into_fault())
+        }
+
+        async fn artifact_pack_schema_hash(&self) -> Option<[u8; 32]> {
+            match <A::Snapshot as store::ArtifactPack>::record_spec() {
+                Some(spec) => Some(store::os_pack::schema_hash(&spec)),
+                None => None,
+            }
+        }
+
+        async fn artifact_genesis_pair(&self, document_id: &str) -> Result<store::ArtifactPackFiles, Fault> {
+            artifact_app_genesis_pair::<A>(document_id).await.map_err(|error| error.into_fault())
+        }
+
+        async fn artifact_print_mirror(&self, pack: &[u8], spr: &[u8]) -> Result<store::ArtifactTextFiles, Fault> {
+            let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_pack(pack, spr).await.map_err(|error| error.into_fault())?;
+            let envelope = parsed.into_envelope();
+            let mirror = store::print_document_text(&envelope).await;
+            drop(envelope.into_owners());
+            mirror.map_err(|error| error.into_fault())
+        }
+
+        async fn artifact_apply_ops(&self, pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<store::ArtifactPackFiles, Fault> {
+            artifact_app_apply_ops::<A>(pack, spr, ops).await.map_err(|error| error.into_fault())
         }
 
         async fn load_document_pack(&mut self, files: &store::ArtifactPackFiles) -> Result<(), Fault> {
@@ -31262,6 +31604,10 @@ pub mod app {
     pub struct Plugin<PA: PluginApp = NoPluginApp> {
         pub manifest: PluginManifest,
         descriptor_extras: crate::plugin_runtime::PluginDescriptorExtras,
+        /// 📦️ Descriptor declarations for the example bodies this plugin registered as DEFERRED —
+        /// collected at `register_app_factory`, where the leaf and its dialect are both in hand, and
+        /// merged into the descriptor by `plugin_runtime::plugin_descriptor_extras`.
+        deferred_example_assets: Vec<semio_framework::AssetDeclaration>,
         apps: HashMap<String, declarations::AppFactory<PA>>,
         command_handlers: HashMap<String, PluginCommandHandler>,
         runtime: PluginRuntimeRegistry,
@@ -31287,6 +31633,7 @@ pub mod app {
                 command_handlers: HashMap::new(),
                 runtime: PluginRuntimeRegistry::empty(),
                 descriptor_extras: crate::plugin_runtime::PluginDescriptorExtras::default(),
+                deferred_example_assets: Vec::new(),
             }
         }
 
@@ -31299,6 +31646,11 @@ pub mod app {
         /// 🪪️ Reads descriptor fields belonging to this plugin, never the last assembled plugin.
         pub(crate) fn descriptor_extras(&self) -> &crate::plugin_runtime::PluginDescriptorExtras {
             &self.descriptor_extras
+        }
+
+        /// 📦️ Descriptor declarations for this plugin's DEFERRED example bodies — see the field.
+        pub(crate) fn deferred_example_assets(&self) -> &[semio_framework::AssetDeclaration] {
+            &self.deferred_example_assets
         }
 
         /// 🧬️ Installs the fully preflighted declaration authority before external rows commit.
@@ -31423,8 +31775,16 @@ pub mod app {
             // 📚️ An example is a document of the registering surface's DIALECT, shared by every app
             // bound to it (editor and viewer alike) — never a property of this one app id.
             let dialect = app.definition.dialect.clone();
+            let media_type = app.definition.io.artifact_media_type;
             self.manifest.apps.push(app.definition);
             for source in app.examples {
+                // 📦️ A deferred body never becomes a manifest string, so its descriptor declaration
+                // has to be taken from the leaf HERE — `describe` only ever sees the (empty) row.
+                if let Some(declaration) = source.deferred_body_asset(&dialect, media_type) {
+                    if !self.deferred_example_assets.iter().any(|existing| existing.name == declaration.name) {
+                        self.deferred_example_assets.push(declaration);
+                    }
+                }
                 self.manifest.examples.push(source.into_example_definition(dialect.clone()));
             }
             self.apps.insert(self.manifest.apps.last().unwrap().id.clone(), (factory_definition, factory_create));
@@ -32550,46 +32910,64 @@ pub mod app {
             }
         }
     }
-    #[cfg(not(target_arch = "wasm32"))]
-    pub type NativeArtifactGenesisFutureV1<'a> = Pin<Box<dyn Future<Output = Result<store::ArtifactPackFiles, store::VcsError>> + Send + 'a>>;
-
-    #[cfg(target_arch = "wasm32")]
-    pub type NativeArtifactGenesisFutureV1<'a> = Pin<Box<dyn Future<Output = Result<store::ArtifactPackFiles, store::VcsError>> + 'a>>;
-
-    /// 🌱️ Package-selected initial document factory kept separate from the generic codec table.
-    pub type NativeArtifactGenesisFactoryV1 = for<'a> fn(&'a str, &'a ArtifactDialect) -> NativeArtifactGenesisFutureV1<'a>;
-
     /// 🪪️ Accepts only one server-minted nonzero lowercase artifact identity.
     fn is_server_minted_artifact_document_id_v1(document_id: &str) -> bool {
         let Some(suffix) = document_id.strip_prefix("artifact-") else { return false };
         suffix.len() == 32 && suffix.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) && suffix.bytes().any(|byte| byte != b'0')
     }
 
-    /// 🪡️ Builds one editor-owned initial pair while preserving an exact empty history and cursor.
-    pub fn native_artifact_genesis_for_editor<'a, E: ArtifactEditor>(document_id: &'a str, dialect: &'a ArtifactDialect) -> NativeArtifactGenesisFutureV1<'a>
-    where
-        E::Mutation: Sync,
-    {
-        Box::pin(async move {
-            let expected: ArtifactDialect = E::DIALECT.into();
-            if !is_server_minted_artifact_document_id_v1(document_id) || dialect != &expected {
-                return Err(store::VcsError::ValidationFailed("native artifact genesis identity or dialect is invalid".into()));
-            }
-            let mut envelope = create_document_envelope::<E::Snapshot, E::Mutation>(E::DOCUMENT_SCHEMA, document_id, E::initial_snapshot(), None).into_owners();
-            envelope.dialect = Some(dialect.clone());
-            let zero_cursor = envelope.cursor.as_ref().is_some_and(|cursor| cursor.applied_edit_ids.is_empty() && cursor.redo_edit_ids.is_empty() && cursor.checkpoint_id.is_none());
-            if envelope.id != document_id
-                || envelope.dialect.as_ref() != Some(dialect)
-                || !envelope.vcs.edits.is_empty()
-                || !envelope.vcs.changes.is_empty()
-                || !envelope.vcs.checkpoints.is_empty()
-                || !envelope.vcs.alternatives.is_empty()
-                || !zero_cursor
-            {
-                return Err(store::VcsError::ValidationFailed("native artifact genesis factory produced nonzero history".into()));
-            }
-            store::print_document_pack(&envelope).await
-        })
+    /// 🪡️ Builds one app-owned initial pair at a server-minted identity while preserving an exact
+    /// empty history and cursor. This is the single producer behind `world actor`'s `codec.genesis`
+    /// export, so every plugin gets creation authority from the one implementation rather than from
+    /// a per-package native factory the host has to link (ticket 26/09/18 slice TC3b).
+    pub async fn artifact_app_genesis_pair<A: ArtifactApp>(document_id: &str) -> Result<store::ArtifactPackFiles, store::VcsError> {
+        let dialect: ArtifactDialect = A::DIALECT.into();
+        if !is_server_minted_artifact_document_id_v1(document_id) {
+            return Err(store::VcsError::ValidationFailed("artifact genesis identity is not a server-minted artifact id".into()));
+        }
+        let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, document_id, A::initial_snapshot().await, None).into_owners();
+        envelope.dialect = Some(dialect.clone());
+        let zero_cursor = envelope.cursor.as_ref().is_some_and(|cursor| cursor.applied_edit_ids.is_empty() && cursor.redo_edit_ids.is_empty() && cursor.checkpoint_id.is_none());
+        if envelope.id != document_id
+            || envelope.dialect.as_ref() != Some(&dialect)
+            || !envelope.vcs.edits.is_empty()
+            || !envelope.vcs.changes.is_empty()
+            || !envelope.vcs.checkpoints.is_empty()
+            || !envelope.vcs.alternatives.is_empty()
+            || !zero_cursor
+        {
+            return Err(store::VcsError::ValidationFailed("artifact genesis produced nonzero history".into()));
+        }
+        store::print_document_pack(&envelope).await
+    }
+
+    /// 🧩️ Applies one `os_spr::encode_ops_vec` batch to an app-owned pair — the guest half of
+    /// `world actor`'s `codec.apply-ops` export, structurally the same reduction
+    /// `store::ArtifactCodec::apply_ops_binary` performs for a natively linked codec.
+    pub async fn artifact_app_apply_ops<A: ArtifactApp>(pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<store::ArtifactPackFiles, store::VcsError> {
+        if pack.is_empty() || spr.is_empty() {
+            return Err(store::VcsError::Deserialize("artifact apply-ops has no pack+spr baseline".into()));
+        }
+        let parsed: store::ParsedDocumentText<A::Snapshot, A::Mutation> = store::parse_document_pack(pack, spr).await.map_err(|error| store::VcsError::Deserialize(error.to_string()))?;
+        let mut envelope = parsed.into_envelope();
+        let (applied, redo) = match &envelope.cursor {
+            Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
+            None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+        };
+        envelope.cursor = Some(store::ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
+        if ops.is_empty() {
+            let printed = store::print_document_pack(&envelope).await;
+            drop(envelope.into_owners());
+            return printed;
+        }
+        let blobs = store::os_spr::decode_ops_vec(ops).map_err(|error| store::VcsError::Deserialize(error.to_string()))?;
+        let mut mutations: Vec<A::Mutation> = Vec::with_capacity(blobs.len());
+        for bytes in &blobs {
+            mutations.push(<A::Mutation as OpBinary>::decode_op(bytes).map_err(|error| store::VcsError::Deserialize(error.to_string()))?);
+        }
+        let mut owner = store::ArtifactStore::<A::Snapshot, A::Mutation>::new(envelope).await?;
+        owner.dispatch(store::ArtifactCommand::Apply { mutations, description: None }).await?;
+        store::print_document_pack(owner.envelope()).await
     }
     //#endregion 🔖️ArtifactEditor
 
@@ -34897,7 +35275,21 @@ pub mod plugin_runtime {
 
     /// 📖️ Reads only the descriptor authority installed in this exact runtime.
     pub async fn plugin_descriptor_extras<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> PluginDescriptorExtras {
-        runtime.plugin.borrow().as_ref().map(|plugin| plugin.descriptor_extras().clone()).unwrap_or_default()
+        runtime
+            .plugin
+            .borrow()
+            .as_ref()
+            .map(|plugin| {
+                let mut extras = plugin.descriptor_extras().clone();
+                for declaration in plugin.deferred_example_assets() {
+                    match extras.assets.iter().position(|asset| asset.name == declaration.name) {
+                        Some(existing) => extras.assets[existing] = declaration.clone(),
+                        None => extras.assets.push(declaration.clone()),
+                    }
+                }
+                extras
+            })
+            .unwrap_or_default()
     }
 
     /// 🛂️ Re-encodes a packed `PackageDescriptor` with `hashes` blanked — shared by `plugin_exports!`/
@@ -36511,6 +36903,71 @@ pub mod plugin_runtime {
             resolve_ready(instance.app.load_document_text(files))
         })
         .await
+    }
+
+    /// 🧬️ Resolves the ONE app of the installed bundle that owns `artifact_schema`, as a fresh
+    /// throwaway instance carrying nothing but its own initial document. This is the guest half of
+    /// `world actor`'s `codec` interface: a host that links no Rust codec for this package selects a
+    /// document kind by the same `schema` string `store::ArtifactCodec` is keyed by, and the bundle
+    /// answers from its own registered apps. An editor is preferred over a viewer because only an
+    /// editor's snapshot is the kind's creation authority; an ambiguous schema is refused rather
+    /// than resolved by order.
+    async fn plugin_artifact_codec_app<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str) -> Result<PA, Fault> {
+        if artifact_schema.is_empty() || artifact_schema.len() > 256 || artifact_schema.chars().any(char::is_control) {
+            return Err(plugin_internal_fault("artifact codec schema identity is empty, oversized or control-bearing"));
+        }
+        if let Some(fault) = runtime.plugin_assembly_error.try_borrow().map_err(|_| plugin_internal_fault("plugin assembly authority busy"))?.clone() {
+            return Err(fault);
+        }
+        let program = runtime.plugin.try_borrow().map_err(|_| plugin_internal_fault("plugin factory authority busy"))?;
+        let program = program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?;
+        let mut editor = None;
+        let mut viewer = None;
+        for definition in &program.manifest.apps {
+            let Some(app) = program.create_app(&definition.id) else { continue };
+            // 🪪️ The document schema is the primary key — it is what `store::ArtifactCodec` and the
+            // hub's trusted catalog are keyed by. The dialect's ARTIFACT KIND is admitted as a second
+            // key because it is the only document identity a package's own manifest publishes: an app
+            // definition carries `dialect.artifact_kind`, never `A::DOCUMENT_SCHEMA`. Build tooling
+            // that has nothing but a compiled descriptor therefore asks by kind, reads the schema back
+            // out of `codec.genesis`'s history, and asks everything after that by schema. A kind and a
+            // schema never collide by construction: a kind is `s.<plugin>.<artifact>` and a schema is
+            // the artifact's own `DOCUMENT_SCHEMA` spelling.
+            let schema_matches = app.artifact_schema().await == artifact_schema;
+            if !schema_matches && definition.dialect.artifact_kind != artifact_schema {
+                continue;
+            }
+            let slot = if definition.role == semio_framework::AppRole::Editor { &mut editor } else { &mut viewer };
+            if slot.is_some() {
+                return Err(plugin_internal_fault("artifact codec schema resolves more than one app of the same role"));
+            }
+            *slot = Some(app);
+        }
+        editor.or(viewer).ok_or_else(|| plugin_internal_fault("artifact codec schema is owned by no app of this bundle"))
+    }
+
+    /// 🧬️ `codec.pack-schema-hash` — the kind's own 32-byte snapshot-record fingerprint.
+    pub async fn plugin_artifact_pack_schema_hash<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str) -> Result<[u8; 32], Fault> {
+        let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
+        app.artifact_pack_schema_hash().await.ok_or_else(|| plugin_internal_fault("artifact codec schema has no structural record specification"))
+    }
+
+    /// 🌱️ `codec.genesis` — the canonical empty document of `artifact_schema` at `document_id`.
+    pub async fn plugin_artifact_genesis<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, document_id: &str) -> Result<store::ArtifactPackFiles, Fault> {
+        let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
+        app.artifact_genesis_pair(document_id).await
+    }
+
+    /// 📥️ `codec.print-mirror` — the host's pair-validation fence for an unlinked package.
+    pub async fn plugin_artifact_print_mirror<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, pack: &[u8], spr: &[u8]) -> Result<store::ArtifactTextFiles, Fault> {
+        let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
+        app.artifact_print_mirror(pack, spr).await
+    }
+
+    /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for an unlinked package.
+    pub async fn plugin_artifact_apply_ops<PA: PluginApp>(runtime: &PluginRuntime<PA>, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<store::ArtifactPackFiles, Fault> {
+        let app = plugin_artifact_codec_app(runtime, artifact_schema).await?;
+        app.artifact_apply_ops(pack, spr, ops).await
     }
 
     /// @emoji 📦️ Serializes the instance's full persistent document as pack+spr bytes
@@ -38905,20 +39362,73 @@ pub mod plugin_runtime {
                 }
             }
 
+            // 🌱️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b): `world actor`'s `codec` export. Every
+            // function resolves the owning app from the installed bundle by `artifact-schema` and
+            // runs on a throwaway instance, so none of them observe or disturb live actor state.
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            impl $crate::component::wasip2::exports::semio::framework::codec::Guest for $guest {
+                async fn pack_schema_hash(artifact_schema: String) -> Result<Vec<u8>, $crate::component::wasip2::semio::framework::types::PluginError> {
+                    $ensure();
+                    $runtime
+                        .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_pack_schema_hash(runtime, &artifact_schema)))
+                        .map(|hash| hash.to_vec())
+                        .map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                }
+
+                async fn genesis(
+                    artifact_schema: String,
+                    document_id: String,
+                ) -> Result<$crate::component::wasip2::exports::semio::framework::codec::DocumentPair, $crate::component::wasip2::semio::framework::types::PluginError> {
+                    $ensure();
+                    $runtime
+                        .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_genesis(runtime, &artifact_schema, &document_id)))
+                        .map(|files| $crate::component::wasip2::exports::semio::framework::codec::DocumentPair { pack: files.pack, spr: files.spr })
+                        .map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                }
+
+                async fn print_mirror(
+                    artifact_schema: String,
+                    pair: $crate::component::wasip2::exports::semio::framework::codec::DocumentPair,
+                ) -> Result<(String, String), $crate::component::wasip2::semio::framework::types::PluginError> {
+                    $ensure();
+                    $runtime
+                        .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_print_mirror(runtime, &artifact_schema, &pair.pack, &pair.spr)))
+                        .map(|files| (files.dsl, files.ops))
+                        .map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                }
+
+                async fn apply_ops(
+                    artifact_schema: String,
+                    pair: $crate::component::wasip2::exports::semio::framework::codec::DocumentPair,
+                    ops: Vec<u8>,
+                ) -> Result<$crate::component::wasip2::exports::semio::framework::codec::DocumentPair, $crate::component::wasip2::semio::framework::types::PluginError> {
+                    $ensure();
+                    $runtime
+                        .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_apply_ops(runtime, &artifact_schema, &pair.pack, &pair.spr, &ops)))
+                        .map(|files| $crate::component::wasip2::exports::semio::framework::codec::DocumentPair { pack: files.pack, spr: files.spr })
+                        .map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
+                }
+            }
+
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
             $crate::__semio_export_component_guest!($guest);
         };
     }
 
-    /// 🧬️ THE nine `semio_owned_*_v1` core exports — the owned Semio actor ABI, defined exactly
+    /// 🧬️ THE thirteen `semio_owned_*_v1` core exports — the owned Semio actor ABI, defined exactly
     /// once and invoked by BOTH component owners (`__semio_plugin_actor_exports!` for a plugin,
     /// `extension_exports!`'s single-argument arm for an extension). `OwnedSemioArtifact::
-    /// from_component` (`🧠️interpreter/🦀️.rs`) accepts a component only when all nine are present
-    /// with exact core types, so an owner that carries the WIT guest exports but not these nine
+    /// from_component` (`🧠️interpreter/🦀️.rs`) accepts a component only when all thirteen are present
+    /// with exact core types, so an owner that carries the WIT guest exports but not these thirteen
     /// cannot be described, loaded by the owned host, or published to the catalog at all.
     ///
+    /// 🌱️ The last four (`pack_schema_hash`/`genesis`/`print_mirror`/`apply_ops`, ticket 26/09/18
+    /// slice TC3b) are the owned twin of `world actor`'s `codec` interface: they are what lets a
+    /// headless hub create and validate a document of ANY package's artifact kind without linking
+    /// that package's Rust codec.
+    ///
     /// 🐛️ Until 2026-09-20 the extension arm expanded `__semio_actor_exports!` DIRECTLY and emitted
-    /// none of the nine, so every extension component in the tree failed validation with "component
+    /// none of them, so every extension component in the tree failed validation with "component
     /// has no core module implementing the owned Semio actor ABI" — 16 of the 29 MCP capability
     /// catalog skips (`📓️a3-descriptor-regeneration.md` §3b). The arms now share this one body by
     /// construction rather than by a copy that can drift again; the law is
@@ -39029,6 +39539,70 @@ pub mod plugin_runtime {
             pub extern "C" fn semio_owned_describe_v1() -> u64 {
                 $ensure();
                 $crate::owned_abi::return_bytes($describe_bytes())
+            }
+
+            // 🌱️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b): the owned-ABI twin of `world actor`'s
+            // `codec` export, so the repository-owned interpreter (the production `describe` path,
+            // and the hub's only guest execution path) reaches the same four functions wasmtime and
+            // jco reach through the WIT.
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn semio_owned_pack_schema_hash_v1(pointer: u32, length: u32) -> u64 {
+                let input = unsafe { $crate::owned_abi::take_json::<$crate::owned_abi::CodecInput>(pointer, length) };
+                $ensure();
+                let result = match input {
+                    Ok(input) => $runtime
+                        .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_pack_schema_hash(runtime, &input.artifact_schema)))
+                        .map(|hash| hash.to_vec())
+                        .map_err(|fault| $crate::encode_fault_bytes(&fault)),
+                    Err(error) => Err(error),
+                };
+                $crate::owned_abi::return_json(&result)
+            }
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn semio_owned_genesis_v1(pointer: u32, length: u32) -> u64 {
+                let input = unsafe { $crate::owned_abi::take_json::<$crate::owned_abi::CodecInput>(pointer, length) };
+                $ensure();
+                let result = match input {
+                    Ok(input) => $runtime
+                        .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_genesis(runtime, &input.artifact_schema, &input.document_id)))
+                        .map(|files| $crate::owned_abi::CodecPair { pack: files.pack, spr: files.spr })
+                        .map_err(|fault| $crate::encode_fault_bytes(&fault)),
+                    Err(error) => Err(error),
+                };
+                $crate::owned_abi::return_json(&result)
+            }
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn semio_owned_print_mirror_v1(pointer: u32, length: u32) -> u64 {
+                let input = unsafe { $crate::owned_abi::take_json::<$crate::owned_abi::CodecInput>(pointer, length) };
+                $ensure();
+                let result = match input {
+                    Ok(input) => $runtime
+                        .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_print_mirror(runtime, &input.artifact_schema, &input.pack, &input.spr)))
+                        .map(|files| $crate::owned_abi::CodecMirror { dsl: files.dsl, ops: files.ops })
+                        .map_err(|fault| $crate::encode_fault_bytes(&fault)),
+                    Err(error) => Err(error),
+                };
+                $crate::owned_abi::return_json(&result)
+            }
+
+            #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+            #[unsafe(no_mangle)]
+            pub unsafe extern "C" fn semio_owned_apply_ops_v1(pointer: u32, length: u32) -> u64 {
+                let input = unsafe { $crate::owned_abi::take_json::<$crate::owned_abi::CodecInput>(pointer, length) };
+                $ensure();
+                let result = match input {
+                    Ok(input) => $runtime
+                        .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_artifact_apply_ops(runtime, &input.artifact_schema, &input.pack, &input.spr, &input.ops)))
+                        .map(|files| $crate::owned_abi::CodecPair { pack: files.pack, spr: files.spr })
+                        .map_err(|fault| $crate::encode_fault_bytes(&fault)),
+                    Err(error) => Err(error),
+                };
+                $crate::owned_abi::return_json(&result)
             }
         };
     }
@@ -40313,6 +40887,8 @@ pub use app::{
     bounded_window_config_store_disposer,
     bounded_window_config_store_owners,
     CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES,
+    artifact_app_apply_ops,
+    artifact_app_genesis_pair,
     built_text_node,
     built_text_to_component_tree,
     built_to_component_tree,
@@ -40322,7 +40898,6 @@ pub use app::{
     deserializer_entry_of,
     infer_artifact,
     list_artifact_inference_services,
-    native_artifact_genesis_for_editor,
     node_graph_delete_selection_spec,
     paged_text_carrier,
     publish_document_store_candidate_if_authoritative,
@@ -40433,6 +41008,7 @@ pub use app::{
     Emit,
     EphemeralEmit,
     ExampleSource,
+    ExampleSourceBody,
     ExtensionInvocation,
     FlowExtensionContribution,
     FlowExtensionContributionKind,
@@ -40458,8 +41034,6 @@ pub use app::{
     MeshView,
     MeshWindowKit,
     ModeSpec,
-    NativeArtifactGenesisFactoryV1,
-    NativeArtifactGenesisFutureV1,
     OwnedDocumentMemberIngress,
     NoChildren,
     NoConfig,
@@ -40532,7 +41106,8 @@ pub use engagement::{engagement_token_matches, strip_engagement_prefix};
 // `important.md`'s sequencing constraints).
 pub use plugin_runtime::{
     extension_activate, extension_deactivate, extension_invoke, extension_manifest, install_extension_bundle, install_plugin_bundle, install_plugin_bundle_result, plugin_attach_backbone, plugin_cancel_media_export, plugin_detach_backbone,
-    plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack, plugin_poll_media_export, plugin_submit_media_export, plugin_take_segmented_download_chunk, ExtensionBundle, ExtensionManifest,
+    plugin_artifact_apply_ops, plugin_artifact_genesis, plugin_artifact_pack_schema_hash, plugin_artifact_print_mirror, plugin_document_pack, plugin_ingest_operations, plugin_load_document_pack,
+    plugin_poll_media_export, plugin_submit_media_export, plugin_take_segmented_download_chunk, ExtensionBundle, ExtensionManifest,
 };
 pub use semio_framework::*;
 pub use semio_framework::{MediaForm, MediaPortDirection, MediaPortSpec};

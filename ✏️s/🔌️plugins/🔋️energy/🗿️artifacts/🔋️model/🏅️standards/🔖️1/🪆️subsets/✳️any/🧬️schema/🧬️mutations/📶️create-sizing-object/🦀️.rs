@@ -34,8 +34,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Create sizing object {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create sizing object {}", self.id.0), &format!("Auslegungsobjekt {} erstellen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

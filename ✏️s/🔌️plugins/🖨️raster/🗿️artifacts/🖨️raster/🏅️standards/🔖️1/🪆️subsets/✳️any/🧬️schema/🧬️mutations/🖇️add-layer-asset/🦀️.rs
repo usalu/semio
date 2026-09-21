@@ -34,8 +34,8 @@ pub mod mutation {
             super::super::inverse::inverse(self, base)
         }
 
-        fn label(&self) -> String {
-            format!("Add asset {}", self.asset_id)
+        fn label(&self) -> protocol::LocalizedLabel {
+            protocol::LocalizedLabel::native(&format!("Add asset {}", self.asset_id), &format!("Asset {} hinzufügen", self.asset_id))
         }
 
         fn target(&self) -> Vec<String> {

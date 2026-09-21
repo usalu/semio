@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOutlines {
         vec![PdfMutation::SetOutlines(SetOutlines { outlines: base.outlines.clone() })]
     }
 
-    fn label(&self) -> String {
-        format!("Set {} outline items", self.outlines.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set {} outline items", self.outlines.len()), &format!("{} Umrisselemente setzen", self.outlines.len()))
     }
 
     fn target(&self) -> Vec<String> {

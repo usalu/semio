@@ -27,8 +27,8 @@ impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for 
         vec![Self { camera: base.preview_camera.clone() }.into()]
     }
 
-    fn label(&self) -> String {
-        "Set Preview Camera".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Preview Camera", "Vorschaukamera setzen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -28,8 +28,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Crea
         crate::standards::v1::subsets::any::schema::mutations::create_widget::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Create widget \"{}\"", crate::widget_id(&self.widget))
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create widget \"{}\"", crate::widget_id(&self.widget)), &format!("Widget \"{}\" erstellen", crate::widget_id(&self.widget)))
     }
 
     fn target(&self) -> Vec<String> {

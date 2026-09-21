@@ -30,8 +30,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Move
         crate::standards::v1::subsets::any::schema::mutations::move_widget::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Move widget \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move widget \"{}\"", self.id), &format!("Widget \"{}\" verschieben", self.id))
     }
 
     fn target(&self) -> Vec<String> {

@@ -24,7 +24,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceProject {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace project definition \"{}\"", self.new_project.code)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace project definition \"{}\"", self.new_project.code), &format!("Projektdefinition \"{}\" ersetzen", self.new_project.code))
     }
 }

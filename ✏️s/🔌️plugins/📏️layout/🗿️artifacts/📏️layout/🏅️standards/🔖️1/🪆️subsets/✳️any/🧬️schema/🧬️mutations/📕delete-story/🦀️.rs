@@ -22,8 +22,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteStory {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_delete_story(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete story \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete story \"{}\"", self.id), &format!("Geschoss \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

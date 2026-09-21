@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeVLRd {
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change longitudinal shear resistance V_L,Rd to {}", self.new_v_l_rd)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change longitudinal shear resistance V_L,Rd to {}", self.new_v_l_rd), &format!("Längsschubwiderstandv_L,Rd auf {} ändern", self.new_v_l_rd))
     }
 }
 //#endregion 🔖️Payload

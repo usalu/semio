@@ -66,8 +66,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindSceneRoot
         vec![super::GltfMutation::BindSceneRootNode(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Bind Scene Root Node".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Bind Scene Root Node", "Szenenwurzelknoten binden")
     }
 
     fn target(&self) -> Vec<String> {

@@ -21,8 +21,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for InsertHuffmanT
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
         agg_inverse(&JpgBaselineMutation::InsertHuffmanTable(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-huffman-table".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-huffman-table", "Huffmantabelle einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

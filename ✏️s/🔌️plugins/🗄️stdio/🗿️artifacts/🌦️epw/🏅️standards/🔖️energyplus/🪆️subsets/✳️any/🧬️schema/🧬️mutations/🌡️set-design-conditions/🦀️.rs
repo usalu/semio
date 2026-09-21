@@ -22,8 +22,8 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetDesignConditions {
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {
         agg_inverse(&EpwMutation::SetDesignConditions(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-design-conditions".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-design-conditions", "Bemessungsbedingungen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -20,8 +20,8 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetCente
     fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> {
         vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Set Center Model".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Center Model", "Mittelpunktmodell setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["center_model".into()]

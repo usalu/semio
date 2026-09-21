@@ -67,8 +67,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderMorphT
         vec![super::GltfMutation::ReorderMorphTargetAttributes(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Reorder Morph Target Attributes".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Reorder Morph Target Attributes", "Morphzielattribute umordnen")
     }
 
     fn target(&self) -> Vec<String> {

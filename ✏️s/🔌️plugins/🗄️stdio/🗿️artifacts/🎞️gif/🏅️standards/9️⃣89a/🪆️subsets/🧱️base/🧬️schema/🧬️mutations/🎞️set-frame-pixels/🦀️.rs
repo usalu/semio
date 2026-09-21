@@ -23,8 +23,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFramePixels {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::SetFramePixels(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-frame-pixels".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-frame-pixels", "Rahmenpixel setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -27,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for InsertLaunchAction {
         vec![PdfAMutation::RemoveLaunchAction(RemoveLaunchAction { target: self.target.clone() })]
     }
 
-    fn label(&self) -> String {
-        "Insert launch action".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Insert launch action", "Startaktion einfügen")
     }
 
     fn target(&self) -> Vec<String> {

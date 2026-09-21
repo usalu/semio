@@ -11,8 +11,7 @@ use crate::artifact_authority::creation::{
 };
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
-use crate::directory::{
-    ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DIRECTORY_WIRE_INTEGER_MAX, DirectoryAppendOutcomeV1,
+use crate::directory::{DIRECTORY_FORMAT_SCHEMA, DIRECTORY_FORMAT_VERSION, DirectoryFormatAdmission, admit_directory_format, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DIRECTORY_WIRE_INTEGER_MAX, DirectoryAppendOutcomeV1,
     DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability,
     UNCONTROLLED_PROJECTION_REBUILD, active_capability, admin_operation_effect_receipt_v1, auth_audit, bounded_event_read, checkpoint_projection_rebuild, decode_auth_digest_hex, directory_command_result_kind_from_str,
     directory_command_result_kind_str, directory_projection_rejection_v1, directory_projection_space_v1, document_genesis_completion_v1, encode_capability_bytes, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite,
@@ -35,6 +34,37 @@ fn now_ms() -> i64 {
 
 fn backend<E: std::fmt::Display>(err: E) -> DirectoryError {
     DirectoryError::Backend(err.to_string())
+}
+
+/// 🔒️ How many times a contended Neo4j write is re-attempted after the server aborts it as
+/// transient. Forseti breaks a lock cycle by killing one participant, so a two-writer race needs one
+/// retry and a wider fan-out needs a few; beyond this the contention is not transient and the caller
+/// must see the fault.
+const NEO4J_TRANSIENT_RETRY_MAX: u32 = 6;
+
+/// ⏳️ First back-off step in milliseconds, doubled per attempt. The loser of a Forseti cycle must not
+/// re-enter the same lock order immediately or the two writers simply rebuild the cycle.
+const NEO4J_TRANSIENT_RETRY_BASE_MS: u64 = 10;
+
+/// 🔁️ Whether a directory fault is one Neo4j classifies as transient — the server aborted an
+/// otherwise-valid transaction to break a deadlock, serialization cycle or leader change, and rolled
+/// it back whole. Unlike SQLite (`BEGIN IMMEDIATE` plus a busy handler) and PostgreSQL (`SELECT …
+/// FOR UPDATE`), Bolt has no server-side wait: the retry is the client's half of the contract, so a
+/// backend that surfaces `Neo.TransientError.*` to its caller is reporting a failure the database
+/// never meant as one.
+fn is_neo4j_transient(error: &DirectoryError) -> bool {
+    matches!(error, DirectoryError::Backend(message) if message.contains("Neo.TransientError."))
+}
+
+/// 😴️ Consumes one retry budget unit for a transient fault and sleeps the back-off, answering
+/// whether the caller should attempt the write again.
+async fn neo4j_transient_retry_pause(error: &DirectoryError, attempt: &mut u32) -> bool {
+    if !is_neo4j_transient(error) || *attempt >= NEO4J_TRANSIENT_RETRY_MAX {
+        return false;
+    }
+    *attempt += 1;
+    tokio::time::sleep(std::time::Duration::from_millis(NEO4J_TRANSIENT_RETRY_BASE_MS << (*attempt - 1))).await;
+    true
 }
 
 fn artifact_creation_request_key(actor_user_id: &str, request_id: &str) -> String {
@@ -387,6 +417,600 @@ pub struct Neo4jDirectory {
     genesis_test_control: std::sync::Arc<ArtifactGenesisTestControlV1>,
 }
 
+#[cfg(feature = "neo4j")]
+impl Neo4jDirectory {
+    /// 🔁️ One attempt of [`HubDirectory::claim_artifact_creation`]; the trait method retries it while Neo4j reports a transient fault.
+    async fn claim_artifact_creation_attempt(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<ArtifactCreationClaimV1> {
+        intent.validate()?;
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        let request_key = lock_artifact_creation_request(&mut txn, &intent.actor.user_id, &intent.request.request_id).await?;
+        let observed_now = validate_artifact_creation_authority(&mut txn, &intent.actor, &intent.scope.space_id, None).await?;
+        if intent.accepted_at_ms > observed_now || observed_now >= intent.deadline_ms {
+            return Err(DirectoryError::Conflict("artifact creation acceptance is outside its live server deadline".into()));
+        }
+        let facts = artifact_creation_facts(&mut txn, &request_key).await?;
+        if !facts.is_empty() {
+            let operation = ArtifactCreationOperationV1::fold(&facts)?;
+            if operation.intent.command_sha256 != intent.command_sha256 || operation.intent.scope.space_id != intent.scope.space_id {
+                return Err(DirectoryError::Conflict("artifact creation request is already bound to another intent".into()));
+            }
+            txn.commit().await.map_err(backend)?;
+            return Ok(ArtifactCreationClaimV1::Existing(operation));
+        }
+        let scope_key = document_scope_key_v1(&intent.scope);
+        let mut occupied = txn
+            .execute(
+                query("OPTIONAL MATCH (d:DocumentDescriptor {scopeKey: $scope_key}) OPTIONAL MATCH (f:ArtifactCreationFact {spaceId: $space_id, documentId: $document_id, revision: 1}) RETURN count(d) + count(f) AS count")
+                    .param("scope_key", scope_key)
+                    .param("space_id", intent.scope.space_id.clone())
+                    .param("document_id", intent.scope.document_id.clone()),
+            )
+            .await
+            .map_err(backend)?;
+        let count: i64 = occupied.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact creation occupancy returned no row".into()))?.get("count").map_err(backend)?;
+        drop(occupied);
+        if count != 0 {
+            return Err(DirectoryError::Conflict("artifact creation document identity is already occupied".into()));
+        }
+        txn.run(
+            query("MATCH (r:ArtifactCreationRequest {key: $key}) SET r.documentScopeKey = $scope_key, r.spaceId = $space_id, r.documentId = $document_id")
+                .param("key", request_key.clone())
+                .param("scope_key", document_scope_key_v1(&intent.scope))
+                .param("space_id", intent.scope.space_id.clone())
+                .param("document_id", intent.scope.document_id.clone()),
+        )
+        .await
+        .map_err(backend)?;
+        let fact = ArtifactCreationFactV1 {
+            actor_user_id: intent.actor.user_id.clone(),
+            request_id: intent.request.request_id.clone(),
+            revision: 1,
+            recorded_at_ms: intent.accepted_at_ms,
+            body: ArtifactCreationFactBodyV1::Accepted { intent: intent.clone() },
+        };
+        let operation = ArtifactCreationOperationV1::fold(std::slice::from_ref(&fact))?;
+        insert_artifact_creation_fact(&mut txn, &request_key, intent, &fact).await?;
+        txn.commit().await.map_err(backend)?;
+        Ok(ArtifactCreationClaimV1::Accepted(operation))
+    }
+
+    /// 🔁️ One attempt of [`HubDirectory::append_artifact_creation_fact`]; the trait method retries it while Neo4j reports a transient fault.
+    async fn append_artifact_creation_fact_attempt(&self, append: &ArtifactCreationFactAppendV1) -> DirectoryResult<ArtifactCreationOperationV1> {
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        let request_key = lock_artifact_creation_request(&mut txn, &append.actor.user_id, &append.request_id).await?;
+        let observed_now = validate_artifact_creation_authority(&mut txn, &append.actor, &append.space_id, None).await?;
+        let mut facts = artifact_creation_facts(&mut txn, &request_key).await?;
+        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        if append.recorded_at_ms > observed_now || matches!(append.body, ArtifactCreationFactBodyV1::Prepared { .. }) && observed_now >= operation.intent.deadline_ms {
+            return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into()));
+        }
+        if let Some(next) = decide_artifact_creation_fact_append_v1(&facts, append, observed_now)? {
+            insert_artifact_creation_fact(&mut txn, &request_key, &operation.intent, &next).await?;
+            facts.push(next);
+        }
+        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        txn.commit().await.map_err(backend)?;
+        Ok(operation)
+    }
+
+    /// 🔁️ One attempt of [`HubDirectory::artifact_creation_terminate_uncommitted`]; the trait method retries it while Neo4j reports a transient fault.
+    async fn artifact_creation_terminate_uncommitted_attempt(&self, intent: &ArtifactCreationIntentV1, current_now_ms: u64) -> DirectoryResult<ArtifactCreationOperationV1> {
+        intent.validate()?;
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        let request_key = lock_artifact_creation_request(&mut txn, &intent.actor.user_id, &intent.request.request_id).await?;
+        let mut facts = artifact_creation_facts(&mut txn, &request_key).await?;
+        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        if operation.intent != *intent {
+            return Err(DirectoryError::Conflict("artifact creation supervisor intent differs".into()));
+        }
+        if operation.receipt.is_some()
+            || matches!(operation.phase, directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Cancelled | directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Failed)
+        {
+            txn.commit().await.map_err(backend)?;
+            return Ok(operation);
+        }
+        let authority = validate_artifact_creation_authority(&mut txn, &intent.actor, &intent.scope.space_id, None).await;
+        let observed_now = match authority {
+            Ok(observed_now) => {
+                if observed_now < intent.deadline_ms {
+                    return Err(DirectoryError::Conflict("artifact creation still has live execution authority".into()));
+                }
+                observed_now
+            }
+            Err(DirectoryError::Unauthorized) => u64::try_from(now_ms()).map_err(backend)?,
+            Err(error) => return Err(error),
+        };
+        if current_now_ms > observed_now {
+            return Err(DirectoryError::Conflict("artifact creation supervisor clock is in the future".into()));
+        }
+        let next = ArtifactCreationFactV1 { actor_user_id: intent.actor.user_id.clone(), request_id: intent.request.request_id.clone(), revision: operation.revision + 1, recorded_at_ms: observed_now, body: ArtifactCreationFactBodyV1::Failed };
+        facts.push(next.clone());
+        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        insert_artifact_creation_fact(&mut txn, &request_key, intent, &next).await?;
+        txn.commit().await.map_err(backend)?;
+        Ok(operation)
+    }
+
+    /// 🔁️ One attempt of [`HubDirectory::append_document_genesis`]; the trait method retries it while Neo4j reports a transient fault.
+    async fn append_document_genesis_attempt(&self, append: &DocumentGenesisAppendV1) -> DirectoryResult<DocumentGenesisCommitV1> {
+        append.intent.validate()?;
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        let request_key = lock_artifact_creation_request(&mut txn, &append.intent.actor.user_id, &append.intent.request.request_id).await?;
+        let lease_expires_at_ms = cas_lock_space(&mut txn, &append.intent.scope.space_id).await?;
+        let mut writer = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.claimNonce = coalesce(c.claimNonce, 0) + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
+        writer.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory writer lock returned no row".into()))?;
+        drop(writer);
+        #[cfg(test)]
+        let observed_now_override = self.pause_genesis_before_authority_for_test().await;
+        #[cfg(not(test))]
+        let observed_now_override = None;
+        let observed_now = validate_artifact_creation_authority(&mut txn, &append.intent.actor, &append.intent.scope.space_id, observed_now_override).await?;
+        let mut facts = artifact_creation_facts(&mut txn, &request_key).await?;
+        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        if operation.intent != append.intent {
+            return Err(DirectoryError::Conflict("genesis creation accepted identity differs".into()));
+        }
+        if operation.receipt.is_some() {
+            txn.commit().await.map_err(backend)?;
+            return Ok(DocumentGenesisCommitV1::Existing(operation));
+        }
+        if append.now_ms > observed_now || observed_now >= append.intent.deadline_ms {
+            return Err(DirectoryError::Conflict("genesis publication is outside its live server deadline".into()));
+        }
+        validate_document_genesis_append_v1(&operation, append)?;
+        let checkpoint = &append.checkpoint;
+        let reservation = &append.reservation;
+        let encoded = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
+        let current_now = i64::try_from(observed_now).map_err(backend)?;
+        let token_generation = i64::try_from(reservation.generation).map_err(backend)?;
+        let token_epoch = i64::try_from(reservation.write_epoch).map_err(backend)?;
+        let token_expiry = i64::try_from(reservation.expires_at_ms).map_err(backend)?;
+        if lease_expires_at_ms > current_now {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into()));
+        }
+        let scope_key = document_scope_key_v1(&checkpoint.scope);
+        let mut occupied = txn.execute(query("OPTIONAL MATCH (d:DocumentDescriptor {scopeKey: $scope_key}) OPTIONAL MATCH (i:DocumentIndex {scopeKey: $scope_key}) OPTIONAL MATCH (c:ArtifactCheckpoint {spaceId: $space_id, documentId: $document_id}) RETURN count(d) + count(i) + count(c) AS count")
+            .param("scope_key", scope_key).param("space_id", checkpoint.scope.space_id.clone()).param("document_id", checkpoint.scope.document_id.clone())).await.map_err(backend)?;
+        let count: i64 = occupied.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("genesis public occupancy returned no row".into()))?.get("count").map_err(backend)?;
+        drop(occupied);
+        if count != 0 {
+            return Err(DirectoryError::Conflict("genesis scope is already publicly occupied".into()));
+        }
+        let mut published = txn
+            .execute(query("MATCH (r:ArtifactCasReference {spaceId: $space_id, documentId: $document_id}) RETURN count(r) AS count").param("space_id", checkpoint.scope.space_id.clone()).param("document_id", checkpoint.scope.document_id.clone()))
+            .await
+            .map_err(backend)?;
+        let published_count: i64 = published.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("genesis CAS reference count returned no row".into()))?.get("count").map_err(backend)?;
+        drop(published);
+        if published_count != 0 {
+            return Err(DirectoryError::Conflict("genesis scope has a CAS reference without its creation receipt".into()));
+        }
+        let checkpoint_key = checkpoint_key_v1(&checkpoint.scope, checkpoint.checkpoint_id);
+        let mut current = txn
+            .execute(query("MATCH (r:ArtifactCasReservation {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.expiresAtMs AS expiresAtMs, r.plan AS plan").param("key", checkpoint_key.clone()))
+            .await
+            .map_err(backend)?;
+        let row = current.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("genesis CAS reservation is missing, expired or substituted".into()))?;
+        let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
+        if row.get::<i64>("generation").map_err(backend)? != token_generation
+            || row.get::<i64>("writeEpoch").map_err(backend)? != token_epoch
+            || row.get::<i64>("expiresAtMs").map_err(backend)? != token_expiry
+            || token_expiry <= current_now
+            || stored.value.as_ref() != encoded
+        {
+            return Err(DirectoryError::Conflict("genesis CAS reservation is missing, expired or substituted".into()));
+        }
+        drop(current);
+        let mut events = Vec::with_capacity(3);
+        for event in &append.events {
+            let id = time_ordered_id();
+            let recorded_at_ms = now_ms();
+            let payload = serde_json::Value::from(&event.body.to_value());
+            let kind = payload.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
+            let mut counter = txn.execute(query("MATCH (c:DirectoryCounter {id: 'singleton'}) SET c.seq = c.seq + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
+            let sequence: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter returned no row".into()))?.get("seq").map_err(backend)?;
+            drop(counter);
+            let seq = u64::try_from(sequence).map_err(backend)?;
+            if seq > DIRECTORY_WIRE_INTEGER_MAX {
+                return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into()));
+            }
+            let full = DirectoryEvent { seq, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
+            validate_directory_event_page_event(&full).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
+            txn.run(query("CREATE (e:DirectoryEvent {seq: $seq, id: $id, hlcPhysical: $hlc_physical, hlcLogical: $hlc_logical, actorKind: $actor_kind, actorId: $actor_id, spaceId: $space_id, userId: $user_id, kind: $kind, payload: $payload, recordedAt: $recorded_at})")
+                .param("seq", sequence).param("id", id).param("hlc_physical", event.hlc.physical_ms).param("hlc_logical", i64::from(event.hlc.logical)).param("actor_kind", actor_kind_to_str(event.actor.kind)).param("actor_id", event.actor.id.clone()).param("space_id", event.space_id.clone()).param("user_id", event.user_id.clone()).param("kind", kind).param("payload", payload.to_string()).param("recorded_at", recorded_at_ms)).await.map_err(backend)?;
+            if events.len() == 2 {
+                txn.run(
+                    query("CREATE (:ArtifactAuthorityEvent {eventSeq: $event_seq, scopeCheckpointKey: $key, payload: $payload})")
+                        .param("event_seq", sequence)
+                        .param("key", checkpoint_key.clone())
+                        .param("payload", directory::os_pack::json::to_json_string(checkpoint)),
+                )
+                .await
+                .map_err(backend)?;
+            }
+            self.project(&mut txn, &full).await?;
+            if events.len() == 2 {
+                self.project_verified_checkpoint(&mut txn, &full, checkpoint).await?;
+            }
+            events.push(full);
+        }
+        let generation = cas_generation(&mut txn).await?;
+        txn.run(query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'publish', scopeCheckpointKey: $key, spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, writeEpoch: $write_epoch, expiresAtMs: $expires_at, eventSeq: $event_seq, plan: $plan})")
+            .param("generation", generation).param("key", checkpoint_key).param("space_id", checkpoint.scope.space_id.clone()).param("document_id", checkpoint.scope.document_id.clone()).param("checkpoint_id", hex_lower(&checkpoint.checkpoint_id.0)).param("write_epoch", token_epoch).param("expires_at", token_expiry).param("event_seq", i64::try_from(events[2].seq).map_err(backend)?).param("plan", encoded)).await.map_err(backend)?;
+        cas_project_publish(&mut txn, reservation, generation).await?;
+        let completion = document_genesis_completion_v1(&operation, append, &events)?;
+        insert_artifact_creation_fact(&mut txn, &request_key, &append.intent, &completion).await?;
+        facts.push(completion);
+        let operation = ArtifactCreationOperationV1::fold(&facts)?;
+        match txn.commit().await {
+            Ok(()) => {
+                #[cfg(test)]
+                if self.genesis_test_control.fail_commit_ack.swap(false, std::sync::atomic::Ordering::SeqCst) {
+                    return Ok(DocumentGenesisCommitV1::Indeterminate);
+                }
+                Ok(DocumentGenesisCommitV1::Committed { events, operation })
+            }
+            Err(_) => Ok(DocumentGenesisCommitV1::Indeterminate),
+        }
+    }
+
+    /// 🔁️ One attempt of [`HubDirectory::redeem_invite_atomic`]; the trait method retries it while Neo4j reports a transient fault.
+    async fn redeem_invite_atomic_attempt(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str, hlc: Hlc) -> DirectoryResult<InviteRedemptionCommit> {
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        let accepted_at_ms = now_ms();
+        let mut counter_lock = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.claimNonce = coalesce(c.claimNonce, 0) + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
+        counter_lock.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter lock returned no row".into()))?;
+        drop(counter_lock);
+        let mut invite_lock = txn.execute(query("MATCH (i:SpaceInvite {selector: $selector}) SET i.claimNonce = coalesce(i.claimNonce, 0) + 1 RETURN i AS i").param("selector", capability.selector())).await.map_err(backend)?;
+        let record = invite_lock.next(txn.handle()).await.map_err(backend)?.map(|row| invite_from_node(&row)).transpose()?;
+        drop(invite_lock);
+        let mut user_query = txn.execute(query("MATCH (u:User {id: $user_id}) RETURN count(u) AS count").param("user_id", user_id)).await.map_err(backend)?;
+        let user_exists = user_query.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get::<i64>("count").ok()).unwrap_or(0) == 1;
+        drop(user_query);
+        let space_kind: Option<String> = match record.as_ref() {
+            Some(invite) => {
+                let mut result = txn.execute(query("MATCH (s:Space {id: $space_id}) RETURN s.kind AS kind").param("space_id", invite.space_id.clone())).await.map_err(backend)?;
+                let kind = result.next(txn.handle()).await.map_err(backend)?.map(|row| row.get::<String>("kind").map_err(backend)).transpose()?;
+                drop(result);
+                kind
+            }
+            None => None,
+        };
+        let space_state = InviteRedemptionSpaceStateV1::from_kind(space_kind.as_deref())?;
+        match invite_redemption_preflight(record.as_ref(), capability, actor, user_id, user_exists, space_state, accepted_at_ms) {
+            InviteRedemptionPreflight::AlreadyCommitted => {
+                let invite = record.as_ref().expect("committed preflight requires a record");
+                let mut result = txn.execute(query("MATCH (e:DirectoryEvent {id: $event_id}) RETURN e AS e").param("event_id", invite.accepted_event_id.clone().unwrap_or_default())).await.map_err(backend)?;
+                let event = result.next(txn.handle()).await.map_err(backend)?.map(|row| event_from_node(&row)).transpose()?;
+                drop(result);
+                let event = verify_invite_redemption_event(invite, event, user_id)?;
+                txn.commit().await.map_err(backend)?;
+                return Ok(InviteRedemptionCommit::AlreadyCommitted { event });
+            }
+            InviteRedemptionPreflight::Revoked => return Err(DirectoryError::Conflict("invite already revoked".into())),
+            InviteRedemptionPreflight::Expired => return Err(DirectoryError::Conflict("invite expired".into())),
+            InviteRedemptionPreflight::Denied => return Err(DirectoryError::Unauthorized),
+            InviteRedemptionPreflight::Corrupt => return Err(DirectoryError::Backend("invite acceptance marker is incomplete".into())),
+            InviteRedemptionPreflight::Claim => {}
+        }
+        let invite = record.expect("claim preflight requires a record");
+        let id = time_ordered_id();
+        let mut claimed = txn
+            .execute(
+                query("MATCH (i:SpaceInvite {id: $invite_id}) WHERE i.acceptedAt IS NULL AND i.acceptedEventId IS NULL AND i.revokedAt IS NULL AND i.expiresAt > $accepted_at SET i.acceptedAt = $accepted_at, i.acceptedEventId = $event_id RETURN count(i) AS count")
+                    .param("invite_id", invite.id.clone())
+                    .param("accepted_at", accepted_at_ms)
+                    .param("event_id", id.clone()),
+            )
+            .await
+            .map_err(backend)?;
+        let changed = claimed.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get::<i64>("count").ok()).unwrap_or(0);
+        drop(claimed);
+        if changed != 1 {
+            return Err(DirectoryError::Backend("Neo4j invitation claim lost its transaction fence".into()));
+        }
+        let event = NewDirectoryEvent {
+            hlc,
+            actor: actor.clone(),
+            space_id: Some(invite.space_id.clone()),
+            user_id: Some(user_id.to_string()),
+            body: DirectoryEventBody::InviteRedeemed { space_id: invite.space_id, user_id: user_id.to_string(), invite_id: invite.id, role: role_to_wire(invite.role) },
+        };
+        let mut counter = txn.execute(query("MATCH (c:DirectoryCounter {id: 'singleton'}) SET c.seq = c.seq + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
+        let sequence: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter query returned no row".into()))?.get("seq").map_err(backend)?;
+        drop(counter);
+        let sequence = u64::try_from(sequence).map_err(backend)?;
+        if sequence > DIRECTORY_WIRE_INTEGER_MAX {
+            return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into()));
+        }
+        let payload_value = serde_json::Value::from(&event.body.to_value());
+        let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
+        let persisted = DirectoryEvent { seq: sequence, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms: accepted_at_ms };
+        validate_directory_event_page_event(&persisted).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
+        txn.run(
+            query("CREATE (e:DirectoryEvent {seq: $seq, id: $id, hlcPhysical: $hlc_physical, hlcLogical: $hlc_logical, actorKind: $actor_kind, actorId: $actor_id, spaceId: $space_id, userId: $user_id, kind: $kind, payload: $payload, recordedAt: $recorded_at})")
+                .param("seq", i64::try_from(sequence).map_err(backend)?)
+                .param("id", id.clone())
+                .param("hlc_physical", event.hlc.physical_ms)
+                .param("hlc_logical", i64::from(event.hlc.logical))
+                .param("actor_kind", actor_kind_to_str(event.actor.kind))
+                .param("actor_id", event.actor.id.clone())
+                .param("space_id", event.space_id.clone())
+                .param("user_id", event.user_id.clone())
+                .param("kind", kind)
+                .param("payload", payload_value.to_string())
+                .param("recorded_at", accepted_at_ms),
+        )
+        .await
+        .map_err(backend)?;
+        if let Err(error) = self.project(&mut txn, &persisted).await {
+            txn.rollback().await.map_err(backend)?;
+            return Err(error);
+        }
+        txn.commit().await.map_err(backend)?;
+        Ok(InviteRedemptionCommit::NewlyCommitted { event: persisted })
+    }
+
+    /// 🔁️ One attempt of [`HubDirectory::reserve_artifact_cas`]; the trait method retries it while Neo4j reports a transient fault.
+    async fn reserve_artifact_cas_attempt(&self, plan: &ArtifactCasOwnershipPlanV1, expires_at_ms: u64, now_ms: u64) -> DirectoryResult<ArtifactCasReservation> {
+        let encoded = encode_artifact_cas_ownership_v1(plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
+        if expires_at_ms <= now_ms || expires_at_ms.checked_sub(now_ms).is_none_or(|ttl| ttl > ARTIFACT_CAS_RESERVATION_MAX_TTL_MS) {
+            return Err(DirectoryError::Conflict(format!("artifact CAS reservation ttl must be 1..={ARTIFACT_CAS_RESERVATION_MAX_TTL_MS} milliseconds")));
+        }
+        let scope_key = checkpoint_key_v1(&plan.scope, plan.checkpoint_id);
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        let (coordinator_id, physical_epoch) = cas_reservation_barrier(&mut txn, &plan.scope.space_id, i64::try_from(now_ms).map_err(backend)?).await?;
+        let mut historical = txn.execute(query("MATCH (e:ArtifactCasLedgerEvent {scopeCheckpointKey: $key}) WHERE e.plan IS NOT NULL RETURN e.plan AS plan ORDER BY e.generation LIMIT 1").param("key", scope_key.clone())).await.map_err(backend)?;
+        if let Some(row) = historical.next(txn.handle()).await.map_err(backend)? {
+            let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
+            if stored.value.as_ref() != encoded {
+                return Err(DirectoryError::Conflict("artifact CAS checkpoint identity names a different ownership plan".into()));
+            }
+        }
+        drop(historical);
+        let mut published = txn.execute(query("MATCH (r:ArtifactCasReference {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.plan AS plan").param("key", scope_key.clone())).await.map_err(backend)?;
+        if let Some(row) = published.next(txn.handle()).await.map_err(backend)? {
+            let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
+            if stored.value.as_ref() != encoded {
+                return Err(DirectoryError::Conflict("artifact CAS published ownership conflict".into()));
+            }
+            let reservation = ArtifactCasReservation::fenced(
+                plan.clone(),
+                u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?,
+                u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?,
+                i64::MAX as u64,
+                coordinator_id,
+                physical_epoch,
+            );
+            drop(published);
+            txn.commit().await.map_err(backend)?;
+            return Ok(reservation);
+        }
+        drop(published);
+        let mut released = txn.execute(query("MATCH (e:ArtifactCasLedgerEvent {scopeCheckpointKey: $key, operation: 'publish'}) RETURN count(e) > 0 AS released").param("key", scope_key.clone())).await.map_err(backend)?;
+        let was_released: bool = released.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS released checkpoint query returned no row".into()))?.get("released").map_err(backend)?;
+        drop(released);
+        if was_released {
+            return Err(DirectoryError::Conflict("artifact CAS released checkpoint cannot be reserved again".into()));
+        }
+        let mut current = txn
+            .execute(query("MATCH (r:ArtifactCasReservation {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.expiresAtMs AS expiresAtMs, r.plan AS plan").param("key", scope_key.clone()))
+            .await
+            .map_err(backend)?;
+        if let Some(row) = current.next(txn.handle()).await.map_err(backend)? {
+            let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
+            if stored.value.as_ref() != encoded {
+                return Err(DirectoryError::Conflict("artifact CAS reservation identity conflict".into()));
+            }
+            let expiry: i64 = row.get("expiresAtMs").map_err(backend)?;
+            if expiry > i64::try_from(now_ms).map_err(backend)? {
+                let reservation = ArtifactCasReservation::fenced(
+                    plan.clone(),
+                    u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?,
+                    u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?,
+                    u64::try_from(expiry).map_err(backend)?,
+                    coordinator_id,
+                    physical_epoch,
+                );
+                drop(current);
+                txn.commit().await.map_err(backend)?;
+                return Ok(reservation);
+            }
+        }
+        drop(current);
+        let mut epoch_result = txn.execute(query("MATCH (e:ArtifactCasLedgerEvent {scopeCheckpointKey: $key}) RETURN coalesce(max(e.writeEpoch), 0) AS writeEpoch").param("key", scope_key.clone())).await.map_err(backend)?;
+        let previous_epoch: i64 = epoch_result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS write epoch query returned no row".into()))?.get("writeEpoch").map_err(backend)?;
+        drop(epoch_result);
+        let write_epoch = previous_epoch.checked_add(1).ok_or_else(|| DirectoryError::Conflict("artifact CAS write epoch overflow".into()))?;
+        let generation = cas_generation(&mut txn).await?;
+        txn.run(query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'reserve', scopeCheckpointKey: $key, spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, writeEpoch: $write_epoch, expiresAtMs: $expires_at, plan: $plan})")
+            .param("generation", generation).param("key", scope_key).param("space_id", plan.scope.space_id.clone()).param("document_id", plan.scope.document_id.clone()).param("checkpoint_id", hex_lower(&plan.checkpoint_id.0)).param("write_epoch", write_epoch).param("expires_at", i64::try_from(expires_at_ms).map_err(backend)?).param("plan", encoded)).await.map_err(backend)?;
+        let reservation = ArtifactCasReservation::fenced(plan.clone(), u64::try_from(generation).map_err(backend)?, u64::try_from(write_epoch).map_err(backend)?, expires_at_ms, coordinator_id, physical_epoch);
+        cas_project_reserve(&mut txn, &reservation).await?;
+        txn.commit().await.map_err(backend)?;
+        Ok(reservation)
+    }
+
+    /// 🔁️ One attempt of [`HubDirectory::append_reserved_artifact_checkpoint`]; the trait method retries it while Neo4j reports a transient fault.
+    async fn append_reserved_artifact_checkpoint_attempt(
+        &self,
+        event: Option<&NewDirectoryEvent>,
+        checkpoint: &ArtifactCheckpoint,
+        reservation: &ArtifactCasReservation,
+        completion: Option<&CheckpointPublicationCompletionV1>,
+        current_now_ms: u64,
+    ) -> DirectoryResult<Vec<DirectoryEvent>> {
+        if checkpoint.parent_checkpoint_id.is_none() || !checkpoint.baseline_frontier.is_edited_for(&checkpoint.scope) {
+            return Err(DirectoryError::Conflict("ordinary artifact checkpoint publication requires established edited lineage".into()));
+        }
+        validate_artifact_cas_publication_v1(&reservation.plan, checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
+        if let Some(event) = event {
+            validate_verified_checkpoint_append(event, checkpoint)?;
+        }
+        let scope_key = checkpoint_key_v1(&reservation.plan.scope, reservation.plan.checkpoint_id);
+        let encoded = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        if cas_lock_space(&mut txn, &reservation.plan.scope.space_id).await? > i64::try_from(current_now_ms).map_err(backend)? {
+            return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into()));
+        }
+        let mut published = txn.execute(query("MATCH (r:ArtifactCasReference {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.plan AS plan").param("key", scope_key.clone())).await.map_err(backend)?;
+        if let Some(row) = published.next(txn.handle()).await.map_err(backend)? {
+            let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
+            if event.is_some()
+                || row.get::<i64>("generation").map_err(backend)? != i64::try_from(reservation.generation).map_err(backend)?
+                || row.get::<i64>("writeEpoch").map_err(backend)? != i64::try_from(reservation.write_epoch).map_err(backend)?
+                || stored.value.as_ref() != encoded
+            {
+                return Err(DirectoryError::Conflict("artifact CAS published reservation conflict".into()));
+            }
+            return Ok(Vec::new());
+        }
+        drop(published);
+        let mut current = txn
+            .execute(query("MATCH (r:ArtifactCasReservation {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.expiresAtMs AS expiresAtMs, r.plan AS plan").param("key", scope_key.clone()))
+            .await
+            .map_err(backend)?;
+        let row = current.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("artifact CAS reservation is missing, expired, or superseded".into()))?;
+        let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
+        if row.get::<i64>("generation").map_err(backend)? != i64::try_from(reservation.generation).map_err(backend)?
+            || row.get::<i64>("writeEpoch").map_err(backend)? != i64::try_from(reservation.write_epoch).map_err(backend)?
+            || row.get::<i64>("expiresAtMs").map_err(backend)? != i64::try_from(reservation.expires_at_ms).map_err(backend)?
+            || reservation.expires_at_ms <= current_now_ms
+            || stored.value.as_ref() != encoded
+        {
+            return Err(DirectoryError::Conflict("artifact CAS reservation is missing, expired, or superseded".into()));
+        }
+        drop(current);
+        let event = event.ok_or_else(|| DirectoryError::Conflict("new artifact CAS publication requires one public event".into()))?;
+        let id = time_ordered_id();
+        let recorded_at_ms = now_ms();
+        let payload_value = serde_json::Value::from(&event.body.to_value());
+        let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
+        let mut counter = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.seq = c.seq + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
+        let seq: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter query returned no row".into()))?.get("seq").map_err(backend)?;
+        drop(counter);
+        let public_seq = u64::try_from(seq).map_err(backend)?;
+        if public_seq > DIRECTORY_WIRE_INTEGER_MAX {
+            return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into()));
+        }
+        let full = DirectoryEvent { seq: public_seq, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
+        validate_directory_event_page_event(&full).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
+        txn.run(query("CREATE (e:DirectoryEvent {seq: $seq, id: $id, hlcPhysical: $hlc_physical, hlcLogical: $hlc_logical, actorKind: $actor_kind, actorId: $actor_id, spaceId: $space_id, userId: $user_id, kind: $kind, payload: $payload, recordedAt: $recorded_at})")
+            .param("seq", seq).param("id", id.clone()).param("hlc_physical", event.hlc.physical_ms).param("hlc_logical", i64::from(event.hlc.logical)).param("actor_kind", actor_kind_to_str(event.actor.kind)).param("actor_id", event.actor.id.clone()).param("space_id", event.space_id.clone()).param("user_id", event.user_id.clone()).param("kind", kind).param("payload", payload_value.to_string()).param("recorded_at", recorded_at_ms)).await.map_err(backend)?;
+        txn.run(
+            query("CREATE (:ArtifactAuthorityEvent {eventSeq: $event_seq, scopeCheckpointKey: $key, payload: $payload})").param("event_seq", seq).param("key", scope_key.clone()).param("payload", directory::os_pack::json::to_json_string(checkpoint)),
+        )
+        .await
+        .map_err(backend)?;
+        self.project(&mut txn, &full).await?;
+        self.project_verified_checkpoint(&mut txn, &full, checkpoint).await?;
+        let generation = cas_generation(&mut txn).await?;
+        txn.run(query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'publish', scopeCheckpointKey: $key, spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, writeEpoch: $write_epoch, expiresAtMs: $expires_at, eventSeq: $event_seq, plan: $plan})")
+            .param("generation", generation).param("key", scope_key).param("space_id", reservation.plan.scope.space_id.clone()).param("document_id", reservation.plan.scope.document_id.clone()).param("checkpoint_id", hex_lower(&reservation.plan.checkpoint_id.0)).param("write_epoch", i64::try_from(reservation.write_epoch).map_err(backend)?).param("expires_at", i64::try_from(reservation.expires_at_ms).map_err(backend)?).param("event_seq", seq).param("plan", encoded)).await.map_err(backend)?;
+        cas_project_publish(&mut txn, reservation, generation).await?;
+        if let Some(completion) = completion {
+            validate_checkpoint_publication_completion(completion)?;
+            let mut updated = txn
+                .execute(
+                    query("MATCH (r:CheckpointPublicationReceipt {key: $key, commandSha256: $command_sha256, disposition: 'pending'}) SET r.disposition = 'completed', r.checkpointId = $checkpoint_id, r.completedAt = $completed_at RETURN count(r) AS changed")
+                        .param("key", checkpoint_publication_receipt_key(&completion.actor_user_id, &completion.correlation_id))
+                        .param("command_sha256", completion.command_sha256.clone())
+                        .param("checkpoint_id", hex_lower(&completion.checkpoint_id.0))
+                        .param("completed_at", completion.completed_at),
+                )
+                .await
+                .map_err(backend)?;
+            let changed = updated.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("checkpoint publication completion returned no row".into()))?.get::<i64>("changed").map_err(backend)?;
+            drop(updated);
+            if changed != 1 {
+                return Err(DirectoryError::Conflict("checkpoint publication claim is missing, substituted, or already completed".into()));
+            }
+        }
+        txn.commit().await.map_err(backend)?;
+        Ok(vec![full])
+    }
+
+    /// 🔁️ One attempt of [`HubDirectory::append_decided_events`]; the trait method retries it while Neo4j reports a transient fault.
+    async fn append_decided_events_attempt(&self, events: &[NewDirectoryEvent]) -> DirectoryResult<DirectoryAppendOutcomeV1> {
+        if events.iter().any(|event| matches!(&event.body, DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::InviteRedeemed { .. })) {
+            return Err(DirectoryError::Conflict("event requires its verified authority append seam".into()));
+        }
+        let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        let mut persisted = Vec::with_capacity(events.len());
+        for event in events {
+            let id = time_ordered_id();
+            let recorded_at_ms = now_ms();
+            let payload_value = serde_json::Value::from(&event.body.to_value());
+            let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
+            let mut counter = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.seq = c.seq + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
+            let seq: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter query returned no row".into()))?.get("seq").map_err(backend)?;
+            drop(counter);
+            let seq = u64::try_from(seq).map_err(backend)?;
+            if let Some(reason) = self.projection_rejection(&mut txn, &event.body).await? {
+                txn.rollback().await.map_err(backend)?;
+                return Ok(DirectoryAppendOutcomeV1::RejectedBeforeCommit(reason));
+            }
+            if seq > DIRECTORY_WIRE_INTEGER_MAX {
+                return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into()));
+            }
+            let full = DirectoryEvent { seq, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
+            validate_directory_event_page_event(&full).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
+            txn.run(
+                query(
+                    "CREATE (e:DirectoryEvent {seq: $seq, id: $id, hlcPhysical: $hlc_physical, hlcLogical: $hlc_logical, actorKind: $actor_kind, actorId: $actor_id,
+                                                spaceId: $space_id, userId: $user_id, kind: $kind, payload: $payload, recordedAt: $recorded_at})",
+                )
+                .param("seq", i64::try_from(seq).map_err(backend)?)
+                .param("id", id.clone())
+                .param("hlc_physical", event.hlc.physical_ms)
+                .param("hlc_logical", event.hlc.logical as i64)
+                .param("actor_kind", actor_kind_to_str(event.actor.kind))
+                .param("actor_id", event.actor.id.clone())
+                .param("space_id", event.space_id.clone())
+                .param("user_id", event.user_id.clone())
+                .param("kind", kind)
+                .param("payload", payload_value.to_string())
+                .param("recorded_at", recorded_at_ms),
+            )
+            .await
+            .map_err(backend)?;
+            self.project(&mut txn, &full).await?;
+            match &full.body {
+                DirectoryEventBody::ArtifactRetentionAdvanced { retention } => {
+                    let generation = cas_generation(&mut txn).await?;
+                    txn.run(
+                        query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'retention', spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, eventSeq: $event_seq})")
+                            .param("generation", generation)
+                            .param("space_id", retention.scope.space_id.clone())
+                            .param("document_id", retention.scope.document_id.clone())
+                            .param("checkpoint_id", hex_lower(&retention.retained_checkpoint_id.0))
+                            .param("event_seq", i64::try_from(seq).map_err(backend)?),
+                    )
+                    .await
+                    .map_err(backend)?;
+                    cas_project_release(&mut txn, "retention", &retention.scope.space_id, Some(&retention.scope), Some(retention.retained_checkpoint_id)).await?;
+                }
+                DirectoryEventBody::SpaceDeleted { space_id } => {
+                    let generation = cas_generation(&mut txn).await?;
+                    txn.run(
+                        query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'space-delete', spaceId: $space_id, eventSeq: $event_seq})")
+                            .param("generation", generation)
+                            .param("space_id", space_id.clone())
+                            .param("event_seq", i64::try_from(seq).map_err(backend)?),
+                    )
+                    .await
+                    .map_err(backend)?;
+                    cas_project_release(&mut txn, "space-delete", space_id, None, None).await?;
+                }
+                _ => {}
+            }
+            persisted.push(full);
+        }
+        txn.commit().await.map_err(backend)?;
+        Ok(DirectoryAppendOutcomeV1::Appended(persisted))
+    }
+}
+
 #[cfg(test)]
 struct ArtifactGenesisTestControlV1 {
     pause_before_authority: std::sync::atomic::AtomicBool,
@@ -417,6 +1041,21 @@ impl Neo4jDirectory {
         let graph = Graph::new(uri, user, password).await.map_err(backend)?;
         for statement in CONSTRAINTS {
             graph.run(query(statement)).await.map_err(backend)?;
+        }
+        let mut stamp_result = graph.execute(query("MATCH (f:DirectoryFormat {id: 'singleton'}) RETURN f.schema AS schema, f.version AS version")).await.map_err(backend)?;
+        let stamp = match stamp_result.next().await.map_err(backend)? {
+            Some(row) => Some((row.get::<String>("schema").map_err(backend)?, row.get::<i64>("version").map_err(backend)?)),
+            None => None,
+        };
+        drop(stamp_result);
+        let mut event_result = graph.execute(query("MATCH (e:DirectoryEvent) RETURN count(e) AS count")).await.map_err(backend)?;
+        let events: i64 = event_result.next().await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory event count returned no row".into()))?.get("count").map_err(backend)?;
+        drop(event_result);
+        if admit_directory_format(stamp, events > 0, "Neo4j")? == DirectoryFormatAdmission::Stamp {
+            graph
+                .run(query("MERGE (f:DirectoryFormat {id: 'singleton'}) ON CREATE SET f.schema = $schema, f.version = $version").param("schema", DIRECTORY_FORMAT_SCHEMA).param("version", DIRECTORY_FORMAT_VERSION))
+                .await
+                .map_err(backend)?;
         }
         let mut identity = Sha256::new();
         identity.update(b"semio.hub.artifact-cas.barrier-identity.v1\0");
@@ -851,57 +1490,14 @@ impl Neo4jDirectory {
 
 impl HubDirectory for Neo4jDirectory {
     async fn claim_artifact_creation(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<ArtifactCreationClaimV1> {
-        intent.validate()?;
-        let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        let request_key = lock_artifact_creation_request(&mut txn, &intent.actor.user_id, &intent.request.request_id).await?;
-        let observed_now = validate_artifact_creation_authority(&mut txn, &intent.actor, &intent.scope.space_id, None).await?;
-        if intent.accepted_at_ms > observed_now || observed_now >= intent.deadline_ms {
-            return Err(DirectoryError::Conflict("artifact creation acceptance is outside its live server deadline".into()));
-        }
-        let facts = artifact_creation_facts(&mut txn, &request_key).await?;
-        if !facts.is_empty() {
-            let operation = ArtifactCreationOperationV1::fold(&facts)?;
-            if operation.intent.command_sha256 != intent.command_sha256 || operation.intent.scope.space_id != intent.scope.space_id {
-                return Err(DirectoryError::Conflict("artifact creation request is already bound to another intent".into()));
+        let mut attempt = 0u32;
+        loop {
+            let outcome = self.claim_artifact_creation_attempt(intent).await;
+            match outcome {
+                Err(error) if neo4j_transient_retry_pause(&error, &mut attempt).await => continue,
+                outcome => return outcome,
             }
-            txn.commit().await.map_err(backend)?;
-            return Ok(ArtifactCreationClaimV1::Existing(operation));
         }
-        let scope_key = document_scope_key_v1(&intent.scope);
-        let mut occupied = txn
-            .execute(
-                query("OPTIONAL MATCH (d:DocumentDescriptor {scopeKey: $scope_key}) OPTIONAL MATCH (f:ArtifactCreationFact {spaceId: $space_id, documentId: $document_id, revision: 1}) RETURN count(d) + count(f) AS count")
-                    .param("scope_key", scope_key)
-                    .param("space_id", intent.scope.space_id.clone())
-                    .param("document_id", intent.scope.document_id.clone()),
-            )
-            .await
-            .map_err(backend)?;
-        let count: i64 = occupied.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact creation occupancy returned no row".into()))?.get("count").map_err(backend)?;
-        drop(occupied);
-        if count != 0 {
-            return Err(DirectoryError::Conflict("artifact creation document identity is already occupied".into()));
-        }
-        txn.run(
-            query("MATCH (r:ArtifactCreationRequest {key: $key}) SET r.documentScopeKey = $scope_key, r.spaceId = $space_id, r.documentId = $document_id")
-                .param("key", request_key.clone())
-                .param("scope_key", document_scope_key_v1(&intent.scope))
-                .param("space_id", intent.scope.space_id.clone())
-                .param("document_id", intent.scope.document_id.clone()),
-        )
-        .await
-        .map_err(backend)?;
-        let fact = ArtifactCreationFactV1 {
-            actor_user_id: intent.actor.user_id.clone(),
-            request_id: intent.request.request_id.clone(),
-            revision: 1,
-            recorded_at_ms: intent.accepted_at_ms,
-            body: ArtifactCreationFactBodyV1::Accepted { intent: intent.clone() },
-        };
-        let operation = ArtifactCreationOperationV1::fold(std::slice::from_ref(&fact))?;
-        insert_artifact_creation_fact(&mut txn, &request_key, intent, &fact).await?;
-        txn.commit().await.map_err(backend)?;
-        Ok(ArtifactCreationClaimV1::Accepted(operation))
     }
 
     async fn read_artifact_creation(&self, actor_user_id: &str, request_id: &str) -> DirectoryResult<Vec<ArtifactCreationFactV1>> {
@@ -915,58 +1511,25 @@ impl HubDirectory for Neo4jDirectory {
     }
 
     async fn append_artifact_creation_fact(&self, append: &ArtifactCreationFactAppendV1) -> DirectoryResult<ArtifactCreationOperationV1> {
-        let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        let request_key = lock_artifact_creation_request(&mut txn, &append.actor.user_id, &append.request_id).await?;
-        let observed_now = validate_artifact_creation_authority(&mut txn, &append.actor, &append.space_id, None).await?;
-        let mut facts = artifact_creation_facts(&mut txn, &request_key).await?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        if append.recorded_at_ms > observed_now || matches!(append.body, ArtifactCreationFactBodyV1::Prepared { .. }) && observed_now >= operation.intent.deadline_ms {
-            return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into()));
+        let mut attempt = 0u32;
+        loop {
+            let outcome = self.append_artifact_creation_fact_attempt(append).await;
+            match outcome {
+                Err(error) if neo4j_transient_retry_pause(&error, &mut attempt).await => continue,
+                outcome => return outcome,
+            }
         }
-        if let Some(next) = decide_artifact_creation_fact_append_v1(&facts, append, observed_now)? {
-            insert_artifact_creation_fact(&mut txn, &request_key, &operation.intent, &next).await?;
-            facts.push(next);
-        }
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        txn.commit().await.map_err(backend)?;
-        Ok(operation)
     }
 
     async fn artifact_creation_terminate_uncommitted(&self, intent: &ArtifactCreationIntentV1, current_now_ms: u64) -> DirectoryResult<ArtifactCreationOperationV1> {
-        intent.validate()?;
-        let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        let request_key = lock_artifact_creation_request(&mut txn, &intent.actor.user_id, &intent.request.request_id).await?;
-        let mut facts = artifact_creation_facts(&mut txn, &request_key).await?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        if operation.intent != *intent {
-            return Err(DirectoryError::Conflict("artifact creation supervisor intent differs".into()));
-        }
-        if operation.receipt.is_some()
-            || matches!(operation.phase, directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Cancelled | directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Failed)
-        {
-            txn.commit().await.map_err(backend)?;
-            return Ok(operation);
-        }
-        let authority = validate_artifact_creation_authority(&mut txn, &intent.actor, &intent.scope.space_id, None).await;
-        let observed_now = match authority {
-            Ok(observed_now) => {
-                if observed_now < intent.deadline_ms {
-                    return Err(DirectoryError::Conflict("artifact creation still has live execution authority".into()));
-                }
-                observed_now
+        let mut attempt = 0u32;
+        loop {
+            let outcome = self.artifact_creation_terminate_uncommitted_attempt(intent, current_now_ms).await;
+            match outcome {
+                Err(error) if neo4j_transient_retry_pause(&error, &mut attempt).await => continue,
+                outcome => return outcome,
             }
-            Err(DirectoryError::Unauthorized) => u64::try_from(now_ms()).map_err(backend)?,
-            Err(error) => return Err(error),
-        };
-        if current_now_ms > observed_now {
-            return Err(DirectoryError::Conflict("artifact creation supervisor clock is in the future".into()));
         }
-        let next = ArtifactCreationFactV1 { actor_user_id: intent.actor.user_id.clone(), request_id: intent.request.request_id.clone(), revision: operation.revision + 1, recorded_at_ms: observed_now, body: ArtifactCreationFactBodyV1::Failed };
-        facts.push(next.clone());
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        insert_artifact_creation_fact(&mut txn, &request_key, intent, &next).await?;
-        txn.commit().await.map_err(backend)?;
-        Ok(operation)
     }
 
     async fn artifact_creation_recovery_candidates(&self, current_now_ms: u64, limit: usize) -> DirectoryResult<Vec<ArtifactCreationIntentV1>> {
@@ -1002,124 +1565,13 @@ impl HubDirectory for Neo4jDirectory {
     }
 
     async fn append_document_genesis(&self, append: &DocumentGenesisAppendV1) -> DirectoryResult<DocumentGenesisCommitV1> {
-        append.intent.validate()?;
-        let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        let request_key = lock_artifact_creation_request(&mut txn, &append.intent.actor.user_id, &append.intent.request.request_id).await?;
-        let lease_expires_at_ms = cas_lock_space(&mut txn, &append.intent.scope.space_id).await?;
-        let mut writer = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.claimNonce = coalesce(c.claimNonce, 0) + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
-        writer.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory writer lock returned no row".into()))?;
-        drop(writer);
-        #[cfg(test)]
-        let observed_now_override = self.pause_genesis_before_authority_for_test().await;
-        #[cfg(not(test))]
-        let observed_now_override = None;
-        let observed_now = validate_artifact_creation_authority(&mut txn, &append.intent.actor, &append.intent.scope.space_id, observed_now_override).await?;
-        let mut facts = artifact_creation_facts(&mut txn, &request_key).await?;
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        if operation.intent != append.intent {
-            return Err(DirectoryError::Conflict("genesis creation accepted identity differs".into()));
-        }
-        if operation.receipt.is_some() {
-            txn.commit().await.map_err(backend)?;
-            return Ok(DocumentGenesisCommitV1::Existing(operation));
-        }
-        if append.now_ms > observed_now || observed_now >= append.intent.deadline_ms {
-            return Err(DirectoryError::Conflict("genesis publication is outside its live server deadline".into()));
-        }
-        validate_document_genesis_append_v1(&operation, append)?;
-        let checkpoint = &append.checkpoint;
-        let reservation = &append.reservation;
-        let encoded = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
-        let current_now = i64::try_from(observed_now).map_err(backend)?;
-        let token_generation = i64::try_from(reservation.generation).map_err(backend)?;
-        let token_epoch = i64::try_from(reservation.write_epoch).map_err(backend)?;
-        let token_expiry = i64::try_from(reservation.expires_at_ms).map_err(backend)?;
-        if lease_expires_at_ms > current_now {
-            return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into()));
-        }
-        let scope_key = document_scope_key_v1(&checkpoint.scope);
-        let mut occupied = txn.execute(query("OPTIONAL MATCH (d:DocumentDescriptor {scopeKey: $scope_key}) OPTIONAL MATCH (i:DocumentIndex {scopeKey: $scope_key}) OPTIONAL MATCH (c:ArtifactCheckpoint {spaceId: $space_id, documentId: $document_id}) RETURN count(d) + count(i) + count(c) AS count")
-            .param("scope_key", scope_key).param("space_id", checkpoint.scope.space_id.clone()).param("document_id", checkpoint.scope.document_id.clone())).await.map_err(backend)?;
-        let count: i64 = occupied.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("genesis public occupancy returned no row".into()))?.get("count").map_err(backend)?;
-        drop(occupied);
-        if count != 0 {
-            return Err(DirectoryError::Conflict("genesis scope is already publicly occupied".into()));
-        }
-        let mut published = txn
-            .execute(query("MATCH (r:ArtifactCasReference {spaceId: $space_id, documentId: $document_id}) RETURN count(r) AS count").param("space_id", checkpoint.scope.space_id.clone()).param("document_id", checkpoint.scope.document_id.clone()))
-            .await
-            .map_err(backend)?;
-        let published_count: i64 = published.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("genesis CAS reference count returned no row".into()))?.get("count").map_err(backend)?;
-        drop(published);
-        if published_count != 0 {
-            return Err(DirectoryError::Conflict("genesis scope has a CAS reference without its creation receipt".into()));
-        }
-        let checkpoint_key = checkpoint_key_v1(&checkpoint.scope, checkpoint.checkpoint_id);
-        let mut current = txn
-            .execute(query("MATCH (r:ArtifactCasReservation {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.expiresAtMs AS expiresAtMs, r.plan AS plan").param("key", checkpoint_key.clone()))
-            .await
-            .map_err(backend)?;
-        let row = current.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("genesis CAS reservation is missing, expired or substituted".into()))?;
-        let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
-        if row.get::<i64>("generation").map_err(backend)? != token_generation
-            || row.get::<i64>("writeEpoch").map_err(backend)? != token_epoch
-            || row.get::<i64>("expiresAtMs").map_err(backend)? != token_expiry
-            || token_expiry <= current_now
-            || stored.value.as_ref() != encoded
-        {
-            return Err(DirectoryError::Conflict("genesis CAS reservation is missing, expired or substituted".into()));
-        }
-        drop(current);
-        let mut events = Vec::with_capacity(3);
-        for event in &append.events {
-            let id = time_ordered_id();
-            let recorded_at_ms = now_ms();
-            let payload = serde_json::Value::from(&event.body.to_value());
-            let kind = payload.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
-            let mut counter = txn.execute(query("MATCH (c:DirectoryCounter {id: 'singleton'}) SET c.seq = c.seq + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
-            let sequence: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter returned no row".into()))?.get("seq").map_err(backend)?;
-            drop(counter);
-            let seq = u64::try_from(sequence).map_err(backend)?;
-            if seq > DIRECTORY_WIRE_INTEGER_MAX {
-                return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into()));
+        let mut attempt = 0u32;
+        loop {
+            let outcome = self.append_document_genesis_attempt(append).await;
+            match outcome {
+                Err(error) if neo4j_transient_retry_pause(&error, &mut attempt).await => continue,
+                outcome => return outcome,
             }
-            let full = DirectoryEvent { seq, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
-            validate_directory_event_page_event(&full).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
-            txn.run(query("CREATE (e:DirectoryEvent {seq: $seq, id: $id, hlcPhysical: $hlc_physical, hlcLogical: $hlc_logical, actorKind: $actor_kind, actorId: $actor_id, spaceId: $space_id, userId: $user_id, kind: $kind, payload: $payload, recordedAt: $recorded_at})")
-                .param("seq", sequence).param("id", id).param("hlc_physical", event.hlc.physical_ms).param("hlc_logical", i64::from(event.hlc.logical)).param("actor_kind", actor_kind_to_str(event.actor.kind)).param("actor_id", event.actor.id.clone()).param("space_id", event.space_id.clone()).param("user_id", event.user_id.clone()).param("kind", kind).param("payload", payload.to_string()).param("recorded_at", recorded_at_ms)).await.map_err(backend)?;
-            if events.len() == 2 {
-                txn.run(
-                    query("CREATE (:ArtifactAuthorityEvent {eventSeq: $event_seq, scopeCheckpointKey: $key, payload: $payload})")
-                        .param("event_seq", sequence)
-                        .param("key", checkpoint_key.clone())
-                        .param("payload", directory::os_pack::json::to_json_string(checkpoint)),
-                )
-                .await
-                .map_err(backend)?;
-            }
-            self.project(&mut txn, &full).await?;
-            if events.len() == 2 {
-                self.project_verified_checkpoint(&mut txn, &full, checkpoint).await?;
-            }
-            events.push(full);
-        }
-        let generation = cas_generation(&mut txn).await?;
-        txn.run(query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'publish', scopeCheckpointKey: $key, spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, writeEpoch: $write_epoch, expiresAtMs: $expires_at, eventSeq: $event_seq, plan: $plan})")
-            .param("generation", generation).param("key", checkpoint_key).param("space_id", checkpoint.scope.space_id.clone()).param("document_id", checkpoint.scope.document_id.clone()).param("checkpoint_id", hex_lower(&checkpoint.checkpoint_id.0)).param("write_epoch", token_epoch).param("expires_at", token_expiry).param("event_seq", i64::try_from(events[2].seq).map_err(backend)?).param("plan", encoded)).await.map_err(backend)?;
-        cas_project_publish(&mut txn, reservation, generation).await?;
-        let completion = document_genesis_completion_v1(&operation, append, &events)?;
-        insert_artifact_creation_fact(&mut txn, &request_key, &append.intent, &completion).await?;
-        facts.push(completion);
-        let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        match txn.commit().await {
-            Ok(()) => {
-                #[cfg(test)]
-                if self.genesis_test_control.fail_commit_ack.swap(false, std::sync::atomic::Ordering::SeqCst) {
-                    return Ok(DocumentGenesisCommitV1::Indeterminate);
-                }
-                Ok(DocumentGenesisCommitV1::Committed { events, operation })
-            }
-            Err(_) => Ok(DocumentGenesisCommitV1::Indeterminate),
         }
     }
 
@@ -1445,8 +1897,8 @@ impl HubDirectory for Neo4jDirectory {
                       CALL { WITH s OPTIONAL MATCH (:User)-[membership:MEMBER_OF]->(s) RETURN count(membership) AS memberCount }
                       CALL { WITH s OPTIONAL MATCH (s)-[:CONTAINS_DOCUMENT]->(document:DocumentDescriptor) RETURN count(document) AS documentCount }
                       CALL { WITH s OPTIONAL MATCH (session:SyncSession {spaceId: s.id}) WHERE session.disconnectedAt IS NULL RETURN count(session) AS activeConnections }
-                      CALL { WITH s OPTIONAL MATCH (event:DirectoryEvent {spaceId: s.id}) RETURN coalesce(max(event.recordedAt), s.createdAt) AS updatedAt }
-                      RETURN s AS s, memberCount, documentCount, activeConnections, updatedAt ORDER BY s.id";
+                      CALL { WITH s OPTIONAL MATCH (event:DirectoryEvent {spaceId: s.id}) RETURN max(event.recordedAt) AS lastEventAt }
+                      RETURN s AS s, memberCount, documentCount, activeConnections, coalesce(lastEventAt, s.createdAt) AS updatedAt ORDER BY s.id";
         let mut result = self.graph.execute(query(cypher).param("space_id", space_id.map(str::to_string)).param("offset", i64::try_from(offset).map_err(backend)?).param("limit", i64::try_from(limit).map_err(backend)?)).await.map_err(backend)?;
         let mut summaries = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
@@ -2110,99 +2562,14 @@ impl HubDirectory for Neo4jDirectory {
     }
 
     async fn redeem_invite_atomic(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str, hlc: Hlc) -> DirectoryResult<InviteRedemptionCommit> {
-        let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        let accepted_at_ms = now_ms();
-        let mut counter_lock = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.claimNonce = coalesce(c.claimNonce, 0) + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
-        counter_lock.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter lock returned no row".into()))?;
-        drop(counter_lock);
-        let mut invite_lock = txn.execute(query("MATCH (i:SpaceInvite {selector: $selector}) SET i.claimNonce = coalesce(i.claimNonce, 0) + 1 RETURN i AS i").param("selector", capability.selector())).await.map_err(backend)?;
-        let record = invite_lock.next(txn.handle()).await.map_err(backend)?.map(|row| invite_from_node(&row)).transpose()?;
-        drop(invite_lock);
-        let mut user_query = txn.execute(query("MATCH (u:User {id: $user_id}) RETURN count(u) AS count").param("user_id", user_id)).await.map_err(backend)?;
-        let user_exists = user_query.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get::<i64>("count").ok()).unwrap_or(0) == 1;
-        drop(user_query);
-        let space_kind: Option<String> = match record.as_ref() {
-            Some(invite) => {
-                let mut result = txn.execute(query("MATCH (s:Space {id: $space_id}) RETURN s.kind AS kind").param("space_id", invite.space_id.clone())).await.map_err(backend)?;
-                let kind = result.next(txn.handle()).await.map_err(backend)?.map(|row| row.get::<String>("kind").map_err(backend)).transpose()?;
-                drop(result);
-                kind
+        let mut attempt = 0u32;
+        loop {
+            let outcome = self.redeem_invite_atomic_attempt(capability, actor, user_id, hlc).await;
+            match outcome {
+                Err(error) if neo4j_transient_retry_pause(&error, &mut attempt).await => continue,
+                outcome => return outcome,
             }
-            None => None,
-        };
-        let space_state = InviteRedemptionSpaceStateV1::from_kind(space_kind.as_deref())?;
-        match invite_redemption_preflight(record.as_ref(), capability, actor, user_id, user_exists, space_state, accepted_at_ms) {
-            InviteRedemptionPreflight::AlreadyCommitted => {
-                let invite = record.as_ref().expect("committed preflight requires a record");
-                let mut result = txn.execute(query("MATCH (e:DirectoryEvent {id: $event_id}) RETURN e AS e").param("event_id", invite.accepted_event_id.clone().unwrap_or_default())).await.map_err(backend)?;
-                let event = result.next(txn.handle()).await.map_err(backend)?.map(|row| event_from_node(&row)).transpose()?;
-                drop(result);
-                let event = verify_invite_redemption_event(invite, event, user_id)?;
-                txn.commit().await.map_err(backend)?;
-                return Ok(InviteRedemptionCommit::AlreadyCommitted { event });
-            }
-            InviteRedemptionPreflight::Revoked => return Err(DirectoryError::Conflict("invite already revoked".into())),
-            InviteRedemptionPreflight::Expired => return Err(DirectoryError::Conflict("invite expired".into())),
-            InviteRedemptionPreflight::Denied => return Err(DirectoryError::Unauthorized),
-            InviteRedemptionPreflight::Corrupt => return Err(DirectoryError::Backend("invite acceptance marker is incomplete".into())),
-            InviteRedemptionPreflight::Claim => {}
         }
-        let invite = record.expect("claim preflight requires a record");
-        let id = time_ordered_id();
-        let mut claimed = txn
-            .execute(
-                query("MATCH (i:SpaceInvite {id: $invite_id}) WHERE i.acceptedAt IS NULL AND i.acceptedEventId IS NULL AND i.revokedAt IS NULL AND i.expiresAt > $accepted_at SET i.acceptedAt = $accepted_at, i.acceptedEventId = $event_id RETURN count(i) AS count")
-                    .param("invite_id", invite.id.clone())
-                    .param("accepted_at", accepted_at_ms)
-                    .param("event_id", id.clone()),
-            )
-            .await
-            .map_err(backend)?;
-        let changed = claimed.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get::<i64>("count").ok()).unwrap_or(0);
-        drop(claimed);
-        if changed != 1 {
-            return Err(DirectoryError::Backend("Neo4j invitation claim lost its transaction fence".into()));
-        }
-        let event = NewDirectoryEvent {
-            hlc,
-            actor: actor.clone(),
-            space_id: Some(invite.space_id.clone()),
-            user_id: Some(user_id.to_string()),
-            body: DirectoryEventBody::InviteRedeemed { space_id: invite.space_id, user_id: user_id.to_string(), invite_id: invite.id, role: role_to_wire(invite.role) },
-        };
-        let mut counter = txn.execute(query("MATCH (c:DirectoryCounter {id: 'singleton'}) SET c.seq = c.seq + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
-        let sequence: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter query returned no row".into()))?.get("seq").map_err(backend)?;
-        drop(counter);
-        let sequence = u64::try_from(sequence).map_err(backend)?;
-        if sequence > DIRECTORY_WIRE_INTEGER_MAX {
-            return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into()));
-        }
-        let payload_value = serde_json::Value::from(&event.body.to_value());
-        let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
-        let persisted = DirectoryEvent { seq: sequence, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms: accepted_at_ms };
-        validate_directory_event_page_event(&persisted).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
-        txn.run(
-            query("CREATE (e:DirectoryEvent {seq: $seq, id: $id, hlcPhysical: $hlc_physical, hlcLogical: $hlc_logical, actorKind: $actor_kind, actorId: $actor_id, spaceId: $space_id, userId: $user_id, kind: $kind, payload: $payload, recordedAt: $recorded_at})")
-                .param("seq", i64::try_from(sequence).map_err(backend)?)
-                .param("id", id.clone())
-                .param("hlc_physical", event.hlc.physical_ms)
-                .param("hlc_logical", i64::from(event.hlc.logical))
-                .param("actor_kind", actor_kind_to_str(event.actor.kind))
-                .param("actor_id", event.actor.id.clone())
-                .param("space_id", event.space_id.clone())
-                .param("user_id", event.user_id.clone())
-                .param("kind", kind)
-                .param("payload", payload_value.to_string())
-                .param("recorded_at", accepted_at_ms),
-        )
-        .await
-        .map_err(backend)?;
-        if let Err(error) = self.project(&mut txn, &persisted).await {
-            txn.rollback().await.map_err(backend)?;
-            return Err(error);
-        }
-        txn.commit().await.map_err(backend)?;
-        Ok(InviteRedemptionCommit::NewlyCommitted { event: persisted })
     }
 
     async fn revoke_invite_as(&self, space_id: &str, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
@@ -2455,82 +2822,14 @@ impl HubDirectory for Neo4jDirectory {
     //#endregion
 
     async fn reserve_artifact_cas(&self, plan: &ArtifactCasOwnershipPlanV1, expires_at_ms: u64, now_ms: u64) -> DirectoryResult<ArtifactCasReservation> {
-        let encoded = encode_artifact_cas_ownership_v1(plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
-        if expires_at_ms <= now_ms || expires_at_ms.checked_sub(now_ms).is_none_or(|ttl| ttl > ARTIFACT_CAS_RESERVATION_MAX_TTL_MS) {
-            return Err(DirectoryError::Conflict(format!("artifact CAS reservation ttl must be 1..={ARTIFACT_CAS_RESERVATION_MAX_TTL_MS} milliseconds")));
-        }
-        let scope_key = checkpoint_key_v1(&plan.scope, plan.checkpoint_id);
-        let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        let (coordinator_id, physical_epoch) = cas_reservation_barrier(&mut txn, &plan.scope.space_id, i64::try_from(now_ms).map_err(backend)?).await?;
-        let mut historical = txn.execute(query("MATCH (e:ArtifactCasLedgerEvent {scopeCheckpointKey: $key}) WHERE e.plan IS NOT NULL RETURN e.plan AS plan ORDER BY e.generation LIMIT 1").param("key", scope_key.clone())).await.map_err(backend)?;
-        if let Some(row) = historical.next(txn.handle()).await.map_err(backend)? {
-            let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
-            if stored.value.as_ref() != encoded {
-                return Err(DirectoryError::Conflict("artifact CAS checkpoint identity names a different ownership plan".into()));
+        let mut attempt = 0u32;
+        loop {
+            let outcome = self.reserve_artifact_cas_attempt(plan, expires_at_ms, now_ms).await;
+            match outcome {
+                Err(error) if neo4j_transient_retry_pause(&error, &mut attempt).await => continue,
+                outcome => return outcome,
             }
         }
-        drop(historical);
-        let mut published = txn.execute(query("MATCH (r:ArtifactCasReference {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.plan AS plan").param("key", scope_key.clone())).await.map_err(backend)?;
-        if let Some(row) = published.next(txn.handle()).await.map_err(backend)? {
-            let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
-            if stored.value.as_ref() != encoded {
-                return Err(DirectoryError::Conflict("artifact CAS published ownership conflict".into()));
-            }
-            let reservation = ArtifactCasReservation::fenced(
-                plan.clone(),
-                u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?,
-                u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?,
-                i64::MAX as u64,
-                coordinator_id,
-                physical_epoch,
-            );
-            drop(published);
-            txn.commit().await.map_err(backend)?;
-            return Ok(reservation);
-        }
-        drop(published);
-        let mut released = txn.execute(query("MATCH (e:ArtifactCasLedgerEvent {scopeCheckpointKey: $key, operation: 'publish'}) RETURN count(e) > 0 AS released").param("key", scope_key.clone())).await.map_err(backend)?;
-        let was_released: bool = released.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS released checkpoint query returned no row".into()))?.get("released").map_err(backend)?;
-        drop(released);
-        if was_released {
-            return Err(DirectoryError::Conflict("artifact CAS released checkpoint cannot be reserved again".into()));
-        }
-        let mut current = txn
-            .execute(query("MATCH (r:ArtifactCasReservation {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.expiresAtMs AS expiresAtMs, r.plan AS plan").param("key", scope_key.clone()))
-            .await
-            .map_err(backend)?;
-        if let Some(row) = current.next(txn.handle()).await.map_err(backend)? {
-            let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
-            if stored.value.as_ref() != encoded {
-                return Err(DirectoryError::Conflict("artifact CAS reservation identity conflict".into()));
-            }
-            let expiry: i64 = row.get("expiresAtMs").map_err(backend)?;
-            if expiry > i64::try_from(now_ms).map_err(backend)? {
-                let reservation = ArtifactCasReservation::fenced(
-                    plan.clone(),
-                    u64::try_from(row.get::<i64>("generation").map_err(backend)?).map_err(backend)?,
-                    u64::try_from(row.get::<i64>("writeEpoch").map_err(backend)?).map_err(backend)?,
-                    u64::try_from(expiry).map_err(backend)?,
-                    coordinator_id,
-                    physical_epoch,
-                );
-                drop(current);
-                txn.commit().await.map_err(backend)?;
-                return Ok(reservation);
-            }
-        }
-        drop(current);
-        let mut epoch_result = txn.execute(query("MATCH (e:ArtifactCasLedgerEvent {scopeCheckpointKey: $key}) RETURN coalesce(max(e.writeEpoch), 0) AS writeEpoch").param("key", scope_key.clone())).await.map_err(backend)?;
-        let previous_epoch: i64 = epoch_result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("artifact CAS write epoch query returned no row".into()))?.get("writeEpoch").map_err(backend)?;
-        drop(epoch_result);
-        let write_epoch = previous_epoch.checked_add(1).ok_or_else(|| DirectoryError::Conflict("artifact CAS write epoch overflow".into()))?;
-        let generation = cas_generation(&mut txn).await?;
-        txn.run(query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'reserve', scopeCheckpointKey: $key, spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, writeEpoch: $write_epoch, expiresAtMs: $expires_at, plan: $plan})")
-            .param("generation", generation).param("key", scope_key).param("space_id", plan.scope.space_id.clone()).param("document_id", plan.scope.document_id.clone()).param("checkpoint_id", hex_lower(&plan.checkpoint_id.0)).param("write_epoch", write_epoch).param("expires_at", i64::try_from(expires_at_ms).map_err(backend)?).param("plan", encoded)).await.map_err(backend)?;
-        let reservation = ArtifactCasReservation::fenced(plan.clone(), u64::try_from(generation).map_err(backend)?, u64::try_from(write_epoch).map_err(backend)?, expires_at_ms, coordinator_id, physical_epoch);
-        cas_project_reserve(&mut txn, &reservation).await?;
-        txn.commit().await.map_err(backend)?;
-        Ok(reservation)
     }
 
     async fn append_reserved_artifact_checkpoint(
@@ -2541,94 +2840,14 @@ impl HubDirectory for Neo4jDirectory {
         completion: Option<&CheckpointPublicationCompletionV1>,
         current_now_ms: u64,
     ) -> DirectoryResult<Vec<DirectoryEvent>> {
-        if checkpoint.parent_checkpoint_id.is_none() || !checkpoint.baseline_frontier.is_edited_for(&checkpoint.scope) {
-            return Err(DirectoryError::Conflict("ordinary artifact checkpoint publication requires established edited lineage".into()));
-        }
-        validate_artifact_cas_publication_v1(&reservation.plan, checkpoint).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
-        if let Some(event) = event {
-            validate_verified_checkpoint_append(event, checkpoint)?;
-        }
-        let scope_key = checkpoint_key_v1(&reservation.plan.scope, reservation.plan.checkpoint_id);
-        let encoded = encode_artifact_cas_ownership_v1(&reservation.plan).map_err(|error| DirectoryError::Conflict(error.to_string()))?;
-        let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        if cas_lock_space(&mut txn, &reservation.plan.scope.space_id).await? > i64::try_from(current_now_ms).map_err(backend)? {
-            return Err(DirectoryError::Conflict("artifact CAS deletion lease is active for this space".into()));
-        }
-        let mut published = txn.execute(query("MATCH (r:ArtifactCasReference {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.plan AS plan").param("key", scope_key.clone())).await.map_err(backend)?;
-        if let Some(row) = published.next(txn.handle()).await.map_err(backend)? {
-            let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
-            if event.is_some()
-                || row.get::<i64>("generation").map_err(backend)? != i64::try_from(reservation.generation).map_err(backend)?
-                || row.get::<i64>("writeEpoch").map_err(backend)? != i64::try_from(reservation.write_epoch).map_err(backend)?
-                || stored.value.as_ref() != encoded
-            {
-                return Err(DirectoryError::Conflict("artifact CAS published reservation conflict".into()));
-            }
-            return Ok(Vec::new());
-        }
-        drop(published);
-        let mut current = txn
-            .execute(query("MATCH (r:ArtifactCasReservation {scopeCheckpointKey: $key}) RETURN r.generation AS generation, r.writeEpoch AS writeEpoch, r.expiresAtMs AS expiresAtMs, r.plan AS plan").param("key", scope_key.clone()))
-            .await
-            .map_err(backend)?;
-        let row = current.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("artifact CAS reservation is missing, expired, or superseded".into()))?;
-        let stored: neo4rs::BoltBytes = row.get("plan").map_err(backend)?;
-        if row.get::<i64>("generation").map_err(backend)? != i64::try_from(reservation.generation).map_err(backend)?
-            || row.get::<i64>("writeEpoch").map_err(backend)? != i64::try_from(reservation.write_epoch).map_err(backend)?
-            || row.get::<i64>("expiresAtMs").map_err(backend)? != i64::try_from(reservation.expires_at_ms).map_err(backend)?
-            || reservation.expires_at_ms <= current_now_ms
-            || stored.value.as_ref() != encoded
-        {
-            return Err(DirectoryError::Conflict("artifact CAS reservation is missing, expired, or superseded".into()));
-        }
-        drop(current);
-        let event = event.ok_or_else(|| DirectoryError::Conflict("new artifact CAS publication requires one public event".into()))?;
-        let id = time_ordered_id();
-        let recorded_at_ms = now_ms();
-        let payload_value = serde_json::Value::from(&event.body.to_value());
-        let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
-        let mut counter = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.seq = c.seq + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
-        let seq: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter query returned no row".into()))?.get("seq").map_err(backend)?;
-        drop(counter);
-        let public_seq = u64::try_from(seq).map_err(backend)?;
-        if public_seq > DIRECTORY_WIRE_INTEGER_MAX {
-            return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into()));
-        }
-        let full = DirectoryEvent { seq: public_seq, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
-        validate_directory_event_page_event(&full).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
-        txn.run(query("CREATE (e:DirectoryEvent {seq: $seq, id: $id, hlcPhysical: $hlc_physical, hlcLogical: $hlc_logical, actorKind: $actor_kind, actorId: $actor_id, spaceId: $space_id, userId: $user_id, kind: $kind, payload: $payload, recordedAt: $recorded_at})")
-            .param("seq", seq).param("id", id.clone()).param("hlc_physical", event.hlc.physical_ms).param("hlc_logical", i64::from(event.hlc.logical)).param("actor_kind", actor_kind_to_str(event.actor.kind)).param("actor_id", event.actor.id.clone()).param("space_id", event.space_id.clone()).param("user_id", event.user_id.clone()).param("kind", kind).param("payload", payload_value.to_string()).param("recorded_at", recorded_at_ms)).await.map_err(backend)?;
-        txn.run(
-            query("CREATE (:ArtifactAuthorityEvent {eventSeq: $event_seq, scopeCheckpointKey: $key, payload: $payload})").param("event_seq", seq).param("key", scope_key.clone()).param("payload", directory::os_pack::json::to_json_string(checkpoint)),
-        )
-        .await
-        .map_err(backend)?;
-        self.project(&mut txn, &full).await?;
-        self.project_verified_checkpoint(&mut txn, &full, checkpoint).await?;
-        let generation = cas_generation(&mut txn).await?;
-        txn.run(query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'publish', scopeCheckpointKey: $key, spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, writeEpoch: $write_epoch, expiresAtMs: $expires_at, eventSeq: $event_seq, plan: $plan})")
-            .param("generation", generation).param("key", scope_key).param("space_id", reservation.plan.scope.space_id.clone()).param("document_id", reservation.plan.scope.document_id.clone()).param("checkpoint_id", hex_lower(&reservation.plan.checkpoint_id.0)).param("write_epoch", i64::try_from(reservation.write_epoch).map_err(backend)?).param("expires_at", i64::try_from(reservation.expires_at_ms).map_err(backend)?).param("event_seq", seq).param("plan", encoded)).await.map_err(backend)?;
-        cas_project_publish(&mut txn, reservation, generation).await?;
-        if let Some(completion) = completion {
-            validate_checkpoint_publication_completion(completion)?;
-            let mut updated = txn
-                .execute(
-                    query("MATCH (r:CheckpointPublicationReceipt {key: $key, commandSha256: $command_sha256, disposition: 'pending'}) SET r.disposition = 'completed', r.checkpointId = $checkpoint_id, r.completedAt = $completed_at RETURN count(r) AS changed")
-                        .param("key", checkpoint_publication_receipt_key(&completion.actor_user_id, &completion.correlation_id))
-                        .param("command_sha256", completion.command_sha256.clone())
-                        .param("checkpoint_id", hex_lower(&completion.checkpoint_id.0))
-                        .param("completed_at", completion.completed_at),
-                )
-                .await
-                .map_err(backend)?;
-            let changed = updated.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("checkpoint publication completion returned no row".into()))?.get::<i64>("changed").map_err(backend)?;
-            drop(updated);
-            if changed != 1 {
-                return Err(DirectoryError::Conflict("checkpoint publication claim is missing, substituted, or already completed".into()));
+        let mut attempt = 0u32;
+        loop {
+            let outcome = self.append_reserved_artifact_checkpoint_attempt(event, checkpoint, reservation, completion, current_now_ms).await;
+            match outcome {
+                Err(error) if neo4j_transient_retry_pause(&error, &mut attempt).await => continue,
+                outcome => return outcome,
             }
         }
-        txn.commit().await.map_err(backend)?;
-        Ok(vec![full])
     }
 
     async fn artifact_cas_ledger_generation(&self) -> DirectoryResult<u64> {
@@ -2826,82 +3045,14 @@ impl HubDirectory for Neo4jDirectory {
     /// the write's atomicity comes from `Txn`, not from any Neo4j auto-increment primitive (Neo4j
     /// has none).
     async fn append_decided_events(&self, events: &[NewDirectoryEvent]) -> DirectoryResult<DirectoryAppendOutcomeV1> {
-        if events.iter().any(|event| matches!(&event.body, DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::InviteRedeemed { .. })) {
-            return Err(DirectoryError::Conflict("event requires its verified authority append seam".into()));
+        let mut attempt = 0u32;
+        loop {
+            let outcome = self.append_decided_events_attempt(events).await;
+            match outcome {
+                Err(error) if neo4j_transient_retry_pause(&error, &mut attempt).await => continue,
+                outcome => return outcome,
+            }
         }
-        let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        let mut persisted = Vec::with_capacity(events.len());
-        for event in events {
-            let id = time_ordered_id();
-            let recorded_at_ms = now_ms();
-            let payload_value = serde_json::Value::from(&event.body.to_value());
-            let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
-            let mut counter = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.seq = c.seq + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
-            let seq: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter query returned no row".into()))?.get("seq").map_err(backend)?;
-            drop(counter);
-            let seq = u64::try_from(seq).map_err(backend)?;
-            if let Some(reason) = self.projection_rejection(&mut txn, &event.body).await? {
-                txn.rollback().await.map_err(backend)?;
-                return Ok(DirectoryAppendOutcomeV1::RejectedBeforeCommit(reason));
-            }
-            if seq > DIRECTORY_WIRE_INTEGER_MAX {
-                return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into()));
-            }
-            let full = DirectoryEvent { seq, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
-            validate_directory_event_page_event(&full).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
-            txn.run(
-                query(
-                    "CREATE (e:DirectoryEvent {seq: $seq, id: $id, hlcPhysical: $hlc_physical, hlcLogical: $hlc_logical, actorKind: $actor_kind, actorId: $actor_id,
-                                                spaceId: $space_id, userId: $user_id, kind: $kind, payload: $payload, recordedAt: $recorded_at})",
-                )
-                .param("seq", i64::try_from(seq).map_err(backend)?)
-                .param("id", id.clone())
-                .param("hlc_physical", event.hlc.physical_ms)
-                .param("hlc_logical", event.hlc.logical as i64)
-                .param("actor_kind", actor_kind_to_str(event.actor.kind))
-                .param("actor_id", event.actor.id.clone())
-                .param("space_id", event.space_id.clone())
-                .param("user_id", event.user_id.clone())
-                .param("kind", kind)
-                .param("payload", payload_value.to_string())
-                .param("recorded_at", recorded_at_ms),
-            )
-            .await
-            .map_err(backend)?;
-            self.project(&mut txn, &full).await?;
-            match &full.body {
-                DirectoryEventBody::ArtifactRetentionAdvanced { retention } => {
-                    let generation = cas_generation(&mut txn).await?;
-                    txn.run(
-                        query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'retention', spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, eventSeq: $event_seq})")
-                            .param("generation", generation)
-                            .param("space_id", retention.scope.space_id.clone())
-                            .param("document_id", retention.scope.document_id.clone())
-                            .param("checkpoint_id", hex_lower(&retention.retained_checkpoint_id.0))
-                            .param("event_seq", i64::try_from(seq).map_err(backend)?),
-                    )
-                    .await
-                    .map_err(backend)?;
-                    cas_project_release(&mut txn, "retention", &retention.scope.space_id, Some(&retention.scope), Some(retention.retained_checkpoint_id)).await?;
-                }
-                DirectoryEventBody::SpaceDeleted { space_id } => {
-                    let generation = cas_generation(&mut txn).await?;
-                    txn.run(
-                        query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'space-delete', spaceId: $space_id, eventSeq: $event_seq})")
-                            .param("generation", generation)
-                            .param("space_id", space_id.clone())
-                            .param("event_seq", i64::try_from(seq).map_err(backend)?),
-                    )
-                    .await
-                    .map_err(backend)?;
-                    cas_project_release(&mut txn, "space-delete", space_id, None, None).await?;
-                }
-                _ => {}
-            }
-            persisted.push(full);
-        }
-        txn.commit().await.map_err(backend)?;
-        Ok(DirectoryAppendOutcomeV1::Appended(persisted))
     }
 
     async fn append_decided_events_with_admin_effect(&self, events: &[NewDirectoryEvent], effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<DirectoryEvent>> {
@@ -3033,7 +3184,6 @@ impl HubDirectory for Neo4jDirectory {
         txn.run(query("MATCH (i:DocumentIndex) DETACH DELETE i")).await.map_err(backend)?;
         txn.run(query("MATCH (d:DocumentDescriptor) DETACH DELETE d")).await.map_err(backend)?;
         txn.run(query("MATCH (s:Space) DETACH DELETE s")).await.map_err(backend)?;
-        txn.run(query("MATCH (u:User) DETACH DELETE u")).await.map_err(backend)?;
         let mut replayed = 0u64;
         let mut cursor = 0i64;
         while replayed < total {

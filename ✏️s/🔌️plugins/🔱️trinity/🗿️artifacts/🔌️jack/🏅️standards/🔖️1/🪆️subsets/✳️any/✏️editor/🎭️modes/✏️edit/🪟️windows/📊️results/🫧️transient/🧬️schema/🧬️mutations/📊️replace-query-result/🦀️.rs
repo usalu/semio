@@ -24,6 +24,8 @@ impl protocol::MutationKind<JackResultsWindowTransient, JackResultsWindowTransie
     fn inverse(&self, base: &JackResultsWindowTransient) -> Vec<JackResultsWindowTransientMutation> {
         vec![Self { execution_id: base.query_execution_id.clone(), result: base.result.clone(), error: base.query_error.clone() }.into()]
     }
-    fn label(&self) -> String { "Replace Results Window Query Output".into() }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace Results Window Query Output", "Ergebnissenfensterabfragenausgabe ersetzen")
+    }
     fn target(&self) -> Vec<String> { vec!["query_execution_id".into(), "result".into(), "query_error".into()] }
 }

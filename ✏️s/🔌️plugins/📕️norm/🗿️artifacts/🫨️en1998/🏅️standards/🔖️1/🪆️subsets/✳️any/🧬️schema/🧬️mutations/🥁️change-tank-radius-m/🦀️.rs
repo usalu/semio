@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTankRadius
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change tank radius [m] to {}", self.new_tank_radius_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change tank radius [m] to {}", self.new_tank_radius_m), &format!("Tankradius [m] auf {} ändern", self.new_tank_radius_m))
     }
 }
 //#endregion 🔖️ChangeTankRadiusM

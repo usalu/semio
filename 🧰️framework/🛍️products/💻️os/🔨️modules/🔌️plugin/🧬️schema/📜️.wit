@@ -1370,6 +1370,51 @@ interface describe {
   describe: async func() -> list<u8>;
 }
 
+/// 🌱️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b, `📓️tc3-catalog-carried-genesis.md` §2.2/§2.3).
+/// The package's OWN document-kind codec, callable by a host that has the component bytes and the
+/// catalog row but links no Rust codec for this package at all. This is what makes any plugin's
+/// artifact kind creatable on a headless hub: `📇️native-openable-provider`'s compiled stdio+gis+vcs
+/// table is a closed set of three, and a hub that only links those three can never resolve a codec
+/// for a fourth package, however complete its trusted catalog is.
+///
+/// 🪪️ `genesis` takes the REAL server-minted `document-id` rather than returning an
+/// id-independent template: a genesis pair's `pack` is `E::initial_snapshot().encode_pack()` and is
+/// indeed id-independent, but its `spr` is `HistoryLog { doc_id, .. }` and belongs to exactly one
+/// document (TC3 §1.1). Asking the guest at creation time, with the id in hand, is both exact and
+/// smaller than staging a template and re-encoding its id host-side.
+///
+/// ⛽️ Every function here is pure: it reads no storage, opens no window, emits no effect, and is
+/// answerable with `pure` imports alone — the same contract `describe` states. A host calls them
+/// on a throwaway instance with a fuel cap and throws the instance away afterwards.
+interface codec {
+  use types.{plugin-error};
+
+  /// 📦️ One document's authoritative binary pair. `pack` is the snapshot container, `spr` the
+  /// history log; together they are exactly what `store::print_document_pack` writes.
+  record document-pair {
+    pack: list<u8>,
+    spr: list<u8>,
+  }
+
+  /// 🧬️ Structural fingerprint of `artifact-kind`'s snapshot record shape — `os_pack::schema_hash`
+  /// over the editor snapshot's `RecordSpec`, exactly the 32 bytes `ArtifactCodec::pack_schema_hash`
+  /// carries natively. A catalog row's `packSchemaHash` is pinned against this, so a bundle cannot
+  /// name a schema identity the component itself does not own.
+  pack-schema-hash: async func(artifact-kind: string) -> result<list<u8>, plugin-error>;
+
+  /// 🌱️ The canonical empty document of `artifact-kind` at `document-id`: zero edits, zero changes,
+  /// zero checkpoints, zero alternatives, an empty cursor, and the kind's own initial snapshot.
+  genesis: async func(artifact-kind: string, document-id: string) -> result<document-pair, plugin-error>;
+
+  /// 📥️ `(pack, spr) -> (dsl, ops)` text mirror — the host's pair-validation fence. A pair the
+  /// component cannot print back is not a document of this kind.
+  print-mirror: async func(artifact-kind: string, pair: document-pair) -> result<tuple<string, string>, plugin-error>;
+
+  /// 🧩️ Applies one `encode_ops_vec` batch to a pair and returns the next pair. This is the
+  /// host-authoritative edit apply for a package whose codec the host does not link.
+  apply-ops: async func(artifact-kind: string, pair: document-pair, ops: list<u8>) -> result<document-pair, plugin-error>;
+}
+
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1). One world for both roles —
 /// a plugin and an extension are the same wasm component contract now; `describe()`'s
 /// `PackageDescriptor.role` (packet E1) is what tells the host which one it loaded, not a
@@ -1392,4 +1437,5 @@ world actor {
   export jobs;
   export checkpoint;
   export describe;
+  export codec;
 }

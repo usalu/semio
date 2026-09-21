@@ -21,8 +21,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for ChangeNodeLa
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Relabel node \"{}\" to \"{}\"", self.id, self.new_label)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Relabel node \"{}\" to \"{}\"", self.id, self.new_label), &format!("Neubeschriftungsknoten \"{}\" zu \"{}\"", self.id, self.new_label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

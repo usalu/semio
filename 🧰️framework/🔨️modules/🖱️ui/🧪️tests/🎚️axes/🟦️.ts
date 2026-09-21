@@ -37,7 +37,7 @@ describe("UI axes source and projections", () => {
       const axes = readUiAxes(repoRoot);
       const targets = uiAxesTargets(root, axes);
       expect(targets.map(({ path }) => path)).toEqual([
-        join(root, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🤖️generated/🦀️.rs"),
+        join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌐️locale/🤖️generated/🦀️.rs"),
         join(root, "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts"),
       ]);
       expect(uiAxesPreview(root, targets).nodes).toHaveLength(2);
@@ -55,9 +55,11 @@ describe("UI axes source and projections", () => {
     const project = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json"), "utf8")) as { namedInputs: { default: string[] } };
     const requiredInputs = ["🎚️axes/🔣️.json", "🎚️axes/📥️source/🟦️.ts", "🎚️axes/📽️projection/🟦️.ts", "🎚️axes/📋️plan/🟦️.ts", "🎚️axes/📤️publication/🟦️.ts", "🎚️axes/🏃️execution/🟦️.ts", "🧪️tests/🎚️axes/🟦️.ts"];
     for (const suffix of requiredInputs) expect(project.namedInputs.default.some((path) => path.endsWith(suffix))).toBe(true);
-    const rustConsumer = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
+    const rustConsumer = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌐️locale/🦀️.rs"), "utf8");
+    const rustFacade = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
     const typescriptConsumer = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts"), "utf8");
     expect(rustConsumer).toContain("#[path = \"🤖️generated/🦀️.rs\"]");
+    expect(rustFacade).toContain("pub use dsl::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};");
     expect(typescriptConsumer).toContain("./🤖️generated/🎚️ui-axes/🟦️.ts");
     const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as { generatorContracts: Record<string, { ownerPath: string; inputPatterns: string[] }> };
     const contract = taxonomy.generatorContracts["ui-axes"]!;

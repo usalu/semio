@@ -34,7 +34,7 @@ export type AccessibilityProjectionNode = {
 export type AccessibilityProjectionWindow = { readonly windowId: string; readonly windowGeneration: number; readonly nodes: readonly AccessibilityProjectionNode[] };
 export type AccessibilityMirrorTransport = Pick<BrowserFrameTransport, "enqueueLossless" | "introspect">;
 
-export function createAccessibilityMirror(root: HTMLElement, transport: AccessibilityMirrorTransport, tongue: "en" | "de"): { readonly refresh: () => void; readonly dispose: () => void } {
+export function createAccessibilityMirror(root: HTMLElement, transport: AccessibilityMirrorTransport, tongue: "en" | "de", focusFallback?: HTMLElement): { readonly refresh: () => void; readonly dispose: () => void } {
   const mirror = document.createElement("div");
   mirror.id = WGPU_ACCESSIBILITY_MIRROR_ID;
   mirror.setAttribute("role", "region");
@@ -170,6 +170,7 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
     const [windowId, windowGeneration, nodeId, nodeKey] = focus.split("\u0000");
     const next = Array.from(mirror.querySelectorAll<HTMLElement>("[data-node-id]")).find((candidate) => candidate.dataset.window === windowId && candidate.dataset.windowGeneration === windowGeneration && candidate.dataset.nodeId === nodeId && candidate.dataset.nodeKey === nodeKey);
     if (next === undefined) {
+      focusFallback?.focus({ preventScroll: true });
       restoringFocus = false;
       return;
     }

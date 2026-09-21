@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeInfilt
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change infiltration allowance to {}", self.new_infiltration_allowance_m3_h)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change infiltration allowance to {}", self.new_infiltration_allowance_m3_h), &format!("Infiltrationszuschlag auf {} ändern", self.new_infiltration_allowance_m3_h))
     }
 }
 //#endregion 🔖️ChangeInfiltrationAllowanceM3H

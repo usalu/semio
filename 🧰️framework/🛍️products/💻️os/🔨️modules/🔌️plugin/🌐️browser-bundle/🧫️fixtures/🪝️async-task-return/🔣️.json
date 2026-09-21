@@ -1,0 +1,16 @@
+{
+  "$comment": "🪝️ Generated-shape rows for the async task.return indirect-lift refusal. `admitted` sources must close; every `denied` row carries the exact defect jco 1.27.0 shipped — an unflattenable result (variantFlatCount null/undefined) bound with useDirectParams: true, so the return-area pointer is lifted as the variant discriminant.",
+  "bindings": 3,
+  "admitted": [
+    "const trampoline23 = taskReturn.bind(null, { componentIdx: 0, useDirectParams: true, getMemoryFn: () => memory0, memoryIdx: 0, callbackFnIdx: null, liftFns: [_liftFlatResult({ caseMetas: [['ok', null, 0, 1, 0]], variantSize32: 16, variantAlign32: 4, variantPayloadOffset32: 4, variantFlatCount: 4 })], stringEncoding: 'utf8' });\nconst trampoline27 = taskReturn.bind(null, { componentIdx: 0, useDirectParams: false, getMemoryFn: () => memory0, memoryIdx: 0, callbackFnIdx: null, liftFns: [_liftFlatResult({ caseMetas: [['ok', null, 0, 1, 0]], variantSize32: 344, variantAlign32: 8, variantPayloadOffset32: 8, variantFlatCount: null })], stringEncoding: 'utf8' });\nconst trampoline28 = taskReturn.bind(null, { componentIdx: 0, useDirectParams: true, getMemoryFn: () => memory0, memoryIdx: 0, callbackFnIdx: null, liftFns: [_liftFlatU32], stringEncoding: 'utf8' });"
+  ],
+  "denied": [
+    "const trampoline27 = taskReturn.bind(null, { componentIdx: 0, useDirectParams: true, getMemoryFn: () => memory0, memoryIdx: 0, callbackFnIdx: null, liftFns: [_liftFlatResult({ caseMetas: [['ok', null, 0, 1, 0]], variantSize32: 344, variantAlign32: 8, variantPayloadOffset32: 8, variantFlatCount: null })], stringEncoding: 'utf8' });",
+    "const trampoline27 = taskReturn.bind(null, { componentIdx: 0, useDirectParams: true, getMemoryFn: () => memory0, memoryIdx: 0, callbackFnIdx: null, liftFns: [_liftFlatVariant({ caseMetas: [['ok', null, 0, 1, 0]], variantSize32: 344, variantAlign32: 8, variantPayloadOffset32: 8, variantFlatCount: undefined })], stringEncoding: 'utf8' });",
+    "const trampoline27 = taskReturn.bind(null, { componentIdx: 0, useDirectParams: true, getMemoryFn: () => memory0, memoryIdx: 0, callbackFnIdx: null, liftFns: [_liftFlatU32, _liftFlatResult({ caseMetas: [], variantSize32: 344, variantAlign32: 8, variantPayloadOffset32: 8, variantFlatCount: null })], stringEncoding: 'utf8' });",
+    "const trampoline27 = taskReturn.bind(null, { componentIdx: 0, getMemoryFn: () => memory0, memoryIdx: 0, callbackFnIdx: null, liftFns: [_liftFlatU32], stringEncoding: 'utf8' });",
+    "const trampoline27 = taskReturn.bind(null, { componentIdx: 0, useDirectParams: true, getMemoryFn: () => memory0, memoryIdx: 0, callbackFnIdx: null, stringEncoding: 'utf8' });",
+    "const trampoline27 = taskReturn.bind(null, { componentIdx: 0, useDirectParams: direct, getMemoryFn: () => memory0, memoryIdx: 0, callbackFnIdx: null, liftFns: [_liftFlatU32], stringEncoding: 'utf8' });",
+    "const trampoline27 = taskReturn.bind(null, { componentIdx: 0, useDirectParams: true, getMemoryFn: () => memory0, memoryIdx: 0, callbackFnIdx: null, liftFns: liftFns27, stringEncoding: 'utf8' });"
+  ]
+}

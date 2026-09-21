@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAssumedGKK
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change assumed self-weight load to {:?}", self.new_assumed_g_k_kn_m2)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change assumed self-weight load to {:?}", self.new_assumed_g_k_kn_m2), &format!("Angenommene Eigengewichtslast auf {:?} ändern", self.new_assumed_g_k_kn_m2))
     }
 }
 //#endregion 🔖️Payload

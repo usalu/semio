@@ -23,8 +23,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for DragAssets {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Drag {} asset(s)", self.asset_ids.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Drag {} asset(s)", self.asset_ids.len()), &format!("{} Asset(s) ziehen", self.asset_ids.len()))
     }
     fn target(&self) -> Vec<String> {
         self.asset_ids.clone()

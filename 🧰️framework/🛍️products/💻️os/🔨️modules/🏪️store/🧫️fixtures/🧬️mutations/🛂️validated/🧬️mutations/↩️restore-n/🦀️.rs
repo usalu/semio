@@ -24,8 +24,8 @@ impl crate::os_spr::MutationKind<DemoSnapshot, ValidatedMutation> for RestoreN {
     fn inverse(&self, base: &DemoSnapshot) -> Vec<ValidatedMutation> {
         vec![ValidatedMutation::RestoreN(Self { n: base.n })]
     }
-    fn label(&self) -> String {
-        "Restore N".into()
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Restore N", "N wiederherstellen")
     }
     fn target(&self) -> Vec<String> {
         vec!["n".into()]

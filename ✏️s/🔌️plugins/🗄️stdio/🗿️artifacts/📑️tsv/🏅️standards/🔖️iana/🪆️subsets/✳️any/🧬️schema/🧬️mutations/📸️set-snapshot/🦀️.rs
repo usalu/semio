@@ -29,8 +29,8 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetSnapshot {
     fn inverse(&self, base: &TsvSnapshot) -> Vec<TsvMutation> {
         agg_inverse(&TsvMutation::SetSnapshot(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-snapshot".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

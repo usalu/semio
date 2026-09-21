@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreatePrimiti
         vec![super::GltfMutation::CreatePrimitive(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Create Primitive".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Create Primitive", "Primitiv erstellen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -20,8 +20,8 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for SealRun {
     fn inverse(&self, _base: &RunArtifact) -> Vec<RunMutation> {
         Vec::new()
     }
-    fn label(&self) -> String {
-        "Seal run".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Seal run", "Siegellauf")
     }
     fn target(&self) -> Vec<String> {
         vec!["sealed".into()]

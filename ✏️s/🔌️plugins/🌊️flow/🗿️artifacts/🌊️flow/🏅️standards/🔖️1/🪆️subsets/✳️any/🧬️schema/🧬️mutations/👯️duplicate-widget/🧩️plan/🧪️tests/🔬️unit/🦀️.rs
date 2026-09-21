@@ -3,7 +3,7 @@ use protocol::{fold_plan_diff, fold_plan_inverse, Mutation, MutationDiff};
 use semio_framework_artifact_flow_flow::Widget;
 
 fn base_with_source_widget() -> FlowSnapshot {
-    let base = FlowSnapshot::default();
+    let base = FlowSnapshot { schema: crate::FLOW_DOCUMENT_SCHEMA.into(), content: crate::flow_content_child_handle_and_cache(Vec::new(), Vec::new(), Default::default()) };
     let create = FlowMutation::CreateWidget(CreateWidget { index: 0, widget: Widget::InputNote { id: "note-1".into(), text: "hello".into() } });
     create.diff(&base).diff().apply(&base).expect("valid mutation diff")
 }

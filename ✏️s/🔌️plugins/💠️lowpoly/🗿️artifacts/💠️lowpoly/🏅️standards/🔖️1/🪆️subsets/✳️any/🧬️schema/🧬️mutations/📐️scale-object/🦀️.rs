@@ -24,8 +24,8 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ScaleObject {
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Scale object \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Scale object \"{}\"", self.id), &format!("Objekt \"{}\" skalieren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

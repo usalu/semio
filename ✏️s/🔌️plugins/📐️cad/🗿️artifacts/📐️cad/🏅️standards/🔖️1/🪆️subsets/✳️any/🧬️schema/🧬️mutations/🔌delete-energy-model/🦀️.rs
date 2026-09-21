@@ -22,8 +22,8 @@ impl MutationKind<CadSnapshot, CadMutation> for DeleteEnergyModel {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Delete energy-model child".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Delete energy-model child", "Energiemodell-Kind löschen")
     }
     fn target(&self) -> Vec<String> {
         vec!["energy_model".to_string()]

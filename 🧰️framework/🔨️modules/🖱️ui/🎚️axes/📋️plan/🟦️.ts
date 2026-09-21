@@ -10,7 +10,7 @@ export interface UiAxesTarget {
 /** 📋️ Plans the two implementation projections from one neutral source. */
 export function uiAxesTargets(repoRoot: string, axes: UiAxes): readonly UiAxesTarget[] {
   return [
-    { path: join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🤖️generated/🦀️.rs"), content: emitUiAxesRust(axes) },
+    { path: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌐️locale/🤖️generated/🦀️.rs"), content: emitUiAxesRust(axes) },
     { path: join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts"), content: emitUiAxesTypeScript(axes) },
   ];
 }

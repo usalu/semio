@@ -1,0 +1,97 @@
+{
+  "note": "🏷️ One language-agnostic contract for the LocalizedLabel wire, read by BOTH implementations: the Rust decoder (🌐️locale/🧪️tests/🏷️localized-label-fixture) and the AJV schema oracle plus historyEntryLabelText (🎠️kernel/🧪️tests/🏷️localized-label-fixture). Nothing here names a language in code: every expectation is keyed '<terminology>.<locale>' from 🖱️ui/🎚️axes/🔣️.json, so adding an axis adds keys and fails both readers until every row is translated.",
+  "axes": {
+    "terminologies": ["native", "reuse"],
+    "locales": ["en", "de"]
+  },
+  "rows": [
+    {
+      "id": "add-widget",
+      "why": "🧱️ A framework history row: authored copy, a real translation per cell, both terminologies distinct.",
+      "wire": {
+        "native": { "en": "Add Widget", "de": "Widget hinzufügen" },
+        "reuse": { "en": "Add Part", "de": "Teil hinzufügen" }
+      },
+      "resolve": {
+        "native.en": "Add Widget",
+        "native.de": "Widget hinzufügen",
+        "reuse.en": "Add Part",
+        "reuse.de": "Teil hinzufügen"
+      }
+    },
+    {
+      "id": "rename-layer",
+      "why": "🏷️ A label whose runtime data (the layer name) is quoted inside authored copy — the quoted datum is identical in every cell, the prose around it is not.",
+      "wire": {
+        "native": { "en": "Rename layer \"roof\" to \"deck\"", "de": "Ebene \"roof\" in \"deck\" umbenennen" },
+        "reuse": { "en": "Rename layer \"roof\" to \"deck\"", "de": "Ebene \"roof\" in \"deck\" umbenennen" }
+      },
+      "resolve": {
+        "native.en": "Rename layer \"roof\" to \"deck\"",
+        "native.de": "Ebene \"roof\" in \"deck\" umbenennen",
+        "reuse.en": "Rename layer \"roof\" to \"deck\"",
+        "reuse.de": "Ebene \"roof\" in \"deck\" umbenennen"
+      }
+    },
+    {
+      "id": "locale-invariant-data",
+      "why": "📊️ LocalizedLabel::data — a shell-noted command id or a fixture name. Locale-INVARIANT by construction, so every cell is byte-identical; this row exists so 'identical cells' is a declared, tested shape and not read as an untranslated leak.",
+      "wire": {
+        "native": { "en": "os.setThemeId", "de": "os.setThemeId" },
+        "reuse": { "en": "os.setThemeId", "de": "os.setThemeId" }
+      },
+      "resolve": {
+        "native.en": "os.setThemeId",
+        "native.de": "os.setThemeId",
+        "reuse.en": "os.setThemeId",
+        "reuse.de": "os.setThemeId"
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "id": "missing-locale",
+      "why": "🚫️ A carrier that filled only one locale. The schema REFUSES the document (the locale key is required), and the readers resolve the absent cell to the EMPTY string — visibly wrong — instead of falling back to another locale's text.",
+      "wire": {
+        "native": { "de": "Widget hinzufügen" },
+        "reuse": { "de": "Teil hinzufügen" }
+      },
+      "schemaError": "must have required property 'en'",
+      "resolve": {
+        "native.en": "",
+        "native.de": "Widget hinzufügen",
+        "reuse.en": "",
+        "reuse.de": "Teil hinzufügen"
+      }
+    },
+    {
+      "id": "missing-terminology",
+      "why": "🚫️ The pre-LocalizedLabel shape ({en, de} with no terminology level) that took the whole shell down on 2026-09-21. Refused by the schema; resolved as empty, never thrown.",
+      "wire": {
+        "native": { "en": "Add Widget", "de": "Widget hinzufügen" }
+      },
+      "schemaError": "must have required property 'reuse'",
+      "resolve": {
+        "native.en": "Add Widget",
+        "native.de": "Widget hinzufügen",
+        "reuse.en": "",
+        "reuse.de": ""
+      }
+    },
+    {
+      "id": "unknown-locale",
+      "why": "🚫️ A cell for a locale the axes do not declare. Refused by the schema rather than silently carried through the wire into a panel that can never render it.",
+      "wire": {
+        "native": { "en": "Add Widget", "de": "Widget hinzufügen", "fr": "Ajouter un widget" },
+        "reuse": { "en": "Add Part", "de": "Teil hinzufügen" }
+      },
+      "schemaError": "must NOT have additional properties",
+      "resolve": {
+        "native.en": "Add Widget",
+        "native.de": "Widget hinzufügen",
+        "reuse.en": "Add Part",
+        "reuse.de": "Teil hinzufügen"
+      }
+    }
+  ]
+}

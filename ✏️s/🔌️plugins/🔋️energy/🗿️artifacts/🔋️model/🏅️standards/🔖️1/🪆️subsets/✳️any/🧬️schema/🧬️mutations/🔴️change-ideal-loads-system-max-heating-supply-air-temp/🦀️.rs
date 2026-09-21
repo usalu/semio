@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change ideal loads system {} maximum heating supply air temperature to {:?}", self.id.0, self.new_max_heating_supply_air_temp_c)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change ideal loads system {} maximum heating supply air temperature to {:?}", self.id.0, self.new_max_heating_supply_air_temp_c), &format!("ideale Lastensystem {} Maximalheizungszuluftlufttemperatur auf {:?} ändern", self.id.0, self.new_max_heating_supply_air_temp_c))
     }
 
     fn target(&self) -> Vec<String> {

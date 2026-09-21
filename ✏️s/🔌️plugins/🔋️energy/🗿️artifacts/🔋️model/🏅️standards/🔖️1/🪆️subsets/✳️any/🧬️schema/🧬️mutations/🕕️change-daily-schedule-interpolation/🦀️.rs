@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change Daily Schedule Interpolation of daily schedule {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change Daily Schedule Interpolation of daily schedule {}", self.id.0), &format!("Tageszeitplaninterpolation von Tageszeitplan {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

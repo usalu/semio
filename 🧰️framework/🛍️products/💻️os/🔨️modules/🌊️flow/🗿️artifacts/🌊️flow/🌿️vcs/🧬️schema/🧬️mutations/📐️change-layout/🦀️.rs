@@ -31,7 +31,9 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for ChangeLayout {
         }
         inverse
     }
-    fn label(&self) -> String { "Change layout".into() }
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Change layout", "Layout ändern")
+    }
     fn target(&self) -> Vec<String> { vec!["layout".into()] }
 }
 

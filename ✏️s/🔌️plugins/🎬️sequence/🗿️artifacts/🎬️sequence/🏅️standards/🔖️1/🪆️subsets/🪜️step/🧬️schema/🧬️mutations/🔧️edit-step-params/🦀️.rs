@@ -30,8 +30,8 @@ impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for EditStepPara
     fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Edit step \"{}\" parameters", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Edit step \"{}\" parameters", self.id), &format!("Schritt \"{}\" Parameter bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

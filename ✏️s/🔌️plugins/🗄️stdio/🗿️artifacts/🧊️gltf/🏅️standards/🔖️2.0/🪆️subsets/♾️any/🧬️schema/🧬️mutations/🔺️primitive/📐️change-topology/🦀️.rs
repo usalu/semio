@@ -63,8 +63,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimiti
         vec![super::GltfMutation::ChangePrimitiveTopologyMode(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Change Primitive Topology Mode".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Primitive Topology Mode", "Primitivtopologienmodus ändern")
     }
 
     fn target(&self) -> Vec<String> {

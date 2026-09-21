@@ -104,6 +104,58 @@ async fn a_semio_member_mints_and_reopens_a_real_child_envelope() {
     close_member(&mut child);
 }
 
+/// 🪤 A snapshot read lease ALIASES the very snapshot the next commit displaces, so the displaced
+/// owner cannot become unique until the returned lease is retired. The store disposer must
+/// therefore drain returned read leases BEFORE displaced owners — draining them the other way
+/// round wedges the close on a lease its own cursor has not reached yet.
+#[semio_framework_async_macros::async_test]
+async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them() {
+    use crate::standards::v1::subsets::value::schema::mutations::{set_snapshot::SetSnapshot, SemioValueMutation};
+    use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+
+    let seed = SemioValueSnapshot::default();
+    let mut envelope = dsl::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, "value-close-law", seed.clone(), None);
+    envelope.dialect = Some(subset_dialect("value"));
+    let digest = *semio_framework_hash::hash(&seed.encode_pack()).as_bytes();
+    let runtime = dsl::ArtifactStoreInitializationRuntime::new("value-close-law", STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, seed, digest);
+    let mut store = dsl::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <SemioValueSnapshot as dsl::MemberStoreOwner<SemioValueMutation>>::member_store_owners());
+
+    let first = store.snapshot_read().expect("first snapshot read lease");
+    let second = store.snapshot_read().expect("second snapshot read lease");
+    drop(first);
+    drop(second);
+    assert_eq!(store.outstanding_snapshot_read_count(), 0, "both leases were handed back");
+    assert_eq!(store.returned_snapshot_read_count(), 2, "both leases are waiting to be retired");
+
+    // The first commit parks the aliased snapshot in the tail-undo cache; the SECOND one evicts it
+    // into the displaced-owner queue, which is where the close cursor meets it.
+    for step in ["first", "second"] {
+        let next = SemioValueSnapshot { root: SemioValue::Str { value: step.into() }, ..SemioValueSnapshot::default() };
+        store.apply_one(store.generation(), SemioValueMutation::SetSnapshot(SetSnapshot { snapshot: next }), None, dsl::HistoryLane::Document).await.expect("one-item commit");
+    }
+
+    // The laws this pins reach their close through a SECOND decision — an undo of the commit they
+    // just applied, which is what repopulates the tail-undo cache from a displaced snapshot.
+    SpaceMember::undo(&mut store).await.expect("derived undo of the last commit");
+
+    for _ in 0..100_000 {
+        match store.close_owned_step(1, 4096).expect("bounded value-store close") {
+            dsl::SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= 4096),
+            dsl::SnapshotRetirementStep::Complete => {
+                assert!(store.close_owned_terminal_is_empty(), "a Complete close owes its terminal-empty witness");
+                return;
+            }
+            dsl::SnapshotRetirementStep::Blocked => panic!(
+                "value store close blocked with outstanding_reads={} returned_reads={} phase={}",
+                store.outstanding_snapshot_read_count(),
+                store.returned_snapshot_read_count(),
+                store.close_owned_phase_witness()
+            ),
+        }
+    }
+    panic!("value store close must converge");
+}
+
 /// 🧹️ Every member store is retired explicitly over bounded turns before it drops — the store's
 /// drop witness refuses an unretired owner.
 fn close_member(member: &mut SemioMembers) {

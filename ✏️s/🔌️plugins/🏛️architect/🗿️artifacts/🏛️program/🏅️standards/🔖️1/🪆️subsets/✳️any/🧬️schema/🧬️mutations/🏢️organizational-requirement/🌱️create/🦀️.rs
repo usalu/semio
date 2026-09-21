@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateOrganizationalRequ
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create organizational requirement \"{}\"", self.organizational_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create organizational requirement \"{}\"", self.organizational_requirement.header.name), &format!("Organisationsanforderung \"{}\" erstellen", self.organizational_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.organizational_requirement.header.id.0.clone()]

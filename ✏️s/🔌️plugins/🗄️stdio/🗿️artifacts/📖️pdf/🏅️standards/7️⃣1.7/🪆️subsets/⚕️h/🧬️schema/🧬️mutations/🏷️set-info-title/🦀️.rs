@@ -26,8 +26,8 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for SetInfoTitle {
         vec![PdfHMutation::SetInfoTitle(SetInfoTitle { title: base.info.title.clone().unwrap_or_default() })]
     }
 
-    fn label(&self) -> String {
-        format!("Set PDF/H title \"{}\"", self.title)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set PDF/H title \"{}\"", self.title), &format!("PDF/Htitel \"{}\" setzen", self.title))
     }
 
     fn target(&self) -> Vec<String> {

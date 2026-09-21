@@ -33,8 +33,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetDictEntry {
         }
     }
 
-    fn label(&self) -> String {
-        format!("Set dictionary entry {}", self.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set dictionary entry {}", self.key), &format!("Wörterbucheintrag {} setzen", self.key))
     }
 
     fn target(&self) -> Vec<String> {

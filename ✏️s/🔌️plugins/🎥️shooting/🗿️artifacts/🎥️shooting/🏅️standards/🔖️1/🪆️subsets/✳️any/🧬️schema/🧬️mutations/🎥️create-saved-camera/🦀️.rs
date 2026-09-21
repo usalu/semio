@@ -21,8 +21,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for CreateSavedCamera {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create saved camera \"{}\"", self.saved_camera.label)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create saved camera \"{}\"", self.saved_camera.label), &format!("gespeicherte Kamera \"{}\" erstellen", self.saved_camera.label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.saved_camera.id.clone()]

@@ -44,7 +44,7 @@ impl MutationKind<DummySnapshot, DummyMutation> for SetDummyCount {
     fn inverse(&self, base: &DummySnapshot) -> Vec<DummyMutation> {
         vec![Self { value: base.count }.into()]
     }
-    fn label(&self) -> String {
-        format!("Set dummy count to {}", self.value)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set dummy count to {}", self.value), &format!("platzhaltende Anzahl auf {} setzen", self.value))
     }
 }

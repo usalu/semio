@@ -26,8 +26,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ChangeParame
             |current| vec![WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: self.parameter_id.clone(), parameter: Box::new(current.clone()) })],
         )
     }
-    fn label(&self) -> String {
-        format!("Change workflow parameter {}", self.parameter_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change workflow parameter {}", self.parameter_id), &format!("Arbeitsablaufparameter {} ändern", self.parameter_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["parameters".into(), self.parameter_id.clone()]

@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageLayout {
         vec![PdfMutation::SetPageLayout(SetPageLayout { layout: base.page_layout.clone() })]
     }
 
-    fn label(&self) -> String {
-        "Set page-layout".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set page-layout", "Seitenlayout setzen")
     }
 
     fn target(&self) -> Vec<String> {

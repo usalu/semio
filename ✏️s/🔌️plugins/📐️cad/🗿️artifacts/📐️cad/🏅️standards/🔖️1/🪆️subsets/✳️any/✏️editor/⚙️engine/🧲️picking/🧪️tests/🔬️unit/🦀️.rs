@@ -656,7 +656,10 @@ fn a_curved_edge_samples_its_whole_polyline_where_a_straight_one_stays_its_endpo
     let circle = CadEdgeCurve { kind: "circle".into(), center: Some([0.0, 0.0, 0.0]), normal: Some([0.0, 0.0, 1.0]), radius: Some(2.0), ..Default::default() };
     let samples = edge_sample_points(&circle, &ends, 4);
     assert_eq!(samples.len(), CLOSED_CURVE_SAMPLE_SEGMENTS + 1);
-    assert_eq!(samples.first(), samples.last(), "a full turn closes on itself");
+    // ⭕️ `sin(TAU)` is `-2.45e-16`, not `0`, in both hosts — the turn closes to float precision, and
+    // asserting bit equality here would only pin an artefact React's own polyline carries too.
+    let (first, last) = (samples.first().copied().expect("first sample"), samples.last().copied().expect("last sample"));
+    assert!([0, 1, 2].iter().all(|axis| (first[*axis] - last[*axis]).abs() < 1e-9), "a full turn closes on itself: {first:?} vs {last:?}");
 
     // 🥚️ An ellipse takes the two radii on its own axes.
     let ellipse = CadEdgeCurve {
@@ -690,7 +693,10 @@ fn a_curved_edge_samples_its_whole_polyline_where_a_straight_one_stays_its_endpo
 #[test]
 fn a_curved_edges_pick_target_carries_its_tessellation() {
     let mut geometry = box_geometry();
-    geometry.edges[0].curve = CadEdgeCurve { kind: "arc".into(), center: Some([0.0, 0.0, 0.0]), ..Default::default() };
+    // 🔵️ `e0` runs `v0 [0,0,0] → v1 [1,0,0]`, so the arc's centre sits on their perpendicular
+    // bisector — a centre ON one boundary vertex has radius 0 and is no arc at all
+    // (`arc_plane_frame` rightly refuses it and falls back to the chord).
+    geometry.edges[0].curve = CadEdgeCurve { kind: "arc".into(), center: Some([0.5, -0.5, 0.0]), ..Default::default() };
     let buckets = geometry_buckets(&geometry);
     let points = buckets.entity_points(ModelEntityKind::Edge, "e0");
     assert_eq!(points.len(), EDGE_SAMPLE_SEGMENTS + 1, "the curved edge's points are its samples, not its two vertices");

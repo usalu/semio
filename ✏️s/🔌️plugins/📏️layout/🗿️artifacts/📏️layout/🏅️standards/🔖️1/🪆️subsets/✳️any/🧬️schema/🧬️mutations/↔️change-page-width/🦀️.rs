@@ -23,8 +23,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePageWidth {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_page_width(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change page \"{}\" width", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change page \"{}\" width", self.id), &format!("Seite \"{}\" Breite ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeWeldLength
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change weld length [mm] to {}", self.new_weld_length_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change weld length [mm] to {}", self.new_weld_length_mm), &format!("Schweißnahtlänge [mm] auf {} ändern", self.new_weld_length_mm))
     }
 }
 //#endregion 🔖️ChangeWeldLengthMm

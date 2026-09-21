@@ -22,8 +22,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeletePage {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_delete_page(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete page \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete page \"{}\"", self.id), &format!("Seite \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

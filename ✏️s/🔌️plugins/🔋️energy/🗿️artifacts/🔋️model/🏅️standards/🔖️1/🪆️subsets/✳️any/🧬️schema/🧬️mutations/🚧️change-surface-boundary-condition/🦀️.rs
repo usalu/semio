@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change surface {} boundary to {:?}", self.id.0, self.new_boundary)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change surface {} boundary to {:?}", self.id.0, self.new_boundary), &format!("Oberfläche {} Rand auf {:?} ändern", self.id.0, self.new_boundary))
     }
 
     fn target(&self) -> Vec<String> {

@@ -1,5 +1,8 @@
-
 use super::*;
+
+fn frozen_clock() -> Option<u64> {
+    Some(0)
+}
 
 fn inputs(now_ms: f64) -> FrameBuildInputs {
     FrameBuildInputs { wheel_zoom_deadline_ms: 500.0, now_ms }
@@ -49,6 +52,28 @@ fn stale_runtime_frame_generation_is_rejected() {
 }
 
 #[test]
+fn retained_frame_owner_turn_advances_once_and_charges_terminal_work() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap_or_else(|_| panic!("frame turn fixture"));
+    let turns = fixture["requests"][0]["remainingTurns"].as_u64().unwrap_or_else(|| panic!("frame turn count"));
+    let mut calls = 0;
+    for turn in 0..turns {
+        let mut preview_sequence = 0;
+        let mut context = StepContext::new(OperationId(41), Generation(7), semio_framework_job::StepBudget::new(1, u64::MAX), root_cancel_token(), frozen_clock, &mut preview_sequence);
+        let step = run_frame_owner_turn(&mut context, || {
+            calls += 1;
+            if turn + 1 == turns {
+                ActiveFrameStep::Complete(None)
+            } else {
+                ActiveFrameStep::Pending
+            }
+        });
+        assert!(matches!((turn + 1 == turns, step), (false, Some(ActiveFrameStep::Pending)) | (true, Some(ActiveFrameStep::Complete(None)))));
+        assert!(context.should_yield(), "one attempted terminal or pending unit consumes one fuel credit");
+    }
+    assert_eq!(calls, turns, "each retained Worker turn advances exactly once");
+}
+
+#[test]
 fn cancellation_retires_deadline_apply_and_build_phases_to_terminal_empty() {
     let deadline = BatchJobSession::try_new(FrameBuildJob::new(FrameBuildInputs { wheel_zoom_deadline_ms: 0.0, now_ms: 2.0 }), batch_params(OperationId(20), Generation(20), root_cancel_token()))
         .unwrap_or_else(|_| panic!("frame deadline test session admission"));
@@ -67,6 +92,7 @@ fn cancellation_retires_deadline_apply_and_build_phases_to_terminal_empty() {
 fn cancellation_retires_empty_preparation_to_terminal_empty() {
     let build = crate::AppFrameBuild {
         input: ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 1, ui_wgpu::wgpu::DrawList::default(), None, 0.0).unwrap_or_else(|_| panic!("empty fixture preparation admission")),
+        input_candidate: None,
         engine_packets: crate::FrameEnginePackets::default(),
         generation: Generation(1),
         cursor: ui_wgpu::wgpu::SemioCursor::Default,

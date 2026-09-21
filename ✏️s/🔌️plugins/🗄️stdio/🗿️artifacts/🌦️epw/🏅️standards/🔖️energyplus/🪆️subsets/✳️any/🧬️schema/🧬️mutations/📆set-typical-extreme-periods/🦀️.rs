@@ -22,8 +22,8 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetTypicalExtremePerio
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {
         agg_inverse(&EpwMutation::SetTypicalExtremePeriods(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-typical-extreme-periods".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-typical-extreme-periods", "typische extreme Perioden setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

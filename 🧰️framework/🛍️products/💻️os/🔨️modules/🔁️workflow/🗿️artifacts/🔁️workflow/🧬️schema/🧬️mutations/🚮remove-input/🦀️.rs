@@ -26,8 +26,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for RemoveInput 
             ops
         }
     }
-    fn label(&self) -> String {
-        format!("Remove workflow input {}", self.input_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove workflow input {}", self.input_id), &format!("Arbeitsablaufeingabe {} entfernen", self.input_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["inputs".into(), self.input_id.clone()]

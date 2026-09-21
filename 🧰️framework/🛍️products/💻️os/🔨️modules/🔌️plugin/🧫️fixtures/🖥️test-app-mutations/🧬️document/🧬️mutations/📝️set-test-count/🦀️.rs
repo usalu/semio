@@ -19,8 +19,8 @@ impl MutationKind<TestSnapshot, TestMutation> for SetCount {
     fn inverse(&self, base: &TestSnapshot) -> Vec<TestMutation> {
         vec![Self { value: base.count }.into()]
     }
-    fn label(&self) -> String {
-        format!("Set count to {}", self.value)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set count to {}", self.value), &format!("Anzahl auf {} setzen", self.value))
     }
 }
 

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeMu {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change friction coefficient mu to {}", self.new_mu)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change friction coefficient mu to {}", self.new_mu), &format!("Reibungskoeffizientmu auf {} ändern", self.new_mu))
     }
 }
 //#endregion 🔖️ChangeMu

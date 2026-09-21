@@ -19,8 +19,8 @@ impl CompositeMutationKind<Counter, CounterMutation> for AddCounterTwice {
         planner.call(CounterMutation::AddCounter(AddCounter { delta: self.delta }))?;
         planner.call(CounterMutation::AddCounter(AddCounter { delta: self.delta }))
     }
-    fn label(&self) -> String {
-        format!("Add {} twice", self.delta)
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Add {} twice", self.delta), &format!("{} Zweimal hinzufügen", self.delta))
     }
 }
 

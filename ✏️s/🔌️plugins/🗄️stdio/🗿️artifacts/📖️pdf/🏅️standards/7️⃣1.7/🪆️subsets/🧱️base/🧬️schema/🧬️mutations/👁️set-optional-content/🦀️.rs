@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetOptionalContent {
         vec![PdfMutation::SetOptionalContent(SetOptionalContent { content: base.optional_content.clone() })]
     }
 
-    fn label(&self) -> String {
-        "Set optional-content".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set optional-content", "Optionalen Inhalt setzen")
     }
 
     fn target(&self) -> Vec<String> {

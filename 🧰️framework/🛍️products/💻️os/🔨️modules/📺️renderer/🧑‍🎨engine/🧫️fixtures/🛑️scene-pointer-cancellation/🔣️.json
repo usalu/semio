@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "owner": {
     "identity": ["surfaceId", "generation", "pointerId"],
     "match": "all-fields",
@@ -7,6 +7,53 @@
     "staleGeneration": "ignore",
     "replacement": "cancel-old-before-reuse",
     "afterCancel": "next-down-accepted"
+  },
+  "tiledMap": {
+    "owner": {
+      "windowId": "map.window.upper",
+      "surfaceId": "map.surface.upper",
+      "peerSurfaceId": "map.surface.lower"
+    },
+    "cancel": [
+      {
+        "mode": "pan",
+        "button": 1,
+        "cameraPublications": 1,
+        "selectionPublications": 0,
+        "clearsDrag": true,
+        "nextDown": "accepted",
+        "duplicateCancel": "inert",
+        "outsideUp": "inert"
+      },
+      {
+        "mode": "marquee",
+        "button": 0,
+        "cameraPublications": 0,
+        "selectionPublications": 0,
+        "clearsDrag": true,
+        "nextDown": "accepted",
+        "duplicateCancel": "inert",
+        "outsideUp": "inert"
+      },
+      {
+        "mode": "none",
+        "button": 0,
+        "cameraPublications": 0,
+        "selectionPublications": 0,
+        "clearsDrag": false,
+        "nextDown": "accepted",
+        "duplicateCancel": "inert",
+        "outsideUp": "inert"
+      }
+    ],
+    "hoverLeave": {
+      "prior": "position:position.upper",
+      "emptyTargets": "[]",
+      "publications": 1,
+      "repeatPublications": 0,
+      "peerPublications": 0,
+      "gestureFanout": []
+    }
   },
   "cases": [
     {

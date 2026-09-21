@@ -27,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for InsertEmbeddedFile {
         vec![PdfAMutation::RemoveEmbeddedFile(RemoveEmbeddedFile { file_name: self.file_name.clone() })]
     }
 
-    fn label(&self) -> String {
-        format!("Insert embedded file \"{}\"", self.file_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Insert embedded file \"{}\"", self.file_name), &format!("eingebettete Datei \"{}\" einfügen", self.file_name))
     }
 
     fn target(&self) -> Vec<String> {

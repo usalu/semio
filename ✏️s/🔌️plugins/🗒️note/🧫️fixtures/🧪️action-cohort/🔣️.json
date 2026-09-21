@@ -2,18 +2,19 @@
   "schema": "semio.note.action-cohort.v1",
   "owner": "NotePlayApp",
   "source": "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-  "routeCount": 36,
+  "routeCount": 35,
   "retainedRoutes": [
     "setGridVisible",
     "setGridSpacing",
     "setCamera",
     "setCameraZoom",
-    "setActiveUtility",
     "engagementInput",
     "navigatorEngagementInput",
     "loadRequest"
   ],
-  "frameworkOwnedRoutes": [],
+  "frameworkOwnedRoutes": [
+    "setActiveUtility"
+  ],
   "groups": [
     {
       "status": "batch-only-pending-rewrite",
@@ -88,7 +89,6 @@
       "routes": [
         "setCamera",
         "setCameraZoom",
-        "setActiveUtility",
         "engagementInput"
       ]
     },

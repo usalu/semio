@@ -183,6 +183,55 @@ fn a_silent_shell_times_out_into_a_retryable_budget_fault_and_never_hangs() {
     assert!(started.elapsed() < Duration::from_secs(5), "the wait is bounded, not forever");
 }
 
+/// 🎯️ An artifact handle names its own plugin, and that is what a capability-less command resolves
+/// an instance from. Measured inside `s` before this rule existed: with a spawned `note` editor open
+/// the shell reported 3 instances and `ReadArtifact` refused outright, cascading (f1)…(f8) of the
+/// live agent gate (ticket 26/09/18, S6 §5.4).
+#[test]
+fn a_capability_less_command_resolves_the_one_open_instance_of_its_own_plugin() {
+    let handle = std::sync::Arc::new(BridgeHandle::new());
+    let (id, _receiver) = handle.register();
+    handle.record_hello(id, BridgeFlags { relay_app_commands: true, shared_backbone: false, elicit: false });
+    handle.record(id, ShellToGateway::Instances {
+        entries: vec![
+            BridgeInstanceRef { plugin_id: "space".to_string(), app_id: "s.space.home".to_string(), instance_id: "2".to_string(), artifact_ref: "space:s.space.home:2".to_string(), window_ids: vec!["s-home-main".to_string()] },
+            BridgeInstanceRef { plugin_id: "note".to_string(), app_id: "s.note.note".to_string(), instance_id: "4".to_string(), artifact_ref: "note:s.note.note:4".to_string(), window_ids: vec!["note-4::note-composite".to_string()] },
+        ],
+    });
+    let slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
+    slot.set(std::sync::Arc::clone(&handle)).ok();
+    let binding = std::sync::Arc::new(SessionChannelBinding::new(Some(slot)));
+    let mut channel = ShellArtifactChannel::new(binding, empty_catalog()).for_plugin("note").with_timeout(Duration::from_millis(60));
+    // 🎯️ Nothing answers, so the exchange still times out — but it times out having ADDRESSED an
+    // instance, which is the whole statement: before the rule it refused `plugin.unavailable` here.
+    let fault = channel.exchange(0, vec![AppCommand::ReadArtifact]).expect_err("nothing answers");
+    assert_eq!(fault.code, "budget.exceeded", "{}", fault.message);
+}
+
+/// 🎯️ Several open instances of the artifact's own plugin is genuinely ambiguous, and an ambiguous
+/// handle is refused BY NAME rather than resolved silently — picking one would edit a document the
+/// agent never named.
+#[test]
+fn an_ambiguous_artifact_handle_is_refused_by_name_with_its_candidates() {
+    let handle = std::sync::Arc::new(BridgeHandle::new());
+    let (id, _receiver) = handle.register();
+    handle.record_hello(id, BridgeFlags { relay_app_commands: true, shared_backbone: false, elicit: false });
+    handle.record(id, ShellToGateway::Instances {
+        entries: vec![
+            BridgeInstanceRef { plugin_id: "note".to_string(), app_id: "s.note.note".to_string(), instance_id: "4".to_string(), artifact_ref: "note:s.note.note:4".to_string(), window_ids: vec![] },
+            BridgeInstanceRef { plugin_id: "note".to_string(), app_id: "s.note.note".to_string(), instance_id: "9".to_string(), artifact_ref: "note:s.note.note:9".to_string(), window_ids: vec![] },
+        ],
+    });
+    let slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
+    slot.set(std::sync::Arc::clone(&handle)).ok();
+    let binding = std::sync::Arc::new(SessionChannelBinding::new(Some(slot)));
+    let mut channel = ShellArtifactChannel::new(binding, empty_catalog()).for_plugin("note");
+    let fault = channel.exchange(0, vec![AppCommand::ReadArtifact]).expect_err("two candidates");
+    assert_eq!(fault.code, "plugin.unavailable");
+    assert!(fault.message.contains("note:s.note.note:4"), "{}", fault.message);
+    assert!(fault.message.contains("note:s.note.note:9"), "{}", fault.message);
+}
+
 #[test]
 fn inference_never_travels_the_shell_route() {
     let binding = std::sync::Arc::new(SessionChannelBinding::new(None));

@@ -28,8 +28,8 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateShapeModel {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create shape-model child {}", self.child_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create shape-model child {}", self.child_id), &format!("Formmodell-Kind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["shape_model".to_string()]

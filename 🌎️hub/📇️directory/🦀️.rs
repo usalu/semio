@@ -774,6 +774,56 @@ pub const AUTH_ASSERTION_MAX_BYTES: usize = 16 * 1024;
 pub const AUTH_TEXT_MAX_BYTES: usize = 256;
 
 /// @emoji 🔐️ Encodes capability bytes without a runtime dependency.
+/// 📐️ The stamp shape a directory database carries, so a future format is recognised rather than
+/// guessed at. Mirrors `🗄️stores/🦀️.rs`'s `STORE_FORMAT_SCHEMA` for the four filesystem stores.
+pub(crate) const DIRECTORY_FORMAT_SCHEMA: &str = "semio/hub/directory-format/v1";
+
+/// 📐️ The directory record format this build writes and reads. Bump it in the same commit that
+/// changes what a `hub_directory_event` row, a projection column or a capability digest means.
+pub(crate) const DIRECTORY_FORMAT_VERSION: i64 = 1;
+
+/// 📐️ What this build must do about the stamp it found on a directory database.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum DirectoryFormatAdmission {
+    Stamp,
+    Admitted,
+}
+
+/// 📐️ Decides whether a directory database may be opened, from the stamp it carries.
+///
+/// The hub has **no migration framework** on purpose (`🌎️hub/README.md` § "There is no cross-version
+/// upgrade path"), and `🗄️stores/🦀️.rs` already pays that decision's price for the four filesystem
+/// stores by stamping each one on creation and refusing a root it did not write. The three directory
+/// backends carried no stamp at all, so a build could fold over event rows and projection columns it
+/// only half-understands and produce a plausible, wrong directory in silence — the exact failure the
+/// filesystem law exists to prevent. Four outcomes, each a decision rather than a default:
+/// - **no stamp, no events** — creation: write this build's stamp.
+/// - **no stamp, events already there** — adoption at [`DIRECTORY_FORMAT_VERSION`], with a warning.
+///   Exactly one directory format has ever existed, so an unstamped database is genuinely a v1 one.
+///   This branch stops being reachable the moment a v2 exists, and must be deleted then.
+/// - **a newer version, or a schema this build does not know** — refused; this build cannot know
+///   what a later format means.
+/// - **an older version** — refused; there is no migration framework to run.
+pub(crate) fn admit_directory_format(observed: Option<(String, i64)>, populated: bool, backend: &'static str) -> DirectoryResult<DirectoryFormatAdmission> {
+    let Some((schema, version)) = observed else {
+        if populated {
+            eprintln!("[WARN] adopting an unstamped {backend} hub directory as format v{DIRECTORY_FORMAT_VERSION}");
+        }
+        return Ok(DirectoryFormatAdmission::Stamp);
+    };
+    if schema != DIRECTORY_FORMAT_SCHEMA {
+        return Err(DirectoryError::Backend(format!(
+            "{backend} hub directory carries an unknown format stamp {schema:?}; this build writes {DIRECTORY_FORMAT_SCHEMA}. There is no migration framework: back the database up and start this build from an empty one."
+        )));
+    }
+    if version != DIRECTORY_FORMAT_VERSION {
+        return Err(DirectoryError::Backend(format!(
+            "{backend} hub directory is format v{version} and this build reads v{DIRECTORY_FORMAT_VERSION}. There is no migration framework: back the database up and start this build from an empty one."
+        )));
+    }
+    Ok(DirectoryFormatAdmission::Admitted)
+}
+
 pub fn encode_capability_bytes(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     let mut encoded = String::with_capacity(bytes.len() * 2);
@@ -4451,6 +4501,10 @@ impl HubDirectory for HubDirectories {
 // feature set — Amendment 2 — actually compiles/runs here); postgres/neo4j get the same coverage
 // via their own `#[cfg(test)]` modules once `🛢️db`'s optional-dependency gap is fixed (not this
 // lane's to fix, see the lane report).
+#[cfg(test)]
+#[path = "🧪️tests/🔮️backend-corpus/🦀️.rs"]
+pub(crate) mod backend_corpus;
+
 #[cfg(all(test, feature = "sqlite"))]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

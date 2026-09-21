@@ -47,8 +47,8 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for RemoveArrayEl
         vec![super::JsonMutation::RemoveArrayElement(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String {
-        "Remove Array Element".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove Array Element", "Arrayelement entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-array-element".to_string()]

@@ -61,8 +61,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderAccess
         vec![super::GltfMutation::ReorderAccessors(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Reorder Accessors".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Reorder Accessors", "Accessoren umordnen")
     }
 
     fn target(&self) -> Vec<String> {

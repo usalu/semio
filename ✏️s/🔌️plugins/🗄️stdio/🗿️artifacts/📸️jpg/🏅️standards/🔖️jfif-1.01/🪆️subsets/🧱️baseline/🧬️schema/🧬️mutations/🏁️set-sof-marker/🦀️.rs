@@ -20,8 +20,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetSofMarker {
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
         agg_inverse(&JpgBaselineMutation::SetSofMarker(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-sof-marker".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-sof-marker", "Sofmarker setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

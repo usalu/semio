@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for SetRelationshi
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxStrictMutation> {
         agg_inverse(&DocxStrictMutation::SetRelationshipBase(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-relationship-base".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-relationship-base", "Beziehungsbasis setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

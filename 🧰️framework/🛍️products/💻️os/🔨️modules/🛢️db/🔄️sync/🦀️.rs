@@ -1529,6 +1529,23 @@ pub fn database_sync_hello_live_slots() -> usize {
     database_sync_hello_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter(|slot| slot.is_some()).count()
 }
 
+static DATABASE_SYNC_HELLO_STATE_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// 🔬️ How many LIVE `DatabaseSyncHelloState` owners still hold the `WorkerPoolUse` clone their
+/// admission was given. The registry slot is cleared the moment the hello stops being pending, but
+/// the `Arc<DatabaseSyncHelloState>` outlives that clearing inside its future, its session and its
+/// deadline callback — so `database_sync_hello_live_slots() == 0` does NOT exclude a live carrier.
+/// This counter is incremented where the state is built and decremented in its `Drop`.
+pub fn database_sync_hello_live_states() -> usize {
+    DATABASE_SYNC_HELLO_STATE_LIVE.load(std::sync::atomic::Ordering::Acquire)
+}
+
+impl Drop for DatabaseSyncHelloState {
+    fn drop(&mut self) {
+        DATABASE_SYNC_HELLO_STATE_LIVE.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+    }
+}
+
 fn database_sync_hello_registry() -> &'static std::sync::Mutex<[Option<std::sync::Arc<DatabaseSyncHelloState>>; DATABASE_SYNC_HELLO_SLOTS]> {
     static REGISTRY: std::sync::OnceLock<std::sync::Mutex<[Option<std::sync::Arc<DatabaseSyncHelloState>>; DATABASE_SYNC_HELLO_SLOTS]>> = std::sync::OnceLock::new();
     REGISTRY.get_or_init(|| std::sync::Mutex::new(std::array::from_fn(|_| None)))
@@ -1536,12 +1553,12 @@ fn database_sync_hello_registry() -> &'static std::sync::Mutex<[Option<std::sync
 
 impl std::task::Wake for DatabaseSyncHelloState {
     fn wake(self: std::sync::Arc<Self>) {
-        self.wake_requested.store(true, std::sync::atomic::Ordering::Release);
+        self.wake_requested.store(true, std::sync::atomic::Ordering::SeqCst);
         self.schedule();
     }
 
     fn wake_by_ref(self: &std::sync::Arc<Self>) {
-        self.wake_requested.store(true, std::sync::atomic::Ordering::Release);
+        self.wake_requested.store(true, std::sync::atomic::Ordering::SeqCst);
         self.schedule();
     }
 }
@@ -1551,8 +1568,15 @@ impl DatabaseSyncHelloState {
         self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(DatabaseSyncHelloAdmission::is_current)
     }
 
+    /// 🔔️ The signal half of the driver handoff. A caller that finds the driver busy does NOT
+    /// re-submit — it has already published its signal (`wake_requested` or `demand`) and hands the
+    /// re-drive to `drive_one`'s release. Both halves are `SeqCst` so the two stores and the two
+    /// loads share one total order: whenever this CAS reads a busy driver, the release is guaranteed
+    /// to read the signal, and whenever the release's loads read no signal, this CAS is guaranteed to
+    /// read `Idle` and queue the turn itself. Any weaker pair permits StoreLoad reordering, i.e. a
+    /// lost wake whose only recovery is the 30 s `DATABASE_SYNC_HELLO_DEADLINE_MS` callback.
     fn schedule(self: &std::sync::Arc<Self>) {
-        if self.driver.compare_exchange(DatabaseSyncHelloDriverAuthority::Idle as u8, DatabaseSyncHelloDriverAuthority::Queued as u8, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+        if self.driver.compare_exchange(DatabaseSyncHelloDriverAuthority::Idle as u8, DatabaseSyncHelloDriverAuthority::Queued as u8, std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst).is_err() {
             return;
         }
         let state = self.clone();
@@ -1586,6 +1610,12 @@ impl DatabaseSyncHelloState {
         }
     }
 
+    /// 🚚️ One driver turn, and the release that must never drop a signal raised during it. The
+    /// swap of `wake_requested` happens before the driver goes `Idle`, so a wake raised in that
+    /// window finds a busy driver in `schedule` AND has already been swapped out here — the reason
+    /// both signals are re-read AFTER the release. A dropped signal parks the whole hello with
+    /// nothing scheduled, and its only recovery is the 30 s deadline callback, which every caller
+    /// of `hello()`/`next_frame()` experiences as a bootstrap frame that simply never arrives.
     fn drive_one(self: std::sync::Arc<Self>) {
         if self.driver.compare_exchange(DatabaseSyncHelloDriverAuthority::Queued as u8, DatabaseSyncHelloDriverAuthority::Driving as u8, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
             return;
@@ -1593,9 +1623,10 @@ impl DatabaseSyncHelloState {
         let returned = self.close_returned_frame_one();
         let closing = self.close_requested.load(std::sync::atomic::Ordering::Acquire) && self.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).future.is_none();
         let pending = returned.unwrap_or_else(|| if closing { self.close_one_claimed() } else { self.poll_one() });
-        let wake = self.wake_requested.swap(false, std::sync::atomic::Ordering::AcqRel);
-        self.driver.store(DatabaseSyncHelloDriverAuthority::Idle as u8, std::sync::atomic::Ordering::Release);
-        if pending || wake || self.demand.load(std::sync::atomic::Ordering::Acquire) {
+        let wake = self.wake_requested.swap(false, std::sync::atomic::Ordering::SeqCst);
+        self.driver.store(DatabaseSyncHelloDriverAuthority::Idle as u8, std::sync::atomic::Ordering::SeqCst);
+        let signalled = self.wake_requested.load(std::sync::atomic::Ordering::SeqCst) || self.demand.load(std::sync::atomic::Ordering::SeqCst);
+        if pending || wake || signalled {
             self.schedule();
         }
     }
@@ -1819,6 +1850,12 @@ impl DatabaseSyncHelloState {
         pending
     }
 
+    /// ⏳️ Expires one hello that is still running at its deadline. The `WorkerPool` timer holds the
+    /// state WEAKLY: `callback_at` cannot be cancelled, so an owning clone would pin the state — and
+    /// with it the `Database`'s `WorkerPoolUse` — for the full `DATABASE_SYNC_HELLO_DEADLINE_MS`
+    /// after the hello finished, long past the registry slot being cleared. A database that
+    /// completed a sync could then not shut down inside its own deadline. A hello whose owners are
+    /// all gone has nothing left to expire, so the upgrade failing is the terminal case.
     fn deadline_callback(self: &std::sync::Arc<Self>) {
         if self.current() && !matches!(self.progress(), DatabaseSyncHelloProgress::Completed | DatabaseSyncHelloProgress::Cancelled | DatabaseSyncHelloProgress::Fault) {
             self.expired.store(true, std::sync::atomic::Ordering::Release);
@@ -1890,6 +1927,7 @@ impl DatabaseSyncHelloFuture {
         let progress = std::sync::Arc::new(std::sync::atomic::AtomicU8::new(DatabaseSyncHelloProgress::Admitted as u8));
         let future = Box::pin(database_sync_hello_execute(owners, cancelled.clone(), expired.clone(), progress.clone()));
         let deadline_ms = pool.now_ms().saturating_add(DATABASE_SYNC_HELLO_DEADLINE_MS);
+        DATABASE_SYNC_HELLO_STATE_LIVE.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         let state = std::sync::Arc::new(DatabaseSyncHelloState {
             pool: pool.clone(),
             _pool_use: pool_use,
@@ -1912,8 +1950,12 @@ impl DatabaseSyncHelloFuture {
             returned_generation: std::sync::atomic::AtomicU64::new(1),
         });
         database_sync_hello_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[slot] = Some(state.clone());
-        let deadline = state.clone();
-        pool.callback_at(deadline_ms, move || deadline.deadline_callback());
+        let deadline = std::sync::Arc::downgrade(&state);
+        pool.callback_at(deadline_ms, move || {
+            if let Some(state) = deadline.upgrade() {
+                state.deadline_callback();
+            }
+        });
         state.schedule();
         Ok(Self { state: Some(state), completed: false })
     }
@@ -2212,7 +2254,7 @@ impl std::future::Future for DatabaseSyncHelloNextFuture {
         if lease_closing {
             state.schedule();
         } else if state.core.lock().unwrap_or_else(std::sync::PoisonError::into_inner).returned_frame.is_none() {
-            state.demand.store(true, std::sync::atomic::Ordering::Release);
+            state.demand.store(true, std::sync::atomic::Ordering::SeqCst);
             state.schedule();
         }
         std::task::Poll::Pending

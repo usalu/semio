@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 
 export function createBrowserBundleTests(dependencies: import("../../🌐️browser-bundle/📜️script.ts").BrowserBundleTestDependencies, source: { directory: string; url: string }) {
-  const { browserActorAsyncImports, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync } = dependencies;
+  const { browserActorAsyncImports, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync } = dependencies;
   type BrowserActorBuildControl = import("../../🌐️browser-bundle/📜️script.ts").BrowserActorBuildControl;
   async function testClosedBrowserComponentFactory(repoRoot: string): Promise<void> {
     await testBrowserActorCodegenManifest();
+    testAsyncTaskReturnLift();
     await testBrowserCodegenCapsule(repoRoot);
     await testBrowserCodegenSources(repoRoot);
     await testBrowserCodegenPolicy(repoRoot);
@@ -194,7 +195,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
       packages: fixture.packages.map(([name, version]: string[]) => ({ name, version, lockSha256: digest.sha256, manifestSha256: digest.sha256 })),
       parser: { name: "typescript", version: "5.9.3", manifestSha256: digest.sha256, lockRowSha256: digest.sha256, entry: { logicalPath: "typescript/lib/typescript.js", ...digest } },
       firstParty: [{ logicalPath: "browser/script.ts", ...digest }],
-      options: { jco: "1.27.0", entrypoint: "@bytecodealliance/jco/component", target: "browser", format: "esm", name: "browser-actor", instantiation: "async", asyncMode: "jspi", nodejsCompat: false, base64Cutoff: 0, importInterfaces: [...browserActorInterfaces], asyncImports: [...browserActorAsyncImports] },
+      options: { jco: "1.34.0", entrypoint: "@bytecodealliance/jco/component", target: "browser", format: "esm", name: "browser-actor", instantiation: "async", asyncMode: "jspi", nodejsCompat: false, base64Cutoff: 0, importInterfaces: [...browserActorInterfaces], asyncImports: [...browserActorAsyncImports] },
     };
     assert(validate(input), JSON.stringify(validate.errors));
     const sealed = sealBrowserCodegenPolicy(input);
@@ -225,12 +226,21 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     const capturedInputs = structuredClone(compiler.inputs);
     writeFileSync(join(evidence, "compiler-sources.json"), "[]", { mode: 0o600 });
     assert.deepEqual(compiler.inputs, capturedInputs);
-    assert.equal(compiler.inputs.length, 8);
+    assert.equal(compiler.inputs.length, 11);
     assert(compiler.inputs.every(Object.isFrozen));
     assert.equal(compiler.cores.length, 2);
     console.log(`browser-codegen-policy: AJV=1 stable-stringify=1 WebCrypto=1 laws=${fixture.laws.length} inputs=${targets.length + input.packages.length * 2}`);
   }
   
+  /** 🪝️ Pins the refusal that an unflattenable async result may never be bound to direct `task.return` params. */
+  function testAsyncTaskReturnLift(): void {
+    const fixture = JSON.parse(readFileSync(join(source.directory, "🧫️fixtures/🪝️async-task-return/🔣️.json"), "utf8"));
+    for (const admitted of fixture.admitted) assert.equal(validateAsyncTaskReturnLift(admitted), fixture.bindings);
+    for (const denied of fixture.denied) assert.throws(() => validateAsyncTaskReturnLift(denied), /unflattenable async result requires an indirect task\.return/);
+    assert.equal(validateAsyncTaskReturnLift(""), 0);
+    console.log(`async-task-return-lift: TypeScript=1 admitted=${fixture.admitted.length} bindings=${fixture.bindings} denied=${fixture.denied.length}`);
+  }
+
   /** 📦️ Compares generated-manifest admission with the strict schema and canonical array ordering. */
   async function testBrowserActorCodegenManifest(): Promise<void> {
     const fixture = JSON.parse(readFileSync(join(source.directory, "🧫️fixtures/📦️codegen-manifest/🔣️.json"), "utf8"));
@@ -288,7 +298,7 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert(validatePolicy(policy), JSON.stringify(validatePolicy.errors));
     assert.equal(artifact.policySha256, Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(artifact.policyCanonical))).toString("hex"));
     assert.equal(artifact.policyCanonical.includes(repoRoot), false);
-    assert.equal(policy.compiler.inputs.length, 8);
+    assert.equal(policy.compiler.inputs.length, 11);
     assert.equal(policy.firstParty.length, 6);
     assert.deepEqual(artifact.importInterfaces, input.closed.importInterfaces);
     const nodeClosure = await closedBrowserActorBundle(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), { importInterfaces: input.closed.importInterfaces });

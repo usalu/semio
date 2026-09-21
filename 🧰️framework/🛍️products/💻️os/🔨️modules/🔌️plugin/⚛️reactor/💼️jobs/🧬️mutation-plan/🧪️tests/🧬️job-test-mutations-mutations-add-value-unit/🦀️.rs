@@ -95,7 +95,7 @@ fn ordinary_contributed_plan_keeps_direct_leaf_and_label() {
         let leaf = AddValue { delta };
         let plan = protocol::plan_of::<JobTestSnapshot, JobTestOp, AddValue>(&leaf, &base).expect("contribution plan");
         assert_eq!(plan.len(), 1);
-        assert_eq!(<AddValue as protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp>>::label(&leaf), format!("Add {delta} to value"));
+        assert_eq!(<AddValue as protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp>>::label(&leaf), protocol::LocalizedLabel::native(&format!("Add {delta} to value"), &format!("{delta} zu Wert hinzufügen")));
         assert_eq!(JobTestOp::AddValue(leaf).diff(&base).diff(), &JobTestDiff { deltas: vec![delta] });
     }
 }

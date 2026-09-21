@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetIcc {
     fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {
         agg_inverse(&SemioImageMutation::SetIcc(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-icc".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-icc", "icc setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

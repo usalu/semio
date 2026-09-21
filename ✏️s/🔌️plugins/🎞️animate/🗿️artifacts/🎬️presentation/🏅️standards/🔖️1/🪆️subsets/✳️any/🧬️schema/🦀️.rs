@@ -11,6 +11,13 @@ use schema::ArtifactSchema;
 pub struct PresentationArtifact {
     #[state(artifact)]
     pub schema: String,
+    /// 🖼️ See `PresentationSnapshot::source` — the persisted payload the composed `presentation`
+    /// deck is derived from.
+    #[state(artifact)]
+    pub source: crate::FigureTileSource,
+    /// 🧱 See `PresentationSnapshot::tiles`.
+    #[state(artifact)]
+    pub tiles: Vec<crate::FigureTileDraft>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub presentation: PresentationChild,
@@ -23,24 +30,26 @@ pub struct PresentationArtifact {
 //#region 🔖️Conversions
 impl Default for PresentationArtifact {
     fn default() -> Self {
-        Self { schema: PRESENTATION_DOCUMENT_SCHEMA.into(), presentation: crate::presentation_child_handle_and_cache(&crate::default_figure_tile_source(), &[]), animation: crate::animation_child_handle() }
+        Self::from_snapshot(crate::default_snapshot())
     }
 }
 
 impl PresentationArtifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::PresentationSnapshot {
-        crate::PresentationSnapshot { schema: self.schema.clone(), presentation: self.presentation.clone(), animation: self.animation.clone() }
+        crate::PresentationSnapshot { schema: self.schema.clone(), source: self.source.clone(), tiles: self.tiles.clone(), presentation: self.presentation.clone(), animation: self.animation.clone() }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::PresentationSnapshot) -> Self {
-        Self { schema: snapshot.schema, presentation: snapshot.presentation, animation: snapshot.animation }
+        Self { schema: snapshot.schema, source: snapshot.source, tiles: snapshot.tiles, presentation: snapshot.presentation, animation: snapshot.animation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
     pub fn set_snapshot(&mut self, snapshot: crate::PresentationSnapshot) {
         self.schema = snapshot.schema;
+        self.source = snapshot.source;
+        self.tiles = snapshot.tiles;
         self.presentation = snapshot.presentation;
         self.animation = snapshot.animation;
     }

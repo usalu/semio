@@ -17,8 +17,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ReorderNodes {
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         vec![DagMutation::ReorderNodes(Self { order: base.nodes.iter().map(|node| node.id.clone()).collect() })]
     }
-    fn label(&self) -> String {
-        "Reorder nodes".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Reorder nodes", "Knoten umordnen")
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into()]

@@ -67,8 +67,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateAccesso
         vec![super::GltfMutation::CreateAccessor(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Create Accessor".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Create Accessor", "Accessor erstellen")
     }
 
     fn target(&self) -> Vec<String> {

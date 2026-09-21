@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for Se
     fn inverse(&self, base: &SemioDocumentSnapshot) -> Vec<SemioDocumentMutation> {
         agg_inverse(&SemioDocumentMutation::SetHeadingLevel(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-heading-level".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-heading-level", "Überschriftstufe setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

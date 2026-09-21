@@ -77,8 +77,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindNodeChild
         vec![super::GltfMutation::BindNodeChild(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Bind Node Child".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Bind Node Child", "Knotenkind binden")
     }
 
     fn target(&self) -> Vec<String> {

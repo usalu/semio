@@ -23,8 +23,8 @@ impl MutationKind<FormsSnapshot, FormMutation> for RenameStep {
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename step to \"{}\"", self.new_title)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename step to \"{}\"", self.new_title), &format!("Schritt in \"{}\" umbenennen", self.new_title))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

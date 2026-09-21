@@ -26,8 +26,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for RenameStep
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Rename step to \"{}\"", self.new_label)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename step to \"{}\"", self.new_label), &format!("Schritt in \"{}\" umbenennen", self.new_label))
     }
 
     fn target(&self) -> Vec<String> {

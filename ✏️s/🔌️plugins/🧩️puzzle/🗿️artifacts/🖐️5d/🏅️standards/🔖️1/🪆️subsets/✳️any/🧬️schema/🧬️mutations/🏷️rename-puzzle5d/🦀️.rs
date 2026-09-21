@@ -30,8 +30,8 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for RenamePuzzle
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Rename puzzle5d".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Rename puzzle5d", "Puzzle5d umbenennen")
     }
 }
 //#endregion 🔖️Mutation

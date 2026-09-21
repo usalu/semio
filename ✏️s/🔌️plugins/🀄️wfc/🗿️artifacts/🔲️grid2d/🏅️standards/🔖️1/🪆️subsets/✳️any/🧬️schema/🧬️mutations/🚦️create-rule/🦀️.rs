@@ -28,8 +28,8 @@ impl MutationKind<Grid2dSnapshot, Grid2dMutation> for CreateRule {
     fn inverse(&self, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create rule \"{}\"", self.rule.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create rule \"{}\"", self.rule.id), &format!("Regel \"{}\" erstellen", self.rule.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.rule.id.clone()]

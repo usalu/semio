@@ -21,8 +21,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveAppExtension {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::RemoveAppExtension(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-app-extension".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-app-extension", "Apperweiterung entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

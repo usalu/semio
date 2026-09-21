@@ -32,8 +32,8 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for MoveWidget {
     fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move widget \"{}\" to ({}, {})", self.id, self.layout.x, self.layout.y)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move widget \"{}\" to ({}, {})", self.id, self.layout.x, self.layout.y), &format!("Widget \"{}\" nach ({}, {}) verschieben", self.id, self.layout.x, self.layout.y))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioImageSnapshot, SemioImageMutation> for SetMetad
     fn inverse(&self, base: &SemioImageSnapshot) -> Vec<SemioImageMutation> {
         agg_inverse(&SemioImageMutation::SetMetadataEntry(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-metadata-entry".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-metadata-entry", "Metadateneintrag setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

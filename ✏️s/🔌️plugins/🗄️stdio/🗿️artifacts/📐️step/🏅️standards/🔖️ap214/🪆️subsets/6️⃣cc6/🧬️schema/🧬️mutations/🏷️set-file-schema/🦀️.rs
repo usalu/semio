@@ -23,8 +23,8 @@ impl protocol::MutationKind<StepSnapshot, StepCc6Mutation> for SetFileSchema {
     fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc6Mutation> {
         class_inverse(base, &ClassEdit::FileSchema { schemas: self.schemas.clone() })
     }
-    fn label(&self) -> String {
-        format!("Set FILE_SCHEMA to [{}]", self.schemas.join(", "))
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set FILE_SCHEMA to [{}]", self.schemas.join(", ")), &format!("FILE_SCHEMA auf [{}] setzen", self.schemas.join(",")))
     }
     fn target(&self) -> Vec<String> {
         self.schemas.clone()

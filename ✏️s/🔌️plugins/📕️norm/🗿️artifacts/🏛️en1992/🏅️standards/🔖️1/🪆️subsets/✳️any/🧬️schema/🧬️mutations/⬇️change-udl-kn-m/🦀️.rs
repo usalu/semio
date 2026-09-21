@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeUdlKnM {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change udl kn m to {:?}", self.new_udl_kn_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change udl kn m to {:?}", self.new_udl_kn_m), &format!("Udlknm auf {:?} ändern", self.new_udl_kn_m))
     }
 }
 //#endregion 🔖️ChangeUdlKnM

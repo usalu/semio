@@ -30,8 +30,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DeleteLayer {
     fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete layer \"{}\"", self.layer_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete layer \"{}\"", self.layer_id), &format!("Ebene \"{}\" löschen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

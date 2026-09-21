@@ -19,6 +19,8 @@ impl protocol::MutationKind<JackEditorWindowConfig, JackEditorWindowConfigMutati
     fn inverse(&self, base: &JackEditorWindowConfig) -> Vec<JackEditorWindowConfigMutation> {
         vec![Self { value: base.jack_query.clone() }.into()]
     }
-    fn label(&self) -> String { "Set Editor Query".into() }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Editor Query", "Editorabfrage setzen")
+    }
     fn target(&self) -> Vec<String> { vec!["jack_query".into()] }
 }

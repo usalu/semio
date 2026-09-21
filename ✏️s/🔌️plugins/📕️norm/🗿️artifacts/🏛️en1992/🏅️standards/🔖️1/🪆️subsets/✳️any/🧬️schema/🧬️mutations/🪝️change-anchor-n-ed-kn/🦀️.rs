@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorNEdK
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change anchor n ed kn to {:?}", self.new_anchor_n_ed_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change anchor n ed kn to {:?}", self.new_anchor_n_ed_kn), &format!("Ankernedkn auf {:?} ändern", self.new_anchor_n_ed_kn))
     }
 }
 //#endregion 🔖️ChangeAnchorNEdKn

@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeConstructi
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change construction activity to \"{}\"", self.new_construction_activity)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change construction activity to \"{}\"", self.new_construction_activity), &format!("Konstruktionsaktivität auf \"{}\" ändern", self.new_construction_activity))
     }
 }
 //#endregion 🔖️Payload

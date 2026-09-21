@@ -1,9 +1,9 @@
 // #region draw
 //! 🖌️ Draw list and GPU pipeline for UI quads, vector geometry, and 3D scene passes.
 
-use super::kernel_3d_scene::{Mat4Math, ScenePass3d};
+use super::kernel_3d_scene::{Mat4Math, ProceduralGrid3d, ScenePass3d, PROCEDURAL_GRID_CELL_THICKNESS, PROCEDURAL_GRID_FADE_STRENGTH};
 use crate::wgpu::prepared::{PreparedRasterPages, RasterContentIdentity};
-use crate::wgpu::shaders::{world3d_painted_shader, BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_CELEBRATION_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER, WORLD3D_TEXTURED_SHADER};
+use crate::wgpu::shaders::{world3d_painted_shader, BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_CELEBRATION_SHADER, WORLD3D_GRID_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER, WORLD3D_TEXTURED_SHADER};
 #[cfg(test)]
 use crate::wgpu::theme::Rgba;
 use crate::wgpu::theme::Theme;
@@ -316,6 +316,26 @@ impl World3dGlobals {
             material: [pass.neutral_material.metalness, pass.neutral_material.roughness, pass.neutral_material.emissive_intensity, if pass.lighting.sun_enabled { 1.0 } else { 0.0 }],
             material_emissive: [pass.neutral_material.emissive[0], pass.neutral_material.emissive[1], pass.neutral_material.emissive[2], 0.0],
             shadow: [if pass.shadow.enabled { 1.0 } else { 0.0 }, 0.0, 0.0, 1.0],
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Pod, Zeroable)]
+pub(crate) struct World3dGridUniforms {
+    pub plane_cell: [f32; 4],
+    pub camera_fade: [f32; 4],
+    pub cell_color: [f32; 4],
+    pub _pad: [[f32; 4]; 13],
+}
+
+impl World3dGridUniforms {
+    pub(crate) fn from_grid(grid: &ProceduralGrid3d) -> Self {
+        Self {
+            plane_cell: [grid.plane_z, grid.cell_size, PROCEDURAL_GRID_CELL_THICKNESS, grid.fade_distance],
+            camera_fade: [grid.camera_plane_projection[0], grid.camera_plane_projection[1], grid.camera_plane_projection[2], PROCEDURAL_GRID_FADE_STRENGTH],
+            cell_color: [grid.cell_color[0], grid.cell_color[1], grid.cell_color[2], 0.0],
+            _pad: [[0.0; 4]; 13],
         }
     }
 }
@@ -2589,6 +2609,7 @@ pub(crate) struct UiPipelines {
     world_celebration_pipeline_translucent: wgpu::RenderPipeline,
     world_shadow_pipeline: wgpu::RenderPipeline,
     world_line_pipeline: wgpu::RenderPipeline,
+    world_grid_pipeline: wgpu::RenderPipeline,
     world_textured_pipeline: wgpu::RenderPipeline,
     blur_downsample_pipeline: wgpu::RenderPipeline,
     scene_blit_pipeline: wgpu::RenderPipeline,
@@ -2596,6 +2617,8 @@ pub(crate) struct UiPipelines {
     quad_vertex_buffer: wgpu::Buffer,
     world_plane_vertex_buffer: wgpu::Buffer,
     world_plane_sampler: wgpu::Sampler,
+    world_grid_uniform_buffer: wgpu::Buffer,
+    world_grid_bind_group: wgpu::BindGroup,
     globals_buffer: wgpu::Buffer,
     blur_globals_buffer: wgpu::Buffer,
     world_globals_ring: WorldGlobalsRing,
@@ -2697,11 +2720,15 @@ fn build_overlay_layer_batches(draw: &DrawList, filter: LayerBatchFilter) -> (Ve
 
 /// ✂️ One LOGICAL scissor as the PHYSICAL rectangle `wgpu` clips against. An already-empty rect
 /// stays empty, so "clip everything away" never becomes a one-pixel sliver at 2×.
-fn physical_scissor_rect(scissor: ScissorRect, scale: f32) -> ScissorRect {
+pub(crate) fn physical_scissor_rect(scissor: ScissorRect, scale: f32) -> ScissorRect {
     if scissor.w == 0 || scissor.h == 0 {
         return ScissorRect { x: 0, y: 0, w: 0, h: 0 };
     }
     ScissorRect { x: (scissor.x as f32 * scale) as u32, y: (scissor.y as f32 * scale) as u32, w: ((scissor.w as f32 * scale).round() as u32).max(1), h: ((scissor.h as f32 * scale).round() as u32).max(1) }
+}
+
+pub(crate) fn physical_viewport_rect(viewport: [f32; 4], scale: f32) -> [f32; 4] {
+    [viewport[0] * scale, viewport[1] * scale, viewport[2] * scale, viewport[3] * scale]
 }
 
 /// ✂️ `scissor` and `width`/`height` are LOGICAL pixels; `scale` turns them into the physical
@@ -3310,6 +3337,7 @@ impl UiPipelines {
         });
 
         let world_textured_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world3d_textured_shader"), source: wgpu::ShaderSource::Wgsl(WORLD3D_TEXTURED_SHADER.into()) });
+        let world_grid_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world3d_grid_shader"), source: wgpu::ShaderSource::Wgsl(WORLD3D_GRID_SHADER.into()) });
         let world_plane_vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("world3d_plane_vertices"), contents: bytemuck::cast_slice(WORLD_PLANE_VERTICES), usage: wgpu::BufferUsages::VERTEX });
         let world_plane_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             label: Some("world3d_plane_sampler"),
@@ -3352,6 +3380,57 @@ impl UiPipelines {
             },
             fragment: Some(wgpu::FragmentState {
                 module: &world_textured_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: wgpu::TextureFormat::Depth24PlusStencil8,
+                depth_write_enabled: Some(false),
+                depth_compare: Some(wgpu::CompareFunction::LessEqual),
+                stencil: content_stencil_state(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let world_grid_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("world3d_grid_layout"),
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Buffer { ty: wgpu::BufferBindingType::Uniform, has_dynamic_offset: false, min_binding_size: std::num::NonZeroU64::new(size_of::<World3dGridUniforms>() as u64) },
+                count: None,
+            }],
+        });
+        let world_grid_uniform_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("world3d_grid_uniforms"),
+            contents: bytemuck::bytes_of(&World3dGridUniforms::zeroed()),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        });
+        let world_grid_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("world3d_grid_bind_group"),
+            layout: &world_grid_bind_group_layout,
+            entries: &[wgpu::BindGroupEntry { binding: 0, resource: world_grid_uniform_buffer.as_entire_binding() }],
+        });
+        let world_grid_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("world3d_grid_pipeline_layout"),
+            bind_group_layouts: &[Some(&world_bind_group_layout), Some(&world_grid_bind_group_layout)],
+            immediate_size: 0,
+        });
+        let world_grid_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_grid_pipeline"),
+            layout: Some(&world_grid_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &world_grid_shader,
+                entry_point: Some("vs_main"),
+                buffers: &[wgpu::VertexBufferLayout { array_stride: 20, step_mode: wgpu::VertexStepMode::Vertex, attributes: &[wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x3 }] }],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_grid_shader,
                 entry_point: Some("fs_main"),
                 targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::ALPHA_BLENDING), write_mask: wgpu::ColorWrites::ALL })],
                 compilation_options: Default::default(),
@@ -3457,6 +3536,7 @@ impl UiPipelines {
             world_celebration_pipeline_translucent,
             world_shadow_pipeline,
             world_line_pipeline,
+            world_grid_pipeline,
             world_textured_pipeline,
             blur_downsample_pipeline,
             scene_blit_pipeline,
@@ -3464,6 +3544,8 @@ impl UiPipelines {
             quad_vertex_buffer,
             world_plane_vertex_buffer,
             world_plane_sampler,
+            world_grid_uniform_buffer,
+            world_grid_bind_group,
             globals_buffer,
             blur_globals_buffer,
             world_globals_ring,
@@ -4315,6 +4397,43 @@ impl UiPipelines {
         pass.set_bind_group(1, &texture_bind_group, &[]);
         pass.set_vertex_buffer(0, self.world_plane_vertex_buffer.slice(..));
         pass.set_vertex_buffer(1, instance_buffer);
+        pass.draw(0..6, 0..1);
+        Ok(())
+    }
+
+    pub fn encode_prepared_world_grid<'a>(
+        &'a mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        color_view: &'a wgpu::TextureView,
+        depth_view: &'a wgpu::TextureView,
+        pass_owner: &ScenePass3d,
+    ) -> Result<(), &'static str> {
+        let grid = pass_owner.procedural_grid.as_ref().ok_or("prepared world grid cursor was stale")?;
+        let globals = World3dGlobals::from_pass(pass_owner);
+        self.world_globals_ring.ensure_slots(device, &self.world_bind_group_layout, 1);
+        self.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
+        queue.write_buffer(&self.world_grid_uniform_buffer, 0, bytemuck::bytes_of(&World3dGridUniforms::from_grid(grid)));
+        let viewport = physical_viewport_rect(pass_owner.viewport, self.surface_scale);
+        let scene_scissor = self.physical_scissor(ScissorRect { x: pass_owner.viewport[0] as u32, y: pass_owner.viewport[1] as u32, w: pass_owner.viewport[2] as u32, h: pass_owner.viewport[3] as u32 });
+        if scene_scissor.w == 0 || scene_scissor.h == 0 {
+            return Ok(());
+        }
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("prepared_world_grid"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: color_view, resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: Some(stencil_attachment(depth_view, wgpu::LoadOp::Load, wgpu::LoadOp::Load)),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+            multiview_mask: None,
+        });
+        pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
+        pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
+        pass.set_pipeline(&self.world_grid_pipeline);
+        pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
+        pass.set_bind_group(1, &self.world_grid_bind_group, &[]);
+        pass.set_vertex_buffer(0, self.world_plane_vertex_buffer.slice(..));
         pass.draw(0..6, 0..1);
         Ok(())
     }

@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for DeleteModel 
     fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete model child {}", self.child_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete model child {}", self.child_id), &format!("Modellkind {} löschen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.child_id.clone()]

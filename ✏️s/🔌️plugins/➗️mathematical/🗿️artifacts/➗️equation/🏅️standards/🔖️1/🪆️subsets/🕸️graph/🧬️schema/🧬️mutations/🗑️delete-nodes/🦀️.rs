@@ -22,8 +22,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for DeleteNodes 
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete {} nodes", self.ids.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete {} nodes", self.ids.len()), &format!("{} Knoten löschen", self.ids.len()))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()

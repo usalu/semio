@@ -206,6 +206,15 @@ pub mod os_spr {
     pub mod protocol_laws;
 }
 
+// 🌐️ Locale × terminology axes and the label carriers built on them (`Locale`/`Terminology`/
+// `Label`/`LabelText`/`LocalizedLabel`/`AppLabels`). They live below the UI crate because
+// `MutationKind::label` returns a `LocalizedLabel` and this crate owns that trait; `ui_wgpu`'s
+// wgpu target re-exports every name. Ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END (U3).
+#[path = "../../🔨️modules/🌐️locale/🦀️.rs"]
+pub mod os_locale;
+
+pub use crate::os_locale::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
+
 #[path = "../../🔨️modules/🌿️vcs/🦀️.rs"]
 pub mod os_vcs;
 

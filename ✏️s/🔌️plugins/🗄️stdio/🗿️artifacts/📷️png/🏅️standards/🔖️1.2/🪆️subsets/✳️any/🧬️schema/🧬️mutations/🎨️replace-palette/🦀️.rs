@@ -33,8 +33,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ReplacePaletteMutation
         }
         vec![PngMutation::ReplacePalette(ReplacePaletteMutation { plte: base.plte.clone() })]
     }
-    fn label(&self) -> String {
-        "replace palette".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("replace palette", "Palette ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-palette".into()]

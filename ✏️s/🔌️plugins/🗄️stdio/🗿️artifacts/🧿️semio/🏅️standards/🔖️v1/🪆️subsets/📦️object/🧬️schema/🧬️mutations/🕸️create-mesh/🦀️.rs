@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for Create
     fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create mesh child {}", self.child_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create mesh child {}", self.child_id), &format!("Netzkind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["mesh".to_string()]

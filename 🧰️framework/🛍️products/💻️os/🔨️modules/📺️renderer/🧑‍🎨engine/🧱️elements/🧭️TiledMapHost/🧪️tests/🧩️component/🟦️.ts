@@ -12,6 +12,7 @@ import ts from "typescript";
 import { createByteLru, createBoundedSet, createLeadingTrailingDebounce, mapFeatureHoverActionArgs, mapFeatureSelectionActionArgs, MapRenderer, resolveMapInteractionSync } from "../../🟦️.tsx";
 import type { MapWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 import repaintFixture from "./🧫️repaint.json";
+import lifecycleFixture from "../../../../🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json";
 import rendererSource from "../../🟦️.tsx?raw";
 // #endregion 🔌️Adapters
 
@@ -49,7 +50,10 @@ describe("MapRenderer idle appearance updates", () => {
     }
   });
 
-  it("returns to idle when a pan pointer is cancelled", async () => {
+  it.each([
+    { name: "pan", leftDown: false, middleDown: true },
+    { name: "marquee", leftDown: true, middleDown: false },
+  ])("returns to idle without publishing feature selection when a $name pointer is cancelled", async ({ leftDown, middleDown }) => {
     vi.useFakeTimers();
     const renderFrame = vi.fn();
     const pointerUpScreen = vi.fn();
@@ -68,12 +72,13 @@ describe("MapRenderer idle appearance updates", () => {
     visit(source);
     expect(initializer).not.toBe("");
     const callback = ts.transpileModule(`const callback = ${initializer};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-    const pointer = { current: { leftDown: true, middleDown: true } };
+    const pointer = { current: { leftDown, middleDown } };
     const panningRef = { current: true };
     const resetMarquee = vi.fn();
     const releasePointerCapture = vi.fn();
     const mirrorSessionCameraToReact = vi.fn();
-    const cancel = new Function("rendererRef", "pointer", "panningRef", "resetMarquee", "canvas", "mirrorSessionCameraToReact", "clientToLocal", `${callback}\nreturn callback;`)(
+    const emitFeatureSelection = vi.fn();
+    const cancel = new Function("rendererRef", "pointer", "panningRef", "resetMarquee", "canvas", "mirrorSessionCameraToReact", "clientToLocal", "emitFeatureSelection", `${callback}\nreturn callback;`)(
       { current: renderer },
       pointer,
       panningRef,
@@ -81,6 +86,7 @@ describe("MapRenderer idle appearance updates", () => {
       { hasPointerCapture: () => true, releasePointerCapture },
       mirrorSessionCameraToReact,
       () => repaintFixture.cancelledPan.point,
+      emitFeatureSelection,
     );
     const target = new EventTarget();
     target.addEventListener(repaintFixture.cancelledPan.event, cancel);
@@ -99,12 +105,45 @@ describe("MapRenderer idle appearance updates", () => {
       expect(resetMarquee).toHaveBeenCalledOnce();
       expect(releasePointerCapture).toHaveBeenCalledExactlyOnceWith(repaintFixture.cancelledPan.pointerId);
       expect(mirrorSessionCameraToReact).toHaveBeenCalledOnce();
+      expect(emitFeatureSelection).not.toHaveBeenCalled();
       const frames = renderFrame.mock.calls.length;
       await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
       expect(renderFrame).toHaveBeenCalledTimes(frames);
     } finally {
       renderer.dispose();
     }
+  });
+
+  it("preserves one Map owner across the same React key and retires it before a keyed successor", async () => {
+    const { createElement, useEffect, useRef } = await import("react");
+    const { fireEvent, render } = await import("@testing-library/react");
+    const owners: Array<{ active: boolean; renderer: MapRenderer; free: ReturnType<typeof vi.fn> }> = [];
+    function Probe() {
+      const owner = useRef<(typeof owners)[number] | null>(null);
+      if (owner.current === null) {
+        const free = vi.fn();
+        const session = { free } as unknown as MapWasmSession;
+        owner.current = { active: false, renderer: new MapRenderer("/osm/{z}/{x}/{y}.png", "/vt/{z}/{x}/{y}.pbf", session), free };
+        owners.push(owner.current);
+      }
+      useEffect(() => () => owner.current?.renderer.dispose(), []);
+      return createElement("button", { "aria-label": "Map gesture owner", onPointerDown: () => { owner.current!.active = true; } });
+    }
+    const original = lifecycleFixture.owner.key;
+    const successor = lifecycleFixture.cases.find(({ name }) => name === "key-replacement")!.next!.key;
+    const view = render(createElement(Probe, { key: original }));
+    fireEvent.pointerDown(view.getByRole("button", { name: "Map gesture owner" }));
+    expect(owners).toHaveLength(1);
+    expect(owners[0]!.active).toBe(true);
+    view.rerender(createElement(Probe, { key: original }));
+    expect(owners).toHaveLength(1);
+    expect(owners[0]!.active).toBe(true);
+    view.rerender(createElement(Probe, { key: successor }));
+    expect(owners).toHaveLength(2);
+    expect(owners[0]!.free).toHaveBeenCalledOnce();
+    expect(owners[1]!.active).toBe(false);
+    view.unmount();
+    expect(owners[1]!.free).toHaveBeenCalledOnce();
   });
 });
 

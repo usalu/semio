@@ -27,8 +27,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetUsemtl {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::SetUsemtl(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-usemtl".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-usemtl", "usemtl setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

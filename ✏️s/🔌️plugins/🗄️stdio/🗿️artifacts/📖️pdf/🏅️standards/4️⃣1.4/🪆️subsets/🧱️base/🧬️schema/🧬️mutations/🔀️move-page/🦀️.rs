@@ -44,8 +44,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for MovePage {
         vec![PdfMutation::MovePage(MovePage { from: self.to, to: self.from })]
     }
 
-    fn label(&self) -> String {
-        "move page".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("move page", "Seite verschieben")
     }
 
     fn target(&self) -> Vec<String> {

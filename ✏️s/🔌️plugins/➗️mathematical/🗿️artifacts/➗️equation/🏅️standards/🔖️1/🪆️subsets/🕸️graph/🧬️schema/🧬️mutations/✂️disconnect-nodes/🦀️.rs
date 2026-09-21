@@ -19,8 +19,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for DisconnectNo
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Disconnect edge \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Disconnect edge \"{}\"", self.id), &format!("Kante \"{}\" trennen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

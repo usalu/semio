@@ -20,8 +20,8 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveComment {
     fn inverse(&self, base: &PlySnapshot) -> Vec<PlyMutation> {
         agg_inverse(&PlyMutation::RemoveComment(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-comment".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-comment", "Kommentar entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -764,6 +764,18 @@ function consumeTypedOperationEffects(effects: readonly WireVariant[], call?: Ty
       terminal = true;
       continue;
     }
+    // 🧾️ The receipt's REAL carrier. A retained typed command's `AppEvent` crosses as an ordinary
+    // `publish-event` host effect — topic plus a pack-encoded payload — not as the lane-7
+    // typed-operation result page the rule below expects: measured on the signed-in `s` Home, where the
+    // settled operation's turn carried `["publish-event", "typed-operation-terminal-seen"]` and the
+    // completion's terminal output was therefore `undefined` (ticket 26/09/18 S8). The effect itself is
+    // KEPT, because the event is also a real backbone publication; only its value is lifted.
+    if (effect.tag === "publish-event" && (effect.val as { readonly topic?: unknown } | null)?.topic === DIRECTORY_PROJECTION_RECEIPT_SCHEMA) {
+      if (terminalOutput !== undefined) throw new Error("typed-operation emitted more than one directory projection receipt");
+      terminalOutput = decodeWirePack((effect.val as { readonly payload?: unknown }).payload, "typed-operation.terminal-output");
+      consumed.push(effect);
+      continue;
+    }
     const page = typedOperationResult(effect);
     if (!page) {
       consumed.push(effect);
@@ -1126,6 +1138,26 @@ function typedOperationTerminalOutputV1(leftover: readonly WireVariant[]): unkno
   const outputs = leftover.filter((effect) => effect.tag === TYPED_OPERATION_TERMINAL_OUTPUT || effect.tag === TYPED_OPERATION_PENDING_OUTPUT);
   if (outputs.length > 1) throw new Error("typed-operation returned more than one terminal output");
   return outputs[0]?.val;
+}
+
+/** 🧾️ The settled operation's terminal value, taken from WHICHEVER carrier the turn it settled on
+ * parked it in, and removed from that carrier so it is delivered exactly once.
+ *
+ * 🐛️ Two carriers, because a mounted operation may settle on either kind of turn: a continuation turn
+ * the drain drove parks it in {@link pendingCompletionEffects}, and a command turn whose own settle ran
+ * the operation to its terminal parks it in {@link pendingTurnEffects}. Reading only the first left
+ * `terminalOutput` undefined for every operation that finished inside its own command turn — which is
+ * every FAST one, including the `s` Home directory bootstrap once its config publication stopped
+ * blocking (ticket 26/09/18 S8). Only the terminal-output entries are taken from the invocation's
+ * carrier, never its requested effects: the completion must not steal what the in-flight invocation
+ * owns, and an `output` that the admitting reply is contractually the OPERATION HANDLE of must not be
+ * overwritten by the receipt in {@link invocationFromFrames}. */
+function takeTypedOperationTerminalOutputV1(instanceId: number): unknown {
+  const completionLeftover = pendingCompletionEffects.get(instanceId) ?? [];
+  const turnLeftover = pendingTurnEffects.get(instanceId) ?? [];
+  const carried = turnLeftover.filter((effect) => effect.tag === TYPED_OPERATION_TERMINAL_OUTPUT || effect.tag === TYPED_OPERATION_PENDING_OUTPUT);
+  if (carried.length > 0) pendingTurnEffects.set(instanceId, turnLeftover.filter((effect) => !carried.includes(effect)));
+  return typedOperationTerminalOutputV1([...completionLeftover, ...carried]);
 }
 
 /** 📏️ Fixed retained authority for {@link pendingCompletionEffects}: an operation publishes at most
@@ -3940,6 +3972,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       if (!fanout) {
         const listeners = new Set<(completion: PluginOperationCompletion) => void>();
         const dispose = channel.onOperationCompleted((completion) => {
+          const terminalOutput = takeTypedOperationTerminalOutputV1(instanceId);
           const leftover = pendingCompletionEffects.get(instanceId) ?? [];
           pendingCompletionEffects.delete(instanceId);
           const published: PluginOperationCompletion = {
@@ -3952,7 +3985,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
               .filter((effect) => effect.tag !== TYPED_OPERATION_TERMINAL_OUTPUT && effect.tag !== TYPED_OPERATION_PENDING_OUTPUT && effect.tag !== TYPED_OPERATION_TERMINAL_SEEN)
               .map(wireEffectToFriendly)
               .filter((effect): effect is Effect => effect !== null),
-            terminalOutput: typedOperationTerminalOutputV1(leftover),
+            terminalOutput,
           };
           for (const subscriber of [...listeners]) {
             try { subscriber(published); }

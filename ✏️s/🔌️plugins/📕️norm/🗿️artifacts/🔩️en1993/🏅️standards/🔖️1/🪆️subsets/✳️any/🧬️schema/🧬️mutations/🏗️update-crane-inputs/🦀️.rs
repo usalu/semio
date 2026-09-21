@@ -22,8 +22,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateCraneInput
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Update EN 1993-6 crane runway inputs".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update EN 1993-6 crane runway inputs", "EN 1993-6 Kranlaufbahneingaben aktualisieren")
     }
 }
 //#endregion 🔖️Payload

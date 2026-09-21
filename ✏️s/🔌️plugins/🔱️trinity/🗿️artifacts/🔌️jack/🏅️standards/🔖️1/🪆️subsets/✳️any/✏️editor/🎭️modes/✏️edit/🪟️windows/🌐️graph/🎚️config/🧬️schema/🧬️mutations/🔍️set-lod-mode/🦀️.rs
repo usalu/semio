@@ -22,8 +22,8 @@ impl protocol::MutationKind<JackGraphWindowConfig, JackGraphWindowConfigMutation
         vec![Self { value: base.lod_mode.clone() }.into()]
     }
 
-    fn label(&self) -> String {
-        "Set Window Lod Mode".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Window Lod Mode", "Fensterlodmodus setzen")
     }
 
     fn target(&self) -> Vec<String> {

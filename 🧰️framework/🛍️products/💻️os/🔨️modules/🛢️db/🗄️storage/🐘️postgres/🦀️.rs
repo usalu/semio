@@ -9,14 +9,20 @@
 //! every `db_storage` sub-trait method is a plain `async fn` — `sqlx`'s Postgres driver
 //! is async-only (Postgres has no blocking C client to wrap, unlike sqlite), and this backend used
 //! to bridge that onto the family's then-synchronous trait signatures by owning a dedicated
-//! multi-thread `tokio::runtime::Runtime` and `block_on`-ing every call. That runtime (and its
-//! `block_on` bridge) is GONE: every method body here is the SAME already-async `sqlx` code that
-//! runtime used to drive, now handed straight back as `Box::pin(async move { .. })` — the calling
-//! task's own executor (ultimately the hub's `#[tokio::main]`) drives it, so this crate spends no
-//! thread of its own parked in `block_on` per call. `connect`/`connect_to_database` are async too,
-//! for the same reason. This crate names no `tokio` anywhere (the repo's "`tokio` only in
-//! `🛎️services`" rule) — `sqlx`'s `runtime-tokio` feature selects ITS internal executor binding at
-//! ITS compile time, it does not require this crate to depend on `tokio` itself.
+//! multi-thread `tokio::runtime::Runtime` and `block_on`-ing every call. The `block_on` bridge is
+//! GONE and every method body here is the SAME already-async `sqlx` code, handed straight back as
+//! `Box::pin(async move { .. })`, so this backend parks no thread per call.
+//!
+//! 🧵 **Who polls it.** Not the caller's own executor — that claim was wrong and fatal. A
+//! `PostgresStorage` call becomes a `DbIoTask` submitted to the process `WorkerPool`, and an
+//! async-native backend's future is driven from `Lane::Io`, whose workers are plain `std::thread`s
+//! with no `tokio` context at all. `sqlx` needs that context at **poll** time, so the hub aborted
+//! with `this functionality requires a Tokio context` on the first Postgres document call (ticket
+//! `26/09/18`, D4). This backend therefore names the bounded runtime `db_storage_driver_runtime`
+//! owns through [`DbIoTaskExecutor::driver_runtime`], and `Lane::Io` only ever polls the repo-owned
+//! rendezvous that runtime hands back. `sqlx`'s `runtime-tokio` feature selects ITS internal
+//! executor binding at ITS compile time; the runtime this backend is polled on is the one named
+//! here, and there is exactly one per process.
 //!
 //! 🐘️ On-disk shape: six tables (`db_wal_segment`, `db_snapshot_generation`, `db_payload`,
 //! `db_catalog_root`, `db_index_run`, `db_lease`), bootstrapped idempotently on `connect`. Every
@@ -82,7 +88,7 @@ use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::db_storage::{
     close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_transfer_list, db_io_write_observed_bytes, register_db_io_backend, register_db_io_backend_prepared_with_use,
     retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult,
-    DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities,
+    DbIoAsyncDriverRuntime, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities,
     WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
 };
 
@@ -121,7 +127,7 @@ struct PostgresDbIoExecutor {
     database_url: DbIoText,
     backend_terminal: std::sync::atomic::AtomicBool,
     active_operation: u64,
-    close_future: std::sync::Mutex<Option<std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send>>>>,
+    close_future: std::sync::Mutex<Option<semio_framework_async::oneshot::Receiver<()>>>,
 }
 
 impl PostgresDbIoExecutor {
@@ -782,6 +788,10 @@ impl DbIoTaskExecutor for PostgresDbIoExecutor {
         DbIoExecutorMode::AsyncNative
     }
 
+    fn driver_runtime(&self) -> Option<&'static dyn DbIoAsyncDriverRuntime> {
+        Some(crate::db_storage_driver_runtime::shared())
+    }
+
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
@@ -813,11 +823,11 @@ impl DbIoTaskExecutor for PostgresDbIoExecutor {
         let mut close = self.close_future.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if close.is_none() {
             let pool = self.pool.clone();
-            *close = Some(Box::pin(async move { pool.close().await }));
+            *close = Some(crate::db_storage_driver_runtime::detach_unit(Box::pin(async move { pool.close().await })));
             return Ok(false);
         }
         let terminal = match close.as_mut() {
-            Some(future) => std::future::Future::poll(future.as_mut(), context).is_ready(),
+            Some(receiver) => std::future::Future::poll(std::pin::Pin::new(receiver), context).is_ready(),
             None => false,
         };
         if terminal {

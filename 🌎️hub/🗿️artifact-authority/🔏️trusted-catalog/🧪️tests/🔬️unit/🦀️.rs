@@ -270,7 +270,7 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
             id: "local-stdio-gis-open-v1".into(),
             selected_closure,
             selected_closure_sha256: "01".repeat(32),
-            open_target: TrustedBundleProfileOpenTargetV1 { package: gis_identity, target },
+            open_targets: vec![TrustedBundleProfileOpenTargetV1 { package: gis_identity, target }],
             generation_id: "02".repeat(32),
         }],
         packages,
@@ -406,7 +406,9 @@ fn prepared_fixture() -> FixtureDirectory {
     for target in bundle["packages"][0]["openTargets"].as_array_mut().expect("open targets") {
         target["artifactSchema"] = schema.clone().into();
     }
-    bundle["profiles"][0]["openTarget"]["target"]["artifactSchema"] = schema.clone().into();
+    for entry in bundle["profiles"][0]["openTargets"].as_array_mut().expect("profile open targets") {
+        entry["target"]["artifactSchema"] = schema.clone().into();
+    }
     let component = [b'a', b'b', b'c'];
     for index in 0..2 {
         let component_path = root.join(bundle["packages"][index]["component"]["path"].as_str().expect("component path"));
@@ -515,7 +517,7 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
     let bundle = serde_json::json!({
         "schemaVersion": 2,
         "profiles": [{ "id": "frozen-gis-test", "selectedClosure": [package.clone(), stdio_identity.clone()], "selectedClosureSha256": "01".repeat(32),
-            "openTarget": { "package": package.clone(), "target": target.clone() }, "generationId": "02".repeat(32) }],
+            "openTargets": [{ "package": package.clone(), "target": target.clone() }], "generationId": "02".repeat(32) }],
         "packages": [{ "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [stdio_identity],
             "executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version },
             "component": { "path": "component.wasm", "byteLength": component.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
@@ -631,7 +633,8 @@ async fn gis_native_provider_selection_binds_literal_owner_version_and_cancellat
         let result = providers.preview(case["pluginId"].as_str().unwrap(), case["packageId"].as_str().unwrap(), case["version"].as_str().unwrap(), &context);
         assert_eq!(result.is_ok(), case["accepted"].as_bool().unwrap(), "{}", case["name"]);
         if let Ok(bindings) = result {
-            assert_eq!(bindings.len(), fixture["codecCount"].as_u64().unwrap() as usize);
+            assert_eq!(bindings.len(), case["bindings"].as_u64().unwrap() as usize, "{}", case["name"]);
+            assert_eq!(bindings.is_empty(), case["code"] == "unlinked-package", "{}", case["name"]);
             for (binding, row) in bindings.iter().zip(expected["receipts"].as_array().unwrap()) {
                 assert_eq!(binding.plugin_id, expected["pluginId"]);
                 assert_eq!(binding.package_id, expected["packageId"]);
@@ -873,7 +876,7 @@ async fn verified_trusted_catalog_document_open_generation_and_resolution_are_ex
     assert!(catalog.resolve_document_open(&descriptor, Some("s.fixture.document@1/*#viewer"), false).is_none());
     for field in ["artifactKind", "standard", "subset"] {
         let mut changed: TrustedBundleV1 = serde_json::from_value(fixture.bundle.clone()).expect("bundle");
-        let dialect = &mut changed.profiles[0].open_target.target.parent_dialect;
+        let dialect = &mut changed.profiles[0].open_targets[0].target.parent_dialect;
         match field {
             "artifactKind" => dialect.artifact_kind.push_str(".foreign"),
             "standard" => dialect.standard.push_str("-foreign"),
@@ -1131,7 +1134,7 @@ async fn all_trust_failures_precede_activation_and_have_bounded_diagnostics() {
 
     let missing = prepared_fixture();
     let error = expect_load_error(&missing, &[], &control).await;
-    assert!(error.to_string().contains("no explicit native codec"));
+    assert!(error.to_string().contains(&missing.schema), "a declared codec row no provider answers for is pinned against the component and names its own schema: {error}");
     assert!(document_codec(&missing.schema).await.expect("codec registry").is_none());
 
     let wrong_package = prepared_fixture();
@@ -1180,7 +1183,7 @@ async fn descriptor_owned_surface_is_required_before_any_catalog_or_codec_public
     ] {
         let mut fixture = prepared_fixture();
         fixture.bundle["packages"][0]["openTargets"][0][field] = value.clone();
-        fixture.bundle["profiles"][0]["openTarget"]["target"][field] = value;
+        fixture.bundle["profiles"][0]["openTargets"][0]["target"][field] = value;
         fixture.persist_bundle();
         let error = expect_load_error(&fixture, &[fixture.binding()], &TestControl::new()).await;
         assert!(error.to_string().contains("document-open target"), "{field}: {error}");

@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeChille
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change chiller type to \"{}\"", self.new_chiller_type)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change chiller type to \"{}\"", self.new_chiller_type), &format!("Kältemaschinentyp auf \"{}\" ändern", self.new_chiller_type))
     }
 }
 //#endregion 🔖️ChangeChillerType

@@ -31,8 +31,8 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetScaleAndOffset {
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {
         agg_inverse(&LasMutation::SetScaleAndOffset(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-scale-and-offset".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-scale-and-offset", "Maßstab und Versatz setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

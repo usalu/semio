@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for RemoveCh
     fn inverse(&self, base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
         agg_inverse(&SemioAudioMutation::RemoveChannel(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-channel".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-channel", "Kanal entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

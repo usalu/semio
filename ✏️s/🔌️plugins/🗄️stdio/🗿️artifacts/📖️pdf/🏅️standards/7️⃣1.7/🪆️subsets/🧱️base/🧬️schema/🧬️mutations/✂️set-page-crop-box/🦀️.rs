@@ -27,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageCropBox {
         base.pages.get(self.index).map(|page| PdfMutation::SetPageCropBox(SetPageCropBox { index: self.index, crop_box: page.crop_box })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Set page {} crop box", self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set page {} crop box", self.index), &format!("Seite {} Zuschnittkasten setzen", self.index))
     }
 
     fn target(&self) -> Vec<String> {

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeBridgeSigm
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change bridge sigma c mpa to {:?}", self.new_bridge_sigma_c_mpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change bridge sigma c mpa to {:?}", self.new_bridge_sigma_c_mpa), &format!("Brückensigmacmpa auf {:?} ändern", self.new_bridge_sigma_c_mpa))
     }
 }
 //#endregion 🔖️ChangeBridgeSigmaCMpa

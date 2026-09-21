@@ -26,8 +26,8 @@ impl protocol::MutationKind<EquationGraphWindowConfig, EquationGraphWindowConfig
             vec![EquationGraphWindowConfigMutation::SetCamera(SetCamera { camera: base.camera.clone() })]
         }
     }
-    fn label(&self) -> String {
-        "Set Camera".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Camera", "Kamera setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]

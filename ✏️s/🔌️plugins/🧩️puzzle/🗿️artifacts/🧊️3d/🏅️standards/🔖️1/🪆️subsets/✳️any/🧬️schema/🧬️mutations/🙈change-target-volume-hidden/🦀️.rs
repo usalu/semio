@@ -25,8 +25,8 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ChangeTarget
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change target volume \"{}\" hidden", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change target volume \"{}\" hidden", self.id), &format!("Zielvolumen \"{}\" verborgen ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

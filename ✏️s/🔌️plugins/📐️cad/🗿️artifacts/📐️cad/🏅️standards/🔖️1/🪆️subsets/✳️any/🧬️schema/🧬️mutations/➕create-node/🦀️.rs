@@ -24,8 +24,8 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateNode {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create node \"{}\"", self.node.label)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create node \"{}\"", self.node.label), &format!("Knoten \"{}\" erstellen", self.node.label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node.id.clone()]

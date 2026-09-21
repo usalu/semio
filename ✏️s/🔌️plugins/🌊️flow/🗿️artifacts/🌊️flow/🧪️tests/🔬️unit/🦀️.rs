@@ -84,6 +84,7 @@ async fn widget_content_round_trips_through_the_composed_child_snapshot() {
     for (id, entry) in &fixture.layout {
         assert_eq!(layout.get(id), Some(entry));
     }
+    drop(FlowWorkingScene { widgets, synapses, layout });
 }
 
 #[test]
@@ -93,7 +94,9 @@ fn authored_slider_labels_survive_child_content_round_trip() {
         let widget: Widget = dsl::FromValue::from_value(dsl::DslValue::from(row["widget"].clone())).unwrap();
         let content = flow_content_snapshot_from_working(&[widget.clone()], &[], &flow::OrderedMap::new());
         assert_eq!(content.nodes[0].label, row["expectedDagName"].as_str().unwrap());
-        assert_eq!(working_from_flow_content_snapshot(&content).0, [widget]);
+        let (widgets, synapses, layout) = working_from_flow_content_snapshot(&content);
+        assert_eq!(widgets, [widget]);
+        drop(FlowWorkingScene { widgets, synapses, layout });
     }
 }
 

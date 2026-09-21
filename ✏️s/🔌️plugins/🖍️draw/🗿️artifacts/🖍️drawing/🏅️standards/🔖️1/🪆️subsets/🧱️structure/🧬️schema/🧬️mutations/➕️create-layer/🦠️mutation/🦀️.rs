@@ -37,8 +37,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for CreateLayer {
     fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create layer \"{}\"", crate::schema::layer_id(&self.layer))
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create layer \"{}\"", crate::schema::layer_id(&self.layer)), &format!("Ebene \"{}\" erstellen", crate::schema::layer_id(&self.layer)))
     }
     fn target(&self) -> Vec<String> {
         vec![crate::schema::layer_id(&self.layer).to_string()]

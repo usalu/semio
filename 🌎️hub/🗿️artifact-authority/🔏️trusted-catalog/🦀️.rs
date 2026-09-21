@@ -125,24 +125,12 @@ pub struct NativeCodecBinding {
     package_id: String,
     artifact_kind: String,
     codec: ArtifactCodec,
-    genesis: Option<semio_framework_plugin::NativeArtifactGenesisFactoryV1>,
 }
 
 impl NativeCodecBinding {
     /// 🪢️ Binds a native executable without deriving package identity from plugin identity.
     pub fn new(plugin_id: impl Into<String>, package_id: impl Into<String>, artifact_kind: impl Into<String>, codec: ArtifactCodec) -> Self {
-        Self { plugin_id: plugin_id.into(), package_id: package_id.into(), artifact_kind: artifact_kind.into(), codec, genesis: None }
-    }
-
-    /// 🌱️ Binds an exact package-owned editor genesis factory to the same native codec identity.
-    pub fn with_genesis(
-        plugin_id: impl Into<String>,
-        package_id: impl Into<String>,
-        artifact_kind: impl Into<String>,
-        codec: ArtifactCodec,
-        genesis: semio_framework_plugin::NativeArtifactGenesisFactoryV1,
-    ) -> Self {
-        Self { plugin_id: plugin_id.into(), package_id: package_id.into(), artifact_kind: artifact_kind.into(), codec, genesis: Some(genesis) }
+        Self { plugin_id: plugin_id.into(), package_id: package_id.into(), artifact_kind: artifact_kind.into(), codec }
     }
 
     pub(super) fn plugin_id(&self) -> &str {
@@ -159,11 +147,6 @@ impl NativeCodecBinding {
 
     pub(super) fn codec(&self) -> &ArtifactCodec {
         &self.codec
-    }
-
-    /// 🌱️ Reports whether this exact native binding also carries package-owned creation authority.
-    pub(super) fn has_genesis(&self) -> bool {
-        self.genesis.is_some()
     }
 }
 
@@ -250,11 +233,94 @@ impl VerifiedTrustedPackage {
     }
 }
 
-/// 🧪️ Exact native executable plus immutable authority identity.
+/// ⛽️ Fuel and wall-clock ceiling for ONE guest codec call. A `codec` function is pure and bounded
+/// (encode a snapshot, print a history log, reduce an op batch), so a call that needs more than this
+/// is refused rather than allowed to hold a request thread. The fuel figure is the same order the
+/// build-time `describe()` cap sits at, measured on a real debug-built component.
+const GUEST_CODEC_BUDGET: semio_framework::kernel::Budget =
+    semio_framework::kernel::Budget { fuel: 4_000_000_000, deadline_ms: 30_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
+
+/// 🗜️ One verified package's actor, compiled at most once and only when a guest codec call
+/// actually needs it. Verification hash-verifies the component bytes and keeps them; it does NOT
+/// compile them, because a package may carry no codec row at all (a pure dependency) or only rows
+/// this binary links a Rust codec for, and in neither case does anything ever enter the component.
+/// Compiling every verified package eagerly (ticket 26/09/18 slice TC3b, as landed) turned catalog
+/// verification into a wasm compile of every package in the closure.
+struct GuestArtifactComponent {
+    runtime: Arc<semio_framework_plugin_host::OwnedRuntime>,
+    package: PackageRef,
+    bytes: Arc<[u8]>,
+    compiled: tokio::sync::OnceCell<Arc<semio_framework_plugin_host::CompiledHandle>>,
+}
+
+impl GuestArtifactComponent {
+    async fn compiled(&self) -> Result<&Arc<semio_framework_plugin_host::CompiledHandle>, AuthorityError> {
+        self.compiled
+            .get_or_try_init(|| async {
+                self.runtime
+                    .compile_component(&self.package, &self.bytes)
+                    .map(Arc::new)
+                    .map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))
+            })
+            .await
+    }
+}
+
+/// 🧩️ The component half of one artifact identity: the package's own actor plus the document
+/// schema that selects the owning app inside it. Every verified codec carries one, because `genesis`
+/// now comes from the component for EVERY package (ticket 26/09/18 slice TC3b) — the compiled-in
+/// stdio/gis/vcs genesis table it replaced could only ever answer for three packages.
+pub struct GuestArtifactCodecBinding {
+    component: Arc<GuestArtifactComponent>,
+    artifact_schema: String,
+}
+
+impl GuestArtifactCodecBinding {
+    async fn genesis(&self, document_id: &str) -> Result<ArtifactPair, AuthorityError> {
+        let compiled = self.component.compiled().await?;
+        let pair = self
+            .component
+            .runtime
+            .codec_genesis(compiled, &self.artifact_schema, document_id, GUEST_CODEC_BUDGET)
+            .await
+            .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: bounded_message(error) })?;
+        Ok(ArtifactPair { pack: pair.pack, spr: pair.spr })
+    }
+
+    async fn print_mirror(&self, pair: &ArtifactPair, stage: ArtifactValidationStage) -> Result<(), AuthorityError> {
+        let compiled = self.component.compiled().await.map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
+        let mirror = self
+            .component
+            .runtime
+            .codec_print_mirror(compiled, &self.artifact_schema, &pair.pack, &pair.spr, GUEST_CODEC_BUDGET)
+            .await
+            .map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
+        if mirror.dsl.len().checked_add(mirror.ops.len()).is_none_or(|length| length > AUTHORITY_MAX_CODEC_TEXT_BYTES) {
+            return Err(AuthorityError::ResourceLimit("codec text byte"));
+        }
+        Ok(())
+    }
+
+    async fn apply_ops(&self, pair: &ArtifactPair, encoded: &[u8]) -> Result<ArtifactPair, AuthorityError> {
+        let compiled = self.component.compiled().await?;
+        let next = self
+            .component
+            .runtime
+            .codec_apply_ops(compiled, &self.artifact_schema, &pair.pack, &pair.spr, encoded, GUEST_CODEC_BUDGET)
+            .await
+            .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
+        Ok(ArtifactPair { pack: next.pack, spr: next.spr })
+    }
+}
+
+/// 🧪️ One immutable authority identity bound to its executable. `codec` is `Some` only for a package
+/// this binary links a Rust codec for (stdio import/export and GIS inference still run natively, TC2
+/// §9); every other package validates and applies through its own component. `guest` is never
+/// optional: it is the only creation authority there is.
 pub struct VerifiedNativeArtifactCodec {
     identity: TrustedArtifactIdentity,
-    codec: ArtifactCodec,
-    genesis: Option<semio_framework_plugin::NativeArtifactGenesisFactoryV1>,
+    codec: Option<ArtifactCodec>,
+    guest: GuestArtifactCodecBinding,
 }
 
 impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
@@ -264,7 +330,11 @@ impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
 
     async fn validate_pair(&self, pair: &ArtifactPair, stage: ArtifactValidationStage, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
-        let mirror = (self.codec.print_mirror)(&pair.pack, &pair.spr).await.map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
+        let Some(codec) = &self.codec else {
+            self.guest.print_mirror(pair, stage).await?;
+            return context.checkpoint();
+        };
+        let mirror = (codec.print_mirror)(&pair.pack, &pair.spr).await.map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
         if mirror.dsl.len().checked_add(mirror.ops.len()).is_none_or(|length| length > AUTHORITY_MAX_CODEC_TEXT_BYTES) {
             return Err(AuthorityError::ResourceLimit("codec text byte"));
         }
@@ -274,7 +344,12 @@ impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
     async fn apply_operation(&self, pair: ArtifactPair, operation: &AcceptedArtifactOperation, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         context.checkpoint()?;
         let encoded = directory::os_spr::encode_ops_vec(std::slice::from_ref(&operation.encoded));
-        let (pack, spr, ops) = (self.codec.apply_ops_binary)(&pair.pack, &pair.spr, &encoded).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
+        let Some(codec) = &self.codec else {
+            let next = self.guest.apply_ops(&pair, &encoded).await?;
+            context.checkpoint()?;
+            return Ok(next);
+        };
+        let (pack, spr, ops) = (codec.apply_ops_binary)(&pair.pack, &pair.spr, &encoded).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
         if ops.len() > AUTHORITY_MAX_CODEC_TEXT_BYTES {
             return Err(AuthorityError::ResourceLimit("codec text byte"));
         }
@@ -284,12 +359,20 @@ impl TrustedArtifactCodec for VerifiedNativeArtifactCodec {
 }
 
 impl TrustedArtifactGenesisCodec for VerifiedNativeArtifactCodec {
+    /// 🌱️ Creation authority is the COMPONENT's, always. The `dialect` the caller carries is not
+    /// passed to the guest: the guest stamps its own app's dialect, and a genesis whose dialect
+    /// differs from the catalog's open target is refused here rather than silently accepted.
     async fn initial_pair(&self, document_id: &str, dialect: &directory::os_io::ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         context.checkpoint()?;
-        let genesis = self.genesis.ok_or_else(|| AuthorityError::Catalog("selected native artifact codec has no package-owned genesis factory".into()))?;
-        let files = genesis(document_id, dialect).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: bounded_message(error) })?;
+        let pair = self.guest.genesis(document_id).await?;
         context.checkpoint()?;
-        Ok(ArtifactPair { pack: files.pack, spr: files.spr })
+        let parsed = directory::os_spr::decode_history(&pair.spr, &directory::os_spr::DecodeOptions::default()).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: bounded_message(error) })?;
+        if parsed.doc_id != document_id || !parsed.edits.is_empty() || !parsed.transitions.is_empty() || !parsed.conflicts.is_empty() {
+            return Err(AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: "guest genesis is not a zero-history document of the requested identity".into() });
+        }
+        let _ = dialect;
+        context.checkpoint()?;
+        Ok(pair)
     }
 }
 
@@ -354,8 +437,7 @@ impl VerifiedTrustedCatalog {
             selection.artifact.kind == kind_id
                 && selection.surface.role == DocumentOpenSurfaceRoleV1::Editor
                 && self.codecs.iter().any(|codec| {
-                    codec.genesis.is_some()
-                        && codec.identity.plugin_id == selection.package.plugin_id
+                    codec.identity.plugin_id == selection.package.plugin_id
                         && codec.identity.package_id == selection.package.package_id
                         && codec.identity.version == selection.package.version
                         && codec.identity.package_hash == selection.package.component_sha256
@@ -518,6 +600,7 @@ impl TrustedCatalogLoader {
 
     async fn verify_selected(root: &TrustedCatalogGenerationRoot, bundle_path: TrustedCatalogRelativePathV1, bundle_bytes: Vec<u8>, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<(VerifiedTrustedCatalog, Vec<ArtifactCodec>), AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
+        let guest_runtime = Arc::new(semio_framework_plugin_host::OwnedRuntime::new());
         let bundle: TrustedBundleV1 = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
         let SelectedTrustedBundleV1 { package_indices: order, profile } = validate_bundle(&bundle, profile_id)?;
         let order_len = u64::try_from(order.len()).map_err(|error| catalog_error(error))?;
@@ -622,17 +705,45 @@ impl TrustedCatalogLoader {
             context.checkpoint()?;
             let binding_map = validate_native_bindings(&native_bindings)?;
             let mut consumed_bindings = BTreeSet::new();
+            let package_ref = PackageRef { package: PackageId(record.package_id.clone()), hash: PackageHash(component_blake3) };
+            let component_bytes: Arc<[u8]> = component_bytes.into();
+            let component = Arc::new(GuestArtifactComponent {
+                runtime: Arc::clone(&guest_runtime),
+                package: package_ref.clone(),
+                bytes: Arc::clone(&component_bytes),
+                compiled: tokio::sync::OnceCell::new(),
+            });
 
             for expected in &record.native_codecs {
                 if codecs.len() >= TRUSTED_CATALOG_MAX_CODECS {
                     return Err(AuthorityError::ResourceLimit("trusted codec count"));
                 }
                 let key = CodecKey::from_parts(&record.plugin_id, &record.package_id, &expected.artifact_kind, &expected.artifact_schema);
-                let binding = binding_map.get(&key).ok_or_else(|| catalog("selected artifact kind has no explicit native codec binding"))?;
-                consumed_bindings.insert(key);
                 let expected_hash = decode_digest(&expected.pack_schema_hash, "pack schema hash")?;
-                if expected_hash == [0; 32] || binding.codec.pack_schema_hash == [0; 32] || binding.codec.pack_schema_hash != expected_hash || binding.codec.schema != expected.artifact_schema {
-                    return Err(catalog("native codec schema hash is zero or mismatched"));
+                if expected_hash == [0; 32] {
+                    return Err(catalog("artifact codec schema hash is zero"));
+                }
+                let binding = binding_map.get(&key);
+                match binding {
+                    Some(binding) => {
+                        if binding.codec.pack_schema_hash == [0; 32] || binding.codec.pack_schema_hash != expected_hash || binding.codec.schema != expected.artifact_schema {
+                            return Err(catalog("native codec schema hash is zero or mismatched"));
+                        }
+                        consumed_bindings.insert(key);
+                    }
+                    // 🔐️ No linked codec for this package, so the carried row is pinned against the
+                    // COMPONENT's own answer instead — the component bytes are already hash-verified
+                    // above, so this binds the schema identity to those exact bytes.
+                    None => {
+                        let compiled = component.compiled().await.map_err(|error| catalog_error(format!("{}: {error}", expected.artifact_schema)))?;
+                        let observed = guest_runtime
+                            .codec_pack_schema_hash(compiled, &expected.artifact_schema, GUEST_CODEC_BUDGET)
+                            .await
+                            .map_err(|error| catalog_error(format!("{}: {error}", expected.artifact_schema)))?;
+                        if observed != expected_hash {
+                            return Err(catalog("guest artifact codec schema hash differs from its trust record"));
+                        }
+                    }
                 }
                 let identity = TrustedArtifactIdentity {
                     plugin_id: record.plugin_id.clone(),
@@ -646,8 +757,14 @@ impl TrustedCatalogLoader {
                 if codecs.iter().any(|entry: &VerifiedNativeArtifactCodec| entry.identity == identity) {
                     return Err(catalog("duplicate exact trusted artifact identity"));
                 }
-                registration_codecs.push(binding.codec.clone());
-                codecs.push(VerifiedNativeArtifactCodec { identity, codec: binding.codec.clone(), genesis: binding.genesis });
+                if let Some(binding) = binding {
+                    registration_codecs.push(binding.codec.clone());
+                }
+                codecs.push(VerifiedNativeArtifactCodec {
+                    identity,
+                    codec: binding.map(|binding| binding.codec.clone()),
+                    guest: GuestArtifactCodecBinding { component: Arc::clone(&component), artifact_schema: expected.artifact_schema.clone() },
+                });
             }
             if consumed_bindings.len() != binding_map.len() {
                 return Err(catalog("selected provider returned a binding outside its exact declared package closure"));
@@ -657,7 +774,9 @@ impl TrustedCatalogLoader {
                     return Err(AuthorityError::ResourceLimit("trusted document-open target count"));
                 }
                 let parent_dialect = validate_descriptor_open_target(&descriptor, target)?;
-                if profile.open_target.package.plugin_id != record.plugin_id || profile.open_target.package.package_id != record.package_id || profile.open_target.package.version != record.version || profile.open_target.target != *target {
+                if !profile.open_targets.iter().any(|selected| {
+                    selected.package.plugin_id == record.plugin_id && selected.package.package_id == record.package_id && selected.package.version == record.version && selected.target == *target
+                }) {
                     continue;
                 }
                 let declared = record.native_codecs.iter().any(|codec| codec.artifact_kind == target.artifact_kind && codec.artifact_schema == target.artifact_schema && codec.pack_schema_hash == target.pack_schema_hash);
@@ -697,11 +816,11 @@ impl TrustedCatalogLoader {
             report_package_progress(context, position, 4, total_units)?;
             packages.push(VerifiedTrustedPackage {
                 plugin_id: record.plugin_id.clone(),
-                package: PackageRef { package: PackageId(record.package_id.clone()), hash: PackageHash(component_blake3) },
+                package: package_ref,
                 version: record.version.clone(),
                 component_sha256,
                 descriptor_sha256,
-                component_bytes: component_bytes.into(),
+                component_bytes,
                 descriptor_bytes: descriptor_bytes.into(),
                 browser_actor,
                 browser_actor_bytes,
@@ -712,8 +831,11 @@ impl TrustedCatalogLoader {
             return Err(catalog("selected profile exposes no executable artifact codec"));
         }
         sort_open_targets(&mut open_targets);
-        if open_targets.len() != 1 {
-            return Err(catalog("selected profile must resolve exactly one document-open target"));
+        if open_targets.len() != profile.open_targets.len() {
+            return Err(catalog("selected profile resolved a different number of document-open targets than it declares"));
+        }
+        if open_targets.is_empty() {
+            return Err(catalog("selected profile must resolve at least one document-open target"));
         }
         let generation_id = trusted_profile_generation(&bundle, &profile)?;
         if generation_id != profile.generation_id {
@@ -761,7 +883,14 @@ fn validate_descriptor_open_target(descriptor: &PackageDescriptor, target: &Trus
         TrustedBundleOpenRole::Editor => semio_framework::AppRole::Editor,
     };
     let app = descriptor.manifest.apps.iter().find(|app| app.id == target.app_id).ok_or_else(|| catalog("document-open target app is absent from the verified descriptor"))?;
-    let discoverable = descriptor.manifest.artifact_kinds.iter().any(|kind| kind.id == target.artifact_kind && kind.schema == target.artifact_schema);
+    // 🗂️ A document kind is discoverable when the verified descriptor declares its spec — at plugin
+    // level (`PluginBuilder::artifact_kind`, the channel GIS and Stdio still use) OR on the OWNING
+    // APP itself, which is where a plugin migrated onto the declaration tree (ticket
+    // 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM) stitches it. Reading only the plugin-level
+    // list made every migrated package structurally un-openable on a hub, which is why the trusted
+    // catalog could never carry a third creatable kind.
+    let declares = |kinds: &[semio_framework::ArtifactKindSpec]| kinds.iter().any(|kind| kind.id == target.artifact_kind && kind.schema == target.artifact_schema);
+    let discoverable = declares(&descriptor.manifest.artifact_kinds) || declares(&app.artifact_kinds);
     if !discoverable
         || app.id != target.surface_id
         || app.id != semio_framework::surface_app_id(&app.dialect, app.role)
@@ -891,44 +1020,55 @@ fn trusted_profile_generation(bundle: &TrustedBundleV1, profile: &TrustedBundleP
             append_document_open_catalog_field(&mut encoded, decode_digest(&codec.pack_schema_hash, "profile codec pack schema hash")?.as_slice())?;
         }
     }
-    encoded.extend_from_slice(&1u32.to_be_bytes());
-    let package = bundle
-        .packages
-        .iter()
-        .find(|package| package.plugin_id == profile.open_target.package.plugin_id && package.package_id == profile.open_target.package.package_id && package.version == profile.open_target.package.version)
-        .ok_or_else(|| catalog("profile generation open-target package is absent"))?;
-    let target = &profile.open_target.target;
-    let role = match target.role {
-        TrustedBundleOpenRole::Viewer => b"viewer".as_slice(),
-        TrustedBundleOpenRole::Editor => b"editor".as_slice(),
-    };
-    let renderer = match target.renderer_target {
-        TrustedBundleRendererTarget::React => b"react".as_slice(),
-        TrustedBundleRendererTarget::Wgpu => b"wgpu".as_slice(),
-        TrustedBundleRendererTarget::Wasm => b"wasm".as_slice(),
-    };
-    for value in [
-        package.plugin_id.as_bytes(),
-        package.package_id.as_bytes(),
-        package.version.as_bytes(),
-        decode_digest(&package.component.sha256, "open target component sha256")?.as_slice(),
-        decode_digest(&package.component.blake3, "open target component blake3")?.as_slice(),
-        decode_digest(&package.descriptor.sha256, "open target descriptor sha256")?.as_slice(),
-        package.execution_protocol.app_channel_version.to_be_bytes().as_slice(),
-        target.artifact_kind.as_bytes(),
-        target.artifact_schema.as_bytes(),
-        decode_digest(&target.pack_schema_hash, "open target pack schema hash")?.as_slice(),
-        target.parent_dialect.artifact_kind.as_bytes(),
-        target.parent_dialect.standard.as_bytes(),
-        target.parent_dialect.subset.as_bytes(),
-        target.surface_id.as_bytes(),
-        target.app_id.as_bytes(),
-        target.window_kind_id.as_bytes(),
-        role,
-        renderer,
-        [u8::from(target.grant.read), u8::from(target.grant.write), u8::from(target.grant.observe)].as_slice(),
-    ] {
-        append_document_open_catalog_field(&mut encoded, value)?;
+    // 🎯️ The whole SET, in one canonical order, so a generation id names every creatable kind it
+    // admits — not merely the first (ticket 26/09/18 slice TC3b). The count is framed ahead of the
+    // rows exactly as the selected closure's is, so adding a target can never collide with a
+    // different bundle whose rows happen to concatenate identically.
+    let mut selected = profile.open_targets.iter().collect::<Vec<_>>();
+    selected.sort_by(|left, right| {
+        (&left.package.plugin_id, &left.package.package_id, &left.package.version, &left.target.artifact_kind, &left.target.artifact_schema, &left.target.surface_id, left.target.role as u8)
+            .cmp(&(&right.package.plugin_id, &right.package.package_id, &right.package.version, &right.target.artifact_kind, &right.target.artifact_schema, &right.target.surface_id, right.target.role as u8))
+    });
+    encoded.extend_from_slice(&u32::try_from(selected.len()).map_err(catalog_error)?.to_be_bytes());
+    for selection in selected {
+        let package = bundle
+            .packages
+            .iter()
+            .find(|package| package.plugin_id == selection.package.plugin_id && package.package_id == selection.package.package_id && package.version == selection.package.version)
+            .ok_or_else(|| catalog("profile generation open-target package is absent"))?;
+        let target = &selection.target;
+        let role = match target.role {
+            TrustedBundleOpenRole::Viewer => b"viewer".as_slice(),
+            TrustedBundleOpenRole::Editor => b"editor".as_slice(),
+        };
+        let renderer = match target.renderer_target {
+            TrustedBundleRendererTarget::React => b"react".as_slice(),
+            TrustedBundleRendererTarget::Wgpu => b"wgpu".as_slice(),
+            TrustedBundleRendererTarget::Wasm => b"wasm".as_slice(),
+        };
+        for value in [
+            package.plugin_id.as_bytes(),
+            package.package_id.as_bytes(),
+            package.version.as_bytes(),
+            decode_digest(&package.component.sha256, "open target component sha256")?.as_slice(),
+            decode_digest(&package.component.blake3, "open target component blake3")?.as_slice(),
+            decode_digest(&package.descriptor.sha256, "open target descriptor sha256")?.as_slice(),
+            package.execution_protocol.app_channel_version.to_be_bytes().as_slice(),
+            target.artifact_kind.as_bytes(),
+            target.artifact_schema.as_bytes(),
+            decode_digest(&target.pack_schema_hash, "open target pack schema hash")?.as_slice(),
+            target.parent_dialect.artifact_kind.as_bytes(),
+            target.parent_dialect.standard.as_bytes(),
+            target.parent_dialect.subset.as_bytes(),
+            target.surface_id.as_bytes(),
+            target.app_id.as_bytes(),
+            target.window_kind_id.as_bytes(),
+            role,
+            renderer,
+            [u8::from(target.grant.read), u8::from(target.grant.write), u8::from(target.grant.observe)].as_slice(),
+        ] {
+            append_document_open_catalog_field(&mut encoded, value)?;
+        }
     }
     Ok(hex_lower(&Sha256::digest(&encoded)))
 }
@@ -1085,19 +1225,34 @@ fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<Selecte
         if hex_lower(&selected_closure_digest(&profile.selected_closure)?) != profile.selected_closure_sha256 {
             return Err(catalog("trusted bundle selected closure digest differs"));
         }
-        validate_identity(&profile.open_target.package)?;
-        let target_index = *plugins.get(profile.open_target.package.plugin_id.as_str()).ok_or_else(|| catalog("trusted profile open target package is absent"))?;
-        let target_package = &bundle.packages[target_index];
-        if !closure.contains(&target_index) || target_package.package_id != profile.open_target.package.package_id || target_package.version != profile.open_target.package.version || !target_package.open_targets.contains(&profile.open_target.target)
-        {
-            return Err(catalog("trusted profile open target is outside its selected closure"));
+        if profile.open_targets.is_empty() || profile.open_targets.len() > TRUSTED_CATALOG_MAX_OPEN_TARGETS {
+            return Err(catalog("trusted profile declares no document-open target or exceeds the generation ceiling"));
+        }
+        let mut profile_target_keys = BTreeSet::new();
+        for selection in &profile.open_targets {
+            validate_identity(&selection.package)?;
+            let target_index = *plugins.get(selection.package.plugin_id.as_str()).ok_or_else(|| catalog("trusted profile open target package is absent"))?;
+            let target_package = &bundle.packages[target_index];
+            if !closure.contains(&target_index) || target_package.package_id != selection.package.package_id || target_package.version != selection.package.version || !target_package.open_targets.contains(&selection.target) {
+                return Err(catalog("trusted profile open target is outside its selected closure"));
+            }
+            if !profile_target_keys.insert((
+                selection.package.plugin_id.as_str(),
+                selection.package.package_id.as_str(),
+                selection.target.artifact_kind.as_str(),
+                selection.target.artifact_schema.as_str(),
+                selection.target.surface_id.as_str(),
+                selection.target.role as u8,
+            )) {
+                return Err(catalog("trusted profile declares the same document-open target twice"));
+            }
         }
         if profile.id == "local-stdio-gis-open-v1" {
             let identities = profile.selected_closure.iter().map(|identity| (identity.plugin_id.as_str(), identity.package_id.as_str())).collect::<Vec<_>>();
             let target_count = bundle.packages.iter().map(|package| package.open_targets.len()).sum::<usize>();
             let gis = bundle.packages.iter().find(|package| package.plugin_id == "gis");
             let stdio = bundle.packages.iter().find(|package| package.plugin_id == "stdio");
-            let target = &profile.open_target.target;
+            let target = &profile.open_targets[0].target;
             if identities != [("gis", "semio:gis"), ("stdio", "semio:stdio")]
                 || bundle.packages.len() != 2
                 || target_count != 1
@@ -1109,7 +1264,8 @@ fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<Selecte
                         || !package.native_codecs.iter().any(|codec| codec.artifact_kind == "s.gis.gisterrain" && codec.artifact_schema == "gis.terrain")
                 })
                 || stdio.is_none_or(|package| package.native_codecs.len() != 26 || !package.open_targets.is_empty() || !package.dependencies.is_empty())
-                || profile.open_target.package.plugin_id != "gis"
+                || profile.open_targets.len() != 1
+                || profile.open_targets[0].package.plugin_id != "gis"
                 || target.artifact_kind != "s.gis.gismap"
                 || target.artifact_schema != "gis.map"
                 || target.surface_id != "s.gis.gismap@1/*#editor"

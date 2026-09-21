@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeFireRating
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change fire rating to {:?}", self.new_fire_rating)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change fire rating to {:?}", self.new_fire_rating), &format!("Brandbewertung auf {:?} ändern", self.new_fire_rating))
     }
 }
 //#endregion 🔖️ChangeFireRating

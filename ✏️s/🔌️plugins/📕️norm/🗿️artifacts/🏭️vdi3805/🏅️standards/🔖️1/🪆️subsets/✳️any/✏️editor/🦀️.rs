@@ -115,6 +115,8 @@ impl ArtifactEditor for Vdi3805PlayApp {
         command.command_id()
     }
 
+    semio_s_artifact_norm_contract::norm_command_from_action!(Vdi3805Command, crate::standards::v1::subsets::any::schema::snapshot::decode_vdi3805_snapshot_json);
+
     fn handle(
         command: &Vdi3805Command,
         doc: &ArtifactView<'_, Vdi3805Snapshot>,
@@ -215,7 +217,7 @@ pub fn create_vdi3805_app() -> semio_framework_plugin::AppDefinition {
             .mutation("setSnapshot", LocalizedLabel::native("Set Snapshot", "Dokument setzen"))
             .action_destructive("setSnapshot")
             .action_with(semio_framework_plugin::ActionDefinition::new("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"), semio_framework_plugin::ActionKind::View, "hash"))
-            .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "AusgewÃ¤hlte PrÃ¼fung setzen"))
+            .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "Ausgewählte Prüfung setzen"))
             .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("evaluate", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::Migrated)

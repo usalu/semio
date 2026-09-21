@@ -20,8 +20,8 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangePermanentA
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change permanent action G_k to {} kN", self.new_g_k)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change permanent action G_k to {} kN", self.new_g_k), &format!("ständige Aktionsg_k auf {} kN ändern", self.new_g_k))
     }
 }
 //#endregion 🔖️Payload

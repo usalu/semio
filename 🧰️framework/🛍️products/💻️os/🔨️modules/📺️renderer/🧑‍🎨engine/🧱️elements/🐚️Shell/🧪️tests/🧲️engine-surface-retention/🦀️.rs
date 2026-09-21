@@ -17,6 +17,51 @@
 use super::*;
 use serde_json::Value;
 
+#[test]
+fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route() {
+    let fixture = law();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut mirror = SurfaceMirror::default();
+        for frame in case["frames"].as_array().unwrap() {
+            mirror.frame(frame);
+        }
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        shell.node_graph_states = mirror.node_graph_states;
+        shell.tiled_map_states = mirror.tiled_map_states;
+        shell.board2d_states = mirror.board2d_states;
+        shell.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
+        shell.dock_tabs = ShellDock::default();
+        let theme = Theme::default();
+        for probe in case["expectedResolve"].as_array().unwrap() {
+            let Some(surface) = probe["surfaceId"].as_str() else { continue };
+            let (window, bounds, suffix, kind) = if let Some(state) = shell.node_graph_states.get(surface) {
+                (state.window_id.clone(), state.bounds, "pane", ui_wgpu::wgpu::SurfaceKind::NodeGraph)
+            } else if let Some(state) = shell.tiled_map_states.get(surface) {
+                (state.window_id.clone(), state.bounds, "map", ui_wgpu::wgpu::SurfaceKind::TiledMap)
+            } else {
+                let state = shell.board2d_states.get(surface).expect("live Board2d surface");
+                (state.window_id.clone(), state.bounds, "pane", ui_wgpu::wgpu::SurfaceKind::Board2d)
+            };
+            let control = format!("{surface}.{suffix}");
+            let mut input = InputState::<ActionDescriptor>::default();
+            input.register_hit(HitTarget { rect: bounds, event: None, control_id: Some(control.clone()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
+            let node = ui_wgpu::wgpu::Arena::new().insert(());
+            shell.retained_scene_hits_staging.insert(control.clone(), (bounds, crate::interpreter::ScenePointerTarget { host_id: surface.into(), window_id: window.clone(), surface_id: surface.into(), kind, node, key: ui_wgpu::wgpu::NodeKey::Explicit(control.clone()), window_generation: 0, component_generation: 1 }));
+            shell.retained_hit_windows_staging.insert(control.clone(), (window, bounds));
+            shell.publish_retained_hit_registry(&mut input);
+            let x = probe["at"][0].as_f64().unwrap() as f32;
+            let y = probe["at"][1].as_f64().unwrap() as f32;
+            assert_eq!(shell.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Surface, "{} live {surface}", case["name"]);
+            assert!(shell.wheel_reaches_scene_surface(x, y, &input, &theme), "{} live wheel {surface}", case["name"]);
+            assert!(!shell.handle_pointer_wheel(x, y, 0.0, 1.0, &mut input), "{} generic retained scroll must yield to {surface}", case["name"]);
+            shell.retained_hit_windows.insert(control, ("unrelated-window".into(), bounds));
+            assert_eq!(shell.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Chrome, "{} forged owner {surface}", case["name"]);
+        }
+    }
+    println!("[DEBUG] retained Graph, Map and Board hits reached only their live surface owner's dedicated ingress");
+}
+
+
 fn law() -> Value {
     serde_json::from_str(include_str!("../../../../🧫️fixtures/🧲️engine-surface-retention/🔣️.json")).expect("engine surface retention fixture")
 }
@@ -37,6 +82,7 @@ fn registration(value: &Value) -> crate::engine_canvas::EngineSurfaceRegistratio
         other => panic!("unknown surface kind {other}"),
     };
     crate::engine_canvas::EngineSurfaceRegistration {
+        host_id: value["hostId"].as_str().unwrap_or_else(|| value["surfaceId"].as_str().expect("surface id")).to_string(),
         surface_id: value["surfaceId"].as_str().expect("surface id").to_string(),
         window_id: value["windowId"].as_str().expect("window id").to_string(),
         bounds: rect(&value["bounds"]),
@@ -54,6 +100,7 @@ struct SurfaceMirror {
     tiled_map_states: AdmittedSurfaceMap<TiledMapSurface>,
     board2d_states: AdmittedSurfaceMap<Board2dSurface>,
     world3d_status: HashMap<String, String>,
+    world3d_window_ids: HashMap<String, String>,
 }
 
 impl SurfaceMirror {
@@ -61,7 +108,7 @@ impl SurfaceMirror {
         let registrations: Vec<crate::engine_canvas::EngineSurfaceRegistration> = frame["drain"].as_array().expect("frame drain").iter().map(registration).collect();
         let live: Vec<String> = frame["liveWindows"].as_array().expect("live windows").iter().map(|id| id.as_str().expect("window id").to_string()).collect();
         let live: Vec<&str> = live.iter().map(String::as_str).collect();
-        ShellState::mirror_engine_surface_states(&mut self.node_graph_states, &mut self.tiled_map_states, &mut self.board2d_states, &mut self.world3d_status, registrations, &live)
+        ShellState::mirror_engine_surface_states(&mut self.node_graph_states, &mut self.tiled_map_states, &mut self.board2d_states, &mut self.world3d_status, &mut self.world3d_window_ids, registrations, &live)
     }
 
     /// 🖱️ Exactly the resolution the OS event loop performs: the first surface, in any bespoke map,
@@ -126,10 +173,12 @@ fn an_engine_surface_is_retained_by_its_window_instance_not_by_a_painted_frame()
 #[test]
 fn the_mirror_never_evicts_a_world3d_surface() {
     let mut world3d_status: HashMap<String, String> = HashMap::new();
+    let mut world3d_window_ids: HashMap<String, String> = HashMap::new();
     let mut node_graph_states = AdmittedSurfaceMap::<NodeGraphSurface>::default();
     let mut tiled_map_states = AdmittedSurfaceMap::<TiledMapSurface>::default();
     let mut board2d_states = AdmittedSurfaceMap::<Board2dSurface>::default();
     let registration = crate::engine_canvas::EngineSurfaceRegistration {
+        host_id: "scene.1.0.0.1".into(),
         surface_id: "procedural-preview-world".into(),
         window_id: "procedural-preview".into(),
         bounds: Rect { x: 0.0, y: 0.0, w: 10.0, h: 10.0 },
@@ -137,8 +186,8 @@ fn the_mirror_never_evicts_a_world3d_surface() {
         detail: crate::engine_canvas::EngineSurfaceKindDetail::World3d { status_json: Some("{\"phase\":\"evaluating\"}".into()) },
         created: true,
     };
-    ShellState::mirror_engine_surface_states(&mut node_graph_states, &mut tiled_map_states, &mut board2d_states, &mut world3d_status, vec![registration], &["procedural-preview"]);
-    assert_eq!(world3d_status.get("procedural-preview-world").map(String::as_str), Some("{\"phase\":\"evaluating\"}"));
-    ShellState::mirror_engine_surface_states(&mut node_graph_states, &mut tiled_map_states, &mut board2d_states, &mut world3d_status, Vec::new(), &["procedural-preview"]);
-    assert_eq!(world3d_status.get("procedural-preview-world").map(String::as_str), Some("{\"phase\":\"evaluating\"}"), "a frame that did not repaint the preview does not retire its compute status");
+    ShellState::mirror_engine_surface_states(&mut node_graph_states, &mut tiled_map_states, &mut board2d_states, &mut world3d_status, &mut world3d_window_ids, vec![registration], &["procedural-preview"]);
+    assert_eq!(world3d_status.get("scene.1.0.0.1").map(String::as_str), Some("{\"phase\":\"evaluating\"}"));
+    ShellState::mirror_engine_surface_states(&mut node_graph_states, &mut tiled_map_states, &mut board2d_states, &mut world3d_status, &mut world3d_window_ids, Vec::new(), &["procedural-preview"]);
+    assert_eq!(world3d_status.get("scene.1.0.0.1").map(String::as_str), Some("{\"phase\":\"evaluating\"}"), "a frame that did not repaint the preview does not retire its compute status");
 }

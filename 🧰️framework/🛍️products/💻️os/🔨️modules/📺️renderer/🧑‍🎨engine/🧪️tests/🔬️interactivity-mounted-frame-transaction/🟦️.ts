@@ -26,7 +26,18 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs"),
     read(INTERACTIVITY_AUDIT_OS_SERVICES_FILE),
   ];
-  const mutations: [string, number, string, string][] = [
+  const navbarScopeMarker = "fn render_navbar_step";
+  const navbarScopeFailure = "P5a policy boundary is stale: Shell navbar";
+  for (const [name, shell] of [
+    ["missing", clean[5]!.replace(navbarScopeMarker, "fn stale_render_navbar_step")],
+    ["duplicate", `${navbarScopeMarker}() {}\n${clean[5]}`],
+  ] as const) {
+    const scoped: typeof clean = [...clean];
+    scoped[5] = shell;
+    const failures = interactivityMountedFrameTransactionFailures(...scoped);
+    if (failures.filter((failure) => failure === navbarScopeFailure).length !== 1) throw new Error(`[verify interactivity] P5a ${name} Rust block scope did not emit one named stale-boundary failure`);
+  }
+  const mutations: [string, number, string, string, string?][] = [
     ["zero-mounted-constructor", 1, "crate::FrameTransaction::new", "crate::UnmountedFrameTransaction::new"],
     ["second-runtime", 1, "renderer_worker_pool()", "semio_framework_async::WorkerPool::new()"],
     ["caller-drive", 1, "try_submit_step(&crate::renderer_worker_pool(), Lane::Interactive)", "try_step_on_caller()"],
@@ -49,7 +60,7 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["dormant-production-authority", 4, "#[cfg(test)]\n#[path = \"../../🔄️transaction/🦀️.rs\"]", "#[path = \"../../🔄️transaction/🦀️.rs\"]"],
     ["opaque-before-callee", 0, "app.frame_before_input_step(handle, directives, cursor)", "app.frame_before_input(handle, directives, cursor)"],
     ["bulk-draw-clear", 0, "if previous.retire_step() {\n                    cursor.previous_draw = None;", "if { self.draw.clear(); true } {\n                    cursor.previous_draw = None;"],
-    ["select-whole-materialization", 13, "UiNode::Select(select) => {\n            if select.items.len()", "UiNode::Select(select) => {\n            let _whole_select = select.items.iter().collect::<Vec<_>>();\n            if select.items.len()"],
+    ["select-whole-materialization", 13, "UiNode::Select(select) if node.state.open => {\n                    if select.items.len()", "UiNode::Select(select) if node.state.open => {\n                    let _whole_select = select.items.iter().collect::<Vec<_>>();\n                    if select.items.len()", "P5a mounted interactive synchronization retains whole collection/depth work .collect::<Vec"],
     ["immediate-deferred-drive", 0, "self.pending_frame_deferred = Some", "self.drive_pending_frame_deferred(handle); self.pending_frame_deferred = Some"],
     ["whole-chrome", 5, "render_chrome_step", "render_chrome"],
     ["mounted-navbar-whole-label", 5, "RetainedChromeGroupStep::Fault => self.error = Some(\"Shell fullscreen item exceeded the retained glyph boundary\".to_string())", "RetainedChromeGroupStep::Fault => { chrome_text(draw, atlas, input, theme, item.label.unwrap_or_default(), rect.x, rect.y, theme.font_size_small, theme.text); self.error = Some(\"Shell fullscreen item exceeded the retained glyph boundary\".to_string()) }"],
@@ -58,20 +69,20 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["bulk-engine-take", 6, "take_packet_step", "take_packets"],
     ["dynamic-world-uploads", 7, "uploads: Box<[Option<PreparedRenderUpload>; WORLD3D_FRAME_RESOURCE_CAPACITY]>", "uploads: Vec<PreparedRenderUpload>"],
     ["bulk-world-append", 7, "pub fn append_step", "pub fn append_to"],
-    ["maintenance-authority-release-erasure", 0, "fn release(&self, generation: u64) -> bool {\n        if !self.is_live(generation) {\n            return false;\n        }\n        self.generation.store(0, std::sync::atomic::Ordering::Release);\n        self.state.compare_exchange(1, 0, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()\n    }", "fn release(&self, _generation: u64) -> bool {\n        true\n    }"],
+    ["maintenance-authority-release-erasure", 0, "fn release(&self, generation: u64) -> bool {\n        if !self.is_live(generation) {\n            return false;\n        }\n        self.generation.store(0, Ordering::Release);\n        self.state.compare_exchange(1, 0, Ordering::AcqRel, Ordering::Acquire).is_ok()\n    }", "fn release(&self, _generation: u64) -> bool {\n        true\n    }", "P5a maintenance authority is not generation/cancel/deadline-qualified with nonblocking exact-owner refusal handback"],
     ["deferred-run-to-completion", 0, "let Some(work) = cursor_value.take_next() else {", "while cursor_value.take_next().is_some() {}\n        let Some(work) = cursor_value.take_next() else {"],
-    ["bulk-deferred-close", 0, "if self.actions.pop_front().is_some() {\n            return false;\n        }", "if !self.actions.is_empty() {\n            self.actions = FrameActionOwners::default();\n            return false;\n        }"],
+    ["bulk-deferred-close", 0, "if !self.actions.close_step() {\n            return false;\n        }", "if !self.actions.is_empty() {\n            self.actions = FrameActionOwners::default();\n            return false;\n        }", "P5a deferred close bulk-drops the populated action owner"],
     ["atlas-credit-after-allocation", 8, "let Some(permit) = PreparedAtlasPermit::try_reserve(pages, byte_len, backing_bytes)", "let _premature = Box::new([const { None }; PREPARED_ATLAS_PAGE_CAPACITY]); let Some(permit) = PreparedAtlasPermit::try_reserve(pages, byte_len, backing_bytes)"],
     ["bulk-atlas-close", 8, "slots[index] = None", "slots.fill(None)"],
     ["two-atlas-pages-per-upload", 9, "cursor.page.checked_add(1)", "cursor.page.checked_add(2)"],
     ["whole-document-frame", 11, "engine.frame_into_step", "engine.frame"],
     ["dynamic-paint-stack", 12, "visits: [Option<RetainedPaintVisit>; RETAINED_PAINT_DEPTH_CREDITS]", "visits: Vec<RetainedPaintVisit>"],
     ["complete-text-wrap", 13, "let Some(ch) = value[cursor.byte..].chars().next() else", "for ch in value[cursor.byte..].chars() { let _ = atlas.ensure_glyph(ch, size); }\n    let Some(ch) = value[cursor.byte..].chars().next() else"],
-    ["whole-nontext-paint", 13, "UiNode::Tree(tree_node) => retained_tree_node_step(tree_node, bounds, theme, atlas, icons, draw, cursor),", "UiNode::Tree(_) => { paint_node_self(tree, id, origin_x, origin_y, theme, atlas, icons, has_scene_host, draw); RetainedNodePaintStep::Complete },"],
+    ["whole-nontext-paint", 13, "UiNode::Tree(tree_node) => retained_tree_node_step(tree, id, tree_node, bounds, theme, driver_drag, block_reversed, atlas, icons, draw, cursor),", "UiNode::Tree(_) => { paint_node_self(tree, id, origin_x, origin_y, theme, atlas, icons, has_scene_host, draw); RetainedNodePaintStep::Complete },", "P5a paint node recursively reaches child work paint_node_self("],
     ["whole-scene-collection", 14, "UiNode::ComponentScene", "collect_scene_slots(tree, id); UiNode::ComponentScene"],
     ["whole-context-menu", 5, "render_context_menu_step", "render_context_menu"],
     ["whole-tour", 5, "render_chrome_tour_step", "render_chrome_tour"],
-    ["whole-shell-glyph-callee", 5, "paint_retained_glyph_step(text, Rect::new", "for ch in text.chars() { let _ = atlas.ensure_glyph(ch, size); }\n    paint_retained_glyph_step(text, Rect::new"],
+    ["whole-shell-glyph-callee", 5, "paint_retained_glyph_step_flowed(text, Rect::new", "for ch in text.chars() { let _ = atlas.ensure_glyph(ch, size); }\n    paint_retained_glyph_step_flowed(text, Rect::new", "P5a Shell text callee retains whole-string work for ch in"],
     ["cloned-cleanup-key", 5, "extract_if(|_, _| true).next()", "keys().next().cloned()"],
     ["dynamic-find-owner", 5, "slots: Box<[Option<ShellFindItem>; SHELL_FIND_ITEM_CAPACITY]>", "slots: Vec<ShellFindItem>"],
     ["blocking-find-binding", 5, "std::cell::Cell<Option<ActiveShellFindItems>>", "std::sync::Mutex<Option<ActiveShellFindItems>>"],
@@ -90,10 +101,10 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["discarded-maintenance-submission", 0, "match renderer_worker_pool().try_submit(semio_framework_async::Lane::Io, job) {", "renderer_worker_pool().submit(semio_framework_async::Lane::Io, job);\n        return Ok(());\n        match renderer_worker_pool().try_submit(semio_framework_async::Lane::Io, job) {"],
     ["dynamic-preference-page", 16, "let mut page = [0u8; STORAGE_FIXED_FILE_PAGE_BYTES];", "let mut page = vec![0u8; STORAGE_FIXED_FILE_PAGE_BYTES];"],
     ["whole-preference-json", 5, "String::from_utf8(page).ok()", "serde_json::from_slice::<String>(&page).ok()"],
-    ["ui-bypasses-host-storage-read", 5, "semio_framework_os_services::storage_worker_read_fixed_file_page(&path, SHELL_CHROME_IO_FIELD_BYTES)", "std::fs::read(&path)"],
-    ["ui-bypasses-host-storage-write", 5, "semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), SHELL_CHROME_IO_FIELD_BYTES)", "std::fs::write(&path, value.as_bytes())"],
+    ["ui-bypasses-host-storage-read", 5, "semio_framework_os_services::storage_worker_read_fixed_file_page(&path, SHELL_CHROME_IO_FIELD_BYTES)", "std::fs::read(&path)", "P5a native preference maintenance does not delegate document and field pages to the host-storage service"],
+    ["ui-bypasses-host-storage-write", 5, "semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), SHELL_CHROME_IO_FIELD_BYTES)", "std::fs::write(&path, value.as_bytes())", "P5a native preference maintenance does not delegate document and field pages to the host-storage service"],
     ["missing-fixed-page-law", 16, "fixed_file_page_exact_max_plus_one_matches_system_oracle_and_preserves_last_valid_page", "fixed_file_page_smoke"],
-    ["missing-paint-output-credit", 13, "draw.begin_retained_output(1, std::mem::size_of::<crate::wgpu::draw::UiInstance>())", "Ok::<(), ()>(())"],
+    ["missing-paint-output-credit", 13, "draw.begin_retained_output(strikes, strikes * size_of::<crate::wgpu::draw::UiInstance>())", "Ok::<(), ()>(())", "P5a paint child authority is not retained by byte, glyph, line, output credit, and close state"],
     ["missing-paint-byte-cursor", 13, "byte: usize", "bytes: Vec<u8>"],
     ["missing-multimegabyte-text-law", 13, "retained_text_multi_megabyte_max_plus_one_preserves_tree_owner_identity", "retained_text_large_smoke"],
     ["missing-nontext-large-law", 13, "retained_multi_megabyte_input_advances_one_scalar_per_grant", "retained_large_input_smoke"],
@@ -113,11 +124,15 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["missing-atlas-interrupted-close-law", 8, "interrupted_atlas_close_rejoins_the_same_abandonment_authority", "interrupted_atlas_close_smoke"],
   ];
   const mutationFailures: string[] = [];
-  for (const [name, index, needle, replacement] of mutations) {
+  for (const [name, index, needle, replacement, expected] of mutations) {
     const mutated: typeof clean = [...clean];
     mutated[index] = mutated[index]!.replace(needle, replacement);
     if (mutated[index] === clean[index]) mutationFailures.push(`mutation ${name} did not alter source`);
-    else if (interactivityMountedFrameTransactionFailures(...mutated).length === 0) mutationFailures.push(`mutation ${name} was falsely accepted`);
+    else {
+      const failures = interactivityMountedFrameTransactionFailures(...mutated);
+      if (expected && !failures.includes(expected)) mutationFailures.push(`mutation ${name} did not emit assigned failure ${expected}`);
+      else if (failures.length === 0) mutationFailures.push(`mutation ${name} was falsely accepted`);
+    }
   }
   const legacyChromeMutations: [string, string, string][] = [
     ["production-chrome-measure-oracle", "#[cfg(test)]\nfn measure_chrome_group_item", "fn measure_chrome_group_item"],

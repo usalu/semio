@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceDecision {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace decision \"{}\"", self.decision.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace decision \"{}\"", self.decision.header.name), &format!("Entscheidung \"{}\" ersetzen", self.decision.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.decision.header.id.0.clone()]

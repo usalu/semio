@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "cases": [
     {
       "id": "canvas-fullscreen",
@@ -260,6 +260,17 @@
         "meta": false,
         "alt": false,
         "shift": false
+      }
+    }
+  ],
+  "retirementCases": [
+    {
+      "id": "retired-focused-palette-input-restores-canvas",
+      "retiredNodeKey": "ui.search.input",
+      "expectedFocus": "canvas",
+      "reopenKey": "p",
+      "modifiers": {
+        "meta": true
       }
     }
   ],

@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceDeliveryConstrain
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace delivery constraint \"{}\"", self.delivery_constraint.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace delivery constraint \"{}\"", self.delivery_constraint.header.name), &format!("Lieferungsrandbedingung \"{}\" ersetzen", self.delivery_constraint.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.delivery_constraint.header.id.0.clone()]

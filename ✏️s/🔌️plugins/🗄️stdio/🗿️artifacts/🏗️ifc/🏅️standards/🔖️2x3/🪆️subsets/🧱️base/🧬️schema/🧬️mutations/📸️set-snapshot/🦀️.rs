@@ -28,8 +28,8 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for SetSnapshot {
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3Mutation> {
         agg_inverse(&Ifc2x3Mutation::SetSnapshot(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-snapshot".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

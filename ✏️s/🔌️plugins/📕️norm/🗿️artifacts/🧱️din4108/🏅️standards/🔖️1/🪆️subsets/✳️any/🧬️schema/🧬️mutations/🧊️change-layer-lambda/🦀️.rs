@@ -21,8 +21,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeLayerLam
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change layer #{} lambda to {}", self.index, self.new_lambda_w_mk)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change layer #{} lambda to {}", self.index, self.new_lambda_w_mk), &format!("Ebene #{} lambda auf {} ändern", self.index, self.new_lambda_w_mk))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

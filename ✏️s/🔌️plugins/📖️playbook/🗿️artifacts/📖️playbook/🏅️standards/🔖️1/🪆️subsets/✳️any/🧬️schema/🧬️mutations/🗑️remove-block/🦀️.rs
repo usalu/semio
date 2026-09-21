@@ -35,8 +35,8 @@ impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for RemoveBlock 
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove block \"{}\"", self.block_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove block \"{}\"", self.block_id), &format!("Block \"{}\" entfernen", self.block_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block_id.clone()]

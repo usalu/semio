@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change Infiltration Stack Height of infiltration {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change Infiltration Stack Height of infiltration {}", self.id.0), &format!("Infiltrationsstapelhöhe von Infiltration {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

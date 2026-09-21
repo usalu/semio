@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeRhoL {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change rho l to {:?}", self.new_rho_l)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change rho l to {:?}", self.new_rho_l), &format!("Rhol auf {:?} ändern", self.new_rho_l))
     }
 }
 //#endregion 🔖️ChangeRhoL

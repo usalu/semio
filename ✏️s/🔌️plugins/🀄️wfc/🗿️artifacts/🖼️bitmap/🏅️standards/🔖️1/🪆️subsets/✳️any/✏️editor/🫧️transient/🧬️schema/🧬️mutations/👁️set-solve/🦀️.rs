@@ -21,8 +21,8 @@ impl protocol::MutationKind<BitmapTransient, BitmapTransientMutation> for SetSol
     fn inverse(&self, base: &BitmapTransient) -> Vec<BitmapTransientMutation> {
         vec![Self { output_pixels: base.output_pixels.clone(), contradiction: base.contradiction, output_width: base.output_width, output_height: base.output_height }.into()]
     }
-    fn label(&self) -> String {
-        "Set Solve".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Solve", "Lösung setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["outputPixels".into()]

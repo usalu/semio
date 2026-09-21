@@ -22,8 +22,8 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for Repl
     fn inverse(&self, base: &ImperativeConfig) -> Vec<ImperativeConfigMutation> {
         vec![ImperativeConfigMutation::ReplaceConfig(Self { config: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Replace Config".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace Config", "Konfiguration ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["config".into()]

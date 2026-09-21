@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeCraneClass
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change crane class to \"{}\"", self.new_crane_class)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change crane class to \"{}\"", self.new_crane_class), &format!("Kranklasse auf \"{}\" ändern", self.new_crane_class))
     }
 }
 //#endregion 🔖️Payload

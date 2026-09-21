@@ -21,8 +21,8 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for SetSnapshot {
     fn inverse(&self, base: &ZipSnapshot) -> Vec<ZipIso21320Mutation> {
         agg_inverse(&ZipIso21320Mutation::SetSnapshot(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-snapshot".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

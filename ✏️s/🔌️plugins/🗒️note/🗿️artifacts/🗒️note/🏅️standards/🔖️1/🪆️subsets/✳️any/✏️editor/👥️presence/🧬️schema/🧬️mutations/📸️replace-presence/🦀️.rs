@@ -19,8 +19,8 @@ impl protocol::MutationKind<NotePresence, NotePresenceMutation> for ReplacePrese
     fn inverse(&self, base: &NotePresence) -> Vec<NotePresenceMutation> {
         vec![NotePresenceMutation::ReplacePresence(Self { presence: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Replace Presence".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace Presence", "Präsenz ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["presence".into()]

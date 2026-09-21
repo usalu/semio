@@ -33,8 +33,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeSrgbIntentMutati
         }
         vec![PngMutation::ChangeSrgbIntent(ChangeSrgbIntentMutation { srgb: base.srgb })]
     }
-    fn label(&self) -> String {
-        "change srgb intent".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("change srgb intent", "Srgbabsicht ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-srgb-intent".into()]

@@ -24,8 +24,8 @@ impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for InsertSa
     fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {
         agg_inverse(&SemioVideoMutation::InsertSample(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-sample".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-sample", "Probe einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

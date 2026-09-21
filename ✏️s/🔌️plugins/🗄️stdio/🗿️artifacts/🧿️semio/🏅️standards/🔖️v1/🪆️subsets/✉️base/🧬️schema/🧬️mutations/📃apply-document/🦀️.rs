@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyDocument {
     fn inverse(&self, base: &SemioSnapshot) -> Vec<SemioMutation> {
         agg_inverse(&SemioMutation::ApplyDocument(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "document".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("document", "Dokument")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

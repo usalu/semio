@@ -5668,6 +5668,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sqlx",
+ "tokio",
 ]
 
 [[package]]
@@ -6810,6 +6811,7 @@ dependencies = [
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-infinite-dag",
  "semio-framework-artifact-playbook-playbook",
+ "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-hash",
@@ -9487,6 +9489,7 @@ dependencies = [
  "semio-framework-artifact-playbook-playbook",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
  "semio-framework-pack",

@@ -88,6 +88,7 @@ mod ui_node_wire_format_tests {
                 UiNode::Image(UiImageNode { menu: None, id: "img1".into(), src: "icon.png".into(), alt: Some(Label::data("alt text")), presence: UiPresence::default() }),
                 UiNode::ComponentScene(UiComponentSceneNode {
                     menu: None,
+                    host_id: String::new(),
                     surface_id: "surf1".into(),
                     controller_id: "ctrl".into(),
                     component_kind: SurfaceKind::World3d,
@@ -268,6 +269,7 @@ mod ui_node_wire_format_tests {
         assert_presence_serializes(
             UiNode::ComponentScene(UiComponentSceneNode {
                 menu: None,
+                host_id: String::new(),
                 surface_id: "s".into(),
                 controller_id: "c".into(),
                 component_kind: SurfaceKind::Canvas2d,

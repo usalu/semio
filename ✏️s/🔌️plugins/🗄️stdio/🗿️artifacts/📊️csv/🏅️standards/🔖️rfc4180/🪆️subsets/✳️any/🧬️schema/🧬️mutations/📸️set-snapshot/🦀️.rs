@@ -24,8 +24,8 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetSnapshot {
     fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {
         crate::schema::mutations::agg_inverse(&CsvMutation::SetSnapshot(SetSnapshot { snapshot: self.snapshot.clone() }), base)
     }
-    fn label(&self) -> String {
-        "set-snapshot".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

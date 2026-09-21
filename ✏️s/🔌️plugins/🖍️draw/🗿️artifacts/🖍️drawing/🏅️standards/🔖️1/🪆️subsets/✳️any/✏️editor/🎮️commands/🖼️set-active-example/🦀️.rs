@@ -29,7 +29,7 @@ pub fn handle(
         default_drawing_document("empty", None)
     } else {
         let source = examples().iter().find(|source| source.id() == payload.example_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.example.unknown"), format!("Drawing declares no example '{}'", payload.example_id)))?;
-        DrawingSnapshot::parse_dsl(source.document_json()).map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("drawing.example.parse"), format!("Drawing example '{}' does not parse as a drawing document", payload.example_id)))?
+        DrawingSnapshot::parse_dsl(&source.document_json()).map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("drawing.example.parse"), format!("Drawing example '{}' does not parse as a drawing document", payload.example_id)))?
     };
     Ok(Emit { effects: vec![crate::editor::drawing::drawing_reset_document_effect(&next)], ..Default::default() })
 }

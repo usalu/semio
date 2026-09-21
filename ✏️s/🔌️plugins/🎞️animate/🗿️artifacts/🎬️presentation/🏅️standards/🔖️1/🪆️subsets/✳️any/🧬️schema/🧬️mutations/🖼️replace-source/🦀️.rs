@@ -31,8 +31,8 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for ReplaceSource 
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Replace source with \"{}\"", self.new_source.src)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace source with \"{}\"", self.new_source.src), &format!("Quelle mit \"{}\" ersetzen", self.new_source.src))
     }
 
     fn target(&self) -> Vec<String> {

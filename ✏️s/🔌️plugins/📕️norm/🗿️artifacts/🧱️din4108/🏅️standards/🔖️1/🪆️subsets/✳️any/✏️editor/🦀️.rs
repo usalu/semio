@@ -248,7 +248,7 @@ pub fn create_din4108_app() -> semio_framework_plugin::AppDefinition {
                     .with_args(vec![semio_framework_plugin::ActionArgDef::text("snapshot", LocalizedLabel::native("Document JSON", "Dokument-JSON"))]),
             )
             .action_with(semio_framework_plugin::ActionDefinition::new("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"), semio_framework_plugin::ActionKind::View, "hash"))
-            .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "AusgewÃ¤hlte PrÃ¼fung setzen"))
+            .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "Ausgewählte Prüfung setzen"))
             .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("evaluate", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::Migrated)

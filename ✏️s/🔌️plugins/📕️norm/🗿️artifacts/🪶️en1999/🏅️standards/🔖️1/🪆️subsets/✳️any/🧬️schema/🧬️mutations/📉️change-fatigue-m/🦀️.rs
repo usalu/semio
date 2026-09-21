@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeFatigueM {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change fatigue S-N slope m to {}", self.new_fatigue_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change fatigue S-N slope m to {}", self.new_fatigue_m), &format!("Ermüdungs-S-N-Steigung m auf {} ändern", self.new_fatigue_m))
     }
 }
 //#endregion 🔖️ChangeFatigueM

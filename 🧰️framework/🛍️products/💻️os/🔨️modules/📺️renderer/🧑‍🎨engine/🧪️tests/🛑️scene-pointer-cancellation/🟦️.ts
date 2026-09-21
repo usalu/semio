@@ -7,6 +7,7 @@ import paintSource from "../../🧱️elements/🖌️Paint2dHost/🟦️.tsx?ra
 import textEditorSource from "../../🧱️elements/✏️TextEditor/🟦️.tsx?raw";
 import tiledMapSource from "../../🧱️elements/🧭️TiledMapHost/🟦️.tsx?raw";
 import engineCanvasSource from "../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs?raw";
+import scenesSource from "../../🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs?raw";
 import interpreterSource from "../../🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs?raw";
 import shellSource from "../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs?raw";
 import rendererSource from "../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs?raw";
@@ -37,6 +38,19 @@ describe("scene pointer cancellation contract", () => {
       expect(entry.publishOnCancel, entry.family).toEqual([]);
       expect(entry.preservePublished, entry.family).toEqual(expect.arrayContaining(["selection", "camera"]));
     }
+  });
+
+  it("pins TiledMap cancel and hover retirement to one exact retained owner", () => {
+    expect(new Set(Object.values(fixture.tiledMap.owner)).size).toBe(3);
+    expect(fixture.tiledMap.cancel).toEqual([
+      expect.objectContaining({ mode: "pan", button: 1, cameraPublications: 1, selectionPublications: 0, clearsDrag: true }),
+      expect.objectContaining({ mode: "marquee", button: 0, cameraPublications: 0, selectionPublications: 0, clearsDrag: true }),
+      expect.objectContaining({ mode: "none", button: 0, cameraPublications: 0, selectionPublications: 0, clearsDrag: false }),
+    ]);
+    for (const row of fixture.tiledMap.cancel) {
+      expect(row).toMatchObject({ nextDown: "accepted", duplicateCancel: "inert", outsideUp: "inert" });
+    }
+    expect(fixture.tiledMap.hoverLeave).toEqual({ prior: "position:position.upper", emptyTargets: "[]", publications: 1, repeatPublications: 0, peerPublications: 0, gestureFanout: [] });
   });
 
   it("addresses cancellation by surface, generation, and pointer before admitting the next generation", () => {
@@ -76,14 +90,17 @@ describe("scene pointer cancellation contract", () => {
   it("preserves the physical pointer and surface generation through the native cancellation owner", () => {
     expect(winitSource).toContain("DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(pointer.id)");
     expect(rendererSource).toContain("handle_pointer_cancel(&mut self, pointer_id: ui_render::PointerId)");
-    expect(rendererSource).toContain("claim_scene_pointer_owner(&surface.window_id, surface_id");
+    expect(rendererSource).toContain("claim_scene_pointer_owner(target.clone(), pointer_id)");
     expect(interpreterSource).toContain("surface_generation: u64");
     expect(interpreterSource).toContain("pointer_id: Option<ui_render::PointerId>");
-    expect(interpreterSource).toContain("owner.window_generation == slot.surface_generation");
+    expect(interpreterSource).toContain("engine.surface_generation(&target.window_id) != Some(target.window_generation)");
     expect(interpreterSource).toContain("job.matches_pointer_owner(slot.surface_generation, pointer_id)");
     expect(shellSource).toContain("handle_pointer_cancel_for(&mut self, pointer_id");
     expect(shellSource).toContain("SurfaceKind::TiledMap");
-    expect(shellSource).toContain("tiled_map_pointer_up_into");
+    const cancelRoute = shellSource.slice(shellSource.indexOf("pub fn handle_pointer_cancel_for"), shellSource.indexOf("crate::scenes::cancel_canvas_interactions", shellSource.indexOf("pub fn handle_pointer_cancel_for")));
+    expect(cancelRoute).toContain("tiled_map_pointer_cancel_into");
+    expect(cancelRoute).not.toContain("tiled_map_pointer_up_into");
+    expect(scenesSource).toContain("tiled_map_pointer_leave_into");
     expect(engineCanvasSource).toContain("node_graph_pointer_cancel_into");
     expect(engineCanvasSource).toContain("puzzle_board_pointer_cancel_into");
     expect(engineCanvasSource).toContain("paint2d_pointer_cancel_into");

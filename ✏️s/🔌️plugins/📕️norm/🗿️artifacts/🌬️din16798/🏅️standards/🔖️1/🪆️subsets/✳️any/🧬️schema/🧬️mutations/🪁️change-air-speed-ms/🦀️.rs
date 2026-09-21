@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeAirSpe
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change air speed to {}", self.new_air_speed_m_s)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change air speed to {}", self.new_air_speed_m_s), &format!("Luftgeschwindigkeit auf {} ändern", self.new_air_speed_m_s))
     }
 }
 //#endregion 🔖️ChangeAirSpeedMS

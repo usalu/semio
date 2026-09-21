@@ -84,8 +84,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMateria
         vec![super::GltfMutation::ChangeMaterialAlphaMode(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Change Material Alpha Mode".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Material Alpha Mode", "Materialalphamodus ändern")
     }
 
     fn target(&self) -> Vec<String> {

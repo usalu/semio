@@ -3963,6 +3963,33 @@ pub struct ExampleDefinition {
     pub dialect: ArtifactDialect,
 }
 
+/// 🏷️ One asset-name component: everything outside `[0-9A-Za-z._-]` folds to `-` so a dialect
+/// coordinate (`s.puzzle.5d@1/*`) and an example id yield a single stable path segment.
+pub fn asset_name_segment(raw: &str) -> String {
+    raw.chars().map(|character| if character.is_ascii_alphanumeric() || character == '.' || character == '_' || character == '-' { character } else { '-' }).collect()
+}
+
+/// 📦️ The directory-and-stem prefix every externalized example body of `example_id` travels under.
+/// The suffix after it names the BYTES that were declared: `.json` for a body the descriptor
+/// emitter moved out of the manifest, and the authored fixture's own extension for a body the
+/// plugin never materialised at all (see `ExampleSource::deferred`). Consumers match the prefix,
+/// never one fixed extension, because those two declarations hash different bytes on purpose.
+pub fn example_body_asset_prefix(dialect: &ArtifactDialect, example_id: &str) -> String {
+    format!(
+        "📚️examples/{}.{}.{}/{}",
+        asset_name_segment(&dialect.artifact_kind),
+        asset_name_segment(&dialect.standard),
+        asset_name_segment(&dialect.subset),
+        asset_name_segment(example_id)
+    )
+}
+
+/// 📦️ The full `AssetDeclaration.name` for one example body — [`example_body_asset_prefix`] plus the
+/// suffix of the bytes actually declared (`.json`, `.dsl.semio`, …).
+pub fn example_body_asset_name(dialect: &ArtifactDialect, example_id: &str, suffix: &str) -> String {
+    format!("{}{}", example_body_asset_prefix(dialect, example_id), suffix)
+}
+
 /// 📚️ THE example-picker predicate — every example authored for `dialect`, in manifest order,
 /// deduplicated by id. The react shell's navbar select (`ShellHost`'s `exampleOptions`) and the
 /// host's own example-graph scoping (`exampleArtifactSources`) both answer it, and so does the

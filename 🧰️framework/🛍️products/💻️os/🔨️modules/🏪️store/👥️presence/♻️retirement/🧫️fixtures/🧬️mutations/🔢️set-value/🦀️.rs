@@ -19,8 +19,8 @@ impl crate::os_spr::MutationKind<Value, ValueMutation> for SetValue {
     fn inverse(&self, base: &Value) -> Vec<ValueMutation> {
         vec![ValueMutation::SetValue(Self { n: base.0 })]
     }
-    fn label(&self) -> String {
-        "Set Value".into()
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Set Value", "Wert setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["value".into()]

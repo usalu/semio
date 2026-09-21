@@ -21,8 +21,8 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for RemoveGeometry
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove connection \"{}\" from geometry \"{}\"", self.connection_id, self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove connection \"{}\" from geometry \"{}\"", self.connection_id, self.id), &format!("Verbindung \"{}\" aus Geometrie \"{}\" entfernen", self.connection_id, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone(), self.connection_id.clone()]

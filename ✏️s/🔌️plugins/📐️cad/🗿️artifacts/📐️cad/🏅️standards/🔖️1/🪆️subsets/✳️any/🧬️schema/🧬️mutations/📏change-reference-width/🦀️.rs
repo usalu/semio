@@ -25,8 +25,8 @@ impl MutationKind<CadSnapshot, CadMutation> for ChangeReferenceWidth {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change width of reference \"{}\"", self.reference_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change width of reference \"{}\"", self.reference_id), &format!("Breite von Referenz \"{}\" ändern", self.reference_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.model_definition_id.clone(), self.reference_id.clone()]

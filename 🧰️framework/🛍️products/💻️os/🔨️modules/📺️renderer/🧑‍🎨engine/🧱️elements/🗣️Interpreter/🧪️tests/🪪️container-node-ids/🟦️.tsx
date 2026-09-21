@@ -13,6 +13,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { cleanup, fireEvent, render } = await import("@semio-tech/ui-react/test");
   const { createElement } = await import("react");
+  const { default: lifetime } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🪟️surface-lifetime/🔣️.json");
+  const { default: lifetimeSchema } = await import("../../../../../../../../../🔨️modules/🖱️ui/🧬️schema/🪟️surface-lifetime/🔣️.json");
+  const { default: Ajv } = await import("ajv");
 
   type AnyRecord = Record<string, any>;
 
@@ -89,6 +92,43 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(field).not.toBeNull();
       expect(field!.getAttribute("data-slot")).toBe("field");
       expect(field!.querySelector('[data-slot="field-label"]')!.getAttribute("for")).toBe(`${SURFACE}/puzzle3d-play-settings.grid-spacing.control`);
+    });
+  });
+
+  describe("🪟️ interpreted surface retirement", () => {
+    afterEach(() => cleanup());
+
+    it("validates the shared retained surface lifetime contract", () => {
+      const validate = new Ajv({ allErrors: true, strict: false }).compile(lifetimeSchema);
+      expect(validate(lifetime), JSON.stringify(validate.errors)).toBe(true);
+    });
+
+    it("silently unmounts focused drafts and rejects detached predecessors through repeated same-id mounts", () => {
+      const intents: unknown[] = [];
+      let previous: HTMLInputElement | undefined;
+      for (let index = 0; index < lifetime.sequentialMounts; index += 1) {
+        const store = new UiDocumentStore(SURFACE);
+        const inputRecord = {
+          ...node(1, "retained-draft", { type: "input", kind: "text", value: lifetime.silentBlurCommit.initialValue, commit: "blur" }),
+          bindings: [{ trigger: "commit", action: { name: "setDriverSaveLabel", scope: "framework", version: 1 }, args: {}, capability: null }],
+        };
+        store.loadSnapshot({ surface: SURFACE, revision: 1, root: 1, nodes: [inputRecord] });
+        const view = render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => intents.push(intent) } }));
+        const input = view.container.querySelector("input") as HTMLInputElement;
+        expect(input).not.toBeNull();
+        if (previous && lifetime.sameIdSuccessor.rejectPreviousIdentity) {
+          fireEvent.blur(previous);
+          expect(intents).toHaveLength(lifetime.silentBlurCommit.actions);
+        }
+        fireEvent.focus(input);
+        fireEvent.change(input, { target: { value: lifetime.silentBlurCommit.draft } });
+        expect(input.value).toBe(lifetime.silentBlurCommit.draft);
+        if (lifetime.sameIdSuccessor.preserveSuccessor) expect(input.isConnected).toBe(true);
+        view.unmount();
+        expect(view.container.querySelectorAll("input")).toHaveLength(lifetime.closedSurfaces);
+        expect(intents).toHaveLength(lifetime.silentBlurCommit.actions);
+        previous = input;
+      }
     });
   });
 

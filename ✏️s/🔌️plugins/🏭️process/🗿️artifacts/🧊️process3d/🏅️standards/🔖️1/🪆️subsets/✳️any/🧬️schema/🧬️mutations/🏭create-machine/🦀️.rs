@@ -31,8 +31,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for CreateMach
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Create machine \"{}\"", self.machine.label)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create machine \"{}\"", self.machine.label), &format!("Maschine \"{}\" erstellen", self.machine.label))
     }
 
     fn target(&self) -> Vec<String> {

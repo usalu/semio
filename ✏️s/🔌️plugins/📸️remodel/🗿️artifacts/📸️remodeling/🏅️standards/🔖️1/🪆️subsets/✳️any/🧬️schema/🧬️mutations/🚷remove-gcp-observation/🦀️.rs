@@ -35,8 +35,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for RemoveGc
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove observation {} from GCP \"{}\"", self.observation_index, self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove observation {} from GCP \"{}\"", self.observation_index, self.id), &format!("Beobachtung {} aus GCP \"{}\" entfernen", self.observation_index, self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

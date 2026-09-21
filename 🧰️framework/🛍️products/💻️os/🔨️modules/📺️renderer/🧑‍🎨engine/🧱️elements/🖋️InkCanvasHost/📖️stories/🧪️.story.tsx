@@ -5,8 +5,7 @@
 // renderer/react/index.tsx`), so a story-local reducer over `InkCanvasEvent`s is enough for real interaction.
 // Summary: `applyStoryInkEvents` mirrors `applyEventsLocal`'s operation vocabulary (`addBlock`/`updateBlock`/
 // `removeBlock`/`putAsset`/`setCamera`) that a real plugin's `inkApplyEvents` handler would apply; the reducer
-// also handles the sibling `setSelection`/`setCamera`/`setHover` actions `InkCanvasHost` dispatches directly
-// (`inkCanvasActions`). Interactive drag/draw/pan/erase and click-to-select therefore all round-trip live.
+// also handles the framework `interactionSelect`/`interactionHover` actions the host publishes.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
@@ -28,6 +27,7 @@ const STORY_INK_DOCUMENT: InkDocument = {
   blocks: [
     {
       id: "text-1",
+      interactionId: "ink-story-block:text-1",
       kind: "text",
       name: "Heading",
       x: 40,
@@ -43,6 +43,7 @@ const STORY_INK_DOCUMENT: InkDocument = {
     },
     {
       id: "stroke-1",
+      interactionId: "ink-story-block:stroke-1",
       kind: "stroke",
       name: "Sketch",
       x: 0,
@@ -62,6 +63,7 @@ const STORY_INK_DOCUMENT: InkDocument = {
     },
     {
       id: "table-1",
+      interactionId: "ink-story-block:table-1",
       kind: "table",
       name: "Parts",
       x: 60,
@@ -83,6 +85,11 @@ const STORY_INK_DOCUMENT: InkDocument = {
 //#region Reducer
 type StoryInkState = { readonly document: InkDocument; readonly selection: readonly string[]; readonly hoveredId: string | null };
 
+function storyInteractionItem(block: InkItem): InkItem {
+  const interactionId = `ink-story-block:${block.id}`;
+  return block.kind === "group" ? { ...block, interactionId, children: block.children.map(storyInteractionItem) } : { ...block, interactionId };
+}
+
 /** @emoji ✍️ Story-local mirror of `applyEventsLocal` (`framework/os/renderer/js/react/index.tsx`) — the subset of a real plugin's `inkApplyEvents` operation vocabulary the stories exercise. */
 function applyStoryInkEvents(document: InkDocument, events: readonly InkCanvasEvent[]): InkDocument {
   let blocks = document.blocks;
@@ -90,10 +97,10 @@ function applyStoryInkEvents(document: InkDocument, events: readonly InkCanvasEv
   for (const event of events) {
     switch (event.operation) {
       case "addBlock":
-        blocks = [...blocks, event.block];
+        blocks = [...blocks, storyInteractionItem(event.block)];
         break;
       case "updateBlock":
-        blocks = blocks.map((block) => (block.id === event.blockId ? event.block : block));
+        blocks = blocks.map((block) => (block.id === event.blockId ? storyInteractionItem(event.block) : block));
         break;
       case "removeBlock":
         blocks = blocks.filter((block) => block.id !== event.blockId);
@@ -109,7 +116,7 @@ function applyStoryInkEvents(document: InkDocument, events: readonly InkCanvasEv
   return { ...next, blocks };
 }
 
-/** @emoji ✍️ Story-local mirror of the `inkCanvasActions.applyEvents`/`setSelection`/`setCamera`/`setHover` handling a real host app performs against `InkCanvasHost`'s dispatched actions. */
+/** @emoji ✍️ Story-local mirror of the app event reducer plus framework interaction projection. */
 function reduceStoryInkAction(state: StoryInkState, descriptor: ActionDescriptor): StoryInkState {
   const args = (descriptor.args ?? {}) as Record<string, unknown>;
   switch (descriptor.action) {
@@ -120,17 +127,20 @@ function reduceStoryInkAction(state: StoryInkState, descriptor: ActionDescriptor
       const selection = Array.isArray(selectIds) ? selectIds.filter((id): id is string => typeof id === "string") : state.selection;
       return { ...state, document, selection };
     }
-    case inkCanvasActions.setSelection: {
-      const ids = args.ids;
-      return { ...state, selection: Array.isArray(ids) ? ids.filter((id): id is string => typeof id === "string") : [] };
+    case "interactionSelect": {
+      const targets = typeof args.targets === "string" ? (JSON.parse(args.targets) as readonly { readonly id?: unknown }[]) : [];
+      const ids = targets.flatMap((target) => (typeof target.id === "string" && target.id.startsWith("ink-story-block:") ? [target.id.slice("ink-story-block:".length)] : []));
+      const selection = args.merge === "additive" ? [...new Set([...state.selection, ...ids])] : ids;
+      return { ...state, selection };
     }
     case inkCanvasActions.setCamera: {
       const camera = args.camera as InkDocument["camera"] | undefined;
       return camera ? { ...state, document: { ...state.document, camera } } : state;
     }
-    case inkCanvasActions.setHover: {
-      const id = args.id;
-      return { ...state, hoveredId: typeof id === "string" ? id : null };
+    case "interactionHover": {
+      const targets = typeof args.targets === "string" ? (JSON.parse(args.targets) as readonly { readonly id?: unknown }[]) : [];
+      const id = targets[0]?.id;
+      return { ...state, hoveredId: typeof id === "string" && id.startsWith("ink-story-block:") ? id.slice("ink-story-block:".length) : null };
     }
     default:
       return state;
@@ -149,6 +159,7 @@ function buildStoryInkScene(state: StoryInkState, interactive: boolean, viewMode
     activeUtility: "selectDirect",
     viewMode,
     interactive,
+    interactionDomain: { id: "ink-story-blocks", granularityId: "block" },
   };
 }
 //#endregion SceneNode

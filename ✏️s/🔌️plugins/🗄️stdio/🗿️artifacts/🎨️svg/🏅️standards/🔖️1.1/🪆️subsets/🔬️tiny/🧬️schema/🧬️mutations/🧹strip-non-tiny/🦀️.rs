@@ -23,8 +23,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for StripNonTiny {
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgTinyMutation> {
         agg_inverse(&SvgTinyMutation::StripNonTiny(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "strip-non-tiny".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("strip-non-tiny", "winzige Streifennicht")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

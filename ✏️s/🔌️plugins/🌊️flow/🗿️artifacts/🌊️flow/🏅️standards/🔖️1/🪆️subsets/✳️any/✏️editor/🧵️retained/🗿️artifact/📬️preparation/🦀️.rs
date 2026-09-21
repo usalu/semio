@@ -21,14 +21,18 @@ impl store::ArtifactStoreOneItemPreparationFactory<FlowSnapshot, FlowMutation> f
         if !Recipe::supported(mutation) {
             return Err("Flow mutation requires its explicit batch-only recipe".into());
         }
-        let work_items = match mutation {
+        let semantic_items = match mutation {
             FlowMutation::MoveWidgets(payload) => payload.entries.len(),
             _ => 1,
         };
-        if work_items == 0 || work_items > FLOW_STORE_MAX_MUTATION_ITEMS {
+        if semantic_items == 0 || semantic_items > FLOW_STORE_MAX_MUTATION_ITEMS {
             return Err("Flow artifact mutation exceeds admitted semantic items".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items, retained_bytes: FLOW_STORE_MAX_TEXT_BYTES })
+        let inverse_rows = match mutation {
+            FlowMutation::DeleteWidget(_) => FLOW_STORE_MAX_MUTATION_ITEMS.saturating_add(2),
+            _ => 1,
+        };
+        Ok(store::ArtifactStoreOneItemFootprint::for_one_item(inverse_rows, FLOW_STORE_MAX_TEXT_BYTES))
     }
 
     fn begin(

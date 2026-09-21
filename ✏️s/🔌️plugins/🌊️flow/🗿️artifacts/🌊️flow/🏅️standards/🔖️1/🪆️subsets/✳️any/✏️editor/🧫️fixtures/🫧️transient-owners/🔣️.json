@@ -1,10 +1,17 @@
 {
 "contract": "semio.flow.transient-owners/v1", "payloadBytes": 0,
   "trace": [
-    { "id": "zero-items", "items": 0, "bytes": 64, "status": "pending", "retired": false },
-    { "id": "zero-bytes", "items": 1, "bytes": 0, "status": "pending", "retired": false },
-    { "id": "retire-exact-store", "items": 1, "bytes": 1, "status": "pending", "retired": true },
-    { "id": "sticky-complete", "items": 0, "bytes": 0, "status": "complete", "retired": true }
+    { "id": "zero-items", "items": 0, "bytes": 64, "status": "pending", "rootRetired": false, "terminalEmpty": false },
+    { "id": "begin-store-retirement", "items": 1, "bytes": 0, "status": "pending", "rootRetired": false, "terminalEmpty": false },
+    { "id": "transfer-root-alias", "items": 1, "bytes": 1, "status": "pending", "rootRetired": false, "terminalEmpty": false },
+    { "id": "recover-unique-root", "items": 1, "bytes": 1, "status": "pending", "rootRetired": true, "terminalEmpty": false },
+    { "id": "retire-unique-root", "items": 1, "bytes": 1, "status": "pending", "rootRetired": true, "terminalEmpty": false },
+    { "id": "close-unique-retirement", "items": 1, "bytes": 1, "status": "pending", "rootRetired": true, "terminalEmpty": false },
+    { "id": "close-root-wrapper", "items": 1, "bytes": 1, "status": "pending", "rootRetired": true, "terminalEmpty": false },
+    { "id": "close-read-registry", "items": 1, "bytes": 1, "status": "pending", "rootRetired": true, "terminalEmpty": false },
+    { "id": "close-retirement-factory", "items": 1, "bytes": 1, "status": "pending", "rootRetired": true, "terminalEmpty": false },
+    { "id": "close-store-retirement", "items": 1, "bytes": 1, "status": "pending", "rootRetired": true, "terminalEmpty": true },
+    { "id": "sticky-complete", "items": 0, "bytes": 0, "status": "complete", "rootRetired": true, "terminalEmpty": true }
   ],
   "rejectForeignOwner": true,
   "rejectResetOwner": true

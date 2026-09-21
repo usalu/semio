@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceFlowRequirement {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace flow requirement \"{}\"", self.flow_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace flow requirement \"{}\"", self.flow_requirement.header.name), &format!("Flussanforderung \"{}\" ersetzen", self.flow_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.flow_requirement.header.id.0.clone()]

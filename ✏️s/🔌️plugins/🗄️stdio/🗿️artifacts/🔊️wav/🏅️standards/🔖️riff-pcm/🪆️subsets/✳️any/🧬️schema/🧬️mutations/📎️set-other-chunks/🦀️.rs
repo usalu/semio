@@ -21,8 +21,8 @@ impl protocol::MutationKind<WavSnapshot, WavMutation> for SetOtherChunks {
     fn inverse(&self, base: &WavSnapshot) -> Vec<WavMutation> {
         agg_inverse(&WavMutation::SetOtherChunks(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-other-chunks".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-other-chunks", "sonstige Chunks setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

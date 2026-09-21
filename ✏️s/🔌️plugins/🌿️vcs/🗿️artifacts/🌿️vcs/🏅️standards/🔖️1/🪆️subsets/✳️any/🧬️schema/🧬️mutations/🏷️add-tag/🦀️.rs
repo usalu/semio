@@ -28,8 +28,8 @@ impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for AddTag {
     fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add tag \"{}\"", self.tag)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add tag \"{}\"", self.tag), &format!("Tag \"{}\" hinzufügen", self.tag))
     }
     fn target(&self) -> Vec<String> {
         vec![self.tag.clone()]

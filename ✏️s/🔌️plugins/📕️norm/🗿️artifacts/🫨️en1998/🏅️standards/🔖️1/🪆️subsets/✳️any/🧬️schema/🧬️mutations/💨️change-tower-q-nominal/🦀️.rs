@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTowerQNomi
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change tower nominal behaviour factor q to {}", self.new_tower_q_nominal)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change tower nominal behaviour factor q to {}", self.new_tower_q_nominal), &format!("Turmnominalverhaltenfaktorq auf {} ändern", self.new_tower_q_nominal))
     }
 }
 //#endregion 🔖️ChangeTowerQNominal

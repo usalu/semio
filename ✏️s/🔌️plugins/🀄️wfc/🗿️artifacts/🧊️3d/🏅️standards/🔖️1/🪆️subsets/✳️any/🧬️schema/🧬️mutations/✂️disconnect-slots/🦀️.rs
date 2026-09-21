@@ -26,8 +26,8 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for DisconnectSlots {
     fn inverse(&self, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Disconnect slots edge \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Disconnect slots edge \"{}\"", self.id), &format!("Plätzenkante \"{}\" trennen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

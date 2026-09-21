@@ -23,8 +23,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateFireInputs
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Update EN 1993-1-2 fire resistance inputs".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update EN 1993-1-2 fire resistance inputs", "EN 1993-1-2 Brandwiderstandeingaben aktualisieren")
     }
 }
 //#endregion 🔖️Payload

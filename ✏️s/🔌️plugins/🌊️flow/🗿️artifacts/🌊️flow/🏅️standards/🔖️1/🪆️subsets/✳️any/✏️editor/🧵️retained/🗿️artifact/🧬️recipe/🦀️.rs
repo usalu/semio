@@ -321,17 +321,20 @@ impl Recipe {
                 };
                 let map = std::mem::take(&mut scene.layout);
                 let key = state.key.take().unwrap();
-                state.update = Some(match layout {
+                let update = match layout {
                     Some(layout) => map.begin_set(key, layout),
                     None => map.begin_remove(key),
-                });
+                };
+                state.retirement.push(Owner::Layouts(map));
+                state.update = Some(update);
                 state.phase = 23;
             }
             23 => {
                 let update = state.update.as_mut().unwrap();
                 match update.advance(Grant { maximum_items: 1, maximum_bytes: grant.maximum_bytes }) {
                     Step::Complete => {
-                        scene.layout = update.take_result().ok_or("Flow map update lost output")?;
+                        let next = update.take_result().ok_or("Flow map update lost output")?;
+                        scene.layout = next;
                         let previous = update.take_removed().map(|value| (*value).clone());
                         let id = state.inverse_id.take().unwrap();
                         if matches!(&**mutation, FlowMutation::MoveWidgets(_)) {

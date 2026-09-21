@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for RemoveNode
     fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
         agg_inverse(&SemioFlowMutation::RemoveNodeParam(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-node-param".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-node-param", "Knotenparameter entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

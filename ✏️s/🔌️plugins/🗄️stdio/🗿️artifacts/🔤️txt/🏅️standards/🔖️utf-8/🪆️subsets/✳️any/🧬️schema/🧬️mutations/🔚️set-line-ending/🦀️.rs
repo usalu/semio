@@ -51,8 +51,8 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineEndingMu
         vec![super::TxtMutation::SetLineEnding(Self { value: base.line_ending })]
     }
 
-    fn label(&self) -> String {
-        "Set Line Ending".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Line Ending", "Linienende setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-line-ending".to_string()]

@@ -18,8 +18,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxTransitionalMutation> for RemoveCo
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxTransitionalMutation> {
         agg_inverse(&DocxTransitionalMutation::RemoveConformanceAttribute(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-conformance-attribute".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-conformance-attribute", "Konformitätsattribut entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeStoreys {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change number of storeys to {}", self.new_storeys)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change number of storeys to {}", self.new_storeys), &format!("Nummer von Geschosse auf {} ändern", self.new_storeys))
     }
 }
 //#endregion 🔖️ChangeStoreys

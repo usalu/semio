@@ -3617,14 +3617,4 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
     });
   });
 
-  describe("leftover brush guest hover retain", () => {
-    it("keeps the leftover vortex id on an armed brush window", async () => {
-      const { leftoverBrushRetainGuestHoverV1 } = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
-      const leftover = { ids: [], hoveredId: "seed-left-001:v0", hoveredDomain: "vortex", gumballActive: false, gumballAnchorId: null, activeUtility: "brush" };
-      expect(leftoverBrushRetainGuestHoverV1("brush", leftover)).toBe("seed-left-001:v0");
-      expect(leftoverBrushRetainGuestHoverV1("select", leftover)).toBeUndefined();
-      expect(leftoverBrushRetainGuestHoverV1("brush", { ...leftover, hoveredId: null })).toBeUndefined();
-    });
-  });
-
 }

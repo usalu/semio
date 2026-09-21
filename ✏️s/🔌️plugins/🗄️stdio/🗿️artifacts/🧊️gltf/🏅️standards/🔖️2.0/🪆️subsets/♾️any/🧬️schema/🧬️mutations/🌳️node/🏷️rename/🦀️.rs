@@ -388,8 +388,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeNam
         vec![super::GltfMutation::ChangeNodeName(inverse)]
     }
 
-    fn label(&self) -> String {
-        "Change Node Name".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Node Name", "Knotenname ändern")
     }
     fn target(&self) -> Vec<String> {
         vec![node_path(match self {

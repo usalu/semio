@@ -12,6 +12,7 @@
   "cases": [
     {
       "id": "inside-release",
+      "types": ["application/x-semio-catalogue-item", "application/x-semio-catalogue-kind.page"],
       "rawPayload": "{\"pluginId\":\"s.system\",\"appId\":\"layout\",\"kindId\":\"vertical\"}",
       "moves": [{ "x": 132, "y": 248 }],
       "terminal": "up",
@@ -20,6 +21,7 @@
     },
     {
       "id": "outside-release",
+      "types": ["application/x-semio-catalogue-item", "application/x-semio-catalogue-kind.rect"],
       "rawPayload": "{\"pluginId\":\"s.system\",\"appId\":\"layout\",\"kindId\":\"horizontal\"}",
       "moves": [{ "x": 180, "y": 260 }, { "x": 460, "y": 420 }],
       "terminal": "up",
@@ -28,6 +30,7 @@
     },
     {
       "id": "cancel",
+      "types": ["application/x-semio-catalogue-item", "application/x-semio-catalogue-kind.text"],
       "rawPayload": "{\"pluginId\":\"s.system\",\"appId\":\"layout\",\"kindId\":\"overlay\"}",
       "moves": [{ "x": 260, "y": 300 }],
       "terminal": "cancel",

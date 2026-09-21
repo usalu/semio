@@ -1,13 +1,19 @@
-# 🐳️ `os-hub` compose example — UNBUILT, UNRUN.
+# 🐳️ `os-hub` compose example — the production topology, matching `🌎️hub/Dockerfile`.
 #
-# Authored alongside `🌎️hub/Dockerfile` on a machine with no Docker installed. Nothing here has been
-# validated by `docker compose config`, let alone started.
-#
-#   docker compose -f 🌎️hub/compose.yaml up --build           # sqlite + filesystem store (default)
+#   docker compose -f 🌎️hub/compose.yaml up --build             # sqlite + filesystem store (default)
 #   docker compose -f 🌎️hub/compose.yaml --profile postgres up --build
 #
-# The build context is the repository root, because the image carries the repository — see the long
-# comment at the top of the Dockerfile for why the binary alone cannot boot today.
+# Seed the first user into the volume before the first `up` — there is no sign-up, and the verb
+# needs the data root rather than a running hub:
+#
+#   docker compose -f 🌎️hub/compose.yaml run --rm hub credential set --email ada@example.com --display-name Ada
+#
+# `docker compose config` resolves this file (Docker 29.5). Nothing here has been *started*: the
+# build stage compiles the hub's full release dependency graph. See the Dockerfile's header for what
+# has and has not been verified.
+#
+# The build context is the repository root, because the builder stage compiles from source; the
+# runtime image carries the binary and the admin SPA only.
 
 name: semio-hub
 
@@ -16,22 +22,30 @@ services:
     build:
       context: ..
       dockerfile: 🌎️hub/Dockerfile
-    # 🌐️ Loopback *inside the container*: `validate_auth_startup` refuses any non-loopback bind in
-    # both modes, so the port must be published rather than bound wide. Publishing on 127.0.0.1 of
-    # the host keeps it off the network until a TLS-terminating proxy fronts it
-    # (`🌎️hub/README.md` § "TLS-terminating reverse proxy").
+    # 🌐️ Published on the host's loopback only: the hub speaks plain HTTP and always will, so it
+    # belongs behind a TLS-terminating reverse proxy on this host (`🌎️hub/README.md` §
+    # "TLS-terminating reverse proxy"). Inside the container the bind is `0.0.0.0` — a loopback bind
+    # inside a container would make this mapping unreachable.
     ports:
       - "127.0.0.1:8787:8787"
     environment:
       OS_HUB_DATA: /srv/semio-hub/data
-      OS_HUB_BIND: 127.0.0.1
+      OS_HUB_ADMIN_DIR: /srv/semio-hub/admin
+      OS_HUB_BIND: 0.0.0.0
       OS_HUB_PORT: "8787"
-      OS_HUB_MODE: development
+      OS_HUB_MODE: production
       OS_HUB_CREDENTIAL_SIGN_IN: "true"
       OS_HUB_SESSION_TTL_SECONDS: "43200"
       OS_HUB_STORAGE_BACKEND: fs
       OS_HUB_DIRECTORY_BACKEND: sqlite
-      # OS_HUB_ALLOWED_ORIGINS: https://s.example.com
+      # 🛂️ A network bind in production mode is refused without BOTH of these, each naming itself.
+      # `OS_HUB_ALLOWED_ORIGINS` is the origin your `s` bundle is served from; `proxy` is you taking
+      # responsibility for the transport in front of this socket.
+      OS_HUB_ALLOWED_ORIGINS: https://s.example.com
+      OS_HUB_TRUSTED_FORWARDING: proxy
+      # 👑️ Production mode requires at least one admin identity. The provider string for a password
+      # credential is literally `credential.password.v1`; the subject is the seeded email.
+      OS_HUB_ADMIN_SUBJECTS: credential.password.v1:ada@example.com
     volumes:
       # 🗄️ The whole durable state of a hub: WAL + snapshots, `directory.db`, blobs, the trusted
       # catalog pointer and the instance stores' format stamps. Backup unit = this volume, hub

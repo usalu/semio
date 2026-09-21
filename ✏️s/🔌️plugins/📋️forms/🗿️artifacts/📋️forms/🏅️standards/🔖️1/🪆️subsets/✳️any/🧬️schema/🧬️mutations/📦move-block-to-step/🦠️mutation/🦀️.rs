@@ -29,8 +29,8 @@ impl MutationKind<FormsSnapshot, FormMutation> for MoveBlockToStep {
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_move_block_to_step(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move block \"{}\" to step \"{}\"", self.block_id, self.to_step_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move block \"{}\" to step \"{}\"", self.block_id, self.to_step_id), &format!("Block \"{}\" nach Schritt \"{}\" verschieben", self.block_id, self.to_step_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block_id.clone()]

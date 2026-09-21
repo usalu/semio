@@ -25,8 +25,8 @@ pub mod mutation {
             super::super::inverse::inverse(self, base)
         }
 
-        fn label(&self) -> String {
-            format!("Set layer {} visible to {}", self.layer_id, self.new_visible)
+        fn label(&self) -> protocol::LocalizedLabel {
+            protocol::LocalizedLabel::native(&format!("Set layer {} visible to {}", self.layer_id, self.new_visible), &format!("Ebene {} sichtbar auf {} setzen", self.layer_id, self.new_visible))
         }
 
         fn target(&self) -> Vec<String> {

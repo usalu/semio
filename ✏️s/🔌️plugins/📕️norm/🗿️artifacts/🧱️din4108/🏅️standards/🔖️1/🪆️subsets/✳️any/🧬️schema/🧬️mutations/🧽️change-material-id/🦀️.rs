@@ -19,8 +19,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeMaterial
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change material id to \"{}\"", self.new_material_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change material id to \"{}\"", self.new_material_id), &format!("Materialid auf \"{}\" ändern", self.new_material_id))
     }
 }
 //#endregion 🔖️Payload

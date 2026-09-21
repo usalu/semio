@@ -26,8 +26,8 @@ otel = []
 # 🔌️ Each backend feature pulls in its own driver dep — mirrors `🌎️hub/📦️packages/🦀️rust/Cargo.toml`'s
 # same-named features one level up, which forward into these.
 sqlite = ["dep:rusqlite"]
-postgres = ["dep:sqlx"]
-neo4j = ["dep:neo4rs"]
+postgres = ["dep:sqlx", "dep:tokio"]
+neo4j = ["dep:neo4rs", "dep:tokio"]
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -35,8 +35,9 @@ semio-framework-replication = { workspace = true }
 # 🔌️ `db_storage`'s schema-first task family crosses the sync/async boundary through the
 # process-wide `WorkerPool` I/O lane; `FsStorage`/`db_storage_sqlite::SqliteStorage` dispatch
 # their typed, retained operations there, and
-# this crate names no concrete executor (no `tokio`, no `futures`) anywhere: that stays confined to
-# `🛎️services` per the repo's rule. See `db_storage`'s module doc ("Async-first").
+# this crate names no concrete executor (no `tokio`, no `futures`) anywhere EXCEPT the one bounded
+# runtime `db_storage_driver_runtime` owns for the external drivers that are bound to one — see that
+# module's doc and `db_storage::DbIoAsyncDriverRuntime`. See `db_storage`'s module doc ("Async-first").
 # 🔀️ O1 (drop dyn dispatch, dedyn-fw-os-misc): `#[dyn_enum]`/`dyn_enum_close!` — `VersionGraph`'s
 # two implementors (`NullVersionGraph`, `VcsVersionGraph`) close over a real enum instead of
 # `Arc<dyn VersionGraph>`. Same dependency shape `🔌️plugin`'s own Cargo.toml already uses.
@@ -54,15 +55,26 @@ rusqlite = { version = "0.38.0", features = ["bundled"], optional = true }
 # 🔌️ Same `sqlx-core`/`sqlx-postgres` major version `🌎️hub/📦️packages/🦀️rust/Cargo.toml` pins for its
 # own directory backend, so the workspace resolves one `sqlx` line, not two. `runtime-tokio`
 # selects sqlx's internal executor binding at ITS compile time — it does not require this crate to
-# depend on `tokio` itself; the ambient runtime `sqlx`'s futures poll on is whatever ultimately
-# drives this crate's own `DbFuture`s (the hub's `#[tokio::main]`), never a runtime this crate
-# constructs (see `db_storage_postgres`'s module doc: the private `tokio::runtime::Runtime` +
-# `block_on` bridge this feature used to pull in is gone).
+# depend on `tokio` for its own sake. It does need one at RUNTIME: `sqlx` demands its runtime's
+# thread-local context at poll time, and `db_storage`'s async-native drivers are dispatched from
+# `Lane::Io` of the tokio-free `WorkerPool`, so the futures are polled on the bounded runtime
+# `db_storage_driver_runtime` owns and never on a pool worker (measured abort: ticket 26/09/18 D4).
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres"], optional = true }
 neo4rs = { version = "0.8", optional = true }
+# 🧵️ ONLY for `db_storage_driver_runtime` — the bounded, never-shut-down runtime the `sqlx`/`neo4rs`
+# drivers above are polled on, behind `db_storage::DbIoAsyncDriverRuntime`. Enabled exactly by the
+# `postgres`/`neo4j` features, i.e. only when a driver that requires one is actually linked. `rt`
+# + `rt-multi-thread` build it, `net`/`time` give the drivers their reactor and timers.
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "net", "time"], optional = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
-semio-framework-pack = { workspace = true, features = ["corruption-testing"] }
+# 🎒️ Renamed on purpose: this package's lib target is named `pack`, and cargo derives a dependency's
+# extern name from the LIB name unless the dependency key renames it — so plain
+# `semio-framework-pack` arrives as `pack`, which this crate has already bound to the os-kernel
+# (`extern crate semio_framework_os_kernel as pack`). The key then loses and `🦀️.rs`'s
+# `pub use semio_framework_pack::corruption_testing` stops resolving, taking the whole test target
+# with it. Naming the key `semio_framework_pack` is what makes cargo rename it.
+semio_framework_pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack", features = ["corruption-testing"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true, features = ["testkit"] }

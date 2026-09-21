@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "spacing",
+    "cases",
+    "pointerCases",
+    "retainedWorld"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "spacing": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "width",
+          "panels",
+          "reserved"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "width": {
+            "type": "number",
+            "minimum": 600
+          },
+          "panels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "anchor",
+                "visible",
+                "tabs",
+                "size"
+              ],
+              "properties": {
+                "anchor": {
+                  "enum": [
+                    "top-left",
+                    "top-middle",
+                    "top-right",
+                    "left-middle",
+                    "right-middle",
+                    "bottom-left",
+                    "bottom-middle",
+                    "bottom-right"
+                  ]
+                },
+                "visible": {
+                  "type": "boolean"
+                },
+                "tabs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "size": {
+                  "type": "number",
+                  "minimum": 180,
+                  "maximum": 420
+                }
+              }
+            }
+          },
+          "reserved": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "pointerCases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "anchor",
+          "visible",
+          "tabs",
+          "activates"
+        ],
+        "properties": {
+          "anchor": {
+            "enum": [
+              "top-left",
+              "top-middle",
+              "top-right",
+              "left-middle",
+              "right-middle",
+              "bottom-left",
+              "bottom-middle",
+              "bottom-right"
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "tabs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "activates": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "retainedWorld": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "wheel"
+      ],
+      "properties": {
+        "owner": {
+          "const": "surface"
+        },
+        "wheel": {
+          "const": true
+        }
+      }
+    }
+  }
+}

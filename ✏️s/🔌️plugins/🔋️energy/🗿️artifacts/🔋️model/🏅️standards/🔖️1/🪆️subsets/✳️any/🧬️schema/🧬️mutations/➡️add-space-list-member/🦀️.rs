@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddSpa
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Add space {} to space list {}", self.space_id.0, self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add space {} to space list {}", self.space_id.0, self.id.0), &format!("Raum {} zu Raumliste {} hinzufügen", self.space_id.0, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeVEdKn {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change v ed kn to {:?}", self.new_v_ed_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change v ed kn to {:?}", self.new_v_ed_kn), &format!("Vedkn auf {:?} ändern", self.new_v_ed_kn))
     }
 }
 //#endregion 🔖️ChangeVEdKn

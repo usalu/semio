@@ -31,8 +31,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Rename
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Rename energy model to \"{}\"", self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename energy model to \"{}\"", self.new_name), &format!("Energienmodell in \"{}\" umbenennen", self.new_name))
     }
 }
 //#endregion 🔖️Mutation

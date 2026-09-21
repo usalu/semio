@@ -9633,9 +9633,24 @@ pub const PUZZLE5D_PART_KIND_OPTIONS_MAX: usize = 64;
 /// process and never sees the live document, so the union of the shipped catalogs IS the reachable
 /// kind set — not the single literal `"Part"` this select used to hardcode, which could not add a
 /// single real kind of any example.
+///
+/// 🌙️ `capsule-dream` is deliberately NOT in that union, for two independent reasons measured on
+/// 2026-09-21 (`📓️pz1-catalog-zero-diagnostics.md` §2.3):
+/// 1. **It names no kind a human could pick.** Its own `kindCatalogs.parts` is empty — the catalog
+///    is a composed child, absent from the standalone document — so the inference fallback runs over
+///    its 2 880 parts, whose `part-kind` column holds the child's raw UUIDs
+///    (`"0e240cd2-7f98-42b6-af39-34e7ee4fad35"`, …). `nakagin`'s and `concrete-forest`'s hold names
+///    (`Base`, `Bridge`, `Capital`, `Tambour`, `Capsule With Balcony J`, …). A select that offers
+///    UUIDs is a worse select, and with `PUZZLE5D_PART_KIND_OPTIONS_MAX = 64` they crowd out real
+///    kinds.
+/// 2. **It is what made this package undescribable.** Dereferencing
+///    `CAPSULE_DREAM_EXAMPLE_DOCUMENT` here parses 3 035 200 B of DSL, re-serialises ~3.5 MB of
+///    JSON and deserialises it into `Puzzle5dDocument` — inside the owned interpreter, while the
+///    bundle is assembled, i.e. before `describe()` emits anything. `AppDefinition` is built on the
+///    describe path, so this one call put `🧩️puzzle` over the 1 800 s guest epoch on its own.
 fn puzzle5d_part_kind_options() -> Vec<ActionArgOption> {
     let mut options: Vec<ActionArgOption> = Vec::with_capacity(PUZZLE5D_PART_KIND_OPTIONS_MAX);
-    for document in [&*CONCRETE_FOREST_EXAMPLE_DOCUMENT, &*NAKAGIN_EXAMPLE_DOCUMENT, &*CAPSULE_DREAM_EXAMPLE_DOCUMENT] {
+    for document in [&*CONCRETE_FOREST_EXAMPLE_DOCUMENT, &*NAKAGIN_EXAMPLE_DOCUMENT] {
         for (id, label) in puzzle5d_part_kind_rows(document) {
             if options.len() >= PUZZLE5D_PART_KIND_OPTIONS_MAX {
                 return options;

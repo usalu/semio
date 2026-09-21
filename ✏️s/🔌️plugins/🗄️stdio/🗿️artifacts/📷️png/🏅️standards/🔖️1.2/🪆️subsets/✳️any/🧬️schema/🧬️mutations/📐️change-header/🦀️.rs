@@ -37,8 +37,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeHeaderMutation {
         }
         vec![PngMutation::ChangeHeader(ChangeHeaderMutation { width: base.width, height: base.height, bit_depth: base.bit_depth, color_type: base.color_type, interlace: base.interlace })]
     }
-    fn label(&self) -> String {
-        "change header".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("change header", "Kopf ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-header".into()]

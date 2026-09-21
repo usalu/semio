@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for Rotate
     fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Rotate object".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Rotate object", "Objekt drehen")
     }
     fn target(&self) -> Vec<String> {
         vec!["transform".to_string()]

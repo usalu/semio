@@ -34,8 +34,8 @@ impl MutationKind<WriterSnapshot, WriterMutation> for RenameWriter {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Rename document to \"{}\"", self.new_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename document to \"{}\"", self.new_id), &format!("Dokument in \"{}\" umbenennen", self.new_id))
     }
 }
 //#endregion 🔖️Mutation

@@ -22,8 +22,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetClipPathRefere
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
         agg_inverse(&SvgBasicMutation::SetClipPathReference(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-clip-path-reference".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-clip-path-reference", "Ausschnittpfadreferenz setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

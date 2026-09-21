@@ -31,8 +31,8 @@ impl MutationKind<Grid3dSnapshot, Grid3dMutation> for ChangeCellSizes {
     fn inverse(&self, base: &Grid3dSnapshot) -> Vec<Grid3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change {} cell sizes", self.axis.label())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change {} cell sizes", self.axis.label()), &format!("{} Zellengrößen ändern", self.axis.label()))
     }
 }
 //#endregion 🔖️ChangeCellSizes

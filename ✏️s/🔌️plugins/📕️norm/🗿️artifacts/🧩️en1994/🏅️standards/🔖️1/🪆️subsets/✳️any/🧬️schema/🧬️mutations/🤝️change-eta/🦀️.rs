@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeEta {
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change shear connection degree η to {}", self.new_eta)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change shear connection degree η to {}", self.new_eta), &format!("Schubverbindungsgrad η auf {} ändern", self.new_eta))
     }
 }
 //#endregion 🔖️Payload

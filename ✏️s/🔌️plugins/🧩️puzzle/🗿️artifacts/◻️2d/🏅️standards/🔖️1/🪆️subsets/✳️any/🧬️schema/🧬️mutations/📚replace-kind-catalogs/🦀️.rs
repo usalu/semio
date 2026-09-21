@@ -32,8 +32,8 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ReplaceKindC
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Replace kind catalogs".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace kind catalogs", "Artkataloge ersetzen")
     }
 }
 //#endregion 🔖️Mutation

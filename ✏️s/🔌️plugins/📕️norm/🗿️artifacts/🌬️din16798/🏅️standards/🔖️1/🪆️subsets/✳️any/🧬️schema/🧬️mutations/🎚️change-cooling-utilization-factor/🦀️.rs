@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCoolin
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change cooling gain utilization factor to {}", self.new_cooling_utilization_factor)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change cooling gain utilization factor to {}", self.new_cooling_utilization_factor), &format!("Kühlungsgewinnausnutzungsfaktor auf {} ändern", self.new_cooling_utilization_factor))
     }
 }
 //#endregion 🔖️ChangeCoolingUtilizationFactor

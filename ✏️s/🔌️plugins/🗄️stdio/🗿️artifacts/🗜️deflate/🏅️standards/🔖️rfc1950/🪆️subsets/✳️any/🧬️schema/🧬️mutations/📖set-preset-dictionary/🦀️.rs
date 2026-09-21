@@ -27,8 +27,8 @@ impl protocol::MutationKind<DeflateSnapshot, DeflateMutation> for SetPresetDicti
     fn inverse(&self, base: &DeflateSnapshot) -> Vec<DeflateMutation> {
         agg_inverse(&DeflateMutation::SetPresetDictionary(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-preset-dictionary".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-preset-dictionary", "Voreinstellungswörterbuch setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

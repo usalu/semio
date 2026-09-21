@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change surface {} class to {:?}", self.id.0, self.new_class)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change surface {} class to {:?}", self.id.0, self.new_class), &format!("Oberfläche {} Klasse auf {:?} ändern", self.id.0, self.new_class))
     }
 
     fn target(&self) -> Vec<String> {

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeEnAGr {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change reference ground acceleration a_gr to {}", self.new_en_a_gr)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change reference ground acceleration a_gr to {}", self.new_en_a_gr), &format!("Referenzbodenbeschleunigungsa_gr auf {} ändern", self.new_en_a_gr))
     }
 }
 //#endregion 🔖️ChangeEnAGr

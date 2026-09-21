@@ -31,8 +31,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for BindWe
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Bind weather file {}", self.target_uri)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Bind weather file {}", self.target_uri), &format!("Wetterdatei {} binden", self.target_uri))
     }
 
     fn target(&self) -> Vec<String> {

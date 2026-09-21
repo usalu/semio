@@ -29,8 +29,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Unbind
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        "Unbind the weather file".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Unbind the weather file", "Wetterdatei lösen")
     }
 }
 //#endregion 🔖️Mutation

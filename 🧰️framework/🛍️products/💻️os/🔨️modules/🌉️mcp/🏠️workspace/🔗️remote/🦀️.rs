@@ -23,6 +23,9 @@ pub const HUB_VERIFIED_CATALOG_MAX_DESCRIPTOR_BYTES: usize = 32 * 1024 * 1024;
 pub const HUB_BINDING_DIAGNOSTIC_MAX_BYTES: usize = 4_096;
 pub const HUB_BINDING_ID_MAX_BYTES: usize = 512;
 pub const HUB_BINDING_OPERATION_TIMEOUT_MS: u64 = 10_000;
+/// ⏳️ One authorized component is tens of megabytes over a loopback or LAN hub; the ordinary 10 s
+/// directory budget is a JSON-page budget and refuses it long before the transfer could finish.
+pub const HUB_EXECUTION_TARGET_COMPONENT_TIMEOUT_MS: u64 = 120_000;
 pub const CANONICAL_CHECKPOINT_RESOURCE_SCHEMA: &str = "semio.mcp.canonical-checkpoint-resource/v1";
 pub const CANONICAL_CHECKPOINT_RESOURCE_MAX_TEXT_BYTES: usize = 6 * 1024 * 1024;
 const CANONICAL_CHECKPOINT_RESOURCE_METADATA_MAX_BYTES: usize = 16 * 1024;
@@ -789,6 +792,11 @@ pub struct NativeHubBindingDriver {
     runtime: Arc<semio_framework_os_services::TokioHostRuntime>,
     pair_transport: Arc<NativeCanonicalPairTransport<semio_framework_os_services::TokioHostRuntime>>,
     inference_transport: Arc<crate::inference::NativeInferenceHubTransport<semio_framework_os_services::TokioHostRuntime>>,
+    /// 🧩️ The SAME authenticated client the binding refreshes through, held so the execution-target
+    /// COMPONENT can be fetched on demand. The catalog refresh already pulls manifest and descriptor
+    /// for every selected document; the component is deliberately NOT pulled there — it is tens of
+    /// megabytes per package and a session that never dispatches an action must not pay for it.
+    client: Arc<DirectoryClient<semio_framework_os_kernel::os_directory::client::native::NativeDirectoryTransport<semio_framework_os_services::TokioHostRuntime>>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -808,11 +816,16 @@ impl NativeHubBindingDriver {
         let runtime = Arc::new(TokioHostRuntime::with_pool(pool.clone()));
         let scope = runtime.open_scope_now(ScopeOwner::Service("mcp-authenticated-hub-descriptor-index"), None);
         let compute = Arc::new(ComputePool::with_pool(2, pool));
+        // 💰️ The per-package byte budget must admit ONE authorized execution-target component plus
+        // the directory JSON around it. The previous flat 16 MiB was a directory-page budget: a real
+        // `gis` component is 47 MB, so every component fetch would have aborted mid-body with
+        // `ByteBudgetExhausted` — the budget is therefore derived from the Hub's own fixed component
+        // ceiling rather than from a number chosen when only JSON crossed this pool.
         let transport = NativeDirectoryTransport::with_new_http_pool_now(
             runtime.clone(),
             scope,
             compute,
-            16 * 1024 * 1024,
+            semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES + 16 * 1024 * 1024,
             2,
             PackageId("semio-framework-os-mcp".to_string()),
             ActorId(0x4d43_5001),
@@ -956,7 +969,32 @@ impl NativeHubBindingDriver {
                 stream.close();
             })
             .map_err(|_| GatewayError::new(GatewayErrorCode::Internal, "could not start the hub descriptor binding actor"))?;
-        Ok((binding, Self { cancel, thread: Some(thread), runtime, pair_transport, inference_transport }, grant_source))
+        Ok((binding, Self { cancel, thread: Some(thread), runtime, pair_transport, inference_transport, client }, grant_source))
+    }
+
+    /// 🧩️ Fetches the plugin COMPONENT the Hub authorized for `scope` and verifies it against the
+    /// manifest lease that named it — exact byte length and exact SHA-256, both compared before the
+    /// bytes are handed to any runtime. This is the leg of the browser shell's own attach chain a
+    /// native client never had: `open-plan` → `execution-target/{manifest, component, descriptor}`.
+    /// The verification is the whole point: a component the Hub serves is executable code, so it is
+    /// admitted only when it is bit-for-bit the one the authenticated manifest selected.
+    pub fn fetch_execution_target_component(&self, scope: &DocumentScope, expected: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetComponentV1, client_instance_id: &str) -> Result<Vec<u8>, GatewayError> {
+        let intent = DocumentOpenIntentV1 {
+            schema: "semio.hub.document-open-intent/v1".into(),
+            version: 1,
+            scope: scope.clone(),
+            requested_surface_id: None,
+            client_instance_id: client_instance_id.to_string(),
+        };
+        let (ctx, _) = self.operation_context(&self.cancel, HUB_EXECUTION_TARGET_COMPONENT_TIMEOUT_MS);
+        let bytes = self.runtime.block_on(self.client.document_execution_target_component(&ctx, &intent)).map_err(|error| binding_error_to_gateway(map_client_error(error)))?;
+        if bytes.len() as u64 != expected.byte_length {
+            return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, format!("hub served {} component bytes where its own manifest declared {}", bytes.len(), expected.byte_length)));
+        }
+        if framework_hash::sha256_hex(&bytes) != expected.sha256 {
+            return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "hub execution-target component does not hash to the SHA-256 its own manifest declared"));
+        }
+        Ok(bytes)
     }
 
     pub fn mount_canonical_pair(
@@ -1161,6 +1199,30 @@ impl NativeHubBindingDriver {
             return Err(CanonicalPairMountError::InvalidResponse("canonical checkpoint scope does not match its mount"));
         }
         binding.project_mounted_canonical_pair(&mount, wall_now_ms(), canonical_checkpoint_resource_text)
+    }
+
+    /// 📖️ One hub document's own canonical `pack`/`spr` bytes — the SAME verified mount
+    /// [`Self::read_canonical_checkpoint`] takes, projected to the bytes instead of to the
+    /// checkpoint's descriptive JSON.
+    ///
+    /// 🧊️ This is what `artifact_open`/`artifact_snapshot` of a hub document needs. Before ticket
+    /// 26/09/18 slice M8 the workspace's hub arm answered a flat `canonical artifact bodies remain
+    /// unavailable until P4-B`, so an agent bound to a real hub space could list the hub's documents
+    /// and read their descriptors but never read one — measured live on hub 7631
+    /// (`📓️m8-mcp-agent-third-participant.md` §2.3). Nothing new is fetched or trusted here: the
+    /// mount is already digest-verified against the descriptor the authenticated binding published.
+    pub fn read_canonical_pair_bytes(
+        &self,
+        binding: &HubRemoteBinding,
+        scope: &DocumentScope,
+        cancel: &semio_framework_async::CancelToken,
+    ) -> Result<(Vec<u8>, Vec<u8>), CanonicalPairMountError> {
+        let (context, operation_now) = self.operation_context(cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
+        let mount = self.mount_canonical_pair(binding, scope, None, None, &context, wall_now_ms(), operation_now)?;
+        if mount.identity().scope != *scope {
+            return Err(CanonicalPairMountError::InvalidResponse("canonical pair scope does not match its mount"));
+        }
+        binding.project_mounted_canonical_pair(&mount, wall_now_ms(), |_identity, _baseline, pack, spr| Ok((pack.to_vec(), spr.to_vec())))
     }
 }
 

@@ -34,8 +34,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ConnectNodes {
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Connect \"{}\" to \"{}\"", self.source, self.target)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Connect \"{}\" to \"{}\"", self.source, self.target), &format!("\"{}\" mit \"{}\" verbinden", self.source, self.target))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

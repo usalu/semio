@@ -23,8 +23,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetImagePixels {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::SetImagePixels(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-image-pixels".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-image-pixels", "Bildpixel setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

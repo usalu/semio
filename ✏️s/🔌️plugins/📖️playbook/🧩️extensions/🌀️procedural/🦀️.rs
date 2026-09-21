@@ -11,9 +11,16 @@ use semio_framework_artifact_playbook_playbook::{visible_blocks, PlaybookBlock};
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework::action_bus::RetainedToolWireInput;
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec};
+use semio_framework_job::Operation;
+use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionHoverState};
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_framework_plugin::{bounded_config_store_one_item_preparation_factory, HistoryView};
 use semio_framework_plugin::{
-    app_labels, create_default_layout, mesh_from_kind, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, App, ArtifactApp, ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault,
-    LocalizedLabel, NoDraft, NoDraftMutation, Plugin, PluginApp, WorldSunConfig,
+    app_labels, create_default_layout, mesh_from_kind, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, App, AppOperationContext, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
+    ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, FaultCode, FaultOrigin, InteractiveJobClassification, LocalizedLabel,
+    NoDraft, NoDraftMutation, Plugin, PluginApp, WorldSunConfig,
 };
 // 🌱️ `Value`/`Map` alias `pack::json`'s first-party JSON tree (the `serde_json::Value`
 // replacement, `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs`), keeping this file's shape
@@ -593,6 +600,116 @@ impl protocol::OpBinary for Command {
 }
 //#endregion 🔖️Command
 
+//#region 🧵️RetainedCommands
+/// 🧵️ The two declared verbs, which are also the only two routes the shell may dispatch. A verb
+/// classified anything but `Migrated` is refused by `validate_ui_dispatch_classification` before it
+/// ever reaches the guest, so declaring the classification without the owned tool factory that earns
+/// it would be a lie the registry catches at assembly time (`interactive-job.owner-classification`).
+const MODULE_RETAINED_TOOL_IDS: &[&str] = &[ACTION_EXPORT_SOLID, ACTION_IMPORT_SOLID];
+const MODULE_RETAINED_PAYLOAD_SCHEMA: &str = "playbook.module.procedural.tool-command.v1";
+/// 📦️ `importSolidGeometry` carries a whole interchange body (STEP/OBJ/STL/GLB text or base64) as its
+/// `data` argument, so the wire ceiling is sized for a model file rather than for a click; the
+/// retained OUTPUT is the re-emitted `SetPayload`, whose payload is the same order of magnitude.
+const MODULE_RETAINED_RAW_BYTES: usize = 4 * 1024 * 1024;
+const MODULE_RETAINED_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
+const MODULE_RETAINED_WORK_ITEMS: usize = 1;
+/// 🛣️ Both handlers answer `Emit::mutations(vec![ModulePayloadMutation::SetPayload(..)])` and this
+/// app declares `NoConfig`, so the artifact lane is the only lane either route may publish into.
+const MODULE_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: ACTION_EXPORT_SOLID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: ACTION_IMPORT_SOLID, lanes: &[ArtifactToolPublicationLane::Artifact] },
+];
+
+fn module_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(MODULE_RETAINED_RAW_BYTES, 64, MODULE_RETAINED_WORK_ITEMS as u64, MODULE_RETAINED_OUTPUT_BYTES, 7_500)
+}
+
+fn module_retained_command_id(command: &Command) -> &'static str {
+    match command {
+        Command::ExportSolid { .. } => ACTION_EXPORT_SOLID,
+        Command::ImportSolid { .. } => ACTION_IMPORT_SOLID,
+    }
+}
+
+fn module_retained_extent(command: &Command, _snapshot: &ModuleRenderPayload, _interaction: &InteractionState) -> Option<usize> {
+    MODULE_RETAINED_TOOL_IDS.contains(&module_retained_command_id(command)).then_some(MODULE_RETAINED_WORK_ITEMS)
+}
+
+#[expect(clippy::too_many_arguments, reason = "BoundedArtifactCommandWork requires the full retained reducer context callback")]
+fn module_retained_reduce(
+    command: &Command,
+    snapshot: &ModuleRenderPayload,
+    _config: &NoConfig,
+    _history: &HistoryView,
+    _interaction: &InteractionState,
+    _hover: &InteractionHoverState,
+    _context: Option<&ArtifactOwnedToolJobContext<ModuleApp>>,
+    _operation: &AppOperationContext,
+) -> Result<Emit<ModulePayloadMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    let mut payload = snapshot.clone();
+    match command {
+        Command::ExportSolid { format } => handle_export_solid(&mut payload, format),
+        Command::ImportSolid { format, data } => handle_import_solid(&mut payload, format, data),
+    }
+    Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload(SetPayload { payload })]))
+}
+
+pub struct ModuleRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl ModuleRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: MODULE_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for ModuleRetainedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<ModuleApp>;
+    type Job = ArtifactRetainedCommandJob<ModuleApp>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        MODULE_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        module_retained_contract()
+    }
+
+    fn create_job(&mut self, _operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: Operation,
+        payload: Self::Payload,
+        input: RetainedToolWireInput,
+        checkpoint: Option<RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, RetainedToolWireInput, Option<RetainedToolWireInput>)> {
+        if input.declared_bytes() > MODULE_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Playbook procedural module retained command rejects an oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for ModuleRetainedCommandJobFactory {
+    type Owner = ModuleApp;
+    const TOOL_IDS: &'static [&'static str] = MODULE_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = MODULE_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = MODULE_RETAINED_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
 //#region 🔖️App
 #[derive(Default)]
 pub struct ModuleApp;
@@ -614,6 +731,65 @@ impl ArtifactApp for ModuleApp {
 
     const APP_ID: &'static str = MODULE_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = MODULE_DOCUMENT_SCHEMA;
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: ModuleApp,
+        owner_file: "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs",
+        controller: "s.playbook.procedural@1/*#editor",
+        artifact_schema: "playbook.module.procedural.payload",
+        factory: "ModuleRetainedCommandJobFactory",
+        factory_type: ModuleRetainedCommandJobFactory,
+        contract: module_retained_contract(),
+        tools: ["exportSolidGeometry", "importSolidGeometry"]
+    }
+
+    /// 📬️ Without a publication authority on the artifact lane every `Artifact`-lane tool fails
+    /// closed with `interactive-job.publication-authority-missing`, so the `Migrated` classification
+    /// alone would move the refusal one stage later instead of curing it.
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("playbook-module-procedural-artifact-retained", MODULE_RETAINED_OUTPUT_BYTES))
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(ModuleRetainedCommandJobFactory::new(&controller))
+    }
+
+    async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
+        if !MODULE_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if module_retained_command_id(&request.command) != request.tool_id {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("playbook.module.procedural.tool-mismatch"), "the procedural module command does not match its exact registered tool"));
+        }
+        let tool_id = module_retained_command_id(&request.command);
+        let work = Box::new(BoundedArtifactCommandWork::new(tool_id, module_retained_reduce, module_retained_extent));
+        let operation_context = AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id,
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = ArtifactRetainedCommandPayload::try_new(
+            ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
+            module_retained_command_id,
+            MODULE_RETAINED_RAW_BYTES,
+            MODULE_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     async fn initial_snapshot() -> ModuleRenderPayload {
         default_payload()
@@ -705,10 +881,11 @@ async fn create_module_app() -> Result<App, PluginAssemblyError> {
             // 🧵️ Every declared action needs an explicit phase-8 disposition: `validate_interactive_job_classification`
             // rejects the `Unclassified` default, `App::try_from_builder` turns that into a `PluginAssemblyError`, and
             // the guest then ships the `assembly-failed` manifest stub — which made the whole `playbook` activation die
-            // in `materialize dev`'s descriptor probe. These two verbs own no bounded tool-job factory here, so
-            // `BatchOnlyPendingRewrite` is the truthful disposition until one exists.
-            .action_interactive_job(ACTION_EXPORT_SOLID, InteractiveJobClassification::BatchOnlyPendingRewrite).await
-            .action_interactive_job(ACTION_IMPORT_SOLID, InteractiveJobClassification::BatchOnlyPendingRewrite).await,
+            // in `materialize dev`'s descriptor probe. Both verbs now own `ModuleRetainedCommandJobFactory`, the
+            // bounded first-step tool factory `validate_ui_dispatch_classification` demands, so `Migrated` is the
+            // truthful disposition and the shell can dispatch them (ticket 26/09/18 S10).
+            .action_interactive_job(ACTION_EXPORT_SOLID, InteractiveJobClassification::Migrated).await
+            .action_interactive_job(ACTION_IMPORT_SOLID, InteractiveJobClassification::Migrated).await,
     )
     .await
 }

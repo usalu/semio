@@ -34,8 +34,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for UpdateCa
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Update camera calibration \"{}\"", self.camera.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Update camera calibration \"{}\"", self.camera.id), &format!("Kamerakalibrierung \"{}\" aktualisieren", self.camera.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.camera.id.clone()]

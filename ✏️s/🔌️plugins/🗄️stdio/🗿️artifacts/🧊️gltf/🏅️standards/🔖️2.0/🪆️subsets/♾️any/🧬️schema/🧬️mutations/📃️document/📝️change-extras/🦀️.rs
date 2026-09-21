@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeDocumen
         vec![super::GltfMutation::ChangeDocumentExtraData(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Change Document Extra Data".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Document Extra Data", "zusätzliche Dokumentdaten ändern")
     }
 
     fn target(&self) -> Vec<String> {

@@ -23,8 +23,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertClipPathSha
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
         agg_inverse(&SvgBasicMutation::InsertClipPathShape(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-clip-path-shape".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-clip-path-shape", "Ausschnittpfadform einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

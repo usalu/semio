@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeMortar {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change mortar compressive-strength class to {:?}", self.new_mortar)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change mortar compressive-strength class to {:?}", self.new_mortar), &format!("Mörteldruckfestigkeitsklasse auf {:?} ändern", self.new_mortar))
     }
 }
 //#endregion 🔖️ChangeMortar

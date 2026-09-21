@@ -29,8 +29,8 @@ impl protocol::MutationKind<WiresSnapshot, WiresMutation> for DeleteNode {
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete node \"{}\"", self.node_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete node \"{}\"", self.node_id), &format!("Knoten \"{}\" löschen", self.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]

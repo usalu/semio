@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for RemoveStyle {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::RemoveStyle(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-style".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-style", "Stil entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageMode {
         vec![PdfMutation::SetPageMode(SetPageMode { mode: base.page_mode.clone() })]
     }
 
-    fn label(&self) -> String {
-        "Set page-mode".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set page-mode", "Seitenmodus setzen")
     }
 
     fn target(&self) -> Vec<String> {

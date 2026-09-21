@@ -28,8 +28,8 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignOut {
         base.0.clone().map(sign_in).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        "Sign out".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Sign out", "aus signieren")
     }
 
     fn target(&self) -> Vec<String> {

@@ -13,7 +13,9 @@ async fn move_widgets_diff_touches_only_the_content_slot() {
     assert!(diff.content.is_some(), "MoveWidgets must produce a content diff: {diff:?}");
     assert!(diff.artifact.is_none(), "MoveWidgets must not replace the whole artifact: {diff:?}");
     let after = diff.apply(&base).expect("valid mutation diff");
-    assert_eq!(after.to_host_snapshot().layout.get("slider"), Some(&semio_framework_artifact_flow_flow::WidgetLayout { x: 3.0, y: 4.0 }));
+    let after_scene = after.to_host_snapshot();
+    assert_eq!(after_scene.layout.get("slider"), Some(&semio_framework_artifact_flow_flow::WidgetLayout { x: 3.0, y: 4.0 }));
+    after_scene.retire_cold();
 }
 
 #[semio_framework_async_macros::async_test]

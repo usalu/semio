@@ -21,8 +21,8 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetElementName {
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
         agg_inverse(&HtmlMutation::SetElementName(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-element-name".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-element-name", "Elementname setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

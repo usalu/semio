@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveDictEntry {
         original_dict_value(base, self.id, &self.path, &self.key).map(|value| PdfMutation::SetDictEntry(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove dictionary entry {}", self.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove dictionary entry {}", self.key), &format!("Wörterbucheintrag {} entfernen", self.key))
     }
 
     fn target(&self) -> Vec<String> {

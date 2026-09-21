@@ -20,8 +20,8 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for FinishRunNode {
     fn inverse(&self, base: &RunArtifact) -> Vec<RunMutation> {
         base.node_records.iter().find(|entry| entry.node_id == self.node_record.node_id).map(|node_record| vec![RunMutation::FinishRunNode(Self { node_record: node_record.clone() })]).unwrap_or_default()
     }
-    fn label(&self) -> String {
-        format!("Finish run node {}", self.node_record.node_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Finish run node {}", self.node_record.node_id), &format!("Abschlusslaufknoten {}", self.node_record.node_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node_record.node_id.clone()]

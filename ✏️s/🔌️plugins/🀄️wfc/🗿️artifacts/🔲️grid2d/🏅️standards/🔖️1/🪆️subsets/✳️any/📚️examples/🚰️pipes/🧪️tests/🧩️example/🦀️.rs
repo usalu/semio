@@ -45,7 +45,7 @@ fn the_vector_media_draws_one_stroke_per_connector() {
 fn the_example_source_prints_the_document_it_states() {
     let source = source();
     assert_eq!(source.id(), ID);
-    let parsed = <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(source.document()).expect("the printed example parses back");
+    let parsed = <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(&source.document()).expect("the printed example parses back");
     assert_eq!(parsed, document(), "the example text must be a PRINT of the Rust authority, never a second one");
 }
 

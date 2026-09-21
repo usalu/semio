@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change plant loop {} design mass flow to {:?}", self.id.0, self.new_design_flow_kg_s)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change plant loop {} design mass flow to {:?}", self.id.0, self.new_design_flow_kg_s), &format!("Anlagenkreis {} Bemessungsmassenfluss auf {:?} ändern", self.id.0, self.new_design_flow_kg_s))
     }
 
     fn target(&self) -> Vec<String> {

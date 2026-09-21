@@ -62,7 +62,7 @@ impl MutationKind<PublicationPresence, PublicationPresenceMutation> for ChangePu
         vec![Self { revision: base.revision }.into()]
     }
 
-    fn label(&self) -> String {
-        format!("Change publication presence to {}", self.revision)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change publication presence to {}", self.revision), &format!("Veröffentlichungspräsenz auf {} ändern", self.revision))
     }
 }

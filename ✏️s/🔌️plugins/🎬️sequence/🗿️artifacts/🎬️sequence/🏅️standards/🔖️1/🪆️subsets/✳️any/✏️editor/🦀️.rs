@@ -1177,7 +1177,7 @@ fn sequence_bounded_child_emit_bytes(child_emits: &[ChildEmit], maximum_bytes: u
         admit(child.child_id.len())?;
         admit(child.op_schema.0.len())?;
         for label in &child.labels {
-            admit(label.len())?;
+            admit(label.retained_bytes())?;
         }
         for op in &child.ops {
             admit(op.len())?;

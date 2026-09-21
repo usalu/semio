@@ -31,8 +31,8 @@ impl MutationKind<Grid3dSnapshot, Grid3dMutation> for ChangePeriodicity {
     fn inverse(&self, base: &Grid3dSnapshot) -> Vec<Grid3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change periodicity to {}/{}/{}", self.periodic_x, self.periodic_y, self.periodic_z)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change periodicity to {}/{}/{}", self.periodic_x, self.periodic_y, self.periodic_z), &format!("Periodizität auf {}/{}/{} ändern", self.periodic_x, self.periodic_y, self.periodic_z))
     }
 }
 //#endregion 🔖️ChangePeriodicity

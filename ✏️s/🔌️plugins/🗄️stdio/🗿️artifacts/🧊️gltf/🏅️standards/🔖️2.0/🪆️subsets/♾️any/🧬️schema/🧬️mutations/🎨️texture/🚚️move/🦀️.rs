@@ -62,8 +62,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveTextureMu
         vec![super::GltfMutation::MoveTexture(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Move Texture".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Move Texture", "Textur verschieben")
     }
 
     fn target(&self) -> Vec<String> {

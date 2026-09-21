@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/world3d/grid-visual.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schema", "reference", "themes", "cases", "pixelOracle"],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "schema": { "const": "framework.world3d.grid-visual/v1" },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["threeRevision", "dreiVersion", "args", "cellSize", "cellThickness", "sectionThickness", "fadeDistance", "fadeStrength", "fadeFrom", "followCamera", "infiniteGrid", "planeZ", "depthTest", "depthWrite", "renderOrder"],
+      "properties": {
+        "threeRevision": { "const": "182" },
+        "dreiVersion": { "const": "10.7.7" },
+        "args": { "$ref": "#/definitions/positiveVec2" },
+        "cellSize": { "type": "number", "exclusiveMinimum": 0 },
+        "cellThickness": { "const": 0.6 },
+        "sectionThickness": { "const": 0 },
+        "fadeDistance": { "type": "number", "exclusiveMinimum": 0 },
+        "fadeStrength": { "const": 1.5 },
+        "fadeFrom": { "const": 1 },
+        "followCamera": { "const": true },
+        "infiniteGrid": { "const": true },
+        "planeZ": { "type": "number" },
+        "depthTest": { "const": true },
+        "depthWrite": { "const": false },
+        "renderOrder": { "const": -5 }
+      }
+    },
+    "themes": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "elementHex", "elementLinear"],
+        "properties": {
+          "id": { "enum": ["semio-light", "neutral-dark"] },
+          "elementHex": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+          "elementLinear": { "$ref": "#/definitions/rgb" }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "themeId", "viewport", "dpr", "projection", "camera", "samples"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "themeId": { "type": "string", "minLength": 1 },
+          "viewport": { "$ref": "#/definitions/positiveVec2" },
+          "dpr": { "enum": [1, 2] },
+          "projection": { "enum": ["orthographic", "perspective"] },
+          "camera": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["position", "target", "up", "near", "far", "fov", "zoom"],
+            "properties": {
+              "position": { "$ref": "#/definitions/vec3" },
+              "target": { "$ref": "#/definitions/vec3" },
+              "up": { "$ref": "#/definitions/vec3" },
+              "near": { "type": "number", "exclusiveMinimum": 0 },
+              "far": { "type": "number", "exclusiveMinimum": 0 },
+              "fov": { "type": "number", "exclusiveMinimum": 0 },
+              "zoom": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          },
+          "samples": {
+            "type": "array",
+            "minItems": 5,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "physicalPoint"],
+              "properties": {
+                "id": { "enum": ["line-centre", "line-neighbour", "cell-centre", "mid-fade", "beyond-fade"] },
+                "physicalPoint": { "$ref": "#/definitions/nonnegativeVec2Integer" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pixelOracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "producer", "maximumRgbError", "rows"],
+      "properties": {
+        "status": { "enum": ["unrecorded", "recorded"] },
+        "producer": { "type": "string" },
+        "maximumRgbError": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "rgba8"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "rgba8": { "$ref": "#/definitions/rgba8" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "rgb": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number", "minimum": 0, "maximum": 1 } },
+    "rgba8": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "integer", "minimum": 0, "maximum": 255 } },
+    "vec3": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+    "positiveVec2": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number", "exclusiveMinimum": 0 } },
+    "nonnegativeVec2Integer": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 0 } }
+  }
+}

@@ -3,8 +3,7 @@
   "scene": {
     "surfaceId": "note.play.composite",
     "controllerId": "note-composite",
-    "domainId": "blocks",
-    "domainGranularityId": "block",
+    "interactionDomain": { "id": "blocks", "granularityId": "block" },
     "hoverChannel": "pointer",
     "selectionJson": "[\"text-a\"]",
     "hoveredId": "image-b"

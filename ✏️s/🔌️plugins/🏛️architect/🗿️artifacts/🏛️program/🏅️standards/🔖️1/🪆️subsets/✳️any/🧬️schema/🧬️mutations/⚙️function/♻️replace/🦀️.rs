@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceFunction {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace function \"{}\"", self.function.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace function \"{}\"", self.function.header.name), &format!("Funktion \"{}\" ersetzen", self.function.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.function.header.id.0.clone()]

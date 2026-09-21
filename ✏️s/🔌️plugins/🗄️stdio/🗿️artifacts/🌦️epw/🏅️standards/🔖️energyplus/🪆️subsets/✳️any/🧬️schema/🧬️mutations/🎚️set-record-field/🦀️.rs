@@ -24,8 +24,8 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetRecordField {
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {
         agg_inverse(&EpwMutation::SetRecordField(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-record-field".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-record-field", "Datensatzfeld setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

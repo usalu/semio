@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Remove
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Remove terminal zone {} from air loop {}", self.zone_id.0, self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove terminal zone {} from air loop {}", self.zone_id.0, self.id.0), &format!("Terminalzone {} aus Luftkreis {} entfernen", self.zone_id.0, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

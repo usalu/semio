@@ -42,8 +42,8 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetDeclarationM
         vec![super::SvgMutation::SetDeclaration(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String {
-        "Set Declaration".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Declaration", "Deklaration setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-declaration".to_string()]

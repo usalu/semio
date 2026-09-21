@@ -48,7 +48,7 @@ async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered
             let value = store::pack_rt::decode_wire_value(&bytes).expect("wire value decodes");
             let result: crate::app::WireArtifactMutationPlanResult = dsl::from_dsl_value(value).expect("result decodes");
             assert_eq!(result.mutation_id, mutation_id);
-            assert_eq!(result.label, "Add 5 to value");
+            assert_eq!(result.label, protocol::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"), "the whole locale matrix crosses the job wire, not a pre-resolved string");
             assert_eq!(result.owner_ops.len(), 1);
             let op = JobTestOp::decode_op(&result.owner_ops[0]).expect("owner op decodes");
             assert_eq!(op, JobTestOp::AddValue(AddValue { delta: 5 }));

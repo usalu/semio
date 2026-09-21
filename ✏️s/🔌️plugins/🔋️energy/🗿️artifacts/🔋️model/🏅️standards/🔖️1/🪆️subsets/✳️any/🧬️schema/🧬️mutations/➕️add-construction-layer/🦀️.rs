@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddCon
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Add layer {} to construction {} at index {}", self.material_id.0, self.id.0, self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add layer {} to construction {} at index {}", self.material_id.0, self.id.0, self.index), &format!("Ebene {} zu Konstruktion {} an Index {} hinzufügen", self.material_id.0, self.id.0, self.index))
     }
 
     fn target(&self) -> Vec<String> {

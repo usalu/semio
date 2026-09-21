@@ -28,8 +28,8 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for CreateTile {
     fn inverse(&self, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create tile \"{}\"", self.tile.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create tile \"{}\"", self.tile.id), &format!("Kachel \"{}\" erstellen", self.tile.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.tile.id.clone()]

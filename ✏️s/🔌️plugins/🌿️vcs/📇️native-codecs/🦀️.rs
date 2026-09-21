@@ -54,12 +54,6 @@ impl NativeVcsCodecReceiptV1 {
         }
     }
 
-    /// 🌱️ Returns the exact package-owned editor genesis selected by this receipt.
-    fn genesis_factory(&self) -> semio_framework_plugin::NativeArtifactGenesisFactoryV1 {
-        match self.artifact {
-            VcsCodecV1::Vcs => semio_framework_plugin::native_artifact_genesis_for_editor::<crate::editor::vcs::VcsPlayApp>,
-        }
-    }
 
     fn validate(&self) -> Result<(), PluginAssemblyError> {
         let identity = self.identity();
@@ -96,11 +90,6 @@ impl NativeVcsCodecReceiptV1 {
         Ok(codec)
     }
 
-    /// 🌱️ Consumes the validated private receipt into its inseparable codec and editor genesis pair.
-    pub fn into_codec_and_genesis(self) -> Result<(store::ArtifactCodec, semio_framework_plugin::NativeArtifactGenesisFactoryV1), PluginAssemblyError> {
-        let genesis = self.genesis_factory();
-        Ok((self.into_codec()?, genesis))
-    }
 }
 
 /// 🪤 Previews the complete fixed VCS closure without process-global registration.

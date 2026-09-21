@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeSeismicZon
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change seismic zone to {}", self.new_seismic_zone)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change seismic zone to {}", self.new_seismic_zone), &format!("Erdbebenzone auf {} ändern", self.new_seismic_zone))
     }
 }
 //#endregion 🔖️ChangeSeismicZone

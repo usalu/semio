@@ -54,6 +54,7 @@ import {
   type NodeGraphFindItem,
   type NodeGraphHover,
   type NodeGraphNodeRecord,
+  type NodeGraphInteractionDomain,
   type NodeGraphPortRecord,
   type NodeGraphScene,
   type Viewport2d,
@@ -237,18 +238,37 @@ type NodeGraphInteractionIds = {
   readonly handleIds?: readonly string[];
 };
 
-export function nodeGraphSelectionActionArgs(ids: NodeGraphInteractionIds) {
+export function nodeGraphSelectionActionArgs(domain: NodeGraphInteractionDomain | undefined, ids: NodeGraphInteractionIds) {
+  if (!domain) return undefined;
   const targets = [
-    ...ids.nodeIds.map((id) => ({ granularity: "node", id })),
-    ...(ids.edgeIds ?? []).map((id) => ({ granularity: "edge", id })),
-    ...(ids.handleIds ?? []).map((id) => ({ granularity: "handle", id })),
+    ...ids.nodeIds.map((id) => ({ granularity: "node", id: `${domain.nodeTargetPrefix}${id}` })),
+    ...(ids.edgeIds ?? []).map((id) => ({ granularity: "edge", id: `${domain.edgeTargetPrefix}${id}` })),
+    ...(ids.handleIds ?? []).map((id) => ({ granularity: "handle", id: `${domain.handleTargetPrefix}${id}` })),
   ];
-  return { domainId: "graph", targets: JSON.stringify(targets), merge: "replace", method: "pick" };
+  return { domainId: domain.id, targets: JSON.stringify(targets), merge: "replace", method: "pick" };
 }
 
-export function nodeGraphHoverActionArgs(nodeId: string | null | undefined, portId?: string | null) {
-  const targets = nodeId ? [portId ? { granularity: "handle", id: `${nodeId}@${portId}` } : { granularity: "node", id: nodeId }] : [];
-  return { domainId: "graph", channel: "pointer", targets: JSON.stringify(targets) };
+export function nodeGraphHoverActionArgs(domain: NodeGraphInteractionDomain | undefined, nodeId: string | null | undefined, portId?: string | null) {
+  if (!domain) return undefined;
+  const targets = nodeId
+    ? [portId ? { granularity: "handle", id: `${domain.handleTargetPrefix}${nodeId}@${portId}` } : { granularity: "node", id: `${domain.nodeTargetPrefix}${nodeId}` }]
+    : [];
+  return { domainId: domain.id, channel: "pointer", targets: JSON.stringify(targets) };
+}
+
+function publishNodeGraphSelection(dispatch: (action: string, args?: Record<string, unknown>) => unknown, domain: NodeGraphInteractionDomain | undefined, ids: NodeGraphInteractionIds): void {
+  const args = nodeGraphSelectionActionArgs(domain, ids);
+  if (args) dispatch(nodeGraphActions.select, args);
+}
+
+function publishNodeGraphHover(
+  dispatch: (action: string, args?: Record<string, unknown>) => unknown,
+  domain: NodeGraphInteractionDomain | undefined,
+  nodeId: string | null | undefined,
+  portId?: string | null,
+): void {
+  const args = nodeGraphHoverActionArgs(domain, nodeId, portId);
+  if (args) dispatch(nodeGraphActions.hover, args);
 }
 //#endregion Viewport
 
@@ -827,9 +847,9 @@ function WasmGraphSurface({
     if (!session) return;
     try {
       const nodeIds = JSON.parse(session.selectedNodeIdsJson()) as string[];
-      dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds }));
+      publishNodeGraphSelection(dispatch, sceneRef.current.interactionDomain, { nodeIds });
       const hovered = session.hoveredNodeId();
-      dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered));
+      publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered);
       const openId = session.takePendingOpenInstanceId?.();
       if (openId) dispatch("openInstance", { instanceId: openId });
     } catch {
@@ -912,7 +932,7 @@ function WasmGraphSurface({
       }
       try {
         const hovered = session.hoveredNodeId();
-        dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered, channel?.portId));
+        publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered, channel?.portId);
       } catch {
         /* session not ready */
       }
@@ -1231,7 +1251,7 @@ function DiagramGraphFallback({
         onNodeClick={(_event, clickedNode) => {
           const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
           if (record?.instanceId) dispatch("selectInstance", { instanceId: record.instanceId });
-          if (interactionLedger.publishSelection({ nodeIds: [clickedNode.id] })) dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds: [clickedNode.id] }));
+          if (interactionLedger.publishSelection({ nodeIds: [clickedNode.id] })) publishNodeGraphSelection(dispatch, scene.interactionDomain, { nodeIds: [clickedNode.id] });
         }}
         onNodeDoubleClick={(_event, clickedNode) => {
           const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
@@ -1239,7 +1259,7 @@ function DiagramGraphFallback({
         }}
         onSelectionChange={(selection) => {
           const nodeIds = selection.nodes.map((entry) => entry.id);
-          if (interactionLedger.publishSelection({ nodeIds })) dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds }));
+          if (interactionLedger.publishSelection({ nodeIds })) publishNodeGraphSelection(dispatch, scene.interactionDomain, { nodeIds });
         }}
       />
       <ContextMenuController
@@ -1340,7 +1360,7 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
   onFindItemRef.current = (itemId: string) => {
     const mediaNode = parsedNodes.find((entry) => entry.instanceId === itemId);
     if (!mediaNode) return;
-    dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs({ nodeIds: [mediaNode.id] }));
+    publishNodeGraphSelection(dispatch, scene?.interactionDomain, { nodeIds: [mediaNode.id] });
     dispatch("selectInstance", { instanceId: mediaNode.instanceId! });
   };
 
@@ -1748,6 +1768,7 @@ export type FlowGraphSurfaceProbe = {
    * needs to answer "did a reorganize move anything". Same reason as {@link nodeIds}: it comes off the
    * scene the surface holds, not off a snapshot field the plugin may never send. */
   readonly nodeLayout: () => Readonly<Record<string, { readonly x: number; readonly y: number }>>;
+  readonly viewport: () => { readonly x: number; readonly y: number; readonly zoom: number };
   readonly hostSnapshotJson: () => string | null;
   readonly rect: () => { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null;
 };
@@ -2777,6 +2798,7 @@ export function FlowGraphCanvasHost({
       entity: (domain, id) => resolver.entity?.(domain, id) ?? null,
       nodeIds: () => (sceneRef.current.nodes ?? []).map((node) => node.id),
       nodeLayout: () => Object.fromEntries((sceneRef.current.nodes ?? []).map((node) => [node.id, { x: node.x, y: node.y }])),
+      viewport: () => sceneRef.current.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT,
       hostSnapshotJson: () => sceneRef.current.hostSnapshotJson ?? null,
       rect: () => {
         const measured = containerRef.current?.getBoundingClientRect();
@@ -3138,8 +3160,8 @@ export function FlowGraphCanvasHost({
       const hovered = typeof hoveredValue === "string" ? hoveredValue : undefined;
       const portId = parseDagChannelRefJson(flowJsonText(channelValue))?.portId;
       const hoverDue = interactionLedger.publishHover({ hoveredId: hovered, portId });
-      if (selectionDue) dispatch(nodeGraphActions.select, nodeGraphSelectionActionArgs(selection));
-      if (hoverDue) dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hovered, portId));
+      if (selectionDue) publishNodeGraphSelection(dispatch, sceneRef.current.interactionDomain, selection);
+      if (hoverDue) publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hovered, portId);
     }).catch(() => {});
     paintOverlays();
   }, [dispatch, interactionLedger, paintOverlays]);
@@ -3348,7 +3370,7 @@ export function FlowGraphCanvasHost({
       ]).then(([hoveredValue, channelValue]) => {
         const hoveredId = typeof hoveredValue === "string" ? hoveredValue : undefined;
         const portId = parseDagChannelRefJson(flowJsonText(channelValue))?.portId;
-        if (interactionLedger.publishHover({ hoveredId, portId })) dispatch(nodeGraphActions.hover, nodeGraphHoverActionArgs(hoveredId, portId));
+        if (interactionLedger.publishHover({ hoveredId, portId })) publishNodeGraphHover(dispatch, sceneRef.current.interactionDomain, hoveredId, portId);
       }).catch(() => {});
       schedulerRef.current?.invalidate();
     },

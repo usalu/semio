@@ -29,8 +29,8 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for DeleteTile {
     fn inverse(&self, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Delete Tile".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Delete Tile", "Kachel löschen")
     }
 }
 //#endregion 🔖️DeleteTile

@@ -232,7 +232,7 @@ async fn fillet_translate_chain() {
     )
     .await;
     let fillet_out = channel_payload(&reg.dispatch_cold("brep.solid.fillet", Dictionary::new().insert("geometry", Value::Dictionary(box_out.into_inner())).insert("radius", Value::Dictionary(number_dictionary(0.1)))).unwrap(), "solid").await;
-    let moved = channel_payload(&reg.dispatch_cold("brep.xform.translate", Dictionary::new().insert("geometry", Value::Dictionary(fillet_out.into_inner())).insert("offset", Value::Dictionary(vector(1.0, 0.0, 0.0).await))).unwrap(), "geometry").await;
+    let moved = channel_payload(&reg.dispatch_cold("brep.xform.translate", Dictionary::new().insert("geometry", Value::Dictionary(fillet_out.into_inner())).insert("offset", Value::Dictionary(vector(1.0, 0.0, 0.0).await))).unwrap(), "geometryOut").await;
     assert_eq!(moved.schema(), Some("geometry"));
 }
 
@@ -423,7 +423,7 @@ async fn boolean_family_fuse_cut_intersect_report_plausible_volumes() {
     let reg = neural_engine::ColdOwner::new(reg);
     let a = box_of(&reg, 2.0).await;
     let b_raw = box_of(&reg, 2.0).await;
-    let b = channel_payload(&reg.dispatch_cold("brep.xform.translate", Dictionary::new().insert("geometry", Value::Dictionary(b_raw.into_inner())).insert("offset", Value::Dictionary(vector(1.0, 0.0, 0.0).await))).unwrap(), "geometry").await;
+    let b = channel_payload(&reg.dispatch_cold("brep.xform.translate", Dictionary::new().insert("geometry", Value::Dictionary(b_raw.into_inner())).insert("offset", Value::Dictionary(vector(1.0, 0.0, 0.0).await))).unwrap(), "geometryOut").await;
 
     let fused = channel_payload(&reg.dispatch_cold("brep.bool.fuse", Dictionary::new().insert("a", Value::Dictionary(a.clone())).insert("b", Value::Dictionary(b.clone()))).unwrap(), "solid").await;
     let fused_volume = number_value(&*channel_payload(&reg.dispatch_cold("brep.measure.volume", Dictionary::new().insert("geometry", Value::Dictionary(fused.into_inner()))).unwrap(), "volume").await);
@@ -459,7 +459,7 @@ async fn rotate_about_rotates_around_the_given_origin_not_the_world_origin() {
                 .insert("angle", Value::Dictionary(number_dictionary(std::f64::consts::PI))),
         )
         .unwrap(),
-        "geometry",
+        "geometryOut",
     )
     .await;
     let center = channel_payload(&reg.dispatch_cold("brep.measure.centerOfMass", Dictionary::new().insert("geometry", Value::Dictionary(rotated.into_inner()))).unwrap(), "center").await;
@@ -480,7 +480,7 @@ async fn evaluation_family_closest_parameter_and_closest_uv_report_certified_dis
     let out = reg.dispatch_cold("brep.eval.curveClosestParameter", Dictionary::new().insert("curve", Value::Dictionary(curve.into_inner())).insert("point", Value::Dictionary(point(4.0, 3.0, 0.0).await))).unwrap();
     let distance = number_value(&*channel_payload(&out, "distance").await);
     assert!((distance - 3.0).abs() < 1e-9, "closest distance from (4,3,0) to the segment along the x axis should be 3, got {distance}");
-    let closest = channel_payload(&out, "point").await;
+    let closest = channel_payload(&out, "pointOut").await;
     assert!((closest.get("x").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap() - 4.0).abs() < 1e-9);
 
     let surface = channel_payload(&reg.dispatch_cold("brep.surf.plane", Dictionary::new().insert("origin", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("normal", Value::Dictionary(vector(0.0, 0.0, 1.0).await))).unwrap(), "surface").await;

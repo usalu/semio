@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeTightnessC
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change tightness class to {:?}", self.new_tightness_class)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change tightness class to {:?}", self.new_tightness_class), &format!("Dichtheitsklasse auf {:?} ändern", self.new_tightness_class))
     }
 }
 //#endregion 🔖️ChangeTightnessClass

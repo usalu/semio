@@ -26,8 +26,8 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Crea
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create node in layer #{} at #{}", self.parent.layer, self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create node in layer #{} at #{}", self.parent.layer, self.index), &format!("Knoten in Ebene #{} an #{} erstellen", self.parent.layer, self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.parent.layer.to_string(), self.index.to_string()]

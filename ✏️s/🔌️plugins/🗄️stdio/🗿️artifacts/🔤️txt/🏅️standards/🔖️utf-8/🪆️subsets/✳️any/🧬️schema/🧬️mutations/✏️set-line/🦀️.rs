@@ -64,8 +64,8 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineMutation
         vec![super::TxtMutation::SetLine(Self { index: self.index, text: base.lines[index].clone() })]
     }
 
-    fn label(&self) -> String {
-        "Set Line".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Line", "Linie setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-line".to_string()]

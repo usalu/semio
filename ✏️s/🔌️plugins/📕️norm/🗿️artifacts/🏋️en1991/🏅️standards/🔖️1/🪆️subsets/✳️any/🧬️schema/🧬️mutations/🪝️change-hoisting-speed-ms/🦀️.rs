@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeHoistingSp
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change hoisting speed to {:?}", self.new_hoisting_speed_m_s)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change hoisting speed to {:?}", self.new_hoisting_speed_m_s), &format!("hebende Geschwindigkeit auf {:?} ändern", self.new_hoisting_speed_m_s))
     }
 }
 //#endregion 🔖️Payload

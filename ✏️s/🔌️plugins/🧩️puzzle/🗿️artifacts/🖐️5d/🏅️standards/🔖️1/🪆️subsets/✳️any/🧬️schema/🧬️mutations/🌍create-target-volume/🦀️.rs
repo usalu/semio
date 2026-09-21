@@ -32,8 +32,8 @@ impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for CreateTarget
     fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create target volume \"{}\"", self.target_volume.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create target volume \"{}\"", self.target_volume.id), &format!("Zielvolumen \"{}\" erstellen", self.target_volume.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.target_volume.id.clone()]

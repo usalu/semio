@@ -287,7 +287,12 @@ export async function produceFreshComponentV1<T>(
         return iface ?? token;
       })
       .sort();
-    if (!["checkpoint", "describe", "jobs", "reactor"].every((name) => witExports.includes(name))) throw new Error("fresh component omits a required actor export");
+    // 🧬️ `codec` joined `world actor`'s exports with the creation-path codec surface (ticket
+    // 26/09/18): a component without it cannot answer `pack-schema-hash`/`genesis`/`print-mirror`/
+    // `apply-ops`, so a hub that links no Rust codec for its package can neither create nor edit its
+    // documents. Requiring it here is the earliest point the absence is visible — at the built
+    // artifact, before a descriptor or a catalog generation is derived from it.
+    if (!["checkpoint", "codec", "describe", "jobs", "reactor"].every((name) => witExports.includes(name))) throw new Error("fresh component omits a required actor export");
     await freshRun("cargo", ["build", "-p", CRATE_NAME], repoRoot, env, control, "build-descriptor-emitter", 3, total);
     const emitter = join(targetRoot, "debug", process.platform === "win32" ? `${CRATE_NAME}.exe` : CRATE_NAME);
     const descriptorRoot = join(workRoot, "descriptor");

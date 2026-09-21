@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeNightS
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change night setback temperature to {}", self.new_night_setback_k)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change night setback temperature to {}", self.new_night_setback_k), &format!("Nachtabsenkungstemperatur auf {} ändern", self.new_night_setback_k))
     }
 }
 //#endregion 🔖️ChangeNightSetbackK

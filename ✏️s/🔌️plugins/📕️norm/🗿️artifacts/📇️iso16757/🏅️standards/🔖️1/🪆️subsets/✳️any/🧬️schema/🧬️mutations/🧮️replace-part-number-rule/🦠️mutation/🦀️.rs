@@ -20,8 +20,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for ReplacePartN
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Replace part-number rule".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace part-number rule", "Bauteilnummer-Regel ersetzen")
     }
 }
 //#endregion 🔖️Payload

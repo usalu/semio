@@ -188,9 +188,10 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["action", "controlId", "initialValue", "nextValue"],
+            "required": ["action", "publicationLane", "controlId", "initialValue", "nextValue"],
             "properties": {
               "action": { "enum": ["setAppearance", "setLocale", "setLayout", "setTerminology", "setMergePolicy", "setDriver"] },
+              "publicationLane": { "enum": ["dispatch", "maintenance"] },
               "controlId": { "type": "string", "pattern": "^framework\\.settings\\." },
               "initialValue": { "type": "string" },
               "nextValue": { "type": "string", "minLength": 1 }

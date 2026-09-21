@@ -21,8 +21,8 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for SetSafeNumber {
     fn inverse(&self, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
         agg_inverse(&JsonIJsonMutation::SetSafeNumber(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-safe-number".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-safe-number", "sichere Nummer setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

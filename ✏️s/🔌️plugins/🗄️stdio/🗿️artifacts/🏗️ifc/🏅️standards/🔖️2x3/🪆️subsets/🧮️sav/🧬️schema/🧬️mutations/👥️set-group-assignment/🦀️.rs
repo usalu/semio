@@ -21,8 +21,8 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3SavMutation> for SetGroupAssig
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3SavMutation> {
         agg_inverse(&Ifc2x3SavMutation::SetGroupAssignment(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-group-assignment".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-group-assignment", "Gruppenzuordnung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

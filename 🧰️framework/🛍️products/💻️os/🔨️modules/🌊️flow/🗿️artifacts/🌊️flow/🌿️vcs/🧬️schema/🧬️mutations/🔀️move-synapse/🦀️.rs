@@ -21,7 +21,9 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for MoveSynapse {
     fn inverse(&self, base: &FlowHostSnapshot) -> Vec<FlowMutation> {
         base.synapses.iter().position(|item| item.id() == &self.id).and_then(|index| flow_wire_index(index).ok().map(|to_index| FlowMutation::MoveSynapse(Self { id: self.id.clone(), to_index }))).into_iter().collect()
     }
-    fn label(&self) -> String { format!("Move synapse {}", self.id) }
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Move synapse {}", self.id), &format!("Synapse {} verschieben", self.id))
+    }
     fn target(&self) -> Vec<String> { vec!["synapses".into(), self.id.clone()] }
 }
 

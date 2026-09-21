@@ -27,8 +27,8 @@ impl protocol::MutationKind<DependencyTestSnapshot, DependencyTestOp> for AddVal
             vec![DependencyTestOp::AddValue(Self { delta: -self.delta })]
         }
     }
-    fn label(&self) -> String {
-        format!("Add {} to value", self.delta)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
     }
     fn target(&self) -> Vec<String> {
         vec!["value".into()]
@@ -40,7 +40,7 @@ impl protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp> f
     fn plan(&self, _base: &DependencyTestSnapshot, planner: &mut protocol::Planner<DependencyTestSnapshot, DependencyTestOp>) -> Result<(), protocol::PlanError> {
         planner.call(DependencyTestOp::AddValue(self.clone()))
     }
-    fn label(&self) -> String {
+    fn label(&self) -> protocol::LocalizedLabel {
         <Self as protocol::MutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(self)
     }
     fn target(&self) -> Vec<String> {

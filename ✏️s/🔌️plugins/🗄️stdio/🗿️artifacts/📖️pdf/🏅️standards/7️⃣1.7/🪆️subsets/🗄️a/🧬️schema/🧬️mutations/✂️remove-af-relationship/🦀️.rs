@@ -34,8 +34,8 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveAfRelationship {
             .collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove AF relationship from \"{}\"", self.file_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove AF relationship from \"{}\"", self.file_name), &format!("AFbeziehung aus \"{}\" entfernen", self.file_name))
     }
 
     fn target(&self) -> Vec<String> {

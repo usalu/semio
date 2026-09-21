@@ -30,8 +30,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetAnnotation {
         base.pages.get(self.index).and_then(|page| page.annotations.get(self.at)).map(|annotation| PdfMutation::SetAnnotation(SetAnnotation { index: self.index, at: self.at, annotation: annotation.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Set annotation {} on page {}", self.at, self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set annotation {} on page {}", self.at, self.index), &format!("Anmerkung {} auf Seite {} setzen", self.at, self.index))
     }
 
     fn target(&self) -> Vec<String> {

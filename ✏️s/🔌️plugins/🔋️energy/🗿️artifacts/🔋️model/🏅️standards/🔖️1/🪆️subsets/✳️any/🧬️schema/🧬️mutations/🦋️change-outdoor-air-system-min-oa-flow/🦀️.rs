@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change outdoor air system {} minimum outdoor air flow to {:?}", self.id.0, self.new_min_oa_flow_m3_s)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change outdoor air system {} minimum outdoor air flow to {:?}", self.id.0, self.new_min_oa_flow_m3_s), &format!("Außenluftsystem {} Minimalaußenluftfluss auf {:?} ändern", self.id.0, self.new_min_oa_flow_m3_s))
     }
 
     fn target(&self) -> Vec<String> {

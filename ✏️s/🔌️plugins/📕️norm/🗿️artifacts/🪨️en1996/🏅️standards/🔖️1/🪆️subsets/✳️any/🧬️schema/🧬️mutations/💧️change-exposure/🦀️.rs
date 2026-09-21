@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeExposure {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change durability exposure class to {:?}", self.new_exposure)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change durability exposure class to {:?}", self.new_exposure), &format!("Dauerhaftigkeitsexpositionsklasse auf {:?} ändern", self.new_exposure))
     }
 }
 //#endregion 🔖️ChangeExposure

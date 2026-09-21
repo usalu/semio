@@ -21,8 +21,8 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetComment {
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
         agg_inverse(&HtmlMutation::SetComment(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-comment".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-comment", "Kommentar setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -30,6 +30,7 @@
             "outputBytes",
             "bootMs",
             "loadMs",
+            "loadBytesPerMs",
             "invokeMs",
             "wasiOutputBytes",
             "wasiOutputWrites"
@@ -52,6 +53,9 @@
             },
             "loadMs": {
               "const": 5000
+            },
+            "loadBytesPerMs": {
+              "const": 2048
             },
             "invokeMs": {
               "const": 2000

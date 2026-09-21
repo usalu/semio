@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeShearAreaM
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change shear area [mm2] to {}", self.new_shear_area_mm2)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change shear area [mm2] to {}", self.new_shear_area_mm2), &format!("Schubfläche [mm2] auf {} ändern", self.new_shear_area_mm2))
     }
 }
 //#endregion 🔖️ChangeShearAreaMm2

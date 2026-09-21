@@ -64,8 +64,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeChi
         vec![super::GltfMutation::UnbindNodeChild(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Unbind Node Child".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Unbind Node Child", "Knotenkind lösen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -6,5 +6,6 @@ type WriterDiff {
   id: String @state(class: ARTIFACT)
   languageId: String @state(class: ARTIFACT)
   uri: String @state(class: ARTIFACT)
+  text: String @state(class: ARTIFACT)
   document: ArtifactChild @state(class: ARTIFACT)
 }

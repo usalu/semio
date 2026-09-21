@@ -32,8 +32,8 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for AddAuthor {
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add author \"{}\"", self.author.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add author \"{}\"", self.author.name), &format!("Autor \"{}\" hinzufügen", self.author.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.author.id.clone()]

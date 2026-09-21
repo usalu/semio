@@ -370,6 +370,7 @@
       "textLgLineHeightPx": 25.6
     },
     "dom": {
+      "rootRemPx": 16.0,
       "iconTinyUiSpacing": 3.75,
       "iconSmallUiSpacing": 6.25,
       "iconBaseUiSpacing": 7.5,

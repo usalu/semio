@@ -27,8 +27,8 @@ pub mod mutation {
             super::super::inverse::inverse(self, base)
         }
 
-        fn label(&self) -> String {
-            format!("Move layer {} to ({}, {})", self.layer_id, self.new_x, self.new_y)
+        fn label(&self) -> protocol::LocalizedLabel {
+            protocol::LocalizedLabel::native(&format!("Move layer {} to ({}, {})", self.layer_id, self.new_x, self.new_y), &format!("Ebene {} nach ({}, {}) verschieben", self.layer_id, self.new_x, self.new_y))
         }
 
         fn target(&self) -> Vec<String> {

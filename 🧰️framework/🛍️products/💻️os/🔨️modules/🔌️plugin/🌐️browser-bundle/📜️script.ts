@@ -14,7 +14,7 @@ import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️lib
 export type BrowserComponentCore = Readonly<{ name: string; bytes: Uint8Array }>;
 export type BrowserComponentFactoryControl = Readonly<{ importInterfaces?: readonly string[]; cancelled?: () => boolean; progress?: (completedBytes: number, totalBytes: number) => void }>;
 export type BrowserActorPort = import("./🌐️host/🟦️.ts").BrowserHostPort & Readonly<{ wasi?: import("./🌐️wasi/🟦️.ts").BrowserWasiPort }>;
-export type ClosedBrowserActorArtifactV1 = Readonly<{ schema: "semio.os.closed-browser-actor.v1"; codegenPolicy: "semio.os.browser-jco-1.27.0-jspi.v1"; policySha256: string; policyCanonical: string; componentSha256: string; sha256: string; byteLength: number; importInterfaces: readonly string[]; bytes: Uint8Array }>;
+export type ClosedBrowserActorArtifactV1 = Readonly<{ schema: "semio.os.closed-browser-actor.v1"; codegenPolicy: "semio.os.browser-jco-1.34.0-jspi.v1"; policySha256: string; policyCanonical: string; componentSha256: string; sha256: string; byteLength: number; importInterfaces: readonly string[]; bytes: Uint8Array }>;
 export type BrowserActorBuildControl = Readonly<{ cancelled?: () => boolean; progress?: (phase: "snapshot" | "policy" | "codegen" | "closure" | "hash", completedBytes: number, totalBytes: number) => void }>;
 
 const browserActorMaximumBytes = 64 * 1024 * 1024;
@@ -41,14 +41,14 @@ const browserActorAsyncImports = Object.freeze([
   "wasi:io/streams#[method]output-stream.blocking-write-zeroes-and-flush", "wasi:io/streams#[method]output-stream.blocking-splice",
 ]);
 
-type BrowserActorCodegenManifest = Readonly<{ version: "1.27.0"; runtime: "bun@1.3.14"; importInterfaces: readonly string[]; files: readonly string[] }>;
+type BrowserActorCodegenManifest = Readonly<{ version: "1.34.0"; runtime: "bun@1.3.14"; importInterfaces: readonly string[]; files: readonly string[] }>;
 
 /** 🛂️ Admits exact canonical generated-file and interface names independently of the codegen subprocess. */
 function parseBrowserActorCodegenManifest(value: unknown): BrowserActorCodegenManifest {
   const denied = (): never => { throw new Error("browser actor artifact: invalid generated manifest"); };
   if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join(",") !== "files,importInterfaces,runtime,version") return denied();
   const record = value as Record<string, unknown>;
-  if (record.version !== "1.27.0" || record.runtime !== "bun@1.3.14") return denied();
+  if (record.version !== "1.34.0" || record.runtime !== "bun@1.3.14") return denied();
   const strings = (value: unknown, maximum: number, valid: (entry: string) => boolean): readonly string[] => {
     if (!Array.isArray(value) || value.length > maximum || !value.every((entry, index) => typeof entry === "string" && valid(entry) && (index === 0 || value[index - 1] < entry))) return denied();
     return Object.freeze([...value]);
@@ -56,7 +56,7 @@ function parseBrowserActorCodegenManifest(value: unknown): BrowserActorCodegenMa
   const importInterfaces = strings(record.importInterfaces, browserActorInterfaces.length, name => browserActorInterfaces.includes(name));
   const files = strings(record.files, 65, name => name === "browser-actor.js" || /^browser-actor\.core\d*\.wasm$/.test(name));
   if (files.length < 2 || files.filter(name => name === "browser-actor.js").length !== 1) return denied();
-  return Object.freeze({ version: "1.27.0", runtime: "bun@1.3.14", importInterfaces, files });
+  return Object.freeze({ version: "1.34.0", runtime: "bun@1.3.14", importInterfaces, files });
 }
 
 /** 🧊️ Replaces the compiler's exact two file loaders with captured core bytes and rejects residual module IO. */
@@ -154,9 +154,9 @@ function captureBrowserCodegenPolicyInputs(runtime: BrowserActorRuntimeSnapshot,
     return hash(canonicalJson(row));
   };
   const packageRoots = [
-    { name: "@bytecodealliance/jco", version: "1.27.0", path: dirname(dirname(fileURLToPath(import.meta.resolve("@bytecodealliance/jco/component")))) },
-    { name: "@bytecodealliance/jco-transpile", version: "0.6.1", path: dirname(dirname(fileURLToPath(import.meta.resolve("@bytecodealliance/jco-transpile/component")))) },
-    { name: "@bytecodealliance/preview2-shim", version: "0.20.1", path: dirname(dirname(dirname(fileURLToPath(import.meta.resolve("@bytecodealliance/preview2-shim/io"))))) },
+    { name: "@bytecodealliance/jco", version: "1.34.0", path: dirname(dirname(fileURLToPath(import.meta.resolve("@bytecodealliance/jco/component")))) },
+    { name: "@bytecodealliance/jco-transpile", version: "0.14.0", path: dirname(dirname(fileURLToPath(import.meta.resolve("@bytecodealliance/jco-transpile/component")))) },
+    { name: "@bytecodealliance/preview2-shim", version: "0.25.0", path: dirname(dirname(dirname(fileURLToPath(import.meta.resolve("@bytecodealliance/preview2-shim/io"))))) },
   ];
   const packages = packageRoots.map(({ name, version, path }) => {
     const bytes = read(join(path, "package.json")), manifest = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
@@ -224,7 +224,7 @@ async function buildBrowserCodegenModule(evidence: string, check: () => void): P
   const vendor = fileURLToPath(import.meta.resolve("@bytecodealliance/jco-transpile/component"));
   const shim = dirname(dirname(fileURLToPath(import.meta.resolve("@bytecodealliance/preview2-shim/io"))));
   const packageBytes = readStableBuildFile(join(dirname(entrypoint), "../package.json"), 64 * 1024, { remaining: 64 * 1024 }, check);
-  if (JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(packageBytes)).version !== "1.27.0") throw new Error("browser actor artifact: unqualified JCO version");
+  if (JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(packageBytes)).version !== "1.34.0") throw new Error("browser actor artifact: unqualified JCO version");
   const { source, inputs } = await captureBrowserCodegenSources(entrypoint, [
     { name: "@bytecodealliance/jco/dist", path: dirname(entrypoint) },
     { name: "@bytecodealliance/jco-transpile/vendor", path: dirname(vendor) },
@@ -283,7 +283,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
       runtime: { kind: "bun", version: "1.3.14", executable: { sha256: executable.sha256, byteLength: executable.byteLength } },
       compiler: { module: { sha256: compiler.sha256, byteLength: compiler.byteLength }, inputs: compiler.inputs, cores: compiler.cores },
       ...policyInputs,
-      options: { jco: "1.27.0", entrypoint: "@bytecodealliance/jco/component", target: "browser", format: "esm", name: "browser-actor", instantiation: "async", asyncMode: "jspi", nodejsCompat: false, base64Cutoff: 0, importInterfaces: browserActorInterfaces, asyncImports: browserActorAsyncImports },
+      options: { jco: "1.34.0", entrypoint: "@bytecodealliance/jco/component", target: "browser", format: "esm", name: "browser-actor", instantiation: "async", asyncMode: "jspi", nodejsCompat: false, base64Cutoff: 0, importInterfaces: browserActorInterfaces, asyncImports: browserActorAsyncImports },
     });
     writeFileSync(join(evidence, "codegen-policy.json"), policy.canonical, { mode: 0o600 });
     check();
@@ -308,7 +308,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
       let generate;
       try { ({ generate } = await import(compilerUrl)); }
       finally { URL.revokeObjectURL(compilerUrl); compilerBytes.fill(0); }
-      const version = "1.27.0";
+      const version = "1.34.0";
       const admitted = JSON.parse(importsJson), asyncImports = JSON.parse(asyncJson);
       const output = await generate(componentBytes, { name: "browser-actor", instantiation: { tag: "async" }, noNodejsCompat: true, base64Cutoff: 0, map: admitted.map(name => [name, name]), asyncMode: { tag: "jspi", val: { imports: asyncImports, exports: [] } }, noTypescript: false, tlaCompat: false, validLiftingOptimization: false, tracing: false, noNamespacedExports: false, multiMemory: false, bindgenEnableWasmExnref: false, strict: false, asmjs: false });
       componentBytes.fill(0);
@@ -344,7 +344,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
     const sha256 = createHash("sha256").update(bytes).digest("hex");
     control.progress?.("hash", byteLength, byteLength);
     check();
-    return Object.freeze({ schema: "semio.os.closed-browser-actor.v1", codegenPolicy: "semio.os.browser-jco-1.27.0-jspi.v1", policySha256: policy.sha256, policyCanonical: policy.canonical, componentSha256, sha256, byteLength, importInterfaces: Object.freeze([...manifest.importInterfaces]), bytes });
+    return Object.freeze({ schema: "semio.os.closed-browser-actor.v1", codegenPolicy: "semio.os.browser-jco-1.34.0-jspi.v1", policySha256: policy.sha256, policyCanonical: policy.canonical, componentSha256, sha256, byteLength, importInterfaces: Object.freeze([...manifest.importInterfaces]), bytes });
   } finally {
     snapshot?.fill(0);
     try { if (evidenceRoot === undefined && evidence !== undefined) rmSync(evidence, { recursive: true, force: true, maxRetries: 3 }); }
@@ -363,6 +363,15 @@ function validateWasiSuspension(source: string): void {
     const bindings = node.arguments[1].properties.filter(property => ts.isPropertyAssignment(property) && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)) && property.name.text === "importFn");
     if (bindings.length !== 1 || !ts.isPropertyAssignment(bindings[0]) || !ts.isIdentifier(bindings[0].initializer)) return;
     return bindings[0].initializer.text;
+  };
+  const suspendingBinding = (node: ts.Expression): string | undefined => {
+    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || node.expression.text !== "_suspendingImport" || node.arguments.length !== 2 || !ts.isNumericLiteral(node.arguments[0])) return;
+    return lowerBinding(node.arguments[1]);
+  };
+  const coreImportsExpression = (node: ts.Expression): ts.ObjectLiteralExpression | undefined => {
+    let current = node;
+    while (ts.isParenthesizedExpression(current) || (ts.isBinaryExpression(current) && current.operatorToken.kind === ts.SyntaxKind.CommaToken)) current = ts.isParenthesizedExpression(current) ? current.expression : current.right;
+    return ts.isObjectLiteralExpression(current) ? current : undefined;
   };
   const coreImports = (node: ts.ObjectLiteralExpression): void => {
     for (const property of node.properties) {
@@ -391,7 +400,10 @@ function validateWasiSuspension(source: string): void {
         }
       }
     }
-    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "instantiateCore" && node.arguments[1] && ts.isObjectLiteralExpression(node.arguments[1])) coreImports(node.arguments[1]);
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "instantiateCore" && node.arguments[1]) {
+      const imports = coreImportsExpression(node.arguments[1]);
+      if (imports) coreImports(imports);
+    }
     ts.forEachChild(node, visit);
   };
   visit(parsed);
@@ -402,11 +414,38 @@ function validateWasiSuspension(source: string): void {
     for (const [binding, entries] of declarations) for (const entry of entries) {
       const value = entry.initializer;
       if (!value || !ts.isConditionalExpression(value) || !ts.isPropertyAccessExpression(value.condition) || !ts.isIdentifier(value.condition.expression) || value.condition.expression.text !== name || value.condition.name.text !== "manuallyAsync") continue;
-      if (!ts.isNewExpression(value.whenTrue) || value.whenTrue.expression.getText(parsed) !== "WebAssembly.Suspending" || value.whenTrue.arguments?.length !== 1 || lowerBinding(value.whenTrue.arguments[0]) !== name || lowerBinding(value.whenFalse) !== name || entries.length !== 1 || rebound.has(binding)) denied();
+      if (!ts.isNewExpression(value.whenTrue) || value.whenTrue.expression.getText(parsed) !== "WebAssembly.Suspending" || value.whenTrue.arguments?.length !== 1 || suspendingBinding(value.whenTrue.arguments[0]) !== name || lowerBinding(value.whenFalse) !== name || entries.length !== 1 || rebound.has(binding)) denied();
       wrappers.push(binding);
     }
     if (wrappers.length !== 1 || !coreBindings.has(wrappers[0])) denied();
   }
+}
+
+/** 🪝️ Refuses an async `task.return` bound to direct params when its result cannot be flattened and must arrive by pointer. */
+export function validateAsyncTaskReturnLift(source: string): number {
+  const parsed = ts.createSourceFile("actor-input.js", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const denied = (): never => { throw new Error("browser actor bundle: unflattenable async result requires an indirect task.return"); };
+  const property = (node: ts.ObjectLiteralExpression, key: string): ts.Expression | undefined => {
+    const found = node.properties.filter(entry => ts.isPropertyAssignment(entry) && (ts.isIdentifier(entry.name) || ts.isStringLiteral(entry.name)) && entry.name.text === key);
+    return found.length === 1 && ts.isPropertyAssignment(found[0]) ? found[0].initializer : undefined;
+  };
+  const unflattenable = (node: ts.Expression): boolean => {
+    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || !node.expression.text.startsWith("_liftFlat") || node.arguments.length !== 1 || !ts.isObjectLiteralExpression(node.arguments[0])) return false;
+    const flatCount = property(node.arguments[0], "variantFlatCount");
+    return flatCount !== undefined && (flatCount.kind === ts.SyntaxKind.NullKeyword || (ts.isIdentifier(flatCount) && flatCount.text === "undefined"));
+  };
+  let bindings = 0;
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && ts.isIdentifier(node.expression.expression) && node.expression.expression.text === "taskReturn" && node.expression.name.text === "bind" && node.arguments.length === 2 && node.arguments[0].kind === ts.SyntaxKind.NullKeyword && ts.isObjectLiteralExpression(node.arguments[1])) {
+      bindings += 1;
+      const direct = property(node.arguments[1], "useDirectParams"), lifts = property(node.arguments[1], "liftFns");
+      if (direct === undefined || ![ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword].includes(direct.kind) || lifts === undefined || !ts.isArrayLiteralExpression(lifts)) return denied();
+      if (direct.kind === ts.SyntaxKind.TrueKeyword && lifts.elements.some(unflattenable)) denied();
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(parsed);
+  return bindings;
 }
 
 /** 🎭️ Builds one closed actor module with fresh first-party host state and an explicit owner. */
@@ -422,6 +461,7 @@ async function closedBrowserActorBundleFromRuntime(source: string, cores: readon
   if (names.some(name => !Object.hasOwn(known, name) && !browserWasiInterfaces.includes(name))) throw new Error("browser actor bundle: unsupported import interface");
   const wasiRequired = names.some(name => browserWasiInterfaces.includes(name));
   if (wasiRequired) validateWasiSuspension(source);
+  validateAsyncTaskReturnLift(source);
   const component = await closedBrowserComponentFactory(source, cores, control);
   const imports = names.map(name => `${JSON.stringify(name)}: ${browserWasiInterfaces.includes(name) ? `wasi.imports[${JSON.stringify(name)}]` : `host.${known[name as keyof typeof known]}`}`).join(",");
   const contents = `import { createBrowserHostActivation } from "semio:actor-host";
@@ -666,6 +706,7 @@ export type BrowserBundleTestDependencies = Readonly<{
   readonly closedBrowserActorBundle: typeof closedBrowserActorBundle;
   readonly closedBrowserActorBundleFromRuntime: typeof closedBrowserActorBundleFromRuntime;
   readonly closedBrowserComponentFactory: typeof closedBrowserComponentFactory;
+  readonly validateAsyncTaskReturnLift: typeof validateAsyncTaskReturnLift;
   readonly dirname: typeof dirname;
   readonly exactExecutableFingerprint: typeof exactExecutableFingerprint;
   readonly join: typeof join;
@@ -682,7 +723,7 @@ export type BrowserBundleTestDependencies = Readonly<{
   readonly ts: typeof ts;
   readonly writeFileSync: typeof writeFileSync;
 }>;
-const createBrowserBundleTestsInstance = createBrowserBundleTests({ browserActorAsyncImports, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+const createBrowserBundleTestsInstance = createBrowserBundleTests({ browserActorAsyncImports, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 export const testClosedBrowserComponentFactory = createBrowserBundleTestsInstance.testClosedBrowserComponentFactory;
 const testBrowserCodegenCapsule = createBrowserBundleTestsInstance.testBrowserCodegenCapsule;
 const testBrowserCodegenSources = createBrowserBundleTestsInstance.testBrowserCodegenSources;

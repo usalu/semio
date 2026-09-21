@@ -32,8 +32,8 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for AddAttribute {
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add attribute \"{}\"", self.attribute.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add attribute \"{}\"", self.attribute.key), &format!("Attribut \"{}\" hinzufügen", self.attribute.key))
     }
     fn target(&self) -> Vec<String> {
         vec![self.attribute.key.clone()]

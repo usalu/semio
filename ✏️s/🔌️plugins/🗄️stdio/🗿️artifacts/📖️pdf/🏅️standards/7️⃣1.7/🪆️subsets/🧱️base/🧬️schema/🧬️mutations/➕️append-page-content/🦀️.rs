@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for AppendPageContent {
         base.pages.get(self.index).map(|page| PdfMutation::RemoveContent(super::remove_content::RemoveContent { index: self.index, at: page.content.len(), count: self.content.len() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Append {} operators to page {}", self.content.len(), self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Append {} operators to page {}", self.content.len(), self.index), &format!("{} Operatoren an Seite {} anhängen", self.content.len(), self.index))
     }
 
     fn target(&self) -> Vec<String> {

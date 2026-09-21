@@ -23,8 +23,8 @@ impl protocol::MutationKind<ImperativeConfig, ImperativeConfigMutation> for SetR
     fn inverse(&self, base: &ImperativeConfig) -> Vec<ImperativeConfigMutation> {
         vec![ImperativeConfigMutation::SetRunOutput(Self { json: base.run_output_json.clone() })]
     }
-    fn label(&self) -> String {
-        "Set Run Output".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Run Output", "Laufausgabe setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["run_output_json".into()]

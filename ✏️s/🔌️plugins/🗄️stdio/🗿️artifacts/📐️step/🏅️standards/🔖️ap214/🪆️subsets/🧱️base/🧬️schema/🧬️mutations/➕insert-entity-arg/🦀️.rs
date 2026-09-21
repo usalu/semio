@@ -23,8 +23,8 @@ impl protocol::MutationKind<StepSnapshot, StepMutation> for InsertEntityArg {
     fn inverse(&self, base: &StepSnapshot) -> Vec<StepMutation> {
         agg_inverse(&StepMutation::InsertEntityArg(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-entity-arg".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-entity-arg", "Entitätsargument einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

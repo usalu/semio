@@ -117,7 +117,7 @@ fn validate(identity: Option<IdentityRef<'_>>, source: DocumentBrowserActorSourc
         Some(row) => {
             renderer == "wasm"
                 && row.schema == "semio.os.closed-browser-actor.v1"
-                && row.policy == "semio.os.browser-jco-1.27.0-jspi.v1"
+                && row.policy == "semio.os.browser-jco-1.34.0-jspi.v1"
                 && [row.sha256, row.component, row.descriptor, row.policy_sha256].into_iter().all(digest)
                 && row.component == source.component_sha256
                 && row.descriptor == source.descriptor_byte_sha256

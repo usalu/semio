@@ -65,8 +65,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderRequir
         vec![super::GltfMutation::ReorderRequiredExtensions(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Reorder Required Extensions".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Reorder Required Extensions", "erforderliche Erweiterungen umordnen")
     }
 
     fn target(&self) -> Vec<String> {

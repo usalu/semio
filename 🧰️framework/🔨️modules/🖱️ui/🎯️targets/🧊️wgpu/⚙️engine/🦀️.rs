@@ -7,7 +7,7 @@
 //! path stays the only pipeline actually driving pixels until a later workstream proves this façade
 //! out (via the golden `tests` module below) and cuts over.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use crate::wgpu::chrome::UiDriverDrag;
 use crate::wgpu::component::layout::WindowLayout;
@@ -21,7 +21,7 @@ use crate::wgpu::mounted_layout::{MountedLayoutIdentity, MountedLayoutJob, Mount
 #[cfg(test)]
 use crate::wgpu::paint::paint_tree;
 use crate::wgpu::paint::{paint_node_step_with_driver, retained_overlay_chrome_step, sync_interactive_state_node_step, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep};
-use crate::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
+use crate::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileFault, UiDocumentReconcileStep, UiRetiredComponentScene};
 #[cfg(test)]
 use crate::wgpu::scene_slots::collect_scene_slots;
 use crate::wgpu::scene_slots::{scene_slot_for_node, SceneHost, ScenePaintCursor, ScenePaintStep};
@@ -58,8 +58,22 @@ pub struct UiOverlayPlacement {
 /// comment ("the engine facade... holds `HashMap<window_id, UiTree>`") by keying the *whole*
 /// per-window pipeline the same way, not just the tree.
 struct UiWindow {
+    closing: Option<UiSurfaceClosePhase>,
     tree: UiTree,
     router: EventRouter,
+    presented_tree: UiTree,
+    presented_router: EventRouter,
+    presented_ready: bool,
+    presented_revision: u64,
+    presented_accessibility_generation: u64,
+    presented_interaction_epoch: u64,
+    candidate_base_interaction_epoch: u64,
+    candidate_ready: bool,
+    candidate_reconciled: bool,
+    candidate_retirements_resolved: bool,
+    candidate_interaction_cursor: Option<usize>,
+    sealed_input_candidate: Option<(u64, u64)>,
+    candidate_baseline: Option<Box<UiCandidateBaseline>>,
     draw: DrawList,
     viewport: (f32, f32),
     layout_job: Option<MountedLayoutJob>,
@@ -78,9 +92,14 @@ struct UiWindow {
     accessibility_generation: u64,
     document_ingress: Option<UiDocumentIngress>,
     retiring_document: Option<UiDocumentTree>,
+    retiring_presented_document: Option<UiDocumentTree>,
     /// 🌳️ The published document's own reconcile into the paintable arena — the one thing that ever
     /// sets `tree.root` in production (see `🔁️reconcile.rs`'s `🌳️DocumentTreeReconcile`).
     document_reconcile: UiDocumentReconcileCursor,
+    scene_retirements: VecDeque<UiRetiredComponentScene>,
+    candidate_scene_retirements: VecDeque<UiRetiredComponentScene>,
+    accepted_scene_retirements: VecDeque<UiRetiredComponentScene>,
+    component_mount_generation: u64,
     paint_frame: Option<RetainedPaintFrame>,
     retiring_draw: Option<DrawList>,
     paint_census: UiFramePaintCensus,
@@ -93,8 +112,22 @@ struct UiWindow {
 impl UiWindow {
     fn new(window_id: &str) -> Self {
         Self {
+            closing: None,
             tree: UiTree::new(),
             router: EventRouter::new(window_id),
+            presented_tree: UiTree::new(),
+            presented_router: EventRouter::new(window_id),
+            presented_ready: false,
+            presented_revision: 0,
+            presented_accessibility_generation: 0,
+            presented_interaction_epoch: 0,
+            candidate_base_interaction_epoch: 0,
+            candidate_ready: false,
+            candidate_reconciled: false,
+            candidate_retirements_resolved: false,
+            candidate_interaction_cursor: None,
+            sealed_input_candidate: None,
+            candidate_baseline: None,
             draw: DrawList::default(),
             viewport: (0.0, 0.0),
             layout_job: None,
@@ -113,7 +146,12 @@ impl UiWindow {
             accessibility_generation: 0,
             document_ingress: None,
             retiring_document: None,
+            retiring_presented_document: None,
             document_reconcile: UiDocumentReconcileCursor::default(),
+            scene_retirements: VecDeque::with_capacity(UI_RETIRED_COMPONENT_SCENE_CAPACITY),
+            candidate_scene_retirements: VecDeque::with_capacity(UI_RETIRED_COMPONENT_SCENE_CAPACITY),
+            accepted_scene_retirements: VecDeque::with_capacity(UI_RETIRED_COMPONENT_SCENE_CAPACITY),
+            component_mount_generation: 0,
             paint_frame: None,
             retiring_draw: None,
             paint_census: UiFramePaintCensus::default(),
@@ -124,11 +162,193 @@ impl UiWindow {
     /// 🚨️ Whether this window's root (and thus, transitively, anything below it per
     /// `UiTree::mark_dirty`'s bubbling) still needs a layout or paint pass.
     fn is_dirty(&self) -> bool {
-        self.tree.root.and_then(|root| self.tree.node(root)).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::DIRTY_PAINT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY))
+        self.closing.is_none() && self.tree.root.and_then(|root| self.tree.node(root)).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::DIRTY_PAINT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY))
+    }
+
+    fn close_tree_storage_step(&mut self, window_id: &str) -> bool {
+        let generation = self.accessibility_generation;
+        let Self { tree, scene_retirements, .. } = self;
+        tree.close_storage_step(&mut |node_id, node| retire_surface_scene(window_id, generation, scene_retirements, node_id, node))
+    }
+
+    fn close_presented_tree_storage_step(&mut self, window_id: &str) -> bool {
+        let generation = self.presented_accessibility_generation;
+        let Self { presented_tree, scene_retirements, .. } = self;
+        presented_tree.close_storage_step(&mut |node_id, node| retire_surface_scene(window_id, generation, scene_retirements, node_id, node))
+    }
+
+    fn begin_presented_interaction_rebase(&mut self) {
+        if self.candidate_baseline.is_some() || !self.candidate_reconciled || !self.candidate_retirements_resolved {
+            self.candidate_base_interaction_epoch = self.presented_interaction_epoch;
+            self.candidate_ready = false;
+            self.candidate_interaction_cursor = None;
+            return;
+        }
+        if !self.presented_ready {
+            self.candidate_base_interaction_epoch = self.presented_interaction_epoch;
+            self.candidate_ready = true;
+            self.candidate_interaction_cursor = None;
+            return;
+        }
+        self.candidate_ready = false;
+        self.candidate_interaction_cursor = Some(0);
+    }
+
+    fn step_presented_interaction_rebase(&mut self) -> bool {
+        let Some(index) = self.candidate_interaction_cursor else { return self.candidate_ready };
+        if !self.tree.transfer_interaction_record_from(&self.presented_tree, index) {
+            self.candidate_interaction_cursor = Some(index.saturating_add(1));
+            return false;
+        }
+        self.router.transfer_interaction_from(&self.presented_router, &self.presented_tree, &self.tree);
+        self.candidate_base_interaction_epoch = self.presented_interaction_epoch;
+        self.candidate_ready = true;
+        self.candidate_interaction_cursor = None;
+        true
+    }
+
+    fn advance_presented_interaction(&mut self) {
+        let Some(epoch) = self.presented_interaction_epoch.checked_add(1) else { return };
+        self.presented_interaction_epoch = epoch;
+        self.begin_presented_interaction_rebase();
+    }
+
+    fn rearm_candidate_scene_retirements(&mut self) {
+        while let Some(retirement) = self.accepted_scene_retirements.pop_front() {
+            debug_assert!(self.candidate_scene_retirements.len() < UI_RETIRED_COMPONENT_SCENE_CAPACITY);
+            self.candidate_scene_retirements.push_back(retirement);
+        }
+        self.candidate_retirements_resolved = false;
     }
 }
 
+/// 🪙 A fallible, bounded initial candidate revision. The presented tree keeps the exact records
+/// required by accessibility and intent dispatch while this owner acquires one credited record per
+/// reconcile opportunity. Refusal drains the partial copy before surfacing a terminal fault.
+struct UiCandidateBaseline {
+    document: Option<UiDocumentTree>,
+    next_record: usize,
+    fault: Option<UiDocumentReconcileFault>,
+}
+
+enum UiCandidateBaselineStep {
+    Pending,
+    Complete(UiDocumentTree),
+    Fault(UiDocumentReconcileFault),
+}
+
+impl UiCandidateBaseline {
+    fn new(source: &UiDocumentTree) -> Self {
+        Self { document: Some(source.credited_baseline()), next_record: 0, fault: None }
+    }
+
+    fn generation(&self) -> Option<u64> {
+        self.document.as_ref().map(UiDocumentTree::generation)
+    }
+
+    fn refuse(&mut self, fault: UiDocumentReconcileFault) -> UiCandidateBaselineStep {
+        self.fault = Some(fault);
+        UiCandidateBaselineStep::Pending
+    }
+
+    fn step(&mut self, source: Option<&UiDocumentTree>) -> UiCandidateBaselineStep {
+        if let Some(fault) = self.fault {
+            if let Some(document) = self.document.as_mut() {
+                if !document.close_step() {
+                    return UiCandidateBaselineStep::Pending;
+                }
+            }
+            self.document = None;
+            return UiCandidateBaselineStep::Fault(fault);
+        }
+        let Some(source) = source else { return self.refuse(UiDocumentReconcileFault::MissingRecord) };
+        let Some(candidate) = self.document.as_mut() else { return self.refuse(UiDocumentReconcileFault::MissingRecord) };
+        if candidate.generation() != source.generation()
+            || candidate.revision() != source.revision()
+            || candidate.surface() != source.surface()
+            || candidate.root_id() != source.root_id()
+            || candidate.layout_epoch() != source.layout_epoch()
+            || candidate.node_count() != source.node_count()
+        {
+            return self.refuse(UiDocumentReconcileFault::MissingRecord);
+        }
+        if self.next_record < source.node_count() {
+            let record = match source.credited_record_at(self.next_record) {
+                Ok(record) => record,
+                Err(UiDocumentTreeFault::Credits) => return self.refuse(UiDocumentReconcileFault::DocumentCredits),
+                Err(_) => return self.refuse(UiDocumentReconcileFault::MissingRecord),
+            };
+            if candidate.try_upsert_record(record).is_err() {
+                return self.refuse(UiDocumentReconcileFault::DocumentCredits);
+            }
+            self.next_record += 1;
+            return UiCandidateBaselineStep::Pending;
+        }
+        if candidate.validate_header().is_err() {
+            return self.refuse(UiDocumentReconcileFault::MissingRecord);
+        }
+        match self.document.take() {
+            Some(document) => UiCandidateBaselineStep::Complete(document),
+            None => self.refuse(UiDocumentReconcileFault::MissingRecord),
+        }
+    }
+
+    fn close_step(&mut self) -> bool {
+        let Some(document) = self.document.as_mut() else { return true };
+        if !document.close_step() {
+            return false;
+        }
+        self.document = None;
+        false
+    }
+}
+
+fn retire_surface_scene(window_id: &str, window_generation: u64, retirements: &mut VecDeque<UiRetiredComponentScene>, node_id: crate::wgpu::arena::NodeId, node: &crate::wgpu::tree::Node) -> bool {
+    let UiNode::ComponentScene(scene) = &node.spec.0 else { return true };
+    if retirements.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
+        return false;
+    }
+    retirements.push_back(UiRetiredComponentScene {
+        host_id: scene.host_id.clone(),
+        window_id: window_id.to_string(),
+        window_generation,
+        component_generation: node.component_generation(),
+        node: node_id,
+        key: node.key.clone(),
+        kind: scene.component_kind,
+        surface_id: scene.surface_id.clone(),
+    });
+    true
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum UiSurfaceClosePhase {
+    Router,
+    PresentedRouter,
+    LayoutRejected,
+    LayoutSession,
+    LayoutJob,
+    Previews,
+    Paint,
+    Draw,
+    Hits,
+    Document,
+    PresentedDocument,
+    Storage,
+    PresentedStorage,
+    Scheduler,
+    Complete,
+}
+
+/// 🧹️ One retained-surface close opportunity and its externally owned scene handoff.
+pub enum UiSurfaceCloseStep {
+    Pending,
+    RetiredScene(UiRetiredComponentScene),
+    Complete,
+}
+
 const RETAINED_PAINT_DEPTH_CREDITS: usize = 64;
+pub const UI_RETIRED_COMPONENT_SCENE_CAPACITY: usize = 256;
 
 /// 🎯️ Fixed ceiling on one window's pointer registry — well under `input`'s own
 /// `HIT_TARGET_CAPACITY`, so a hostile document can never crowd the chrome out of the shell's
@@ -426,7 +646,7 @@ fn register_retained_hit(
         if out.len() >= RETAINED_HIT_REGISTRY_CAPACITY {
             return;
         }
-        push_retained_hit(out, overlay_hits, true, RetainedHitRegistration { node, rect, overlay: true, kind: HitKind::DropdownItem, control_id: crate::wgpu::select::select_scroll_control_id(select_id, up), action: None, drag_axis: None, drag_data: None });
+        push_retained_hit(out, overlay_hits, true, RetainedHitRegistration { node, rect, overlay: true, scene: None, kind: HitKind::DropdownItem, control_id: crate::wgpu::select::select_scroll_control_id(select_id, up), action: None, drag_axis: None, drag_data: None });
     }
 }
 
@@ -525,7 +745,7 @@ impl UiSurfaceRegistry {
     #[expect(clippy::result_large_err, reason = "Surface and document admission return the exact refused identity or page without allocating a rejection wrapper.")]
     fn try_admit(&mut self, id: SurfaceId) -> Result<UiSurfaceToken, UiSurfaceAdmissionRejected> {
         if let Some(token) = self.token(id.as_ref()) {
-            return Ok(token);
+            return if self.get_token(token).is_some_and(|window| window.closing.is_none()) { Ok(token) } else { Err(UiSurfaceAdmissionRejected { id }) };
         }
         let Some(slot) = self.slots.iter().position(Option::is_none) else { return Err(UiSurfaceAdmissionRejected { id }) };
         let Some(generation) = self.generations[slot].checked_add(1) else { return Err(UiSurfaceAdmissionRejected { id }) };
@@ -551,6 +771,15 @@ impl UiSurfaceRegistry {
     fn get_token_mut(&mut self, token: UiSurfaceToken) -> Option<&mut UiWindow> {
         let slot = self.slots.get_mut(token.slot as usize)?.as_mut()?;
         (slot.generation == token.generation).then_some(&mut slot.window)
+    }
+
+    fn remove_terminal(&mut self, token: UiSurfaceToken) -> bool {
+        let Some(window) = self.get_token(token) else { return true };
+        if window.closing != Some(UiSurfaceClosePhase::Complete) {
+            return false;
+        }
+        self.slots[token.slot as usize] = None;
+        true
     }
 
     fn id(&self, token: UiSurfaceToken) -> Option<&SurfaceId> {
@@ -669,6 +898,16 @@ impl Default for SurfaceLaneRing {
 }
 
 impl SurfaceLaneRing {
+    fn remove_token_one(&mut self, token: UiSurfaceToken) -> bool {
+        let Some(offset) = (0..self.len).find(|offset| self.slots[(self.head + offset) % UI_LAYOUT_SURFACE_SLOTS].is_some_and(|entry| entry.token == token)) else { return false };
+        for offset in offset..self.len - 1 {
+            self.slots[(self.head + offset) % UI_LAYOUT_SURFACE_SLOTS] = self.slots[(self.head + offset + 1) % UI_LAYOUT_SURFACE_SLOTS].take();
+        }
+        self.slots[(self.head + self.len - 1) % UI_LAYOUT_SURFACE_SLOTS] = None;
+        self.len -= 1;
+        true
+    }
+
     fn try_push(&mut self, entry: SurfaceLaneEntry) -> Result<(), SurfaceLaneEntry> {
         if self.len == UI_LAYOUT_SURFACE_SLOTS {
             return Err(entry);
@@ -776,6 +1015,7 @@ fn worker_lane(lane: SurfaceLane) -> semio_framework_async::Lane {
 /// already do; wiring that hand-off into a real host event loop is later, renderer-thinning work.
 pub struct Ui {
     windows: UiSurfaceRegistry,
+    document_generation: u64,
     shell: Shell,
     theme: Theme,
     driver_drag: UiDriverDrag,
@@ -798,6 +1038,7 @@ impl Ui {
     pub fn new() -> Self {
         Self {
             windows: UiSurfaceRegistry::default(),
+            document_generation: 0,
             shell: Shell::new(),
             theme: Theme::default(),
             driver_drag: UiDriverDrag::Handle,
@@ -831,7 +1072,7 @@ impl Ui {
         self.driver_drag = driver_drag;
         let metrics = TreeRowMetrics::from_theme(&self.theme);
         let mut commands = Vec::new();
-        for window in self.windows.values_mut() {
+        for window in self.windows.values_mut().filter(|window| window.closing.is_none()) {
             commands.extend(window.router.set_tree_drag_policy(&mut window.tree, driver_drag, metrics));
             let Some(next_revision) = window.theme_revision.checked_add(1) else { continue };
             window.theme_revision = next_revision;
@@ -850,6 +1091,266 @@ impl Ui {
     pub fn try_admit_surface(&mut self, window_id: &str) -> Result<UiSurfaceToken, UiSurfaceAdmissionRejected> {
         let id = SurfaceId::try_from(window_id).map_err(|_| UiSurfaceAdmissionRejected { id: SurfaceId::default() })?;
         self.windows.try_admit(id)
+    }
+
+    /// 🪪️ Exact registry lifetime; document epochs are exposed separately by surface_generation.
+    pub fn surface_token(&self, window_id: &str) -> Option<UiSurfaceToken> {
+        self.windows.token(window_id)
+    }
+
+    /// 🎞️ Seals every visible candidate interaction revision under the Shell's exact presenter
+    /// witness. A live presented capture holds publication until its matching terminal event.
+    pub fn seal_presented_input_candidate(&mut self, witness: u64, visible_windows: &[String]) -> bool {
+        if self.windows.values_mut().any(|window| window.sealed_input_candidate.is_some()) {
+            return false;
+        }
+        if visible_windows.iter().any(|window_id| self.windows.get(window_id).is_some_and(|window| window.closing.is_none() && window.presented_ready && !window.candidate_ready)) {
+            return false;
+        }
+        for window_id in visible_windows {
+            let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { continue };
+            if !window.candidate_ready {
+                continue;
+            }
+            window.sealed_input_candidate = Some((witness, window.candidate_base_interaction_epoch));
+        }
+        true
+    }
+
+    pub fn presented_input_candidate_matches(&self, witness: u64) -> bool {
+        self.windows.values().all(|window| match window.sealed_input_candidate {
+            Some((candidate, base)) => candidate == witness && base == window.presented_interaction_epoch,
+            None => true,
+        })
+    }
+
+    /// 🏁 Swaps bounded move-owned tree/router revisions only after the matching pixels are accepted.
+    pub fn acknowledge_presented_input(&mut self, witness: u64) -> bool {
+        if !self.presented_input_candidate_matches(witness) {
+            return false;
+        }
+        for window in self.windows.values_mut().filter(|window| window.sealed_input_candidate.is_some_and(|(candidate, _)| candidate == witness)) {
+            let initial = !window.presented_ready;
+            std::mem::swap(&mut window.tree, &mut window.presented_tree);
+            std::mem::swap(&mut window.router, &mut window.presented_router);
+            window.presented_revision = window.revision;
+            window.presented_accessibility_generation = window.accessibility_generation;
+            window.presented_ready = true;
+            if !window.accepted_scene_retirements.is_empty() {
+                debug_assert!(window.scene_retirements.is_empty());
+                std::mem::swap(&mut window.scene_retirements, &mut window.accepted_scene_retirements);
+            }
+            if initial {
+                window.candidate_baseline = window.presented_tree.document().map(|source| Box::new(UiCandidateBaseline::new(source)));
+            }
+            window.candidate_ready = false;
+            window.candidate_reconciled = false;
+            window.candidate_retirements_resolved = false;
+            window.candidate_interaction_cursor = None;
+            window.sealed_input_candidate = None;
+            window.candidate_base_interaction_epoch = window.presented_interaction_epoch;
+        }
+        true
+    }
+
+    pub fn discard_presented_input_candidate(&mut self, witness: u64) -> bool {
+        let mut matched = false;
+        for window in self.windows.values_mut() {
+            if window.sealed_input_candidate.is_some_and(|(candidate, _)| candidate == witness) {
+                window.sealed_input_candidate = None;
+                matched = true;
+            }
+        }
+        matched || !self.windows.values().any(|window| window.sealed_input_candidate.is_some())
+    }
+
+    /// 🛑️ Latches retirement before topology removal and refuses further surface admission.
+    pub fn begin_surface_close(&mut self, token: UiSurfaceToken) -> bool {
+        let Some(window) = self.windows.get_token_mut(token) else { return false };
+        if window.closing.is_none() {
+            window.closing = Some(UiSurfaceClosePhase::Router);
+        }
+        true
+    }
+
+    /// 🧵️ Drives the sole close owner through input, jobs, paint, documents, and registry release.
+    pub fn close_surface_one(&mut self, token: UiSurfaceToken) -> UiSurfaceCloseStep {
+        let Some(window) = self.windows.get_token_mut(token) else { return UiSurfaceCloseStep::Complete };
+        let Some(phase) = window.closing else { return UiSurfaceCloseStep::Pending };
+        if let Some(retirement) = window.scene_retirements.pop_front() {
+            return UiSurfaceCloseStep::RetiredScene(retirement);
+        }
+        if let Some(retirement) = window.accepted_scene_retirements.pop_front() {
+            return UiSurfaceCloseStep::RetiredScene(retirement);
+        }
+        if let Some(retirement) = window.candidate_scene_retirements.pop_front() {
+            return UiSurfaceCloseStep::RetiredScene(retirement);
+        }
+        let next = match phase {
+            UiSurfaceClosePhase::Router => {
+                if !window.router.close_step() {
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::PresentedRouter
+            }
+            UiSurfaceClosePhase::PresentedRouter => {
+                if !window.presented_router.close_step() {
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::LayoutRejected
+            }
+            UiSurfaceClosePhase::LayoutRejected => {
+                if let Some(rejected) = window.layout_rejected.as_mut() {
+                    let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    if rejected.terminal_is_empty() {
+                        window.layout_rejected = None;
+                    }
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::LayoutSession
+            }
+            UiSurfaceClosePhase::LayoutSession => {
+                if let Some(session) = window.layout_session.as_mut() {
+                    session.begin_close();
+                    let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    if session.terminal_is_empty() {
+                        window.layout_session = None;
+                    }
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::LayoutJob
+            }
+            UiSurfaceClosePhase::LayoutJob => {
+                if let Some(job) = window.layout_job.as_mut() {
+                    job.begin_close();
+                    if job.close_one() && job.terminal_is_empty() {
+                        window.layout_job = None;
+                    }
+                    return UiSurfaceCloseStep::Pending;
+                }
+                window.layout_closing = false;
+                UiSurfaceClosePhase::Previews
+            }
+            UiSurfaceClosePhase::Previews => {
+                if window.layout_preview.take().is_some() || window.glyph_preview.take().is_some() {
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::Paint
+            }
+            UiSurfaceClosePhase::Paint => {
+                if let Some(draw) = window.retiring_draw.as_mut() {
+                    if draw.retire_step() && draw.retirement_is_empty() {
+                        window.retiring_draw = None;
+                    }
+                    return UiSurfaceCloseStep::Pending;
+                }
+                if let Some(frame) = window.paint_frame.as_mut() {
+                    frame.node_paint.cancel_draw_route(&mut frame.candidate);
+                    if !frame.node_sync.close_step() || !frame.node_paint.close_step() || !frame.scene_paint.close_step() {
+                        return UiSurfaceCloseStep::Pending;
+                    }
+                    if frame.hit_candidates.pop().is_some() {
+                        return UiSurfaceCloseStep::Pending;
+                    }
+                    if frame.hit_candidates.capacity() > 0 {
+                        frame.hit_candidates = Vec::new();
+                        return UiSurfaceCloseStep::Pending;
+                    }
+                    if !frame.candidate.retire_step() || !frame.candidate.retirement_is_empty() {
+                        return UiSurfaceCloseStep::Pending;
+                    }
+                    window.paint_frame = None;
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::Draw
+            }
+            UiSurfaceClosePhase::Draw => {
+                if !window.draw.retire_step() || !window.draw.retirement_is_empty() {
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::Hits
+            }
+            UiSurfaceClosePhase::Hits => {
+                if window.hit_registry.pop().is_some() {
+                    return UiSurfaceCloseStep::Pending;
+                }
+                if window.hit_registry.capacity() > 0 {
+                    window.hit_registry = Vec::new();
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::Document
+            }
+            UiSurfaceClosePhase::Document => {
+                let Some(window_id) = self.windows.id(token).cloned() else { return UiSurfaceCloseStep::Complete };
+                if !self.close_document_step(window_id.as_ref()) {
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::PresentedDocument
+            }
+            UiSurfaceClosePhase::PresentedDocument => {
+                let Some(window_id) = self.windows.id(token).cloned() else { return UiSurfaceCloseStep::Complete };
+                let Some(window) = self.windows.get_token_mut(token) else { return UiSurfaceCloseStep::Complete };
+                let generation = window.presented_accessibility_generation;
+                if !window.presented_tree.close_document_binding_step(&mut |node_id, node| retire_surface_scene(window_id.as_ref(), generation, &mut window.scene_retirements, node_id, node)) {
+                    return UiSurfaceCloseStep::Pending;
+                }
+                if let Some(document) = window.retiring_presented_document.as_mut() {
+                    if !document.close_step() {
+                        return UiSurfaceCloseStep::Pending;
+                    }
+                    window.retiring_presented_document = None;
+                    return UiSurfaceCloseStep::Pending;
+                }
+                if let Some(document) = window.presented_tree.take_document() {
+                    window.retiring_presented_document = Some(document);
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::Storage
+            }
+            UiSurfaceClosePhase::Storage => {
+                let Some(window_id) = self.windows.id(token).cloned() else { return UiSurfaceCloseStep::Complete };
+                let Some(window) = self.windows.get_token_mut(token) else { return UiSurfaceCloseStep::Complete };
+                if !window.close_tree_storage_step(window_id.as_ref()) {
+                    return UiSurfaceCloseStep::Pending;
+                }
+                if window.scene_retirements.capacity() > 0 {
+                    window.scene_retirements = VecDeque::new();
+                    return UiSurfaceCloseStep::Pending;
+                }
+                if window.candidate_scene_retirements.capacity() > 0 || window.accepted_scene_retirements.capacity() > 0 {
+                    window.candidate_scene_retirements = VecDeque::new();
+                    window.accepted_scene_retirements = VecDeque::new();
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::PresentedStorage
+            }
+            UiSurfaceClosePhase::PresentedStorage => {
+                let Some(window_id) = self.windows.id(token).cloned() else { return UiSurfaceCloseStep::Complete };
+                let Some(window) = self.windows.get_token_mut(token) else { return UiSurfaceCloseStep::Complete };
+                if !window.close_presented_tree_storage_step(window_id.as_ref()) {
+                    return UiSurfaceCloseStep::Pending;
+                }
+                UiSurfaceClosePhase::Scheduler
+            }
+            UiSurfaceClosePhase::Scheduler => {
+                if self.layout_pressure.is_some_and(|entry| entry.token == token) {
+                    self.layout_pressure = None;
+                    return UiSurfaceCloseStep::Pending;
+                }
+                if self.layout_queues.iter_mut().any(|lane| lane.remove_token_one(token)) {
+                    return UiSurfaceCloseStep::Pending;
+                }
+                window.queued = false;
+                UiSurfaceClosePhase::Complete
+            }
+            UiSurfaceClosePhase::Complete => {
+                return if self.windows.remove_terminal(token) { UiSurfaceCloseStep::Complete } else { UiSurfaceCloseStep::Pending };
+            }
+        };
+        if let Some(window) = self.windows.get_token_mut(token) {
+            window.closing = Some(next);
+        }
+        UiSurfaceCloseStep::Pending
     }
 
     fn window_mut(&mut self, window_id: &str) -> Option<&mut UiWindow> {
@@ -924,6 +1425,9 @@ impl Ui {
         if window.tree.document().is_some_and(|document| document.generation() == generation) {
             return UiDocumentIngressStatus::Published;
         }
+        if window.candidate_baseline.as_deref().and_then(UiCandidateBaseline::generation) == Some(generation) {
+            return UiDocumentIngressStatus::Published;
+        }
         window
             .document_ingress
             .as_ref()
@@ -943,6 +1447,13 @@ impl Ui {
             return Err((UiDocumentIngressFault::StaleGeneration, header));
         }
         let Some(window) = self.window_mut(window_id) else { return Err((UiDocumentIngressFault::StaleGeneration, header)) };
+        if let Some(baseline) = window.candidate_baseline.as_mut() {
+            if !baseline.close_step() {
+                return Err((UiDocumentIngressFault::InterruptedClose, header));
+            }
+            window.candidate_baseline = None;
+            return Err((UiDocumentIngressFault::InterruptedClose, header));
+        }
         if let Some(retiring) = window.retiring_document.as_mut() {
             if !retiring.close_step() {
                 return Err((UiDocumentIngressFault::InterruptedClose, header));
@@ -987,6 +1498,7 @@ impl Ui {
     }
 
     pub fn finish_document(&mut self, window_id: &str, generation: u64, cx: &mut StepContext<'_>) -> Result<(), UiDocumentIngressFault> {
+        let next_document_generation = self.document_generation.checked_add(1);
         if cx.is_cancelled() {
             return Err(UiDocumentIngressFault::Cancelled);
         }
@@ -1028,8 +1540,8 @@ impl Ui {
         }
         let Some(next_revision) = window.revision.checked_add(1) else { return Err(UiDocumentIngressFault::StaleGeneration) };
         let Some(next_layout_generation) = window.layout_generation.checked_add(1) else { return Err(UiDocumentIngressFault::StaleGeneration) };
-        let next_accessibility_generation = if window.tree.document().is_none() {
-            Some(window.accessibility_generation.checked_add(1).ok_or(UiDocumentIngressFault::StaleGeneration)?)
+        let next_accessibility_generation = if window.accessibility_generation == 0 {
+            Some(next_document_generation.ok_or(UiDocumentIngressFault::StaleGeneration)?)
         } else {
             None
         };
@@ -1038,10 +1550,17 @@ impl Ui {
             window.accessibility_generation = generation;
         }
         window.retiring_document = window.tree.publish_document(ingress.document);
+        window.candidate_ready = false;
+        window.candidate_reconciled = false;
+        window.rearm_candidate_scene_retirements();
+        window.candidate_interaction_cursor = None;
         window.revision = next_revision;
         window.layout_generation = next_layout_generation;
         if let Some(root) = window.tree.root {
             window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+        }
+        if let Some(generation) = next_accessibility_generation {
+            self.document_generation = generation;
         }
         self.enqueue_layout(window_id);
         Ok(())
@@ -1054,11 +1573,15 @@ impl Ui {
     /// byte-identical to `finish_document`'s own tail.
     #[cfg(any(test, feature = "testkit"))]
     pub fn publish_document(&mut self, window_id: &str, document: UiDocumentTree) -> bool {
+        let next_document_generation = self.document_generation.checked_add(1);
         let Some(window) = self.window_mut(window_id) else { return false };
+        if window.candidate_baseline.is_some() {
+            return false;
+        }
         let Some(next_revision) = window.revision.checked_add(1) else { return false };
         let Some(next_layout_generation) = window.layout_generation.checked_add(1) else { return false };
-        let next_accessibility_generation = if window.tree.document().is_none() {
-            let Some(generation) = window.accessibility_generation.checked_add(1) else { return false };
+        let next_accessibility_generation = if window.accessibility_generation == 0 {
+            let Some(generation) = next_document_generation else { return false };
             Some(generation)
         } else {
             None
@@ -1067,10 +1590,17 @@ impl Ui {
             window.accessibility_generation = generation;
         }
         window.retiring_document = window.tree.publish_document(document);
+        window.candidate_ready = false;
+        window.candidate_reconciled = false;
+        window.rearm_candidate_scene_retirements();
+        window.candidate_interaction_cursor = None;
         window.revision = next_revision;
         window.layout_generation = next_layout_generation;
         if let Some(root) = window.tree.root {
             window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+        }
+        if let Some(generation) = next_accessibility_generation {
+            self.document_generation = generation;
         }
         self.enqueue_layout(window_id);
         true
@@ -1086,32 +1616,107 @@ impl Ui {
     /// of the arena, `Ui::apply_tree` being `cfg(test/testkit)`.
     pub fn step_document_reconcile(&mut self, window_id: &str, controller: &str, cx: &mut StepContext<'_>) -> UiDocumentReconcileStep {
         let Some(window) = self.window_mut(window_id) else { return UiDocumentReconcileStep::Pending };
+        if let Some(baseline) = window.candidate_baseline.as_mut() {
+            let step = baseline.step(window.presented_tree.document());
+            cx.consume_fuel(1);
+            return match step {
+                UiCandidateBaselineStep::Pending => UiDocumentReconcileStep::Pending,
+                UiCandidateBaselineStep::Complete(document) => {
+                    window.candidate_baseline = None;
+                    window.retiring_document = window.tree.publish_document(document);
+                    window.candidate_ready = false;
+                    window.candidate_reconciled = false;
+                    window.candidate_retirements_resolved = false;
+                    window.candidate_interaction_cursor = None;
+                    UiDocumentReconcileStep::Pending
+                }
+                UiCandidateBaselineStep::Fault(fault) => {
+                    window.candidate_baseline = None;
+                    UiDocumentReconcileStep::Fault(fault)
+                }
+            };
+        }
+        if window.candidate_reconciled && !window.candidate_retirements_resolved {
+            if let Some(retirement) = window.candidate_scene_retirements.pop_front() {
+                if !window.tree.component_scene_host_is_mounted(&retirement.host_id) {
+                    window.accepted_scene_retirements.push_back(retirement);
+                }
+                cx.consume_fuel(1);
+                return UiDocumentReconcileStep::Pending;
+            }
+            window.candidate_retirements_resolved = true;
+            window.begin_presented_interaction_rebase();
+            cx.consume_fuel(1);
+            if window.candidate_ready {
+                self.enqueue_layout(window_id);
+                return UiDocumentReconcileStep::Complete;
+            }
+            return UiDocumentReconcileStep::Pending;
+        }
+        if window.candidate_reconciled && window.candidate_interaction_cursor.is_some() {
+            let complete = window.step_presented_interaction_rebase();
+            cx.consume_fuel(1);
+            if complete {
+                self.enqueue_layout(window_id);
+                return UiDocumentReconcileStep::Complete;
+            }
+            return UiDocumentReconcileStep::Pending;
+        }
+        if window.candidate_ready {
+            return UiDocumentReconcileStep::Complete;
+        }
         let Some(generation) = window.tree.document().map(UiDocumentTree::generation) else { return UiDocumentReconcileStep::Pending };
         window.document_reconcile.rearm(generation);
         if window.document_reconcile.terminal_is_complete() {
             return UiDocumentReconcileStep::Complete;
         }
         let preserved_composite_owner = window.router.capture().and_then(|(target, _)| window.tree.surviving_composite_owner(target));
-        let UiWindow { tree, document_reconcile, .. } = window;
+        let window_generation = window.accessibility_generation;
+        let UiWindow { tree, presented_tree, document_reconcile, scene_retirements, candidate_scene_retirements, accepted_scene_retirements, component_mount_generation, .. } = window;
         let step = loop {
-            let step = tree.step_document_reconcile_preserving(document_reconcile, window_id, controller, preserved_composite_owner);
+            let step = tree.step_document_reconcile_preserving(document_reconcile, window_id, controller, preserved_composite_owner, window_generation, Some(presented_tree), component_mount_generation, &mut |retirement| {
+                let deferred = presented_tree.component_scene_host_is_mounted(&retirement.host_id);
+                if scene_retirements.len() + candidate_scene_retirements.len() + accepted_scene_retirements.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
+                    return false;
+                }
+                let target = if deferred { &mut *candidate_scene_retirements } else { &mut *scene_retirements };
+                target.push_back(retirement);
+                true
+            });
             cx.consume_fuel(1);
-            if !matches!(step, UiDocumentReconcileStep::Pending) || cx.is_cancelled() || cx.should_yield() {
+            if !scene_retirements.is_empty() || !matches!(step, UiDocumentReconcileStep::Pending) || cx.is_cancelled() || cx.should_yield() {
                 break step;
             }
         };
         if matches!(step, UiDocumentReconcileStep::Complete) {
-            self.enqueue_layout(window_id);
+            window.candidate_reconciled = true;
+            window.candidate_retirements_resolved = false;
+            return UiDocumentReconcileStep::Pending;
         }
         step
     }
 
+    pub fn take_retired_component_scene(&mut self, window_id: &str) -> Option<UiRetiredComponentScene> {
+        self.windows.get_mut(window_id)?.scene_retirements.pop_front()
+    }
+
     pub fn close_document_step(&mut self, window_id: &str) -> bool {
         let Some(window) = self.windows.get_mut(window_id) else { return true };
-        if !window.tree.close_document_binding_step() {
+        if let Some(baseline) = window.candidate_baseline.as_mut() {
+            if !baseline.close_step() {
+                return false;
+            }
+            window.candidate_baseline = None;
             return false;
         }
-        window.document_reconcile = UiDocumentReconcileCursor::default();
+        let window_generation = window.accessibility_generation;
+        let UiWindow { tree, scene_retirements, .. } = window;
+        if !tree.close_document_binding_step(&mut |node_id, node| retire_surface_scene(window_id, window_generation, scene_retirements, node_id, node)) {
+            return false;
+        }
+        if !window.document_reconcile.close_step() {
+            return false;
+        }
         if let Some(ingress) = window.document_ingress.as_mut() {
             if !ingress.document.close_step() {
                 return false;
@@ -1319,7 +1924,7 @@ impl Ui {
                     return true;
                 }
                 let token = self.windows.token_at(cursor.slot);
-                if let Some(window) = token.and_then(|token| self.windows.get_token(token)) {
+                if let Some(window) = token.and_then(|token| self.windows.get_token(token)).filter(|window| window.closing.is_none()) {
                     if window.layout_generation == u64::MAX || window.theme_revision == u64::MAX {
                         self.theme_fault = true;
                         self.theme_propagation = Some(cursor);
@@ -1340,7 +1945,7 @@ impl Ui {
                 let token = cursor.tokens[cursor.slot];
                 cursor.slot += 1;
                 if let Some(token) = token {
-                    let Some(window) = self.windows.get_token_mut(token) else {
+                    let Some(window) = self.windows.get_token_mut(token).filter(|window| window.closing.is_none()) else {
                         self.theme_propagation = Some(cursor);
                         return true;
                     };
@@ -1390,7 +1995,7 @@ impl Ui {
 
     fn enqueue_layout_token(&mut self, token: UiSurfaceToken, reason: SurfaceLayoutReason) {
         let Some(window) = self.windows.get_token_mut(token) else { return };
-        if window.queued {
+        if window.queued || window.closing.is_some() {
             return;
         }
         window.queued = true;
@@ -1407,6 +2012,9 @@ impl Ui {
             self.lane_cursor = (self.lane_cursor + 1) % LANE_WHEEL.len();
             let Some(entry) = self.layout_queues[lane.index()].pop() else { continue };
             let Some(window) = self.windows.get_token(entry.token) else { continue };
+            if window.closing.is_some() {
+                continue;
+            }
             if window.layout_generation != entry.epoch {
                 let current = SurfaceLaneEntry { epoch: window.layout_generation, ..entry };
                 if let Err(current) = self.layout_queues[window.lane.index()].try_push(current) {
@@ -1492,7 +2100,7 @@ impl Ui {
         let overlay_chrome = self.retained_overlay_chrome(window_id);
         let viewport_rect = crate::wgpu::geometry::Rect::new(0.0, 0.0, viewport_width, viewport_height);
         let theme = self.theme;
-        let Some(window) = self.windows.get_mut(window_id) else { return UiFrameStep::Missing };
+        let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
         let reversed = window.router.flow().block == ui_contract::FlowBlock::Up;
         if let Some(retiring) = window.retiring_draw.as_mut() {
@@ -1742,7 +2350,7 @@ impl Ui {
         let overlay_chrome = self.retained_overlay_chrome(window_id);
         let viewport_rect = viewport;
         let theme = self.theme;
-        let Some(window) = self.windows.get_mut(window_id) else { return UiFrameStep::Missing };
+        let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
         let reversed = window.router.flow().block == ui_contract::FlowBlock::Up;
         let layout_dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
@@ -1997,7 +2605,7 @@ impl Ui {
     pub fn frame<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, scene_host: Option<&mut H>) -> Option<&DrawList> {
         self.set_viewport(window_id, viewport_width, viewport_height);
         self.publish_overlay_origins(window_id);
-        let window = self.windows.get_mut(window_id)?;
+        let window = self.windows.get_mut(window_id).filter(|window| window.closing.is_none())?;
         let root = window.tree.root?;
         let layout_dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
         if layout_dirty {
@@ -2115,7 +2723,7 @@ impl Ui {
     /// retained node, at the rect that paint drew it at. A host pushes these into its own
     /// `InputState` every frame build; see [`RetainedHitRegistration`].
     pub fn window_hit_targets(&self, window_id: &str) -> &[RetainedHitRegistration] {
-        self.windows.get(window_id).map_or(&[], |window| window.hit_registry.as_slice())
+        self.windows.get(window_id).filter(|window| window.closing.is_none()).map_or(&[], |window| window.hit_registry.as_slice())
     }
 
     /// 📊️ What `window_id`'s own retained paint contributed to the LAST frame it completed — the
@@ -2129,25 +2737,63 @@ impl Ui {
         self.windows.get(window_id).map(|window| &window.draw)
     }
 
-    /// 🕹️ Routes `event` through `window_id`'s `events::EventRouter` (hit-test, capture, focus, hover
-    /// updates), returning the `UiCommand`s it produced and also queuing them for a later
-    /// `drain_commands` call — callers may use either.
+    /// 🕹️ Routes one event through the exact presented interaction revision. Synchronous commands
+    /// have one owner: this return value. `drain_commands` is reserved for asynchronous producers.
     #[allow(clippy::needless_pass_by_value, reason = "changing to &UiEvent is a breaking public API change across ~30 downstream plugins, out of T1 scope")]
     pub fn dispatch_event(&mut self, window_id: &str, event: UiEvent) -> Vec<UiCommand> {
         let metrics = TreeRowMetrics::from_theme(&self.theme);
         let driver_drag = self.driver_drag;
-        let Some(window) = self.windows.get_mut(window_id) else { return Vec::new() };
-        let Some(root) = window.tree.root else { return Vec::new() };
-        let policy_commands = window.router.set_tree_drag_policy(&mut window.tree, driver_drag, metrics);
-        let commands = window.router.dispatch(&mut window.tree, root, &event);
-        let layout_changed = window.tree.take_disclosure_changed();
+        let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
+        let presented = window.presented_ready;
+        #[cfg(not(test))]
+        if !presented {
+            return Vec::new();
+        }
+        let (commands, layout_changed) = {
+            let (tree, router) = if presented { (&mut window.presented_tree, &mut window.presented_router) } else { (&mut window.tree, &mut window.router) };
+            let Some(root) = tree.root else { return Vec::new() };
+            let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics);
+            commands.extend(router.dispatch(tree, root, &event));
+            (commands, tree.take_disclosure_changed())
+        };
         if layout_changed {
             let Some(generation) = window.layout_generation.checked_add(1) else { return commands };
             window.layout_generation = generation;
             window.intrinsic_content_height = f32::NAN;
         }
-        self.pending_commands.extend(policy_commands);
-        self.pending_commands.extend(commands.iter().cloned());
+        if presented {
+            window.advance_presented_interaction();
+        }
+        if layout_changed {
+            self.enqueue_layout(window_id);
+        }
+        commands
+    }
+
+    pub fn dispatch_pointer_event(&mut self, window_id: &str, pointer_id: u64, event: UiEvent) -> Vec<UiCommand> {
+        let metrics = TreeRowMetrics::from_theme(&self.theme);
+        let driver_drag = self.driver_drag;
+        let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
+        let presented = window.presented_ready;
+        #[cfg(not(test))]
+        if !presented {
+            return Vec::new();
+        }
+        let (commands, layout_changed) = {
+            let (tree, router) = if presented { (&mut window.presented_tree, &mut window.presented_router) } else { (&mut window.tree, &mut window.router) };
+            let Some(root) = tree.root else { return Vec::new() };
+            let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics);
+            commands.extend(router.dispatch_pointer(tree, root, pointer_id, &event));
+            (commands, tree.take_disclosure_changed())
+        };
+        if layout_changed {
+            let Some(generation) = window.layout_generation.checked_add(1) else { return commands };
+            window.layout_generation = generation;
+            window.intrinsic_content_height = f32::NAN;
+        }
+        if presented {
+            window.advance_presented_interaction();
+        }
         if layout_changed {
             self.enqueue_layout(window_id);
         }
@@ -2157,33 +2803,43 @@ impl Ui {
     pub fn dispatch_accessibility_event(&mut self, window_id: &str, window_generation: u64, node_id: u64, node_key: &str, event: AccessibilityUiEvent) -> Option<Vec<UiCommand>> {
         let metrics = TreeRowMetrics::from_theme(&self.theme);
         let driver_drag = self.driver_drag;
-        let window = self.windows.get_mut(window_id)?;
-        if window.accessibility_generation != window_generation || window_generation == 0 {
+        let window = self.windows.get_mut(window_id).filter(|window| window.closing.is_none())?;
+        let presented = window.presented_ready;
+        #[cfg(not(test))]
+        if !presented {
+            return None;
+        }
+        let generation = if presented { window.presented_accessibility_generation } else { window.accessibility_generation };
+        if generation != window_generation || window_generation == 0 {
             return None;
         }
         let document_id = UiNodeId(node_id);
-        let record = window.tree.document()?.record(document_id)?;
-        let virtual_select_value = (record.key.as_str() != node_key).then(|| crate::wgpu::accessibility::select_accessibility_option_value(record, node_key)).flatten();
-        if record.key.as_str() != node_key && virtual_select_value.is_none() {
-            return None;
-        }
-        let target = window.tree.document_node(document_id)?;
-        if virtual_select_value.is_some() && !window.tree.node(target).is_some_and(|node| node.state.open) {
-            return None;
-        }
-        let policy_commands = window.router.set_tree_drag_policy(&mut window.tree, driver_drag, metrics);
-        let commands = match virtual_select_value {
-            Some(value) => window.router.dispatch_accessibility_select_option(&mut window.tree, target, &value, &event),
-            None => window.router.dispatch_accessibility(&mut window.tree, target, &event),
+        let (commands, layout_changed) = {
+            let (tree, router) = if presented { (&mut window.presented_tree, &mut window.presented_router) } else { (&mut window.tree, &mut window.router) };
+            let record = tree.document()?.record(document_id)?;
+            let virtual_select_value = (record.key.as_str() != node_key).then(|| crate::wgpu::accessibility::select_accessibility_option_value(record, node_key)).flatten();
+            if record.key.as_str() != node_key && virtual_select_value.is_none() {
+                return None;
+            }
+            let target = tree.document_node(document_id)?;
+            if virtual_select_value.is_some() && !tree.node(target).is_some_and(|node| node.state.open) {
+                return None;
+            }
+            let mut commands = router.set_tree_drag_policy(tree, driver_drag, metrics);
+            commands.extend(match virtual_select_value {
+                Some(value) => router.dispatch_accessibility_select_option(tree, target, &value, &event),
+                None => router.dispatch_accessibility(tree, target, &event),
+            });
+            (commands, tree.take_disclosure_changed())
         };
-        let layout_changed = window.tree.take_disclosure_changed();
         if layout_changed {
             let generation = window.layout_generation.checked_add(1)?;
             window.layout_generation = generation;
             window.intrinsic_content_height = f32::NAN;
         }
-        self.pending_commands.extend(policy_commands);
-        self.pending_commands.extend(commands.iter().cloned());
+        if presented {
+            window.advance_presented_interaction();
+        }
         if layout_changed {
             self.enqueue_layout(window_id);
         }
@@ -2196,16 +2852,14 @@ impl Ui {
     /// (`🧱️elements/🗨️Popover/🟦️.tsx`, `🧱️elements/💬️Dialog/🟦️.tsx`). Placement, escape/outside-press
     /// dismissal and the `Dialog`/`CommandPalette` focus trap all come from `events`' own policy.
     pub fn open_overlay(&mut self, window_id: &str, root: crate::wgpu::arena::NodeId, kind: OverlayKind, anchor: OverlayAnchor) {
-        let Some(window) = self.windows.get_mut(window_id) else { return };
+        let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return };
         window.router.open_overlay(&mut window.tree, root, kind, anchor);
     }
 
     /// 🚪️ Closes one open overlay by its content root.
     pub fn close_overlay(&mut self, window_id: &str, root: crate::wgpu::arena::NodeId) -> Vec<UiCommand> {
-        let Some(window) = self.windows.get_mut(window_id) else { return Vec::new() };
-        let commands = window.router.close_overlay(&mut window.tree, root);
-        self.pending_commands.extend(commands.iter().cloned());
-        commands
+        let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) else { return Vec::new() };
+        window.router.close_overlay(&mut window.tree, root)
     }
 
     /// 🪟️ The open overlays whose surface chrome the RETAINED LADDER owns, in bottom-to-top order,
@@ -2252,7 +2906,7 @@ impl Ui {
             .filter(|placement| placement.kind != OverlayKind::SelectPopup)
             .map(|placement| (placement.root, placement.x, placement.y))
             .collect();
-        if let Some(window) = self.windows.get_mut(window_id) {
+        if let Some(window) = self.windows.get_mut(window_id).filter(|window| window.closing.is_none()) {
             window.tree.set_overlay_origins(origins);
         }
     }
@@ -2283,10 +2937,18 @@ impl Ui {
         let mut steps = Vec::new();
         let ids: Vec<String> = self.windows.ids().map(|id| id.as_ref().to_string()).collect();
         for window_id in ids {
-            let Some(window) = self.windows.get_mut(&window_id) else { continue };
+            let Some(window) = self.windows.get_mut(&window_id).filter(|window| window.closing.is_none()) else { continue };
             window.draw.set_clock_seconds(seconds);
-            let (step, commands) = window.router.advance_clock(&mut window.tree, seconds);
+            let presented = window.presented_ready;
+            let (step, commands) = if presented {
+                window.presented_router.advance_clock(&mut window.presented_tree, seconds)
+            } else {
+                window.router.advance_clock(&mut window.tree, seconds)
+            };
             self.pending_commands.extend(commands);
+            if presented && step != TooltipStep::Idle {
+                window.advance_presented_interaction();
+            }
             if step != TooltipStep::Idle {
                 steps.push((window_id, step));
             }
@@ -2300,9 +2962,9 @@ impl Ui {
     /// A node with no label of its own has no tooltip, matching `useControlTooltipText`'s own
     /// `if (!label) return undefined`.
     pub fn tooltip_label(&self, window_id: &str, node: crate::wgpu::arena::NodeId) -> Option<String> {
-        let window = self.windows.get(window_id)?;
-        let document = window.tree.document()?;
-        let id = window.tree.document_bindings().iter().find(|(_, arena)| *arena == node).map(|(id, _)| *id)?;
+        let tree = self.tree(window_id)?;
+        let document = tree.document()?;
+        let id = tree.document_bindings().iter().find(|(_, arena)| *arena == node).map(|(id, _)| *id)?;
         let record = document.record(id)?;
         if record.accessibility.hidden {
             return None;
@@ -2326,12 +2988,17 @@ impl Ui {
         std::mem::take(&mut self.pending_commands)
     }
 
+    /// 📬️ Queues commands produced by an asynchronous host completion for the next host drain.
+    pub fn enqueue_async_commands(&mut self, commands: Vec<UiCommand>) {
+        self.pending_commands.extend(commands);
+    }
+
     /// 🫳️ Every retained-ui drag in flight (`EventRouter::DragSession`), keyed by window id with pointer in that window's local coordinates.
     pub fn active_drag_sessions(&self) -> Vec<(String, f32, f32, DragPayload)> {
         let mut sessions = Vec::new();
         for window_id in self.window_ids() {
             let Some(window) = self.windows.get(window_id) else { continue };
-            if let Some(drag) = window.router.drag_session() {
+            if let Some(drag) = window.presented_ready.then_some(&window.presented_router).and_then(EventRouter::drag_session) {
                 sessions.push((window_id.to_string(), drag.pointer_x, drag.pointer_y, drag.payload.clone()));
             }
         }
@@ -2368,15 +3035,24 @@ impl Ui {
 
     /// 🌲️ Read-only access to `window_id`'s retained tree (root + `Node` arena) for a caller to walk.
     pub fn tree(&self, window_id: &str) -> Option<&UiTree> {
+        self.windows.get(window_id).map(|window| if window.presented_ready { &window.presented_tree } else { &window.tree })
+    }
+
+    /// 🎨️ Read-only candidate tree for the paint/hit-registration owner before presentation.
+    pub fn candidate_tree(&self, window_id: &str) -> Option<&UiTree> {
         self.windows.get(window_id).map(|window| &window.tree)
     }
 
     /// 🧬️ Returns the retained tree identity revision used to reject stale interactive intents.
     pub fn tree_revision(&self, window_id: &str) -> Option<u64> {
-        self.windows.get(window_id).map(|window| window.revision)
+        self.windows.get(window_id).map(|window| if window.presented_ready { window.presented_revision } else { window.revision })
     }
 
     pub fn surface_generation(&self, window_id: &str) -> Option<u64> {
+        self.windows.get(window_id).map(|window| if window.presented_ready { window.presented_accessibility_generation } else { window.accessibility_generation })
+    }
+
+    pub fn candidate_surface_generation(&self, window_id: &str) -> Option<u64> {
         self.windows.get(window_id).map(|window| window.accessibility_generation)
     }
 
@@ -2391,14 +3067,15 @@ impl Ui {
     /// climbs `parent` links until it finds one — the same rule React's `onContextMenu` gets for free
     /// from DOM event bubbling.
     pub fn scene_at(&self, window_id: &str, x: f32, y: f32) -> Option<UiSceneHit> {
-        let window = self.windows.get(window_id)?;
-        let root = window.tree.root?;
-        let mut cursor = Some(crate::wgpu::events::hit_test(&window.tree, root, x, y)?);
+        let window = self.windows.get(window_id).filter(|window| window.closing.is_none())?;
+        let tree = if window.presented_ready { &window.presented_tree } else { &window.tree };
+        let root = tree.root?;
+        let mut cursor = Some(crate::wgpu::events::hit_test(tree, root, x, y)?);
         while let Some(id) = cursor {
-            if let Some(slot) = scene_slot_for_node_absolute(&window.tree, id) {
+            if let Some(slot) = scene_slot_for_node_absolute(tree, id) {
                 return Some(slot);
             }
-            cursor = window.tree.node(id)?.parent;
+            cursor = tree.node(id)?.parent;
         }
         None
     }
@@ -2425,7 +3102,7 @@ impl Ui {
     /// fall back to chrome-level shortcuts. Forwards to `EventRouter::is_focused`, itself added this
     /// same pass — both purely additive reads, no change to `dispatch_event`'s own focus logic.
     pub fn window_has_focus(&self, window_id: &str) -> bool {
-        self.windows.get(window_id).is_some_and(|window| window.router.is_focused())
+        self.windows.get(window_id).is_some_and(|window| window.presented_ready && window.presented_router.is_focused())
     }
 
     /// 🖱️ The window whose retained content currently holds pointer capture, if any — a host routes
@@ -2436,8 +3113,15 @@ impl Ui {
     /// rect: the host resolved the point to some other target, stopped feeding the router moves, and
     /// the value froze mid-drag — while a browser keeps the gesture with the element that captured
     /// it until release (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub fn window_with_pointer_capture(&self) -> Option<&str> {
-        self.windows.ids().map(AsRef::as_ref).find(|window_id| self.windows.get(window_id).is_some_and(|window| window.router.capture().is_some()))
+    pub fn window_with_pointer_capture(&self, pointer_id: u64) -> Option<&str> {
+        self.windows.ids().map(AsRef::as_ref).find(|window_id| self.windows.get(window_id).is_some_and(|window| window.presented_ready && window.presented_router.capture_pointer_id() == Some(pointer_id)))
+    }
+
+    pub fn any_pointer_capture(&self) -> Option<(&str, u64)> {
+        self.windows.ids().map(AsRef::as_ref).find_map(|window_id| {
+            let window = self.windows.get(window_id)?;
+            window.presented_ready.then(|| window.presented_router.capture_pointer_id()).flatten().map(|pointer_id| (window_id, pointer_id))
+        })
     }
 }
 //#endregion 🔬️Introspection

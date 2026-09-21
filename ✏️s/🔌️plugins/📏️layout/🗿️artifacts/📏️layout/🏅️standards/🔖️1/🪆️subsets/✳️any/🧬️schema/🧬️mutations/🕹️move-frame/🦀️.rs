@@ -25,8 +25,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for MoveFrame {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_move_frame(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move frame \"{}\"", self.frame_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move frame \"{}\"", self.frame_id), &format!("Rahmen \"{}\" verschieben", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

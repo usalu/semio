@@ -1083,6 +1083,10 @@ enum OwnedOperation {
     CancelJob,
     Checkpoint,
     Restore,
+    PackSchemaHash,
+    Genesis,
+    PrintMirror,
+    ApplyOps,
 }
 
 impl OwnedOperation {
@@ -1095,6 +1099,10 @@ impl OwnedOperation {
             Self::CancelJob => OwnedSemioExport::CancelJob,
             Self::Checkpoint => OwnedSemioExport::Checkpoint,
             Self::Restore => OwnedSemioExport::Restore,
+            Self::PackSchemaHash => OwnedSemioExport::PackSchemaHash,
+            Self::Genesis => OwnedSemioExport::Genesis,
+            Self::PrintMirror => OwnedSemioExport::PrintMirror,
+            Self::ApplyOps => OwnedSemioExport::ApplyOps,
         }
     }
 }
@@ -1170,6 +1178,31 @@ struct OwnedCancelJobInput {
 #[derive(serde::Serialize, ToValue)]
 struct OwnedRestoreInput {
     state: Vec<u8>,
+}
+
+/// 🧬️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b): the input envelope of the four owned `codec`
+/// exports — the mirror of the guest's `owned_abi::CodecInput`.
+#[derive(serde::Serialize)]
+struct OwnedCodecInput<'a> {
+    artifact_schema: &'a str,
+    document_id: &'a str,
+    pack: &'a [u8],
+    spr: &'a [u8],
+    ops: &'a [u8],
+}
+
+/// 📦️ One document's authoritative binary pair as the owned `codec` exports return it.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, FromValue)]
+pub struct GuestDocumentPair {
+    pub pack: Vec<u8>,
+    pub spr: Vec<u8>,
+}
+
+/// 📥️ The `(dsl, ops)` text mirror the owned `codec.print-mirror` export returns.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, FromValue)]
+pub struct GuestDocumentMirror {
+    pub dsl: String,
+    pub ops: String,
 }
 
 struct OwnedInvocation {
@@ -1251,6 +1284,42 @@ impl OwnedRuntime {
 
     pub async fn describe(&self, compiled: &CompiledHandle, budget: Budget) -> Result<Vec<u8>, TurnFault> {
         self.describe_observed(compiled, budget, |_, _| {}).await
+    }
+
+    /// 🌱️ Runs one of the component's four pure `codec` functions on a throwaway instance. This is
+    /// the host half of ticket 26/09/18 slice TC3b: a headless server resolves a document kind's
+    /// schema fingerprint, its canonical empty document, its pair-validation mirror and its edit
+    /// apply from the component itself, so a package whose Rust codec the server does not link is
+    /// still fully creatable and editable. The instance is created and dropped per call — nothing
+    /// here observes or mutates live actor state.
+    fn codec_call<T: serde::de::DeserializeOwned>(&self, compiled: &CompiledHandle, operation: OwnedOperation, input: &OwnedCodecInput<'_>, budget: Budget) -> Result<T, TurnFault> {
+        let mut instance = self.instantiate_actor(compiled, RuntimeActorId(0)).map_err(TurnFault::Host)?;
+        let state = owned_state_mut(&mut instance)?;
+        let encoded = serde_json::to_vec(input).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        begin_owned_operation(state, operation, Some(encoded))?;
+        let invocation = resume_owned_operation(state, operation, budget.fuel, budget.deadline_ms)?;
+        decode_owned_result(&invocation.output)
+    }
+
+    /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
+    pub async fn codec_pack_schema_hash(&self, compiled: &CompiledHandle, artifact_schema: &str, budget: Budget) -> Result<[u8; 32], TurnFault> {
+        let bytes: Vec<u8> = self.codec_call(compiled, OwnedOperation::PackSchemaHash, &OwnedCodecInput { artifact_schema, document_id: "", pack: &[], spr: &[], ops: &[] }, budget)?;
+        <[u8; 32]>::try_from(bytes.as_slice()).map_err(|_| TurnFault::Trapped("guest pack schema hash is not 32 bytes".to_string()))
+    }
+
+    /// 🌱️ `codec.genesis` — the canonical empty document of `artifact_schema` at `document_id`.
+    pub async fn codec_genesis(&self, compiled: &CompiledHandle, artifact_schema: &str, document_id: &str, budget: Budget) -> Result<GuestDocumentPair, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::Genesis, &OwnedCodecInput { artifact_schema, document_id, pack: &[], spr: &[], ops: &[] }, budget)
+    }
+
+    /// 📥️ `codec.print-mirror` — the host's pair-validation fence for an unlinked package.
+    pub async fn codec_print_mirror(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], budget: Budget) -> Result<GuestDocumentMirror, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::PrintMirror, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: &[] }, budget)
+    }
+
+    /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for an unlinked package.
+    pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget) -> Result<GuestDocumentPair, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget)
     }
 
     /// 📈️ Executes owned `describe` with bounded fuel-progress observations for build tooling.

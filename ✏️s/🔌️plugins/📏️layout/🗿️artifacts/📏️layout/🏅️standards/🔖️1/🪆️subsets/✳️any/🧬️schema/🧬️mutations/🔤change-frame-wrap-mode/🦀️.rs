@@ -24,8 +24,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeFrameWrapMode {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_frame_wrap_mode(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change frame \"{}\" wrap mode", self.frame_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change frame \"{}\" wrap mode", self.frame_id), &format!("Rahmen \"{}\" Umbruchmodus ändern", self.frame_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.page_id.clone(), self.frame_id.clone()]

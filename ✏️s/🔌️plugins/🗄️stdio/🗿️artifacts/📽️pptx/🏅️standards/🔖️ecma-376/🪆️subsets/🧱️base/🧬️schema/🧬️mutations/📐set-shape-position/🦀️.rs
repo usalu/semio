@@ -22,8 +22,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetShapePosition {
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
         agg_inverse(&PptxMutation::SetShapePosition(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-shape-position".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-shape-position", "Formposition setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceSiteContext {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace site context \"{}\"", self.site_context.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace site context \"{}\"", self.site_context.header.name), &format!("Standortkontext \"{}\" ersetzen", self.site_context.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.site_context.header.id.0.clone()]

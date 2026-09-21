@@ -15,7 +15,7 @@
 //! not a miss.
 
 use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
-use crate::{cache_presentation_working_scene, default_figure_tile_source, FigureTileDraft, FigureTileFrame, PresentationDiff, PresentationSnapshot};
+use crate::{default_figure_tile_source, FigureTileDraft, FigureTileFrame, PresentationDiff, PresentationSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️resize-tile-crop/🧪️rejects-a-zero-width-crop/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️resize-tile-crop/🧪️rejects-a-zero-width-crop/📸️snapshot/➡️after/🔣️.json");
@@ -39,7 +39,8 @@ fn before() -> PresentationSnapshot {
         panic!("rejects-a-zero-width-crop's committed mutation must be a resize-tile-crop");
     };
     let tile = FigureTileDraft { id: payload.id, name: "Hero".into(), crop: FigureTileFrame { x: 0.25, y: 0.25, width: 0.5, height: 0.5 } };
-    cache_presentation_working_scene(&snapshot.presentation.child_id, &default_figure_tile_source(), &[tile]);
+    assert_eq!(snapshot.tiles, vec![tile], "the committed before-snapshot must persist the healthy tile the payload addresses");
+    assert_eq!(snapshot.source, default_figure_tile_source(), "the committed before-snapshot's persisted source is the plugin's own default figure");
     snapshot
 }
 

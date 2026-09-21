@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceSurvey {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace survey \"{}\"", self.survey.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace survey \"{}\"", self.survey.header.name), &format!("Erhebung \"{}\" ersetzen", self.survey.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.survey.header.id.0.clone()]

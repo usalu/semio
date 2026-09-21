@@ -55,8 +55,8 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for RemoveLineMutat
         vec![super::TxtMutation::InsertLine(super::InsertLineMutation { index: self.index, text: base.lines[index].clone() })]
     }
 
-    fn label(&self) -> String {
-        "Remove Line".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove Line", "Linie entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-line".to_string()]

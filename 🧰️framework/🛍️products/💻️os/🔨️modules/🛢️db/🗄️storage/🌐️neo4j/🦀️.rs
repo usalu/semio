@@ -43,7 +43,7 @@ use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::db_storage::{
     close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_prepare_platform_slices, db_io_transfer_list, db_io_write_observed_bytes_range, register_db_io_backend,
     register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoDriverReservation,
-    DbIoExecutionStep, DbIoExecutorMode, DbIoExternalBytes, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, IndexStorage, LeaseInfo,
+    DbIoAsyncDriverRuntime, DbIoExecutionStep, DbIoExecutorMode, DbIoExternalBytes, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, IndexStorage, LeaseInfo,
     LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
 };
 
@@ -944,6 +944,9 @@ impl Neo4jDbIoExecutor {
 impl DbIoTaskExecutor for Neo4jDbIoExecutor {
     fn mode(&self) -> DbIoExecutorMode {
         DbIoExecutorMode::AsyncNative
+    }
+    fn driver_runtime(&self) -> Option<&'static dyn DbIoAsyncDriverRuntime> {
+        Some(crate::db_storage_driver_runtime::shared())
     }
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self

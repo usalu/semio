@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeAMm2 {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change cross-section area [mm2] to {}", self.new_a_mm2)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change cross-section area [mm2] to {}", self.new_a_mm2), &format!("Querschnittsfläche [mm2] auf {} ändern", self.new_a_mm2))
     }
 }
 //#endregion 🔖️ChangeAMm2

@@ -347,3 +347,48 @@ fn retire_cold_closes_the_layer_a_create_layer_operation_owns() {
     protocol::Mutation::retire_cold(mutation);
 }
 //#endregion 🧪️ColdRetirementLaws
+
+//#region 🧪️WholeDocumentJsonRoutes
+/// 🌉️ Play-grid follow-up (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP): the cross-language
+/// oracle bridge takes a WHOLE committed before-document and answers with the WHOLE applied
+/// document, and every real raster document is populated — an asset pool plus an adjustment's
+/// `params`. Both halves used to fail closed on `RasterOwnedMap`: the projection refused a populated
+/// map outright, and the bridge's own decoded/applied/inverted documents reached the map's
+/// fail-closed `Drop` on the way out of the frame.
+#[test]
+fn mutation_json_bridge_applies_and_inverts_a_populated_before_document() {
+    let mut before = empty_raster_snapshot();
+    before.id = "bridge-populated".into();
+    before.layers.push(pixel_layer("sketch", "Sketch"));
+    before.layers.push(adjustment_layer_with_params("brighten"));
+    before.assets.insert("seed".into(), crate::mint_raster_asset_child("seed", &RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() })).expect("one bridge asset fits the owned map");
+    let before_json = dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&dsl::ToValue::to_value(&before)));
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(before);
+    assert!(before_json.contains("\"brightness\""), "the whole-document projection carries the adjustment params: {before_json}");
+    assert!(before_json.contains("\"seed\""), "the whole-document projection carries the asset pool: {before_json}");
+
+    const RENAME: &str = r#"{"mutation":"renameLayer","layerId":"sketch","newName":"Final Linework"}"#;
+    let applied = apply_raster_mutation_json(&before_json, RENAME).expect("the bridge applies over a populated before-document");
+    assert!(applied.contains("Final Linework"), "the applied answer carries the rename: {applied}");
+    assert!(applied.contains("\"brightness\"") && applied.contains("\"seed\""), "the applied answer keeps both populated maps: {applied}");
+    let inverted = undo_raster_mutation_json(&before_json, RENAME).expect("the bridge walks the inverse over a populated before-document");
+    assert!(inverted.contains("\"Sketch\""), "the metamorphic half restores the prior name: {inverted}");
+}
+
+/// 📤️ The same whole-document law on the `s.stdio.json` export serializer, which hands the snapshot
+/// to stdio's own JSON writer through this artifact's `ToValue` — a populated document is the only
+/// interesting one to export.
+#[test]
+fn json_export_serializes_a_populated_document() {
+    let mut document = empty_raster_snapshot();
+    document.id = "json-export-populated".into();
+    document.layers.push(adjustment_layer_with_params("brighten"));
+    document.assets.insert("seed".into(), crate::mint_raster_asset_child("seed", &RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() })).expect("one export asset fits the owned map");
+    let bytes = crate::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&document).expect("a populated raster document exports as json");
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    let text = String::from_utf8(bytes).expect("json export is utf-8");
+    assert!(text.contains("\"brightness\""), "the export carries the adjustment params: {text}");
+    assert!(text.contains("\"seed\""), "the export carries the asset pool: {text}");
+    assert!(text.contains("\"childId\""), "each exported asset projects its composed child handle: {text}");
+}
+//#endregion 🧪️WholeDocumentJsonRoutes

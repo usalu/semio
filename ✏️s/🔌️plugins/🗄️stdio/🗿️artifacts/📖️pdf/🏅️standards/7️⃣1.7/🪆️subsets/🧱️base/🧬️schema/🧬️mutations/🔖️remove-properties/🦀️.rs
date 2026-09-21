@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveProperties {
         base.properties.iter().find(|item| item.name == self.name).map(|item| PdfMutation::SetProperties(super::set_properties::SetProperties { properties: item.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove properties {}", self.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove properties {}", self.name), &format!("Eigenschaften {} entfernen", self.name))
     }
 
     fn target(&self) -> Vec<String> {

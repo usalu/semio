@@ -30,8 +30,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveContent {
         base.pages.get(self.index).filter(|page| self.at + self.count <= page.content.len()).map(|page| PdfMutation::InsertContent(super::insert_content::InsertContent { index: self.index, at: self.at, content: page.content[self.at..self.at + self.count].to_vec() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove {} operators at {} on page {}", self.count, self.at, self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove {} operators at {} on page {}", self.count, self.at, self.index), &format!("{} Operatoren an {} auf Seite {} entfernen", self.count, self.at, self.index))
     }
 
     fn target(&self) -> Vec<String> {

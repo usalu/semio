@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeDriftMm {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change interstorey drift [mm] to {}", self.new_drift_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change interstorey drift [mm] to {}", self.new_drift_mm), &format!("Geschossverschiebung [mm] auf {} ändern", self.new_drift_mm))
     }
 }
 //#endregion 🔖️ChangeDriftMm

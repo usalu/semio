@@ -22,8 +22,8 @@ impl MutationKind<i64, CounterMutation> for AddCounter {
     fn inverse(&self, _base: &i64) -> Vec<CounterMutation> {
         CounterDiff::from_wide(-i128::from(self.delta)).deltas.into_iter().rev().map(|delta| Self { delta }.into()).collect()
     }
-    fn label(&self) -> String {
-        format!("Add {}", self.delta)
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
     }
 }
 //#endregion ⚙️Behavior

@@ -19,8 +19,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RenameCatalo
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename catalogue to \"{}\"", self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename catalogue to \"{}\"", self.new_name), &format!("Katalog in \"{}\" umbenennen", self.new_name))
     }
 }
 //#endregion 🔖️Payload

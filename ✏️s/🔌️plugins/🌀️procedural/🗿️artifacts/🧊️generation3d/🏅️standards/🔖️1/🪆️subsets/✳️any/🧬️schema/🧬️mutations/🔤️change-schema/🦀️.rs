@@ -28,8 +28,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Chan
         crate::standards::v1::subsets::any::schema::mutations::change_schema::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change schema to \"{}\"", self.new_schema)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change schema to \"{}\"", self.new_schema), &format!("Schema auf \"{}\" ändern", self.new_schema))
     }
 }
 //#endregion 🔖️ChangeSchema

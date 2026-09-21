@@ -21,8 +21,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertBlock {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::InsertBlock(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-block".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-block", "Block einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

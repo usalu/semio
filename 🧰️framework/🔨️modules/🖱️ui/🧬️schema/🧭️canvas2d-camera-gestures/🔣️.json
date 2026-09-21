@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/canvas2d-camera-gestures.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "surface", "wheel", "wheelBursts", "mountLifetime", "sameKeySceneRemount", "sequentialWindowLifetime", "siblingWindowLifetime", "panCases"],
+  "properties": {
+    "version": { "const": 1 },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "controllerId", "windowId", "width", "height"],
+      "properties": {
+        "id": { "const": "canvas2d-camera-gestures" },
+        "controllerId": { "const": "canvas2d-camera-controller" },
+        "windowId": { "const": "canvas2d-camera-window" },
+        "width": { "const": 400 },
+        "height": { "const": 300 }
+      }
+    },
+    "wheel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initialCamera", "anchor", "zoomInDeltaY", "zoomOutDeltaY", "zoomInFactor", "zoomOutFactor", "zoomMinimum", "zoomMaximum", "settleDelayMs", "expectedAction"],
+      "properties": {
+        "initialCamera": { "$ref": "#/$defs/camera" },
+        "anchor": { "$ref": "#/$defs/point" },
+        "zoomInDeltaY": { "const": -120 },
+        "zoomOutDeltaY": { "const": 120 },
+        "zoomInFactor": { "const": 1.1 },
+        "zoomOutFactor": { "const": 0.9 },
+        "zoomMinimum": { "const": 0.05 },
+        "zoomMaximum": { "const": 32 },
+        "settleDelayMs": { "const": 120 },
+        "expectedAction": { "const": "setCamera" }
+      }
+    },
+    "wheelBursts": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        { "$ref": "#/$defs/sameDirectionBurst" },
+        { "$ref": "#/$defs/oppositeDirectionBurst" }
+      ],
+      "items": false
+    },
+    "mountLifetime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps", "retiredDeadlineActions", "removedCameraActions"],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "prefixItems": [
+            { "$ref": "#/$defs/mountCameraAInitial" },
+            { "$ref": "#/$defs/mountCameraARefresh" },
+            { "$ref": "#/$defs/mountCameraBReplacement" }
+          ],
+          "items": false
+        },
+        "retiredDeadlineActions": { "const": 0 },
+        "removedCameraActions": { "const": 0 }
+      }
+    },
+    "sameKeySceneRemount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "intermediateComponent", "initialAuthoredZoom", "refreshAuthoredZoom", "expectedRefreshZoom", "remountAuthoredZoom", "expectedRemountZoom", "retiredDeadlineActions", "remountedCameraActions"],
+      "properties": {
+        "key": { "const": "camera-a" },
+        "intermediateComponent": { "const": "container" },
+        "initialAuthoredZoom": { "const": 2 },
+        "refreshAuthoredZoom": { "const": 8 },
+        "expectedRefreshZoom": { "const": 2.42 },
+        "remountAuthoredZoom": { "const": 4 },
+        "expectedRemountZoom": { "const": 4.4 },
+        "retiredDeadlineActions": { "const": 0 },
+        "remountedCameraActions": { "const": 1 }
+      }
+    },
+    "sequentialWindowLifetime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mountCount", "maximumLiveWindows", "liveWindowsAfterClose", "retiredDeadlineActions", "activeGestureActions", "closedGestureActions"],
+      "properties": {
+        "mountCount": { "const": 257 },
+        "maximumLiveWindows": { "const": 1 },
+        "liveWindowsAfterClose": { "const": 0 },
+        "retiredDeadlineActions": { "const": 0 },
+        "activeGestureActions": { "const": ["canvasPointerDown"] },
+        "closedGestureActions": { "const": 0 }
+      }
+    },
+    "siblingWindowLifetime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cameras", "expectedZooms", "survivingZoom", "retiredActions"],
+      "properties": {
+        "cameras": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/camera" } },
+        "expectedZooms": { "const": [2.2, 4.4] },
+        "survivingZoom": { "const": 4.84 },
+        "retiredActions": { "const": 0 }
+      }
+    },
+    "panCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        { "$ref": "#/$defs/primaryUtilityPan" },
+        { "$ref": "#/$defs/middleButtonPan" },
+        { "$ref": "#/$defs/rightButtonGesture" }
+      ],
+      "items": false
+    }
+  },
+  "$defs": {
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "zoom": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "wheelBurstBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "deltas", "expectedFactors", "expectedActionCount"],
+      "properties": {
+        "id": { "type": "string" },
+        "deltas": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "enum": [-120, 120] }
+        },
+        "expectedFactors": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "enum": [1.1, 0.9] }
+        },
+        "expectedActionCount": { "const": 1 }
+      }
+    },
+    "sameDirectionBurst": {
+      "allOf": [
+        { "$ref": "#/$defs/wheelBurstBase" },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "const": "two-zoom-in-events" },
+            "deltas": { "const": [-120, -120] },
+            "expectedFactors": { "const": [1.1, 1.1] }
+          }
+        }
+      ]
+    },
+    "oppositeDirectionBurst": {
+      "allOf": [
+        { "$ref": "#/$defs/wheelBurstBase" },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "const": "zoom-in-then-out-events" },
+            "deltas": { "const": [-120, 120] },
+            "expectedFactors": { "const": [1.1, 0.9] }
+          }
+        }
+      ]
+    },
+    "mountCameraStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "authoredZoom", "expectedZoom"],
+      "properties": {
+        "key": { "enum": ["camera-a", "camera-b"] },
+        "authoredZoom": { "type": "number", "exclusiveMinimum": 0 },
+        "expectedZoom": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "mountCameraAInitial": {
+      "allOf": [
+        { "$ref": "#/$defs/mountCameraStep" },
+        { "type": "object", "properties": { "key": { "const": "camera-a" }, "authoredZoom": { "const": 2 }, "expectedZoom": { "const": 2.2 } } }
+      ]
+    },
+    "mountCameraARefresh": {
+      "allOf": [
+        { "$ref": "#/$defs/mountCameraStep" },
+        { "type": "object", "properties": { "key": { "const": "camera-a" }, "authoredZoom": { "const": 8 }, "expectedZoom": { "const": 2.42 } } }
+      ]
+    },
+    "mountCameraBReplacement": {
+      "allOf": [
+        { "$ref": "#/$defs/mountCameraStep" },
+        { "type": "object", "properties": { "key": { "const": "camera-b" }, "authoredZoom": { "const": 3 }, "expectedZoom": { "const": 3.3 } } }
+      ]
+    },
+    "panBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "activeUtility", "button", "start", "end", "expectedCamera", "expectedActions", "expectedCameraAction"],
+      "properties": {
+        "id": { "type": "string" },
+        "activeUtility": { "enum": ["selectDirect", "transformMove"] },
+        "button": { "type": "integer", "minimum": 0, "maximum": 2 },
+        "start": { "$ref": "#/$defs/point" },
+        "end": { "$ref": "#/$defs/point" },
+        "expectedCamera": { "$ref": "#/$defs/camera" },
+        "expectedActions": {
+          "type": "array",
+          "items": { "enum": ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp"] },
+          "uniqueItems": true
+        },
+        "expectedCameraAction": { "type": "boolean" }
+      }
+    },
+    "primaryUtilityPan": {
+      "allOf": [
+        { "$ref": "#/$defs/panBase" },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "const": "primary-active-pan" },
+            "activeUtility": { "const": "transformMove" },
+            "button": { "const": 0 },
+            "expectedActions": { "type": "array", "maxItems": 0 },
+            "expectedCameraAction": { "const": true }
+          }
+        }
+      ]
+    },
+    "middleButtonPan": {
+      "allOf": [
+        { "$ref": "#/$defs/panBase" },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "const": "middle-button-pan" },
+            "activeUtility": { "const": "selectDirect" },
+            "button": { "const": 1 },
+            "expectedActions": { "type": "array", "maxItems": 0 },
+            "expectedCameraAction": { "const": true }
+          }
+        }
+      ]
+    },
+    "rightButtonGesture": {
+      "allOf": [
+        { "$ref": "#/$defs/panBase" },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "const": "right-button-gesture" },
+            "activeUtility": { "const": "selectDirect" },
+            "button": { "const": 2 },
+            "expectedActions": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "prefixItems": [
+                { "const": "canvasPointerDown" },
+                { "const": "canvasPointerMove" },
+                { "const": "canvasPointerUp" }
+              ],
+              "items": false
+            },
+            "expectedCameraAction": { "const": false }
+          }
+        }
+      ]
+    }
+  }
+}

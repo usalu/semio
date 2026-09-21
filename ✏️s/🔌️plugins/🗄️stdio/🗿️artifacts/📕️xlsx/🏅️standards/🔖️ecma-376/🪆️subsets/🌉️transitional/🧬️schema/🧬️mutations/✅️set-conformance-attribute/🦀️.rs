@@ -20,8 +20,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxTransitionalMutation> for SetConfo
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxTransitionalMutation> {
         agg_inverse(&XlsxTransitionalMutation::SetConformanceAttribute(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-conformance-attribute".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-conformance-attribute", "Konformitätsattribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

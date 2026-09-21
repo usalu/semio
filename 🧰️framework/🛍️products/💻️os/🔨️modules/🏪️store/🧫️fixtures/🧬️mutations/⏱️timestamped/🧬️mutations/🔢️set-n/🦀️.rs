@@ -20,8 +20,8 @@ impl crate::os_spr::MutationKind<DemoSnapshot, TimestampedMutation> for SetN {
     fn inverse(&self, base: &DemoSnapshot) -> Vec<TimestampedMutation> {
         vec![TimestampedMutation::RestoreN(RestoreN { n: base.n, physical_ms: 0 })]
     }
-    fn label(&self) -> String {
-        "Set N".into()
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Set N", "N setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["n".into()]

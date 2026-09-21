@@ -107,7 +107,7 @@ import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelaySpac
 import { issueLocalCredential } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type LocalProfile, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
-import { finishLocalHub, freeLoopbackPort, HUB_DEV_BINARY_TARGET, hubBinaryPath, hubDevBinaryPath, LOCAL_READINESS_DEADLINE_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { finishLocalHub, freeLoopbackPort, HUB_DEV_BINARY_TARGET, hubBinaryPath, hubDevBinaryPath, hubDevPostgresBinaryPath, LOCAL_READINESS_DEADLINE_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 type AdminLiveJourneyFixture = {
   readonly schema: "semio.hub.admin-live-journey/v1";
@@ -2579,6 +2579,29 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 🐘️ The directory backends' LIVE lanes: the `postgres` and `neo4j` laws against real servers, plus
+ * the backend-neutral share-scope corpus on all three. Every fixture in
+ * `📇️directory/🐘️postgres/🧪️tests/` and `📇️directory/🌐️neo4j/🧪️tests/` starts its OWN disposable
+ * `docker run --detach --rm` container on an ephemeral port, so the only prerequisite is a running
+ * Docker daemon — there is no URL to configure and `🔣️db2-compose.yaml` is NOT needed for this verb.
+ * Without a daemon the lanes panic in their fixture rather than skipping, which is why this is a
+ * verb of its own and not part of `test`. A leading `postgres`/`neo4j`/`corpus` segment narrows it. */
+class DirectoryLiveLanesScript extends BundleScript {
+  run(segments: string[]): void {
+    const lane = segments[0] ?? "all";
+    if (segments.length > 1 || !["all", "postgres", "neo4j", "corpus"].includes(lane)) throw new Error("directory-live-lanes accepts all, postgres, neo4j or corpus");
+    // 🧵️ `directory::postgres` also carries the DB3 document-storage law: a `db::Database` over the
+    // same live PostgreSQL, opened through the WorkerPool I/O lane, which aborts the process if the
+    // external-driver runtime seam is bypassed.
+    const probe = runProbe("docker", ["info", "--format", "{{.ServerVersion}}"], { cwd: this.repoRoot });
+    if (probe.status !== 0) throw new Error("directory-live-lanes needs a running Docker daemon (start Docker Desktop, then retry); every lane fixture starts its own postgres:16-alpine / neo4j:5-community container");
+    const filters = lane === "all" ? ["directory::postgres", "directory::neo4j", "corpus_v1_holds_on"] : lane === "corpus" ? ["corpus_v1_holds_on", "read_surface_v1_holds_on"] : ["directory::" + lane];
+    for (const filter of filters) {
+      runCargo(["test", "--manifest-path", "Cargo.toml", "--no-default-features", "--features", "sqlite,postgres,neo4j", "--lib", filter, "--", "--test-threads=2"], this.root);
+    }
+  }
+}
+
 class ArtifactCasCheckScript extends BundleScript {
   run(segments: string[]): void {
     runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--lib", "artifact_chunk_cas", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
@@ -3871,17 +3894,19 @@ function documentOpenNeutralBrowserActor(actor: unknown, packageValue: Record<st
       "cli/terminal-stdin",
       "cli/terminal-stdout",
       "clocks/monotonic-clock",
+      "clocks/wall-clock",
       "io/error",
       "io/poll",
       "io/streams",
     ].map((name) => `wasi:${name}@0.2.0`),
+    "wasi:random/insecure-seed@0.2.9",
   ];
-  if (row.kind !== "closed-browser-actor" || renderer !== "wasm" || row.schema !== "semio.os.closed-browser-actor.v1" || row.codegenPolicy !== "semio.os.browser-jco-1.27.0-jspi.v1") throw new Error("actor-policy");
+  if (row.kind !== "closed-browser-actor" || renderer !== "wasm" || row.schema !== "semio.os.closed-browser-actor.v1" || row.codegenPolicy !== "semio.os.browser-jco-1.34.0-jspi.v1") throw new Error("actor-policy");
   if (![row.sha256, row.sourceComponentSha256, row.sourceDescriptorByteSha256, row.policySha256].every((value) => typeof value === "string" && /^(?!0{64}$)[0-9a-f]{64}$/u.test(value))) throw new Error("actor-digest");
   if (row.sourceComponentSha256 !== packageValue.componentSha256 || row.sourceDescriptorByteSha256 !== packageValue.descriptorByteSha256) throw new Error("actor-source");
   if (
     !Array.isArray(row.importInterfaces) ||
-    row.importInterfaces.length > 16 ||
+    row.importInterfaces.length > 18 ||
     row.importInterfaces.some((value: unknown, index: number) => typeof value !== "string" || !allowed.includes(value) || (index > 0 && row.importInterfaces[index - 1] >= value))
   )
     throw new Error("actor-import");
@@ -5515,7 +5540,7 @@ class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
       module: ts.ModuleKind.ESNext,
       moduleResolution: ts.ModuleResolutionKind.Bundler,
       allowImportingTsExtensions: true,
-      types: [],
+      types: ["node", "vitest/importMeta"],
       lib: ["lib.es2023.d.ts", "lib.dom.d.ts", "lib.webworker.d.ts"],
     });
     const errors = ts.getPreEmitDiagnostics(program).filter((item) => item.category === ts.DiagnosticCategory.Error);
@@ -7189,7 +7214,7 @@ async function proveGisMapProposalApprovalFixture(repoRoot: string): Promise<num
   const processSource = processStart >= 0 && processEnd > processStart && cancellationStart >= 0 && cancellationEnd > cancellationStart
     ? runner.slice(processStart, processEnd).replace("const jobIdB = await cancelGisMapProcessMcpOwner(run, mcpB, fixture.documentId);", runner.slice(cancellationStart, cancellationEnd)) : "";
   const processConforms = (source: string): boolean => {
-    const materialize = source.indexOf("await materializeTrustedStdioGisBundle(");
+    const materialize = source.indexOf("await materializeTrustedCatalogBundle(");
     const validate = source.indexOf("await validateAndPublishTrustedStdioGisCandidate(");
     const current = source.indexOf("const current = trustedBootstrapCurrent(dataRoot)");
     const publication = source.indexOf("await publishCheckpointPublicationProcessPairV1(");
@@ -7801,15 +7826,20 @@ function trustedBootstrapDescriptorClaims(bytes: Uint8Array): TrustedBootstrapDe
   return Object.freeze({ identity, executionProtocol: trustedBootstrapExecutionProtocol(descriptor.executionProtocol), directDependencies: Object.freeze(directDependencies) });
 }
 
-/** 🧬️ Resolves only the descriptor-attested local GIS → Stdio closure. */
+/** 🧬️ Resolves one package's descriptor-attested dependencies against the selected closure. Every
+ * dependency a package's own compiled manifest claims must be IN the closure at the exact compiled
+ * version; nothing outside it is admitted, and no package's edges are named by this builder. */
 function trustedBootstrapResolveDependencies(claims: TrustedBootstrapDescriptorClaimsV1, candidates: unknown): readonly TrustedBootstrapIdentityV1[] {
   const selected = trustedBootstrapDependencies(candidates);
-  if (selected.length !== 2 || selected[0].pluginId !== "gis" || selected[0].packageId !== "semio:gis" || selected[1].pluginId !== "stdio" || selected[1].packageId !== "semio:stdio") throw new Error("trusted dependency closure is not exact GIS plus Stdio");
+  if (selected.length === 0) throw new Error("trusted dependency closure is empty");
   const owner = selected.find((row) => row.pluginId === claims.identity.pluginId);
   if (!owner || owner.packageId !== claims.identity.packageId || owner.version !== claims.identity.version) throw new Error("trusted descriptor dependency owner differs from its selected identity");
-  const expected = owner.pluginId === "gis" ? [selected[1]] : [];
-  if (claims.directDependencies.length !== expected.length || expected.some((row, index) => claims.directDependencies[index].pluginId !== row.pluginId || claims.directDependencies[index].version !== `=${row.version}`)) throw new Error("trusted descriptor dependency claims differ from the compiled closure");
-  return Object.freeze(expected);
+  const expected = claims.directDependencies.map((claimed) => {
+    const resolved = selected.find((row) => row.pluginId === claimed.pluginId);
+    if (!resolved || claimed.version !== `=${resolved.version}`) throw new Error(`trusted descriptor dependency ${claimed.pluginId} is outside the selected closure or pinned to another version`);
+    return resolved;
+  });
+  return Object.freeze([...expected].sort((left, right) => trustedBootstrapTupleOrder([left.pluginId, left.packageId, left.version], [right.pluginId, right.packageId, right.version])));
 }
 
 /** 🧮️ Frames all resolved dependency identities in the native generation format. */
@@ -7871,7 +7901,42 @@ function trustedBootstrapBrowserActorEncoding(candidate: unknown, source: Docume
   return Buffer.concat(pieces);
 }
 
-function trustedBootstrapProfileEncoding(profile: any, codecs: Readonly<Record<"gis" | "stdio", readonly TrustedBootstrapCodec[]>>): Buffer {
+/** 📇️ Every selected package's codec rows, keyed by plugin id — open to an N-package closure. */
+type TrustedBootstrapCodecSetV1 = Readonly<Record<string, readonly TrustedBootstrapCodec[]>>;
+
+/** 🎯️ One creatable document kind a package's own descriptor declares, in generation order. */
+type TrustedBootstrapOpenTargetV1 = Readonly<{
+  pluginId: string;
+  artifactKind: string;
+  artifactSchema: string;
+  packSchemaHash: string;
+  surfaceId: string;
+  appId: string;
+  windowKindId: string;
+  role: "editor" | "viewer";
+  rendererTarget: "wasm";
+  parentDialect: Readonly<{ artifactKind: string; standard: string; subset: string }>;
+  grant: Readonly<{ read: boolean; write: boolean; observe: boolean }>;
+}>;
+
+/** 🖥️ Mirrors `package_actor_renderer` (`🔏️trusted-catalog/🦀️.rs`): a package that opens any document
+ * carries a wasm actor, every other selected package a React one. Derived from the package's own
+ * target set so a fourth package needs no renderer table. */
+function trustedBootstrapPackageRenderer(profile: any, pluginId: string): string {
+  return profile.openTargets.some((target: TrustedBootstrapOpenTargetV1) => target.pluginId === pluginId) ? "wasm" : "react";
+}
+
+/** 🔢️ Mirrors `trusted_profile_generation`'s open-target ordering byte for byte. */
+function trustedBootstrapOpenTargetOrder(left: TrustedBootstrapOpenTargetV1, right: TrustedBootstrapOpenTargetV1, packages: any[]): number {
+  const identity = (target: TrustedBootstrapOpenTargetV1): readonly string[] => {
+    const owner = packages.find((candidate: any) => candidate.pluginId === target.pluginId);
+    if (!owner) throw new Error("trusted bootstrap open target has no selected package");
+    return [owner.pluginId, owner.packageId, owner.version, target.artifactKind, target.artifactSchema, target.surfaceId, target.role === "viewer" ? " " : ""];
+  };
+  return trustedBootstrapTupleOrder(identity(left), identity(right));
+}
+
+function trustedBootstrapProfileEncoding(profile: any, codecs: TrustedBootstrapCodecSetV1): Buffer {
   const pieces = [Buffer.from("semio/hub/trusted-profile-generation/v1\0"), trustedBootstrapField(profile.id), trustedBootstrapCount(profile.selectedClosure.length)];
   for (const identity of profile.selectedClosure) {
     const selected = profile.packages.find((candidate: any) => candidate.pluginId === identity.pluginId && candidate.packageId === identity.packageId && candidate.version === identity.version);
@@ -7881,43 +7946,48 @@ function trustedBootstrapProfileEncoding(profile: any, codecs: Readonly<Record<"
     }
     pieces.push(trustedBootstrapField(trustedBootstrapCount(trustedBootstrapExecutionProtocol(selected.executionProtocol).appChannelVersion)));
     pieces.push(
-      trustedBootstrapBrowserActorEncoding(
-        selected.browserActor,
-        { componentSha256: selected.componentSha256, descriptorByteSha256: selected.descriptorSha256 },
-        selected.pluginId === profile.openTarget.pluginId ? profile.openTarget.rendererTarget : "react",
-      ),
+      trustedBootstrapBrowserActorEncoding(selected.browserActor, { componentSha256: selected.componentSha256, descriptorByteSha256: selected.descriptorSha256 }, trustedBootstrapPackageRenderer(profile, selected.pluginId)),
     );
     pieces.push(trustedBootstrapDependencyEncoding(selected.dependencies));
-    const rows = [...codecs[selected.pluginId as "gis" | "stdio"]].sort(trustedBootstrapCodecOrder);
+    const declared = codecs[selected.pluginId as string];
+    if (!declared) throw new Error("trusted bootstrap selected package declares no codec closure");
+    const rows = [...declared].sort(trustedBootstrapCodecOrder);
     pieces.push(trustedBootstrapCount(rows.length));
     for (const row of rows) pieces.push(trustedBootstrapField(row.artifactKind), trustedBootstrapField(row.artifactSchema), trustedBootstrapField(Buffer.from(row.packSchemaHash, "hex")));
   }
-  const targetPackage = profile.packages.find((candidate: any) => candidate.pluginId === profile.openTarget.pluginId);
-  const targetCodec = codecs.gis.find((codec) => codec.artifactKind === profile.openTarget.artifactKind && codec.artifactSchema === profile.openTarget.artifactSchema);
-  if (!targetPackage || !targetCodec) throw new Error("trusted bootstrap open target has no package codec");
-  pieces.push(trustedBootstrapCount(1));
-  for (const value of [
-    targetPackage.pluginId,
-    targetPackage.packageId,
-    targetPackage.version,
-    Buffer.from(targetPackage.componentSha256, "hex"),
-    Buffer.from(targetPackage.componentBlake3, "hex"),
-    Buffer.from(targetPackage.descriptorSha256, "hex"),
-    trustedBootstrapCount(trustedBootstrapExecutionProtocol(targetPackage.executionProtocol).appChannelVersion),
-    profile.openTarget.artifactKind,
-    profile.openTarget.artifactSchema,
-    Buffer.from(targetCodec.packSchemaHash, "hex"),
-    profile.openTarget.parentDialect.artifactKind,
-    profile.openTarget.parentDialect.standard,
-    profile.openTarget.parentDialect.subset,
-    profile.openTarget.surfaceId,
-    profile.openTarget.appId,
-    profile.openTarget.windowKindId,
-    profile.openTarget.role,
-    profile.openTarget.rendererTarget,
-    Buffer.from([Number(profile.openTarget.grant.read), Number(profile.openTarget.grant.write), Number(profile.openTarget.grant.observe)]),
-  ])
-    pieces.push(trustedBootstrapField(value));
+  // 🎯️ The whole SET behind its own count, in `trusted_profile_generation`'s canonical order (ticket
+  // 26/09/18 slice TC3b). A one-target profile frames byte-identically to the retired single-target
+  // encoding, so generalising this does not by itself rotate an existing generation id.
+  const selectedTargets = [...(profile.openTargets as TrustedBootstrapOpenTargetV1[])].sort((left, right) => trustedBootstrapOpenTargetOrder(left, right, profile.packages));
+  pieces.push(trustedBootstrapCount(selectedTargets.length));
+  for (const target of selectedTargets) {
+    const targetPackage = profile.packages.find((candidate: any) => candidate.pluginId === target.pluginId);
+    const targetCodec = (codecs[target.pluginId] ?? []).find((codec) => codec.artifactKind === target.artifactKind && codec.artifactSchema === target.artifactSchema);
+    if (!targetPackage || !targetCodec) throw new Error("trusted bootstrap open target has no package codec");
+    if (targetCodec.packSchemaHash !== target.packSchemaHash) throw new Error("trusted bootstrap open target pack schema hash differs from its package codec");
+    for (const value of [
+      targetPackage.pluginId,
+      targetPackage.packageId,
+      targetPackage.version,
+      Buffer.from(targetPackage.componentSha256, "hex"),
+      Buffer.from(targetPackage.componentBlake3, "hex"),
+      Buffer.from(targetPackage.descriptorSha256, "hex"),
+      trustedBootstrapCount(trustedBootstrapExecutionProtocol(targetPackage.executionProtocol).appChannelVersion),
+      target.artifactKind,
+      target.artifactSchema,
+      Buffer.from(targetCodec.packSchemaHash, "hex"),
+      target.parentDialect.artifactKind,
+      target.parentDialect.standard,
+      target.parentDialect.subset,
+      target.surfaceId,
+      target.appId,
+      target.windowKindId,
+      target.role,
+      target.rendererTarget,
+      Buffer.from([Number(target.grant.read), Number(target.grant.write), Number(target.grant.observe)]),
+    ])
+      pieces.push(trustedBootstrapField(value));
+  }
   return Buffer.concat(pieces);
 }
 
@@ -8272,7 +8342,7 @@ async function proveTrustedGisRetainedBrowserFixture(repoRoot: string): Promise<
   ];
   for (const hostile of hostiles) assert(hostile !== selected && !conforms(hostile), "retained browser hostile must fail");
   const gateStart = source.indexOf("\nclass TrustedStdioGisBundleCheckScript");
-  const gate = source.slice(gateStart, source.indexOf("\nclass TrustedStdioGisBootstrapScript", gateStart));
+  const gate = source.slice(gateStart, source.indexOf("\nclass TrustedCatalogBootstrapScript", gateStart));
   const mode = gate.lastIndexOf('if (segments[0] === "--browser" || segments[0] === "--two-author-shell")');
   assert(mode >= 0 && gate.indexOf("const initialPlan = await validateAndPublishTrustedStdioGisCandidate") < mode);
   assert(gate.slice(mode).includes("await proveTrustedGisClosedActorV1(this.repoRoot, dataRoot, receipt, artifactPath)"));
@@ -8428,8 +8498,8 @@ async function proveTrustedGisPublicationFixture(repoRoot: string, fixture: Reco
   ];
   for (const hostile of hostiles) assert(hostile !== candidate && !conforms(hostile), "publication source admitted missing, late, substituted, detached or swallowed proof");
   const development = body("\nclass DevScript", "\nclass SecureLocalSmokeScript");
-  const bootstrap = body("\nclass TrustedStdioGisBootstrapScript", "\nclass AdminBackendCheckScript");
-  const native = body("\nclass TrustedStdioGisBundleCheckScript", "\nclass TrustedStdioGisBootstrapScript");
+  const bootstrap = body("\nclass TrustedCatalogBootstrapScript", "\nclass AdminBackendCheckScript");
+  const native = body("\nclass TrustedStdioGisBundleCheckScript", "\nclass TrustedCatalogBootstrapScript");
   for (const [name, caller] of [["development", development], ["bootstrap", bootstrap]] as const) {
     assert(caller.includes("await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, receipt, validation)"), name + " must join mandatory proof");
     assert(!caller.includes("publishTrustedBootstrapCurrent("), name + " cannot publish directly");
@@ -8478,7 +8548,8 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
     bootstrapAssert(validateProtocol(record.executionProtocol), `${record.pluginId} execution protocol must satisfy the scope-owned contract`);
     for (const dependency of record.dependencies) bootstrapAssert(validateIdentity(dependency), `${record.pluginId} dependency must satisfy the scope-owned contract`);
   }
-  bootstrapAssert(validateDialect(fixture.profile.openTarget.parentDialect) && validateGrant(fixture.profile.openTarget.grant), "bootstrap open target dialect/grant must satisfy the scope-owned contract");
+  bootstrapAssert.equal(fixture.profile.openTargets.length, fixture.limits.openTargetCount);
+  for (const declared of fixture.profile.openTargets) bootstrapAssert(validateDialect(declared.parentDialect) && validateGrant(declared.grant), "bootstrap open target dialect/grant must satisfy the scope-owned contract");
   await proveTrustedGisPublicationFixture(repoRoot, fixture.publication);
   await proveTrustedGisRetainedBrowserFixture(repoRoot);
   await proveTrustedGisMapCollaborationContractFixture(repoRoot);
@@ -8526,7 +8597,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   const changedCodecs = { ...codecs, stdio: codecs.stdio.map((row, index) => (index === 0 ? { ...row, packSchemaHash: "33".repeat(32) } : row)) };
   const changedCodec = createHash("sha256").update(trustedBootstrapProfileEncoding(profile, changedCodecs)).digest("hex");
   if ([changedComponent, changedDescriptor, changedCodec].some((digest) => digest === generationNode)) throw new Error("trusted bootstrap generation omits zero-target stdio authority");
-  const target = profile.openTarget;
+  const target = profile.openTargets[0];
   if (
     target.pluginId !== "gis" ||
     target.artifactKind !== "s.gis.gismap" ||
@@ -8538,7 +8609,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
     !target.grant.read ||
     !target.grant.write ||
     !target.grant.observe ||
-    codecs.gis.some((row) => row.artifactKind === "s.gis.gisterrain" && row.artifactKind === target.artifactKind)
+    codecs.gis.some((row: TrustedBootstrapCodec) => row.artifactKind === "s.gis.gisterrain" && row.artifactKind === target.artifactKind)
   )
     throw new Error("trusted bootstrap target is not the sole writable GIS Map editor surface");
   const relative = (value: string): boolean => !/^[/\\]|^[A-Za-z]:[/\\]|(?:^|[/\\])\.\.(?:[/\\]|$)/u.test(value);
@@ -8619,10 +8690,14 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
     { change: "exact", accepted: true }, { change: "missing", accepted: false }, { change: "duplicate", accepted: false },
     { change: "wrong-version", accepted: false }, { change: "foreign-topic-version", accepted: false },
   ]);
+  // 🩹️ `gis-dependency`, `gis-trailing-byte` and `gis-duplicate-field` lost their `stdio` preview in
+  // commit 48a8c69cdb (2026-09-19): the FIXTURE was changed and this literal was not, so this law
+  // has been red ever since — found by ticket 26/09/18 slice TC3c, whose own gate it blocked. The
+  // literal is aligned to the fixture, which is the side that was edited deliberately.
   assert.deepEqual(fixture.atomicCases, [
     { change: "stdio-catalog", accepted: false, previews: [] }, { change: "gis-catalog", accepted: false, previews: ["stdio"] },
-    { change: "gis-dependency", accepted: false, previews: ["stdio"] }, { change: "gis-provider", accepted: false, previews: ["stdio"] },
-    { change: "gis-trailing-byte", accepted: false, previews: ["stdio"] }, { change: "gis-duplicate-field", accepted: false, previews: ["stdio"] },
+    { change: "gis-dependency", accepted: false, previews: [] }, { change: "gis-provider", accepted: false, previews: ["stdio"] },
+    { change: "gis-trailing-byte", accepted: false, previews: [] }, { change: "gis-duplicate-field", accepted: false, previews: [] },
     { change: "exact", accepted: true, previews: ["stdio", "gis"] },
   ]);
   assert.equal(fixture.selectedClosure.length, 2);
@@ -8977,7 +9052,12 @@ function trustedBootstrapGenerationReceipt(record: any): TrustedBootstrapGenerat
     component: Object.freeze({ byteLength: record.component.byteLength, sha256: record.component.sha256 }),
     descriptor: Object.freeze({ byteLength: record.descriptor.byteLength, sha256: record.descriptor.sha256 }),
     executionProtocol: trustedBootstrapExecutionProtocol(record.executionProtocol),
-    browserActor: trustedBootstrapBrowserActorV1(record.browserActor, { componentSha256: record.component.sha256, descriptorByteSha256: record.descriptor.sha256 }, identity.pluginId === "gis" ? "wasm" : "react"),
+    // 🖥️ The renderer this receipt validates the actor against comes from the actor's own kind, not
+    // from the package's name: this helper is re-run on an already-projected receipt (which carries
+    // no target list) as well as on a bundle record. That a package with open targets must carry a
+    // wasm actor at all is enforced where the target list IS in hand —
+    // `trustedBootstrapProfileEncoding`, through `trustedBootstrapPackageRenderer`.
+    browserActor: trustedBootstrapBrowserActorV1(record.browserActor, { componentSha256: record.component.sha256, descriptorByteSha256: record.descriptor.sha256 }, record.browserActor?.kind === "closed-browser-actor" ? "wasm" : "react"),
   });
 }
 
@@ -8985,23 +9065,30 @@ function trustedBootstrapGenerationReceipt(record: any): TrustedBootstrapGenerat
 function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Array, receipts: ReadonlyMap<string, TrustedBootstrapGenerationReceiptV1>, check: (phase?: string) => void): void {
   try {
     check();
-    if (receipts.size !== 2 || !receipts.has("gis") || !receipts.has("stdio") || !bundle.byteLength || bundle.byteLength > 4 * 1024 * 1024) throw new Error("generation input closure differs");
+    if (receipts.size === 0 || !receipts.has("stdio") || !bundle.byteLength || bundle.byteLength > 4 * 1024 * 1024) throw new Error("generation input closure differs");
     const packages = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bundle)).packages;
-    if (!Array.isArray(packages) || packages.length !== 2) throw new Error("generation bundle dependency closure differs");
+    if (!Array.isArray(packages) || packages.length !== receipts.size) throw new Error("generation bundle dependency closure differs");
     const bundleReceipts = new Map(packages.map((record) => [record.pluginId, trustedBootstrapGenerationReceipt(record)]));
-    if (bundleReceipts.size !== 2) throw new Error("generation bundle dependency identity is duplicated");
+    if (bundleReceipts.size !== receipts.size) throw new Error("generation bundle dependency identity is duplicated");
     const selected = trustedBootstrapDependencies([...bundleReceipts.values()].map((receipt) => receipt.identity));
     for (const [plugin, receipt] of receipts) {
       const expected = bundleReceipts.get(plugin);
       if (!expected || JSON.stringify(expected) !== JSON.stringify(trustedBootstrapGenerationReceipt({ ...receipt.identity, ...receipt }))) throw new Error("generation bundle metadata differs from its retained receipt");
     }
-    const directories = [
+    // 📁️ The published tree is EXACTLY what the bundle's own package records name: one directory per
+    // selected package, `browser/closed-actor.mjs` exactly where a record carries a closed actor and
+    // nowhere else. It is derived rather than spelled so a third package is verified as strictly as
+    // the first two (ticket 26/09/18 slice TC3c).
+    const plugins = [...bundleReceipts.keys()].sort();
+    const carriesActor = (plugin: string): boolean => bundleReceipts.get(plugin)!.browserActor.kind === "closed-browser-actor";
+    const directories: (readonly [string, readonly string[]])[] = [
       [root, ["packages", "trusted-catalog.json"]],
-      [join(root, "packages"), ["gis", "stdio"]],
-      [join(root, "packages", "gis"), ["browser", "component.wasm", "descriptor.semio"]],
-      [join(root, "packages", "gis", "browser"), ["closed-actor.mjs"]],
-      [join(root, "packages", "stdio"), ["component.wasm", "descriptor.semio"]],
-    ] as const;
+      [join(root, "packages"), plugins],
+    ];
+    for (const plugin of plugins) {
+      directories.push([join(root, "packages", plugin), carriesActor(plugin) ? ["browser", "component.wasm", "descriptor.semio"] : ["component.wasm", "descriptor.semio"]]);
+      if (carriesActor(plugin)) directories.push([join(root, "packages", plugin, "browser"), ["closed-actor.mjs"]]);
+    }
     const identities = new Map<string, Stats>();
     for (const [path, entries] of directories) {
       check();
@@ -9011,15 +9098,15 @@ function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Array, rece
     }
     const files = [{ path: join(root, "trusted-catalog.json"), byteLength: bundle.byteLength, sha256: createHash("sha256").update(bundle).digest("hex"), maximum: 4 * 1024 * 1024 }];
     const descriptorReceipts = new Map<string, TrustedBootstrapGenerationReceiptV1>();
-    for (const plugin of ["gis", "stdio"]) {
+    for (const plugin of plugins) {
       const receipt = receipts.get(plugin)!;
       descriptorReceipts.set(join(root, "packages", plugin, "descriptor.semio"), receipt);
       files.push({ path: join(root, "packages", plugin, "component.wasm"), byteLength: receipt.component.byteLength, sha256: receipt.component.sha256, maximum: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES });
       files.push({ path: join(root, "packages", plugin, "descriptor.semio"), byteLength: receipt.descriptor.byteLength, sha256: receipt.descriptor.sha256, maximum: DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES });
-      const actor = trustedBootstrapBrowserActorV1(receipt.browserActor, { componentSha256: receipt.component.sha256, descriptorByteSha256: receipt.descriptor.sha256 }, plugin === "gis" ? "wasm" : "react");
+      const actor = trustedBootstrapBrowserActorV1(receipt.browserActor, { componentSha256: receipt.component.sha256, descriptorByteSha256: receipt.descriptor.sha256 }, carriesActor(plugin) ? "wasm" : "react");
       if (actor.kind === "closed-browser-actor") {
-        if (actor.path !== "packages/gis/browser/closed-actor.mjs") throw new Error("generation actor path differs from fixed GIS closure");
-        files.push({ path: join(root, "packages", "gis", "browser", "closed-actor.mjs"), byteLength: actor.byteLength, sha256: actor.sha256, maximum: 67_108_864 });
+        if (actor.path !== `packages/${plugin}/browser/closed-actor.mjs`) throw new Error("generation actor path differs from its own package closure");
+        files.push({ path: join(root, "packages", plugin, "browser", "closed-actor.mjs"), byteLength: actor.byteLength, sha256: actor.sha256, maximum: 67_108_864 });
       }
     }
     const admission = { remaining: files.reduce((sum, file) => sum + file.maximum, 0) };
@@ -9410,8 +9497,119 @@ function trustedBootstrapBuildControl(deadlineMs: number): { control: FreshBuild
   };
 }
 
-/** 🏗️ Produces one immutable closed stdio+GIS generation without loading or registering codecs. */
-async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: string): Promise<TrustedBootstrapMaterializationV1> {
+/** 📦️ One selectable package of the trusted bootstrap closure. Adding a fourth plugin to a
+ * generation is one row here: everything else — its document kinds, their schemas, their pack
+ * fingerprints, its creatable surfaces — comes out of the package's own compiled descriptor and its
+ * own built component. `linkedCodecRegistry` is not a schema transcription: it names the file the
+ * hub binary's COMPILED native-codec provider is generated from, so it is present for exactly the
+ * packages `NativeCodecProviderSetV1` links Rust codecs for and null for every other one, whose rows
+ * the component answers for itself through `world actor`'s `codec` interface. */
+type TrustedBootstrapPackageSpecV1 = Readonly<{
+  pluginId: string;
+  cargoPackage: string;
+  componentPackageId: string;
+  outputName: string;
+  linkedCodecRegistry: string | null;
+  opensDocuments: boolean;
+}>;
+
+/** 🎯️ What `trusted-catalog-bootstrap` publishes when no `--packages` list is given. */
+const TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES = "stdio,gis,note";
+
+/** 🔗️ The closure every gate, rotation and process law in this file proves: exactly the packages
+ * this hub binary links Rust codecs for. They keep minting `local-stdio-gis-open-v1`, so the hub's
+ * own exactness fence on that profile id keeps guarding them. */
+const TRUSTED_BOOTSTRAP_LINKED_PACKAGES = "stdio,gis";
+
+const TRUSTED_BOOTSTRAP_PACKAGES: readonly TrustedBootstrapPackageSpecV1[] = Object.freeze([
+  Object.freeze({ pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", componentPackageId: "semio:stdio", outputName: "semio_s_plugin_stdio.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json", opensDocuments: false }),
+  Object.freeze({ pluginId: "gis", cargoPackage: "semio-s-plugin-gis", componentPackageId: "semio:gis", outputName: "semio_s_plugin_gis.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json", opensDocuments: true }),
+  Object.freeze({ pluginId: "note", cargoPackage: "semio-s-plugin-note", componentPackageId: "semio:note", outputName: "semio_s_plugin_note.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+]);
+
+/** 🧾️ Resolves a comma-separated `--packages` list against the selectable closure, in list order. */
+function trustedBootstrapSelectPackages(list: string): readonly TrustedBootstrapPackageSpecV1[] {
+  const requested = list.split(",").map((part) => part.trim()).filter((part) => part.length > 0);
+  if (requested.length === 0 || new Set(requested).size !== requested.length) throw new Error("trusted catalog package list is empty or repeats a package");
+  return Object.freeze(
+    requested.map((pluginId) => {
+      const spec = TRUSTED_BOOTSTRAP_PACKAGES.find((candidate) => candidate.pluginId === pluginId);
+      if (!spec) throw new Error(`trusted catalog package ${pluginId} is outside the selectable closure (${TRUSTED_BOOTSTRAP_PACKAGES.map((candidate) => candidate.pluginId).join(",")})`);
+      return spec;
+    }),
+  );
+}
+
+/** 🧬️ Asks ONE built component which document kinds it owns, through the `codecs` subcommand of the
+ * same descriptor emitter the build already ran. `kinds` are the dialect artifact kinds the
+ * package's own compiled descriptor declares; the schema and the 32-byte pack fingerprint come back
+ * out of `codec.genesis` and `codec.pack-schema-hash` on the exact component bytes about to be
+ * published, so a package the hub links no Rust codec for transcribes nothing. */
+function trustedBootstrapComponentCodecRowsV1(repoRoot: string, emitter: string, componentPath: string, outPath: string, kinds: readonly string[]): readonly TrustedBootstrapCodec[] {
+  if (kinds.length === 0) throw new Error("component codec probe requires at least one declared artifact kind");
+  const probe = runProbe(emitter, ["codecs", componentPath, "--kinds", kinds.join(","), "--out", outPath], { cwd: repoRoot, ...orchestratorBudgetOpts() });
+  if (probe.status !== 0) throw new Error(`component codec probe failed (${probe.status}): ${probe.stderr.trim() || probe.stdout.trim()}`);
+  const document = JSON.parse(readFileSync(outPath, "utf8"));
+  if (document?.schema !== "semio.plugin.component-codec-rows/v1" || !Array.isArray(document.rows) || document.rows.length !== kinds.length) throw new Error("component codec probe answered outside its exact declared closure");
+  const rows = document.rows.map((value: unknown) => {
+    const row = documentOpenNeutralObject(value, ["artifactKind", "artifactSchema", "packSchemaHash"]);
+    if (!kinds.includes(row.artifactKind as string) || typeof row.artifactSchema !== "string" || row.artifactSchema.length === 0 || row.artifactSchema.length > 256 || !/^(?!0{64}$)[0-9a-f]{64}$/u.test(String(row.packSchemaHash)))
+      throw new Error("component codec row is not a bounded nonzero identity");
+    return Object.freeze({ artifactKind: row.artifactKind as string, artifactSchema: row.artifactSchema as string, packSchemaHash: row.packSchemaHash as string });
+  });
+  if (new Set(rows.map((row: TrustedBootstrapCodec) => row.artifactKind)).size !== rows.length) throw new Error("component codec probe repeated an artifact kind");
+  return Object.freeze(rows.sort(trustedBootstrapCodecOrder));
+}
+
+/** 🎯️ Derives one package's creatable document kinds from its own verified descriptor. A kind is
+ * creatable exactly when the manifest both LISTS it (`artifactKinds`, which is what
+ * `validate_descriptor_open_target`'s discoverability fence reads) and binds an EDITOR app to its
+ * dialect; the surface, app and window ids are then the app's own. Nothing about the target is
+ * named by this builder, so a package becomes openable by declaring itself openable. */
+/** 🗂️ Every `ArtifactKindSpec` one verified descriptor declares, deduplicated by kind id and in
+ * declaration order. This is `validate_descriptor_open_target`'s own discoverability union: a spec
+ * declared at PLUGIN level (`PluginBuilder::artifact_kind`, the channel GIS and Stdio still use) or
+ * on the OWNING APP, which is where a package migrated onto the declaration tree stitches it. */
+function trustedBootstrapDescriptorKindsV1(descriptor: Record<string, any>): readonly Record<string, any>[] {
+  const manifest = descriptor.manifest as Record<string, any>;
+  const apps = (manifest.apps ?? []) as Record<string, any>[];
+  const declared = [...((manifest.artifactKinds ?? []) as Record<string, any>[]), ...apps.flatMap((app) => (app.artifactKinds ?? []) as Record<string, any>[])];
+  const seen = new Set<string>();
+  return Object.freeze(declared.filter((kind) => !seen.has(String(kind.id)) && seen.add(String(kind.id))));
+}
+
+function trustedBootstrapDescriptorOpenTargetsV1(pluginId: string, descriptor: Record<string, any>, codecs: readonly TrustedBootstrapCodec[]): readonly TrustedBootstrapOpenTargetV1[] {
+  const manifest = descriptor.manifest as Record<string, any>;
+  const apps = (manifest.apps ?? []) as Record<string, any>[];
+  const targets: TrustedBootstrapOpenTargetV1[] = [];
+  for (const kind of trustedBootstrapDescriptorKindsV1(descriptor)) {
+    const app = apps.find((candidate) => candidate.role === "editor" && candidate.dialect?.artifactKind === kind.id);
+    if (!app) continue;
+    const codec = codecs.find((row) => row.artifactKind === kind.id && row.artifactSchema === kind.schema);
+    if (!codec) throw new Error(`trusted bootstrap open target ${kind.id} has no verified codec row`);
+    const windowKindId = (app.windowKinds ?? [])[0]?.id;
+    if (typeof windowKindId !== "string" || windowKindId.length === 0) throw new Error(`trusted bootstrap open target ${kind.id} declares no window kind`);
+    targets.push(
+      Object.freeze({
+        pluginId,
+        artifactKind: kind.id as string,
+        artifactSchema: kind.schema as string,
+        packSchemaHash: codec.packSchemaHash,
+        surfaceId: app.id as string,
+        appId: app.id as string,
+        windowKindId,
+        role: "editor" as const,
+        rendererTarget: "wasm" as const,
+        parentDialect: Object.freeze({ artifactKind: app.dialect.artifactKind as string, standard: app.dialect.standard as string, subset: app.dialect.subset as string }),
+        grant: Object.freeze({ read: true, write: true, observe: true }),
+      }),
+    );
+  }
+  return Object.freeze(targets);
+}
+
+/** 🏗️ Produces one immutable closed N-package generation without loading or registering codecs. */
+async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): Promise<TrustedBootstrapMaterializationV1> {
   const trustedRoot = join(dataRoot, "trusted-catalog");
   mkdirSync(trustedRoot, { recursive: true, mode: 0o700 });
   if (lstatSync(trustedRoot).isSymbolicLink() || !lstatSync(trustedRoot).isDirectory()) throw new Error("trusted catalog root must be a regular private directory");
@@ -9427,18 +9625,19 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
     if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted catalog build cancelled");
   };
   try {
-    const { codecs, gisVersion } = captureTrustedBootstrapCodecsV1(repoRoot, () => {
+    const { codecs: linkedCodecs, gisVersion } = captureTrustedBootstrapCodecsV1(repoRoot, () => {
       if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted codec capture cancelled");
       control.checkpoint("capture-codecs", 0, 8);
     });
-    const requests = [
-      { pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", componentPackageId: "semio:stdio", outputName: "semio_s_plugin_stdio.wasm", componentProfile: "wasm-release" as const, rootCdylib: true },
-      { pluginId: "gis", cargoPackage: "semio-s-plugin-gis", componentPackageId: "semio:gis", outputName: "semio_s_plugin_gis.wasm", componentProfile: "wasm-release" as const, rootCdylib: true },
-    ];
+    const requests = selection.map((spec) => ({ pluginId: spec.pluginId, cargoPackage: spec.cargoPackage, componentPackageId: spec.componentPackageId, outputName: spec.outputName, componentProfile: "wasm-release" as const, rootCdylib: true }));
     const receipts = new Map<string, FreshComponentReceiptV1>();
     const descriptorClaims = new Map<string, TrustedBootstrapDescriptorClaimsV1>();
     const browserActors = new Map<string, TrustedBootstrapBrowserActorV1>();
+    const descriptorJson = new Map<string, Record<string, any>>();
+    const codecs: Record<string, readonly TrustedBootstrapCodec[]> = {};
+    const openTargets: TrustedBootstrapOpenTargetV1[] = [];
     for (const request of requests) {
+      const spec = selection.find((candidate) => candidate.pluginId === request.pluginId)!;
       const target = join(buildRoot, `${request.pluginId}-target`);
       const stage = join(stageRoot, "packages", request.pluginId);
       mkdirSync(target, { recursive: true, mode: 0o700 });
@@ -9447,7 +9646,7 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
       try {
         const { receipt, derived: componentSha256 } = await produceFreshComponentV1(repoRoot, request, target, stage, control, (lease) =>
           lease.consume(async (component) => {
-            if (request.pluginId === "gis")
+            if (spec.opensDocuments)
               derivedActor = await buildClosedBrowserActorArtifactV1(component, { cancelled: () => control.cancelled() || control.remainingMs() <= 0, progress: (phase, completed, total) => control.checkpoint(`actor-${phase}`, completed, total) });
             return createHash("sha256").update(component).digest("hex");
           }),
@@ -9458,9 +9657,24 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
         try {
           if (descriptor.byteLength !== receipt.descriptor.byteLength || createHash("sha256").update(descriptor).digest("hex") !== receipt.descriptor.sha256) throw new Error("fresh descriptor protocol bytes differ from the producer receipt");
           descriptorClaims.set(request.pluginId, trustedBootstrapDescriptorClaims(descriptor));
+          descriptorJson.set(request.pluginId, packValueToExactJson(decodePackValue(descriptor)) as Record<string, any>);
         } finally {
           descriptor.fill(0);
         }
+        // 🧬️ The package's codec closure. A package the hub LINKS Rust codecs for must carry exactly
+        // the rows its compiled provider previews, so those come from the same registry the provider
+        // is generated from; every other package answers for itself, through the `codecs` subcommand
+        // of the descriptor emitter this build already produced, on these exact component bytes.
+        const manifestKinds = trustedBootstrapDescriptorKindsV1(descriptorJson.get(request.pluginId)!).map((kind) => String(kind.id));
+        if (spec.linkedCodecRegistry) {
+          const linked = linkedCodecs[request.pluginId as "gis" | "stdio"];
+          if (!linked || linked.length === 0) throw new Error(`trusted codec capture carries no linked closure for ${request.pluginId}`);
+          codecs[request.pluginId] = linked;
+        } else {
+          const emitter = join(target, "debug", process.platform === "win32" ? "semio-framework-plugin-describe.exe" : "semio-framework-plugin-describe");
+          codecs[request.pluginId] = trustedBootstrapComponentCodecRowsV1(repoRoot, emitter, join(stage, "component.wasm"), join(target, "component-codecs.json"), manifestKinds);
+        }
+        for (const declared of trustedBootstrapDescriptorOpenTargetsV1(request.pluginId, descriptorJson.get(request.pluginId)!, codecs[request.pluginId]!)) openTargets.push(declared);
         const actor = trustedBootstrapBrowserActorV1(
           derivedActor
             ? {
@@ -9473,11 +9687,11 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
                 policySha256: derivedActor.policySha256,
                 importInterfaces: derivedActor.importInterfaces,
                 byteLength: derivedActor.byteLength,
-                path: "packages/gis/browser/closed-actor.mjs",
+                path: `packages/${request.pluginId}/browser/closed-actor.mjs`,
               }
             : { kind: "none" },
           { componentSha256, descriptorByteSha256: receipt.descriptor.sha256 },
-          request.pluginId === "gis" ? "wasm" : "react",
+          spec.opensDocuments ? "wasm" : "react",
         );
         if (derivedActor) {
           mkdirSync(join(stage, "browser"), { mode: 0o700 });
@@ -9490,64 +9704,42 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
         derivedActor?.bytes.fill(0);
       }
     }
-    const stdio = receipts.get("stdio")!;
-    const gis = receipts.get("gis")!;
-    if (gis.version !== gisVersion) throw new Error("fresh GIS component version differs from captured native codecs");
-    if (codecs.stdio.length !== 26 || codecs.gis.length !== 2) throw new Error("trusted stdio+GIS codec closure is not exact 26+2");
-    const map = codecs.gis.find((codec) => codec.artifactKind === "s.gis.gismap" && codec.artifactSchema === "gis.map");
-    const terrain = codecs.gis.find((codec) => codec.artifactKind === "s.gis.gisterrain" && codec.artifactSchema === "gis.terrain");
-    if (!map || !terrain) throw new Error("trusted GIS closure must retain exact Map and Terrain codecs");
-    const selectedClosure = [
-      { pluginId: "gis", packageId: "semio:gis", version: gis.version },
-      { pluginId: "stdio", packageId: "semio:stdio", version: stdio.version },
-    ];
+    const gis = receipts.get("gis");
+    if (gis && gis.version !== gisVersion) throw new Error("fresh GIS component version differs from captured native codecs");
+    for (const spec of selection) {
+      const rows = codecs[spec.pluginId] ?? [];
+      if (rows.length === 0) throw new Error(`trusted ${spec.pluginId} closure carries no artifact codec`);
+      if (spec.opensDocuments !== openTargets.some((declared) => declared.pluginId === spec.pluginId))
+        throw new Error(`trusted ${spec.pluginId} declares ${spec.opensDocuments ? "no" : "an"} openable document kind its own descriptor ${spec.opensDocuments ? "does not" : "does"} carry`);
+    }
+    // 🔢️ `validate_bundle` requires the selected closure in canonical identity order, which is the
+    // same order `trusted_profile_generation` frames it in; the REQUESTED order only names the
+    // profile, so `--packages stdio,gis` keeps minting `local-stdio-gis-open-v1`.
+    const selectedClosure = selection
+      .map((spec) => ({ pluginId: spec.pluginId, packageId: spec.componentPackageId, version: receipts.get(spec.pluginId)!.version }))
+      .sort((left, right) => trustedBootstrapTupleOrder([left.pluginId, left.packageId, left.version], [right.pluginId, right.packageId, right.version]));
     const dependencies = new Map([...descriptorClaims].map(([plugin, claims]) => [plugin, trustedBootstrapResolveDependencies(claims, selectedClosure)]));
-    const target = {
-      artifactKind: "s.gis.gismap",
-      artifactSchema: "gis.map",
-      packSchemaHash: map.packSchemaHash,
-      surfaceId: "s.gis.gismap@1/*#editor",
-      appId: "s.gis.gismap@1/*#editor",
-      windowKindId: "gis2d-main",
-      role: "editor",
-      rendererTarget: "wasm",
-      parentDialect: { artifactKind: "s.gis.gismap", standard: "1", subset: "*" },
-      grant: { read: true, write: true, observe: true },
-    };
-    const packageSummary = [
-      {
-        pluginId: "gis",
-        packageId: "semio:gis",
-        version: gis.version,
+    const packageSummary = selectedClosure.map((identity) => {
+      const receipt = receipts.get(identity.pluginId)!;
+      return {
+        pluginId: identity.pluginId,
+        packageId: identity.packageId,
+        version: identity.version,
         role: "plugin",
-        componentSha256: gis.component.sha256,
-        componentBlake3: gis.component.blake3,
-        descriptorSha256: gis.descriptor.sha256,
-        dependencies: dependencies.get("gis")!,
-        executionProtocol: descriptorClaims.get("gis")!.executionProtocol,
-        browserActor: browserActors.get("gis")!,
-        codecCount: 2,
-        targetCount: 1,
-      },
-      {
-        pluginId: "stdio",
-        packageId: "semio:stdio",
-        version: stdio.version,
-        role: "plugin",
-        componentSha256: stdio.component.sha256,
-        componentBlake3: stdio.component.blake3,
-        descriptorSha256: stdio.descriptor.sha256,
-        dependencies: dependencies.get("stdio")!,
-        executionProtocol: descriptorClaims.get("stdio")!.executionProtocol,
-        browserActor: browserActors.get("stdio")!,
-        codecCount: 26,
-        targetCount: 0,
-      },
-    ];
-    const profileSummary = { id: "local-stdio-gis-open-v1", selectedClosure, packages: packageSummary, openTarget: { pluginId: "gis", ...target } };
+        componentSha256: receipt.component.sha256,
+        componentBlake3: receipt.component.blake3,
+        descriptorSha256: receipt.descriptor.sha256,
+        dependencies: dependencies.get(identity.pluginId)!,
+        executionProtocol: descriptorClaims.get(identity.pluginId)!.executionProtocol,
+        browserActor: browserActors.get(identity.pluginId)!,
+        codecCount: codecs[identity.pluginId]!.length,
+        targetCount: openTargets.filter((declared) => declared.pluginId === identity.pluginId).length,
+      };
+    });
+    const profileSummary = { id: `local-${selection.map((spec) => spec.pluginId).join("-")}-open-v1`, selectedClosure, packages: packageSummary, openTargets };
     const selectedClosureSha256 = createHash("sha256").update(trustedBootstrapClosureEncoding(profileSummary)).digest("hex");
     const generationId = createHash("sha256").update(trustedBootstrapProfileEncoding(profileSummary, codecs)).digest("hex");
-    const file = (plugin: "gis" | "stdio", receipt: FreshComponentReceiptV1) => ({
+    const file = (plugin: string, receipt: FreshComponentReceiptV1) => ({
       pluginId: plugin,
       packageId: receipt.packageId,
       version: receipt.version,
@@ -9558,28 +9750,35 @@ async function materializeTrustedStdioGisBundle(repoRoot: string, dataRoot: stri
       executionProtocol: descriptorClaims.get(plugin)!.executionProtocol,
       browserActor: browserActors.get(plugin)!,
       nativeCodecs: codecs[plugin],
-      openTargets: plugin === "gis" ? [target] : [],
+      openTargets: openTargets.filter((declared) => declared.pluginId === plugin).map(({ pluginId: _owner, ...target }) => target),
     });
     const bundle = {
       schemaVersion: 2,
-      profiles: [{ id: profileSummary.id, selectedClosure, selectedClosureSha256, openTarget: { package: selectedClosure[0], target }, generationId }],
-      packages: [file("gis", gis), file("stdio", stdio)],
+      profiles: [
+        {
+          id: profileSummary.id,
+          selectedClosure,
+          selectedClosureSha256,
+          openTargets: openTargets.map(({ pluginId: owner, ...target }) => ({ package: selectedClosure.find((identity) => identity.pluginId === owner)!, target })),
+          generationId,
+        },
+      ],
+      packages: selectedClosure.map((identity) => file(identity.pluginId, receipts.get(identity.pluginId)!)),
     };
     const bundleBytes = Buffer.from(`${JSON.stringify(bundle)}\n`, "utf8");
-    if (bundleBytes.byteLength > 4 * 1024 * 1024) throw new Error("trusted stdio+GIS bundle exceeds 4 MiB");
+    if (bundleBytes.byteLength > 4 * 1024 * 1024) throw new Error("trusted catalog bundle exceeds 4 MiB");
     const bundlePath = join(stageRoot, "trusted-catalog.json");
     trustedBootstrapWriteNew(bundlePath, bundleBytes, checkBuild);
-    trustedBootstrapFsyncDirectory(join(stageRoot, "packages", "stdio"));
-    trustedBootstrapFsyncDirectory(join(stageRoot, "packages", "gis"));
+    for (const identity of selectedClosure) trustedBootstrapFsyncDirectory(join(stageRoot, "packages", identity.pluginId));
     trustedBootstrapFsyncDirectory(join(stageRoot, "packages"));
     trustedBootstrapFsyncDirectory(stageRoot);
-    if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted stdio+GIS bootstrap cancelled before publication");
+    if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted catalog bootstrap cancelled before publication");
     const generations = join(trustedRoot, "generations");
     mkdirSync(generations, { recursive: true, mode: 0o700 });
     if (lstatSync(generations).isSymbolicLink() || !lstatSync(generations).isDirectory()) throw new Error("trusted generations root must be a regular directory");
     const generationRoot = join(generations, generationId);
     const checkGeneration = () => {
-      if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted stdio+GIS generation cancelled before publication");
+      if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted catalog generation cancelled before publication");
       control.checkpoint("verify-generation", 8, 8);
     };
     if (existsSync(generationRoot)) {
@@ -9618,7 +9817,7 @@ function trustedBootstrapReadCurrentBundle(current: TrustedBootstrapMaterializat
   try {
     if (createHash("sha256").update(bytes).digest("hex") !== current.bundleSha256) throw new Error("trusted rotation source bundle differs from its retained digest");
     const bundle = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-    if (bundle.schemaVersion !== 2 || bundle.profiles?.length !== 1 || bundle.packages?.length !== 2 || bundle.profiles[0]?.id !== current.profileId || bundle.profiles[0]?.generationId !== current.generationId)
+    if (bundle.schemaVersion !== 2 || bundle.profiles?.length !== 1 || !Array.isArray(bundle.packages) || bundle.packages.length === 0 || bundle.profiles[0]?.id !== current.profileId || bundle.profiles[0]?.generationId !== current.generationId)
       throw new Error("trusted rotation source differs from the exact retained profile generation");
     return bundle;
   } finally {
@@ -9637,7 +9836,7 @@ async function proveTrustedGisColdMapComponentV1(repoRoot: string, current: Trus
     const packages = new Map<string, Record<string, any>>((bundle.packages ?? []).map((record: Record<string, any>) => [String(record.pluginId), record]));
     const gis = packages.get("gis");
     if (
-      packages.size !== 2 ||
+      packages.size === 0 ||
       !gis ||
       gis.packageId !== "semio:gis" ||
       gis.component?.path !== "packages/gis/component.wasm" ||
@@ -9722,7 +9921,7 @@ async function proveTrustedGisClosedActorV1(repoRoot: string, dataRoot: string, 
     const packages = new Map<string, Record<string, any>>(bundle.packages.map((record: Record<string, any>) => [String(record.pluginId), record]));
     const gis = packages.get("gis");
     if (
-      packages.size !== 2 || !packages.has("stdio") || !gis || gis.packageId !== "semio:gis" ||
+      packages.size === 0 || !packages.has("stdio") || !gis || gis.packageId !== "semio:gis" ||
       gis.component?.path !== "packages/gis/component.wasm" || gis.descriptor?.path !== "packages/gis/descriptor.semio" ||
       gis.browserActor?.kind !== "closed-browser-actor" || gis.browserActor.path !== "packages/gis/browser/closed-actor.mjs" ||
       gis.browserActor.sourceComponentSha256 !== gis.component.sha256 ||
@@ -9780,9 +9979,9 @@ function stageTrustedBootstrapCandidateCurrent(candidateDataRoot: string, curren
     if (createHash("sha256").update(bundleBytes).digest("hex") !== current.bundleSha256) throw new Error("trusted candidate source bundle differs from its retained digest");
     const bundle = trustedBootstrapReadCurrentBundle(current, check);
     const packages = new Map<string, any>(bundle.packages.map((record: any) => [record.pluginId, record]));
-    if (packages.size !== 2 || !packages.has("gis") || !packages.has("stdio")) throw new Error("trusted candidate source is not the exact stdio+GIS closure");
+    if (packages.size === 0 || !packages.has("stdio")) throw new Error("trusted candidate source carries no package closure rooted at stdio");
     const receipts = new Map<string, TrustedBootstrapGenerationReceiptV1>();
-    for (const plugin of ["gis", "stdio"] as const) {
+    for (const plugin of packages.keys()) {
       const record = packages.get(plugin)!;
       if (record.packageId !== `semio:${plugin}` || record.component?.path !== `packages/${plugin}/component.wasm` || record.descriptor?.path !== `packages/${plugin}/descriptor.semio`)
         throw new Error(`trusted candidate ${plugin} path identity differs`);
@@ -10003,7 +10202,8 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
       codecCount: record.nativeCodecs.length,
       targetCount: record.openTargets.length,
     }));
-    const profileSummary = { id: profile.id, selectedClosure: profile.selectedClosure, packages: packageSummary, openTarget: { pluginId: profile.openTarget.package.pluginId, ...profile.openTarget.target } };
+    if (!Array.isArray(profile.openTargets) || profile.openTargets.length !== 1) throw new Error("trusted rotation source profile does not declare exactly one open target");
+    const profileSummary = { id: profile.id, selectedClosure: profile.selectedClosure, packages: packageSummary, openTarget: { pluginId: profile.openTargets[0].package.pluginId, ...profile.openTargets[0].target } };
     const generationId = createHash("sha256").update(trustedBootstrapProfileEncoding(profileSummary, codecs)).digest("hex");
     if (generationId === current.generationId) throw new Error("trusted rotation did not change the full profile generation");
     profile.generationId = generationId;
@@ -10057,7 +10257,7 @@ function trustedBootstrapCurrent(dataRoot: string): TrustedBootstrapPublishedV1 
   const current = trustedBootstrapReadCurrentPointer(dataRoot);
   if (!current) return undefined;
   const pointer = current.pointer;
-  if (pointer.profileId !== "local-stdio-gis-open-v1") throw new Error("trusted catalog current profile is not the exact local selection");
+  if (!/^local-(?:[a-z0-9]+-)+open-v1$/u.test(pointer.profileId)) throw new Error("trusted catalog current profile is not a local selection this builder mints");
   const bundlePath = join(dataRoot, "trusted-catalog", "generations", pointer.generationId, "trusted-catalog.json");
   const receipt = Object.freeze({ profileId: pointer.profileId, generationId: pointer.generationId, bundleSha256: pointer.bundleSha256, bundlePath, publicationRevision: pointer.publicationRevision, currentSha256: current.sha256 });
   trustedBootstrapReadCurrentBundle(receipt, () => {});
@@ -10201,7 +10401,9 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
   const bundle = JSON.parse(readFileSync(receipt.bundlePath, "utf8"));
   const profile = bundle.profiles?.find((candidate: any) => candidate.id === receipt.profileId);
   const selected = bundle.packages?.find((candidate: any) => candidate.pluginId === "gis");
-  const target = profile?.openTarget?.target;
+  // 🎯️ The GIS target is selected by its OWNER, not by index: a generation's open targets are a SET
+  // now (ticket 26/09/18), so `[0]` would silently probe whichever package happens to sort first.
+  const target = profile?.openTargets?.find((row: any) => row?.package?.pluginId === "gis")?.target;
   if (!profile || !selected || !target) throw new Error("trusted stdio+GIS candidate bundle lost its exact GIS target");
   const headers = { authorization: `Bearer ${envelope.capability}`, "content-type": "application/json" };
   const created = await postLiveDirectoryCommand(run, envelope.capability, liveDirectoryCommandRequestId(), { kind: "create-space", name: "Trusted GIS Bootstrap Probe", spaceKind: "studio", visibility: "private" });
@@ -11439,7 +11641,7 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
   const bundle = trustedBootstrapReadCurrentBundle(prepared.current, () => {});
   const selected = bundle.packages.find((row: any) => row.pluginId === "gis");
   const profile = bundle.profiles.find((row: any) => row.id === prepared.current.profileId);
-  const target = profile?.openTarget?.target;
+  const target = profile?.openTargets?.[0]?.target;
   assert.deepEqual(bundle.packages.map((row: any) => row.pluginId).sort(), ["gis", "stdio"]);
   assert.equal(selected?.executionProtocol?.appChannelVersion, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1);
   assert.equal(target?.surfaceId, "s.gis.gismap@1/*#editor");
@@ -11646,7 +11848,7 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
   const payload = checkpointPublicationProcessFixture();
   const dataRoot = join(artifactPath, `gis-map-proposal-process-${randomBytes(8).toString("hex")}`);
   mkdirSync(dataRoot, { mode: 0o700 });
-  const materialized = await materializeTrustedStdioGisBundle(repoRoot, dataRoot);
+  const materialized = await materializeTrustedCatalogBundle(repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES));
   const binaryPath = hubBinaryPath(repoRoot);
   const validation = { binaryPath, cargoTargetDir: dirname(dirname(binaryPath)) };
   await validateAndPublishTrustedStdioGisCandidate(repoRoot, hubRoot, dataRoot, materialized, validation);
@@ -11655,7 +11857,7 @@ async function proveGisMapProposalProcess(repoRoot: string, hubRoot: string): Pr
   const bundle = trustedBootstrapReadCurrentBundle(current, () => {});
   const profile = bundle.profiles?.find((row: any) => row?.id === current.profileId);
   const selected = bundle.packages?.find((row: any) => row?.pluginId === "gis");
-  const target = profile?.openTarget?.target;
+  const target = profile?.openTargets?.[0]?.target;
   if (
     !profile ||
     !selected ||
@@ -12118,13 +12320,45 @@ class BuildDevScript extends BundleScript {
   }
 }
 
+/** 🐘️ Stages the same `os-hub` with the `postgres` driver linked in, into its own output directory.
+ * `dev postgres` reads it; the default `build-dev` stays driverless so a zero-touch launch needs no
+ * database. `neo4j` rides along because one env var (`OS_HUB_DIRECTORY_BACKEND=neo4j`) is all that
+ * separates the two directory backends at runtime. */
+class BuildDevPostgresScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw new Error("Select build-dev-postgres through Nx without additional arguments");
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub", "--features", "postgres,neo4j"], this.repoRoot, { output: "dist/build-dev-postgres" });
+  }
+}
+
+/** 🐘️ Points BOTH durable halves of a `dev postgres` launch at PostgreSQL.
+ *
+ * `OS_HUB_DATABASE_URL` is required and carries the document/blob store; the directory reuses it
+ * unless `OS_HUB_DIRECTORY_DATABASE_URL` names another database (or `OS_HUB_DIRECTORY_BACKEND` is
+ * already set, e.g. to `neo4j`, in which case that choice is left alone). Anything the caller set
+ * explicitly wins — this only fills what a `postgres` launch cannot run without.
+ *
+ * 🧵️ Both halves reach `sqlx` through `db_storage::DbIoAsyncDriverRuntime`, the bounded runtime the
+ * storage layer owns: a `sqlx` future is never polled on a `WorkerPool` worker, which has no Tokio
+ * context and aborted the process before that seam existed (ticket 26/09/18 D4). */
+function applyPostgresBackendEnvironment(): void {
+  const databaseUrl = process.env.OS_HUB_DATABASE_URL;
+  if (!databaseUrl) throw new Error("dev postgres needs OS_HUB_DATABASE_URL (for example postgres://semio:semio@127.0.0.1:5432/semio_hub) — it is the hub's document/blob store");
+  process.env.OS_HUB_STORAGE_BACKEND = "postgres";
+  if (!process.env.OS_HUB_DIRECTORY_BACKEND) process.env.OS_HUB_DIRECTORY_BACKEND = "postgres";
+  if (process.env.OS_HUB_DIRECTORY_BACKEND === "postgres" && !process.env.OS_HUB_DIRECTORY_DATABASE_URL) process.env.OS_HUB_DIRECTORY_DATABASE_URL = databaseUrl;
+  if (process.env.OS_HUB_DIRECTORY_BACKEND === "neo4j" && !process.env.OS_HUB_DIRECTORY_NEO4J_URI) throw new Error("OS_HUB_DIRECTORY_BACKEND=neo4j needs OS_HUB_DIRECTORY_NEO4J_URI (for example bolt://127.0.0.1:7687)");
+}
+
 /** 🔗️ `runCargo`'s `env` arg replaces `process.env` wholesale (see `runCmdInternal`'s
  * `opts.env ?? process.env`), so this inherits the full process env and only defaults the port —
  * otherwise the launcher's `OS_HUB_PORT`/`OS_HUB_DATA` (and `PATH`) would be silently dropped. */
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     buildAdminSpa(this.repoRoot);
-    const binaryPath = hubDevBinaryPath(this.root);
+    const postgres = segments[0] === "postgres";
+    const binaryPath = postgres ? hubDevPostgresBinaryPath(this.root) : hubDevBinaryPath(this.root);
+    if (postgres) applyPostgresBackendEnvironment();
     const secureSuite = segments[0] === "secure-suite";
     const secureNative = secureSuite || segments[0] === "secure-native";
     const secureMcp = secureSuite || segments[0] === "secure-mcp";
@@ -12144,7 +12378,7 @@ class DevScript extends BundleScript {
     const dataRoot = resolve(process.env.OS_HUB_DATA ?? join(this.repoRoot, ".🧬semio", "🌐hub"));
     let trustedCatalog = trustedBootstrapCurrent(dataRoot);
     if (!trustedCatalog) {
-      const receipt = await materializeTrustedStdioGisBundle(this.repoRoot, dataRoot);
+      const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES));
       runCargo(["build", "--manifest-path", "Cargo.toml"], this.root);
       const validationBinaryPath = hubBinaryPath(this.repoRoot);
       const validation = { binaryPath: validationBinaryPath, cargoTargetDir: dirname(dirname(validationBinaryPath)) };
@@ -12393,7 +12627,7 @@ async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise
   assert.ok(processOwner.includes('"private-job-restart-recovery"'), "process receipt must not claim an unobserved private job after restart");
   assert.ok(peerStart >= 0 && peerEnd > peerStart, "ticket-owned browser peer owner is missing");
   assert.ok(peerOwner.includes('artifactRow.getByRole("button", { name: options.locale === "de" ? "Öffnen" : "Open", exact: true })'), "each author must open its exact artifact row using its explicitly selected locale");
-  assert.ok(!processOwner.includes("materializeTrustedStdioGisBundle(") && !processOwner.includes("validateAndPublishTrustedStdioGisCandidate("), "Shell composition cannot create another current or data root");
+  assert.ok(!processOwner.includes("materializeTrustedCatalogBundle(") && !processOwner.includes("validateAndPublishTrustedStdioGisCandidate("), "Shell composition cannot create another current or data root");
   assert.ok(processOwner.includes("assertGisMapCompositionCurrent(prepared)") && processOwner.includes("dataDir: prepared.dataRoot"), "Shell starts and restarts must retain the prepared current owner");
   assert.ok(processOwner.includes("stageTestBrowserHostV1({") && processOwner.includes("browserHost: browserHost.receipt"), "Shell composition must close one selected ticket browser host before launch");
   for (const name of ["SEMIO_TEST_ARTIFACT_DIR", "SEMIO_TEST_BROWSER_MODULE_ROOT", "SEMIO_TEST_BROWSER_ACTIVATION_ROOT", "SEMIO_TEST_BROWSER_HOST_RECEIPT"]) assert.ok(peerOwner.includes(name), `Shell peer omits ${name}`);
@@ -12476,17 +12710,17 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       if (first < 0 || last < 0) throw new Error(`trusted stdio+GIS source boundary is missing ${start}`);
       return scriptSource.slice(first, last);
     };
-    const materializer = body("\nasync function materializeTrustedStdioGisBundle", "\nfunction trustedBootstrapReadRegular");
+    const materializer = body("\nasync function materializeTrustedCatalogBundle", "\nfunction trustedBootstrapReadRegular");
     const writer = body("\nfunction trustedBootstrapWriteNew", "\nfunction trustedBootstrapFsyncDirectory");
     const publisher = body("\nasync function publishTrustedBootstrapCurrent", "\nasync function proveTrustedStdioGisCandidatePlan");
     const stalePlan = body("\nasync function proveTrustedStdioGisStalePlanRejected", "\n/** 🟢️ Publishes current metadata");
     const candidate = body("\nasync function validateAndPublishTrustedStdioGisCandidate", "\n/** ✉️ Independent bounded canonical envelope oracle");
     const rotation = body("\nasync function materializeTrustedStdioGisRotation", "\nfunction trustedBootstrapCurrent");
-    const bootstrap = body("\nclass TrustedStdioGisBootstrapScript", "\nclass AdminBackendCheckScript");
+    const bootstrap = body("\nclass TrustedCatalogBootstrapScript", "\nclass AdminBackendCheckScript");
     const dev = body("\nclass DevScript", "\nclass TrustedStdioGisBundleCheckScript");
     const gisColdMap = body("\nasync function proveTrustedGisColdMapComponentV1", "\n/** 🧳️ Copies one already verified immutable selection");
-    const nativeGate = body("\nclass TrustedStdioGisBundleCheckScript", "\nclass TrustedStdioGisBootstrapScript");
-    const nativeMaterialized = nativeGate.slice(nativeGate.lastIndexOf("const receipt = await materializeTrustedStdioGisBundle"));
+    const nativeGate = body("\nclass TrustedStdioGisBundleCheckScript", "\nclass TrustedCatalogBootstrapScript");
+    const nativeMaterialized = nativeGate.slice(nativeGate.lastIndexOf("const receipt = await materializeTrustedCatalogBundle"));
     const processGate = nativeGate.slice(nativeGate.lastIndexOf('if (segments[0] === "--process") {'));
     const ordered = (source: string, earlier: string, later: string): boolean => source.indexOf(earlier) >= 0 && source.indexOf(earlier) < source.indexOf(later);
     const missingFence = [
@@ -12505,8 +12739,8 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       ["rotation descriptor", rotation.includes("verifyFreshCatalogPackageV1(") && rotation.includes("trustedBootstrapProfileEncoding(")],
       ["server-owned rotation", rotation.includes('value.manifest.label = `Stdio trusted rotation ${randomBytes(8).toString("hex")}`')],
       ["rotation publication", ordered(rotation, "renameSync(stageRoot, generationRoot)", "trustedBootstrapFsyncDirectory(generationsRoot)")],
-      ["bootstrap candidate", ordered(bootstrap, "materializeTrustedStdioGisBundle", "validateAndPublishTrustedStdioGisCandidate")],
-      ["development candidate", ordered(dev, "await materializeTrustedStdioGisBundle", "await validateAndPublishTrustedStdioGisCandidate")],
+      ["bootstrap candidate", ordered(bootstrap, "materializeTrustedCatalogBundle", "validateAndPublishTrustedStdioGisCandidate")],
+      ["development candidate", ordered(dev, "await materializeTrustedCatalogBundle", "await validateAndPublishTrustedStdioGisCandidate")],
       ["development launch", ordered(dev, "await validateAndPublishTrustedStdioGisCandidate", "const run = await startLocalHub")],
       [
         "GIS cold-map retained owner",
@@ -12583,7 +12817,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
         progress(event) { console.log(`[DEBUG] two-author Shell seed ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
       });
       const dataRoot = join(resolve(artifactRoot), "server-owned-data");
-      const receipt = await materializeTrustedStdioGisBundle(this.repoRoot, dataRoot);
+      const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES));
       const binary = join(hubTarget, "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
       const validation = { binaryPath: binary, cargoTargetDir: hubTarget };
       const initialPlan = await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, receipt, validation);
@@ -12626,17 +12860,21 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
   }
 }
 
-class TrustedStdioGisBootstrapScript extends BundleScript {
+class TrustedCatalogBootstrapScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length !== 0) throw new Error("trusted-stdio-gis-bootstrap accepts no client-selected paths or profiles");
+    const flag = segments.indexOf("--packages");
+    const list = flag === -1 ? TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES : segments[flag + 1];
+    if ((flag === -1 && segments.length !== 0) || (flag !== -1 && (flag !== 0 || segments.length !== 2)) || typeof list !== "string")
+      throw new Error("usage: trusted-catalog-bootstrap [--packages <plugin,plugin,…>]");
+    const selection = trustedBootstrapSelectPackages(list);
     const dataRoot = process.env.OS_HUB_DATA ? resolve(process.env.OS_HUB_DATA) : resolve(this.repoRoot, ".🧬semio", "🌐hub");
     runCargo(["build", "--manifest-path", "Cargo.toml", "--bin", "os-hub"], this.root);
-    const receipt = await materializeTrustedStdioGisBundle(this.repoRoot, dataRoot);
+    const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, selection);
     const binaryPath = hubBinaryPath(this.repoRoot);
     const validation = { binaryPath, cargoTargetDir: dirname(dirname(binaryPath)) };
     await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, receipt, validation);
-    console.log(`trusted-stdio-gis-bootstrap-receipt: ${JSON.stringify(receipt)}`);
-    console.log("trusted-stdio-gis-bootstrap: immutable generation loaded by a candidate and published current after readiness; client execution remains separate");
+    console.log(`trusted-catalog-bootstrap-receipt: ${JSON.stringify(receipt)}`);
+    console.log(`trusted-catalog-bootstrap: immutable ${selection.length}-package generation (${selection.map((spec) => spec.pluginId).join(",")}) loaded by a candidate and published current after readiness; client execution remains separate`);
   }
 }
 
@@ -16690,6 +16928,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("foundation-source-check", HubFoundationSourceScript)
   .register("socket-grant-command-source-check", HubSocketGrantCommandSourceScript)
   .register("test", TestScript)
+  .register("directory-live-lanes", DirectoryLiveLanesScript)
   .register("artifact-cas-check", ArtifactCasCheckScript)
   .register("socket-grant-check", SocketGrantCheckScript)
   .register("admin-directory-authority-check", AdminDirectoryAuthorityCheckScript)
@@ -16732,7 +16971,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("execution-target-lease-check", ExecutionTargetLeaseCheckScript)
   .register("execution-target-lease-browser-check", ExecutionTargetLeaseBrowserCheckScript)
   .register("space-public-boundary-check", SpacePublicBoundaryCheckScript)
-  .register("trusted-stdio-gis-bootstrap", TrustedStdioGisBootstrapScript)
+  .register("trusted-catalog-bootstrap", TrustedCatalogBootstrapScript)
   .register("gis-map-proposal-check", GisMapProposalCheckScript)
   .register("trusted-stdio-gis-bundle-check", TrustedStdioGisBundleCheckScript)
   .register("gis-inference-ledger-oracle", GisInferenceLedgerOracleScript)
@@ -16743,6 +16982,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("build", BuildScript)
   .register("build-dev", BuildDevScript)
   .register("publish", PublishScript)
+  .register("build-dev-postgres", BuildDevPostgresScript)
   .register("dev", DevScript)
   .register("secure-local-smoke", SecureLocalSmokeScript);
 

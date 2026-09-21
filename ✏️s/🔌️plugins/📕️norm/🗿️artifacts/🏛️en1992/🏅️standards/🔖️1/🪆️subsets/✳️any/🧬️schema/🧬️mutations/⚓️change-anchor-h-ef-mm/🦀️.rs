@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeAnchorHEfM
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change anchor h ef mm to {:?}", self.new_anchor_h_ef_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change anchor h ef mm to {:?}", self.new_anchor_h_ef_mm), &format!("Ankerhefmm auf {:?} ändern", self.new_anchor_h_ef_mm))
     }
 }
 //#endregion 🔖️ChangeAnchorHEfMm

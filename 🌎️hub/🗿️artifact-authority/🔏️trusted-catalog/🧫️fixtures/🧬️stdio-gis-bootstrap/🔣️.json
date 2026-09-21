@@ -3,8 +3,16 @@
   "profile": {
     "id": "local-stdio-gis-open-v1",
     "selectedClosure": [
-      { "pluginId": "gis", "packageId": "semio:gis", "version": "0.1.0" },
-      { "pluginId": "stdio", "packageId": "semio:stdio", "version": "0.1.0" }
+      {
+        "pluginId": "gis",
+        "packageId": "semio:gis",
+        "version": "0.1.0"
+      },
+      {
+        "pluginId": "stdio",
+        "packageId": "semio:stdio",
+        "version": "0.1.0"
+      }
     ],
     "selectedClosureSha256": "848e9d6c38a1b1202398214a9138e5e289ee5564bc0bd1fdf61d622c9d4f5588",
     "packages": [
@@ -13,19 +21,33 @@
         "packageId": "semio:gis",
         "version": "0.1.0",
         "role": "plugin",
-        "dependencies": [{ "pluginId": "stdio", "packageId": "semio:stdio", "version": "0.1.0" }],
+        "dependencies": [
+          {
+            "pluginId": "stdio",
+            "packageId": "semio:stdio",
+            "version": "0.1.0"
+          }
+        ],
         "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
         "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
         "descriptorSha256": "1313131313131313131313131313131313131313131313131313131313131313",
-        "executionProtocol": { "appChannelVersion": 17 },
+        "executionProtocol": {
+          "appChannelVersion": 17
+        },
         "browserActor": {
-          "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.27.0-jspi.v1",
-          "path":"packages/gis/browser/closed-actor.mjs", "byteLength":3,
-          "sha256":"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-          "sourceComponentSha256":"1111111111111111111111111111111111111111111111111111111111111111",
-          "sourceDescriptorByteSha256":"1313131313131313131313131313131313131313131313131313131313131313",
-          "policySha256":"4141414141414141414141414141414141414141414141414141414141414141",
-          "importInterfaces":["semio:framework/host-async@1.0.0", "semio:framework/pure@1.0.0"]
+          "kind": "closed-browser-actor",
+          "schema": "semio.os.closed-browser-actor.v1",
+          "codegenPolicy": "semio.os.browser-jco-1.34.0-jspi.v1",
+          "path": "packages/gis/browser/closed-actor.mjs",
+          "byteLength": 3,
+          "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+          "sourceComponentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "sourceDescriptorByteSha256": "1313131313131313131313131313131313131313131313131313131313131313",
+          "policySha256": "4141414141414141414141414141414141414141414141414141414141414141",
+          "importInterfaces": [
+            "semio:framework/host-async@1.0.0",
+            "semio:framework/pure@1.0.0"
+          ]
         },
         "codecCount": 2,
         "targetCount": 1
@@ -39,24 +61,38 @@
         "componentSha256": "2121212121212121212121212121212121212121212121212121212121212121",
         "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
         "descriptorSha256": "2323232323232323232323232323232323232323232323232323232323232323",
-        "executionProtocol": { "appChannelVersion": 17 },
-        "browserActor": { "kind":"none" },
+        "executionProtocol": {
+          "appChannelVersion": 17
+        },
+        "browserActor": {
+          "kind": "none"
+        },
         "codecCount": 26,
         "targetCount": 0
       }
     ],
-    "openTarget": {
-      "pluginId": "gis",
-      "artifactKind": "s.gis.gismap",
-      "artifactSchema": "gis.map",
-      "surfaceId": "s.gis.gismap@1/*#editor",
-      "appId": "s.gis.gismap@1/*#editor",
-      "windowKindId": "gis2d-main",
-      "role": "editor",
-      "rendererTarget": "wasm",
-      "parentDialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" },
-      "grant": { "read": true, "write": true, "observe": true }
-    },
+    "openTargets": [
+      {
+        "pluginId": "gis",
+        "artifactKind": "s.gis.gismap",
+        "artifactSchema": "gis.map",
+        "surfaceId": "s.gis.gismap@1/*#editor",
+        "appId": "s.gis.gismap@1/*#editor",
+        "windowKindId": "gis2d-main",
+        "role": "editor",
+        "rendererTarget": "wasm",
+        "parentDialect": {
+          "artifactKind": "s.gis.gismap",
+          "standard": "1",
+          "subset": "*"
+        },
+        "grant": {
+          "read": true,
+          "write": true,
+          "observe": true
+        }
+      }
+    ],
     "generationId": "e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52"
   },
   "sources": {
@@ -78,8 +114,37 @@
     "integerEndian": "big",
     "lengthBytes": 8
   },
-  "cancellationStages": ["build", "extract-core", "inspect-wit", "emit-descriptor", "stage-component", "stage-descriptor", "hash", "pre-publication"],
-  "hostile": ["stale-stdio-component", "stale-stdio-descriptor", "stale-stdio-codec", "wrong-stdio-version", "wrong-gis-version", "missing-map", "missing-terrain", "duplicate-terrain", "terrain-target", "non-wasm", "readonly-editor", "mixed-package", "closure-order", "path-escape", "path-collision", "descriptor-max-plus-one", "cancel-before-publication", "candidate-crash", "stale-plan-generation"],
+  "cancellationStages": [
+    "build",
+    "extract-core",
+    "inspect-wit",
+    "emit-descriptor",
+    "stage-component",
+    "stage-descriptor",
+    "hash",
+    "pre-publication"
+  ],
+  "hostile": [
+    "stale-stdio-component",
+    "stale-stdio-descriptor",
+    "stale-stdio-codec",
+    "wrong-stdio-version",
+    "wrong-gis-version",
+    "missing-map",
+    "missing-terrain",
+    "duplicate-terrain",
+    "terrain-target",
+    "non-wasm",
+    "readonly-editor",
+    "mixed-package",
+    "closure-order",
+    "path-escape",
+    "path-collision",
+    "descriptor-max-plus-one",
+    "cancel-before-publication",
+    "candidate-crash",
+    "stale-plan-generation"
+  ],
   "publication": {
     "entryPoints": [
       "development",
@@ -162,21 +227,88 @@
   },
   "rotation": {
     "writeCases": [
-      { "id": "chunk-boundary", "byteLength": 65536, "cancelCheck": null, "existing": false, "accepted": true, "retained": "new" },
-      { "id": "chunk-boundary-plus-one", "byteLength": 65537, "cancelCheck": null, "existing": false, "accepted": true, "retained": "new" },
-      { "id": "cancel-before-open", "byteLength": 65537, "cancelCheck": 1, "existing": false, "accepted": false, "retained": "absent" },
-      { "id": "cancel-between-chunks", "byteLength": 65537, "cancelCheck": 3, "existing": false, "accepted": false, "retained": "absent" },
-      { "id": "cancel-before-sync", "byteLength": 65537, "cancelCheck": 4, "existing": false, "accepted": false, "retained": "absent" },
-      { "id": "cancel-after-sync", "byteLength": 65537, "cancelCheck": 5, "existing": false, "accepted": false, "retained": "absent" },
-      { "id": "existing-owner", "byteLength": 65537, "cancelCheck": null, "existing": true, "accepted": false, "retained": "old" }
+      {
+        "id": "chunk-boundary",
+        "byteLength": 65536,
+        "cancelCheck": null,
+        "existing": false,
+        "accepted": true,
+        "retained": "new"
+      },
+      {
+        "id": "chunk-boundary-plus-one",
+        "byteLength": 65537,
+        "cancelCheck": null,
+        "existing": false,
+        "accepted": true,
+        "retained": "new"
+      },
+      {
+        "id": "cancel-before-open",
+        "byteLength": 65537,
+        "cancelCheck": 1,
+        "existing": false,
+        "accepted": false,
+        "retained": "absent"
+      },
+      {
+        "id": "cancel-between-chunks",
+        "byteLength": 65537,
+        "cancelCheck": 3,
+        "existing": false,
+        "accepted": false,
+        "retained": "absent"
+      },
+      {
+        "id": "cancel-before-sync",
+        "byteLength": 65537,
+        "cancelCheck": 4,
+        "existing": false,
+        "accepted": false,
+        "retained": "absent"
+      },
+      {
+        "id": "cancel-after-sync",
+        "byteLength": 65537,
+        "cancelCheck": 5,
+        "existing": false,
+        "accepted": false,
+        "retained": "absent"
+      },
+      {
+        "id": "existing-owner",
+        "byteLength": 65537,
+        "cancelCheck": null,
+        "existing": true,
+        "accepted": false,
+        "retained": "old"
+      }
     ],
     "sourceCases": [
-      { "change": "none", "accepted": true },
-      { "change": "replaced-bundle", "accepted": false },
-      { "change": "wrong-generation", "accepted": false },
-      { "change": "wrong-profile", "accepted": false },
-      { "change": "leaf-replaced-during-read", "accepted": false },
-      { "change": "cancel-before-read", "accepted": false }
+      {
+        "change": "none",
+        "accepted": true
+      },
+      {
+        "change": "replaced-bundle",
+        "accepted": false
+      },
+      {
+        "change": "wrong-generation",
+        "accepted": false
+      },
+      {
+        "change": "wrong-profile",
+        "accepted": false
+      },
+      {
+        "change": "leaf-replaced-during-read",
+        "accepted": false
+      },
+      {
+        "change": "cancel-before-read",
+        "accepted": false
+      }
     ],
     "initialGenerationId": "e53729da5bfb25770f2601ed575e0fa3eeb7903230239df46ee5d6170d9d4e52",
     "failedCandidateGenerationId": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1",

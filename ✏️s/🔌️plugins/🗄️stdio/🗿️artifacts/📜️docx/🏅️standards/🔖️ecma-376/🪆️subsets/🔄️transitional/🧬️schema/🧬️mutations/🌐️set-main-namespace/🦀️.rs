@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxTransitionalMutation> for SetMainN
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxTransitionalMutation> {
         agg_inverse(&DocxTransitionalMutation::SetMainNamespace(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-main-namespace".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-main-namespace", "Hauptnamensraum setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

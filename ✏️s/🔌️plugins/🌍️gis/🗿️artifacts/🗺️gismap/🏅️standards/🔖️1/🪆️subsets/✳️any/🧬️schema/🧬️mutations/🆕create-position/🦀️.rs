@@ -34,8 +34,8 @@ impl MutationKind<GisMapSnapshot, GisMapMutation> for CreatePosition {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Create position \"{}\"", self.item.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create position \"{}\"", self.item.id), &format!("Position \"{}\" erstellen", self.item.id))
     }
 }
 //#endregion 🔹Payload

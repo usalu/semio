@@ -22,8 +22,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetShapeText {
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
         agg_inverse(&PptxMutation::SetShapeText(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-shape-text".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-shape-text", "Formtext setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

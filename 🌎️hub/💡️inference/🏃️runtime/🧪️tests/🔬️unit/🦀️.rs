@@ -311,7 +311,14 @@ impl RuntimeLawHangWatchdogV1 {
                 return;
             }
             let entered = watched_phase.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
-            eprintln!("law hang watchdog: {law} exceeded {budget:?}; last phase entered: {entered}; last abandoned turn {:?}", last_abandoned_assembly_turn());
+            eprintln!(
+                "law hang watchdog: {law} exceeded {budget:?}; last phase entered: {entered}; last abandoned turn {:?}; last close-store step {:?}; last identity mismatch {:?}; last prepare conflict {:?}; last conflict arm {:?}",
+                last_abandoned_assembly_turn(),
+                last_close_store_step(),
+                last_gis_map_identity_mismatch(),
+                last_gis_map_prepare_conflict(),
+                last_gis_map_commit_conflict_arm(),
+            );
             std::process::abort();
         });
         Self { phase, finished }
@@ -762,7 +769,14 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
             ingress: undo_ingress,
         })
         .await
-        .expect("retained durable undo");
+        .unwrap_or_else(|error| {
+            panic!(
+                "retained durable undo: {error:?}, prepare conflict {:?}, conflict arm {:?}, identity mismatch {:?}",
+                last_gis_map_prepare_conflict(),
+                last_gis_map_commit_conflict_arm(),
+                last_gis_map_identity_mismatch(),
+            )
+        });
     assert!(undo_receipt.applied, "the first exact undo applies one second durable decision");
     assert_eq!(undo_receipt.frontier.head_edit_id, undo_mutation_id);
     assert_eq!(undo_receipt.frontier.head_edit_ordinal, terminal.frontier.head_edit_ordinal + undo_contract["undoCommandOrdinalDelta"].as_u64().expect("undo command delta"),);
@@ -802,7 +816,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
         Ok(super::super::sqlite::GisMapApprovalUndoAdmissionV1::Replayed(receipt)) if receipt.frontier == undo_receipt.frontier
     ));
 
-    committer.close().await.expect("committer close");
+    committer.close().await.unwrap_or_else(|error| panic!("committer close: {error:?}, last close-store step {:?}", last_close_store_step()));
     assert_eq!(Arc::strong_count(&committer.documents), 1, "close joins every maintenance task after its full retained committer owner is physically dropped");
     assert!(committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
     assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
@@ -1478,8 +1492,10 @@ mod quick {
             document_write: gate.clone(),
             ingress,
         });
+        watchdog.at("polling the final approval to its committed receipt cutover");
         tokio::time::timeout(std::time::Duration::from_secs(5), poll_approval_to_phase(&mut future, &committer, &key, AbandonedApprovalPhaseV1::Committed)).await.expect("approval reaches its committed receipt cutover");
         drop(future);
+        watchdog.at("awaiting the autonomous public checkpoint and ledger apply after the receipt cutover");
         tokio::time::timeout(std::time::Duration::from_secs(10), async {
             loop {
                 let approved = ledger.read(&accepted.job_id, &reader(&identity), 1_007).is_ok_and(|view| view.proposal_state == crate::inference::schema::InferenceProposalStateV1::Approved);
@@ -1495,15 +1511,19 @@ mod quick {
         assert_eq!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_slice(), ["public-checkpoint-attempt", "public-checkpoint-attempt", "public-checkpoint-ack", "peer-rebootstrap"],);
         let actor = handle.checkpoint_publication_snapshot().await.expect("committed actor frontier");
         assert_eq!((actor.frontier.head_seq, actor.frontier.commit_seq, actor.head_edit_id.as_ref().map(|id| id.0.as_str())), (1, 1, Some(mutation_id.as_str())));
-        committer.close().await.expect("committer close");
+        watchdog.at("driving the committer close to its terminal Store handoff");
+        committer.close().await.unwrap_or_else(|error| panic!("committer close: {error:?}, last close-store step {:?}", last_close_store_step()));
         drop(committer);
         drop(handle);
+        watchdog.at("shutting the database down");
         let mut database = Arc::try_unwrap(database).ok().expect("sole database owner");
         database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await.expect("database shutdown");
         drop(database);
+        watchdog.at("closing the terminal memory DB I/O backend");
         let db::storage::DbBackend::Memory(memory) = backend_witness.as_ref() else { panic!("the law mounts the exact memory DB I/O backend") };
         memory.close().await.expect("terminal memory DB I/O backend close");
         drop(backend_witness);
+        watchdog.at("shutting the worker pool down");
         pool.shutdown().expect("worker pool shutdown");
     }
 }

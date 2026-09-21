@@ -37,8 +37,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for RemoveTextChunkMutatio
             None => Vec::new(),
         }
     }
-    fn label(&self) -> String {
-        "remove text chunk".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove text chunk", "Textchunk entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-text-chunk".into()]

@@ -20,8 +20,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveBlock {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::RemoveBlock(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-block".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-block", "Block entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

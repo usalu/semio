@@ -24,8 +24,8 @@ impl protocol::MutationKind<ShootingConfig, ShootingConfigMutation> for SetDefau
     fn inverse(&self, base: &ShootingConfig) -> Vec<ShootingConfigMutation> {
         vec![ShootingConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Set Defaults".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Defaults", "Standardwerte setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["default_shot_format".into(), "default_shot_shape".into(), "default_asset_format".into()]

@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateOperationalRequire
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create operational requirement \"{}\"", self.operational_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create operational requirement \"{}\"", self.operational_requirement.header.name), &format!("Betriebsanforderung \"{}\" erstellen", self.operational_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.operational_requirement.header.id.0.clone()]

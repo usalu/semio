@@ -65,8 +65,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderBuffer
         vec![super::GltfMutation::ReorderBuffers(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Reorder Buffers".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Reorder Buffers", "Puffer umordnen")
     }
 
     fn target(&self) -> Vec<String> {

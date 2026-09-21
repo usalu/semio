@@ -35,7 +35,7 @@ impl store::ErasedSnapshotRetirement for SnapshotRetirement {
             return Ok(Step::Blocked);
         }
         if !self.retirement.is_empty() {
-            return store::ErasedSnapshotRetirement::close_step(&mut self.retirement, 1, bytes);
+            return self.retirement.close_page(1, bytes);
         }
         if let Some(root) = self.root.take() {
             self.owned = ManuallyDrop::new(Arc::into_inner(root));

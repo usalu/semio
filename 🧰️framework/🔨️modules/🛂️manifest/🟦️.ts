@@ -1226,12 +1226,21 @@ function assetNameSegment(raw: string): string {
   return raw.replace(/[^0-9A-Za-z._-]/g, "-");
 }
 
-/** 📦️ The `AssetDeclaration.name` an externalized example body travels under — TS twin of Rust
- * `describe::externalize_oversized_example_bodies`. A descriptor never inlines a body over
+/** 📦️ The directory-and-stem prefix an externalized example body travels under — TS twin of Rust
+ * `manifest::example_body_asset_prefix`. The suffix after it names the BYTES declared: `.json` for a
+ * body `describe::externalize_oversized_example_bodies` moved out of the manifest, and the authored
+ * fixture's own extension for a body the plugin deferred and never materialised
+ * (`ExampleSource::deferred`). Match the prefix, never one fixed extension. */
+export function exampleBodyAssetPrefix(example: { readonly id: string; readonly dialect: ArtifactDialect }): string {
+  return `📚️examples/${assetNameSegment(example.dialect.artifactKind)}.${assetNameSegment(example.dialect.standard)}.${assetNameSegment(example.dialect.subset)}/${assetNameSegment(example.id)}`;
+}
+
+/** 📦️ The `AssetDeclaration.name` an externalized INLINE example body travels under — TS twin of
+ * Rust `describe::externalize_oversized_example_bodies`. A descriptor never inlines a body over
  * `DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES` (256 KiB); it keeps the row and declares the body as this
  * asset instead, so the 4 MiB descriptor bound cannot be breached by an authored document. */
 export function exampleBodyAssetName(example: { readonly id: string; readonly dialect: ArtifactDialect }): string {
-  return `📚️examples/${assetNameSegment(example.dialect.artifactKind)}.${assetNameSegment(example.dialect.standard)}.${assetNameSegment(example.dialect.subset)}/${assetNameSegment(example.id)}.json`;
+  return `${exampleBodyAssetPrefix(example)}.json`;
 }
 
 /** 📚️ The examples one surface may offer — {@link examplesForDialect} against that surface's own

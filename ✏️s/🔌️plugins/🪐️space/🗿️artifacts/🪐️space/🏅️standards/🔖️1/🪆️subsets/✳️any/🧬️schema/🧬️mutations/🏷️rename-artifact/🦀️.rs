@@ -27,8 +27,8 @@ impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for RenameArtifact {
     fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename artifact \"{}\" to \"{}\"", self.id, self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename artifact \"{}\" to \"{}\"", self.id, self.new_name), &format!("Artefakt \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

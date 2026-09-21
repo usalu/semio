@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceCollaborationReco
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace collaboration record \"{}\"", self.collaboration_record.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace collaboration record \"{}\"", self.collaboration_record.header.name), &format!("Zusammenarbeitdatensatz \"{}\" ersetzen", self.collaboration_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.collaboration_record.header.id.0.clone()]

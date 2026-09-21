@@ -19,8 +19,8 @@ impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for SetContributio
     fn inverse(&self, base: &FormsConfig) -> Vec<FormsConfigMutation> {
         vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Set Contributions".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["contributions".into()]

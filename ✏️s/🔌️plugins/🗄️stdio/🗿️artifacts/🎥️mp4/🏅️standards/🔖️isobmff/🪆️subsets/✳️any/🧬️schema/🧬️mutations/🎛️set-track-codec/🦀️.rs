@@ -22,8 +22,8 @@ impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetTrackCodec {
     fn inverse(&self, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {
         agg_inverse(&Mp4Mutation::SetTrackCodec(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-track-codec".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-track-codec", "Spurcodec setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeNEdKn {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change design axial force N_Ed [kN] to {}", self.new_n_ed_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change design axial force N_Ed [kN] to {}", self.new_n_ed_kn), &format!("Bemessungsaxialkraftn_Ed [kN] auf {} ändern", self.new_n_ed_kn))
     }
 }
 //#endregion 🔖️ChangeNEdKn

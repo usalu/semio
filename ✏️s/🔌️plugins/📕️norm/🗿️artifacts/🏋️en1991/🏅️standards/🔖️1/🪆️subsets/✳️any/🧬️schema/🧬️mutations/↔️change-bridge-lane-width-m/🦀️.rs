@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeBridgeLane
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change bridge lane width to {:?}", self.new_bridge_lane_width_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change bridge lane width to {:?}", self.new_bridge_lane_width_m), &format!("Brückenspurbreite auf {:?} ändern", self.new_bridge_lane_width_m))
     }
 }
 //#endregion 🔖️Payload

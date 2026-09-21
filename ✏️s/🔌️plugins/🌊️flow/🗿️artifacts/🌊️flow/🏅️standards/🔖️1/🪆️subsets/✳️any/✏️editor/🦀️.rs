@@ -150,9 +150,11 @@ pub const FLOW_INTERACTION_GRAPH: &str = "graph";
 
 /// 🕹️ The document panel tree's own row id prefix for "node"-granularity targets (widgets) — see
 /// `document_panel::render`'s doc comment; `interaction_topology` registers the SAME ids.
-const FLOW_GRAPH_NODE_TARGET_PREFIX: &str = "flow-play-document.widget.";
+pub const FLOW_GRAPH_NODE_TARGET_PREFIX: &str = "flow-play-document.widget.";
 /// 🕹️ Same as `FLOW_GRAPH_NODE_TARGET_PREFIX`, for "edge"-granularity targets (synapses).
-const FLOW_GRAPH_EDGE_TARGET_PREFIX: &str = "flow-play-document.synapse.";
+pub const FLOW_GRAPH_EDGE_TARGET_PREFIX: &str = "flow-play-document.synapse.";
+/// 🕹️ The scoped prefix for transient graph handle targets published by the canvas.
+pub const FLOW_GRAPH_HANDLE_TARGET_PREFIX: &str = "flow-play-document.handle.";
 
 /// 🕹️ The "graph" domain's row id for a widget (node granularity).
 pub fn flow_graph_node_target_id(widget_id: &str) -> String {
@@ -328,7 +330,7 @@ fn flow_context_menu_items(registry: &AppActionRegistry, snapshot: &FlowSnapshot
 //#region 📬️StorePreparation
 const FLOW_STORE_MAX_SCENE_ITEMS: usize = 256;
 const FLOW_STORE_MAX_TEXT_BYTES: usize = 16_384;
-const FLOW_STORE_MAX_MUTATION_ITEMS: usize = 256;
+pub(crate) const FLOW_STORE_MAX_MUTATION_ITEMS: usize = 256;
 
 type FlowStorePrepare<P, M> = fn(&P, M) -> Result<(P, Vec<M>, M), String>;
 type FlowStoreAdmit<M> = fn(&M) -> Result<store::ArtifactStoreOneItemFootprint, String>;
@@ -774,7 +776,9 @@ fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowC
     };
     let mut host = FlowHost::from_host_snapshot(patched_fixture);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
-    host.evaluate().unwrap_or_default()
+    let preview = host.evaluate().unwrap_or_default();
+    host.retire_cold();
+    preview
 }
 
 fn generation_window_transient(
@@ -1800,7 +1804,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFa
 /// faulted the entire app at construction with `interactive-job.catalog-authority` on every host
 /// that instantiates the flow editor (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 const FLOW_GRAPH_OPERATION_TOOL_IDS: &[&str] = &["connectMediaPorts", "reorganize", "renameFlowWidget", "nodeGraphEdit", "spotlightCommit", "runExtensionAction"];
-const FLOW_GRAPH_OPERATION_RAW_BYTES: usize = 16_384;
+pub(crate) const FLOW_GRAPH_OPERATION_RAW_BYTES: usize = 16_384;
 /// 🧮️ The ONE capacity this route declares — its survey walks at most every widget of an admitted
 /// scene, plus the single apply step (`📓️work-capacity-2026-09-10.md`).
 const FLOW_GRAPH_OPERATION_CAPACITY: semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity =
@@ -1864,8 +1868,8 @@ impl FlowGraphOperationWork {
                 FlowCommand::Reorganize(_) => Ok(Emit::mutations(reorganize::reorganize_operations(snapshot, config, session))),
                 FlowCommand::RenameFlowWidget(payload) if resolved[0] && !resolved[1] => Ok(Emit::mutations(rename_flow_widget::rename_operations(payload, snapshot))),
                 FlowCommand::RenameFlowWidget(_) => Ok(Emit::default()),
-                FlowCommand::NodeGraphEdit(payload) => Ok(node_graph_edit::node_graph_edit_result(snapshot, config, session, &payload.operations, &nodes)),
-                FlowCommand::SpotlightCommit(payload) => Ok(spotlight_commit::node_graph_edit_result(snapshot, config, session, &payload.operations, &nodes)),
+                FlowCommand::NodeGraphEdit(payload) => node_graph_edit::node_graph_edit_result(snapshot, config, session, &payload.operations, &nodes),
+                FlowCommand::SpotlightCommit(payload) => spotlight_commit::node_graph_edit_result(snapshot, config, session, &payload.operations, &nodes),
                 FlowCommand::RunExtensionAction(payload) => Ok(run_extension_action::extension_action_result(payload, snapshot, config, session)),
                 _ => Err(Fault::from("flow-retained-graph-route-mismatch")),
             })?
@@ -2218,12 +2222,22 @@ impl ArtifactEditor for FlowPlayApp {
         Some(crate::retirement::store_owners())
     }
 
+    /// 🏗️ Restores a complete Flow document archive through the same bounded initializer used by
+    /// ordinary document replacement, including its composed child closure.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, FLOW_DOCUMENT_SCHEMA, operation, generation))
+    }
+
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
         Some(semio_framework_plugin::no_config_store_owners())
     }
 
     fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
-        Some(semio_framework_plugin::bounded_document_store_owners::<NoDraft, NoDraftMutation>())
+        Some(semio_framework_plugin::no_draft_store_owners())
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -2235,7 +2249,7 @@ impl ArtifactEditor for FlowPlayApp {
     }
 
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<NoDraft, NoDraftMutation>())
+        Some(semio_framework_plugin::no_draft_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
@@ -2386,15 +2400,6 @@ impl ArtifactEditor for FlowPlayApp {
                 .find_map(|key| args.get(key).and_then(dsl::DslValue::as_array))
                 .map_or_else(Vec::new, |items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect())
         };
-        // 🧵️ `operations: [op, …]` decoded through the ops' own `FromValue`, the same derive the binary
-        // command codec uses — a malformed row is dropped rather than failing the whole edit, because
-        // both callers of this shape (`nodeGraphEdit`, `spotlightCommit`) are also routed through their
-        // own job factory and this bridge is their fallback, not their contract.
-        fn graph_operations<T: dsl::FromValue>(args: &dsl::DslValue) -> Vec<T> {
-            args.get("operations")
-                .and_then(dsl::DslValue::as_array)
-                .map_or_else(Vec::new, |items| items.iter().filter_map(|item| T::from_value(item.clone()).ok()).collect())
-        }
         match action {
             "addWidget" => Ok(FlowCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind", "neuron_kind"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
             "removeWidget" => Ok(FlowCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
@@ -2415,8 +2420,8 @@ impl ArtifactEditor for FlowPlayApp {
                 value: str_arg(&["value"]).unwrap_or_default(),
             })),
             "renameFlowWidget" => Ok(FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: str_arg(&["oldId", "old_id", "id"]).unwrap_or_default(), value: str_arg(&["value", "name"]).unwrap_or_default() })),
-            "nodeGraphEdit" => Ok(FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: graph_operations(&args) })),
-            "spotlightCommit" => Ok(FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: graph_operations(&args) })),
+            "nodeGraphEdit" => Ok(FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: node_graph_edit::operations_from_action(&args)? })),
+            "spotlightCommit" => Ok(FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: node_graph_edit::operations_from_action(&args)? })),
             "runExtensionAction" => Ok(FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: str_arg(&["actionId", "action_id", "id"]).unwrap_or_default() })),
             "evaluate" => Ok(FlowCommand::Evaluate(evaluate::Evaluate {})),
             "focusSelection" => Ok(FlowCommand::FocusSelection(focus_selection::FocusSelection {})),
@@ -2553,7 +2558,7 @@ impl ArtifactEditor for FlowPlayApp {
         let labels = flow_play_labels(view_state);
         let mut session = FlowEvalSession::new();
         let rendered = match body_key {
-            FLOW_PLAY_BODY_MAIN => main::render(snapshot, &config, &mut session).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_MAIN => main::render(snapshot, &config, &mut session, &[]).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_COMPILED => compiled::render(snapshot, &config, &mut session).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATIONS => generations::render(&transient, view_state.locale, view_state.terminology, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
                 .map(semio_framework_plugin::built_to_component_tree),
@@ -2576,14 +2581,15 @@ impl ArtifactEditor for FlowPlayApp {
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
-        _interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let config = main::config::current(cfg);
         let transient = main::transient::current(transient);
+        let (graph_selection, _) = flow_graph_selection_domains(&interaction.selection(FLOW_INTERACTION_GRAPH).ids);
         owner
             .with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match body_key {
-                    FLOW_PLAY_BODY_MAIN => main::render(doc.snapshot, &config, session).map(semio_framework_plugin::built_to_component_tree),
+                    FLOW_PLAY_BODY_MAIN => main::render(doc.snapshot, &config, session, &graph_selection).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_COMPILED => compiled::render(doc.snapshot, &config, session).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_GENERATIONS => {
                         generations::render(&transient, view_state.locale, view_state.terminology, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_GENERATIONS))
@@ -2677,16 +2683,49 @@ pub fn with_live_host_snapshot<R>(snapshot: &FlowSnapshot, body: impl FnOnce(&se
 /// ✏️ Runs a stateful `FlowHost` mutation and diffs the result back into granular `FlowMutation`s —
 /// returns an empty vec when `mutate` reports "nothing changed".
 pub fn host_operations(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowMutation> {
+    fallible_host_operations(snapshot, config, session, |host| Ok(mutate(host))).unwrap_or_default()
+}
+
+/// ✏️ Runs one atomic host mutation batch while retaining the host's exact semantic refusal.
+pub fn fallible_host_operations(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, mutate: impl FnOnce(&mut FlowHost) -> Result<bool, Fault>) -> Result<Vec<FlowMutation>, Fault> {
     let mut host = host_from_snapshot(snapshot, config, session);
-    if !mutate(&mut host) {
+    let changed = match mutate(&mut host) {
+        Ok(changed) => changed,
+        Err(error) => {
+            host.retire_cold();
+            return Err(error);
+        }
+    };
+    if !changed {
         host.retire_cold();
-        return Vec::new();
+        return Ok(Vec::new());
     }
     let live = snapshot.to_host_snapshot();
     let operations = flow_host_snapshot_operations(&live, &host.host_snapshot).unwrap_or_default();
+    let removed_widgets: Vec<String> = operations
+        .iter()
+        .filter_map(|operation| match operation {
+            semio_framework_artifact_flow_flow::FlowMutation::RemoveWidget(payload) => Some(payload.id.clone()),
+            _ => None,
+        })
+        .collect();
+    let cascaded_synapses: Vec<String> = live
+        .synapses
+        .iter()
+        .filter(|synapse| removed_widgets.iter().any(|id| id == &synapse.from || id == &synapse.to))
+        .map(|synapse| synapse.id.clone())
+        .collect();
+    let operations = operations
+        .into_iter()
+        .filter(|operation| match operation {
+            semio_framework_artifact_flow_flow::FlowMutation::RemoveSynapse(payload) => !cascaded_synapses.iter().any(|id| id == &payload.id),
+            _ => true,
+        })
+        .filter_map(crate::schema::mutations::from_framework_mutation)
+        .collect();
     live.retire_cold();
     host.retire_cold();
-    operations.into_iter().filter_map(crate::schema::mutations::from_framework_mutation).collect()
+    Ok(operations)
 }
 //#endregion 🔖️Host
 

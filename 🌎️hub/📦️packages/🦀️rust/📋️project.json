@@ -92,6 +92,17 @@
         "command": "bun ./📜️script.ts build-dev"
       }
     },
+    "build-dev-postgres": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build-dev-postgres"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build-dev-postgres"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {
@@ -129,6 +140,14 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test all-features",
+        "forwardAllArgs": true
+      }
+    },
+    "directory-live-lanes": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-live-lanes",
         "forwardAllArgs": true
       }
     },
@@ -655,7 +674,10 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts browser-actor-child-worker-containment-check"
+        "command": "bun ./📜️script.ts browser-actor-child-worker-containment-check",
+        "env": {
+          "SEMIO_TEST_ARTIFACT_DIR": "../../../.🧬semio/🦑️repo/⚡️cache/browser-actor-child-containment"
+        }
       },
       "cache": false
     },
@@ -829,12 +851,13 @@
       },
       "outputs": []
     },
-    "trusted-stdio-gis-bootstrap": {
+    "trusted-catalog-bootstrap": {
       "executor": "nx:run-commands",
       "cache": true,
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts trusted-stdio-gis-bootstrap"
+        "command": "bun ./📜️script.ts trusted-catalog-bootstrap",
+        "forwardAllArgs": true
       },
       "outputs": []
     },
@@ -970,6 +993,24 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev"
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "dev-postgres": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "build-dev-postgres",
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev postgres"
       },
       "cache": false,
       "continuous": true

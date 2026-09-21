@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateBenchmarkRecord {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create benchmark record \"{}\"", self.benchmark_record.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create benchmark record \"{}\"", self.benchmark_record.header.name), &format!("Vergleichswertdatensatz \"{}\" erstellen", self.benchmark_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.benchmark_record.header.id.0.clone()]

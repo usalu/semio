@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyCad {
     fn inverse(&self, base: &SemioSnapshot) -> Vec<SemioMutation> {
         agg_inverse(&SemioMutation::ApplyCad(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "cad".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("cad", "cad")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

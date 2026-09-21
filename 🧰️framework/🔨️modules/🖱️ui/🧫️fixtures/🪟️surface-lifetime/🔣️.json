@@ -1,0 +1,13 @@
+{
+  "sequentialMounts": 65,
+  "closedSurfaces": 0,
+  "silentBlurCommit": {
+    "initialValue": "",
+    "draft": "unfinished",
+    "actions": 0
+  },
+  "sameIdSuccessor": {
+    "rejectPreviousIdentity": true,
+    "preserveSuccessor": true
+  }
+}

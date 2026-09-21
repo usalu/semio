@@ -22,8 +22,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for ReplaceGraph
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Replace graph".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace graph", "Graph ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["graph".into()]

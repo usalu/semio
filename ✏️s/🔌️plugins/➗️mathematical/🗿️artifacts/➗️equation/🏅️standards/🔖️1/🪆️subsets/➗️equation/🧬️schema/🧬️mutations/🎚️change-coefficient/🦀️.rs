@@ -29,8 +29,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for ChangeCoeffi
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change coefficient {} to {}/{}", self.label.0, self.numer, self.denom)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change coefficient {} to {}/{}", self.label.0, self.numer, self.denom), &format!("Koeffizient {} auf {}/{} ändern", self.label.0, self.numer, self.denom))
     }
     fn target(&self) -> Vec<String> {
         vec![self.label.0.to_string()]

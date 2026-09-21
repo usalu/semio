@@ -21,8 +21,8 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetText {
     fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {
         agg_inverse(&XmlValidMutation::SetText(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-text".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-text", "Text setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

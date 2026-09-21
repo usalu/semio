@@ -29,8 +29,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateMemberProp
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Update member properties (forces, section, material)".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update member properties (forces, section, material)", "Gliedeigenschaften (Kräfte, Abschnitt, Material) aktualisieren")
     }
 }
 //#endregion 🔖️Payload

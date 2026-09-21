@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridOpacity {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change grid opacity to {:?}", self.new_opacity)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change grid opacity to {:?}", self.new_opacity), &format!("Rasterdeckkraft auf {:?} ändern", self.new_opacity))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -67,8 +67,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveBufferMut
         vec![super::GltfMutation::MoveBuffer(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Move Buffer".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Move Buffer", "Puffer verschieben")
     }
 
     fn target(&self) -> Vec<String> {

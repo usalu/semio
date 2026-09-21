@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeHdOverH {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change hd over h to {:?}", self.new_hd_over_h)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change hd over h to {:?}", self.new_hd_over_h), &format!("hd über h auf {:?} ändern", self.new_hd_over_h))
     }
 }
 //#endregion 🔖️ChangeHdOverH

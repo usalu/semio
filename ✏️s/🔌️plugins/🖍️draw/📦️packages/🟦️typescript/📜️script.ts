@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🖍️ Draw example twins plus the publication-authority law: every dispatchable route is declared once, in every place the framework joins. */
 import { join, resolve } from "node:path";
+import { createRequire } from "node:module";
 import Ajv from "ajv";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 /** 🔤️ The Rust variant name of one kebab lane/disposition from `framework.ui`'s shared vocabulary. */
@@ -10,6 +11,33 @@ type Lane = "artifact" | "config" | "draft" | "presence" | "transient" | "window
 type Route = { id: string; lanes: Lane[]; frameworkInjected?: true };
 type AppAuthority = { owner: string; toolIdsConstants: string[]; source: string; routes: Route[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
 type Fixture = { schema: string; apps: AppAuthority[] };
+
+type BootstrapYield = { expectedStages: string[]; expectedAllocationDelta: number };
+type ScheduledContinuation = () => void | ScheduledContinuation;
+
+function bootstrapYieldOracle(law: BootstrapYield): void {
+  const scheduler = createRequire(import.meta.url)("scheduler/unstable_mock") as {
+    unstable_NormalPriority: number;
+    unstable_scheduleCallback(priority: number, callback: ScheduledContinuation): unknown;
+    unstable_flushNumberOfYields(count: number): void;
+    unstable_flushAllWithoutAsserting(): boolean;
+    unstable_clearLog(): string[];
+    unstable_hasPendingWork(): boolean;
+    log(value: string): void;
+  };
+  let allocations = 0;
+  scheduler.unstable_scheduleCallback(scheduler.unstable_NormalPriority, () => {
+    scheduler.log("yielded");
+    return () => { allocations += 1; scheduler.log("resumed"); };
+  });
+  scheduler.unstable_flushNumberOfYields(1);
+  const stages = scheduler.unstable_clearLog();
+  if (allocations !== law.expectedAllocationDelta || !scheduler.unstable_hasPendingWork()) throw new Error("React Scheduler lost or advanced the yielded bootstrap continuation");
+  scheduler.unstable_flushAllWithoutAsserting();
+  stages.push(...scheduler.unstable_clearLog());
+  if (allocations !== 1 || scheduler.unstable_hasPendingWork() || JSON.stringify(stages) !== JSON.stringify(law.expectedStages)) throw new Error("React Scheduler failed the bootstrap resume law");
+  console.error(`[DEBUG] Drawing bootstrap third-party React Scheduler oracle: ${stages.join("→")}; allocations before resume=${law.expectedAllocationDelta}`);
+}
 
 /** 🖍️ Every anchor draw's publication apparatus must carry verbatim: the proof catalogs, both owned
  * factories, the one-item artifact store preparation authority, the exact Canvas window config +
@@ -90,6 +118,13 @@ class TestScript extends BundleScript {
     ajv.addSchema(module);
     const validate = ajv.compile({ $ref: `${module.$id}#/$defs/DrawPublicationAuthority` });
     if (!validate(fixture)) throw new Error(`Draw fixture failed strict Ajv: ${JSON.stringify(validate.errors)}`);
+    const admission = resolve(subset, "🧬️schema/🧰️owned/🧫️fixtures/🧮️mutation-admission");
+    const admissionSchema = await Bun.file(resolve(admission, "🧬️schema/🔣️.json")).json() as { $id: string };
+    const admissionFixture = await Bun.file(resolve(admission, "🔣️.json")).json() as { cases: unknown[]; bootstrapYield: BootstrapYield };
+    ajv.addSchema(admissionSchema);
+    const validateAdmission = ajv.getSchema(admissionSchema.$id);
+    if (!validateAdmission?.(admissionFixture)) throw new Error(`Drawing mutation-admission fixture failed strict Ajv: ${JSON.stringify(validateAdmission?.errors)}`);
+    bootstrapYieldOracle(admissionFixture.bootstrapYield);
     const sources = new Map<string, string>();
     for (const app of fixture.apps) sources.set(app.owner, await Bun.file(resolve(plugin, app.source)).text());
     if (!oracle(fixture, sources)) throw new Error("Draw publication-authority oracle rejected production");
@@ -104,7 +139,7 @@ class TestScript extends BundleScript {
       hostile += 1;
       if (oracle(hostileFixture, sources)) throw new Error(`Draw accepted a hostile fixture mutation for ${app.owner}`);
     }
-    console.error(`validated Draw publication authority; apps=${fixture.apps.map((app) => `${app.owner}:${app.routes.length}`).join(",")}; schema=Ajv; oracle=owned; hostile=${hostile}`);
+    console.error(`validated Draw publication authority; apps=${fixture.apps.map((app) => `${app.owner}:${app.routes.length}`).join(",")}; schema=Ajv; oracle=owned; hostile=${hostile}; mutationAdmission=${admissionFixture.cases.length}`);
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("publication-authority-audit", TestScript);

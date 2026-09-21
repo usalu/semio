@@ -22,8 +22,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for InsertPoint 
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Insert point at {}", self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Insert point at {}", self.index), &format!("Punkt an {} einfügen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec!["geometry".into(), "points".into(), self.index.to_string()]

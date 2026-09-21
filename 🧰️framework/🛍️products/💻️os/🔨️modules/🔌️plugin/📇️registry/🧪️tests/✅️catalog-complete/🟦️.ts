@@ -467,7 +467,7 @@ describe("strict plugin catalog completion", () => {
     expect(auditInteractiveJobClassificationDrift("owner", join(ownerRoot, "absent"), descriptor)).toEqual([]);
   });
 
-  it("independently enumerates the 60 real manifests and the known 15 missing source pairs", () => {
+  it("independently enumerates the 60 real manifests and finds every one of them paired with a committed descriptor", () => {
     const audit = auditPluginCatalogSources();
     const missing = audit.issues.filter(({ code }) => code === "descriptor-pair-missing").map(({ pluginId }) => pluginId).sort();
     expect(audit.manifestCount).toBe(60);
@@ -480,9 +480,11 @@ describe("strict plugin catalog completion", () => {
     expect(audit.entries.find(({ pluginId }) => pluginId === "demonstrator")?.dependsOn).toEqual(["cad", "gis", "procedural", "process", "puzzle", "sourcing", "flow-extension-bim", "flow-extension-brep", "flow-extension-dictionary", "flow-extension-list", "flow-extension-logic", "flow-extension-math", "flow-extension-primitive", "flow-extension-text"]);
     expect(audit.entries.find(({ pluginId }) => pluginId === "cad-extension-aec-building")?.dependsOn).toEqual(["cad"]);
     expect(audit.issues.filter(({ code }) => code === "dependency-invalid")).toEqual([]);
-    expect(missing).toEqual([
-      "imperative-extension-control", "imperative-extension-effect", "imperative-extension-logic", "imperative-extension-math", "imperative-extension-text", "playbook", "playbook-module-procedural", "process-extension-concrete", "process-extension-metal", "process-extension-robotic", "process-extension-wood", "sourcing-module-beams", "sourcing-module-slabs", "sourcing-module-windows", "stdio",
-    ]);
+    // 📇️ Every registry plugin is paired. The list this asserted used to hold 15 ids; A3b/CE1 closed
+    // fourteen of them and `stdio` — the last one, and the only one that had NEVER been described —
+    // landed on 2026-09-21 (`🎫️…/📓️pz1-catalog-zero-diagnostics.md` §1). An empty list is the
+    // contract: a plugin the registry enumerates but cannot read is a plugin agents cannot reach.
+    expect(missing).toEqual([]);
   }, 120_000);
 
   it("checked-in manifest examples carry dialect so the navbar picker can resolve them", () => {

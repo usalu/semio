@@ -20,8 +20,8 @@ impl MutationKind<i64, CounterMutation> for AddRejectedCounter {
     fn inverse(&self, _base: &i64) -> Vec<CounterMutation> {
         Vec::new()
     }
-    fn label(&self) -> String {
-        "Add rejected counter".into()
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Add rejected counter", "abgelehnte Zähler hinzufügen")
     }
 }
 //#endregion ⚙️Behavior

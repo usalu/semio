@@ -12,7 +12,7 @@
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🌳️wgpu-document-reconcile/🟦️.ts`).
 
 use super::*;
-use crate::wgpu::engine::{ui_document_ingress_generation, Ui, UiDocumentIngressFault, UiDocumentIngressStatus, UiFrameStep, UiLayoutStep};
+use crate::wgpu::engine::{ui_document_ingress_generation, Ui, UiDocumentIngressFault, UiDocumentIngressStatus, UiFrameStep, UiLayoutStep, UI_RETIRED_COMPONENT_SCENE_CAPACITY};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::tree::UiTree;
 use ui_contract::{SurfaceId, UiDocumentAssembly, UiDocumentAssemblyIdentity, UiDocumentLease, UiDocumentLeaseHeader, UiRevision};
@@ -54,9 +54,13 @@ fn document_from(law: &serde_json::Value, ids: &[u64], generation: u64, revision
 }
 
 fn reconcile(tree: &mut UiTree, cursor: &mut UiDocumentReconcileCursor, generation: u64) -> UiDocumentReconcileStep {
+    reconcile_window(tree, cursor, generation, "procedural-main")
+}
+
+fn reconcile_window(tree: &mut UiTree, cursor: &mut UiDocumentReconcileCursor, generation: u64, window_id: &str) -> UiDocumentReconcileStep {
     cursor.rearm(generation);
     for _ in 0..4096 {
-        match tree.step_document_reconcile(cursor, "procedural-main", "generation3d") {
+        match tree.step_document_reconcile(cursor, window_id, "generation3d") {
             UiDocumentReconcileStep::Pending => {}
             terminal => return terminal,
         }
@@ -233,7 +237,7 @@ fn retiring_a_document_frees_every_node_it_mounted_one_step_at_a_time() {
     let mounted = law["expected"]["arenaNodeCount"].as_u64().expect("count") as usize;
 
     let mut steps = 0;
-    while !tree.close_document_binding_step() {
+    while !tree.close_document_binding_step(&mut |_, _| true) {
         steps += 1;
         assert!(steps <= mounted, "retirement must free exactly the nodes it mounted, one per step");
     }
@@ -529,7 +533,7 @@ fn tiny_document(surface: &str, revision: u64, root: &serde_json::Value, child: 
 /// allocator notices — and a neighbouring test running in parallel meets `ArenaFull` instead of its
 /// own law. Retiring explicitly is the same rule the runtime itself follows.
 fn retire(mut tree: UiTree) {
-    while !tree.close_document_binding_step() {}
+    while !tree.close_document_binding_step(&mut |_, _| true) {}
     if let Some(mut document) = tree.take_document() {
         while !document.close_step() {}
     }
@@ -642,18 +646,146 @@ fn an_extension_slot_carries_its_publishers_plugin_id_instead_of_an_empty_string
 /// (`componentScene#gis2d-main`, `nodes=1`). Every other wgpu playground wraps its surface in at
 /// least one container, so this shape had no law at all.
 fn engine_surface_root_record(id: u64, key: &str, kind: &str) -> serde_json::Value {
+    let doc_schema = match kind {
+        "tiled-map" => "tiled-map@1",
+        "world-3d" => "world3d@1",
+        _ => "node-graph@1",
+    };
     serde_json::json!({
         "id": id,
         "key": key,
         // 📐️ A root engine surface owns the viewport in both axes. `LeafLayout` requires both
         // sizing fields on the wire; the renderer contract has no compatibility defaults.
         "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
-        "component": { "type": "surface", "kind": kind, "docSchema": "tiled-map@1", "doc": { "bytes": [] } },
+        "component": { "type": "surface", "kind": kind, "docSchema": doc_schema, "doc": { "bytes": [] } },
         "style": {},
         "activity": "idle",
         "accessibility": {},
         "children": [],
     })
+}
+
+#[test]
+fn same_key_scene_kind_replacement_emits_the_exact_old_identity_once() {
+    let mut tree = UiTree::new();
+    let map = engine_surface_root_record(0, "scene.same-key", "tiled-map");
+    tree.publish_document(tiny_document("scene-window", 1, &map, None));
+    let mut cursor = UiDocumentReconcileCursor::default();
+    assert_eq!(reconcile_window(&mut tree, &mut cursor, 11, "scene-window"), UiDocumentReconcileStep::Complete);
+    let node = tree.document_node(UiNodeId(0)).expect("Map root mounted");
+
+    let world = engine_surface_root_record(0, "scene.same-key", "world-3d");
+    tree.publish_document(tiny_document("scene-window", 2, &world, None));
+    cursor.rearm(11);
+    let mut retired = Vec::new();
+    let mut component_mount_generation = 1;
+    for _ in 0..4096 {
+        let step = tree.step_document_reconcile_preserving(&mut cursor, "scene-window", "fixture", None, 7, None, &mut component_mount_generation, &mut |row| {
+            retired.push(row);
+            true
+        });
+        if !matches!(step, UiDocumentReconcileStep::Pending) {
+            assert_eq!(step, UiDocumentReconcileStep::Complete);
+            break;
+        }
+    }
+    assert_eq!(retired.len(), 1);
+    assert_eq!(retired[0].window_id, "scene-window");
+    assert_eq!(retired[0].window_generation, 7);
+    assert_eq!(retired[0].component_generation, 1);
+    assert_eq!(retired[0].node, node);
+    assert_eq!(retired[0].key, NodeKey::Explicit("scene.same-key".into()));
+    assert_eq!(retired[0].kind, SurfaceKind::TiledMap);
+    assert_eq!(retired[0].surface_id, "scene-window");
+    assert!(matches!(tree.node(node).map(|node| &node.spec.0), Some(UiNode::ComponentScene(scene)) if scene.component_kind == SurfaceKind::World3d));
+    assert_eq!(tree.node(node).map(|node| node.component_generation()), Some(2));
+    retire(tree);
+}
+
+#[test]
+fn a_full_scene_retirement_ledger_yields_before_mutating_the_old_node() {
+    let mut tree = UiTree::new();
+    let map = engine_surface_root_record(0, "scene.backpressure", "tiled-map");
+    tree.publish_document(tiny_document("scene-backpressure", 1, &map, None));
+    let mut cursor = UiDocumentReconcileCursor::default();
+    assert_eq!(reconcile_window(&mut tree, &mut cursor, 11, "scene-backpressure"), UiDocumentReconcileStep::Complete);
+    let node = tree.document_node(UiNodeId(0)).expect("Map root mounted");
+    let mounted = tree.node(node).expect("Map root remains live");
+    let UiNode::ComponentScene(scene) = &mounted.spec.0 else { panic!("root is a scene") };
+    let template = UiRetiredComponentScene {
+        host_id: scene.host_id.clone(),
+        window_id: "scene-backpressure".into(),
+        window_generation: 9,
+        component_generation: mounted.component_generation(),
+        node,
+        key: mounted.key.clone(),
+        kind: scene.component_kind,
+        surface_id: scene.surface_id.clone(),
+    };
+    let mut ledger = vec![template; UI_RETIRED_COMPONENT_SCENE_CAPACITY];
+
+    let world = engine_surface_root_record(0, "scene.backpressure", "world-3d");
+    tree.publish_document(tiny_document("scene-backpressure", 2, &world, None));
+    cursor.rearm(11);
+    let mut refused = false;
+    let mut component_mount_generation = 1;
+    for _ in 0..4096 {
+        let _ = tree.step_document_reconcile_preserving(&mut cursor, "scene-backpressure", "fixture", None, 9, None, &mut component_mount_generation, &mut |row| {
+            if ledger.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
+                refused = true;
+                return false;
+            }
+            ledger.push(row);
+            true
+        });
+        if refused {
+            break;
+        }
+    }
+    assert!(refused, "the full fixed ledger applies backpressure");
+    assert!(matches!(tree.node(node).map(|node| &node.spec.0), Some(UiNode::ComponentScene(scene)) if scene.component_kind == SurfaceKind::TiledMap), "the old scene remains observable until retirement admission succeeds");
+    assert_eq!(tree.node(node).map(|node| node.component_generation()), Some(1), "backpressure cannot advance the component mount identity before retiring its old owner");
+    ledger.pop();
+    let _ = tree.step_document_reconcile_preserving(&mut cursor, "scene-backpressure", "fixture", None, 9, None, &mut component_mount_generation, &mut |row| {
+        ledger.push(row);
+        true
+    });
+    assert_eq!(ledger.len(), UI_RETIRED_COMPONENT_SCENE_CAPACITY);
+    assert!(matches!(tree.node(node).map(|node| &node.spec.0), Some(UiNode::ComponentScene(scene)) if scene.component_kind == SurfaceKind::World3d), "one freed ledger slot admits retirement and only then mutates the scene");
+    assert_eq!(tree.node(node).map(|node| node.component_generation()), Some(2));
+    retire(tree);
+}
+
+#[test]
+fn a_full_scene_retirement_ledger_yields_before_closing_the_mounted_node() {
+    let mut tree = UiTree::new();
+    let map = engine_surface_root_record(0, "scene.close-backpressure", "tiled-map");
+    tree.publish_document(tiny_document("scene-close-backpressure", 1, &map, None));
+    let mut cursor = UiDocumentReconcileCursor::default();
+    assert_eq!(reconcile_window(&mut tree, &mut cursor, 11, "scene-close-backpressure"), UiDocumentReconcileStep::Complete);
+    let node = tree.document_node(UiNodeId(0)).expect("Map root mounted");
+    let mut ledger = vec![node; UI_RETIRED_COMPONENT_SCENE_CAPACITY];
+
+    assert!(!tree.close_document_binding_step(&mut |retired, _| {
+        if ledger.len() == UI_RETIRED_COMPONENT_SCENE_CAPACITY {
+            return false;
+        }
+        ledger.push(retired);
+        true
+    }));
+    assert!(tree.node(node).is_some(), "a refused close keeps the exact scene node live");
+    assert_eq!(tree.root, Some(node));
+
+    ledger.pop();
+    assert!(!tree.close_document_binding_step(&mut |retired, _| {
+        ledger.push(retired);
+        true
+    }));
+    assert_eq!(ledger.len(), UI_RETIRED_COMPONENT_SCENE_CAPACITY);
+    assert_eq!(ledger.last(), Some(&node), "the freed credit admits the exact old owner");
+    assert!(tree.node(node).is_none(), "only admitted retirement may free the node");
+    assert!(tree.root.is_none());
+    retire(tree);
 }
 
 /// 🚦️ The wgpu shell's OWN per-window loop, bounded: layout first, paint only when this window's own

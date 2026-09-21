@@ -27,8 +27,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for DisconnectNodes {
             })
             .unwrap_or_default()
     }
-    fn label(&self) -> String {
-        format!("Disconnect {}", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Disconnect {}", self.id), &format!("{} trennen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["edges".into(), self.id.clone()]

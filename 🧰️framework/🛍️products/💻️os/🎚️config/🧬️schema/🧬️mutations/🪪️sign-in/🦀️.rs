@@ -97,8 +97,8 @@ impl MutationKind<IdentitySetting, IdentityConfigMutation> for SignIn {
         }
     }
 
-    fn label(&self) -> String {
-        format!("Sign in \"{}\"", self.email)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Sign in \"{}\"", self.email), &format!("in \"{}\" signieren", self.email))
     }
 
     fn target(&self) -> Vec<String> {

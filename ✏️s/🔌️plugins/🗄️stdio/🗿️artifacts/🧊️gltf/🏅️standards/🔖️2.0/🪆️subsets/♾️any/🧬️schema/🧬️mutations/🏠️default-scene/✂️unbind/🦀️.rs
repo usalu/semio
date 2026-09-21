@@ -57,8 +57,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindDefault
         vec![super::GltfMutation::UnbindDefaultScene(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Unbind Default Scene".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Unbind Default Scene", "Standardszene lösen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -31,8 +31,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageBox {
         base.pages.get(self.index).map(|page| PdfMutation::SetPageBox(SetPageBox { index: self.index, kind: self.kind, rect: match self.kind { PdfPageBox::Crop => page.crop_box, PdfPageBox::Bleed => page.bleed_box, PdfPageBox::Trim => page.trim_box, PdfPageBox::Art => page.art_box } })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Set page {} {:?} box", self.index, self.kind)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set page {} {:?} box", self.index, self.kind), &format!("Seite {} {:?} Kasten setzen", self.index, self.kind))
     }
 
     fn target(&self) -> Vec<String> {

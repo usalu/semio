@@ -63,7 +63,7 @@ class FakeWorker implements BrowserFrameWorkerPort {
   }
 }
 
-function transport(worker: FakeWorker, hooks: { directives?: number[]; faults?: string[]; turns?: string[] } = {}): BrowserFrameTransport {
+function transport(worker: FakeWorker, hooks: { directives?: number[]; faults?: string[]; turns?: string[]; now?: () => number } = {}): BrowserFrameTransport {
   return new BrowserFrameTransport({
     worker,
     boot: {
@@ -81,6 +81,7 @@ function transport(worker: FakeWorker, hooks: { directives?: number[]; faults?: 
     },
     setTimer: () => 1,
     clearTimer: () => {},
+    now: hooks.now,
     onDirectives: (value) => hooks.directives?.push(value.generation),
     onUiTurn: (outcome) => hooks.turns?.push(`${outcome.verdict}:${outcome.site}`),
     onFault: (code) => hooks.faults?.push(code),
@@ -119,6 +120,24 @@ describe("browser frame worker transport", () => {
     expect(batch.replaceable).toContainEqual(expect.objectContaining({ kind: "resize", width: 30, height: 40, dpr: 2 }));
   });
 
+  it("releases the input lease on batch acknowledgement and orders multiple frame turns independently", () => {
+    const worker = new FakeWorker();
+    const directives: number[] = [];
+    const subject = transport(worker, { directives });
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    subject.enqueueLossless({ kind: "text", text: "a" });
+    expect(subject.flush(1)).toBe(true);
+    const first = worker.messages.at(-1);
+    if (first?.kind !== "batch") throw new Error("first input batch");
+    expect(subject.flush(2)).toBe(false);
+    worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: first.inputSequence, generation: first.generation });
+    subject.requestFrame();
+    expect(subject.flush(2)).toBe(true);
+    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 1, generation: first.generation, cursor: "default", fullscreen: null, requestFrame: false, progress: 0.5, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 2, generation: first.generation, cursor: "text", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    expect(directives).toEqual([first.generation, first.generation]);
+  });
+
   it("coalesces Hub status by document, refuses only a new key at capacity, and releases admission after transfer", () => {
     const worker = new FakeWorker();
     const subject = transport(worker);
@@ -137,14 +156,16 @@ describe("browser frame worker transport", () => {
     if (first?.kind !== "batch") return;
     expect(first.lossless.filter((event) => "documentKey" in event && event.documentKey === key)).toEqual([expect.objectContaining({ kind: "hub-document-close" })]);
     expect(subject.publishHubDocumentStatus(refused, { kind: "live", peerCount: 9 })).toBe(true);
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: first.sequence, generation: first.generation, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: first.inputSequence, generation: first.generation });
+    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: first.inputSequence, generation: first.generation, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     const delivered: unknown[] = [...first.lossless];
-    let sequence = first.sequence;
+    let sequence = first.inputSequence;
     while (subject.flush(++sequence)) {
       const batch = worker.messages.at(-1);
       if (batch?.kind !== "batch") break;
       delivered.push(...batch.lossless);
-      worker.reply({ kind: "frame", lifecycle: 1, sequence: batch.sequence, generation: batch.generation, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+      worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: batch.inputSequence, generation: batch.generation });
+      worker.reply({ kind: "frame", lifecycle: 1, frameSequence: batch.inputSequence, generation: batch.generation, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     }
     expect(delivered.filter((event) => typeof event === "object" && event !== null && "documentKey" in event && event.documentKey === key)).toEqual([expect.objectContaining({ kind: "hub-document-close" })]);
     expect(delivered).toContainEqual(expect.objectContaining({ kind: "hub-document-status", documentKey: refused, remote: { kind: "live", peerCount: 9 } }));
@@ -284,10 +305,11 @@ describe("browser frame worker transport", () => {
     subject.enqueueLossless({ kind: "text", text: "a" });
     subject.flush(1);
     subject.enqueueLossless({ kind: "text", text: "b" });
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: 1, generation: 1 });
+    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(directives).toEqual([]);
     expect(subject.flush(2)).toBe(true);
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 2, generation: 2, cursor: "text", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 2, generation: 2, cursor: "text", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(directives).toEqual([2]);
   });
 
@@ -297,7 +319,7 @@ describe("browser frame worker transport", () => {
     const subject = transport(worker, { directives });
     worker.reply({ kind: "booted", lifecycle: 1 });
     subject.close();
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 0, cursor: "pointer", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 1, generation: 0, cursor: "pointer", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(subject.status).toBe("closed");
     expect(worker.terminated).toBe(false);
     worker.reply({ kind: "closed", lifecycle: 1 });
@@ -310,7 +332,7 @@ describe("browser frame worker transport", () => {
     const subject = transport(worker);
     worker.reply({ kind: "booted", lifecycle: 1 });
     subject.flush(1);
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 1, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(subject.status).toBe("faulted");
     expect(subject.fault?.code).toBe("protocol-violation");
   });
@@ -334,11 +356,11 @@ describe("browser frame worker transport", () => {
     const subject = transport(worker, { directives });
     worker.reply({ kind: "booted", lifecycle: 1 });
     subject.flush(1);
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 1, generation: 0, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 40, workerExecutingMs: 9, workerStepVerdict: "sustained-overrun", quarantined: true, faultCode: "worker-step-overrun", faultDetail: "frame step executed 9.000 ms for 4 consecutive steps" });
+    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 1, generation: 0, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 40, workerExecutingMs: 9, workerStepVerdict: "sustained-overrun", quarantined: true, faultCode: "worker-step-overrun", faultDetail: "frame step executed 9.000 ms for 4 consecutive steps" });
     expect(subject.status).toBe("quarantined");
     expect(worker.terminated).toBe(false);
     expect(directives).toEqual([]);
-    worker.reply({ kind: "frame", lifecycle: 1, sequence: 2, generation: 0, cursor: "pointer", fullscreen: true, requestFrame: true, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    worker.reply({ kind: "frame", lifecycle: 1, frameSequence: 2, generation: 0, cursor: "pointer", fullscreen: true, requestFrame: true, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     expect(directives).toEqual([]);
   });
 
@@ -471,13 +493,14 @@ describe("browser frame worker transport", () => {
     const worker = new FakeWorker();
     const directives: number[] = [];
     const turns: string[] = [];
-    const subject = transport(worker, { directives, turns });
+    const subject = transport(worker, { directives, turns, now: () => 0 });
     worker.reply({ kind: "booted", lifecycle: 1 });
     subject.enqueueLossless({ kind: "text", text: "x" });
     for (let sequence = 1; sequence <= 5; sequence++) {
       subject.requestFrame();
       expect(subject.flush(sequence)).toBe(true);
-      worker.reply({ kind: "frame", lifecycle: 1, sequence, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+      worker.reply({ kind: "batch-accepted", lifecycle: 1, inputSequence: sequence, generation: 1 });
+      worker.reply({ kind: "frame", lifecycle: 1, frameSequence: sequence, generation: 1, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
     }
     expect(directives).toEqual([1, 1, 1, 1, 1]);
     expect(turns).toEqual([]);

@@ -26,8 +26,8 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RemovePaintLay
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove paint layer {} from object \"{}\"", self.index, self.object_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove paint layer {} from object \"{}\"", self.index, self.object_id), &format!("Farbenebene {} aus Objekt \"{}\" entfernen", self.index, self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

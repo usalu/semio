@@ -20,8 +20,8 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetDoctype {
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
         agg_inverse(&HtmlMutation::SetDoctype(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-doctype".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-doctype", "Dokumenttyp setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

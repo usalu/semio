@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetSampl
     fn inverse(&self, base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
         agg_inverse(&SemioAudioMutation::SetSampleRate(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-sample-rate".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-sample-rate", "Probenrate setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

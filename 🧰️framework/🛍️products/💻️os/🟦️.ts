@@ -1262,8 +1262,10 @@ export type BackboneWorkerResponse =
   | { readonly kind: "socket-actor-failed"; readonly documentId: string; readonly clientInstanceId: string; readonly scope?: DocumentScope; readonly code: "installed-target-unavailable" | "session-mismatch" }
   /** 🪪️ Bounded execution-target install status for the React host's localized live region. It
    * carries a status code and byte counters only — never bytes, an origin, a path, a module URL, a
-   * receipt, a grant or a digest. */
-  | { readonly kind: "execution-target-status"; readonly documentId: string; readonly clientInstanceId: string; readonly spaceId: string; readonly scope?: DocumentScope; readonly code: DocumentExecutionTargetStatusCodeV1; readonly progress?: DocumentExecutionTargetProgressV1 }
+   * receipt, a grant or a digest. `diagnostic` is the one exception and never reaches the localized
+   * text: it is the bounded failure line the owner itself named, surfaced beside the notice so a
+   * terminal outcome is readable instead of anonymous. */
+  | { readonly kind: "execution-target-status"; readonly documentId: string; readonly clientInstanceId: string; readonly spaceId: string; readonly scope?: DocumentScope; readonly code: DocumentExecutionTargetStatusCodeV1; readonly progress?: DocumentExecutionTargetProgressV1; readonly diagnostic?: string }
   /** 🏛️ The complete renderer-visible administration state. `canonicalJson` is the exact page the
    * hub sealed; `inviteCapabilityPending` says a one-shot invite token remains held by the worker
    * until exact clipboard success. No session identity, bearer, or invite token ever appears here. */

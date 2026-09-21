@@ -21,8 +21,8 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for RemoveChunk {
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {
         agg_inverse(&AviMutation::RemoveChunk(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-chunk".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-chunk", "Chunk entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

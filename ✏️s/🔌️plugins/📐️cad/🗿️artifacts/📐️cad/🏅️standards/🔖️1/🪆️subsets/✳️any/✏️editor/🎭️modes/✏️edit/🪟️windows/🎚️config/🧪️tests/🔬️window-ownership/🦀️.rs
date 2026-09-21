@@ -74,6 +74,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                         app.take_typed_operation_effect();
                         app.take_typed_operation_event();
                         app.take_typed_operation_ui_scope();
+                        app.take_typed_operation_completion().await.map_err(|error| format!("{error:?}"))?;
                         std::thread::yield_now();
                     }
                     Ok(window_config_pages)

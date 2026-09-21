@@ -44,8 +44,8 @@ impl MutationKind<PdfSnapshot, PdfX1Mutation> for SetPageSize {
         vec![PdfX1Mutation::SetPageSize(SetPageSize { width: base.pages[0].width, height: base.pages[0].height })]
     }
 
-    fn label(&self) -> String {
-        "set page size".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set page size", "Seitengröße setzen")
     }
 
     fn target(&self) -> Vec<String> {

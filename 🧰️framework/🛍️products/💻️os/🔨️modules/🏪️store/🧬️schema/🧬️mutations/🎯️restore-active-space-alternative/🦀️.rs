@@ -42,8 +42,8 @@ impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Vec<SpaceHistoryMutation> {
         vec![SpaceHistoryMutation::RestoreActiveSpaceAlternative(Self { alternative_id: base.active_alternative_id.clone() })]
     }
-    fn label(&self) -> String {
-        "Restore active space alternative".into()
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Restore active space alternative", "aktive Raumalternative wiederherstellen")
     }
     fn target(&self) -> Vec<String> {
         vec!["activeAlternativeId".into()]

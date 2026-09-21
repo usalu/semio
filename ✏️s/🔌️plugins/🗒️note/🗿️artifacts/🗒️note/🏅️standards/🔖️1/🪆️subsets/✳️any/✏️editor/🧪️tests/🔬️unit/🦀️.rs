@@ -294,7 +294,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     for body in [NOTE_PLAY_BODY_ARTIFACT, NOTE_PLAY_BODY_CATALOGUE, NOTE_PLAY_BODY_PROPERTIES] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
-    assert!(json.contains("2d.note"), "artifact kind missing from the manifest");
+    assert!(json.contains("s.note.note"), "artifact kind missing from the manifest");
 }
 
 #[semio_framework_async_macros::async_test]

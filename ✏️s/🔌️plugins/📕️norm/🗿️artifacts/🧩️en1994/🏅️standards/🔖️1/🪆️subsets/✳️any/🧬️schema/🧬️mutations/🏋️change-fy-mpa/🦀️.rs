@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeFYMpa {
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change steel yield strength f_y to {}", self.new_f_y_mpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change steel yield strength f_y to {}", self.new_f_y_mpa), &format!("Stahlstreckgrenzenfestigkeitsf_y auf {} ändern", self.new_f_y_mpa))
     }
 }
 //#endregion 🔖️Payload

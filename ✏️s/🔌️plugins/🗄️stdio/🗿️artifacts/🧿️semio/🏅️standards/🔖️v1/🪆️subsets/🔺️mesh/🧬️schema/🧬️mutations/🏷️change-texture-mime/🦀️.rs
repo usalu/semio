@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ChangeText
     fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change texture \"{}\" mime type", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change texture \"{}\" mime type", self.id), &format!("Textur \"{}\" MIME-Typ ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

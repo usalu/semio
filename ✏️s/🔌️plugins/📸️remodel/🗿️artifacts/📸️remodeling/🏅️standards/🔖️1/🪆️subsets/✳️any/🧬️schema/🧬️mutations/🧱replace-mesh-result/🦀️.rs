@@ -32,8 +32,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceM
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Replace mesh result".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace mesh result", "Netzergebnis ersetzen")
     }
 }
 //#endregion 🔖️Mutation

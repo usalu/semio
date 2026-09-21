@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeSiloBulkDe
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change silo bulk density to {:?}", self.new_silo_bulk_density_kn_m3)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change silo bulk density to {:?}", self.new_silo_bulk_density_kn_m3), &format!("schütte Silodichte auf {:?} ändern", self.new_silo_bulk_density_kn_m3))
     }
 }
 //#endregion 🔖️Payload

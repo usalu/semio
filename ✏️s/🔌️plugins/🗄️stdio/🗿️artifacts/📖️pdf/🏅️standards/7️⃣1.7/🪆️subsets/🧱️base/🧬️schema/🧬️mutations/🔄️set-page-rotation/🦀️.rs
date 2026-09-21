@@ -27,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageRotation {
         base.pages.get(self.index).map(|page| PdfMutation::SetPageRotation(SetPageRotation { index: self.index, rotation: page.rotate.rem_euclid(360) as u16 })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Set page {} rotation to {}", self.index, self.rotation)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set page {} rotation to {}", self.index, self.rotation), &format!("Seite {} Drehung auf {} setzen", self.index, self.rotation))
     }
 
     fn target(&self) -> Vec<String> {

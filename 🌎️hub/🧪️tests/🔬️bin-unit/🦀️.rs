@@ -76,7 +76,7 @@ fn startup_auth_policy_fails_closed_without_owned_adapters() {
 
 #[test]
 fn readiness_v1_is_redacted_and_never_claims_public_session_issuance() {
-    let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
+    let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
     let encoded = serde_json::to_string(&ready).expect("readiness json");
     assert_eq!(ready.status, "ready");
     assert!(!ready.authentication.public_session_issuance);
@@ -88,26 +88,89 @@ fn readiness_v1_is_redacted_and_never_claims_public_session_issuance() {
     assert!(!encoded.contains("channel"));
     assert!(!encoded.contains("sessionKind"));
     assert!(!encoded.contains("authorizationGeneration"));
-    let partial = hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
+    let partial = hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
     assert_eq!(partial.status, "not-ready");
     assert!(partial.authentication.bootstrap_ready);
     assert!(!partial.artifact_authority.ready);
-    assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), false, false, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
-    assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, false, true, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
-    assert_eq!(hub_readiness(HubMode::Development, "network", ready.run_id, true, true, false, true, false, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
+    assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), false, false, false, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
+    assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, true, false, true, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
+    assert_eq!(hub_readiness(HubMode::Development, "network", ready.run_id, true, true, false, true, true, false, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
+}
+
+/// ⏳️ A trusted-catalog load that runs out of its startup budget is a CLOSED READINESS GATE with a
+/// reason of its own, never an abort and never a claim that the catalog is unloadable. Until ticket
+/// 26/09/18 slice M9 the budget was an `Err` propagated out of the boot function, so a hub on a busy
+/// machine EXITED (measured twice on a 612 MB warm catalog, M8 §2.1) and looked to an operator
+/// exactly like a corrupt data root. The law pins both halves: the outcome carries no authority, and
+/// the reason it publishes is distinguishable from every other closed reason.
+#[test]
+fn a_trusted_catalog_budget_overrun_closes_the_gate_and_never_claims_the_catalog_is_unloadable() {
+    assert!(StartupArtifactAuthority::BudgetExceeded.is_none());
+    assert!(StartupArtifactAuthority::BudgetExceeded.configured().is_none());
+    assert!(StartupArtifactAuthority::Absent.is_none());
+    assert_eq!(artifact_authority_closed_reason(true, true, true), "trusted-catalog-load-exceeded-its-startup-budget");
+    assert_eq!(artifact_authority_closed_reason(true, true, false), "trusted-catalog-load-exceeded-its-startup-budget");
+    assert_eq!(artifact_authority_closed_reason(true, false, true), "trusted-catalog-pointer-present-but-not-loadable");
+    assert_eq!(artifact_authority_closed_reason(true, false, false), "trusted-catalog-never-published-in-this-data-root");
+    assert_eq!(artifact_authority_closed_reason(false, true, true), "native-artifact-execution-feature-not-compiled");
+    let reasons = [
+        artifact_authority_closed_reason(true, true, true),
+        artifact_authority_closed_reason(true, false, true),
+        artifact_authority_closed_reason(true, false, false),
+        artifact_authority_closed_reason(false, false, false),
+    ];
+    let mut distinct = reasons.to_vec();
+    distinct.sort_unstable();
+    distinct.dedup();
+    assert_eq!(distinct.len(), reasons.len(), "every closed artifactAuthority reason must name a different fact");
+    let blocked = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, true, false, false, artifact_authority_closed_reason(true, true, false));
+    assert_eq!(blocked.status, "not-ready");
+    assert!(blocked.blocked_by.iter().any(|gate| gate.gate == "artifactAuthority" && gate.reason == "trusted-catalog-load-exceeded-its-startup-budget"));
+}
+
+/// 🤖️ `features.mcpWorkspace` answers whether a `semio-os-mcp --hub … --credential-file …` gateway
+/// can be served by this hub, and it is derived from both halves that gateway needs — the
+/// delegation exchange and a resolvable document open target. It read a hard-coded `false` from its
+/// introduction until ticket 26/09/18 slice M8, so the law pins all four corners: a constant of
+/// either polarity fails at least two of them.
+#[test]
+fn mcp_workspace_readiness_is_derived_from_delegation_and_open_plan_never_constant() {
+    let readiness = |agent_delegation_ready: bool, open_plan_ready: bool| {
+        hub_readiness(
+            HubMode::Development,
+            "loopback",
+            "00112233445566778899aabbccddeeff".into(),
+            true,
+            true,
+            open_plan_ready,
+            agent_delegation_ready,
+            true,
+            true,
+            false,
+            false,
+            "trusted-catalog-never-published-in-this-data-root",
+        )
+    };
+    assert!(readiness(true, true).features.mcp_workspace, "a hub that can exchange a delegation AND resolve an open target serves an MCP workspace");
+    assert!(!readiness(true, false).features.mcp_workspace, "a delegation with no openable document is not an MCP workspace");
+    assert!(!readiness(false, true).features.mcp_workspace, "an openable document an agent can never authenticate against is not an MCP workspace");
+    assert!(!readiness(false, false).features.mcp_workspace);
+    assert_eq!(readiness(true, true).features.mcp_workspace, readiness(true, true).features.open_plan, "with delegation available the field tracks the open-plan gate exactly");
+    let encoded = serde_json::to_string(&readiness(true, true)).expect("readiness json");
+    assert!(encoded.contains("\"mcpWorkspace\":true"), "the served body carries the derived value: {encoded}");
 }
 
 #[test]
 fn a_not_ready_hub_names_every_closed_gate_and_its_reason_in_readyz_and_at_startup() {
     let addr: SocketAddr = "127.0.0.1:8787".parse().expect("loopback readiness address");
-    let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
+    let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
     let encoded = serde_json::to_string(&ready).expect("ready readiness json");
     assert!(ready.blocked_by.is_empty());
     assert!(!encoded.contains("blockedBy"), "a ready hub publishes no closed-gate list");
     assert!(!encoded.contains("reason"), "an open gate carries no reason");
     assert_eq!(startup_readiness_line(&ready, &addr), "[INFO] os-hub ready at http://127.0.0.1:8787");
 
-    let blocked = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), false, false, false, false, false, false, false, "trusted-catalog-never-published-in-this-data-root");
+    let blocked = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), false, false, false, true, false, false, false, false, "trusted-catalog-never-published-in-this-data-root");
     assert_eq!(blocked.status, "not-ready");
     assert_eq!(
         blocked.blocked_by.iter().map(|closed| (closed.gate, closed.reason)).collect::<Vec<_>>(),
@@ -126,7 +189,7 @@ fn a_not_ready_hub_names_every_closed_gate_and_its_reason_in_readyz_and_at_start
     for reason in ["local-bootstrap-pipe-handshake-incomplete", "trusted-catalog-never-published-in-this-data-root", "admin-spa-dist-missing-run-os-hub-admin-build"] {
         assert!(line.contains(reason), "{line} omits {reason}");
     }
-    let production = hub_readiness(HubMode::Production, "network", "production".into(), false, true, true, true, true, false, false, "native-artifact-execution-feature-not-compiled");
+    let production = hub_readiness(HubMode::Production, "network", "production".into(), false, true, true, true, true, true, false, false, "native-artifact-execution-feature-not-compiled");
     assert_eq!(production.blocked_by.iter().map(|closed| closed.reason).collect::<Vec<_>>(), vec!["identity-assertion-verifier-not-configured"]);
 }
 
@@ -358,10 +421,10 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
             "id": "stdio-native-openable-v1",
             "selectedClosure": [{ "pluginId": "stdio", "packageId": "semio:stdio", "version": version }],
             "selectedClosureSha256": "11".repeat(32),
-            "openTarget": {
+            "openTargets": [{
                 "package": { "pluginId": "stdio", "packageId": "semio:stdio", "version": version },
                 "target": target
-            },
+            }],
             "generationId": "22".repeat(32)
         }],
         "packages": [{
@@ -387,7 +450,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
         }]
     });
     bundle["packages"][0]["browserActor"] = serde_json::json!({
-        "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.27.0-jspi.v1",
+        "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.34.0-jspi.v1",
         "path":"closed-actor.mjs", "byteLength":component.len(), "sha256":component_sha256,
         "sourceComponentSha256":component_sha256, "sourceDescriptorByteSha256":descriptor_sha256, "policySha256":"41".repeat(32), "importInterfaces":[]
     });
@@ -639,7 +702,7 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
         admin_operations: Arc::new(ShardedMap::new()),
         admin_operation_slots: Arc::new(tokio::sync::Semaphore::new(64)),
         admin_operation_tasks: Arc::new(AdminOperationTaskOwner::new(ADMIN_OPERATION_SHUTDOWN_DEADLINE)),
-        readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root")),
+        readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root")),
         admin_dir: dir.join("admin-dist"),
         fanout: Arc::new(ShardedMap::new()),
         fanout_capacity,
@@ -725,7 +788,7 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
         admin_operations: Arc::new(ShardedMap::new()),
         admin_operation_slots: Arc::new(tokio::sync::Semaphore::new(64)),
         admin_operation_tasks: Arc::new(AdminOperationTaskOwner::new(ADMIN_OPERATION_SHUTDOWN_DEADLINE)),
-        readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root")),
+        readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root")),
         admin_dir: dir.join("admin-dist"),
         fanout: Arc::new(ShardedMap::new()),
         fanout_capacity,
@@ -1053,7 +1116,7 @@ fn checkpoint_publication_command(correlation_id: &str, descriptor: &DocumentDes
 async fn checkpoint_publication_fixture(label: &str) -> CheckpointPublicationFixture {
     let catalog_root = native_openable_stdio_bundle();
     let providers = NativeCodecProviderSetV1::linked();
-    let configured = configured_artifact_authority(&catalog_root, Some(&providers), &Tracer::disabled()).await.expect("load stdio publication catalog").expect("configured publication catalog");
+    let configured = configured_artifact_authority(&catalog_root, Some(&providers), &Tracer::disabled()).await.expect("load stdio publication catalog").configured().expect("configured publication catalog");
     let selection = configured.catalog.selected_document_open().expect("selected stdio JSON target").clone();
     let mut state = test_state().await;
     let author = issue_test_session(&state, &format!("checkpoint-{label}-author@example.test")).await;
@@ -2136,15 +2199,26 @@ async fn next_server_frame<S>(ws: &mut S) -> ServerFrame
 where
     S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
 {
+    next_server_frame_at(ws, "unnamed").await
+}
+
+/// 🏷️ The same wait, with the caller's own phase in every refusal. One helper serves 49 call sites
+/// across this suite, so an unnamed `no server frame before 5s deadline` names neither the law's
+/// line nor which of its frames is missing — HT13's whole first hour went into recovering that by
+/// arithmetic. A law that waits on more than one frame passes a phase here so its capture says which.
+async fn next_server_frame_at<S>(ws: &mut S, phase: &str) -> ServerFrame
+where
+    S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
+{
     let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
     loop {
         match tokio::time::timeout_at(deadline, ws.next()).await {
-            Ok(Some(Ok(WsMessage::Binary(bytes)))) => return protocol::decode_server_frame(&bytes).await.expect("server frame").1,
-            Ok(Some(Ok(WsMessage::Close(frame)))) => panic!("the server closed before its next frame: {frame:?} plan refusal {:?}", last_document_plan_refusal()),
+            Ok(Some(Ok(WsMessage::Binary(bytes)))) => return protocol::decode_server_frame(&bytes).await.unwrap_or_else(|error| panic!("server frame at {phase}: {error:?}")).1,
+            Ok(Some(Ok(WsMessage::Close(frame)))) => panic!("the server closed before its next frame at {phase}: {frame:?} plan refusal {:?}", last_document_plan_refusal()),
             Ok(Some(Ok(_))) => continue,
-            Ok(Some(other)) => panic!("expected binary frame, got {other:?}"),
-            Ok(None) => panic!("stream ended before server frame"),
-            Err(_) => panic!("no server frame before 5s deadline"),
+            Ok(Some(other)) => panic!("expected binary frame at {phase}, got {other:?}"),
+            Ok(None) => panic!("stream ended before server frame at {phase}"),
+            Err(_) => panic!("no server frame before 5s deadline at {phase}"),
         }
     }
 }
@@ -2313,7 +2387,7 @@ fn document_open_catalog_for_descriptor(descriptor: &DocumentDescriptor) -> Arc<
 
 fn install_document_open_catalog_for_test(state: &mut HubState, descriptor: &DocumentDescriptor) {
     state.openable_catalog = Some(document_open_catalog_for_descriptor(descriptor));
-    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
 }
 
 fn document_open_catalog_for_descriptor_with_generation(descriptor: &DocumentDescriptor, generation_id: String) -> Arc<dyn DocumentOpenCatalogAuthorityV1> {
@@ -2656,7 +2730,7 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
     let scope = DocumentScope::new(STUDIO, &document_id);
     state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
     let authorization = format!("Bearer {token}");
     let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
     let root = format!("/spaces/{STUDIO}/documents/{document_id}/execution-target");
@@ -2793,7 +2867,7 @@ async fn execution_target_selection_final_fence_matches_neutral_races() {
         let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
         let scope = DocumentScope::new(STUDIO, document_id);
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
         let mut headers = bearer_headers(&token);
         headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
         let gate = Arc::new(TestDocumentOpenPlanIssueGate::default());
@@ -2908,7 +2982,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
     let scope = DocumentScope::new(STUDIO, &document_id);
     state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
     let authorization = format!("Bearer {token}");
     let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
     let plan_route = format!("/spaces/{STUDIO}/documents/{document_id}/open-plan");
@@ -2980,7 +3054,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
 
     let mut unavailable = state.clone();
     unavailable.openable_catalog = None;
-    unavailable.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+    unavailable.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
     let unavailable_addr = spawn_server(unavailable).await;
     let unavailable_readiness = raw_http_get(unavailable_addr, "/readyz", &[]).await;
     let unavailable_readiness: serde_json::Value = serde_json::from_slice(&unavailable_readiness.body).expect("unavailable readiness JSON");
@@ -3019,7 +3093,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     let (cancelled_descriptor, _) = publish_openable_document_for_test(&cancelled, &cancelled_token, STUDIO, &cancelled_document_id).await;
     let cancelled_scope = DocumentScope::new(STUDIO, cancelled_document_id);
     cancelled.openable_catalog = Some(document_open_catalog_for_descriptor(&cancelled_descriptor));
-    cancelled.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+    cancelled.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
     let mut cancelled_headers = bearer_headers(&cancelled_token);
     cancelled_headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
     let gate = Arc::new(TestDocumentOpenPlanIssueGate::default());
@@ -3047,7 +3121,7 @@ async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalo
     let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
     let scope = DocumentScope::new(STUDIO, &document_id);
     state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
 
     let (_, surface_grant) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:surface").await;
     let surface_capability = SocketGrantCapability::parse(&surface_grant.grant).expect("surface grant");
@@ -3118,7 +3192,7 @@ async fn document_open_plan_exchange_route_is_authenticated_exact_hostile_and_si
     seed_genesis_for_document_for_test(&state, &token, STUDIO, foreign_document_id, "open-plan-route-foreign").await;
     let route_descriptor = state.directory.get_document_descriptor(&DocumentScope::new(STUDIO, document_id)).await.expect("route descriptor").expect("route document");
     state.openable_catalog = Some(document_open_catalog_for_descriptor(&route_descriptor));
-    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
     let scope = DocumentScope::new(STUDIO, document_id);
     let mut authority = document_open_plan_authority_for_session(&state, &fixture, &token, scope.clone()).await;
     let addr = spawn_server(state.clone()).await;
@@ -3707,7 +3781,7 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
         seed_genesis_for_document_for_test(&state, &removed.token, &scope.space_id, &scope.document_id, "admin-presence-recovery").await;
         let descriptor = state.directory.get_document_descriptor(&scope).await.unwrap().unwrap();
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
         let (plan_b, grant_b) = issue_and_exchange_document_open_plan_for_test(&state, &removed.token, &scope, "client:removed").await;
         let (plan_c, grant_c) = issue_and_exchange_document_open_plan_for_test(&state, &observer.token, &scope, "client:observer").await;
         assert_eq!(plan_b.surface.surface_id, fixture["surfaceId"].as_str().unwrap());
@@ -3724,13 +3798,13 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
             other => panic!("the member plan socket never reached its welcome: {other:?} refused as {:?}", last_document_plan_refusal()),
         };
         assert!(matches!(&welcome_b, ServerFrame::Welcome { .. }), "member welcome: {welcome_b:?}");
-        let ServerFrame::Session { actor: actor_b, color: color_b } = next_server_frame(&mut b).await else { panic!("member session") };
-        let welcome_c = next_server_frame(&mut c).await;
+        let ServerFrame::Session { actor: actor_b, color: color_b } = next_server_frame_at(&mut b, "member session frame after the sync-hello bootstrap drain").await else { panic!("member session") };
+        let welcome_c = next_server_frame_at(&mut c, "observer welcome").await;
         assert!(matches!(&welcome_c, ServerFrame::Welcome { .. }), "observer welcome: {welcome_c:?}");
-        let ServerFrame::Session { actor: actor_c, .. } = next_server_frame(&mut c).await else { panic!("observer session") };
+        let ServerFrame::Session { actor: actor_c, .. } = next_server_frame_at(&mut c, "observer session frame after the sync-hello bootstrap drain").await else { panic!("observer session") };
         let raw = presence_hex_bytes(presence_normalization_fixture()["vectors"][0]["rawPeerHex"].as_str().unwrap());
         b.send(client_binary(&ClientFrame::Presence { peer: raw.clone() }, Lane::Preview).await).await.unwrap();
-        let ServerFrame::Presence { peers } = next_server_frame(&mut c).await else { panic!("observer normalized presence") };
+        let ServerFrame::Presence { peers } = next_server_frame_at(&mut c, "observer normalized presence of the member").await else { panic!("observer normalized presence") };
         assert_eq!(peers.len(), 1);
         let peer = protocol::decode_presence_peer(&peers[0]).await.unwrap();
         assert_eq!(peer.actor, actor_b);
@@ -3739,7 +3813,7 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
         assert_eq!(peer.role.as_deref(), Some("author"));
         assert_eq!(peer.color, Some(color_b));
         assert_eq!(peer.surface.as_deref(), Some(plan_b.surface.surface_id.as_str()));
-        assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Presence { .. }));
+        assert!(matches!(next_server_frame_at(&mut b, "member echo of its own normalized presence").await, ServerFrame::Presence { .. }));
         let intent = directory::os_pack::json::to_json_string(&DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),
             version: 1,
@@ -3760,7 +3834,7 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
         let receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&receipt.body).unwrap()).unwrap();
         assert_eq!(receipt.state, AdminIntentStateV1::Succeeded);
         assert_eq!(u64::from(next_close_without_authority(&mut b).await), expected["removedCloseCode"].as_u64().unwrap());
-        let ServerFrame::Presence { peers } = next_server_frame(&mut c).await else { panic!("removed member withdrawal") };
+        let ServerFrame::Presence { peers } = next_server_frame_at(&mut c, "observer withdrawal presence after the admin removal").await else { panic!("removed member withdrawal") };
         assert_eq!(peers.len() as u64, expected["visibleAfterRemoval"].as_u64().unwrap());
         assert!(state.presence_snapshot(&document_scope_key_v1(&scope)).peers.is_empty());
         let exchange = directory::os_pack::json::to_json_string(&DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: plan_b.receipt.clone() });
@@ -3773,7 +3847,7 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
             assert_recovery_denied(denied, expected);
         }
         c.send(client_binary(&ClientFrame::Presence { peer: raw }, Lane::Preview).await).await.unwrap();
-        let ServerFrame::Presence { peers } = next_server_frame(&mut c).await else { panic!("observer remains live") };
+        let ServerFrame::Presence { peers } = next_server_frame_at(&mut c, "observer presence after the removal, still live").await else { panic!("observer remains live") };
         assert_eq!(peers.len(), 1);
         let observer_peer = protocol::decode_presence_peer(&peers[0]).await.unwrap();
         assert_eq!(observer_peer.actor, actor_c);
@@ -3789,7 +3863,7 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
         let directory = SqliteDirectory::connect(path.to_str().unwrap()).await.expect("reopen exact file directory");
         let mut state = test_state_with_directory(dir.join("db"), directory, 1024, 256).await;
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
         assert!(state.presence_snapshot(&document_scope_key_v1(&scope)).peers.is_empty());
         assert!(state.socket_grants.inner.lock().unwrap().records.is_empty());
         assert!(state.document_open_plans.inner.lock().unwrap().records.is_empty());
@@ -5032,7 +5106,7 @@ fn presence_lease_expires_server_clocked_visibility_without_socket_close() {
         let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("presence socket");
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
         assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
-        assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { .. }));
+        let ServerFrame::Session { actor, color } = next_server_frame(&mut socket).await else { panic!("session frame") };
         socket.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"visible").await }, Lane::Preview).await).await.expect("visible presence");
         assert!(presence_frame_has_pack(next_server_frame(&mut socket).await, b"visible").await);
         let key = document_scope_key_v1(&DocumentScope::new(STUDIO, document_id));
@@ -5043,15 +5117,125 @@ fn presence_lease_expires_server_clocked_visibility_without_socket_close() {
         assert_eq!(state.presence_snapshot(&key).peers.len(), 1, "an evaluated server tick preserves the lease immediately before its deadline");
         assert!(matches!(observed.try_recv(), Err(broadcast::error::TryRecvError::Empty)), "the evaluated early tick publishes no expiry");
         clock.advance_to(PRESENCE_LEASE_TTL_MS);
+        clock.evaluate_tick(false).await;
+        // 👥️ ticket 26/09/18 slice PR1: a lapsed beat lease means the app-owned EPHEMERALS are
+        // stale, never that the human left — the row a live socket contributes stays, stripped, and
+        // only `close_presence_for_live` removes it. A roster that emptied itself under an open
+        // socket is exactly what C3 §3.4 measured in two browsers.
+        let stripped = state.presence_snapshot(&key).peers;
+        assert_eq!(stripped.len(), 1, "an open socket keeps its admitted row past the beat lease");
+        let stripped_peer = protocol::decode_presence_peer(&stripped[0]).await.expect("stripped row decodes");
+        assert_eq!(stripped_peer.actor, actor, "the stripped row is the same admitted actor");
+        assert_eq!(stripped_peer.color, Some(color), "identity the hub authenticated survives the lapse");
+        assert_eq!(stripped_peer.presence_pack, None, "every app-owned ephemeral is dropped");
+        assert_eq!(stripped_peer.drag_ghost_json, None);
+        assert_eq!(stripped_peer.interaction, None);
+        assert!(stripped_peer.views.is_empty());
+        assert_eq!(stripped_peer.ui, None);
+        assert_eq!(stripped_peer.tool_run, None);
+        assert!(matches!(observed.try_recv(), Ok(ServerFrame::Presence { peers }) if peers == stripped));
+        assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Presence { peers } if peers == stripped), "the server tick publishes exact-deadline stripping");
+        clock.advance_to(PRESENCE_LEASE_TTL_MS + 1);
         clock.evaluate_tick(true).await;
         assert_eq!(clock.tick_release.available_permits(), 0, "ungating leaves no stale release permit");
-        assert!(state.presence_snapshot(&key).peers.is_empty());
-        assert!(matches!(observed.try_recv(), Ok(ServerFrame::Presence { peers }) if peers.is_empty()));
-        assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Presence { peers } if peers.is_empty()), "the server tick publishes exact-deadline expiry");
+        assert_eq!(state.presence_snapshot(&key).peers, stripped, "a re-armed lease does not re-strip an already stripped row");
+        assert!(matches!(observed.try_recv(), Err(broadcast::error::TryRecvError::Empty)), "stripping publishes exactly once per lapse");
         socket.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"revived").await }, Lane::Preview).await).await.expect("live socket refresh after visibility expiry");
         assert!(presence_frame_has_pack(next_server_frame(&mut socket).await, b"revived").await, "expiry does not close or unregister the authenticated socket");
-        eprintln!("[DEBUG] server tick barriers preserved visibility at TTL-1, published expiry at TTL, and kept the live socket refreshable");
+        eprintln!("[DEBUG] server tick barriers preserved the lease at TTL-1, stripped ephemerals exactly once at TTL while the row survived, and kept the live socket refreshable");
     });
+}
+
+/// 👥️ ticket 26/09/18 slice PR1 — presence over the hub is SYMMETRIC: a socket that attaches after
+/// the roster has settled starts from that roster instead of waiting for some other peer to move.
+#[test]
+fn presence_join_replays_the_settled_roster_and_close_removes_exactly_one_row() {
+    run_socket_test(|| async {
+        let mut state = test_state().await;
+        let token = seed_author_token(&state).await;
+        let document_id = artifact_document_id_for_test("presence-join-replay");
+        let document_id = document_id.as_str();
+        seed_genesis_for_document_for_test(&state, &token, STUDIO, document_id, "presence-join-replay").await;
+        let scope = DocumentScope::new(STUDIO, document_id);
+        let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
+        install_document_open_catalog_for_test(&mut state, &descriptor);
+        let joiner_token = seed_author_token(&state).await;
+        let (plan, settled_grant) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:presence-settled").await;
+        let (_, joiner_grant) = issue_and_exchange_document_open_plan_for_test(&state, &joiner_token, &scope, "client:presence-joiner").await;
+        assert_ne!(settled_grant.actor_id, joiner_grant.actor_id, "two humans, two admitted actors");
+        let addr = spawn_server(state.clone()).await;
+        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/{document_id}/socket/v1?surface={}", plan.surface.surface_id);
+        let (mut settled, _) = connect_async(socket_request(&url, &settled_grant.grant)).await.expect("settled socket");
+        settled.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("settled hello");
+        assert!(matches!(next_server_frame(&mut settled).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut settled).await, ServerFrame::Session { .. }));
+        settled.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"settled").await }, Lane::Preview).await).await.expect("settled beat");
+        assert!(presence_frame_has_pack(next_server_frame(&mut settled).await, b"settled").await);
+
+        // 🔁️ The joiner beats NOTHING here. Before this law a roster delta was only ever published
+        // when some peer's bytes CHANGED, so the joiner stayed blind until one of them moved —
+        // measured on this exact handler in `🗑️generated/pr1-before-hub-socket.txt` run A as
+        // `user2:n=0 frames=0` two seconds after its socket opened, while `user1` already listed a
+        // peer. That is C3 §3.4's asymmetry, read from the hub's own side.
+        let (mut joining, _) = connect_async(socket_request(&url, &joiner_grant.grant)).await.expect("joining socket");
+        joining.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("joining hello");
+        assert!(matches!(next_server_frame(&mut joining).await, ServerFrame::Welcome { .. }));
+        assert!(matches!(next_server_frame(&mut joining).await, ServerFrame::Session { .. }));
+        let ServerFrame::Presence { peers } = next_server_frame(&mut joining).await else { panic!("join replay frame") };
+        assert_eq!(peers.len(), 1, "the joiner starts from the roster the document already had");
+        let replayed = protocol::decode_presence_peer(&peers[0]).await.expect("replayed row");
+        assert_eq!(replayed.actor, settled_grant.actor_id);
+        assert_eq!(replayed.presence_pack.as_deref(), Some(b"settled".as_slice()));
+        assert_eq!(replayed.surface.as_deref(), Some(plan.surface.surface_id.as_str()));
+
+        // 🤝️ And the settled peer learns of the join from the joiner's first beat, so both sockets
+        // end on the SAME two-row roster with one palette index each.
+        joining.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"joined").await }, Lane::Preview).await).await.expect("joiner beat");
+        let ServerFrame::Presence { peers: settled_view } = next_server_frame(&mut settled).await else { panic!("settled roster") };
+        let ServerFrame::Presence { peers: joining_view } = next_server_frame(&mut joining).await else { panic!("joiner roster") };
+        assert_eq!(settled_view, joining_view, "both sockets hold the identical roster");
+        assert_eq!(settled_view.len(), 2);
+        let mut colors = Vec::new();
+        for row in &settled_view {
+            colors.push(protocol::decode_presence_peer(row).await.expect("roster row").color.expect("admitted palette index"));
+        }
+        colors.sort_unstable();
+        colors.dedup();
+        assert_eq!(colors.len(), 2, "each admitted session holds its own palette index");
+
+        // 🧹️ Closing one socket removes exactly that row from the other's roster.
+        joining.close(None).await.expect("joiner close");
+        let ServerFrame::Presence { peers: after_close } = next_server_frame(&mut settled).await else { panic!("removal roster") };
+        assert_eq!(after_close.len(), 1);
+        assert_eq!(protocol::decode_presence_peer(&after_close[0]).await.expect("survivor row").actor, settled_grant.actor_id);
+        settled.close(None).await.expect("settled close");
+        eprintln!("[DEBUG] join replay handed the late socket the settled roster, both sockets converged on one two-colour roster, and a close removed exactly one row");
+    });
+}
+
+/// 💓️ ticket 26/09/18 slice PR1 — the beat/eviction contract, read from the SAME file the OS
+/// shell's own law reads (`📺️renderer/🧑‍🎨engine/🧪️tests/👥️scoped-presence/🟦️.tsx`), so the two
+/// languages cannot drift apart on the three numbers that decide whether a live socket keeps its
+/// roster row.
+#[tokio::test]
+async fn presence_liveness_contract_matches_the_shared_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🔨️modules/📡️replication/🧫️fixtures/💓️presence-liveness-v1/🔣️.json")).expect("presence liveness fixture");
+    assert_eq!(fixture["schema"], "semio.presence.liveness/v1");
+    let constants = &fixture["constants"];
+    let heartbeat = constants["heartbeatIntervalMs"].as_u64().expect("heartbeat interval");
+    let snapshot_deadline = constants["ephemeralSnapshotDeadlineMs"].as_u64().expect("snapshot deadline");
+    assert_eq!(constants["leaseTtlMs"].as_u64(), Some(PRESENCE_LEASE_TTL_MS), "the hub owns leaseTtlMs");
+    let law = |name: &str| fixture["laws"].as_array().expect("laws").iter().find(|law| law["name"] == name).expect("named law").clone();
+    assert!(snapshot_deadline < heartbeat, "{}", law("snapshot-deadline-fits-inside-one-beat")["statement"]);
+    let tolerated = law("lease-outlives-three-beats")["missedBeatsTolerated"].as_u64().expect("tolerated beats");
+    assert!(PRESENCE_LEASE_TTL_MS >= tolerated * heartbeat, "{}", law("lease-outlives-three-beats")["statement"]);
+    let live_row = law("a-live-socket-is-always-a-row");
+    assert_eq!(live_row["removesRow"].as_array().expect("removal causes").len(), 1, "only a socket close removes a row");
+    assert_eq!(live_row["removesRow"][0], "socket-close");
+    assert_eq!(live_row["stripsEphemeralsOnly"][0], "lease-lapse");
+    assert_eq!(law("a-joiner-starts-from-the-settled-roster")["replayFramesPerJoin"].as_u64(), Some(1));
+    assert_eq!(law("a-joiner-starts-from-the-settled-roster")["replayedWhenRosterEmpty"], serde_json::Value::Bool(false));
+    eprintln!("[DEBUG] presence liveness: beat {heartbeat} ms, snapshot bound {snapshot_deadline} ms, hub lease {PRESENCE_LEASE_TTL_MS} ms — {tolerated} missed beats tolerated, only a close removes a row");
 }
 
 #[tokio::test]
@@ -6119,7 +6303,7 @@ async fn credential_sign_in_is_refused_and_undeclared_when_the_deployment_did_no
     let response = post_sign_in(addr, &sign_in_body("disabled@example.com", SIGN_IN_PASSWORD)).await;
     assert_eq!(response.status, 403);
     assert_eq!(json_body(&response)["error"].as_str(), Some("credential-sign-in-disabled"));
-    let readiness = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
+    let readiness = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
     assert!(!declare_public_session_issuance(readiness.clone(), false).authentication.public_session_issuance);
     assert!(declare_public_session_issuance(readiness, true).authentication.public_session_issuance);
 }
@@ -6894,13 +7078,13 @@ mod quick {
 
         let providers = NativeCodecProviderSetV1::linked();
         let root = native_openable_stdio_bundle();
-        let configured = configured_artifact_authority(&root, Some(&providers), &Tracer::disabled()).await.expect("verified stdio authority").expect("configured stdio authority");
+        let configured = configured_artifact_authority(&root, Some(&providers), &Tracer::disabled()).await.expect("verified stdio authority").configured().expect("configured stdio authority");
         assert_eq!(configured.catalog.codec_count(), 26);
         assert_eq!(configured.catalog.open_target_count(), 1);
         let mut ready = test_state().await;
         ready.openable_catalog = Some(configured.catalog.clone());
         ready.artifact_authority = Some(configured.authority);
-        ready.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+        ready.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
         let ready_addr = spawn_server(ready).await;
         let readiness = raw_http_get(ready_addr, "/readyz", &[]).await;
         assert_eq!(readiness.status, 200);
@@ -7430,11 +7614,11 @@ async fn the_observability_view_never_carries_identity_fields() {
 #[test]
 fn the_readiness_record_names_every_closed_gate_by_its_reason_code() {
     let addr: SocketAddr = "127.0.0.1:8787".parse().expect("test address");
-    let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
+    let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
     assert!(ready.blocked_by.is_empty());
     assert_eq!(readiness_trace_detail(&ready, &addr, "loopback"), "addr=127.0.0.1:8787 scope=loopback");
 
-    let blocked = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), false, false, false, false, false, false, false, "trusted-catalog-never-published-in-this-data-root");
+    let blocked = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), false, false, false, true, false, false, false, false, "trusted-catalog-never-published-in-this-data-root");
     let detail = readiness_trace_detail(&blocked, &addr, "loopback");
     assert!(detail.starts_with("addr=127.0.0.1:8787 scope=loopback"));
     for closed in &blocked.blocked_by {

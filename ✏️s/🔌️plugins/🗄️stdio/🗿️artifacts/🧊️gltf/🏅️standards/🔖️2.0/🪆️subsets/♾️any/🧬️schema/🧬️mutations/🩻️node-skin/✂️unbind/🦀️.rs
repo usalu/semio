@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeSki
         vec![super::GltfMutation::UnbindNodeSkin(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Unbind Node Skin".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Unbind Node Skin", "Knotenhaut lösen")
     }
 
     fn target(&self) -> Vec<String> {

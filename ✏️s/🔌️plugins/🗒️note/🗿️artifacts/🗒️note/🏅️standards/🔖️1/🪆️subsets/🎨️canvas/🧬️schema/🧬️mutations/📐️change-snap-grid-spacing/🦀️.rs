@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeSnapGridSpacing {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change snap grid spacing to {:?}", self.new_spacing)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change snap grid spacing to {:?}", self.new_spacing), &format!("Fangrasterabstand auf {:?} ändern", self.new_spacing))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -22,8 +22,8 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetLocation {
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {
         agg_inverse(&EpwMutation::SetLocation(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-location".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-location", "Ort setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

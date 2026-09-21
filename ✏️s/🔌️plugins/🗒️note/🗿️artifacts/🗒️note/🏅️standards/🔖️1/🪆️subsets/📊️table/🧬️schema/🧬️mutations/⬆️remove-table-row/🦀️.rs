@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for RemoveTableRow {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove row from table \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove row from table \"{}\"", self.id), &format!("Zeile aus Tabelle \"{}\" entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

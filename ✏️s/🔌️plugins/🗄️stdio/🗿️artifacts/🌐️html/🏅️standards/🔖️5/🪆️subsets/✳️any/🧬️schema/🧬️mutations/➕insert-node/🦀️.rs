@@ -22,8 +22,8 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for InsertNode {
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
         agg_inverse(&HtmlMutation::InsertNode(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-node".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-node", "Knoten einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

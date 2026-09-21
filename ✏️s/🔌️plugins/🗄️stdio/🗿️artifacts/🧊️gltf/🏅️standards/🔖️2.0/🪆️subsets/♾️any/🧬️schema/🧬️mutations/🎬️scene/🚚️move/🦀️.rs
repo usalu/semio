@@ -62,8 +62,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveSceneMuta
         vec![super::GltfMutation::MoveScene(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Move Scene".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Move Scene", "Szene verschieben")
     }
 
     fn target(&self) -> Vec<String> {

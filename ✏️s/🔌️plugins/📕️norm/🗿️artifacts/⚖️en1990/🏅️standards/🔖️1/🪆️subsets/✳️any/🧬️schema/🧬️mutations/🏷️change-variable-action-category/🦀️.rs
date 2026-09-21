@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeVariableAc
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change variable action #{} category to \"{}\"", self.index, self.new_category)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change variable action #{} category to \"{}\"", self.index, self.new_category), &format!("Variablenaktion #{} Kategorie auf \"{}\" ändern", self.index, self.new_category))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

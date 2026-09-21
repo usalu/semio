@@ -27,8 +27,7 @@ function mountHost(activeUtility = "selectDirect") {
       activeUtility,
       viewMode: "composite",
       interactive: true,
-      domainId: fixture.scene.domainId,
-      domainGranularityId: fixture.scene.domainGranularityId,
+      interactionDomain: fixture.scene.interactionDomain,
     },
   };
   const mounted = render(createElement(InkCanvasHost, { node, onAction: (action: unknown) => actions.push(action) } as any));
@@ -59,6 +58,14 @@ describe("InkCanvas canonical interaction domain", () => {
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(fixture.identity).toEqual({ requiresInteractionId: true, missingInteractionId: "refuse-target", rawIdFallback: false, incomingPaintIds: "raw" });
     expect(fixture.forbiddenActions).toEqual(["setHover", "setSelection"]);
+    for (const invalid of [
+      { ...fixture, scene: { ...fixture.scene, interactionDomain: { id: "blocks" } } },
+      { ...fixture, scene: { ...fixture.scene, interactionDomain: { granularityId: "block" } } },
+      { ...fixture, scene: { ...fixture.scene, interactionDomain: { id: "", granularityId: "block" } } },
+      { ...fixture, scene: { ...fixture.scene, interactionDomain: { id: "blocks", granularityId: "" } } },
+    ]) {
+      expect(validate(invalid)).toBe(false);
+    }
   });
 
   it("publishes canonical topology hover and an exact empty hover clear", () => {

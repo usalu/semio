@@ -306,7 +306,6 @@ impl RetainedNodePaintCursor {
         self.node.is_none()
     }
 
-    #[cfg(test)]
     pub(crate) fn close_step(&mut self) -> bool {
         if self.node.take().is_some() {
             self.reset_progress();

@@ -32,8 +32,8 @@ impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for DuplicateSte
     fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Duplicate step \"{}\" as \"{}\"", self.source_id, self.new_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Duplicate step \"{}\" as \"{}\"", self.source_id, self.new_id), &format!("Schritt \"{}\" als \"{}\" duplizieren", self.source_id, self.new_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.new_id.clone()]

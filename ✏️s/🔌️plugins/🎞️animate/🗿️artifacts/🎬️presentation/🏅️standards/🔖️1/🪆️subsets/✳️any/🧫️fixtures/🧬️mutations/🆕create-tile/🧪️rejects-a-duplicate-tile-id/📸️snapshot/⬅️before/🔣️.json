@@ -1,5 +1,28 @@
 {
   "schema": "animate.presentation",
+  "source": {
+    "src": "/🖼️bauteilbörse.png",
+    "kind": "figure",
+    "frame": {
+      "x": 0.127,
+      "y": 0.1,
+      "width": 0.746,
+      "height": 0.75
+    },
+    "sourceAspect": 1.3638392857142858
+  },
+  "tiles": [
+    {
+      "id": "t-hero",
+      "name": "Hero",
+      "crop": {
+        "x": 0.25,
+        "y": 0.25,
+        "width": 0.5,
+        "height": 0.5
+      }
+    }
+  ],
   "presentation": {
     "childId": "presentation-create-tile-duplicate",
     "target": {

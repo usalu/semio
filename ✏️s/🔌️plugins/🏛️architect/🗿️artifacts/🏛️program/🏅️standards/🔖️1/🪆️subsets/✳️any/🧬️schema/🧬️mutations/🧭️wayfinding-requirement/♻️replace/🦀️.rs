@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceWayfindingRequire
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace wayfinding requirement \"{}\"", self.wayfinding_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace wayfinding requirement \"{}\"", self.wayfinding_requirement.header.name), &format!("Wegeführungsanforderung \"{}\" ersetzen", self.wayfinding_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.wayfinding_requirement.header.id.0.clone()]

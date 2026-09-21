@@ -102,6 +102,18 @@ describe("the wgpu preference door's page half", () => {
     expect((await call({ op: "storage", verb: "get", scope: "local", key: "semio.os.config.evil" })).error).toContain("not a carried key");
   });
 
+  it("serves and snapshots the exact document boundary while plus one preserves it", async () => {
+    const { local } = installStores();
+    const exact = "x".repeat(WGPU_HOST_STORAGE_VALUE_MAX_BYTES);
+    expect(await call({ op: "storage", verb: "set", scope: "local", key: "semio.os.config", value: exact })).toEqual({ value: null });
+    expect(await call({ op: "storage", verb: "get", scope: "local", key: "semio.os.config" })).toEqual({ value: exact });
+    expect(readWgpuHostStorageSnapshot(globalThis)["semio.os.config"]).toBe(exact);
+
+    const oversized = await call({ op: "storage", verb: "set", scope: "local", key: "semio.os.config", value: `${exact}x` });
+    expect(oversized.error).toContain("exceeds");
+    expect(local.getItem("semio.os.config")).toBe(exact);
+  });
+
   it("answers a realm with no store with a refusal rather than an empty read", async () => {
     expect((await call({ op: "storage", verb: "get", scope: "local", key: "semio.os.config" })).error).toContain("owns no localStorage");
   });

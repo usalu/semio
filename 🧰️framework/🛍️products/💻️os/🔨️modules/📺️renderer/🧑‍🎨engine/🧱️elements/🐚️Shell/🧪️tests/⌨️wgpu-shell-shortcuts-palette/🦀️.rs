@@ -402,15 +402,43 @@ fn os_arg_commands_are_single_staged_rows() {
 fn picking_an_arg_carrying_command_opens_its_form() {
     let mut shell = palette_shell();
     shell.sync_dock_tabs();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
+    let staged = &fixture["producer"]["stagedCommand"];
+    let surface = staged["categorySurfaceId"].as_str().expect("category surface id");
+    let initial = shell.publish_shell_panel_document(surface).expect("initial Command category publication").expect("Command category owns a retained document");
+    let before = initial.header().expect("published Command category header");
+    shell.panel_documents.insert(surface.to_string(), initial);
     shell.overlay_state = OverlayState::Search;
-    shell.search_query = "Compose".into();
-    let index = shell.filtered_search_items().iter().position(|item| item.id == "command.app.test.test-app.app.compose").expect("the query finds the command");
+    shell.search_query = "Set Theme".into();
+    let index = shell.filtered_search_items().iter().position(|item| item.id == staged["id"].as_str().expect("staged command id")).expect("the query finds the command");
+    let vacancy = shell.closing_documents.first_vacant_index().expect("retirement vacancy");
+    shell.closing_documents.epochs[vacancy] = u64::MAX;
+    let error = semio_framework_async::block_on(shell.activate_search_item(index)).expect_err("retirement refusal rejects the staged replacement");
+    assert!(error.contains("retirement registry refused"));
+    assert_eq!(shell.panel_documents.get(surface).unwrap().header().unwrap(), before, "refusal keeps the exact readable category owner");
+    assert_eq!(shell.expanded_command_id, None, "refusal restores the exact prior expansion");
+    assert_eq!(shell.overlay_state, OverlayState::Search, "refusal keeps the palette available for an exact retry");
+    assert_eq!(shell.search_query, "Set Theme");
+
+    shell.closing_documents.epochs[vacancy] = 0;
     semio_framework_async::block_on(shell.activate_search_item(index)).expect("activating a form redirect never faults");
     assert!(shell.anchor_open(PanelAnchor::BottomMiddle), "the bottom-middle Command anchor — React's own home for the command panel");
     assert_eq!(shell.anchor_state(PanelAnchor::BottomMiddle).path.first().map(String::as_str), Some("framework.category.command"));
-    assert_eq!(shell.anchor_state(PanelAnchor::BottomMiddle).path.last().map(String::as_str), Some("command.category.app"));
-    assert_eq!(shell.expanded_command_id.as_deref(), Some("app:test:test-app:app.compose"));
+    assert_eq!(shell.anchor_state(PanelAnchor::BottomMiddle).path.last().map(String::as_str), Some(surface));
+    assert_eq!(shell.expanded_command_id.as_deref(), staged["expandedKey"].as_str());
     assert_eq!(shell.overlay_state, OverlayState::None, "and the palette closes behind it");
+
+    let after = shell.panel_documents.get(surface).expect("mounted Command category successor").header().expect("published Command category successor header");
+    assert!(after.generation > before.generation && after.revision != before.revision, "activation atomically replaces the mounted category document");
+    let read = shell.panel_documents.get(surface).expect("mounted Command category successor").try_read().expect("Command category successor is readable");
+    let keys = (0..read.len()).filter_map(|ordinal| read.node_at(ordinal).map(|record| record.key.as_str().to_string())).collect::<Vec<_>>();
+    for field in ["formId", "executeId", "resetId"] {
+        let id = staged[field].as_str().expect("retained staged form id");
+        assert!(keys.iter().any(|key| key.ends_with(&format!("/{id}"))), "activation successor contains {id}: {keys:?}");
+    }
+    let unexpanded = staged["unexpandedRowId"].as_str().expect("unexpanded row id");
+    assert!(!keys.iter().any(|key| key.ends_with(&format!("/{unexpanded}"))), "the expanded command is absent from the successor list: {keys:?}");
+    assert!(shell.closing_documents.terminal_is_empty(), "the exact replaced category owner retires after the retry");
 }
 
 fn publish_palette_chrome(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>) {

@@ -26,6 +26,17 @@ use schema::ArtifactSchema;
 pub struct PresentationSnapshot {
     #[state(artifact)]
     pub schema: String,
+    /// 🖼️ The shared source figure the composed `presentation` deck is derived from — the PERSISTED
+    /// payload of that child slot (`🏭️process`'s `stock_payload` pattern). A composed child's content
+    /// never travels inside `store::ArtifactChild`, and the react shell answers `Effect::LoadDocument`
+    /// with an EMPTY member roster, so `crate::genesis_presentation_child_pack` can only derive the deck
+    /// from fields the parent's own pack/DSL round-trips.
+    #[state(artifact)]
+    pub source: crate::FigureTileSource,
+    /// 🧱 The named tile crops of [`PresentationSnapshot::source`] — one composed slide each. See
+    /// [`PresentationSnapshot::source`].
+    #[state(artifact)]
+    pub tiles: Vec<crate::FigureTileDraft>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub presentation: PresentationChild,
@@ -40,9 +51,13 @@ impl Default for PresentationSnapshot {
     }
 }
 
-/// 🌱 Canonical default document used by the play app and examples.
+/// 🌱 Canonical default document used by the play app and the `demo` example — the shared source
+/// figure already cropped into the same 3×5 tile grid `resetGrid` seeds, so a freshly booted pane shows
+/// a real deck instead of a sourceless, tile-less document.
 pub fn default_snapshot() -> PresentationSnapshot {
-    crate::presentation_snapshot_with_tiles(&crate::default_figure_tile_source(), &[])
+    let source = crate::default_figure_tile_source();
+    let tiles = crate::standards::v1::subsets::any::schema::populate_tile_drafts_from_grid(crate::standards::v1::subsets::any::schema::FigureTileGridSeedSpec { source: &source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
+    crate::presentation_snapshot_with_tiles(&source, &tiles)
 }
 //#endregion 🔖️Snapshot
 

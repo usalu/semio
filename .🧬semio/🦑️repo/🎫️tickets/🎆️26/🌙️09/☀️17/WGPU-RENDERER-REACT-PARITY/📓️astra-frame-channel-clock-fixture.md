@@ -1,0 +1,7 @@
+# Frame Channel Clock Fixture
+
+The broad browser-worker run recorded one failure in `raises the frame channel for every accepted frame while the budget channel stays silent`: the real wall clock measured an overrun during frame transfer while Cargo work was active. Its expected empty budget channel was therefore incompatible with its uncontrolled clock. The isolated unchanged law subsequently passed1/1,140 outside filter,5ms/Nx12.5s (`presented-input-authority/transport-overrun-recheck.log`). That observation does not prove the broad suite green or production responsiveness.
+
+This law verifies separation of frame and budget callbacks, not elapsed execution performance. Its fixture now injects a known admitted clock through the existing `BrowserFrameTransportOptions.now` interface. The private test helper forwards an optional clock, and this one law uses a fixed zero elapsed time. Every original callback assertion remains. Production clocks, thresholds and overrun behavior are unchanged; separate timing/overrun tests retain their own clock contracts. The full browser-worker target is the required verification after this fixture change.
+
+The complete canonical browser-worker target passed all 141 tests in 11 files after this change: Vitest 3.27s (tests 2.00s), Nx 11.1s, Nx cache skipped. Receipt: `🗑️generated/astra-runtime/presented-input-authority/browser-worker-full-clock.log`. This verifies the test fixture and worker suite; fresh browser presentation and responsiveness acceptance remain pending.

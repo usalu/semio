@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyAnimation {
     fn inverse(&self, base: &SemioSnapshot) -> Vec<SemioMutation> {
         agg_inverse(&SemioMutation::ApplyAnimation(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "animation".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("animation", "Animation")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

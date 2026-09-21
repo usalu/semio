@@ -23,8 +23,8 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareEntity {
     fn inverse(&self, base: &XmlSnapshot) -> Vec<XmlValidMutation> {
         agg_inverse(&XmlValidMutation::DeclareEntity(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "declare-entity".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("declare-entity", "Entität deklarieren")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

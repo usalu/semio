@@ -224,11 +224,11 @@ fn sync_pill_text_covers_persisted_pending_and_every_remote_state() {
 
 //#region 🧪️CheckInTests
 fn mutation_entry(seq: u64, applied: bool) -> semio_framework::kernel::HistoryEntry {
-    semio_framework::kernel::HistoryEntry { seq, action_id: "apply".into(), label: "Apply".into(), kind: "mutation".into(), applied, ..Default::default() }
+    semio_framework::kernel::HistoryEntry { seq, action_id: "apply".into(), label: LocalizedLabel::native("Apply", "Anwenden"), kind: "mutation".into(), applied, ..Default::default() }
 }
 
 fn checkpoint_entry(seq: u64) -> semio_framework::kernel::HistoryEntry {
-    semio_framework::kernel::HistoryEntry { seq, action_id: "commitCheckpoint".into(), label: "Checkpoint".into(), kind: "history".into(), applied: true, ..Default::default() }
+    semio_framework::kernel::HistoryEntry { seq, action_id: "commitCheckpoint".into(), label: LocalizedLabel::native("Checkpoint", "Kontrollpunkt"), kind: "history".into(), applied: true, ..Default::default() }
 }
 
 /// 🧪️ Verify item: "the fold merges upserts and resets the uncommitted count on a checkpoint".

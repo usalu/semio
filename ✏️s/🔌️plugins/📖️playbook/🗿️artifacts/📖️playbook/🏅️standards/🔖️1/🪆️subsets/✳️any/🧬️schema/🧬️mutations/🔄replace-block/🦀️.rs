@@ -41,8 +41,8 @@ impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for ReplaceBlock
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace block \"{}\"", self.block.label)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace block \"{}\"", self.block.label), &format!("Block \"{}\" ersetzen", self.block.label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block.id.clone()]

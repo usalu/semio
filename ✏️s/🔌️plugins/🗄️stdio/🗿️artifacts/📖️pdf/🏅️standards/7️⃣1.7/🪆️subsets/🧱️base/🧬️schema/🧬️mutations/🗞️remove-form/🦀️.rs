@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveForm {
         base.forms.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetForm(super::set_form::SetForm { form: item.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove form {}", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove form {}", self.id), &format!("Formular {} entfernen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

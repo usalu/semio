@@ -22,8 +22,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertComment {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::InsertComment(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-comment".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-comment", "Kommentar einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

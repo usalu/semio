@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for ChangeNo
     fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change node \"{}\" label to {}", self.id.value, self.new_label)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change node \"{}\" label to {}", self.id.value, self.new_label), &format!("Knoten \"{}\" Beschriftung auf {} ändern", self.id.value, self.new_label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.value.clone()]

@@ -28,8 +28,8 @@ impl MutationKind<PresentationSnapshot, PresentationMutation> for RenameTile {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Rename tile to \"{}\"", self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename tile to \"{}\"", self.new_name), &format!("Kachel in \"{}\" umbenennen", self.new_name))
     }
 
     fn target(&self) -> Vec<String> {

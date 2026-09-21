@@ -23,8 +23,8 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetCell {
     fn inverse(&self, base: &TsvSnapshot) -> Vec<TsvMutation> {
         agg_inverse(&TsvMutation::SetCell(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-cell".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-cell", "Zelle setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

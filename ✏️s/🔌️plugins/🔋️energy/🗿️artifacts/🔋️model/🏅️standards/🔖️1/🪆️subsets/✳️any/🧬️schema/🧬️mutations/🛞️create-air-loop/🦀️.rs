@@ -36,8 +36,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Create air loop {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create air loop {}", self.id.0), &format!("Luftkreis {} erstellen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

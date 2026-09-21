@@ -23,8 +23,8 @@ impl MutationKind<FlowSnapshot, FlowMutation> for ReorderWidgets {
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Reorder widget \"{}\" to {}", self.id, self.to_index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Reorder widget \"{}\" to {}", self.id, self.to_index), &format!("Widget \"{}\" zu {} umordnen", self.id, self.to_index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceConflict {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace conflict \"{}\"", self.conflict.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace conflict \"{}\"", self.conflict.header.name), &format!("Konflikt \"{}\" ersetzen", self.conflict.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.conflict.header.id.0.clone()]

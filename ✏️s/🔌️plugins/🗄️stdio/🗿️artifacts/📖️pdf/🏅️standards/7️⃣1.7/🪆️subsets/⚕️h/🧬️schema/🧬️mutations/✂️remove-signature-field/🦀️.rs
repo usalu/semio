@@ -27,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveSignatureField {
         support::signature_field_named(base, &self.name).map(|_| PdfHMutation::InsertSignatureField(InsertSignatureField { name: self.name.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove signature field \"{}\"", self.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove signature field \"{}\"", self.name), &format!("Signaturfeld \"{}\" entfernen", self.name))
     }
 
     fn target(&self) -> Vec<String> {

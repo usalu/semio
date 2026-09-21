@@ -30,7 +30,7 @@ pub fn example_document(example_id: &str) -> Result<GisMapSnapshot, Fault> {
         return Ok(GisMapSnapshot::default());
     }
     let source = example_catalogue().into_iter().find(|source| source.id() == example_id).ok_or_else(|| Fault::from(format!("gis map example '{example_id}' is not in the catalogue")))?;
-    let parsed = <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(source.document_json()).map_err(|error| Fault::from(format!("gis map example '{example_id}' does not parse: {error:?}")))?;
+    let parsed = <GisMapSnapshot as store::ArtifactDsl>::parse_dsl(&source.document_json()).map_err(|error| Fault::from(format!("gis map example '{example_id}' does not parse: {error:?}")))?;
     Ok(gis_map_snapshot_with_derived_children(parsed))
 }
 //#endregion 🔖️Catalogue

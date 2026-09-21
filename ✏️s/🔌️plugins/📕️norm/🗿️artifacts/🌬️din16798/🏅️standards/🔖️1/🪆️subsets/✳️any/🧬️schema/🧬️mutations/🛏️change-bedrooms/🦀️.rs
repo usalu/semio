@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeBedroo
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change number of bedrooms to {}", self.new_bedrooms)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change number of bedrooms to {}", self.new_bedrooms), &format!("Nummer von Schlafzimmer auf {} ändern", self.new_bedrooms))
     }
 }
 //#endregion 🔖️ChangeBedrooms

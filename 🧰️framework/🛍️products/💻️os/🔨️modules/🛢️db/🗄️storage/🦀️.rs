@@ -31,7 +31,9 @@
 //! (`-> impl Future<..> + Send`) is exactly the bound R3 forbids.
 //!
 //! Backends split two ways: genuinely-async drivers (`db_storage_postgres`'s `sqlx`,
-//! `db_storage_neo4j`'s `neo4rs`) simply `.await` their already-async bodies; genuinely-blocking
+//! `db_storage_neo4j`'s `neo4rs`) `.await` their already-async bodies **on the bounded runtime their
+//! driver is bound to**, reached through the [`DbIoAsyncDriverRuntime`] interface and never polled on
+//! a pool worker (a pool worker has no foreign runtime context — see that trait's doc); genuinely-blocking
 //! backends (this crate's own `FsStorage`, plus the sibling `db_storage_sqlite`) cross the
 //! sync/async boundary through schema-first [`DbIoTask`] owners submitted to the ONE
 //! process-wide `semio_framework_async::WorkerPool` on
@@ -2411,7 +2413,30 @@ pub enum DbIoExecutorMode {
     AsyncNative,
 }
 
-pub type DbIoAsyncDriverFuture = Pin<Box<dyn Future<Output = (Box<dyn DbIoTaskExecutor>, DbIoTask, Result<DbIoResult, DbError>)> + Send + 'static>>;
+/// 🎁️ What an async-native driver hands back when its task reaches a terminal: the executor the
+/// backend registry lends out for the turn, the typed task owner, and the terminal itself.
+pub type DbIoAsyncDriverOutput = (Box<dyn DbIoTaskExecutor>, DbIoTask, Result<DbIoResult, DbError>);
+
+pub type DbIoAsyncDriverFuture = Pin<Box<dyn Future<Output = DbIoAsyncDriverOutput> + Send + 'static>>;
+
+/// @emoji 🧵️ The one seam where a driver bound to a foreign executor may be polled.
+///
+/// `Lane::Io` of the process [`WorkerPool`] is plain `std::thread`s with no foreign runtime context
+/// of any kind — that is the whole point of `semio_framework_async` ("No `tokio` in this crate").
+/// A driver like `sqlx` or `neo4rs` demands ITS runtime's thread-local context at **poll** time, not
+/// merely at construction time, so polling such a future on a pool worker aborts the process
+/// (`this functionality requires a Tokio context`). A backend whose driver has that requirement
+/// therefore owns a bounded runtime of its own and returns it here; [`DbIoAsyncTaskLease::start_on_lane_io`]
+/// then never puts the driver's future in the slot at all. What the slot gets instead is the
+/// **bridge** this returns: a repo-owned rendezvous (`semio_framework_async::oneshot`) that is safe
+/// to poll anywhere, because the only thing it does is read a value and register a waker.
+///
+/// This is an interface, not an implementation: nothing in `db_storage` names a concrete runtime.
+pub trait DbIoAsyncDriverRuntime: Send + Sync {
+    /// 🚚 Take ownership of `future`, drive it to completion on a thread this runtime owns, and
+    /// return the `Lane::Io`-safe bridge future that resolves to the same output.
+    fn detach(&self, future: DbIoAsyncDriverFuture) -> DbIoAsyncDriverFuture;
+}
 
 /// 👣️ One writer-guard release opportunity either progressed or waits for an exact future wake.
 pub enum DbIoWriterReleaseStep {
@@ -2448,6 +2473,13 @@ pub trait DbIoTaskExecutor: Send + Sync {
 
     fn mode(&self) -> DbIoExecutorMode {
         DbIoExecutorMode::BlockingLane
+    }
+
+    /// 🧵️ The runtime this executor's driver must be polled on, when its driver is bound to one.
+    /// `None` — the default, and the answer for every backend in this crate — means the future
+    /// [`Self::drive_async`] returns is safe to poll on `Lane::Io` directly.
+    fn driver_runtime(&self) -> Option<&'static dyn DbIoAsyncDriverRuntime> {
+        None
     }
 
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
@@ -4502,7 +4534,12 @@ impl DbIoAsyncTaskLease {
     pub fn start_on_lane_io(mut self) -> Result<(), DbError> {
         let executor = self.executor.take().ok_or_else(|| DbError::Internal("DB I/O async executor transferred twice".to_string()))?;
         let task = self.task.take().ok_or_else(|| DbError::Internal("DB I/O async task transferred twice".to_string()))?;
+        let runtime = executor.driver_runtime();
         let future = executor.drive_async(self.handle.operation, task);
+        let future = match runtime {
+            Some(runtime) => runtime.detach(future),
+            None => future,
+        };
         {
             let mut owner = DB_IO_TASK_SLOTS[self.handle.slot as usize].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if !db_io_slot_matches(&owner, self.handle) || !owner.async_detached || owner.async_driver.is_some() {

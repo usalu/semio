@@ -20,7 +20,7 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneSunIntensit
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change sun intensity to {}", self.new_intensity)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change sun intensity to {}", self.new_intensity), &format!("Sonnenintensität auf {} ändern", self.new_intensity))
     }
 }

@@ -22,8 +22,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for UpdateScript
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Update script limits (max-steps={}, max-recursion={}, timeout-ms={})", self.new_max_steps, self.new_max_recursion, self.new_timeout_ms)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Update script limits (max-steps={}, max-recursion={}, timeout-ms={})", self.new_max_steps, self.new_max_recursion, self.new_timeout_ms), &format!("Skriptgrenzwerte (Max-Schritte={}, Max-Rekursion={}, Timeout-ms={}) aktualisieren", self.new_max_steps, self.new_max_recursion, self.new_timeout_ms))
     }
 }
 //#endregion 🔖️Payload

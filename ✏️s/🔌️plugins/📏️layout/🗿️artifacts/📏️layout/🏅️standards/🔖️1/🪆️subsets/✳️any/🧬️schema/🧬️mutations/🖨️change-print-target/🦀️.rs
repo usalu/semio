@@ -21,11 +21,18 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangePrintTarget {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_print_target(self, base)
     }
-    fn label(&self) -> String {
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&{
         match &self.new_print_target {
             Some(target) => format!("Set print target to \"{target}\""),
             None => "Clear print target".into(),
         }
+        }, &{
+        match &self.new_print_target {
+            Some(target) => format!("Druckziel auf \"{target}\" setzen"),
+            None => "Druckziel leeren".into(),
+        }
+        })
     }
 }
 //#endregion 🖨️ChangePrintTarget

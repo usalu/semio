@@ -1,0 +1,170 @@
+{
+  "version": 1,
+  "surfaces": [
+    {
+      "windowId": "lower-world",
+      "surfaceId": "lower-world",
+      "bounds": [
+        30,
+        40,
+        260,
+        180
+      ]
+    },
+    {
+      "windowId": "upper-world",
+      "surfaceId": "upper-world",
+      "bounds": [
+        80,
+        60,
+        260,
+        180
+      ]
+    }
+  ],
+  "press": [
+    100,
+    100
+  ],
+  "release": [
+    390,
+    280
+  ],
+  "expectedOwner": "upper-world",
+  "cases": [
+    {
+      "name": "captured",
+      "steps": [
+        "press",
+        "release"
+      ],
+      "events": [
+        "pointerdown",
+        "pointerup"
+      ],
+      "menuOpen": false
+    },
+    {
+      "name": "motion-wheel",
+      "steps": [
+        "press",
+        "move",
+        "release",
+        "wheel"
+      ],
+      "events": [
+        "pointerdown",
+        "pointermove",
+        "pointerup",
+        "wheel"
+      ],
+      "menuOpen": false
+    },
+    {
+      "name": "chrome",
+      "steps": [
+        "chrome",
+        "press",
+        "release"
+      ],
+      "events": [],
+      "menuOpen": false
+    },
+    {
+      "name": "modal",
+      "steps": [
+        "modal",
+        "press",
+        "release"
+      ],
+      "events": [],
+      "menuOpen": false
+    },
+    {
+      "name": "secondary",
+      "steps": [
+        "secondaryPress",
+        "secondaryRelease"
+      ],
+      "events": [
+        "pointerdown",
+        "pointerup"
+      ],
+      "menuOpen": true
+    },
+    {
+      "name": "cancel",
+      "steps": [
+        "press",
+        "cancel",
+        "release"
+      ],
+      "events": [
+        "pointerdown"
+      ],
+      "menuOpen": false
+    },
+    {
+      "name": "refresh",
+      "steps": [
+        "press",
+        "refresh",
+        "move",
+        "release"
+      ],
+      "events": [
+        "pointerdown",
+        "pointermove",
+        "pointerup"
+      ],
+      "menuOpen": false
+    },
+    {
+      "name": "replacement",
+      "steps": [
+        "press",
+        "replace",
+        "move",
+        "release"
+      ],
+      "events": [
+        "pointerdown"
+      ],
+      "menuOpen": false
+    },
+    {
+      "name": "foreign-release",
+      "steps": [
+        "press",
+        "foreignPress",
+        "foreignRelease",
+        "move",
+        "release"
+      ],
+      "events": [
+        "pointerdown",
+        "pointermove",
+        "pointerup"
+      ],
+      "menuOpen": false
+    },
+    {
+      "name": "foreign-cancel",
+      "steps": [
+        "press",
+        "foreignPress",
+        "foreignCancel",
+        "move",
+        "release"
+      ],
+      "events": [
+        "pointerdown",
+        "pointermove",
+        "pointerup"
+      ],
+      "menuOpen": false
+    }
+  ],
+  "captureCapacity": 16,
+  "moveDelta": [290, 180]
+}

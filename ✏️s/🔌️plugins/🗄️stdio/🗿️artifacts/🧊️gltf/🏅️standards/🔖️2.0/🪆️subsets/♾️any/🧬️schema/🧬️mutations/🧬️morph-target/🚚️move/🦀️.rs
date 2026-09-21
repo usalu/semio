@@ -67,8 +67,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveMorphTarg
         vec![super::GltfMutation::MoveMorphTarget(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Move Morph Target".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Move Morph Target", "Morphziel verschieben")
     }
 
     fn target(&self) -> Vec<String> {

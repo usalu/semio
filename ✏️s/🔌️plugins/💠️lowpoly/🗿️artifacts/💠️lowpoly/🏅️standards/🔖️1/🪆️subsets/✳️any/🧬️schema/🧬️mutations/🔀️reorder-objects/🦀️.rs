@@ -25,8 +25,8 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ReorderObjects
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Reorder object \"{}\" to {}", self.id, self.to_index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Reorder object \"{}\" to {}", self.id, self.to_index), &format!("Objekt \"{}\" zu {} umordnen", self.id, self.to_index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

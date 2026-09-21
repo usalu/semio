@@ -33,8 +33,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for UpdateSf
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Update sfm params".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update sfm params", "Sfmparameter aktualisieren")
     }
 }
 //#endregion 🔖️Mutation

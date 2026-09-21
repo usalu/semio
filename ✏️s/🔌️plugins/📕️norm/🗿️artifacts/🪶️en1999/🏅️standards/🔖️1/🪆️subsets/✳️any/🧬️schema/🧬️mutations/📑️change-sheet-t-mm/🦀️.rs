@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeSheetTMm {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change sheet thickness t [mm] to {}", self.new_sheet_t_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change sheet thickness t [mm] to {}", self.new_sheet_t_mm), &format!("Blattdickent [mm] auf {} ändern", self.new_sheet_t_mm))
     }
 }
 //#endregion 🔖️ChangeSheetTMm

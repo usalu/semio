@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceTemplateRecord {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace template record \"{}\"", self.template_record.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace template record \"{}\"", self.template_record.header.name), &format!("Vorlagendatensatz \"{}\" ersetzen", self.template_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.template_record.header.id.0.clone()]

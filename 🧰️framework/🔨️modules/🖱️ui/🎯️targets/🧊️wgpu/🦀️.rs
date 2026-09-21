@@ -33,24 +33,20 @@ pub use icon_name_gen::IconName;
 mod icon_name_value;
 
 //#region 🔖️UiAxes
-#[path = "🤖️generated/🦀️.rs"]
-mod ui_axes_gen;
+// 🌐️ The axes and the label carriers now live in `semio-framework-os-kernel`
+// (`🧰️framework/🛍️products/💻️os/🔨️modules/🌐️locale/`) because `MutationKind::label` returns a
+// `LocalizedLabel` and that trait is the kernel's — this crate already depends on the kernel under
+// the `wgpu` feature, the reverse would be a cycle. Ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END.
+pub use dsl::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
 
-pub use ui_axes_gen::{Locale, Terminology};
+#[cfg(test)]
+#[path = "../../🧪️tests/🔬️targets-wgpu-locale-terminology-value-locale-terminology-value-round-trip/🦀️.rs"]
+mod locale_terminology_value_round_trip_tests;
 
-// 🌱️ `ToValue`/`FromValue` for `Locale`/`Terminology`, hand-written in a sibling file rather than
-// added to `ui_axes_gen` above — that generated file is marked "do not edit" at its own top line.
-// See `🦀️locale_terminology_value.rs`'s own docstring for why this is a separate mount instead of
-// a `#[value]` attribute on the derive. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[path = "🌐️locale-terminology/🧾️value/🦀️.rs"]
-mod locale_terminology_value;
+#[cfg(test)]
+#[path = "../../🧪️tests/🔬️targets-wgpu-label-localized-label-value-round-trip/🦀️.rs"]
+mod localized_label_value_round_trip_tests;
 //#endregion 🔖️UiAxes
-
-//#region 🔖️Label
-#[path = "🏷️label/🦀️.rs"]
-mod label_impl;
-pub use label_impl::*;
-//#endregion 🔖️Label
 
 // #region component
 // 🧩️ Declarative UI component model (declarative `UiNode` tree, scene records, `SurfaceKind`, `WindowLayout`/`WindowEngagement`/`WindowMeasure`, `UtilityNode`) — moved verbatim from framework/core/rs/lib.rs; JSON wire format is byte-identical to the pre-move version (see the inline `*_wire_format_tests` mods). Ungated (default features) so wasm32-wasip2 program builds stay dependency-clean; must never reference `semio_framework`.
@@ -327,7 +323,7 @@ pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event,
 #[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32"), not(target_os = "wasi")))]
 pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, ClipboardContent, ClipboardIoJob, WindowInputState};
 #[cfg(feature = "wgpu-engine")]
-pub use input::RetainedHitRegistration;
+pub use input::{RetainedHitRegistration, RetainedSceneHit};
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
 #[cfg(feature = "wgpu-engine")]
 pub use paint::{
@@ -366,10 +362,10 @@ pub use kernel_3d_scene::{
     mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_update_vec3, mesh3d_write_edge, mesh3d_write_u32,
     mesh3d_write_vec2, mesh3d_write_vec3, mesh3d_write_vec4, pick_closest_mesh_url, point_in_polygon, project_point, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rect_contains,
     rotate_vector, screen_segment_distance, screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, Camera3d, Instance3d, LineDraw3d, LineVertex3d, Mat4, Mat4Math, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dItemCursor,
-    Mesh3dLease, Mesh3dPageCursor, Mesh3dSchema, Mesh3dWriteToken, OrbitController, SceneColorSource3d, SceneDraw3d, SceneInstanceMaterial3d, SceneLighting3d, SceneMaterial3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadow3d,
+    Mesh3dLease, Mesh3dPageCursor, Mesh3dSchema, Mesh3dWriteToken, OrbitController, ProceduralGrid3d, SceneColorSource3d, SceneDraw3d, SceneInstanceMaterial3d, SceneLighting3d, SceneMaterial3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadow3d,
     SceneShadowRole3d, TexturedDraw3d,
     TexturedInstance3d, Vec3, Vec3Math,
-    ICON_SHADOW_MAP_SIZE, WORLD_FRAME_BOUNDS_MARGIN, WORLD_SHADOW_FAR, WORLD_SHADOW_HALF_EXTENT, WORLD_SHADOW_LIGHT_DISTANCE, WORLD_SHADOW_MAP_SIZE, WORLD_SHADOW_NEAR,
+    ICON_SHADOW_MAP_SIZE, PROCEDURAL_GRID_CELL_THICKNESS, PROCEDURAL_GRID_FADE_STRENGTH, PROCEDURAL_GRID_SECTION_THICKNESS, WORLD_FRAME_BOUNDS_MARGIN, WORLD_SHADOW_FAR, WORLD_SHADOW_HALF_EXTENT, WORLD_SHADOW_LIGHT_DISTANCE, WORLD_SHADOW_MAP_SIZE, WORLD_SHADOW_NEAR,
 };
 pub use kernel_3d_scene::{
     adaptive_orbit_camera_far, camera_grid_visible_radius, frame_projection_orbit_to_bounds, lod_grid_step_world, lod_orbit_distance_for_camera, world_projection_matched_ortho_zoom, world_projection_matched_perspective_distance,

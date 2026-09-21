@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceChangeRecord {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace change record \"{}\"", self.change_record.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace change record \"{}\"", self.change_record.header.name), &format!("Änderungsdatensatz \"{}\" ersetzen", self.change_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.change_record.header.id.0.clone()]

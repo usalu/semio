@@ -19,7 +19,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/framework-kernel",
     environment: "jsdom",
-    include: ["🧪️tests/🔬️scope-contributions/🟦️.ts"],
+    include: ["🧪️tests/🔬️scope-contributions/🟦️.ts", "🧪️tests/🏷️history-entry-label/🟦️.ts", "🧪️tests/🏷️localized-label-fixture/🟦️.ts"],
     coverage: { include: ["*.ts"] },
     includeSource: ["*.ts", "📤️return/📦️content/🟦️.ts"],
     passWithNoTests: false,

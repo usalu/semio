@@ -40,8 +40,8 @@ impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for AddBlock {
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add block \"{}\"", self.block.label)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add block \"{}\"", self.block.label), &format!("Block \"{}\" hinzufügen", self.block.label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step_id.clone(), self.block.id.clone()]

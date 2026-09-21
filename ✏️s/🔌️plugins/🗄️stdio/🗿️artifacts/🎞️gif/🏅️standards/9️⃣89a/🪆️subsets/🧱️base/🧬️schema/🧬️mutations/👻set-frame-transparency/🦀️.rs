@@ -22,8 +22,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameTransparency {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::SetFrameTransparency(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-frame-transparency".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-frame-transparency", "Rahmentransparenz setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

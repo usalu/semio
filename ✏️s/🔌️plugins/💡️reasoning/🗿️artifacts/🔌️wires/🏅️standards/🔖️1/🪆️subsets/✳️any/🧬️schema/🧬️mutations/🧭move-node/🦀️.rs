@@ -32,8 +32,8 @@ impl protocol::MutationKind<WiresSnapshot, WiresMutation> for MoveNode {
     fn inverse(&self, base: &WiresSnapshot) -> Vec<WiresMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move node \"{}\" to ({}, {})", self.node_id, self.new_x, self.new_y)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move node \"{}\" to ({}, {})", self.node_id, self.new_x, self.new_y), &format!("Knoten \"{}\" nach ({}, {}) verschieben", self.node_id, self.new_x, self.new_y))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node_id.clone()]

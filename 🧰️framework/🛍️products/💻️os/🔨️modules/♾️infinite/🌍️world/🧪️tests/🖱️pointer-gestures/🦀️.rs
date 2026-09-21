@@ -50,6 +50,9 @@ fn fixture_state() -> World3dState {
         model.cols[3][1] = position[1];
         model.cols[3][2] = position[2];
         state.instance_interaction_ids.insert(id.clone(), target);
+        if let Some(granularity) = instance["interactionGranularityId"].as_str() {
+            state.instance_interaction_granularity_ids.insert(id.clone(), granularity.to_string());
+        }
         instances.push(Instance3d { id, model, color: [1.0; 4], selected: false, hovered: false, material: Default::default() });
     }
     state.draws.push(SceneDraw3d { mesh_key, mesh_version, instances, shadow_role: Default::default() });
@@ -113,7 +116,36 @@ fn decoded_targets(action: &ActionDescriptor) -> serde_json::Value {
 }
 
 #[test]
-fn an_instance_pick_selects_the_topology_target_at_object_granularity() {
+fn the_instance_interaction_carrier_is_schema_bounded_and_retires_one_entry_per_step() {
+    let scene = fixture()["scene"].clone();
+    let parsed: Vec<World3dSceneInstanceEntry> = serde_json::from_value(scene["instances"].clone()).expect("shared instance records satisfy the native carrier");
+    assert!(scene["instances"].to_string().len() <= WORLD_INTERACTION_TOPOLOGY_BYTE_CAPACITY, "the encoded fixture is inside the existing topology-byte authority");
+    assert!(world3d_scene_instance_interactions_are_bounded(&parsed));
+    assert_eq!(parsed[0].interaction_granularity_id, None, "the first instance exercises scene fallback");
+    assert_eq!(parsed[1].interaction_granularity_id.as_deref(), Some("node"), "the second instance carries the schema-first override");
+
+    let mut overlong = parsed.clone();
+    overlong[0].interaction_granularity_id = Some("g".repeat(WORLD_INTERACTION_ID_BYTE_CAPACITY + 1));
+    assert!(!world3d_scene_instance_interactions_are_bounded(&overlong), "an override beyond the existing interaction-id byte authority is refused");
+    let mut overfull = vec![parsed[0].clone(); WORLD_INTERACTION_OBJECT_CAPACITY + 1];
+    assert!(!world3d_scene_instance_interactions_are_bounded(&overfull), "an instance carrier beyond the existing interaction-object authority is refused");
+    overfull.clear();
+
+    let mut state = fixture_state();
+    let initial = state.instance_interaction_ids.len() + state.instance_interaction_granularity_ids.len();
+    let mut retirement = World3dDynamicRetirement { phase: 5, blocked: None };
+    let mut steps = 0;
+    while !retirement.step(&mut state) {
+        steps += 1;
+        assert!(steps <= initial + 3, "interaction carrier retirement remains one entry or phase transition per step");
+    }
+    assert_eq!(steps, initial + 3);
+    assert!(state.instance_interaction_ids.is_empty() && state.instance_interaction_granularity_ids.is_empty());
+    assert!(retirement.terminal_is_empty());
+}
+
+#[test]
+fn an_instance_pick_selects_the_topology_target_at_its_declared_granularity() {
     for id in ["instance-pick-replaces", "instance-pick-additive", "instance-pick-subtractive", "instance-pick-subtractive-on-command", "instance-pick-invertive", "second-instance-of-one-topology-id-pick"] {
         let case = gesture(id);
         let expect = case["expect"].clone();
@@ -129,29 +161,32 @@ fn an_instance_pick_selects_the_topology_target_at_object_granularity() {
         assert_eq!(decoded_targets(&action), expect["targets"], "{id}");
         println!("[DEBUG] pointer-gestures {id}: targets={} merge={}", arg(&action, "targets"), arg(&action, "merge"));
 
-        // 🔍️ The pre-fix shape, re-derived from the same fixture: the RENDER id at the SCENE
-        // granularity, with ctrl spelled `invertive`. It must differ on every case that carries one.
+        // 🔍️ The pre-fix shape used the RENDER id and hardcoded `object`; both must differ
+        // from the fixture's declared topology target on every case.
         let render_id = case["instanceId"].as_str().expect("instanceId");
         let topology_id = expect["targets"][0]["id"].as_str().expect("expected target id");
         assert_ne!(render_id, topology_id, "{id}: the fixture's own scene renders the target under a different id");
-        assert_ne!(expect["targets"][0]["granularity"].as_str().expect("granularity"), fixture()["scene"]["domainGranularityId"].as_str().expect("scene granularity"), "{id}: a pick's granularity is not the scene's");
+        assert_ne!(expect["targets"][0]["granularity"].as_str().expect("granularity"), "object", "{id}: the old hardcoded pick granularity cannot satisfy the fixture");
     }
 }
 
 #[test]
-fn an_instance_hover_reports_the_scene_granularity_on_the_pointer_channel() {
-    let case = gesture("instance-hover");
-    let expect = case["expect"].clone();
-    let mut state = fixture_state();
-    let (origin, direction) = instance_ray(&state, case["instanceId"].as_str().expect("instanceId"));
-    let cursor = ray_cursor(&state, WorldRayPickPurpose::Hover, origin, direction, 0);
-    let action = publish_pick(&mut state, cursor).expect("hover publishes an action");
-    assert_eq!(action.action, expect["action"].as_str().expect("action id"));
-    assert_eq!(arg(&action, "domainId"), expect["domainId"].as_str().expect("domainId"));
-    assert_eq!(arg(&action, "channel"), expect["channel"].as_str().expect("channel"));
-    assert_eq!(decoded_targets(&action), expect["targets"]);
-    assert_eq!(state.local_hover_id.as_deref(), expect["targets"][0]["id"].as_str(), "the surface's own hover marker is the topology target too");
-    println!("[DEBUG] pointer-gestures instance-hover: targets={} hover={:?}", arg(&action, "targets"), state.local_hover_id);
+fn an_instance_hover_reports_the_resolved_granularity_on_the_pointer_channel() {
+    for id in ["instance-hover", "instance-hover-override"] {
+        let case = gesture(id);
+        let expect = case["expect"].clone();
+        let mut state = fixture_state();
+        let (origin, direction) = instance_ray(&state, case["instanceId"].as_str().expect("instanceId"));
+        let cursor = ray_cursor(&state, WorldRayPickPurpose::Hover, origin, direction, 0);
+        let action = publish_pick(&mut state, cursor).expect("hover publishes an action");
+        assert_eq!(action.action, expect["action"].as_str().expect("action id"), "{id}");
+        assert_eq!(arg(&action, "domainId"), expect["domainId"].as_str().expect("domainId"), "{id}");
+        assert_eq!(arg(&action, "channel"), expect["channel"].as_str().expect("channel"), "{id}");
+        assert_eq!(decoded_targets(&action), expect["targets"], "{id}");
+        assert_eq!(state.local_hover_id.as_deref(), expect["targets"][0]["id"].as_str(), "{id}: the local marker is the topology target");
+        assert_eq!(state.local_hover_granularity_id.as_deref(), expect["targets"][0]["granularity"].as_str(), "{id}: local hover retains the exact target pair");
+        println!("[DEBUG] pointer-gestures {id}: targets={} hover={:?}", arg(&action, "targets"), state.local_hover_id);
+    }
 }
 
 #[test]
@@ -192,7 +227,7 @@ fn a_marquee_release_replaces_with_the_deduplicated_topology_targets() {
     assert_eq!(action.action, expect["action"].as_str().expect("action id"));
     assert_eq!(arg(&action, "domainId"), expect["domainId"].as_str().expect("domainId"));
     assert_eq!(arg(&action, "merge"), expect["merge"].as_str().expect("merge"));
-    assert_eq!(decoded_targets(&action), expect["targets"], "two rendered instances of ONE channel collapse onto one target");
+    assert_eq!(decoded_targets(&action), expect["targets"], "only exact granularity/id pairs collapse; one id under two granularities remains two targets");
     println!("[DEBUG] pointer-gestures marquee-release-replaces: targets={} instances={}", arg(&action, "targets"), state.draws[0].instances.len());
 }
 

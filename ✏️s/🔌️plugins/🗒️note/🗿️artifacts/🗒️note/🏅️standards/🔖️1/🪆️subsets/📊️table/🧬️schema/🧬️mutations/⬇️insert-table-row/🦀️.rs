@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for InsertTableRow {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Insert row into table \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Insert row into table \"{}\"", self.id), &format!("Zeile in Tabelle \"{}\" einfügen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

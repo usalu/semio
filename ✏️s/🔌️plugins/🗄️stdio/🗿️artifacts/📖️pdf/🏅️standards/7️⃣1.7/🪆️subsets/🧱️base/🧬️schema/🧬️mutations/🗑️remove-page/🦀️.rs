@@ -27,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemovePage {
         base.pages.get(self.index).cloned().map(|page| PdfMutation::InsertPage(InsertPage { index: self.index, page })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove page {}", self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove page {}", self.index), &format!("Seite {} entfernen", self.index))
     }
 
     fn target(&self) -> Vec<String> {

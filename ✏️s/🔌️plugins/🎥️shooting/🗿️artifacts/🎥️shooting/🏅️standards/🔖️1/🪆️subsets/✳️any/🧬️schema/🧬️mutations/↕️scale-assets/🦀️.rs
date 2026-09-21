@@ -23,8 +23,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ScaleAssets {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Scale {} asset(s)", self.asset_ids.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Scale {} asset(s)", self.asset_ids.len()), &format!("{} Asset(s) skalieren", self.asset_ids.len()))
     }
     fn target(&self) -> Vec<String> {
         self.asset_ids.clone()

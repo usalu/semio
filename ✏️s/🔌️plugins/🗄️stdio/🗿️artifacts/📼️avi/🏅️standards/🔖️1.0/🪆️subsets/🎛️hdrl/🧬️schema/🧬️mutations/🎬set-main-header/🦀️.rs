@@ -20,8 +20,8 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetMainHeader {
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {
         agg_inverse(&AviMutation::SetMainHeader(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-main-header".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-main-header", "Hauptkopf setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

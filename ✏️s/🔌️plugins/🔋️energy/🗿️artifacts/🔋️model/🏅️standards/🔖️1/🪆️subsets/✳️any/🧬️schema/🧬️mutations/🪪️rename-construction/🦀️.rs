@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Rename
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Rename Construction of construction {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename Construction of construction {}", self.id.0), &format!("Konstruktion von Konstruktion {} umbenennen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

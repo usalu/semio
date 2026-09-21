@@ -59,8 +59,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for RemoveRequire
         vec![super::GltfMutation::RemoveRequiredExtension(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Remove Required Extension".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove Required Extension", "erforderliche Erweiterung entfernen")
     }
 
     fn target(&self) -> Vec<String> {

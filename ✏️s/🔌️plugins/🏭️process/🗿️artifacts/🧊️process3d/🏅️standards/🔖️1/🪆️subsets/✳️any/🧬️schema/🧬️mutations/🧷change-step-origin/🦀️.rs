@@ -26,8 +26,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStep
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change origin of step \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change origin of step \"{}\"", self.id), &format!("Ursprung von Schritt \"{}\" ändern", self.id))
     }
 
     fn target(&self) -> Vec<String> {

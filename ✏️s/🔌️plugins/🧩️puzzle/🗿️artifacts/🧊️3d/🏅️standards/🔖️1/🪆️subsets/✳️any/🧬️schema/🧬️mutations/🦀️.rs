@@ -586,7 +586,7 @@ impl protocol::SemanticMutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
     fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::semantics(self)
     }
-    fn label(&self) -> String {
+    fn label(&self) -> protocol::LocalizedLabel {
         <Self as protocol::SemanticMutation<Puzzle3dSnapshot>>::label(self)
     }
     fn target(&self) -> Vec<String> {

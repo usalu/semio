@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for InsertAlternat
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxStrictMutation> {
         agg_inverse(&DocxStrictMutation::InsertAlternateContent(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-alternate-content".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-alternate-content", "alternative Inhalt einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -20,8 +20,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateTowerInput
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Update EN 1993-3-1 tower buckling inputs".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update EN 1993-3-1 tower buckling inputs", "EN 1993-3-1 Turmknickeneingaben aktualisieren")
     }
 }
 //#endregion 🔖️Payload

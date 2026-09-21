@@ -20,8 +20,8 @@ impl protocol::MutationKind<Generation2dTransient, Generation2dTransientMutation
     fn inverse(&self, base: &Generation2dTransient) -> Vec<Generation2dTransientMutation> {
         vec![Self { preview_text: base.generation_preview_text.clone() }.into()]
     }
-    fn label(&self) -> String {
-        "Set Generation Preview".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Generation Preview", "Erzeugungsvorschau setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["generationPreviewText".into()]

@@ -148,6 +148,12 @@
       "consequence": "Engagement rename is inert for the two-item selection; after Control/Meta subtracts the second item, submitting renames the original selected layer row."
     },
     {
+      "id": "repeated-geometry-creation",
+      "input": "Trusted primary-pointer drag re-armed at the second rectangle's exact endpoints after selection checks.",
+      "expectedActions": ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp"],
+      "consequence": "A separate creation adds exactly one layer with a distinct row identity even when its geometry equals an existing rectangle."
+    },
+    {
       "id": "escape-cancel",
       "input": "Trusted pointer input starts a pen draft, followed by a physical Escape key.",
       "expectedActions": ["canvasPointerDown", "canvasEscape"],

@@ -26,8 +26,8 @@ impl MutationKind<MapWindowConfig, MapWindowConfigMutation> for SetRenderMode {
     fn inverse(&self, base: &MapWindowConfig) -> Vec<MapWindowConfigMutation> {
         vec![Self { value: base.render_mode.clone() }.into()]
     }
-    fn label(&self) -> String {
-        "Set render mode".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set render mode", "Darstellungsmodus setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["renderMode".into()]

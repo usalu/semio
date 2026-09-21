@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceStakeholder {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace stakeholder \"{}\"", self.stakeholder.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace stakeholder \"{}\"", self.stakeholder.header.name), &format!("Beteiligter \"{}\" ersetzen", self.stakeholder.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.stakeholder.header.id.0.clone()]

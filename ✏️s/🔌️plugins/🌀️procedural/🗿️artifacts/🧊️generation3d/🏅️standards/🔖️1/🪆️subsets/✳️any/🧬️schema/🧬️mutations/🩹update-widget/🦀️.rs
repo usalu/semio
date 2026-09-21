@@ -31,8 +31,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Upda
         crate::standards::v1::subsets::any::schema::mutations::update_widget::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Update widget \"{}\"", crate::widget_id(&self.widget))
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Update widget \"{}\"", crate::widget_id(&self.widget)), &format!("Widget \"{}\" aktualisieren", crate::widget_id(&self.widget)))
     }
 
     fn target(&self) -> Vec<String> {

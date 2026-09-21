@@ -27,8 +27,8 @@ impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for TruncateAt {
     fn inverse(&self, base: &BinarySnapshot) -> Vec<BinaryMutation> {
         agg_inverse(&BinaryMutation::TruncateAt(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "truncate-at".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("truncate-at", "Kürzung an")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Discon
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Disconnect surfaces {} and {}", self.surface_a_id.0, self.surface_b_id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Disconnect surfaces {} and {}", self.surface_a_id.0, self.surface_b_id.0), &format!("Oberflächen {} und {} trennen", self.surface_a_id.0, self.surface_b_id.0))
     }
 
     fn target(&self) -> Vec<String> {

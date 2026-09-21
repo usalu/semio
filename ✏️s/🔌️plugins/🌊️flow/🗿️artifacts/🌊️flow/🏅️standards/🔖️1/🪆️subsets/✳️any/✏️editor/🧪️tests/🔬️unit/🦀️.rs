@@ -30,15 +30,10 @@ pub(crate) mod context {
     
     impl Drop for FlowAppFixture {
         fn drop(&mut self) {
-            for _ in 0..1_000_000 {
-                if self.0.close_terminal_is_empty() {
-                    return;
-                }
-                if self.0.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).is_err() {
-                    break;
-                }
+            if std::thread::panicking() || self.0.close_terminal_is_empty() {
+                return;
             }
-            assert!(std::thread::panicking() || self.0.close_terminal_is_empty(), "Flow app fixture did not reach its terminal-empty close witness");
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0);
         }
     }
     
@@ -75,43 +70,78 @@ pub(crate) mod context {
                 activation_events: vec!["onStartup".into()],
                 contributes: flow::FlowExtensionContributes {
                     schemas: vec![],
-                    operators: vec![flow::neural::OperatorInfo { id: "math.add".into(), extension: "math".into(), name: "Add".into(), abbreviation: "Add".into(), ..Default::default() }],
+                    operators: vec![flow::neural::OperatorInfo {
+                        id: "math.add".into(),
+                        extension: "math".into(),
+                        name: "Add".into(),
+                        abbreviation: "Add".into(),
+                        inputs: vec![
+                            flow::neural::ChannelSpec::number("a", &["core.number"]),
+                            flow::neural::ChannelSpec::number_default("b", 0.0, &["core.number"]),
+                        ],
+                        outputs: vec![flow::neural::ChannelSpec::named("S", "Sum", "sum", "Sum")],
+                        ..Default::default()
+                    }],
                     widgets: vec![],
                     commands: vec![],
                     settings: vec![],
                 },
             };
             let manifest_json = flow::os_pack::json::to_json_string(&manifest);
+            for schema in manifest.contributes.schemas { schema.retire_cold(); }
+            for operator in manifest.contributes.operators { operator.retire_cold(); }
             flow::install_flow_extension_manifest("flow-core-test-fixture", &manifest_json).expect("fixture extension admission");
         });
     }
     
     /// 🧪️ Uses the real registered application so every concrete tool factory has declared authority.
-    pub async fn flow_app() -> FlowApp {
+    pub async fn flow_app() -> FlowAppFixture {
         flow_app_with_registry().await
     }
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn flow_app_with_registry() -> FlowApp {
+    pub async fn flow_app_with_registry() -> FlowAppFixture {
         install_first_party_light_flow_extensions_for_tests();
         let definition = create_flow_app();
         let registry = AppActionRegistry::from_definition(&definition);
         let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry).await;
         app.bind_instance_id(meta("local").instance_id).await;
-        app
+        FlowAppFixture(app)
     }
     
+    pub fn flow_main_window_meta() -> semio_framework_plugin::ActionMeta {
+        let window = semio_framework_plugin::ViewWindowInstance { id: main::FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: main::FLOW_PLAY_WINDOW_MAIN.into() };
+        semio_framework_plugin::ActionMeta {
+            view_state: Some(ViewModel {
+                window_id: Some(window.id.clone()),
+                active_window_kind_id: Some(window.window_kind_id.clone()),
+                window_instances: vec![window],
+                ..Default::default()
+            }),
+            ..meta("local")
+        }
+    }
+
     pub async fn dispatch(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        app.dispatch_typed(command, &flow_main_window_meta()).await.expect("dispatch")
     }
     
     pub async fn dispatch_with_registry(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        app.dispatch_typed(command, &flow_main_window_meta()).await.expect("dispatch")
+    }
+
+    pub async fn settle(app: &mut FlowApp) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("retained Flow command publication");
     }
     
-    pub async fn render(app: &mut FlowApp, body_key: &str) -> String {
-        let tree = app.render(body_key, None, &ViewModel::default()).await.expect("render");
+    pub async fn render_with_view(app: &mut FlowApp, body_key: &str, view: &ViewModel) -> String {
+        let tree = app.render(body_key, None, view).await.expect("render");
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("rendered fixture observation and retirement")
+    }
+
+    pub async fn render(app: &mut FlowApp, body_key: &str) -> String {
+        let view = flow_main_window_meta().view_state.expect("Flow main window view");
+        render_with_view(app, body_key, &view).await
     }
     
     fn projection_fixture_node(value: &Value) -> semio_framework_plugin::BuiltNode {
@@ -182,7 +212,9 @@ pub(crate) mod context {
     }
     
     pub async fn main_window_measures(app: &mut FlowApp) -> Vec<WindowMeasure> {
-        app.window_measures(&ViewModel::default()).await.get(main::FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
+        let window = semio_framework_plugin::ViewWindowInstance { id: main::FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: main::FLOW_PLAY_WINDOW_MAIN.into() };
+        let view = ViewModel { window_id: Some(window.id.clone()), active_window_kind_id: Some(window.window_kind_id.clone()), window_instances: vec![window], ..Default::default() };
+        app.window_measures(&view).await.get(main::FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
     }
     
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is the framework's injected
@@ -196,12 +228,13 @@ pub(crate) mod context {
         targets.extend(edge_ids.iter().map(|id| serde_json::json!({ "granularity": "edge", "id": flow_graph_edge_target_id(id) })));
         let targets_json = serde_json::to_string(&targets).expect("targets json");
         let args = dsl::DslValue::from(serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" }));
-        app.handle_action("interactionSelect", Some(&args), &meta("test")).await.expect("interactionSelect");
+        let admitted = app.handle_action("interactionSelect", Some(&args), &flow_main_window_meta()).await.expect("interactionSelect admission");
+        semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interactionSelect reserved-job commit");
     }
 }
 
 use super::*;
-use crate::editor::flow::unit_tests::context::{dispatch, flow_app, flow_app_with_registry, FlowApp};
+use crate::editor::flow::unit_tests::context::{dispatch, flow_app, flow_app_with_registry, settle, FlowApp};
 use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{EditorApp, PluginApp};
 
@@ -231,7 +264,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
 
     let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️add-widget-retained/🔣️.json")).expect("retained addWidget fixture");
     let mut app = flow_app_with_registry().await;
-    PluginApp::bind_instance_id(&mut app, 1).await;
+    PluginApp::bind_instance_id(&mut *app, 1).await;
     let parent_before = app.snapshot().expect("Flow parent before retained addWidget");
     let child_id = parent_before.content.child_id.clone();
     let child_before = semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
@@ -245,13 +278,13 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     )
     .await;
     assert!(started.mutations.is_empty(), "retained addWidget must not publish through its immediate invocation result");
-    let lanes = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.expect("retained addWidget publication and exact ACK").lanes;
+    let lanes = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, 1).await.expect("retained addWidget publication and exact ACK").lanes;
     assert_eq!(
         lanes,
         [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal],
         "one acknowledged child group, the emit's own UI scope, then terminal — the framework publishes a Ui page for every successful emit (`ui_pending`, `🔌️plugin/🦀️.rs:27709`), which its own contract fixture declares as `artifactPublications: 1, uiPublications: 1, terminalReceipts: 1` (`🔌️plugin/🧫️fixtures/⏳️completion/🔣️.json:5`)"
     );
-    assert!(!PluginApp::has_pending_typed_operations(&app));
+    assert!(!PluginApp::has_pending_typed_operations(&*app));
     let parent_after = app.snapshot().expect("Flow parent after retained addWidget");
     assert_eq!(parent_after.content, parent_before.content, "retained addWidget must preserve the exact parent content coordinate");
     let child_after = semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
@@ -269,11 +302,11 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     assert_eq!(expected["parentMutations"], 0);
     assert_eq!(expected["childGroups"], 1);
     for _ in 0..100_000 {
-        if PluginApp::close_step(&mut app, 1, 16_384).expect("retained addWidget app close") == semio_framework_plugin::PluginCloseStep::Complete {
+        if PluginApp::close_step(&mut *app, 1, 16_384).expect("retained addWidget app close") == semio_framework_plugin::PluginCloseStep::Complete {
             break;
         }
     }
-    assert!(PluginApp::close_terminal_is_empty(&app));
+    assert!(PluginApp::close_terminal_is_empty(&*app));
     eprintln!("[DEBUG] retained addWidget published one typed child mutation, preserved parent identity and closed every app owner");
 }
 
@@ -286,7 +319,7 @@ fn delete_cascade_inverse_restores_exact_edge_order_and_label() {
     assert_eq!(label.len(), fixture["label"]["expectedBytes"].as_u64().unwrap() as usize);
     scene["widgets"][1]["label"] = Value::String(label);
     let (widgets, synapses, layout) = crate::schema::mutations::decode_flow_scene_json(&scene.to_string()).unwrap();
-    let base = FlowSnapshot { content: crate::flow_content_child_handle(&widgets, &synapses, &layout), ..FlowSnapshot::default() };
+    let base = FlowSnapshot { content: crate::flow_content_child_handle_and_cache(widgets, synapses, layout), ..FlowSnapshot::default() };
     let mutation = FlowMutation::DeleteWidget(DeleteWidget { id: fixture["targetId"].as_str().unwrap().into() });
     let ordinary_inverse = crate::schema::mutations::inverse_flow_mutation(&base, &mutation);
     let (post, prepared_inverse, _) = prepare_flow_artifact(&base, mutation).unwrap();
@@ -314,12 +347,14 @@ fn delete_cascade_inverse_restores_exact_edge_order_and_label() {
 fn action_cohort_fixtures_match_the_exact_route_census() {
     let flow: Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🎬️action-cohort/🔣️.json")).expect("Flow action-cohort fixture must be valid JSON");
     let note: Value = serde_json::from_str(include_str!("../../../../../../../../../../🗒️note/🧫️fixtures/🧪️action-cohort/🔣️.json")).expect("Note action-cohort fixture must be valid JSON");
-    for (fixture, owner, total, framework_owned) in [(&flow, "FlowPlayApp", 37_u64, 0_usize), (&note, "NotePlayApp", 36_u64, 0_usize)] {
+    for (fixture, owner, total, framework_owned) in [(&flow, "FlowPlayApp", 34_u64, 0_usize), (&note, "NotePlayApp", 35_u64, 1_usize)] {
         assert_eq!(fixture["owner"], owner);
         assert_eq!(fixture["routeCount"].as_u64(), Some(total));
-        assert!(fixture["retainedRoutes"].as_array().is_some_and(Vec::is_empty));
         assert_eq!(fixture["frameworkOwnedRoutes"].as_array().map(Vec::len), Some(framework_owned));
         let routes: Vec<&str> = fixture["groups"].as_array().expect("groups").iter().flat_map(|group| group["routes"].as_array().expect("routes")).map(|route| route.as_str().expect("route id")).collect();
+        let retained: Vec<&str> = fixture["retainedRoutes"].as_array().expect("retained routes").iter().map(|route| route.as_str().expect("retained route id")).collect();
+        let migrated: Vec<&str> = fixture["groups"].as_array().expect("groups").iter().filter(|group| group["status"] == "migrated").flat_map(|group| group["routes"].as_array().expect("routes")).map(|route| route.as_str().expect("route id")).collect();
+        assert_eq!(retained, migrated, "the retained route index must exactly name the migrated groups");
         let mut unique = routes.clone();
         unique.sort_unstable();
         unique.dedup();
@@ -408,7 +443,7 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
         FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "n1".into(), value: "renamed".into() }),
         FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
             operations: vec![
-                node_graph_edit::FlowNodeGraphEditOp::SetSnapshot { snapshot_json: "{}".into() },
+                node_graph_edit::FlowNodeGraphEditOp::SetHostSnapshot { host_snapshot_json: "{}".into() },
                 node_graph_edit::FlowNodeGraphEditOp::DeleteSelection,
                 node_graph_edit::FlowNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
             ],
@@ -509,13 +544,13 @@ async fn undo_restores_fixture_after_add_widget() {
     let child_id = app.snapshot().expect("snapshot").content.child_id.clone();
     let before = flow_child_node_count(&app, &child_id).await;
     dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) })).await;
-    settle_registered_typed_operation(&mut app, receiver).await.expect("addWidget child publication");
+    settle_registered_typed_operation(&mut *app, receiver).await.expect("addWidget child publication");
     assert_eq!(flow_child_node_count(&app, &child_id).await, before + 1, "addWidget must land one node in the content child");
-    settle_history_verb(&mut app, "undo", receiver).await;
+    settle_history_verb(&mut *app, "undo", receiver).await;
     assert_eq!(flow_child_node_count(&app, &child_id).await, before, "undo must retire the child-lane group");
-    settle_history_verb(&mut app, "redo", receiver).await;
+    settle_history_verb(&mut *app, "redo", receiver).await;
     assert_eq!(flow_child_node_count(&app, &child_id).await, before + 1, "redo must reapply the child-lane group");
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut *app);
 }
 
 /// 🧩️ The `content` child's node count — the authoritative witness for every `Child`-lane verb.
@@ -549,16 +584,19 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
     let config = FlowMainWindowConfig::default();
     let fixture = FlowSnapshot::default();
-    let session = FlowEvalSession::new();
+    let mut session = FlowEvalSession::new();
     let mut host = host_from_snapshot(&fixture, &config, &session);
-    sync_host_selection_domains(&mut host, &[], &["s1".into()], &[]);
-    assert!(host.has_selection(), "s1 must resolve through host_from_snapshot edge map");
+    let edge_id = host.host_snapshot.synapses.first().expect("starter graph edge").id.clone();
+    sync_host_selection_domains(&mut host, &[], std::slice::from_ref(&edge_id), &[]);
+    assert!(host.has_selection(), "the starter edge must resolve through host_from_snapshot edge map");
     host.delete_selection().expect("deleteSelection");
-    assert!(!host.host_snapshot.synapses.iter().any(|synapse| synapse.id == "s1"));
+    assert!(!host.host_snapshot.synapses.iter().any(|synapse| synapse.id == edge_id));
+    host.retire_cold();
+    session.retire_cold();
 }
 
 /// 🧬️ `artifact_app_laws::assert_two_registered_instances_converge` replayed over THIS crate's harness:
-/// A adds an input note at (40, 41), B adds one at (300, 301); both replicas must fold each other's
+/// A adds an input note at (40, 41), B adds a button at (300, 301); both replicas must fold each other's
 /// events onto the same `content` child. The framework law cannot host flow: its apps are member-less
 /// and child-less, so `addWidget` (a child-lane tool) and every other document verb falls through to
 /// the parent preparation ("Flow mutation requires its explicit batch-only recipe"), and it dispatches
@@ -591,17 +629,17 @@ async fn two_instances_converge_on_disjoint_edits() {
     let genesis = probe(&instance_a).await;
     let receiver = meta("actor-a").instance_id;
     instance_a.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0) }), &meta("actor-a")).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's edit publishes");
-    instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0) }), &meta("actor-b")).await.expect("b applies its edit");
-    settle_registered_typed_operation(&mut instance_b, receiver).await.expect("b's edit publishes");
+    settle_registered_typed_operation(&mut *instance_a, receiver).await.expect("a's edit publishes");
+    instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0) }), &meta("actor-b")).await.expect("b applies its disjoint edit");
+    settle_registered_typed_operation(&mut *instance_b, receiver).await.expect("b's edit publishes");
     instance_a.tick_backbone().await.expect("a folds b's events");
     instance_b.tick_backbone().await.expect("b folds a's events");
     let converged = probe(&instance_a).await;
     assert_eq!(converged, probe(&instance_b).await, "both instances must converge on the same content child");
     assert_eq!(converged.len(), genesis.len() + 2, "each instance holds both disjoint notes");
     let admitted = instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("a commits a checkpoint");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a, admitted).await.expect("a's checkpoint commit settles");
-    settle_registered_typed_operation(&mut instance_a, receiver).await.expect("a's checkpoint publication settles");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *instance_a, admitted).await.expect("a's checkpoint commit settles");
+    settle_registered_typed_operation(&mut *instance_a, receiver).await.expect("a's checkpoint publication settles");
     instance_b.tick_backbone().await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");
     instance_a.detach_backbone().await.expect("a releases its backbone");
@@ -647,6 +685,7 @@ async fn context_menu_includes_hide_preview_for_selection_and_set_preview_off_mu
     assert!(menu.contains("focusSelection"), "menu should expose zoom to selection: {menu}");
     assert!(menu.contains(r#""checked":true"#), "preview checked when visible: {menu}");
     dispatch(&mut app, FlowCommand::SetPreviewOff(set_preview_off::SetPreviewOff { ids: vec!["slider".into()], value: true })).await;
+    settle(&mut app).await;
     let after_menu = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).await.to_string();
     assert!(after_menu.contains("Show preview") || after_menu.contains(r#""icon":"eye""#), "menu should offer show preview: {after_menu}");
 }
@@ -661,6 +700,7 @@ async fn context_menu_at_selects_target_and_enables_preview() {
     let before = context_menu_items(&mut app, None).await.to_string();
     assert!(!before.contains(r#""id":"delete-selection""#), "preview starts without delete: {before}");
     dispatch(&mut app, FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: "slider".into() })).await;
+    settle(&mut app).await;
     let after = context_menu_items(&mut app, Some(node_selection_surface(&["slider"]))).await.to_string();
     assert!(after.contains("setPreviewOff"), "menu keeps preview: {after}");
     assert!(after.contains(r#""ids":["slider"]"#) || after.contains("slider"), "preview args target the clicked node: {after}");

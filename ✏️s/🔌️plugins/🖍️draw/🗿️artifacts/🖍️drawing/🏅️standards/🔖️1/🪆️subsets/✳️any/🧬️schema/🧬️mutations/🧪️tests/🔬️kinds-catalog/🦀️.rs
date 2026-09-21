@@ -23,7 +23,8 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (index, descriptor) in leaf_descriptors.iter().enumerate() {
         let entry = entries.iter().find(|entry| entry["id"] == descriptor.semantic_kind).expect("every leaf has a declared catalog entry");
         assert_eq!(entry["productionDispatch"]["variant"], descriptor.aggregate_variant);
-        assert!(entry["payloadSchema"].as_str().unwrap().ends_with(descriptor.payload_schema));
+        assert_eq!(entry["payloadSchema"], descriptor.payload_schema, "the catalog must publish the leaf descriptor's exact owner-relative payload authority");
+        assert_eq!(descriptor.payload_schema, "🧬️schema/🔣️.json", "Drawing mutation payloads use the canonical owner-local JSON Schema surface");
         assert_eq!(descriptor.text_opcode, Some(KINDS[index]));
         assert_eq!(descriptor.binary_tag, Some(index as u32));
     }

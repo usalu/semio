@@ -21,8 +21,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for CreateProper
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create property definition \"{}\"", self.property_definition.names.preferred.text)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create property definition \"{}\"", self.property_definition.names.preferred.text), &format!("Eigenschaftsdefinition \"{}\" erstellen", self.property_definition.names.preferred.text))
     }
     fn target(&self) -> Vec<String> {
         vec![self.property_definition.id.clone()]

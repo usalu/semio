@@ -24,7 +24,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceMeta {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace document metadata \"{}\"", self.new_meta.title)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace document metadata \"{}\"", self.new_meta.title), &format!("Dokumentmetadaten \"{}\" ersetzen", self.new_meta.title))
     }
 }

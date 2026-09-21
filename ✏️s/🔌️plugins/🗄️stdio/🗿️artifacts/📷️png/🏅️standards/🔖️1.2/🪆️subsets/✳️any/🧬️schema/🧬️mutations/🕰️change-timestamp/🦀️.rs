@@ -33,8 +33,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeTimestampMutatio
         }
         vec![PngMutation::ChangeTimestamp(ChangeTimestampMutation { time: base.time })]
     }
-    fn label(&self) -> String {
-        "change timestamp".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("change timestamp", "Zeitstempel ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-timestamp".into()]

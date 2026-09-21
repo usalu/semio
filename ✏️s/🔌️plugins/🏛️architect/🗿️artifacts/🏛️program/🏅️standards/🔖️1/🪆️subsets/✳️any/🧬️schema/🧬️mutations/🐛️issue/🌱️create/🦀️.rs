@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateIssue {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create issue \"{}\"", self.issue.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create issue \"{}\"", self.issue.header.name), &format!("Vorgang \"{}\" erstellen", self.issue.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.issue.header.id.0.clone()]

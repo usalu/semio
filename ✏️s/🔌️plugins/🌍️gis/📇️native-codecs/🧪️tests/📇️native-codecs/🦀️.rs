@@ -46,7 +46,7 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
         assert_eq!(identity.capability, expected["capability"]);
         let hash = identity.protocol_sha256.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         assert_eq!(hash, expected["protocolSha256"]);
-        let (codec, genesis) = receipt.into_codec_and_genesis().expect("actual typed factory and genesis match immutable receipt");
+        let codec = receipt.into_codec().expect("actual typed factory matches immutable receipt");
         assert_eq!(codec.schema, identity.schema);
         assert_eq!(codec.extension, identity.extension);
         assert_eq!(codec.pack_schema_hash, identity.pack_schema_hash);
@@ -79,17 +79,25 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
             "gis.terrain" => semio_s_artifact_gis_gisterrain::GISTERRAIN_DIALECT.into(),
             _ => panic!("unhandled GIS genesis dialect"),
         };
-        let files = genesis(document_id, &dialect).await.expect("package-owned GIS genesis");
+        let files = match identity.schema {
+            "gis.map" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>>(document_id).await,
+            "gis.terrain" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>(document_id).await,
+            _ => panic!("unhandled GIS genesis schema"),
+        }
+        .expect("package-owned GIS genesis");
         match identity.schema {
             "gis.map" => assert_zero_history(store::parse_document_pack::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(&files.pack, &files.spr).await.unwrap(), document_id, &dialect),
             "gis.terrain" => assert_zero_history(store::parse_document_pack::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(&files.pack, &files.spr).await.unwrap(), document_id, &dialect),
             _ => unreachable!(),
         }
-        let hostile = semio_framework::ArtifactDialect { artifact_kind: dialect.artifact_kind.clone(), standard: dialect.standard.clone(), subset: "strict".into() };
-        assert!(genesis(document_id, &hostile).await.is_err(), "a package genesis factory must reject a substituted dialect");
         for row in document_ids["cases"].as_array().unwrap().iter().filter(|row| row["accepted"] == false) {
             let hostile_id = row["artifactId"].as_str().unwrap();
-            assert!(genesis(hostile_id, &dialect).await.is_err(), "GIS genesis admitted hostile document id {}", row["id"]);
+            let refused = match identity.schema {
+                "gis.map" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>>(hostile_id).await.is_err(),
+                "gis.terrain" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>(hostile_id).await.is_err(),
+                _ => panic!("unhandled GIS genesis schema"),
+            };
+            assert!(refused, "GIS genesis admitted hostile document id {}", row["id"]);
         }
     }
 }
@@ -172,4 +180,58 @@ fn gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline
         assert_eq!(calls, interruption["calls"].as_u64().unwrap(), "no work occurs after the first caller interruption");
     }
     println!("[DEBUG] GIS controlled inference: literal proposal=1 inverse=1 geo=1 interruption=3 rejection=7; no hub approval authority");
+}
+
+/// 🔬️ Creation-path oracle (ticket 26/09/18 slice TC3b, `📓️tc3-catalog-carried-genesis.md` §2.2):
+/// the genesis pair the GUEST producer emits — `artifact_app_genesis_pair`, the single
+/// implementation behind `world actor`'s `codec.genesis` export and therefore behind every
+/// hub-side creation — must be byte-for-byte the pair the LINKED GIS codec produces and accepts.
+/// GIS is the one package where both halves exist in one process, so it is the only place this
+/// equality can be asserted without a built component, and it is exactly the equality the headless
+/// hub relies on when it stops linking a genesis table at all: the hub validates a guest genesis
+/// through `TrustedArtifactCodec::validate_pair`, which for GIS is still the linked
+/// `ArtifactCodec::print_mirror`, and then hands the same bytes to the store forever after.
+#[semio_framework_async_macros::async_test]
+async fn gis_guest_genesis_is_byte_for_byte_the_linked_codec_pair_on_one_generation() {
+    let document_ids: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🌱️artifact-document-id-v1/🔣️.json")).unwrap();
+    let document_id = document_ids["cases"].as_array().unwrap().iter().find(|row| row["accepted"] == true).unwrap()["artifactId"].as_str().unwrap();
+    for receipt in native_codec_factory_receipts().expect("complete inert GIS closure") {
+        let identity = receipt.identity();
+        let schema = identity.schema;
+        let codec = receipt.into_codec().expect("linked GIS codec");
+        let guest = match schema {
+            "gis.map" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gismap::editor::gis2d::Gis2dPlayApp>>(document_id).await,
+            "gis.terrain" => semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<semio_s_artifact_gis_gisterrain::editor::gis3d::Gis3dPlayApp>>(document_id).await,
+            _ => panic!("unhandled GIS genesis schema"),
+        }
+        .expect("guest genesis producer");
+        assert!(!guest.pack.is_empty() && !guest.spr.is_empty(), "{schema} guest genesis is a complete pair");
+        // 🪞️ The linked codec ACCEPTS the guest pair: it prints a mirror of it without error, which
+        // is precisely the fence `materialize_selected_genesis` applies twice before publication.
+        let mirror = (codec.print_mirror)(&guest.pack, &guest.spr).await.expect("linked GIS codec prints the guest genesis pair");
+        assert!(!mirror.dsl.is_empty(), "{schema} guest genesis prints a nonempty mirror");
+        // 🧬️ …and REPRODUCES it: decoding the guest pair with the linked package's own concrete
+        // snapshot and mutation types and reprinting it must return the identical pack, spr and ops.
+        let reprinted = match schema {
+            "gis.map" => {
+                let parsed = store::parse_document_pack::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(&guest.pack, &guest.spr).await.unwrap();
+                let envelope = parsed.into_envelope();
+                let printed = store::print_document_pack(&envelope).await;
+                drop(envelope.into_owners());
+                printed
+            }
+            "gis.terrain" => {
+                let parsed = store::parse_document_pack::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(&guest.pack, &guest.spr).await.unwrap();
+                let envelope = parsed.into_envelope();
+                let printed = store::print_document_pack(&envelope).await;
+                drop(envelope.into_owners());
+                printed
+            }
+            _ => unreachable!(),
+        }
+        .expect("linked GIS types reprint the guest genesis pair");
+        assert_eq!(reprinted.pack, guest.pack, "{schema} pack differs between the guest producer and the linked codec");
+        assert_eq!(reprinted.spr, guest.spr, "{schema} spr differs between the guest producer and the linked codec");
+        assert_eq!(reprinted.ops, guest.ops, "{schema} ops differ between the guest producer and the linked codec");
+    }
 }

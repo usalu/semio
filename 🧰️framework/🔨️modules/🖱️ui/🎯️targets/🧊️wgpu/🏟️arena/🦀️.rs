@@ -5,10 +5,14 @@
 
 /// 🪪️ Opaque handle into an `Arena`: a slot index plus a generation counter. A stale `NodeId`
 /// (same index, old generation) never aliases a value inserted into a recycled slot.
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct NodeId {
     index: u32,
     generation: u32,
+}
+
+impl NodeId {
+    pub const fn identity_parts(self) -> (u32, u32) { (self.index, self.generation) }
 }
 
 enum Slot<T> {
@@ -86,6 +90,32 @@ impl<T> Arena<T> {
 
     pub fn contains(&self, id: NodeId) -> bool {
         self.get(id).is_some()
+    }
+
+    pub(crate) fn last(&self) -> Option<(NodeId, &T)> {
+        let index = self.slots.len().checked_sub(1)?;
+        match &self.slots[index] {
+            Slot::Occupied { generation, value } => Some((NodeId { index: index as u32, generation: *generation }, value)),
+            Slot::Free { .. } => None,
+        }
+    }
+
+    /// 🧹️ Releases one vacant tail slot after every live owner has retired.
+    pub(crate) fn close_vacant_step(&mut self) -> bool {
+        if matches!(self.slots.last(), Some(Slot::Free { .. })) {
+            self.slots.pop();
+            self.free_head = None;
+            return false;
+        }
+        if !self.slots.is_empty() {
+            return false;
+        }
+        if self.slots.capacity() > 0 {
+            self.slots = Vec::new();
+            self.free_head = None;
+            return false;
+        }
+        true
     }
 
     /// 🚶️ Iterates every live `(NodeId, &T)` pair; freed slots are skipped.

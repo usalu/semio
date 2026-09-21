@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeBridgeMome
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change bridge moment resistance to {:?}", self.new_bridge_moment_resistance_knm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change bridge moment resistance to {:?}", self.new_bridge_moment_resistance_knm), &format!("Brückenmomentwiderstand auf {:?} ändern", self.new_bridge_moment_resistance_knm))
     }
 }
 //#endregion 🔖️Payload

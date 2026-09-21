@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeFVkMpa {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change characteristic shear strength f_vk [MPa] to {}", self.new_f_vk_mpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change characteristic shear strength f_vk [MPa] to {}", self.new_f_vk_mpa), &format!("Charakteristischschubfestigkeitsf_vk [MPa] auf {} ändern", self.new_f_vk_mpa))
     }
 }
 //#endregion 🔖️ChangeFVkMpa

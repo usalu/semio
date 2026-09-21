@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeFVK {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change f v k to {:?}", self.new_f_v_k)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change f v k to {:?}", self.new_f_v_k), &format!("Fvk auf {:?} ändern", self.new_f_v_k))
     }
 }
 //#endregion 🔖️ChangeFVK

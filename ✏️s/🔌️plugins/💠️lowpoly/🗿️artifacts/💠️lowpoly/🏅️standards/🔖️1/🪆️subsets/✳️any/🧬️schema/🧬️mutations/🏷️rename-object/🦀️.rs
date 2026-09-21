@@ -24,8 +24,8 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RenameObject {
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename object to \"{}\"", self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename object to \"{}\"", self.new_name), &format!("Objekt in \"{}\" umbenennen", self.new_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

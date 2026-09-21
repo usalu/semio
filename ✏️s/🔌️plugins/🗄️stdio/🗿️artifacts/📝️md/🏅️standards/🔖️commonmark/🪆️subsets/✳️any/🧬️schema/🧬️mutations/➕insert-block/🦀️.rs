@@ -22,8 +22,8 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for InsertBlock {
     fn inverse(&self, base: &MdSnapshot) -> Vec<MdMutation> {
         agg_inverse(&MdMutation::InsertBlock(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-block".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-block", "Block einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -39,7 +39,6 @@ fn keyboard_interaction() -> crate::AppInteractionState {
         pointer_button: 0,
         pointer_capture: crate::shell::PointerCapture::default(),
         modifiers: ui_wgpu::wgpu::PointerModifiers::default(),
-        wheel: crate::AppWheel::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
         caret_blink_at_ms: 0.0,

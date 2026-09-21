@@ -20,6 +20,7 @@ import {
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { type McpBuildProfile, MCP_BINARY_NAME, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
 import { OsMcpLiveAgentLoopScript } from "../../🧪️tests/🤖️live-agent-loop/🏃️execution/🟦️.ts";
+import { OsMcpHubAgentParticipantScript } from "../../🧪️tests/🤖️hub-agent-participant/🏃️execution/🟦️.ts";
 
 import { buildCargoArtifacts, packageNativeRelease, signExecutableForDistribution, workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 
@@ -712,6 +713,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("canonical-checkpoint-resource-check", CanonicalCheckpointResourceCheckScript)
   .register("canonical-checkpoint-resource-native-check", CanonicalCheckpointResourceNativeCheckScript)
   .register("live-agent-loop-check", OsMcpLiveAgentLoopScript)
+  .register("hub-agent-participant-check", OsMcpHubAgentParticipantScript)
   .register("capability-audit-check", CapabilityAuditCheckScript)
   .register("schema-mirror", SchemaMirrorScript)
   .register("dev", DevScript);

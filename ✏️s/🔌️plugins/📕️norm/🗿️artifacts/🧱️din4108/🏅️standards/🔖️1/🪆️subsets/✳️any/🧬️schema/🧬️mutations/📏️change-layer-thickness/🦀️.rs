@@ -21,8 +21,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeLayerThi
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change layer #{} thickness to {}", self.index, self.new_thickness_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change layer #{} thickness to {}", self.index, self.new_thickness_m), &format!("Ebene #{} Dicke auf {} ändern", self.index, self.new_thickness_m))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

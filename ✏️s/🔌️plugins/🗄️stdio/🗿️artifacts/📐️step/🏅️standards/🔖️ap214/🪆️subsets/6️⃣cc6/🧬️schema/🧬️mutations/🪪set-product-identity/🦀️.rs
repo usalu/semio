@@ -24,8 +24,8 @@ impl protocol::MutationKind<StepSnapshot, StepCc6Mutation> for SetProductIdentit
     fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc6Mutation> {
         class_inverse(base, &ClassEdit::ProductIdentity { identity: self.identity.clone() })
     }
-    fn label(&self) -> String {
-        "Set the PRODUCT identity chain".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set the PRODUCT identity chain", "Produktidentitätskette setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

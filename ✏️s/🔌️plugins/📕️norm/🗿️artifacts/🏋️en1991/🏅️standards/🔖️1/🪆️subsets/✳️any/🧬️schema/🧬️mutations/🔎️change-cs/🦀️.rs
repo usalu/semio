@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeCS {
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change size factor c_s to {:?}", self.new_c_s)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change size factor c_s to {:?}", self.new_c_s), &format!("Größenfaktorc_s auf {:?} ändern", self.new_c_s))
     }
 }
 //#endregion 🔖️Payload

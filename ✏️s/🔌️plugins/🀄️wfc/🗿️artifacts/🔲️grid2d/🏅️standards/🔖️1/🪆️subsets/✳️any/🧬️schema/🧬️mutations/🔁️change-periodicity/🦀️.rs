@@ -29,8 +29,8 @@ impl MutationKind<Grid2dSnapshot, Grid2dMutation> for ChangePeriodicity {
     fn inverse(&self, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change periodicity to x={} y={}", self.periodic_x, self.periodic_y)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change periodicity to x={} y={}", self.periodic_x, self.periodic_y), &format!("Periodizität auf x={} y={} ändern", self.periodic_x, self.periodic_y))
     }
 }
 //#endregion 🔖️ChangePeriodicity

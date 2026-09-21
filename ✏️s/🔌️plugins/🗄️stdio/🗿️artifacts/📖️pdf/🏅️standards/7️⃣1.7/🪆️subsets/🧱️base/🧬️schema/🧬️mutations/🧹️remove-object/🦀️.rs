@@ -27,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveObject {
         base.objects.iter().find(|object| object.id == self.id).map(|object| PdfMutation::InsertObject(InsertObject { id: self.id, value: object.value.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove object {} {}", self.id.num, self.id.gen)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove object {} {}", self.id.num, self.id.gen), &format!("Objekt {} {} entfernen", self.id.num, self.id.gen))
     }
 
     fn target(&self) -> Vec<String> {

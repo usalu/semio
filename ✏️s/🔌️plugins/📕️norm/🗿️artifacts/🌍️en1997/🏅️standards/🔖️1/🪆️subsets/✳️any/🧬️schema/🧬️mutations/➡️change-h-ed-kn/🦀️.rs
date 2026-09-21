@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeHEdKn {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change design horizontal load H_Ed [kN] to {}", self.new_h_ed_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change design horizontal load H_Ed [kN] to {}", self.new_h_ed_kn), &format!("Bemessungshorizontallasth_Ed [kN] auf {} ändern", self.new_h_ed_kn))
     }
 }
 //#endregion 🔖️ChangeHEdKn

@@ -23,8 +23,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for UpdateGraphA
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Set graph algorithm to \"{}\"", self.new_algorithm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set graph algorithm to \"{}\"", self.new_algorithm), &format!("Graphalgorithmus auf \"{}\" setzen", self.new_algorithm))
     }
     fn target(&self) -> Vec<String> {
         vec!["graph".into(), "algorithm".into()]

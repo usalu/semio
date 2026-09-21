@@ -37,8 +37,8 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveFontFile {
             .collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove font program from descriptor {}", self.descriptor_ordinal)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove font program from descriptor {}", self.descriptor_ordinal), &format!("Schriftprogramm aus Deskriptor {} entfernen", self.descriptor_ordinal))
     }
 
     fn target(&self) -> Vec<String> {

@@ -22,8 +22,8 @@ impl protocol::MutationKind<StepSnapshot, StepCc1Mutation> for RemoveShapeRepres
     fn inverse(&self, base: &StepSnapshot) -> Vec<StepCc1Mutation> {
         class_inverse(base, &ClassEdit::Representation { id: self.id, row: None })
     }
-    fn label(&self) -> String {
-        format!("Remove shape representation #{}", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove shape representation #{}", self.id), &format!("Formrepräsentation #{} entfernen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string()]

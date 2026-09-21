@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeYearsS
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change years since last inspection to {}", self.new_years_since_inspection)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change years since last inspection to {}", self.new_years_since_inspection), &format!("Jahre seit Letztinspektion auf {} ändern", self.new_years_since_inspection))
     }
 }
 //#endregion 🔖️ChangeYearsSinceInspection

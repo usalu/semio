@@ -20,8 +20,8 @@ impl CompositeMutationKind<Counter, CounterMutation> for AddCounterFourTimes {
         let mid = *planner.base();
         AddCounterTwice { delta: self.delta }.plan(&mid, planner)
     }
-    fn label(&self) -> String {
-        format!("Add {} four times", self.delta)
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Add {} four times", self.delta), &format!("{} viermal hinzufügen", self.delta))
     }
 }
 

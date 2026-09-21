@@ -24,8 +24,8 @@ impl MutationKind<Fem3dSnapshot, Fem3dMutation> for CreateCombination {
     fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create combination \"{}\"", self.combination.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create combination \"{}\"", self.combination.id), &format!("Kombination \"{}\" erstellen", self.combination.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.combination.id.clone()]

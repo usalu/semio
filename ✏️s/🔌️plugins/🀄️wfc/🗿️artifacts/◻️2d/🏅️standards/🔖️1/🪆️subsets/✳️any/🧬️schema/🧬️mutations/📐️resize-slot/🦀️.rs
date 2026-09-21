@@ -31,8 +31,8 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for ResizeSlot {
     fn inverse(&self, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Resize Slot".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Resize Slot", "Platz skalieren")
     }
 }
 //#endregion 🔖️ResizeSlot

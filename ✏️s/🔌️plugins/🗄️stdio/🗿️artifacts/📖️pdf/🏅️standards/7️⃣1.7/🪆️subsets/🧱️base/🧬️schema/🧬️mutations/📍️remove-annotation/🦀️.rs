@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveAnnotation {
         base.pages.get(self.index).and_then(|page| page.annotations.get(self.at)).map(|annotation| PdfMutation::InsertAnnotation(super::insert_annotation::InsertAnnotation { index: self.index, at: self.at, annotation: annotation.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove annotation {} on page {}", self.at, self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove annotation {} on page {}", self.at, self.index), &format!("Anmerkung {} auf Seite {} entfernen", self.at, self.index))
     }
 
     fn target(&self) -> Vec<String> {

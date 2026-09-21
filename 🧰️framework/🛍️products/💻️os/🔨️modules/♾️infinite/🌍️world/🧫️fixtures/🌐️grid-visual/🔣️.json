@@ -1,0 +1,505 @@
+{
+  "$schema": "../../🧬️schema/🌐️grid-visual/🔣️.json",
+  "schema": "framework.world3d.grid-visual/v1",
+  "reference": {
+    "threeRevision": "182",
+    "dreiVersion": "10.7.7",
+    "args": [
+      2,
+      2
+    ],
+    "cellSize": 1,
+    "cellThickness": 0.6,
+    "sectionThickness": 0,
+    "fadeDistance": 4,
+    "fadeStrength": 1.5,
+    "fadeFrom": 1,
+    "followCamera": true,
+    "infiniteGrid": true,
+    "planeZ": 0.001,
+    "depthTest": true,
+    "depthWrite": false,
+    "renderOrder": -5
+  },
+  "themes": [
+    {
+      "id": "semio-light",
+      "elementHex": "#7b827d",
+      "elementLinear": [
+        0.19806932,
+        0.22322796,
+        0.20507874
+      ]
+    },
+    {
+      "id": "neutral-dark",
+      "elementHex": "#808080",
+      "elementLinear": [
+        0.2158605,
+        0.2158605,
+        0.2158605
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "orthographic-light-dpr1",
+      "themeId": "semio-light",
+      "viewport": [
+        128,
+        128
+      ],
+      "dpr": 1,
+      "projection": "orthographic",
+      "camera": {
+        "position": [
+          0,
+          0,
+          10
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "near": 0.01,
+        "far": 100,
+        "fov": 45,
+        "zoom": 16
+      },
+      "samples": [
+        {
+          "id": "line-centre",
+          "physicalPoint": [
+            64,
+            64
+          ]
+        },
+        {
+          "id": "line-neighbour",
+          "physicalPoint": [
+            65,
+            64
+          ]
+        },
+        {
+          "id": "cell-centre",
+          "physicalPoint": [
+            72,
+            72
+          ]
+        },
+        {
+          "id": "mid-fade",
+          "physicalPoint": [
+            104,
+            64
+          ]
+        },
+        {
+          "id": "beyond-fade",
+          "physicalPoint": [
+            127,
+            127
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orthographic-light-dpr2",
+      "themeId": "semio-light",
+      "viewport": [
+        128,
+        128
+      ],
+      "dpr": 2,
+      "projection": "orthographic",
+      "camera": {
+        "position": [
+          0,
+          0,
+          10
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "near": 0.01,
+        "far": 100,
+        "fov": 45,
+        "zoom": 16
+      },
+      "samples": [
+        {
+          "id": "line-centre",
+          "physicalPoint": [
+            128,
+            128
+          ]
+        },
+        {
+          "id": "line-neighbour",
+          "physicalPoint": [
+            129,
+            128
+          ]
+        },
+        {
+          "id": "cell-centre",
+          "physicalPoint": [
+            144,
+            144
+          ]
+        },
+        {
+          "id": "mid-fade",
+          "physicalPoint": [
+            208,
+            128
+          ]
+        },
+        {
+          "id": "beyond-fade",
+          "physicalPoint": [
+            255,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "id": "orthographic-dark-dpr1",
+      "themeId": "neutral-dark",
+      "viewport": [
+        128,
+        128
+      ],
+      "dpr": 1,
+      "projection": "orthographic",
+      "camera": {
+        "position": [
+          0,
+          0,
+          10
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "near": 0.01,
+        "far": 100,
+        "fov": 45,
+        "zoom": 16
+      },
+      "samples": [
+        {
+          "id": "line-centre",
+          "physicalPoint": [
+            64,
+            64
+          ]
+        },
+        {
+          "id": "line-neighbour",
+          "physicalPoint": [
+            65,
+            64
+          ]
+        },
+        {
+          "id": "cell-centre",
+          "physicalPoint": [
+            72,
+            72
+          ]
+        },
+        {
+          "id": "mid-fade",
+          "physicalPoint": [
+            104,
+            64
+          ]
+        },
+        {
+          "id": "beyond-fade",
+          "physicalPoint": [
+            127,
+            127
+          ]
+        }
+      ]
+    },
+    {
+      "id": "perspective-moved-dpr1",
+      "themeId": "semio-light",
+      "viewport": [
+        128,
+        128
+      ],
+      "dpr": 1,
+      "projection": "perspective",
+      "camera": {
+        "position": [
+          2.75,
+          -1.5,
+          8
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "near": 0.01,
+        "far": 100,
+        "fov": 45,
+        "zoom": 1
+      },
+      "samples": [
+        {
+          "id": "line-centre",
+          "physicalPoint": [
+            64,
+            64
+          ]
+        },
+        {
+          "id": "line-neighbour",
+          "physicalPoint": [
+            65,
+            64
+          ]
+        },
+        {
+          "id": "cell-centre",
+          "physicalPoint": [
+            72,
+            72
+          ]
+        },
+        {
+          "id": "mid-fade",
+          "physicalPoint": [
+            104,
+            64
+          ]
+        },
+        {
+          "id": "beyond-fade",
+          "physicalPoint": [
+            127,
+            127
+          ]
+        }
+      ]
+    }
+  ],
+  "pixelOracle": {
+    "status": "recorded",
+    "producer": "installed @react-three/drei Grid 10.7.7 with Three 182 in Chromium",
+    "maximumRgbError": 3,
+    "rows": [
+      {
+        "id": "orthographic-light-dpr1/line-centre",
+        "rgba8": [
+          10,
+          11,
+          10,
+          19
+        ]
+      },
+      {
+        "id": "orthographic-light-dpr1/line-neighbour",
+        "rgba8": [
+          10,
+          10,
+          10,
+          18
+        ]
+      },
+      {
+        "id": "orthographic-light-dpr1/cell-centre",
+        "rgba8": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "orthographic-light-dpr1/mid-fade",
+        "rgba8": [
+          2,
+          2,
+          2,
+          4
+        ]
+      },
+      {
+        "id": "orthographic-light-dpr1/beyond-fade",
+        "rgba8": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "orthographic-light-dpr2/line-centre",
+        "rgba8": [
+          10,
+          11,
+          10,
+          19
+        ]
+      },
+      {
+        "id": "orthographic-light-dpr2/line-neighbour",
+        "rgba8": [
+          10,
+          11,
+          10,
+          19
+        ]
+      },
+      {
+        "id": "orthographic-light-dpr2/cell-centre",
+        "rgba8": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "orthographic-light-dpr2/mid-fade",
+        "rgba8": [
+          2,
+          2,
+          2,
+          4
+        ]
+      },
+      {
+        "id": "orthographic-light-dpr2/beyond-fade",
+        "rgba8": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "orthographic-dark-dpr1/line-centre",
+        "rgba8": [
+          10,
+          10,
+          10,
+          19
+        ]
+      },
+      {
+        "id": "orthographic-dark-dpr1/line-neighbour",
+        "rgba8": [
+          10,
+          10,
+          10,
+          18
+        ]
+      },
+      {
+        "id": "orthographic-dark-dpr1/cell-centre",
+        "rgba8": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "orthographic-dark-dpr1/mid-fade",
+        "rgba8": [
+          2,
+          2,
+          2,
+          4
+        ]
+      },
+      {
+        "id": "orthographic-dark-dpr1/beyond-fade",
+        "rgba8": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "perspective-moved-dpr1/line-centre",
+        "rgba8": [
+          2,
+          2,
+          2,
+          3
+        ]
+      },
+      {
+        "id": "perspective-moved-dpr1/line-neighbour",
+        "rgba8": [
+          2,
+          3,
+          3,
+          5
+        ]
+      },
+      {
+        "id": "perspective-moved-dpr1/cell-centre",
+        "rgba8": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "perspective-moved-dpr1/mid-fade",
+        "rgba8": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "perspective-moved-dpr1/beyond-fade",
+        "rgba8": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  }
+}

@@ -62,8 +62,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveSkinMutat
         vec![super::GltfMutation::MoveSkin(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Move Skin".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Move Skin", "Haut verschieben")
     }
 
     fn target(&self) -> Vec<String> {

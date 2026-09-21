@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetExtGState {
         match base.ext_g_states.iter().find(|item| item.id == self.state.id) { Some(previous) => vec![PdfMutation::SetExtGState(SetExtGState { state: previous.clone() })], None => vec![PdfMutation::RemoveExtGState(super::remove_ext_g_state::RemoveExtGState { id: self.state.id.clone() })] }
     }
 
-    fn label(&self) -> String {
-        format!("Set ext-g-state {}", self.state.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set ext-g-state {}", self.state.id), &format!("ExtGState {} setzen", self.state.id))
     }
 
     fn target(&self) -> Vec<String> {

@@ -24,8 +24,8 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for ChangeObjectSm
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Set object \"{}\" smooth shading to {}", self.id, self.new_smooth_shading)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set object \"{}\" smooth shading to {}", self.id, self.new_smooth_shading), &format!("Objekt \"{}\" glatte Verschattung auf {} setzen", self.id, self.new_smooth_shading))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -27,8 +27,8 @@ impl MutationKind<FlowSnapshot, FlowMutation> for UpdateSynapseEndpoints {
     fn inverse(&self, base: &FlowSnapshot) -> Vec<FlowMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Update synapse \"{}\" endpoints", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Update synapse \"{}\" endpoints", self.id), &format!("Synapse \"{}\" Endpunkte aktualisieren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

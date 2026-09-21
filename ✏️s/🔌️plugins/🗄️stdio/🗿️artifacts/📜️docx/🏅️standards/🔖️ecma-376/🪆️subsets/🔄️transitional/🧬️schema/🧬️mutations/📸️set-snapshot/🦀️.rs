@@ -20,8 +20,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxTransitionalMutation> for SetSnaps
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxTransitionalMutation> {
         agg_inverse(&DocxTransitionalMutation::SetSnapshot(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-snapshot".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-snapshot", "Momentaufnahme setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -24,10 +24,17 @@ impl protocol::MutationKind<NormResultsWindowConfig, NormResultsWindowConfigMuta
         vec![Self { index: base.selected_check_index }.into()]
     }
 
-    fn label(&self) -> String {
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&{
         match self.index {
             Some(index) => format!("Select compliance check {index}"),
             None => "Clear selected compliance check".into(),
         }
+        }, &{
+        match self.index {
+            Some(index) => format!("Konformitätsprüfung {index} auswählen"),
+            None => "ausgewählte Konformitätsprüfung leeren".into(),
+        }
+        })
     }
 }

@@ -80,7 +80,7 @@
         {
           "id": "set-layer-opacity",
           "capability": "drawing-1-style-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🌫️set-layer-opacity/🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -114,7 +114,7 @@
         {
           "id": "set-layer-blend-mode",
           "capability": "drawing-1-style-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🔣️.schema.json",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -144,7 +144,7 @@
         {
           "id": "replace-layer-fill",
           "capability": "drawing-1-style-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🎨️replace-layer-fill/🦠️mutation/🦀️.rs#ReplaceLayerFill",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
@@ -178,7 +178,7 @@
         {
           "id": "replace-layer-stroke",
           "capability": "drawing-1-style-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🦠️mutation/🦀️.rs#ReplaceLayerStroke",
+          "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied",
             "no-op",

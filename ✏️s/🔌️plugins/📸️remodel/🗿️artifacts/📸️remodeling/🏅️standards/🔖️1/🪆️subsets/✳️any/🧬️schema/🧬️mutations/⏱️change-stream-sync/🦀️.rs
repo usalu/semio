@@ -32,8 +32,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ChangeSt
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change stream \"{}\" sync offset to {}ms", self.id, self.new_sync_offset_ms)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change stream \"{}\" sync offset to {}ms", self.id, self.new_sync_offset_ms), &format!("Strom \"{}\" Abgleichversatz auf {}ms ändern", self.id, self.new_sync_offset_ms))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

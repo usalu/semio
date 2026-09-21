@@ -22,8 +22,8 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for InsertTriangle {
     fn inverse(&self, base: &StlSnapshot) -> Vec<StlMutation> {
         agg_inverse(&StlMutation::InsertTriangle(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-triangle".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-triangle", "Dreieck einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

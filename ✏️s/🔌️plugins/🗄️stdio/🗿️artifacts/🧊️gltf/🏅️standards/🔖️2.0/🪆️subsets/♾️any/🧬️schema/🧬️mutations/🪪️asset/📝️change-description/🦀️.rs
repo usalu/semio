@@ -63,8 +63,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetDe
         vec![super::GltfMutation::ChangeAssetDescriptiveMetadata(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Change Asset Descriptive Metadata".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Asset Descriptive Metadata", "beschreibende Assetmetadaten ändern")
     }
 
     fn target(&self) -> Vec<String> {

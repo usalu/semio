@@ -15,7 +15,7 @@
 //! every other source field stays real.
 
 use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
-use crate::{cache_presentation_working_scene, default_figure_tile_source, PresentationDiff, PresentationSnapshot};
+use crate::{default_figure_tile_source, PresentationDiff, PresentationSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-the-frame-is-already-identical/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔲resize-source-frame/🧪️no-ops-when-the-frame-is-already-identical/📸️snapshot/➡️after/🔣️.json");
@@ -37,9 +37,8 @@ fn before() -> PresentationSnapshot {
     let PresentationMutation::ResizeSourceFrame(payload) = mutation() else {
         panic!("no-ops-when-the-frame-is-already-identical's committed mutation must be a resize-source-frame");
     };
-    let mut source = default_figure_tile_source();
-    source.frame = payload.new_frame;
-    cache_presentation_working_scene(&snapshot.presentation.child_id, &source, &[]);
+    assert_eq!(snapshot.source.frame, payload.new_frame, "the committed before-snapshot's persisted source must already carry the payload's frame");
+    assert_eq!(snapshot.source.src, default_figure_tile_source().src, "the committed before-snapshot's persisted source is the plugin's own default figure");
     snapshot
 }
 

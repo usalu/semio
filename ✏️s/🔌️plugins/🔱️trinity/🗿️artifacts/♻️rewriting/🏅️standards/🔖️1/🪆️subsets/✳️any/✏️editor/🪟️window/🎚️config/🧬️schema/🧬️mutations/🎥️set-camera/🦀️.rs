@@ -23,8 +23,8 @@ impl protocol::MutationKind<RewritingWindowConfig, RewritingWindowConfigMutation
         vec![Self { camera: base.camera.clone() }.into()]
     }
 
-    fn label(&self) -> String {
-        "Set Window Camera".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Window Camera", "Fensterkamera setzen")
     }
 
     fn target(&self) -> Vec<String> {

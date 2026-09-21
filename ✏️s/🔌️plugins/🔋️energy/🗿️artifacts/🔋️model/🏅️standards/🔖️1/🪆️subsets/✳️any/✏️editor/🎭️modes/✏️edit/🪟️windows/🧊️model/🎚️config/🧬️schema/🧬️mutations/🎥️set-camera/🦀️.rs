@@ -22,8 +22,8 @@ impl protocol::MutationKind<EnergyModelWindowConfig, EnergyModelWindowConfigMuta
     fn inverse(&self, base: &EnergyModelWindowConfig) -> Vec<EnergyModelWindowConfigMutation> {
         (base.camera != self.camera).then(|| EnergyModelWindowConfigMutation::SetCamera(SetCamera { camera: base.camera })).into_iter().collect()
     }
-    fn label(&self) -> String {
-        "Set camera".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set camera", "Kamera setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["camera".into()]

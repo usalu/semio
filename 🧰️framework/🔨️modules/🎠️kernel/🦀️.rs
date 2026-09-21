@@ -1206,7 +1206,10 @@ mod ui_dirty_scope_tests;
 pub struct HistoryEntry {
     pub seq: u64,
     pub action_id: String,
-    pub label: String,
+    /// @emoji 🏷️ Every shell locale's text for this row, resolved by the renderer against the
+    /// active locale — never a pre-resolved string, so switching the shell locale re-renders the
+    /// whole ledger instead of leaving already-logged rows in the locale they were dispatched in.
+    pub label: dsl::LocalizedLabel,
     pub kind: String,
     pub timestamp: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

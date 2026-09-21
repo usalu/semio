@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeT1S {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change fundamental period T1 [s] to {}", self.new_t1_s)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change fundamental period T1 [s] to {}", self.new_t1_s), &format!("grundlegende Periodent1 [s] auf {} ändern", self.new_t1_s))
     }
 }
 //#endregion 🔖️ChangeT1S

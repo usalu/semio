@@ -310,7 +310,7 @@ async function mount(root: HTMLElement): Promise<void> {
       beacon.ready();
       status.remove();
       detachIntrospection = attachIntrospectionBindings(transport);
-      accessibility = createAccessibilityMirror(root, transport, locale());
+      accessibility = createAccessibilityMirror(root, transport, locale(), canvas);
       accessibility.refresh();
       cleanupInput = wireInput(root, canvas, transport);
       transport.enqueueReplaceable(browserFrameEventFromDom({ type: "resize", clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight }, dpr) as Extract<ReturnType<typeof browserFrameEventFromDom>, { kind: "resize" }>);

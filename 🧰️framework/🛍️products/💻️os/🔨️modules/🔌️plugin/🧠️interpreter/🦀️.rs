@@ -528,6 +528,13 @@ pub const SEMIO_OWNED_CANCEL_JOB_EXPORT: &str = "semio_owned_cancel_job_v1";
 pub const SEMIO_OWNED_START_JOB_EXPORT: &str = "semio_owned_start_job_v1";
 pub const SEMIO_OWNED_STEP_JOB_EXPORT: &str = "semio_owned_step_job_v1";
 pub const SEMIO_OWNED_POLL_EXPORT: &str = "semio_owned_poll_v1";
+/// 🧬️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b): the owned twin of `world actor`'s `codec`
+/// interface — the four pure document-kind functions a headless host calls on a package whose Rust
+/// codec it does not link.
+pub const SEMIO_OWNED_PACK_SCHEMA_HASH_EXPORT: &str = "semio_owned_pack_schema_hash_v1";
+pub const SEMIO_OWNED_GENESIS_EXPORT: &str = "semio_owned_genesis_v1";
+pub const SEMIO_OWNED_PRINT_MIRROR_EXPORT: &str = "semio_owned_print_mirror_v1";
+pub const SEMIO_OWNED_APPLY_OPS_EXPORT: &str = "semio_owned_apply_ops_v1";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SemioActorExport {
@@ -581,10 +588,28 @@ pub enum OwnedSemioExport {
     StartJob,
     StepJob,
     Poll,
+    PackSchemaHash,
+    Genesis,
+    PrintMirror,
+    ApplyOps,
 }
 
 impl OwnedSemioExport {
-    pub const ALL: [Self; 9] = [Self::Allocate, Self::Deallocate, Self::Checkpoint, Self::Restore, Self::Describe, Self::CancelJob, Self::StartJob, Self::StepJob, Self::Poll];
+    pub const ALL: [Self; 13] = [
+        Self::Allocate,
+        Self::Deallocate,
+        Self::Checkpoint,
+        Self::Restore,
+        Self::Describe,
+        Self::CancelJob,
+        Self::StartJob,
+        Self::StepJob,
+        Self::Poll,
+        Self::PackSchemaHash,
+        Self::Genesis,
+        Self::PrintMirror,
+        Self::ApplyOps,
+    ];
 
     pub fn core_name(self) -> &'static str {
         match self {
@@ -597,6 +622,10 @@ impl OwnedSemioExport {
             Self::StartJob => SEMIO_OWNED_START_JOB_EXPORT,
             Self::StepJob => SEMIO_OWNED_STEP_JOB_EXPORT,
             Self::Poll => SEMIO_OWNED_POLL_EXPORT,
+            Self::PackSchemaHash => SEMIO_OWNED_PACK_SCHEMA_HASH_EXPORT,
+            Self::Genesis => SEMIO_OWNED_GENESIS_EXPORT,
+            Self::PrintMirror => SEMIO_OWNED_PRINT_MIRROR_EXPORT,
+            Self::ApplyOps => SEMIO_OWNED_APPLY_OPS_EXPORT,
         }
     }
 
@@ -605,7 +634,9 @@ impl OwnedSemioExport {
             Self::Allocate => FunctionType { parameters: vec![ValueType::I32], results: vec![ValueType::I32] },
             Self::Deallocate => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![] },
             Self::Checkpoint | Self::Describe => FunctionType { parameters: vec![], results: vec![ValueType::I64] },
-            Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![ValueType::I64] },
+            Self::Restore | Self::CancelJob | Self::StartJob | Self::StepJob | Self::Poll | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps => {
+                FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![ValueType::I64] }
+            }
         }
     }
 }

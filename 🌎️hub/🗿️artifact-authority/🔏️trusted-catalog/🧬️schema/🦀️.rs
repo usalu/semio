@@ -196,7 +196,13 @@ pub struct TrustedBundleProfileV1 {
     pub id: String,
     pub selected_closure: Vec<TrustedBundleIdentityV1>,
     pub selected_closure_sha256: String,
-    pub open_target: TrustedBundleProfileOpenTargetV1,
+    /// 🎯️ Every document-open target this generation admits, in the bundle's own order. It is a SET
+    /// rather than the single row it was until ticket 26/09/18 slice TC3b: a generation carries one
+    /// creatable kind per entry, so a `stdio + gis + note` bundle exposes a GIS map AND a note to
+    /// `POST /spaces/{space}/artifact-creations` instead of whichever one the profile named.
+    /// `trusted_profile_generation` frames the sorted set, so adding or removing a target rotates
+    /// the generation id exactly as swapping the single one used to.
+    pub open_targets: Vec<TrustedBundleProfileOpenTargetV1>,
     pub generation_id: String,
 }
 

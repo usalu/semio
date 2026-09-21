@@ -20,8 +20,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for RemoveFrameCom
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
         agg_inverse(&JpgBaselineMutation::RemoveFrameComponent(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-frame-component".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-frame-component", "Rahmenkomponente entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

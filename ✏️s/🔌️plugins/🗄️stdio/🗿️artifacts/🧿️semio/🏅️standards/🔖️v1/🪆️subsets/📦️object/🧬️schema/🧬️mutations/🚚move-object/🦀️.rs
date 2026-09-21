@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for MoveOb
     fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move object to ({}, {}, {})", self.translation.x, self.translation.y, self.translation.z)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move object to ({}, {}, {})", self.translation.x, self.translation.y, self.translation.z), &format!("Objekt nach ({}, {}, {}) verschieben", self.translation.x, self.translation.y, self.translation.z))
     }
     fn target(&self) -> Vec<String> {
         vec!["transform".to_string()]

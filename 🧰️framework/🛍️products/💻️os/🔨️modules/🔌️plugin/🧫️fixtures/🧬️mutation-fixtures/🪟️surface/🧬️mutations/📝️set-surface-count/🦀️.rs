@@ -46,7 +46,7 @@ impl MutationKind<SurfaceSnapshot, SurfaceMutation> for SetSurfaceCount {
     fn inverse(&self, base: &SurfaceSnapshot) -> Vec<SurfaceMutation> {
         vec![Self { value: base.count }.into()]
     }
-    fn label(&self) -> String {
-        format!("Set surface count to {}", self.value)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set surface count to {}", self.value), &format!("Oberflächenanzahl auf {} setzen", self.value))
     }
 }

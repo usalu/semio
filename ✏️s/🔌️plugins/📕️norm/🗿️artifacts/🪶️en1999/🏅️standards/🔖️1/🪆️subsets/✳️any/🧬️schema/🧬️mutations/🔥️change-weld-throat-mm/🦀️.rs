@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeWeldThroat
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change weld throat thickness [mm] to {}", self.new_weld_throat_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change weld throat thickness [mm] to {}", self.new_weld_throat_mm), &format!("Schweißnahtkehlendicke [mm] auf {} ändern", self.new_weld_throat_mm))
     }
 }
 //#endregion 🔖️ChangeWeldThroatMm

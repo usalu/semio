@@ -348,3 +348,75 @@ Rule 26 respected; live hubs and serves untouched; nothing deleted, `#[ignore]`d
 **needs hub rerun.** Expect: **L3 red, naming `closing_owner=<owner>` for the parent publication**
 (`close-not-started` would itself be the root); **L1 red, naming the identity field and the conflict
 arm**; **L4 red with `live_mount_future: N`**. Suite stays ~36 s — the watchdog holds.
+
+---
+
+# HT9 — batch 4, final (rerun 23:16: **321 — 311 / 10**, wall 161 s; capture `…-full-2316.txt`)
+
+## 17. The four new reds are not mine
+
+| law | panic | reading |
+|---|---|---|
+| `inference::wal::…executes_literal_committed_transaction_scope_and_cancellation_traces` | `unexpected WAL outcome Expired` | an `InferenceOperationControlV1` **`Instant`** deadline (HT8 §10's family) |
+| `inference::wal::chain::…rejects_crc_valid_tampering_and_exact_cross_segment_tip_mismatch` | `actual retained WAL "two-segments-exact-prior-tip" left: false` | same real-verify path, same wall-clock bound |
+| `inference::wal::…rejects_hash_matched_noncanonical_or_wrong_actor_commands` | `a matching durable hash cannot bypass "canonical-but-another-actor"` | same |
+| `tests::quick::scoped_directory_socket_removal_and_delivery_have_one_total_membership_order` | `the removal-wins sender gate was never admitted: Elapsed(())` | a tokio `Elapsed` |
+
+All four are **wall-clock** failures, and the run they appeared in took **161 s instead of 36 s**
+with three `semio-pool-worker` stack-overflow aborts in the same process group — HS1's in-flight
+worker stack-size edit starves and kills the workers these real WAL verifies run on. My batch-3
+instruments cannot reach them: `closing_owner_witness()` is pure field reads, `first_identity_mismatch`
+is pure comparisons whose recorder takes a `std::sync::Mutex` **inside** a non-async fn under
+`#[cfg(test)]` (never across an await), and `DatabaseMountFutureLiveGuardV1` is one atomic pair.
+None runs on the WAL or socket path. **HS1's — left alone.**
+
+## 18. What 23:16 printed for my three, and what I landed on it
+
+- **L3** — `closing_owner=none`. The parent publication has retired **all seven** owners; the only
+  false conjunct left in `terminal_is_empty()` is `phase == Complete`, which `close_step` sets on its
+  very next call. So the assembly is **not** stuck — the recorded turn is simply the LAST one that
+  ran: `advance()` sets `ClosingParent` and returns before touching the parent, and no further turn
+  ever happens. The defect is therefore in `drive_abandoned_request` (`🏃️runtime:1884`): it **returns**
+  on `Complete`/`Aborted` (`let Some(ingress) = identity.ingress.as_ref() else { return }`), and
+  `drive_abandoned_turn`'s `Journal`/`Assembly` arms answer `Complete` whenever `request_matches` or
+  `identity_matches` goes false — abandoning a document mid-close, with the writer and ingress held.
+  **Landed:** the driver now records `"driver leaving on Complete"` / `"…on Aborted"` before it
+  returns, so the next capture proves the exit instead of showing a stale turn.
+- **L1** — `refused as None, identity mismatch None`: neither recorder fired, which proves the
+  `Conflict` comes from one of the **six bare `return Err(Conflict)` arms in
+  `prepare_retained_document`** (`🏃️runtime:1237–1300`) — the join precondition, before the drive
+  loop. **Landed:** every one of those six now records its state and its false conjunct
+  (`Ready/stores_match`, `Published/document_write`, `Verification|Publishing/base_frontier=…`, …)
+  via `record_prepare_conflict` / `last_gis_map_prepare_conflict()`, and the law's line-676 panic
+  prints it. My reading of the source: after the committed decision the retained stores have advanced
+  past the genesis `base.pack`, so a `Ready`/`Published` arm's `stores_match` is the likely false
+  conjunct — the next capture says so outright.
+- **L4** — `live_mount_future: 0`; **fourteen families, all 0**. `WorkerPool::acquire_use`
+  (`⏳️async:2021`) mints a **fresh** `Arc` and keeps only a counter, so `strong_count == 3` really is
+  the `Database`'s own plus two clones this process made. The one carrier still uncounted is
+  `ArtifactRunnerRetirementReservation::commit` (`🗿️artifact:4823`), which takes
+  `self._pool_use.clone()` by value from `Drop for ArtifactAuthority`: if the retirement slot is not
+  installed (occupied slot, failed maintenance submit) the clone rides a **submitted maintenance job
+  closure**, which is in neither the retirement registry nor any struct I counted. That is the next
+  family to count — I ran out of context before landing it.
+
+## 19. Verification (batch 4)
+
+| command | result | capture |
+|---|---|---|
+| `CARGO_TARGET_DIR=…/target-ht9 cargo check -p semio-hub --all-targets` | **EXIT 0**, 0 errors | `🗑️generated/ht9-check-hub-5.txt` |
+
+## 20. Hand-over
+
+| law | 23:16 printed state | root | file:line | whose |
+|---|---|---|---|---|
+| L3 `…abandoned_pre_witness…` | `Progress(ClosingParent) … parent=Closing/…/closing_owner=none`, watchdog at 30 s | parent has drained every owner; **no further turn runs** — the abandoned driver returns on `Complete`/`Aborted` and abandons a mid-close document | `🌎️hub/💡️inference/🏃️runtime/🦀️.rs:1884` (`drive_abandoned_request`), turn source `:1662`/`:1693` | HT9 → next worker; exit now recorded |
+| L1 `…committed_event_reaches_actor_frontier…` | `Conflict refused as None, identity mismatch None` at `🔬️unit:676` | one of six bare `Conflict` arms in the join precondition, most likely `stores_match` against the genesis base pack after the stores advanced | `🌎️hub/💡️inference/🏃️runtime/🦀️.rs:1237–1300` (`prepare_retained_document`) | HT9 → next worker; all six now named |
+| L4 `admin_removal_…after_sqlite_reopen` | `owners 3`, 14 census families **all 0** | last uncounted carrier: the `_pool_use` clone `Drop for ArtifactAuthority` hands `retirement.commit(...)`, riding a submitted maintenance-job closure when no slot is installed | `🧰️framework/…/🛢️db/🗿️artifact/🦀️.rs:4823` + `:5618` | HT9 → next worker (count that family next) |
+| 3× `SIGABRT semio-pool-worker-N` + the four new wall-clock reds | stack overflow / `Expired` / `Elapsed` | in-flight worker stack-size edit; 161 s wall starves real WAL verifies | `🧰️framework/🔨️modules/⏳️async/🦀️.rs` | **HS1** |
+
+Landed and **proven by rerun**: §2's `fail()` idempotence (L3 no longer rewinds its close cursor),
+§1's anchor conjunct (L1 runs 100 lines further), §8's watchdog (no more 300 s kills).
+Everything else this slice landed is a named witness, not a guess.
+
+**needs hub rerun.**

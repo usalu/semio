@@ -23,11 +23,18 @@ impl MutationKind<FormsSnapshot, FormMutation> for ChangeFormTitle {
     fn inverse(&self, base: &FormsSnapshot) -> Vec<FormMutation> {
         super::inverse::inverse_change_form_title(self, base)
     }
-    fn label(&self) -> String {
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&{
         match &self.new_title {
             Some(title) => format!("Change form title to \"{title}\""),
             None => "Clear form title".to_string(),
         }
+        }, &{
+        match &self.new_title {
+            Some(title) => format!("Formulartitel auf \"{title}\" ändern"),
+            None => "Formulartitel leeren".to_string(),
+        }
+        })
     }
 }
 //#endregion 🖋️ChangeFormTitle

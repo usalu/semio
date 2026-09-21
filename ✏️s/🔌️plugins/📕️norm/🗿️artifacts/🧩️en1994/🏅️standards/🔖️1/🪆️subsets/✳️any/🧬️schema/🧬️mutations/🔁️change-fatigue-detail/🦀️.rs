@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeFatigueDet
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change fatigue detail to \"{}\"", self.new_fatigue_detail)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change fatigue detail to \"{}\"", self.new_fatigue_detail), &format!("Ermüdungsdetail auf \"{}\" ändern", self.new_fatigue_detail))
     }
 }
 //#endregion 🔖️Payload

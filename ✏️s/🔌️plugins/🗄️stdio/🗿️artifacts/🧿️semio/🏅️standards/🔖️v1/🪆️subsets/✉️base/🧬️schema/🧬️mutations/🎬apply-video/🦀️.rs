@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioSnapshot, SemioMutation> for ApplyVideo {
     fn inverse(&self, base: &SemioSnapshot) -> Vec<SemioMutation> {
         agg_inverse(&SemioMutation::ApplyVideo(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "video".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("video", "Video")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

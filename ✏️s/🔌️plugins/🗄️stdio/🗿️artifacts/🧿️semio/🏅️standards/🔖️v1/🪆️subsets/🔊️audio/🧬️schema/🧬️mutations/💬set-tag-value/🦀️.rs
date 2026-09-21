@@ -23,8 +23,8 @@ impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetTagVa
     fn inverse(&self, base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
         agg_inverse(&SemioAudioMutation::SetTagValue(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-tag-value".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-tag-value", "Tagwert setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

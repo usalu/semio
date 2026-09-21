@@ -464,4 +464,102 @@ fn the_puzzle3d_app_carries_the_introduction_the_tour_arms_on() {
     assert!(!should_auto_start_introduction(&app.id, app.introduction.is_some(), false, true, false), "🎓️ an answered one never re-arms");
     assert!(!should_auto_start_introduction(&app.id, false, false, false, false), "🎓️ an app that authors none arms nothing");
 }
+
+fn chrome_metrics_fixture() -> Value {
+    let path = repo_root().join("🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🔝️navbar-centered-band/🔣️.json");
+    serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))).expect("navbar centered-band fixture")
+}
+
+fn bounded_example_control(label: String, minimum_rem: u16, maximum_rem: u16) -> ShellNavbarControl {
+    ShellNavbarControl {
+        control_id: "playground.navbar.fixture".into(),
+        icon_id: Some("file"),
+        label,
+        active: false,
+        width_policy: Some(ShellNavbarWidthPolicy::RootRemClamp { minimum_rem, maximum_rem }),
+    }
+}
+
+fn painted_example_hit_width(shell: &mut ShellState, theme: &Theme, control: ShellNavbarControl, available_width: f32) -> f32 {
+    let mut cursor = ShellChromeChildCursor { x: 40.0, right: 40.0 + available_width, ..Default::default() };
+    let mut draw = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    for _ in 0..512 {
+        if shell.render_navbar_cluster_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, theme, std::slice::from_ref(&control), 3.2, theme.control_height) {
+            break;
+        }
+    }
+    input
+        .staged_hits()
+        .iter()
+        .find(|hit| hit.control_id.as_deref() == Some("playground.navbar.fixture"))
+        .expect("the painted example control registers its real hit rectangle")
+        .rect
+        .w
+}
+
+/// 📐️ Exact browser rows first prove the resolver. Short and long real labels then exercise both
+/// retained consumers at each root size; the hit rectangle is the painter's published geometry.
+#[test]
+fn example_control_root_rem_bounds_feed_reservation_and_painted_hit_geometry() {
+    let fixture = chrome_metrics_fixture();
+    let metrics = &fixture["exampleControlMetrics"];
+    let minimum_rem = metrics["minimumRem"].as_u64().expect("minimum rem") as u16;
+    let maximum_rem = metrics["maximumRem"].as_u64().expect("maximum rem") as u16;
+    let policy = ShellNavbarWidthPolicy::RootRemClamp { minimum_rem, maximum_rem };
+
+    for row in metrics["cases"].as_array().expect("width cases") {
+        let root_rem = row["rootRemPixels"].as_f64().expect("root rem") as f32;
+        let available = row["availablePixels"].as_f64().expect("available width") as f32;
+        let expected = row["expectedPixels"].as_f64().expect("expected width") as f32;
+        let expected_reservation = row["expectedReservationPixels"].as_f64().expect("expected reservation") as f32;
+        let expected_paint = row["expectedPaintPixels"].as_f64().expect("expected paint") as f32;
+        assert_eq!(resolve_shell_navbar_control_width(available, Some(policy), root_rem), expected, "{}", row["name"].as_str().expect("case name"));
+        assert_eq!(expected_reservation, expected);
+        assert_eq!(expected_paint, expected);
+    }
+
+    for (root_rem, short_expected, long_expected) in [(16.0, 192.0, 448.0), (20.0, 240.0, 560.0)] {
+        let mut shell = ShellState::new(Vec::new(), "chrome-width-law".into());
+        let mut theme = Theme::light();
+        theme.root_rem_pixels = root_rem;
+        let mut atlas = FontAtlas::builtin();
+        let short = bounded_example_control("Concrete Forest".to_string(), minimum_rem, maximum_rem);
+        assert_eq!(shell.navbar_control_band_width(&mut atlas, &theme, std::slice::from_ref(&short)), short_expected);
+        assert_eq!(painted_example_hit_width(&mut shell, &theme, short, 2048.0), short_expected);
+
+        let long = bounded_example_control("W".repeat(96), minimum_rem, maximum_rem);
+        assert_eq!(shell.navbar_control_band_width(&mut atlas, &theme, std::slice::from_ref(&long)), long_expected);
+        assert_eq!(painted_example_hit_width(&mut shell, &theme, long, 2048.0), long_expected);
+    }
+}
+
+/// 🧵️ The footer row keeps React's exact toggle vocabulary and its position after Settings and
+/// Marketplace. This drives `default_dock`, not an invented dock node.
+#[test]
+fn task_manager_footer_identity_order_icon_and_localized_label_match_react() {
+    let fixture = chrome_metrics_fixture();
+    let expected = &fixture["taskManagerFooter"];
+    for label in expected["labels"].as_array().expect("task manager labels") {
+        let mut shell = ShellState::new(Vec::new(), "task-manager-footer-law".into());
+        shell.locale_id = label["locale"].as_str().expect("locale").to_string();
+        shell.session = Some(ActiveSession {
+            plugin_id: "test".into(),
+            instance_id: 1,
+            app: super::command_registry_tests::test_app(Vec::new(), Vec::new()),
+            view_state: ViewModel::default(),
+        });
+        let dock = shell.default_dock();
+        let rows = dock.tabs(PanelAnchor::BottomRight);
+        let index = rows.iter().position(|row| row.id == expected["id"].as_str().expect("task manager id")).expect("task manager footer row");
+        let row = &rows[index];
+        assert_eq!(index as i64, expected["order"].as_i64().expect("task manager order"));
+        assert_eq!(row.order as i64, expected["order"].as_i64().expect("task manager order"));
+        assert_eq!(row.icon_id, expected["iconId"].as_str().expect("task manager icon"));
+        assert_eq!(row.label, label["label"].as_str().expect("task manager label"));
+        assert_eq!(rows.get(index.wrapping_sub(1)).map(|row| row.id.as_str()), Some(FRAMEWORK_MARKETPLACE_TAB_ID));
+    }
+}
 //#endregion 🎓️Introduction

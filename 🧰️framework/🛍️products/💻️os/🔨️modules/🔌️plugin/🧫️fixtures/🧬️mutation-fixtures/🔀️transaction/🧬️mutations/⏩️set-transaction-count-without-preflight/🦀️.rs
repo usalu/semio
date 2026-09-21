@@ -46,8 +46,8 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountWithoutPrefli
     fn inverse(&self, base: &TxnSnapshot) -> Vec<TxnMutation> {
         vec![SetTransactionCount { value: base.count }.into()]
     }
-    fn label(&self) -> String {
-        format!("Set transaction count without preflight to {}", self.value)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set transaction count without preflight to {}", self.value), &format!("Transaktionsanzahl ohne Vorprüfung auf {} setzen", self.value))
     }
     fn foreign_steps(&self, _: &TxnSnapshot) -> Vec<protocol::ForeignStep> {
         panic!("no-foreign mutations must bypass foreign-step preflight")

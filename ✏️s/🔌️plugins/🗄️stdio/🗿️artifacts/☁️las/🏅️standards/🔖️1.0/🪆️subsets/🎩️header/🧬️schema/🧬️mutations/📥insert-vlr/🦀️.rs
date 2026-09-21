@@ -24,8 +24,8 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for InsertVlr {
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {
         agg_inverse(&LasMutation::InsertVlr(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-vlr".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-vlr", "vlr einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

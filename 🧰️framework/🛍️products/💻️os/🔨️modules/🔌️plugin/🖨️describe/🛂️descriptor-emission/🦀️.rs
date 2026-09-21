@@ -249,6 +249,12 @@ const DESCRIBE_FUEL_BUDGET: u64 = 8_000_000_000;
 /// development machines; the independent fuel cap remains the deterministic runaway bound.
 const DESCRIBE_DEADLINE_MS: u32 = 1_800_000;
 
+/// 🌱️ The build-time document id `codecs` mints its probe genesis at. It is a valid
+/// `🌱️artifact-document-id-v1` (`artifact-` + 32 lowercase hex, nonzero) because `codec.genesis`
+/// stamps the id into the history it returns and refuses a hostile one; the pair itself is read for
+/// its schema and discarded, never published.
+const CODEC_PROBE_DOCUMENT_ID: &str = "artifact-c0dec0dec0dec0dec0dec0dec0dec0de";
+
 /// 🛡️ Ceiling for the build artifacts the emitter reads — the raw `wasm32-wasip2` component and
 /// jco's extracted core, both built with the UNOPTIMIZED `wasm-dev` profile. This is a build-time
 /// input bound and deliberately NOT the strict catalog's runtime ceiling
@@ -463,19 +469,123 @@ pub async fn describe_component(wasm_path: &Path, core_wasm_path: &Path, out_dir
 //#endregion 🔖️Describe
 
 //#region 🔖️Cli
-/// ⌨️ `describe <component.wasm> --core <core.wasm> --out <dir>` — the only subcommand this crate has. Returns the
-/// process exit code (0 success, 1 a `describe_component` failure, 2 a usage error).
+/// 🧬️ One document kind a built component answers `world actor`'s `codec` interface for.
+pub struct ComponentCodecRow {
+    pub artifact_kind: String,
+    pub artifact_schema: String,
+    pub pack_schema_hash: String,
+}
+
+/// 🧬️ Asks a built component itself which document kinds it owns and what each one's structural
+/// snapshot fingerprint is, so a catalog builder never has to transcribe a plugin's pack record
+/// specification by hand. Both answers come out of the same hash-identified component bytes the
+/// caller is about to publish:
+///
+/// * `codec.genesis(kind, probe-id)` mints the kind's canonical empty document. Its `spr` is a
+///   `HistoryLog` whose `schema` field IS `A::DOCUMENT_SCHEMA` — the string `store::ArtifactCodec`
+///   and the hub's trusted catalog are keyed by, and the only place a package publishes it.
+/// * `codec.pack-schema-hash(schema)` then returns that kind's 32-byte record fingerprint.
+///
+/// `kinds` are dialect artifact kinds as a descriptor's `manifest.apps[].dialect.artifact_kind`
+/// spells them; a kind the bundle owns no app for is an error, not a silent omission.
+pub async fn component_codec_rows(wasm_path: &Path, kinds: &[String]) -> Result<Vec<ComponentCodecRow>, DescribeError> {
+    let (wasm_bytes, _) = read_artifact(wasm_path, "raw component")?;
+    let runtime = OwnedRuntime::new();
+    let package = PackageRef { package: PackageId(wasm_path.display().to_string()), hash: PackageHash([0; 32]) };
+    let compiled = runtime.compile(&package, &wasm_bytes).await.map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", wasm_path.display())))?;
+    let budget = semio_framework::kernel::Budget { fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
+    let mut rows = Vec::with_capacity(kinds.len());
+    for kind in kinds {
+        let pair = runtime.codec_genesis(&compiled, kind, CODEC_PROBE_DOCUMENT_ID, budget).await.map_err(|error| DescribeError(format!("codec.genesis({kind}) on {}: {error}", wasm_path.display())))?;
+        let history = store::os_spr::decode_history(&pair.spr, &store::os_spr::DecodeOptions::default())
+            .await
+            .map_err(|error| DescribeError(format!("decoding the genesis history of {kind}: {error}")))?;
+        if history.doc_id != CODEC_PROBE_DOCUMENT_ID || !history.edits.is_empty() {
+            return Err(DescribeError(format!("genesis of {kind} is not the canonical empty document at the requested id")));
+        }
+        if history.schema.is_empty() || history.schema.len() > 256 {
+            return Err(DescribeError(format!("genesis of {kind} carries no bounded document schema")));
+        }
+        let hash = runtime.codec_pack_schema_hash(&compiled, &history.schema, budget).await.map_err(|error| DescribeError(format!("codec.pack-schema-hash({}) on {}: {error}", history.schema, wasm_path.display())))?;
+        if hash == [0; 32] {
+            return Err(DescribeError(format!("document schema {} has no structural record specification", history.schema)));
+        }
+        rows.push(ComponentCodecRow { artifact_kind: kind.clone(), artifact_schema: history.schema, pack_schema_hash: semio_framework_hash::hex_lower(&hash) });
+    }
+    Ok(rows)
+}
+
+/// ⌨️ `describe <component.wasm> --core <core.wasm> --out <dir>` and `codecs <component.wasm>
+/// --kinds <k1,k2,…> --out <file.json>`. Returns the process exit code (0 success, 1 a failure,
+/// 2 a usage error).
 pub async fn run(args: Vec<String>) -> i32 {
     let mut rest = args.into_iter();
     match rest.next().as_deref() {
         Some("describe") => run_describe(rest.collect()).await,
+        Some("codecs") => run_codecs(rest.collect()).await,
         Some(other) => {
-            eprintln!("semio-framework-plugin-describe: unknown command {other:?} (expected \"describe\")");
+            eprintln!("semio-framework-plugin-describe: unknown command {other:?} (expected \"describe\" or \"codecs\")");
             2
         }
         None => {
             eprintln!("usage: semio-framework-plugin-describe describe <component.wasm> --core <core.wasm> --out <dir>");
             2
+        }
+    }
+}
+
+async fn run_codecs(args: Vec<String>) -> i32 {
+    let mut wasm_path: Option<PathBuf> = None;
+    let mut kinds: Vec<String> = Vec::new();
+    let mut out_path: Option<PathBuf> = None;
+    let mut iter = args.into_iter();
+    while let Some(arg) = iter.next() {
+        match arg.as_str() {
+            "--kinds" => kinds = iter.next().map(|value| value.split(',').filter(|part| !part.is_empty()).map(str::to_string).collect()).unwrap_or_default(),
+            "--out" => out_path = iter.next().map(PathBuf::from),
+            _ if wasm_path.is_none() => wasm_path = Some(PathBuf::from(arg)),
+            other => {
+                eprintln!("semio-framework-plugin-describe codecs: unexpected argument {other:?}");
+                return 2;
+            }
+        }
+    }
+    let (Some(wasm_path), Some(out_path)) = (wasm_path, out_path) else {
+        eprintln!("usage: semio-framework-plugin-describe codecs <component.wasm> --kinds <k1,k2,…> --out <file.json>");
+        return 2;
+    };
+    if kinds.is_empty() {
+        eprintln!("semio-framework-plugin-describe codecs: --kinds must name at least one dialect artifact kind");
+        return 2;
+    }
+    match component_codec_rows(&wasm_path, &kinds).await {
+        Ok(rows) => {
+            let body = rows
+                .iter()
+                .map(|row| format!("{{\"artifactKind\":\"{}\",\"artifactSchema\":\"{}\",\"packSchemaHash\":\"{}\"}}", row.artifact_kind, row.artifact_schema, row.pack_schema_hash))
+                .collect::<Vec<_>>()
+                .join(",");
+            let document = format!("{{\"schema\":\"semio.plugin.component-codec-rows/v1\",\"rows\":[{body}]}}\n");
+            if let Some(parent) = out_path.parent() {
+                if let Err(error) = fs::create_dir_all(parent) {
+                    eprintln!("semio-framework-plugin-describe codecs: creating {}: {error}", parent.display());
+                    return 1;
+                }
+            }
+            match fs::write(&out_path, document.as_bytes()) {
+                Ok(()) => {
+                    println!("codecs {} -> {} ({} rows)", wasm_path.display(), out_path.display(), rows.len());
+                    0
+                }
+                Err(error) => {
+                    eprintln!("semio-framework-plugin-describe codecs: writing {}: {error}", out_path.display());
+                    1
+                }
+            }
+        }
+        Err(error) => {
+            eprintln!("semio-framework-plugin-describe codecs: {error}");
+            1
         }
     }
 }

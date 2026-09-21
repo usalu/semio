@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeComfor
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change comfort category to \"{}\"", self.new_comfort_category)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change comfort category to \"{}\"", self.new_comfort_category), &format!("Komfortkategorie auf \"{}\" ändern", self.new_comfort_category))
     }
 }
 //#endregion 🔖️ChangeComfortCategory

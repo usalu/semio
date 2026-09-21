@@ -54,14 +54,20 @@ pub enum ColdPairIngressStatus {
 }
 
 impl ColdDocumentPairFrontier {
+    /// 🌱️ Exact empty history — the frontier a freshly created document's FIRST published
+    /// checkpoint carries. It never invents an edit identifier or a chain hash, so demanding a
+    /// nonempty head here refused every new document's own canonical pair.
+    pub fn is_genesis(&self) -> bool {
+        self.head_edit_ordinal == 0 && self.head_edit_id.is_empty() && self.last_commit_seq == 0 && self.chain_sha256 == [0; 32]
+    }
+
+    /// 🌿️ Normal edited history: positive counters and a real authenticated head.
+    pub fn is_edited(&self) -> bool {
+        self.head_edit_ordinal > 0 && !self.head_edit_id.is_empty() && self.head_edit_id.len() <= COLD_PAIR_ID_MAXIMUM_BYTES && self.last_commit_seq > 0 && self.chain_sha256 != [0; 32]
+    }
+
     pub fn validate(&self) -> Result<(), &'static str> {
-        if self.document_id.is_empty()
-            || self.document_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
-            || self.head_edit_id.is_empty()
-            || self.head_edit_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
-            || self.last_commit_seq > self.head_edit_ordinal
-            || self.chain_sha256 == [0; 32]
-        {
+        if self.document_id.is_empty() || self.document_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES || self.last_commit_seq > self.head_edit_ordinal || !(self.is_genesis() || self.is_edited()) {
             return Err("cold-pair.frontier");
         }
         Ok(())

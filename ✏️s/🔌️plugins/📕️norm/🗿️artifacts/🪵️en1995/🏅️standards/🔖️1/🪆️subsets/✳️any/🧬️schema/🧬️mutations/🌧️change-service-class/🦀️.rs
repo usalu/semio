@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeServiceCla
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change service class to {:?}", self.new_service_class)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change service class to {:?}", self.new_service_class), &format!("Dienstklasse auf {:?} ändern", self.new_service_class))
     }
 }
 //#endregion 🔖️ChangeServiceClass

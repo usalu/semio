@@ -29,8 +29,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for InsertTexcoord {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::InsertTexcoord(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-texcoord".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-texcoord", "Texturkoordinate einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

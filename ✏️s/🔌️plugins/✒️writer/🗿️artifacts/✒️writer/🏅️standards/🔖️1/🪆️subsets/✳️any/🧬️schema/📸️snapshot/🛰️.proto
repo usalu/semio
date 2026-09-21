@@ -7,5 +7,6 @@ message WriterSnapshot {
   string id = 2;
   string language_id = 3;
   string uri = 4;
-  semio.os.store.ArtifactChild document = 5;
+  string text = 5;
+  semio.os.store.ArtifactChild document = 6;
 }

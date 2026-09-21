@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeLoadDurati
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change load duration to {:?}", self.new_load_duration)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change load duration to {:?}", self.new_load_duration), &format!("Lastdauer auf {:?} ändern", self.new_load_duration))
     }
 }
 //#endregion 🔖️ChangeLoadDuration

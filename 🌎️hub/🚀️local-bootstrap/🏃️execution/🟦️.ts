@@ -87,11 +87,20 @@ export function hubBinaryPath(repoRoot: string): string {
 /** 🎯 The single Nx target that stages the development executable every launch route reads. */
 export const HUB_DEV_BINARY_TARGET = "os-hub:build-dev";
 
+/** 🐘️ The Nx target that stages the PostgreSQL-capable development executable — the SAME hub with
+ * `db`'s `postgres` storage/directory drivers linked in, which the default build deliberately leaves
+ * out so a zero-touch launch needs no database. */
+export const HUB_DEV_POSTGRES_BINARY_TARGET = "os-hub:build-dev-postgres";
+
 /** 🏗️ The injectable staging boundary: one attempt that returns the exit status of the Nx target. */
 export type HubDevBinaryStaging = Readonly<{ stage: () => number }>;
 
 const nativeHubDevBinaryStaging: HubDevBinaryStaging = {
   stage: () => spawnSync("bun", ["nx", "run", HUB_DEV_BINARY_TARGET], { cwd: getWorkspaceRoot(), stdio: "inherit", shell: false }).status ?? -1,
+};
+
+const nativeHubDevPostgresBinaryStaging: HubDevBinaryStaging = {
+  stage: () => spawnSync("bun", ["nx", "run", HUB_DEV_POSTGRES_BINARY_TARGET], { cwd: getWorkspaceRoot(), stdio: "inherit", shell: false }).status ?? -1,
 };
 
 /** 📦 Reads the Nx-staged development executable, staging it through its own Nx target when absent instead of
@@ -101,6 +110,16 @@ export function hubDevBinaryPath(root: string, staging: HubDevBinaryStaging = na
   if (existsSync(path)) return path;
   const status = staging.stage();
   if (status !== 0 || !existsSync(path)) throw new Error(`Missing Nx-staged os-hub dev binary: ${path}; staging it through \`bun nx run ${HUB_DEV_BINARY_TARGET}\` exited with status ${status}`);
+  return path;
+}
+
+/** 🐘️ The same read for the PostgreSQL-capable executable, staged into its own directory so the two
+ * feature sets never overwrite one another (and a running hub is never replaced in place). */
+export function hubDevPostgresBinaryPath(root: string, staging: HubDevBinaryStaging = nativeHubDevPostgresBinaryStaging): string {
+  const path = join(root, "dist", "build-dev-postgres", process.platform === "win32" ? "os-hub.exe" : "os-hub");
+  if (existsSync(path)) return path;
+  const status = staging.stage();
+  if (status !== 0 || !existsSync(path)) throw new Error(`Missing Nx-staged PostgreSQL os-hub dev binary: ${path}; staging it through \`bun nx run ${HUB_DEV_POSTGRES_BINARY_TARGET}\` exited with status ${status}`);
   return path;
 }
 

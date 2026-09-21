@@ -76,16 +76,30 @@ export function parseColdDocumentPairLifetime(value: unknown): ActorInstanceLife
   });
 }
 
+/** 🌱️ Exact empty history — the frontier a freshly created document's FIRST published checkpoint
+ * carries. It never invents an edit identifier or a chain hash, so a parser that demands a nonempty
+ * head and a nonzero chain refuses every new document's own applied receipt. */
+export function coldDocumentPairFrontierIsGenesis(frontier: ColdDocumentPairFrontier): boolean {
+  return frontier.headEditOrdinal === 0n && frontier.headEditId === "" && frontier.lastCommitSeq === 0n && frontier.chainSha256.every((byte) => byte === 0);
+}
+
+/** 🌿️ Normal edited history: positive counters and a real authenticated head. */
+export function coldDocumentPairFrontierIsEdited(frontier: ColdDocumentPairFrontier): boolean {
+  return frontier.headEditOrdinal > 0n && frontier.headEditId.length > 0 && frontier.lastCommitSeq > 0n && frontier.chainSha256.some((byte) => byte !== 0);
+}
+
 export function parseColdDocumentPairFrontier(value: unknown): ColdDocumentPairFrontier {
   const record = exactRecord(value, ["documentId", "headEditOrdinal", "headEditId", "lastCommitSeq", "chainSha256"], "cold-pair.frontier");
+  const headEditId = record.headEditId;
+  if (typeof headEditId !== "string" || new TextEncoder().encode(headEditId).byteLength > 512) throw new Error("cold-pair.frontier");
   const frontier = Object.freeze({
     documentId: text(record.documentId, "cold-pair.frontier"),
     headEditOrdinal: unsigned64(record.headEditOrdinal, false, "cold-pair.frontier"),
-    headEditId: text(record.headEditId, "cold-pair.frontier"),
+    headEditId,
     lastCommitSeq: unsigned64(record.lastCommitSeq, false, "cold-pair.frontier"),
-    chainSha256: exactHash(record.chainSha256, "cold-pair.frontier"),
+    chainSha256: exactBytes(record.chainSha256, 32, 32, "cold-pair.frontier"),
   });
-  if (frontier.lastCommitSeq > frontier.headEditOrdinal) throw new Error("cold-pair.frontier");
+  if (frontier.lastCommitSeq > frontier.headEditOrdinal || !(coldDocumentPairFrontierIsGenesis(frontier) || coldDocumentPairFrontierIsEdited(frontier))) throw new Error("cold-pair.frontier");
   return frontier;
 }
 

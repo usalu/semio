@@ -31,8 +31,8 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for EditTargetRe
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Edit target region label \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Edit target region label \"{}\"", self.id), &format!("Zielregionsbeschriftung \"{}\" bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

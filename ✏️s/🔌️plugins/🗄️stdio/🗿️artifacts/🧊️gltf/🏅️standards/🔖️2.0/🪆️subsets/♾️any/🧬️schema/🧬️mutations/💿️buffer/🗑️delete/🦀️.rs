@@ -62,8 +62,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferM
         vec![super::GltfMutation::DeleteBuffer(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Delete Buffer".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Delete Buffer", "Puffer löschen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -21,8 +21,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for ReplacePoint
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Replace points".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace points", "Punkte ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["geometry".into(), "points".into()]

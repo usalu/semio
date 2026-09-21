@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn payload_vec(mut payload: semio_framework_job::RetainedJobPayload) -> Vec<u8> {
@@ -13,7 +12,39 @@ fn payload_vec(mut payload: semio_framework_job::RetainedJobPayload) -> Vec<u8> 
     bytes
 }
 
-fn run(request: NativeIoRequest) -> Result<NativeIoValue, String> {
+enum TestNativeIoValue {
+    Other,
+    Page { bytes: Vec<u8>, eof: bool },
+    Paths(Vec<PathBuf>),
+    Modified(Vec<(PathBuf, std::time::SystemTime)>),
+}
+
+fn materialize_test_value(value: NativeIoValue) -> TestNativeIoValue {
+    match value {
+        NativeIoValue::Bytes(bytes) => {
+            drop(payload_vec(bytes));
+            TestNativeIoValue::Other
+        }
+        NativeIoValue::Page { bytes, eof } => TestNativeIoValue::Page { bytes: payload_vec(bytes), eof },
+        NativeIoValue::Paths(mut paths) => {
+            let mut owned = Vec::with_capacity(paths.len());
+            while let Some(path) = paths.pop() {
+                owned.push(path);
+            }
+            TestNativeIoValue::Paths(owned)
+        }
+        NativeIoValue::Modified(mut entries) => {
+            let mut owned = Vec::with_capacity(entries.len());
+            while let Some(entry) = entries.pop() {
+                owned.push(entry);
+            }
+            TestNativeIoValue::Modified(owned)
+        }
+        NativeIoValue::ResidentBytes(_) => TestNativeIoValue::Other,
+    }
+}
+
+fn run(request: NativeIoRequest) -> Result<TestNativeIoValue, String> {
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::allocate_operation_id(),
         generation: semio_framework_job::Generation(1),
@@ -32,6 +63,7 @@ fn run(request: NativeIoRequest) -> Result<NativeIoValue, String> {
         if session.step().is_err() {
             panic!("native I/O test session contention");
         }
+        assert!(session.checkout_outcome(), "native I/O outcome checkout");
         let Some(job) = session.checked_out_job_mut() else { panic!("native I/O checked-out job") };
         let terminal_result = job.take_result();
         let Some(mut outcome) = session.take_outcome() else { panic!("native I/O retained outcome") };
@@ -40,7 +72,7 @@ fn run(request: NativeIoRequest) -> Result<NativeIoValue, String> {
             let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
         }
         if terminal {
-            result = terminal_result.unwrap_or_else(|| panic!("native I/O terminal result"));
+            result = terminal_result.unwrap_or_else(|| panic!("native I/O terminal result")).map(materialize_test_value);
             break;
         }
         if session.resume().is_err() {
@@ -98,17 +130,17 @@ fn chunked_read_write_scan_and_modified_round_trip() {
     std::fs::create_dir_all(&root).expect("test fixture directory");
     std::fs::write(&path, &bytes).expect("test-only filesystem oracle");
     assert!(run(NativeIoRequest::ReadBytes(path.clone())).is_err());
-    let NativeIoValue::Page { bytes: first, eof: false } = run(NativeIoRequest::ReadPage { path: path.clone(), offset: 0, max_bytes: 16 * 1024 }).unwrap() else { panic!("first page") };
-    assert_eq!(payload_vec(first), bytes[..16 * 1024]);
+    let TestNativeIoValue::Page { bytes: first, eof: false } = run(NativeIoRequest::ReadPage { path: path.clone(), offset: 0, max_bytes: 16 * 1024 }).unwrap() else { panic!("first page") };
+    assert_eq!(first, bytes[..16 * 1024]);
     let offset = (bytes.len() - 7) as u64;
-    let NativeIoValue::Page { bytes: last, eof: true } = run(NativeIoRequest::ReadPage { path: path.clone(), offset, max_bytes: 16 * 1024 }).unwrap() else { panic!("last page") };
-    assert_eq!(payload_vec(last), bytes[bytes.len() - 7..]);
+    let TestNativeIoValue::Page { bytes: last, eof: true } = run(NativeIoRequest::ReadPage { path: path.clone(), offset, max_bytes: 16 * 1024 }).unwrap() else { panic!("last page") };
+    assert_eq!(last, bytes[bytes.len() - 7..]);
     assert!(run(NativeIoRequest::ReadPage { path: path.clone(), offset: 0, max_bytes: 64 * 1024 + 1 }).is_err());
-    let NativeIoValue::Paths(mut paths) = run(NativeIoRequest::ScanDirectory { path: root.clone(), directories_only: false, extension: Some("wasm".into()), first_only: true }).unwrap() else { panic!("scan value") };
+    let TestNativeIoValue::Paths(mut paths) = run(NativeIoRequest::ScanDirectory { path: root.clone(), directories_only: false, extension: Some("wasm".into()), first_only: true }).unwrap() else { panic!("scan value") };
     assert_eq!(paths.pop(), Some(path.clone()));
     let mut modified_paths = NativePathSet::new();
     modified_paths.try_push(path).expect("one modified path");
-    let NativeIoValue::Modified(mut modified) = run(NativeIoRequest::Modified(modified_paths)).unwrap() else { panic!("modified value") };
+    let TestNativeIoValue::Modified(mut modified) = run(NativeIoRequest::Modified(modified_paths)).unwrap() else { panic!("modified value") };
     assert_eq!(modified.len(), 1);
     drop(modified.pop());
     std::fs::remove_dir_all(root).unwrap();

@@ -22,8 +22,12 @@ fn apply(base: &FlowSnapshot, mutation: &FlowMutation) -> FlowSnapshot {
     <FlowMutation as Mutation<FlowSnapshot>>::diff(mutation, base).diff().apply(base).expect("valid mutation diff")
 }
 
+fn empty_base() -> FlowSnapshot {
+    FlowSnapshot { schema: crate::FLOW_DOCUMENT_SCHEMA.into(), content: crate::flow_content_child_handle_and_cache(Vec::new(), Vec::new(), Default::default()) }
+}
+
 fn base_with_two_widgets() -> FlowSnapshot {
-    let base = apply(&FlowSnapshot::default(), &FlowMutation::CreateWidget(CreateWidget { index: 0, widget: widget_note("w1") }));
+    let base = apply(&empty_base(), &FlowMutation::CreateWidget(CreateWidget { index: 0, widget: widget_note("w1") }));
     apply(&base, &FlowMutation::CreateWidget(CreateWidget { index: 1, widget: widget_slider("w2") }))
 }
 

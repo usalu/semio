@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeDeltaSigma
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change fatigue stress range Δσ to {}", self.new_delta_sigma_mpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change fatigue stress range Δσ to {}", self.new_delta_sigma_mpa), &format!("Ermüdungsspannungsbereich Δσ auf {} ändern", self.new_delta_sigma_mpa))
     }
 }
 //#endregion 🔖️Payload

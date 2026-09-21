@@ -761,12 +761,22 @@ export type AppCatalogue = {
   readonly sections?: readonly AppCatalogueSection[];
 };
 
+/** 🎯️ A node graph's complete framework interaction target address. */
+export type NodeGraphInteractionDomain = {
+  readonly id: string;
+  readonly nodeTargetPrefix: string;
+  readonly edgeTargetPrefix: string;
+  readonly handleTargetPrefix: string;
+};
+
 /** 🕸️ A node-graph surface scene payload — mirrors the wasm `componentScene` node's `nodeGraph` field. */
 export type NodeGraphScene = {
   readonly nodes: readonly NodeGraphNodeRecord[];
   readonly edges: readonly NodeGraphEdgeRecord[];
   readonly viewport?: Viewport2d;
   readonly editable?: boolean;
+  /** 🎯️ The complete interaction address; absent surfaces publish no selection or hover. */
+  readonly interactionDomain?: NodeGraphInteractionDomain;
   /** 🔌️ DOCUMENT-DERIVED operator records only — one per node this graph holds (the OS workflow window
    * derives one per workflow node so the canvas can lay its ports out). The app's REGISTERED operator
    * catalogue rides {@link AppCatalogue} on the reserved `framework.section.catalogue` surface instead;
@@ -1051,6 +1061,12 @@ export type Board2dScene = {
   readonly lanes?: readonly SceneLaneRef[];
 };
 
+/** 🎯️ A complete interaction publication address for an ink canvas. */
+export type InkCanvasInteractionDomain = {
+  readonly id: string;
+  readonly granularityId: string;
+};
+
 /** 🖊️ An ink-canvas surface scene payload — mirrors the wasm `componentScene` node's `inkCanvas` field. `documentJson` is opaque to the framework: the owning program defines its shape, conventionally an array of items (e.g. stroke | shape | text | image) each carrying its own transform; `selectionJson` is a `string[]` of selected item ids. */
 export type InkCanvasScene = {
   readonly documentJson: string;
@@ -1059,14 +1075,14 @@ export type InkCanvasScene = {
   readonly activeUtility: string;
   readonly viewMode: string;
   readonly interactive: boolean;
+  /** 🎯️ The complete interaction publication address; absent on read-only/non-domain surfaces. */
+  readonly interactionDomain?: InkCanvasInteractionDomain;
 };
 
 /** 🖊️ Renderer-to-plugin action names for ink-canvas surfaces (modeled after {@link nodeGraphActions}/{@link textEditorActions}). */
 export const inkCanvasActions = {
   applyEvents: "inkApplyEvents",
-  setSelection: "setSelection",
   setCamera: "setCamera",
-  setHover: "setHover",
 } as const;
 
 /** 🗄️ A checkpoint ancestor-graph history view. `columnsJson` is a `HistoryColumn[]` array, newest checkpoint first. */

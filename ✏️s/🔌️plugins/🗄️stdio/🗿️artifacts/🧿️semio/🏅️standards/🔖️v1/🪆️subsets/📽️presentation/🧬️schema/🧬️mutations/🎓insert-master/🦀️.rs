@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioPresentationSnapshot, SemioPresentationMutation
     fn inverse(&self, base: &SemioPresentationSnapshot) -> Vec<SemioPresentationMutation> {
         agg_inverse(&SemioPresentationMutation::InsertMaster(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-master".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-master", "Vorlage einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

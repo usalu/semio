@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/renderer/native-preference-retained-document-v2.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "storageKey", "authority", "ownership", "publication", "cases", "integrityCases"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "storageKey": { "const": "semio.os.config" },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "serviceStepBytes", "configDocumentMaxBytes", "documentMaxWriteSteps", "storedFieldMaxBytes", "publishedEncoding", "relation"],
+      "properties": {
+        "kind": { "const": "retained-single-file-document" },
+        "serviceStepBytes": { "const": 16384 },
+        "configDocumentMaxBytes": { "const": 65536 },
+        "documentMaxWriteSteps": { "const": 4 },
+        "storedFieldMaxBytes": { "const": 4096 },
+        "publishedEncoding": { "const": "raw-single-value-file" },
+        "relation": { "const": "config-document-spans-four-bounded-write-steps" }
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tokenFields", "exactTokenRequired", "supersedingWriteInvalidatesPriorToken", "cancelledWriteMayPublish"],
+      "properties": {
+        "tokenFields": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            { "const": "owner" },
+            { "const": "generation" }
+          ],
+          "additionalItems": false
+        },
+        "exactTokenRequired": { "const": true },
+        "supersedingWriteInvalidatesPriorToken": { "const": true },
+        "cancelledWriteMayPublish": { "const": false }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["writeTarget", "maximumBytesPerStep", "publishAfter", "visibility", "readDuringWrite", "partialTemporaryRead"],
+      "properties": {
+        "writeTarget": { "const": "inactive-temporary-file" },
+        "maximumBytesPerStep": { "const": 16384 },
+        "publishAfter": { "const": "complete-length-validated" },
+        "visibility": { "const": "atomic-replace" },
+        "readDuringWrite": { "const": "last-committed-document" },
+        "partialTemporaryRead": { "const": "refuse" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "allOf": [
+        { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "exact-document-round-trip" } } } },
+        { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "one-byte-over-document" } } } },
+        { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "cancel-after-two-steps" } } } },
+        { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "supersede-after-one-step" } } } }
+      ],
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "bytes", "writeSteps", "write", "publish", "read"],
+            "properties": {
+              "id": { "const": "exact-document-round-trip" },
+              "bytes": { "const": 65536 },
+              "writeSteps": { "const": 4 },
+              "write": { "const": "admit" },
+              "publish": { "const": "admit" },
+              "read": { "const": "exact" }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "bytes", "writeSteps", "write", "publish", "read"],
+            "properties": {
+              "id": { "const": "one-byte-over-document" },
+              "bytes": { "const": 65537 },
+              "writeSteps": { "const": 0 },
+              "write": { "const": "refuse" },
+              "publish": { "const": "not-started" },
+              "read": { "const": "prior-exact" }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "bytes", "writeSteps", "write", "publish", "read"],
+            "properties": {
+              "id": { "const": "cancel-after-two-steps" },
+              "bytes": { "const": 65536 },
+              "writeSteps": { "const": 2 },
+              "write": { "const": "cancel" },
+              "publish": { "const": "refuse" },
+              "read": { "const": "prior-exact" }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "bytes", "writeSteps", "replacementWriteSteps", "write", "publish", "read"],
+            "properties": {
+              "id": { "const": "supersede-after-one-step" },
+              "bytes": { "const": 65536 },
+              "writeSteps": { "const": 1 },
+              "replacementWriteSteps": { "const": 4 },
+              "write": { "const": "supersede" },
+              "publish": { "const": "replacement-only" },
+              "read": { "const": "replacement-exact" }
+            }
+          }
+        ]
+      }
+    },
+    "integrityCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "allOf": [
+        { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "truncated-temporary-file" } } } },
+        { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "trailing-temporary-byte" } } } },
+        { "contains": { "type": "object", "required": ["id"], "properties": { "id": { "const": "non-owner-token" } } } }
+      ],
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "publish", "read"],
+            "properties": {
+              "id": { "const": "truncated-temporary-file" },
+              "publish": { "const": "refuse" },
+              "read": { "const": "prior-exact" }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "publish", "read"],
+            "properties": {
+              "id": { "const": "trailing-temporary-byte" },
+              "publish": { "const": "refuse" },
+              "read": { "const": "prior-exact" }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "publish", "read"],
+            "properties": {
+              "id": { "const": "non-owner-token" },
+              "publish": { "const": "refuse" },
+              "read": { "const": "prior-exact" }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -21,8 +21,8 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ReorderVariableA
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move variable action #{} to #{}", self.from, self.to)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move variable action #{} to #{}", self.from, self.to), &format!("Variablenaktion #{} nach #{} verschieben", self.from, self.to))
     }
     fn target(&self) -> Vec<String> {
         vec![self.from.to_string()]

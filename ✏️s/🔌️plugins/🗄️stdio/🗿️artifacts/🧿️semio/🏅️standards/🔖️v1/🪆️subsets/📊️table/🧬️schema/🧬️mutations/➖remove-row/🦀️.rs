@@ -19,8 +19,8 @@ impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for RemoveRo
     fn inverse(&self, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove row #{}", self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove row #{}", self.index), &format!("Zeile #{} entfernen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

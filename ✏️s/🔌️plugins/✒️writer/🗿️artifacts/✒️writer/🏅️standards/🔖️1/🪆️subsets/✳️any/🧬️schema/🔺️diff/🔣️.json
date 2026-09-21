@@ -4,7 +4,7 @@
   "title": "WriterDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": ["artifact", "schema", "id", "languageId", "uri", "document"],
+  "required": ["artifact", "schema", "id", "languageId", "uri", "text", "document"],
   "properties": {
     "artifact": {
       "anyOf": [
@@ -17,6 +17,7 @@
     "id": { "type": ["string", "null"], "x-semio-state": "artifact" },
     "languageId": { "type": ["string", "null"], "x-semio-state": "artifact" },
     "uri": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "text": { "type": ["string", "null"], "x-semio-state": "artifact" },
     "document": {
       "anyOf": [
         { "type": "null" },

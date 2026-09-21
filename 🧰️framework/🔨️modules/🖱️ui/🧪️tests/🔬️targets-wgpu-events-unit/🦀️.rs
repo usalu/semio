@@ -170,7 +170,7 @@ fn capture_routes_move_and_up_to_the_captured_node_regardless_of_pointer_positio
     let mut router = EventRouter::new("main");
 
     router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 50.0, y: 50.0, button: PointerButton::Primary, modifiers: Default::default() });
-    assert_eq!(router.capture.target.map(|(id, _)| id), Some(a));
+    assert_eq!(router.capture.target.map(|(_, id, _)| id), Some(a));
 
     // pointer moved far outside `a`'s bounds and into `b`'s — capture must still target `a`.
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 50.0, modifiers: Default::default() });
@@ -178,6 +178,23 @@ fn capture_routes_move_and_up_to_the_captured_node_regardless_of_pointer_positio
 
     router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 150.0, y: 50.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(router.capture.target, None, "capture releases on PointerUp");
+}
+
+#[test]
+fn foreign_pointer_terminal_cannot_release_retained_capture() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let pressed = leaf(&mut tree, Some(root), 1, separator_ui(), (0.0, 0.0, 100.0, 100.0));
+    let mut router = EventRouter::new("main");
+
+    router.dispatch_pointer(&mut tree, root, 77, &UiEvent::PointerDown { x: 50.0, y: 50.0, button: PointerButton::Primary, modifiers: Default::default() });
+    assert_eq!(router.capture.target, Some((77, pressed, CaptureKind::Press)));
+    assert!(router.dispatch_pointer(&mut tree, root, 78, &UiEvent::PointerCancel).is_empty());
+    assert_eq!(router.capture.target, Some((77, pressed, CaptureKind::Press)));
+    assert!(router.dispatch_pointer(&mut tree, root, 78, &UiEvent::PointerUp { x: 50.0, y: 50.0, button: PointerButton::Primary, modifiers: Default::default() }).is_empty());
+    assert_eq!(router.capture.target, Some((77, pressed, CaptureKind::Press)));
+    router.dispatch_pointer(&mut tree, root, 77, &UiEvent::PointerCancel);
+    assert_eq!(router.capture.target, None);
 }
 
 #[test]
@@ -809,6 +826,7 @@ fn changing_tree_drag_driver_cancels_an_in_flight_surface_drag() {
 /// it's private to the `scene_slots` submodule).
 fn component_scene_ui(surface_id: &str, kind: SurfaceKind) -> UiNode {
     UiNode::ComponentScene(UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: "ctrl".into(),
         component_kind: kind,
@@ -1267,7 +1285,7 @@ fn an_up_flow_tree_section_routes_its_bottom_header_through_the_event_router() {
     router.set_flow(UiFlow { inline: FlowInline::Ltr, block: ui_contract::FlowBlock::Up });
 
     router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 100.0, y: 88.0, button: PointerButton::Primary, modifiers: EventModifiers::default() });
-    assert_eq!(router.capture.target.map(|(id, _)| id), Some(disclosure), "the painted bottom header owns the press");
+    assert_eq!(router.capture.target.map(|(_, id, _)| id), Some(disclosure), "the painted bottom header owns the press");
     router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 100.0, y: 88.0, button: PointerButton::Primary, modifiers: EventModifiers::default() });
     assert_eq!(tree.disclosure_open(disclosure), Some(false), "release over the same bottom band closes the disclosure");
 }

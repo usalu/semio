@@ -34,8 +34,8 @@ impl MutationKind<GisMapSnapshot, GisMapMutation> for ReorderPositions {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Reorder position \"{}\" to {}", self.id, self.to_index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Reorder position \"{}\" to {}", self.id, self.to_index), &format!("Position \"{}\" zu {} umordnen", self.id, self.to_index))
     }
 }
 //#endregion 🔹Payload

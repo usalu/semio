@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for InsertMediaAnnotation {
         vec![PdfEMutation::RemoveMediaAnnotation(RemoveMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone() })]
     }
 
-    fn label(&self) -> String {
-        format!("Insert {} media annotation", self.subtype)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Insert {} media annotation", self.subtype), &format!("{} Medienanmerkung einfügen", self.subtype))
     }
 
     fn target(&self) -> Vec<String> {

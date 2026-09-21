@@ -19,8 +19,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for RenameManufa
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename manufacturer to \"{}\"", self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename manufacturer to \"{}\"", self.new_name), &format!("Hersteller in \"{}\" umbenennen", self.new_name))
     }
 }
 //#endregion 🔖️Payload

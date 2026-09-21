@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeBridgeVRdK
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change bridge design shear resistance [kN] to {}", self.new_bridge_v_rd_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change bridge design shear resistance [kN] to {}", self.new_bridge_v_rd_kn), &format!("Brückenbemessungsschubwiderstand [kN] auf {} ändern", self.new_bridge_v_rd_kn))
     }
 }
 //#endregion 🔖️ChangeBridgeVRdKn

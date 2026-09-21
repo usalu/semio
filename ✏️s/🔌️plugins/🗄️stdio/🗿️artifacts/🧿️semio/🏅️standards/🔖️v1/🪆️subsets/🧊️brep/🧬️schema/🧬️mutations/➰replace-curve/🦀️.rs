@@ -23,8 +23,8 @@ impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for ReplaceCur
     fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace curve on edge \"{}\"", self.edge_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace curve on edge \"{}\"", self.edge_id), &format!("Kurve auf Kante \"{}\" ersetzen", self.edge_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.edge_id.clone()]

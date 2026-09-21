@@ -24,8 +24,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Rena
         crate::standards::v1::subsets::any::schema::mutations::rename_generation::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Rename generation \"{}\" to \"{}\"", self.id, self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename generation \"{}\" to \"{}\"", self.id, self.new_name), &format!("Erzeugung \"{}\" in \"{}\" umbenennen", self.id, self.new_name))
     }
 
     fn target(&self) -> Vec<String> {

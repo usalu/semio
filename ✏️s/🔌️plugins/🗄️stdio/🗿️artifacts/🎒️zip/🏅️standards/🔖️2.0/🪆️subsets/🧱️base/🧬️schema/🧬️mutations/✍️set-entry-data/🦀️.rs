@@ -24,8 +24,8 @@ impl protocol::MutationKind<ZipSnapshot, ZipMutation> for SetEntryData {
     fn inverse(&self, base: &ZipSnapshot) -> Vec<ZipMutation> {
         agg_inverse(&ZipMutation::SetEntryData(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-entry-data".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-entry-data", "Eintragdaten setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

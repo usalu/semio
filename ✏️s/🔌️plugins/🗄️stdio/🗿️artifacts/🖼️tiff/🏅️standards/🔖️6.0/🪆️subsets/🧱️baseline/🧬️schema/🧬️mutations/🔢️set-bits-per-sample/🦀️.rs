@@ -20,8 +20,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetBitsPerSa
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {
         agg_inverse(&TiffBaselineMutation::SetBitsPerSample(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-bits-per-sample".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-bits-per-sample", "Bits pro Probe setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

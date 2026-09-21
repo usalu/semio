@@ -21,8 +21,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveShape {
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
         agg_inverse(&PptxMutation::RemoveShape(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-shape".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-shape", "Form entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

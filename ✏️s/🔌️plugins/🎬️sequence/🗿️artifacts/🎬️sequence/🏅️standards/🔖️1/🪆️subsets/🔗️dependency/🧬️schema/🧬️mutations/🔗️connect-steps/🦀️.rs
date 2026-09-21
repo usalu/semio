@@ -32,8 +32,8 @@ impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for ConnectSteps
     fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Connect step \"{}\" to \"{}\"", self.from, self.to)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Connect step \"{}\" to \"{}\"", self.from, self.to), &format!("Schritt \"{}\" mit \"{}\" verbinden", self.from, self.to))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetProperties {
         match base.properties.iter().find(|item| item.name == self.properties.name) { Some(previous) => vec![PdfMutation::SetProperties(SetProperties { properties: previous.clone() })], None => vec![PdfMutation::RemoveProperties(super::remove_properties::RemoveProperties { name: self.properties.name.clone() })] }
     }
 
-    fn label(&self) -> String {
-        format!("Set properties {}", self.properties.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set properties {}", self.properties.name), &format!("Eigenschaften {} setzen", self.properties.name))
     }
 
     fn target(&self) -> Vec<String> {

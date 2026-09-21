@@ -9,6 +9,7 @@ fn text(value: &str) -> UiNode {
 
 fn scene(surface_id: &str) -> UiNode {
     UiNode::ComponentScene(UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: "ctrl".into(),
         component_kind: SurfaceKind::World3d,

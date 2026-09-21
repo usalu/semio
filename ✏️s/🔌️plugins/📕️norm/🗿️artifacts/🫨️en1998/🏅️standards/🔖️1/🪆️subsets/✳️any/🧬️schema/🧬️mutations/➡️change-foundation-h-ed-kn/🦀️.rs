@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeFoundation
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change foundation design horizontal force H_Ed [kN] to {}", self.new_foundation_h_ed_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change foundation design horizontal force H_Ed [kN] to {}", self.new_foundation_h_ed_kn), &format!("Gründungsbemessungshorizontalkrafth_Ed [kN] auf {} ändern", self.new_foundation_h_ed_kn))
     }
 }
 //#endregion 🔖️ChangeFoundationHEdKn

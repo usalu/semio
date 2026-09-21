@@ -3610,25 +3610,50 @@ fn isolate_surface_reconcile_registries() {
     drain_surface_reconcile_registry_until_idle();
 }
 
+/// ♻️ Rebuilds the handback free list from the slots that are genuinely unowned, and returns every
+/// retained state it reclaimed so the drop happens outside the registry lock.
+///
+/// A RESERVED slot is never reclaimed. The registry is process-wide while
+/// [`SurfaceReconcileRegistryTestGuard`]'s mutex only serialises the laws that take the guard, so a
+/// blanket reset frees slots that a law running beside this one still holds: that owner's own release
+/// then finds the free list already full and reports `surface handback free list exhausted` — an
+/// accounting overflow, reported as if the pool had run dry, in whichever law happened to release
+/// next. Reclaiming by state instead of by position keeps one owner's isolation from corrupting
+/// another's, and the retirement ring is rebuilt from the entries whose slot survived rather than
+/// cleared, so a live owner's queued retirement is not silently dropped either.
 fn reclaim_orphaned_handback_slots() {
     let mut orphaned = Vec::new();
     {
         let mut registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut reclaimed = [false; SURFACE_RECONCILE_HANDBACK_SLOTS];
         let mut free_len = 0;
-        for index in 0..SURFACE_RECONCILE_HANDBACK_SLOTS {
-            let slot = &mut registry.slots[index];
-            if let Some(state) = slot.state.take() {
+        for index in (0..SURFACE_RECONCILE_HANDBACK_SLOTS).rev() {
+            if registry.slots[index].reserved {
+                continue;
+            }
+            if let Some(state) = registry.slots[index].state.take() {
                 orphaned.push(state);
             }
-            let epoch = slot.epoch;
-            *slot = SurfaceReconcileHandbackSlot { epoch, ..SurfaceReconcileHandbackSlot::default() };
-            registry.free[free_len] = SURFACE_RECONCILE_HANDBACK_SLOTS - 1 - index;
+            let epoch = registry.slots[index].epoch;
+            registry.slots[index] = SurfaceReconcileHandbackSlot { epoch, ..SurfaceReconcileHandbackSlot::default() };
+            registry.free[free_len] = index;
+            reclaimed[index] = true;
             free_len += 1;
         }
         registry.free_len = free_len;
-        registry.retirement = [usize::MAX; SURFACE_RECONCILE_HANDBACK_SLOTS];
+        let mut retirement = [usize::MAX; SURFACE_RECONCILE_HANDBACK_SLOTS];
+        let mut retirement_len = 0;
+        for offset in 0..registry.retirement_len {
+            let slot = registry.retirement[(registry.retirement_head + offset) % SURFACE_RECONCILE_HANDBACK_SLOTS];
+            if slot >= SURFACE_RECONCILE_HANDBACK_SLOTS || reclaimed[slot] {
+                continue;
+            }
+            retirement[retirement_len] = slot;
+            retirement_len += 1;
+        }
+        registry.retirement = retirement;
         registry.retirement_head = 0;
-        registry.retirement_len = 0;
+        registry.retirement_len = retirement_len;
     }
     drop(orphaned);
 }

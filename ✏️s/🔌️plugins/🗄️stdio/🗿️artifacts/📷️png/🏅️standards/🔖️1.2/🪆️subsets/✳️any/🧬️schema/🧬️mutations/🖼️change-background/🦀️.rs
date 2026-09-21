@@ -33,8 +33,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeBackgroundMutati
         }
         vec![PngMutation::ChangeBackground(ChangeBackgroundMutation { bkgd: base.bkgd.clone() })]
     }
-    fn label(&self) -> String {
-        "change background".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("change background", "Hintergrund ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-background".into()]

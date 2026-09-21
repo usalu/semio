@@ -20,10 +20,17 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for SetActiveShot {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&{
         match &self.shot_id {
             Some(id) => format!("Set active shot to \"{id}\""),
             None => "Clear active shot".into(),
         }
+        }, &{
+        match &self.shot_id {
+            Some(id) => format!("aktive Aufnahme auf \"{id}\" setzen"),
+            None => "aktive Aufnahme leeren".into(),
+        }
+        })
     }
 }

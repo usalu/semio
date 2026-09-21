@@ -83,7 +83,7 @@ import { parseInferenceJobReconcileRequestV1, parseInferenceJobReconcileResultV1
 import { SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, SPACE_ARTIFACT_CREATION_MAX_BYTES, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1, sealSpaceArtifactCreateV1, type SpaceArtifactCreationCatalogV1 as HubSpaceArtifactCreationCatalogV1, type SpaceArtifactCreationStatusV1 as HubSpaceArtifactCreationStatusV1 } from "../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { browserActorChildCapacity, reserveBrowserActorChild, type BrowserActorChildValue } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
 import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "../../🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
-import { BROWSER_ACTOR_CHILD_LIMITS, measureChildValue } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import { BROWSER_ACTOR_CHILD_LIMITS, boundChildText, measureChildValue } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
 import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseColdDocumentPairLifetime, parseWitColdPairIngressStatus, type ColdDocumentPairFrontier, type ColdPairIngressStatus } from "../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
 import { createShardCommandIngressPages, type ShardCommandIngressPage } from "../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
@@ -132,9 +132,12 @@ import {
   sealGisMapInferenceJobRequestV1,
 } from "../../📇️directory/🧬️schema/🟦️.ts";
 import {
+  CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES,
+  CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1,
   DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
   DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,
   DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1,
+  decodeCanonicalCheckpointPairV1,
   directoryCommandErrorIsTransient,
   directoryAdministrationCommandAllowedV1,
   directoryCommandRequestJson,
@@ -461,6 +464,7 @@ const BLOB_FETCH_TIMEOUT_MS = 15_000;
 const PENDING_MUTATIONS_QUEUE_LIMIT = 2_000;
 const ARTIFACT_BOOTSTRAP_DEADLINE_MS = 15_000;
 const ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES = 4_096;
+const EXECUTION_TARGET_DIAGNOSTIC_MAX_BYTES = 1_024;
 // 🔁️ HUB_RECONNECT_MIN_MS/MAX_MS moved to `🟦️.ts`'s `🔖️HubBinding` region (imported above)
 // — single source of truth shared with `DirectoryClient.stream`'s reconnect loop.
 /** ♻️ Coordinator follow-up (finding 4b): how long a hub OR SSE connection must stay open before a
@@ -1136,12 +1140,17 @@ class DocumentExecutionTargetLease {
       assertExecutionTargetRead(control);
       if ((await executionTargetSha256Hex(source)) !== actor.sha256) throw new Error("document browser actor: body integrity");
       assertExecutionTargetRead(control);
-      await child.load(source.buffer as ArrayBuffer);
+      report({ stage: "actor-transfer", completedBytes: 0, totalBytes: actor.byteLength });
+      await child.load(source.buffer as ArrayBuffer, (progress) => report({ stage: `actor-${progress.stage}`, completedBytes: progress.completedBytes, totalBytes: progress.totalBytes }));
       assertExecutionTargetRead(control);
+      report({ stage: "actor-describe", completedBytes: 0, totalBytes: 1 });
       result = await child.invoke(["describe", "describe"], []);
+      report({ stage: "actor-describe", completedBytes: 1, totalBytes: 1 });
       assertExecutionTargetRead(control);
       if (!(result instanceof Uint8Array) || !(result.buffer instanceof ArrayBuffer) || result.byteOffset !== 0 || result.byteLength !== result.buffer.byteLength || !this.#descriptor) throw new Error("document browser actor: describe shape");
+      report({ stage: "actor-verify", completedBytes: 0, totalBytes: 1 });
       verifyBrowserActorDescribeV1(result, this.#descriptor, { decode: decodePackValue, encode: encodePackValue });
+      report({ stage: "actor-verify", completedBytes: 1, totalBytes: 1 });
       assertExecutionTargetRead(control);
     } finally {
       if (source?.byteLength) source.fill(0);
@@ -1214,9 +1223,9 @@ function browserExecutionTargetAssetRequest(
  * a worker scope posts, and a harness without one still sees the exact bounded payload. */
 let executionTargetStatusObserver: ((status: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>) => void) | null = null;
 
-function emitExecutionTargetStatus(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>, code: DocumentExecutionTargetStatusCodeV1, progress?: DocumentExecutionTargetProgressV1): void {
+function emitExecutionTargetStatus(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>, code: DocumentExecutionTargetStatusCodeV1, progress?: DocumentExecutionTargetProgressV1, diagnostic?: string): void {
   const scope = { spaceId: binding.spaceId, documentId: state.config.documentId };
-  const status: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }> = { kind: "execution-target-status", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, spaceId: binding.spaceId, scope, code, ...(progress ? { progress } : {}) };
+  const status: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }> = { kind: "execution-target-status", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, spaceId: binding.spaceId, scope, code, ...(progress ? { progress } : {}), ...(diagnostic ? { diagnostic: boundChildText(diagnostic, EXECUTION_TARGET_DIAGNOSTIC_MAX_BYTES) } : {}) };
   executionTargetStatusObserver?.(status);
   post(status);
 }
@@ -1516,6 +1525,15 @@ function browserActorCloseReceipt(value: BrowserActorChildValue, request: ActorI
   const receipt: ActorInstanceLifecycleReceipt = { kind: tagged.tag, lifetime: parseColdDocumentPairLifetime(body.lifetime), requestSequence: Number(sequence), closeGeneration };
   if (!actorInstanceCloseReceiptMatches(request, accepted, receipt)) throw new Error("document browser actor: close receipt mismatch");
   return receipt;
+}
+
+/** 🩻️ Names what a cold-pair turn actually answered. A page receipt that is merely refused as
+ * "invalid" hides the difference between a guest that faulted, one that asked for backpressure and
+ * one that answered for a different page — the three things an operator needs to tell apart. */
+function coldPairIngressStatusDiagnostic(status: ColdPairIngressStatus): string {
+  if (status.kind === "idle" || status.kind === "applied") return status.kind;
+  if (status.kind === "fault") return `fault page ${status.cursor.pageIndex + 1}/${status.cursor.pageCount}: ${boundChildText(new TextDecoder().decode(status.fault), EXECUTION_TARGET_DIAGNOSTIC_MAX_BYTES)}`;
+  return `${status.kind} page ${status.cursor.pageIndex + 1}/${status.cursor.pageCount} generation ${status.cursor.transferGeneration}`;
 }
 
 function browserActorColdStatus(value: BrowserActorChildValue, allowLifecycleReceipt = false): ColdPairIngressStatus {
@@ -2160,16 +2178,21 @@ class DocumentBrowserActorReservation {
       const child = this.child,
         binding = hubBinding(this.state.config);
       if (!child || !binding) throw new Error("document browser actor: unavailable child");
+      const stage = (name: DocumentExecutionTargetProgressV1["stage"], completedBytes = 0): void => emitExecutionTargetStatus(this.state, binding, "verifying", { stage: name, completedBytes, totalBytes: 1 });
       await this.lease.activateBrowserActor(child, this.abort.signal, assertCurrent, (progress) => {
         assertCurrent();
         emitExecutionTargetStatus(this.state, binding, "verifying", progress);
       });
       assertCurrent();
+      stage("actor-open");
       this.lifetime = await this.openGuest(child, assertCurrent);
       assertCurrent();
+      stage("actor-cold");
       const owner = this.state.verifiedColdPair;
       if (owner) await this.transferColdPair(owner, child, binding, assertCurrent);
+      stage("actor-view");
       this.refreshHostView();
+      stage("actor-ready", 1);
     })();
     return this.activation;
   }
@@ -2274,7 +2297,8 @@ class DocumentBrowserActorReservation {
             await this.renderSurface(child, assertCurrent);
           } else {
             const expected = { lifetime, transferGeneration: owner.transferGeneration, pageIndex, pageCount: owner.pageCount };
-            if (status.kind !== "pageAccepted" || !coldDocumentPairCursorEquals(status.cursor, expected)) throw new Error("document browser actor: invalid page receipt");
+            if (status.kind !== "pageAccepted" || !coldDocumentPairCursorEquals(status.cursor, expected))
+              throw new Error(`document browser actor: invalid page receipt (page ${pageIndex + 1}/${owner.pageCount} answered ${coldPairIngressStatusDiagnostic(status)})`);
             if (this.captureUiPatch(result, lifetime) !== null) throw new Error("document browser actor: patch before cold pair applied");
           }
         } finally {
@@ -2600,13 +2624,26 @@ async function activateDocumentBrowserActorAfterSession(state: ArtifactState, so
     lease.assertBrowserActorDescribeCapacity();
     owner = await reserveDocumentBrowserActorChild(state);
     if (!owner) throw new Error("document browser actor: reservation unavailable");
+    // 🪢️ The cold pair is seeded HERE, between the reservation and the activation, because
+    // `installArtifactBootstrap` requires a live reservation and the hub's `Session` frame — the one
+    // that admits this reservation — arrives strictly AFTER the `Welcome` that would have carried a
+    // pair. Installing before `activate()` also means the transfer is the activation's own cold
+    // step, not a second pass over a running guest.
+    const tailFrontier = state.requiredTailFrontier,
+      tailResumeToken = state.pendingResumeToken;
+    if (await seedColdPairFromCanonicalCheckpoint(state, tailResumeToken ?? state.resumeToken ?? "") && tailFrontier !== null) {
+      state.pendingResumeToken = tailResumeToken;
+      state.requiredTailFrontier = tailFrontier;
+      finishCatchupIfReady(state);
+    }
     await owner.activate(socket);
-  } catch {
+  } catch (error) {
+    const diagnostic = error instanceof Error ? error.message : String(error);
     owner?.close();
     const current = state.socket === socket && state.executionTargetOpen === attempt && (state.executionTargetLease === lease || state.executionTargetLease === null);
     if (state.executionTargetLease === lease) state.executionTargetLease = null;
     lease.drop();
-    if (current && !state.closed) emitExecutionTargetStatus(state, binding, state.docAbort.signal.aborted ? "cancelled" : "integrity-failed");
+    if (current && !state.closed) emitExecutionTargetStatus(state, binding, state.docAbort.signal.aborted ? "cancelled" : "integrity-failed", undefined, diagnostic);
     socket.close(1008, "browser actor activation failed");
   }
 }
@@ -3873,8 +3910,16 @@ function validateArtifactBootstrapIdentity(state: ArtifactState, bootstrap: Wire
   if (bootstrap.artifact_schema !== state.config.schema) throw new Error("artifact bootstrap schema mismatch");
   if (bootstrap.baseline_frontier.document_id !== state.config.documentId || bootstrap.required_tail_frontier.document_id !== state.config.documentId || serverFrontier.document_id !== state.config.documentId)
     throw new Error("artifact bootstrap document mismatch");
+  // 🧬️ The pack schema hash's AUTHORITY is the verified open plan, mirrored onto the execution-target
+  // lease; `ArtifactActorConfig.packSchemaHash` is the shell's OPTIONAL cross-check, supplied only by
+  // the wasm renderer's `document_pack_schema_hash` export and absent in every React host — exactly
+  // the rule `documentOpenPlanAuthority` already applies to the same pair of values. Demanding the
+  // optional one here made a React host refuse every artifact bootstrap it could ever be offered.
   const packSchemaHash = state.config.packSchemaHash;
-  if (!packSchemaHash || packSchemaHash.length !== 32 || packSchemaHash.every((byte) => byte === 0) || !equalByteArrays(bootstrap.pack_schema_hash, packSchemaHash)) throw new Error("artifact bootstrap pack schema mismatch");
+  const configuredPackSchemaHash = packSchemaHash !== undefined && packSchemaHash !== null && packSchemaHash.some((byte) => byte !== 0);
+  if (bootstrap.pack_schema_hash.length !== 32 || bootstrap.pack_schema_hash.every((byte) => byte === 0)) throw new Error("artifact bootstrap pack schema mismatch");
+  if (configuredPackSchemaHash && (packSchemaHash.length !== 32 || !equalByteArrays(bootstrap.pack_schema_hash, packSchemaHash))) throw new Error("artifact bootstrap pack schema mismatch");
+  if (!configuredPackSchemaHash && state.executionTargetLease === null) throw new Error("artifact bootstrap pack schema unauthenticated");
   if (!equalFrontiers(bootstrap.required_tail_frontier, serverFrontier)) throw new Error("artifact bootstrap required tail does not match welcome frontier");
   const lease = state.executionTargetLease;
   if (lease) {
@@ -3992,6 +4037,80 @@ async function installArtifactBootstrap(state: ArtifactState, owner: DocumentArt
     pair?.pack.fill(0);
     pair?.spr.fill(0);
   }
+}
+
+const CANONICAL_CHECKPOINT_PAIR_REQUEST_TIMEOUT_MS = 30_000;
+
+/** 🪢️ Fetches, verifies and installs the document's canonical checkpoint pair.
+ *
+ * A hub's document socket NEVER seeds an artifact client: its `Welcome.bootstrap` is computed by the
+ * database replay, whose only outcomes are `None`, `Tail` and the database-private `Snapshot` this
+ * client refuses by contract — `Bootstrap.ArtifactBootstrap` has no producer on any hub. The pair a
+ * cold client needs lives behind the hub's canonical-checkpoint-pair route, the same authenticated,
+ * digest-bound transport the remote MCP workspace mounts a document with, and the open plan already
+ * handed this client the checkpoint identity to verify it against.
+ *
+ * The fetched pair is then driven through the EXISTING inline-bootstrap path, so every check that a
+ * socket-delivered pair would face still runs: {@link validateArtifactBootstrapIdentity} against the
+ * lease checkpoint, the assembler's own digest verification, the folder mirror, the cold-pair mint
+ * and `installColdPair`. `required_tail_frontier` is the pair's own baseline rather than the
+ * welcome's frontier, because a hub stamps its INTERNAL database key into every frontier it derives
+ * (`db_artifact_id`), which this client refuses as a document mismatch. */
+async function seedColdPairFromCanonicalCheckpoint(state: ArtifactState, resumeToken: string): Promise<boolean> {
+  const binding = hubBinding(state.config);
+  const lease = state.executionTargetLease;
+  if (binding === null || lease === null || !lease.live) return false;
+  const fields = lease.fields();
+  if (fields.browserActor.kind !== "closed-browser-actor" || state.currentPack !== null || state.verifiedColdPair !== null) return false;
+  const checkpoint = fields.checkpoint;
+  const path = `/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/active-checkpoint/pair`;
+  if (!/^\/spaces\/[^/?#]+\/documents\/[^/?#]+\/active-checkpoint\/pair$/u.test(path)) throw new Error("canonical checkpoint pair: operation denied");
+  const assertCurrent = (): void => {
+    if (state.executionTargetLease !== lease || !lease.live) throw new Error("canonical checkpoint pair: lease retired");
+  };
+  emitExecutionTargetStatus(state, binding, "verifying", { stage: "canonical-pair", completedBytes: 0, totalBytes: 0 });
+  const response = await hubSessionFetch(
+    path,
+    { method: "GET", headers: { accept: CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1 } },
+    { timeoutMs: CANONICAL_CHECKPOINT_PAIR_REQUEST_TIMEOUT_MS, signal: lease.retirement, admit: () => state.executionTargetLease === lease && lease.live },
+  );
+  if (!response.ok) throw new Error(`canonical checkpoint pair: unavailable (${response.status})`);
+  if (response.headers.get("content-type") !== CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1) throw new Error("canonical checkpoint pair: media type mismatch");
+  const control: ExecutionTargetReadControl = { signal: lease.retirement, deadlineAtMs: Date.now() + CANONICAL_CHECKPOINT_PAIR_REQUEST_TIMEOUT_MS, assertCurrent };
+  const body = await readBoundedExecutionTargetBody(response, null, CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES, control, (completedBytes, totalBytes) =>
+    emitExecutionTargetStatus(state, binding, "verifying", { stage: "canonical-pair", completedBytes, totalBytes }),
+  );
+  assertCurrent();
+  const pair = decodeCanonicalCheckpointPairV1(body);
+  if (pair.scope.spaceId !== binding.spaceId || pair.scope.documentId !== state.config.documentId) throw new Error("canonical checkpoint pair: scope mismatch");
+  if (executionTargetHex(Uint8Array.from(pair.activeCheckpointId)) !== checkpoint.checkpointId) throw new Error("canonical checkpoint pair: checkpoint mismatch");
+  const frontier: WireFrontierSummary = {
+    document_id: pair.baselineFrontier.documentId,
+    head_edit_ordinal: pair.baselineFrontier.headEditOrdinal,
+    head_edit_id: pair.baselineFrontier.headEditId,
+    last_commit_seq: pair.baselineFrontier.lastCommitSeq,
+    chain_hash: pair.baselineFrontier.chainHash,
+  };
+  const bootstrap: WireArtifactBootstrap = {
+    format_version: 1,
+    descriptor_hash: pair.descriptorDigestV1,
+    artifact_schema: state.config.schema,
+    artifact_kind: fields.artifact.kind,
+    pack_schema_hash: Array.from({ length: 32 }, (_unused, index) => Number.parseInt(fields.artifact.packSchemaHash.slice(index * 2, index * 2 + 2), 16)),
+    baseline_frontier: frontier,
+    pack_hash: pair.pack.sha256,
+    spr_hash: pair.spr.sha256,
+    pack_length: pair.pack.byteLength,
+    spr_length: pair.spr.byteLength,
+    chunk_count: 0,
+    aggregate_hash: pair.aggregateSha256,
+    required_tail_frontier: frontier,
+    inline: { pack: Array.from(pair.packBytes), spr: Array.from(pair.sprBytes) },
+  };
+  pair.packBytes.fill(0);
+  pair.sprBytes.fill(0);
+  await startArtifactBootstrap(state, bootstrap, resumeToken, frontier);
+  return true;
 }
 
 async function startArtifactBootstrap(state: ArtifactState, bootstrap: WireArtifactBootstrap, resumeToken: string, serverFrontier: WireFrontierSummary): Promise<void> {

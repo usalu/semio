@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPageUserUnit {
         base.pages.get(self.index).map(|page| PdfMutation::SetPageUserUnit(SetPageUserUnit { index: self.index, user_unit: page.user_unit })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Set page {} user unit", self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set page {} user unit", self.index), &format!("Seite {} Benutzereinheit setzen", self.index))
     }
 
     fn target(&self) -> Vec<String> {

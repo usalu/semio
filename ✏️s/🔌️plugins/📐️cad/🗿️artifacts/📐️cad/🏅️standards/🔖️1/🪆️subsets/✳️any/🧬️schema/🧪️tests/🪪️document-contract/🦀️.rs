@@ -23,8 +23,8 @@ fn cad_document_contract_round_trips_exact_child_identities() {
         let mut input = fixture["document"].clone();
         input[row["field"].as_str().unwrap()] = row["value"].clone();
         let text = input.to_string();
-        assert!(dsl::json::from_json_str::<CadArtifact>(&text).is_err());
-        assert!(dsl::json::from_json_str::<CadSnapshot>(&text).is_err());
+        assert!(dsl::json::from_json_str::<CadArtifact>(&text).is_err(), "CadArtifact must reject the document field {}", row["field"]);
+        assert!(dsl::json::from_json_str::<CadSnapshot>(&text).is_err(), "CadSnapshot must reject the document field {}", row["field"]);
     }
     for row in fixture["invalidDiffs"].as_array().unwrap() {
         assert!(dsl::json::from_json_str::<CadDiff>(&row.to_string()).is_err());

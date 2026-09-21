@@ -24,8 +24,8 @@ impl protocol::MutationKind<LowpolySnapshot, LowpolyMutation> for RotateObject {
     fn inverse(&self, base: &LowpolySnapshot) -> Vec<LowpolyMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rotate object \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rotate object \"{}\"", self.id), &format!("Objekt \"{}\" drehen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

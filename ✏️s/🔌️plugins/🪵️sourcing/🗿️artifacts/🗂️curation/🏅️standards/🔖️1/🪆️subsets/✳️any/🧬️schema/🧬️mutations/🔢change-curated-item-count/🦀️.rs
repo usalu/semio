@@ -29,8 +29,8 @@ impl protocol::MutationKind<CurationSnapshot, SourcingMutation> for ChangeCurate
     fn inverse(&self, base: &CurationSnapshot) -> Vec<SourcingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Set curated count of \"{}\" to {}", self.object_id, self.new_count)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set curated count of \"{}\" to {}", self.object_id, self.new_count), &format!("kuratierte Anzahl von \"{}\" auf {} setzen", self.object_id, self.new_count))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

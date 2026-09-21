@@ -22,8 +22,8 @@ impl protocol::MutationKind<JobTestSnapshot, JobTestOp> for AddValue {
             None => vec![JobTestOp::AddValue(Self { delta: 1 }), JobTestOp::AddValue(Self { delta: i32::MAX })],
         }
     }
-    fn label(&self) -> String {
-        format!("Add {} to value", self.delta)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
     }
 }
 
@@ -32,7 +32,7 @@ impl protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp> for AddValue {
     fn plan(&self, _: &JobTestSnapshot, planner: &mut protocol::Planner<JobTestSnapshot, JobTestOp>) -> Result<(), protocol::PlanError> {
         planner.call(JobTestOp::AddValue(self.clone()))
     }
-    fn label(&self) -> String {
+    fn label(&self) -> protocol::LocalizedLabel {
         <Self as protocol::MutationKind<JobTestSnapshot, JobTestOp>>::label(self)
     }
 }

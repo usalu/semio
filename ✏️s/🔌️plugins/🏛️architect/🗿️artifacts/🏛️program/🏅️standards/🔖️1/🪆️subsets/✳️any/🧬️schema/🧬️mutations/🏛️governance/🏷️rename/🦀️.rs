@@ -23,7 +23,7 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for RenameGovernance {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename governance framework to \"{}\"", self.new_framework)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename governance framework to \"{}\"", self.new_framework), &format!("Steuerungsframework in \"{}\" umbenennen", self.new_framework))
     }
 }

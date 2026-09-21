@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change surface {} multiplier to {}", self.id.0, self.new_multiplier)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change surface {} multiplier to {}", self.id.0, self.new_multiplier), &format!("Oberfläche {} Multiplikator auf {} ändern", self.id.0, self.new_multiplier))
     }
 
     fn target(&self) -> Vec<String> {

@@ -4537,22 +4537,25 @@ describe("framework renderer hosts", () => {
     console.log("[DEBUG] Node graph typed viewport action matches Ajv for 8 shared neutral cases");
   });
 
-  it("encodes node graph selection and hover with framework interaction actions", () => {
-    expect(nodeGraphSelectionActionArgs({ nodeIds: ["node-a"], edgeIds: ["edge-a"], handleIds: ["handle-a"] })).toEqual({
+  it("encodes node graph selection and hover with its scene-owned framework interaction address", () => {
+    const domain = { id: "graph", nodeTargetPrefix: "document.node.", edgeTargetPrefix: "document.edge.", handleTargetPrefix: "document.handle." };
+    expect(nodeGraphSelectionActionArgs(domain, { nodeIds: ["node-a"], edgeIds: ["edge-a"], handleIds: ["handle-a"] })).toEqual({
       domainId: "graph",
       targets: JSON.stringify([
-        { granularity: "node", id: "node-a" },
-        { granularity: "edge", id: "edge-a" },
-        { granularity: "handle", id: "handle-a" },
+        { granularity: "node", id: "document.node.node-a" },
+        { granularity: "edge", id: "document.edge.edge-a" },
+        { granularity: "handle", id: "document.handle.handle-a" },
       ]),
       merge: "replace",
       method: "pick",
     });
-    expect(nodeGraphHoverActionArgs("node-a")).toEqual({
+    expect(nodeGraphHoverActionArgs(domain, "node-a")).toEqual({
       domainId: "graph",
       channel: "pointer",
-      targets: JSON.stringify([{ granularity: "node", id: "node-a" }]),
+      targets: JSON.stringify([{ granularity: "node", id: "document.node.node-a" }]),
     });
+    expect(nodeGraphSelectionActionArgs(undefined, { nodeIds: ["node-a"] })).toBeUndefined();
+    expect(nodeGraphHoverActionArgs(undefined, "node-a")).toBeUndefined();
   });
 
   // 🎯️ A world-3d window bound to an interaction domain must speak the SAME framework verbs the node
@@ -9341,10 +9344,12 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(navbarExampleIdFromHistoryUpserts(live, "", "concrete-forest")).toBeUndefined();
   });
 
-  it("navbar example id follows Set Active Example revertible, not chrome-only upserts", () => {
-    expect(navbarExampleIdFromHistoryUpserts([{ actionId: "shell.windowResize", label: "Resize Window", revertible: false }], "nakagin", "forest")).toBeUndefined();
-    expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, label: "Set Active Example", revertible: true }], "nakagin", "forest")).toBe("nakagin");
-    expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, label: "Set Active Example", revertible: false }], "nakagin", "forest")).toBe("forest");
+  it("navbar example id follows Set Active Example revertible, on the action id alone", () => {
+    // 🪪️ The row is recognised by its action id, never by its label's English prose — a history
+    // label is a locale matrix now, so a German shell must reach the same verdict. Ticket 26/09/18 U3.
+    expect(navbarExampleIdFromHistoryUpserts([{ actionId: "shell.windowResize", revertible: false }], "nakagin", "forest")).toBeUndefined();
+    expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, revertible: true }], "nakagin", "forest")).toBe("nakagin");
+    expect(navbarExampleIdFromHistoryUpserts([{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, revertible: false }], "nakagin", "forest")).toBe("forest");
   });
 
   it("leftover InteractionView publication populates selection, lock, and gumball", () => {
@@ -11564,9 +11569,11 @@ describe("node-graph surface attachment in a hidden tab", () => {
     const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }));
     const runtime = await createFlowBrowserRuntime({ source: bridge.exports });
     const opened: unknown[] = [];
+    const released: ReturnType<typeof vi.spyOn>[] = [];
     const session = vi.spyOn(flowSessionLoader, "createFlowSession").mockImplementation(async () => {
       const next = runtime.openSession();
       opened.push(next);
+      released.push(vi.spyOn(next, "free"));
       return next as unknown as flowSessionLoader.FlowWasmSession;
     });
     vi.stubGlobal("devicePixelRatio", 1);
@@ -11591,6 +11598,10 @@ describe("node-graph surface attachment in a hidden tab", () => {
       expect(attaches, `${retention.refreshes.length} refreshes must dispatch exactly one attach`).toBe(retention.expected.surfaceAttaches);
       expect(opened.length, "one flow session per window instance, never one per refresh").toBe(retention.expected.surfaceHostMounts);
       expect(view.container.querySelectorAll("canvas").length, "the two canvases the host owns, never a second pair").toBe(2);
+      for (const release of released) expect(release).not.toHaveBeenCalled();
+      view.unmount();
+      await waitFor(() => { for (const release of released) expect(release).toHaveBeenCalledTimes(1); });
+      console.info("[DEBUG] retained React graph host preserved one session across refreshes and released it once on window unmount");
     } finally {
       view.unmount();
       vi.unstubAllGlobals();
@@ -11812,7 +11823,7 @@ describe("contributions push declaration", () => {
 
 //#region 📇️WindowKindActionScoping
 type DescriptorWindowKind = { readonly id: string; readonly actions?: readonly { readonly id: string }[] };
-type DescriptorApp = { readonly id: string; readonly windowKinds?: readonly DescriptorWindowKind[] };
+type DescriptorApp = { readonly id: string; readonly actions?: readonly { readonly id: string }[]; readonly windowKinds?: readonly DescriptorWindowKind[] };
 
 const windowKindsDeclaring = (app: DescriptorApp, actionId: string): readonly string[] =>
   (app.windowKinds ?? []).filter((kind) => (kind.actions ?? []).some((action) => action.id === actionId)).map((kind) => kind.id);
@@ -11856,11 +11867,8 @@ describe("window-kind action scoping", () => {
     }
   });
 
-  /** ⚖️ LAW: an app-scoped verb no single window body dispatches — the navbar's `setActiveExample`, the
-   * catalogue palette's `addWidget`, the framework's own `undo` — stays UNOWNED, and therefore reaches
-   * every window kind. That is the other half of the scoping contract: over-scoping an app verb would
-   * make it undispatchable from any window that does not own it. */
-  it("leaves app-scoped verbs on every window kind of the procedural editors", () => {
+  /** ⚖️ App-scoped verbs have one app declaration and pass the production dispatch gate from every window. */
+  it("declares procedural app-scoped verbs once and accepts them from every window kind", () => {
     const manifest = readPluginManifest(PROCEDURAL_SOURCE_DESCRIPTOR) as { readonly apps?: readonly DescriptorApp[] } | undefined;
     const apps = new Map((manifest?.apps ?? []).map((app) => [app.id, app]));
     for (const [appId, actionId] of [
@@ -11871,7 +11879,14 @@ describe("window-kind action scoping", () => {
       ["s.procedural.generation2d@1/*#editor", "undo"],
     ] as const) {
       const app = apps.get(appId) as DescriptorApp;
-      expect(`${appId}:${actionId}:${windowKindsDeclaring(app, actionId).length}`).toBe(`${appId}:${actionId}:${(app.windowKinds ?? []).length}`);
+      expect(app, appId).toBeDefined();
+      expect(app.actions?.filter(action => action.id === actionId), `${appId}:${actionId} app owner`).toHaveLength(1);
+      expect(windowKindsDeclaring(app, actionId), `${appId}:${actionId} explicit window owners`).toEqual([]);
+      expect(app.windowKinds?.length).toBeGreaterThan(0);
+      for (const windowKindId of [null, ...(app.windowKinds ?? []).map(kind => kind.id)]) {
+        expect(undeclaredActionDiagnostic(appId, actionId, app.windowKinds ?? [], windowKindId, app.actions), `${appId}:${actionId}:${windowKindId}`).toBeNull();
+        if (actionId !== "undo") expect(undeclaredActionDiagnostic(appId, actionId, app.windowKinds ?? [], windowKindId, app.actions?.filter(action => action.id !== actionId))).not.toBeNull();
+      }
     }
   });
 });
@@ -12678,21 +12693,37 @@ describe("🎫️ the shell says what it holds", () => {
     expect(hoverOnly.selectedIds, "an unhovered graph publishes an EMPTY lane, never a missing one").toEqual([]);
   });
 
-  it("the shell publishes the framework history cursor undo and redo are decided by", async () => {
+  it("the shell publishes the framework history cursor undo and redo are decided by, in the locale it is showing", async () => {
     const { shellHistoryCursorDomV1, SHELL_HISTORY_DOM_LABELS } = await import("../../🧱️elements/🛠️ShellHelpers/🟦️.tsx");
-    const entry = (seq: number, label: string) => [seq, { seq, label, actionId: `action-${seq}`, kind: "app", timestamp: "0" }] as const;
-    const empty = shellHistoryCursorDomV1({ cursor: 0, entries: {}, canUndo: false, canRedo: false });
+    // 🌐️ A history row carries the whole locale matrix, exactly as Rust `LocalizedLabel` serialises
+    // it — the projection resolves it, so the SAME ledger publishes German labels for a German shell
+    // with no re-read of the guest's history. Ticket 26/09/18 slice U3.
+    const bilingual = (en: string, de: string) => ({ native: { en, de }, reuse: { en, de } }) as const;
+    const entry = (seq: number, en: string, de: string) => [seq, { seq, label: bilingual(en, de), actionId: `action-${seq}`, kind: "app", timestamp: "0" }] as const;
+    const english = { terminology: "native", locale: "en" } as const;
+    const german = { terminology: "native", locale: "de" } as const;
+
+    const empty = shellHistoryCursorDomV1({ cursor: 0, entries: {}, canUndo: false, canRedo: false }, english);
     expect(empty).toEqual({ cursor: 0, canUndo: false, canRedo: false, entries: 0, currentCheckpointId: null, labels: [], actionIds: [], undoLabel: null, redoLabel: null });
 
-    const entries = Object.fromEntries([entry(1, "Add Widget"), entry(2, "Move Widget"), entry(3, "Delete Selection")]);
-    const midway = shellHistoryCursorDomV1({ cursor: 2, entries, canUndo: true, canRedo: true, currentCheckpointId: "check-1" });
+    const entries = Object.fromEntries([entry(1, "Add Widget", "Widget hinzufügen"), entry(2, "Move Widget", "Widget verschieben"), entry(3, "Delete Selection", "Auswahl löschen")]);
+    const midway = shellHistoryCursorDomV1({ cursor: 2, entries, canUndo: true, canRedo: true, currentCheckpointId: "check-1" }, english);
     expect(midway.cursor).toBe(2);
     expect(midway.undoLabel, "undo reverts the newest entry at or below the cursor").toBe("Move Widget");
     expect(midway.redoLabel, "redo re-applies the first entry above it").toBe("Delete Selection");
     expect(midway.labels).toEqual(["Add Widget", "Move Widget", "Delete Selection"]);
     expect(midway.currentCheckpointId).toBe("check-1");
 
-    const bounded = shellHistoryCursorDomV1({ cursor: 40, canUndo: true, canRedo: false, entries: Object.fromEntries(Array.from({ length: 40 }, (_, index) => entry(index + 1, `Step ${index + 1}`))) });
+    const auf_deutsch = shellHistoryCursorDomV1({ cursor: 2, entries, canUndo: true, canRedo: true, currentCheckpointId: "check-1" }, german);
+    expect(auf_deutsch.undoLabel, "the same ledger, resolved for a German shell").toBe("Widget verschieben");
+    expect(auf_deutsch.redoLabel).toBe("Auswahl löschen");
+    expect(auf_deutsch.labels, "no English leaks into a German projection").toEqual(["Widget hinzufügen", "Widget verschieben", "Auswahl löschen"]);
+    expect(auf_deutsch.actionIds, "ids are locale-invariant").toEqual(midway.actionIds);
+
+    const bounded = shellHistoryCursorDomV1(
+      { cursor: 40, canUndo: true, canRedo: false, entries: Object.fromEntries(Array.from({ length: 40 }, (_, index) => entry(index + 1, `Step ${index + 1}`, `Schritt ${index + 1}`))) },
+      english,
+    );
     expect((bounded.labels as readonly string[]).length, "a DOM attribute carries a bounded tail, never the whole log").toBe(SHELL_HISTORY_DOM_LABELS);
     expect((bounded.labels as readonly string[])[SHELL_HISTORY_DOM_LABELS - 1]).toBe("Step 40");
     expect(bounded.redoLabel, "nothing above the cursor to redo").toBeNull();

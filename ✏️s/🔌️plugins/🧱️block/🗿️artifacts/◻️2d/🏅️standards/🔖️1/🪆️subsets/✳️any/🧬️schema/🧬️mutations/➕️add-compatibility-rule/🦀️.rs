@@ -32,8 +32,8 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for AddCompatibili
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add compatibility rule \"{}\"", self.rule.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add compatibility rule \"{}\"", self.rule.id), &format!("Kompatibilitätsregel \"{}\" hinzufügen", self.rule.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.rule.id.clone()]

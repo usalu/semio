@@ -108,3 +108,27 @@ audit-visual adc299625bf483222 · audit-artifacts a41c9ecc4a2af26d6 · audit-int
   3 browser probes 0 errors. Details `🗑️generated/play-landing/STATUS.md`.
 - Serve log lists most staged components `[stale] source-newer` → a full play re-activation is required before the
   final acceptance run (after the plugin fix agents finish their production edits).
+
+## 2026-09-21 13:55 — session 5 (coordinator Fable 5.1; goal: play working end to end, all plugins)
+- Found: `🗑️generated/` swept (all topic STATUS.md, baseline, audits lost); :6033 down, no supervisor; play committed
+  2026-09-20 23:20 (60 panes / 8 groups / 27 lanes, activation receipt 2026-09-20 16:23); play unit 58/62 (4 red =
+  stdio pane missing). Peers: `End-to-end repo completion` + `Semio-tech play folder setup` sessions and a Codex fleet
+  sweeping `LocalizedLabel` mutation labels (~3.4k files) and rewriting `💻️os`; a `semio-s-plugin-stdio` wasm-release
+  build (not ours) running. Machine: load ~30, swap 12.4/13 GB, 59 GB disk free.
+- Relaunched: serve supervisor (frozen) for :6033; full plugin native baseline sweep (`🗑️generated/baseline`,
+  `🧪️baseline-plugin-tests.py`, one cargo at a time) + 10-min test-binary watchdog; fleet v4 (`📋️fleet-brief-v4.md`,
+  tracked per-topic reports `📓️<topic>.md`).
+- 14:00–14:35 fleet v4 launched (resume a killed agent by SendMessage to its id while this coordinator lives; after a
+  coordinator restart relaunch the topic from its `🗑️generated/<topic>/STATUS.md` / tracked `📓️<topic>.md`):
+  Sonnet audits audit-visual a6342dd5c4a7881eb · audit-followups ab91ffd865f18f8f8 · audit-stdio ababe6884121f7eb3;
+  Opus fixes play-stdio af5e6f73e247e98a9 · raster a54e59ef6c6dddb6f · flow a5b2801bfff69da09 (guest code peer-owned →
+  proposed diffs only) · knowledge-children a996195935fe8d21b · cad-content a951bf26a4494c143 · engineering
+  a8eca3c74fa0d0d14 · design a7251883c7737a7d0 · stdio-a a6555f77913b638cc · stdio-b a57adfe706b86af55.
+  Wave 3 (14:40): knowledge a2eeb244622dc06a5 · media a7f5f0d8fdf039eeb · block-puzzle a9ffb07b791b50560 — covering knowledge (note, forms, mathematical, reasoning, dag, trinity, imperative), media
+  (shooting, vcs, demonstrator), block-puzzle; norm/space/sequence/procedural/playbook guest code is peer-owned (S10).
+- 14:10 :6033 serve died on `Stale play activation lane: flow` (peer re-activated the flow lane 09-20 19:15 after the
+  demonstrator lane 14:56); aligned the demonstrator receipt's nine flow-* rows to the staged flow lane (dist only);
+  :6033 up 14:25. Peer (`End-to-end repo completion`, ticket 26/09/18/OS-HUB…) owns the LocalizedLabel sweep and the
+  stdio wasm-release build; all wasm32 cargo must go through their `📜️wasm-build-mutex.sh` (see brief v4).
+- 14:30 stopped the serial baseline sweep (2 crates in 30 min, held the shared build-dir lock ahead of every fix agent); each topic baselines its own crates. Peer-owned plugins (norm, space, sequence, procedural, playbook) get a later run.
+- 14:30 play-stdio DONE: 9 stdio panes (group documents), 28 lanes, play unit 62/62, 69 panes boot on :6033 with 0 errors (📓️play-stdio.md).

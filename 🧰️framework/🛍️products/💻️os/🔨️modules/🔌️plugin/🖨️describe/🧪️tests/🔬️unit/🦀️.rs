@@ -145,19 +145,22 @@ fn owned_exports_reached_by(arm: &str) -> Vec<String> {
     owned_export_definitions(core)
 }
 
-/// 🛡️ Every component owner exports the SAME nine `semio_owned_*_v1` core symbols, from ONE shared
-/// definition, and that set is exactly the one `OwnedSemioArtifact::from_component` demands.
+/// 🛡️ Every component owner exports the SAME thirteen `semio_owned_*_v1` core symbols, from ONE
+/// shared definition, and that set is exactly the one `OwnedSemioArtifact::from_component` demands.
+/// The last four are the owned twin of `world actor`'s `codec` interface (ticket 26/09/18 slice
+/// TC3b) — a component that carries the other nine but not those cannot answer a headless hub's
+/// creation or validation call, so the ABI admits it as a whole or not at all.
 ///
 /// 🐛️ Regression guard for `📓️a3-descriptor-regeneration.md` §3b: `extension_exports!`'s
-/// single-argument arm used to expand `__semio_actor_exports!` directly and emit none of the nine,
+/// single-argument arm used to expand `__semio_actor_exports!` directly and emit none of them,
 /// so every extension component failed owned-ABI validation and no extension could be described.
-/// Copying the nine into the extension arm would have satisfied a symbol-set assertion while
+/// Copying them into the extension arm would have satisfied a symbol-set assertion while
 /// leaving two bodies free to drift, so the law also refuses any second definition of them.
 #[semio_framework_async_macros::async_test]
 async fn owned_core_exports_are_defined_once_and_invoked_by_both_owners() {
     let mut required: Vec<String> = interpreter::OwnedSemioExport::ALL.iter().map(|export| export.core_name().to_string()).collect();
     required.sort();
-    assert_eq!(required.len(), 9, "the owned Semio actor ABI is nine core exports");
+    assert_eq!(required.len(), 13, "the owned Semio actor ABI is thirteen core exports");
 
     let defined_in_shared_macro = owned_export_definitions(macro_rules_body(PLUGIN_SDK_SOURCE, "__semio_owned_core_exports"));
     assert_eq!(defined_in_shared_macro, required, "the shared owned-core-export macro does not define exactly `OwnedSemioExport::ALL`");
@@ -168,7 +171,7 @@ async fn owned_core_exports_are_defined_once_and_invoked_by_both_owners() {
     let extension_with_apps_arm = owned_exports_reached_by(macro_arm(extension, "($bundle_fn:expr, $plugin_fn:expr, $app:ty)"));
     let extension_only_arm = owned_exports_reached_by(macro_arm(extension, "($bundle_fn:expr)"));
 
-    assert_eq!(plugin_arm, required, "`plugin_exports!` does not reach the nine owned core exports");
+    assert_eq!(plugin_arm, required, "`plugin_exports!` does not reach every owned core export");
     assert_eq!(extension_with_apps_arm, plugin_arm, "`extension_exports!`'s three-argument arm exports a different core symbol set than `plugin_exports!`");
     assert_eq!(extension_only_arm, plugin_arm, "`extension_exports!`'s single-argument arm exports a different core symbol set than `plugin_exports!`");
 }

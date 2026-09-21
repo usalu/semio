@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveShading {
         base.shadings.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetShading(super::set_shading::SetShading { shading: item.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove shading {}", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove shading {}", self.id), &format!("Verschattung {} entfernen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

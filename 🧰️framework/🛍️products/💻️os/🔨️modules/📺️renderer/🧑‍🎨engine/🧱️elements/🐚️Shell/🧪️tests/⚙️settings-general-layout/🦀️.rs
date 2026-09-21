@@ -61,15 +61,18 @@ fn retained_control_state(shell: &ShellState, surface: &str, control_id: &str) -
     "absent".into()
 }
 
-fn retained_has_section_label(shell: &ShellState, surface: &str, expected: &str) -> bool {
+fn retained_has_record_label(shell: &ShellState, surface: &str, expected: &str) -> bool {
     let read = shell.panel_documents.get(surface).expect("mounted localized document").try_read().expect("localized document remains readable");
     (0..read.len()).any(|ordinal| {
         let Some(record) = read.node_at(ordinal) else { return false };
-        match &record.component {
-            ui_contract::Component::TreeSection(section) => section.label.as_ref().is_some_and(|label| label.0.as_str() == expected),
-            _ => false,
-        }
+        matches!(&record.component, ui_contract::Component::Container(container) if container.label.as_ref().is_some_and(|label| label.0.as_str() == expected))
+            || matches!(&record.component, ui_contract::Component::TreeSection(section) if section.label.as_ref().is_some_and(|label| label.0.as_str() == expected))
     })
+}
+
+fn dock_tab_label<'a>(shell: &'a ShellState, surface: &str) -> &'a str {
+    let (anchor, path) = shell.dock_tabs.locate(surface).expect("localized dock tab remains mounted");
+    shell.dock_tabs.node_at(anchor, &path).expect("localized dock tab path remains valid").label.as_str()
 }
 
 fn retained_header_identity(shell: &ShellState, surface: &str) -> (u64, ui_contract::UiRevision) {
@@ -77,8 +80,27 @@ fn retained_header_identity(shell: &ShellState, surface: &str) -> (u64, ui_contr
     (header.generation, header.revision)
 }
 
+fn dock_roster(shell: &ShellState) -> Vec<(String, String)> {
+    fn collect(nodes: &[DockTabNode], roster: &mut Vec<(String, String)>) {
+        for node in nodes {
+            roster.push((node.id.clone(), node.label.clone()));
+            collect(&node.children, roster);
+        }
+    }
+    let mut roster = Vec::new();
+    for anchor in PanelAnchor::ALL {
+        collect(shell.dock_tabs.tabs(anchor), &mut roster);
+    }
+    roster
+}
+
 fn mount_localized_fixture_documents(shell: &mut ShellState, contract: &Value) -> Vec<String> {
+    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::default() });
+    shell.sync_dock_tabs();
     let mounted = contract["mountedSurfaceIds"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().to_string()).collect::<Vec<_>>();
+    let roster = dock_roster(shell);
+    let missing = mounted.iter().filter(|surface| !roster.iter().any(|(id, _)| id == *surface)).collect::<Vec<_>>();
+    assert!(missing.is_empty(), "the real test session must mount every localized fixture leaf: missing={missing:?} roster={roster:?}");
     for surface in &mounted {
         let document = shell.publish_shell_panel_document(surface).expect("localized panel publication").expect("fixture panel owns a retained document");
         shell.panel_documents.insert(surface.clone(), document);
@@ -199,9 +221,9 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
             break;
         }
     }
-    input.publish_hits();
-    assert!(input.hits().iter().any(|hit| hit.kind == HitKind::Toggle && hit.control_id.as_deref() == Some(FRAMEWORK_SETTINGS_PANEL_ID)), "the complete footer remains interactive while panel layout is pending");
-    assert!(input.hits().iter().all(|hit| hit.kind != HitKind::PanelTab || hit.control_id.as_deref() != Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)), "a pending panel publishes no premature leaf hit");
+    assert!(input.staged_hits().iter().any(|hit| hit.kind == HitKind::Toggle && hit.control_id.as_deref() == Some(FRAMEWORK_SETTINGS_PANEL_ID)), "the complete footer remains staged while panel layout is pending");
+    assert!(input.hits().is_empty(), "an incomplete frame cannot promote even its completed footer");
+    assert!(input.staged_hits().iter().all(|hit| hit.kind != HitKind::PanelTab || hit.control_id.as_deref() != Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)), "a pending panel stages no premature leaf hit");
 
     let panel_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         shell.render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources)
@@ -212,7 +234,7 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
         shell.render_footer_step(&mut settled_footer_cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, shell.screen_w, shell.screen_h)
     });
     assert!(footer_complete, "the settled frame paints its footer");
-    input.publish_hits();
+    shell.publish_retained_hit_registry(&mut input);
     let root = input
         .hits()
         .iter()
@@ -299,7 +321,7 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     let content = shell.anchor_content_rect(anchor, compact, &theme);
     let owners = shell.retained_hit_windows_staging.values().filter(|(owner, _)| owner == SURFACE).collect::<Vec<_>>();
     assert!(!owners.is_empty() && owners.iter().all(|(_, rect)| *rect == content), "every retained General target is owned by the compact content rectangle");
-    input.publish_hits();
+    shell.publish_retained_hit_registry(&mut input);
     let control_suffix = vector["controlId"].as_str().unwrap();
     let live = input.hits().iter().find(|hit| hit.control_id.as_deref().is_some_and(|id| id.ends_with(control_suffix))).expect("actual General control hit");
     assert!(content.contains(live.rect.x + live.rect.w * 0.5, live.rect.y + live.rect.h * 0.5));
@@ -575,12 +597,13 @@ fn host_preference_dispatch_republishes_general_without_a_guest_refresh() {
         app: super::command_registry_tests::test_app(Vec::new(), Vec::new()),
         view_state: ViewModel::default(),
     });
+    shell.chrome_present.maintenance.load_requested = false;
     let initial = shell.publish_shell_panel_document(surface).expect("initial General publication").expect("General owns a retained document");
     shell.panel_documents.insert(surface.to_string(), initial);
-    let mut missing = Vec::new();
 
     for vector in contract["cases"].as_array().unwrap() {
         let action = vector["action"].as_str().unwrap();
+        let publication_lane = vector["publicationLane"].as_str().unwrap();
         let control_id = vector["controlId"].as_str().unwrap();
         let initial_value = vector["initialValue"].as_str().unwrap();
         let next_value = vector["nextValue"].as_str().unwrap();
@@ -594,16 +617,21 @@ fn host_preference_dispatch_republishes_general_without_a_guest_refresh() {
         }))
         .expect("host preference dispatch");
 
-        let after = shell.panel_documents.get(surface).expect("dispatch keeps General published").header().expect("updated General header");
-        if after.revision == before.revision || after.generation <= before.generation {
-            missing.push(action.to_string());
-            shell.republish_shell_panel_document(surface).expect("test continuation republishes the missing General successor");
+        let after_dispatch = shell.panel_documents.get(surface).expect("dispatch keeps General published").header().expect("General header after dispatch");
+        if publication_lane == "maintenance" {
+            assert_eq!(after_dispatch, before, "{action} keeps the exact readable owner until bounded maintenance");
+            let cursor = shell.chrome_present.maintenance.locale_refresh.as_ref().expect("locale dispatch arms mounted-owner maintenance");
+            assert_eq!(cursor.pending.front().map(String::as_str), Some(surface));
+            shell.advance_chrome_maintenance_step();
+        } else {
+            assert!(after_dispatch.revision != before.revision && after_dispatch.generation > before.generation, "{action} republishes in dispatch");
         }
+        let after = shell.panel_documents.get(surface).expect("preference keeps General published").header().expect("updated General header");
+        assert!(after.revision != before.revision && after.generation > before.generation, "{action} publishes through its declared lane");
         assert_eq!(retained_select_value(&shell, surface, control_id), next_value, "{action} publishes the accepted value without guest refresh");
         assert!(shell.closing_documents.terminal_is_empty(), "{action} retires the replaced General source lease");
         assert!(shell.owed_refresh_scope.asks_for_nothing(), "{action} does not broaden into a guest refresh");
     }
-    assert!(missing.is_empty(), "host preference dispatches missing retained General publication: {missing:?}");
 }
 
 #[test]
@@ -696,6 +724,10 @@ fn locale_refresh_republishes_one_exact_mounted_shell_owner_per_maintenance_step
     }))
     .expect("locale host mutation arms retained refresh");
 
+    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_GENERAL_TAB_ID), "Allgemein");
+    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_THEME_TAB_ID), "Thema");
+    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID), "Tastenkürzel");
+
     let cursor = shell.chrome_present.maintenance.locale_refresh.as_ref().expect("mounted localized roster cursor");
     assert_eq!(cursor.locale_id, contract["nextLocale"].as_str().unwrap());
     assert_eq!(cursor.pending.iter().cloned().collect::<Vec<_>>(), mounted, "the cursor snapshots the exact mounted shell-owned inventory");
@@ -716,9 +748,9 @@ fn locale_refresh_republishes_one_exact_mounted_shell_owner_per_maintenance_step
         assert!(shell.closing_documents.terminal_is_empty(), "each replaced locale owner retires before the next step");
     }
     assert!(shell.chrome_present.maintenance.locale_refresh.is_none());
-    assert!(retained_has_section_label(&shell, FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "Allgemein"));
-    assert!(retained_has_section_label(&shell, FRAMEWORK_SETTINGS_THEME_TAB_ID, "Thema"));
-    assert!(retained_has_section_label(&shell, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, "Tastenkürzel"));
+    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "Allgemein"));
+    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_THEME_TAB_ID, "Design"));
+    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, "Tastenkürzel"));
     assert!(shell.owed_refresh_scope.asks_for_nothing(), "host localization never requests a guest refresh");
 }
 
@@ -760,8 +792,11 @@ fn locale_refresh_refusal_and_supersession_preserve_exact_owner_and_generation()
     while shell.chrome_present.maintenance.locale_refresh.is_some() {
         shell.advance_chrome_maintenance_step();
     }
-    assert!(retained_has_section_label(&shell, FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General"));
-    assert!(retained_has_section_label(&shell, FRAMEWORK_SETTINGS_THEME_TAB_ID, "Theme"));
-    assert!(retained_has_section_label(&shell, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, "Hotkeys"));
+    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_GENERAL_TAB_ID), "General");
+    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_THEME_TAB_ID), "Theme");
+    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID), "Hotkeys");
+    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General"));
+    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_THEME_TAB_ID, "Theme"));
+    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, "Hotkeys"));
     assert!(shell.owed_refresh_scope.asks_for_nothing());
 }

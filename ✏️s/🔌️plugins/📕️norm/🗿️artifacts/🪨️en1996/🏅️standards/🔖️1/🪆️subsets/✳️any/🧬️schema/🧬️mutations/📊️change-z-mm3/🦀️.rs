@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeZMm3 {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change section modulus z [mm3] to {}", self.new_z_mm3)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change section modulus z [mm3] to {}", self.new_z_mm3), &format!("Abschnittmodulz [mm3] auf {} ändern", self.new_z_mm3))
     }
 }
 //#endregion 🔖️ChangeZMm3

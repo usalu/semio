@@ -96,16 +96,17 @@ pub fn writer_text_for_handle(handle: &WriterDocumentChild) -> String {
     handle.local_text().unwrap_or_default().to_string()
 }
 
-/// 🔎 Reads the current document's live text off its `document` child handle — the single read
-/// call site every render/inference/export path in this plugin uses instead of the old
-/// `snapshot.text` field access.
+/// 🔎 Reads the current document's authored body — the single read call site every
+/// render/inference/export path in this plugin uses. The body lives in the PERSISTED
+/// `WriterSnapshot::text` payload (see that field's doc comment), not in the composed child handle,
+/// so it survives `ArtifactPack`/`ArtifactDsl` and therefore the host's member-less archive door.
 pub fn writer_text(snapshot: &WriterSnapshot) -> String {
-    writer_text_for_handle(&snapshot.document)
+    snapshot.text.clone()
 }
 
 /// 🧵️ Retains the immutable child-text owner for bounded worker jobs without cloning its bytes.
 pub fn writer_text_owner(snapshot: &WriterSnapshot) -> Arc<str> {
-    snapshot.document.local_text_owner().unwrap_or_else(|| Arc::<str>::from(""))
+    Arc::<str>::from(snapshot.text.as_str())
 }
 
 /// 🏗️ Mints a content-addressed handle carrying its artifact-instance text owner.
@@ -117,7 +118,7 @@ pub fn document_child_handle_with_text(id: &str, text: &str, language_id: &str) 
 /// replacing the old 5-field `WriterSnapshot { ..., text }` struct literal now that `document` is a
 /// composed child handle, not a plain field.
 pub fn writer_snapshot_with_text(schema: &str, id: &str, language_id: &str, uri: &str, text: &str) -> WriterSnapshot {
-    WriterSnapshot { schema: schema.into(), id: id.into(), language_id: language_id.into(), uri: uri.into(), document: document_child_handle_with_text(id, text, language_id) }
+    WriterSnapshot { schema: schema.into(), id: id.into(), language_id: language_id.into(), uri: uri.into(), text: text.into(), document: document_child_handle_with_text(id, text, language_id) }
 }
 
 /// 🌱️ `ArtifactEditor`/`ArtifactViewer::genesis_child_pack` for the composed `document` child — the
@@ -127,7 +128,7 @@ pub fn writer_snapshot_with_text(schema: &str, id: &str, language_id: &str, uri:
 /// `Incomplete` and the load is refused (`document-archive-replacement.closure-rejected`).
 pub fn genesis_writer_child_pack(snapshot: &WriterSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
     use store::ArtifactPack;
-    (slot == "document" && child_id == snapshot.document.child_id).then(|| <SemioDocumentSnapshot as ArtifactPack>::encode_pack(&document_snapshot_from_text(&writer_text(snapshot), &snapshot.language_id)))
+    (slot == "document" && child_id == snapshot.document.child_id).then(|| <SemioDocumentSnapshot as ArtifactPack>::encode_pack(&document_snapshot_from_text(&snapshot.text, &snapshot.language_id)))
 }
 //#endregion 🔖️WorkingScene
 

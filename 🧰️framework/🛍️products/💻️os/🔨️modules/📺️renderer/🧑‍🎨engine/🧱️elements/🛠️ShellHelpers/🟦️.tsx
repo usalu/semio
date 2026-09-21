@@ -27,6 +27,7 @@ import {
     type AppRole,
     type AppRouter,
     type AppWindowKindDefinition,
+    historyEntryLabelText,
     // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
     // `ActionArgDef.control` is gone (derived, not stored) — every reader below now calls this instead.
     argControl,
@@ -279,25 +280,29 @@ export function historyPatchShouldApplyV1(
  * the History panel. */
 export const SHELL_HISTORY_DOM_LABELS = 8;
 
-export function shellHistoryCursorDomV1(projection: {
-  readonly cursor: number;
-  readonly entries: Readonly<Record<number, { readonly seq: number; readonly label: string; readonly actionId: string }>>;
-  readonly canUndo: boolean;
-  readonly canRedo: boolean;
-  readonly currentCheckpointId?: string;
-}): Record<string, unknown> {
+export function shellHistoryCursorDomV1(
+  projection: {
+    readonly cursor: number;
+    readonly entries: Readonly<Record<number, { readonly seq: number; readonly label: LocalizedLabel; readonly actionId: string }>>;
+    readonly canUndo: boolean;
+    readonly canRedo: boolean;
+    readonly currentCheckpointId?: string;
+  },
+  axes: { readonly terminology: string; readonly locale: string },
+): Record<string, unknown> {
   const ordered = Object.values(projection.entries ?? {}).sort((left, right) => left.seq - right.seq);
   const recent = ordered.slice(-SHELL_HISTORY_DOM_LABELS);
+  const text = (entry: { readonly label: LocalizedLabel } | undefined): string | null => (entry ? historyEntryLabelText(entry.label, axes.terminology, axes.locale) : null);
   return {
     cursor: projection.cursor,
     canUndo: Boolean(projection.canUndo),
     canRedo: Boolean(projection.canRedo),
     entries: ordered.length,
     currentCheckpointId: projection.currentCheckpointId ?? null,
-    labels: recent.map((entry) => entry.label),
+    labels: recent.map((entry) => historyEntryLabelText(entry.label, axes.terminology, axes.locale)),
     actionIds: recent.map((entry) => entry.actionId),
-    undoLabel: projection.canUndo ? (ordered.findLast((entry) => entry.seq <= projection.cursor)?.label ?? null) : null,
-    redoLabel: projection.canRedo ? (ordered.find((entry) => entry.seq > projection.cursor)?.label ?? null) : null,
+    undoLabel: projection.canUndo ? text(ordered.findLast((entry) => entry.seq <= projection.cursor)) : null,
+    redoLabel: projection.canRedo ? text(ordered.find((entry) => entry.seq > projection.cursor)) : null,
   };
 }
 
@@ -438,11 +443,14 @@ export function rememberedExampleIdFromDispatchV1(action: { readonly action: str
  * (`undefined`). A live Set Active Example row restores `rememberedExampleId`; a popped row returns
  * `bootExampleId`. */
 export function navbarExampleIdFromHistoryUpserts(
-  upserts: readonly { readonly actionId?: string; readonly label?: string; readonly revertible?: boolean }[] | undefined,
+  upserts: readonly { readonly actionId?: string; readonly revertible?: boolean }[] | undefined,
   rememberedExampleId: string,
   bootExampleId: string,
 ): string | undefined {
-  const rows = (upserts ?? []).filter((entry) => entry.actionId === SET_ACTIVE_EXAMPLE_ACTION_ID || (entry.label ?? "").includes("Set Active Example"));
+  // 🪪️ Keyed on the action id alone. The former `label.includes("Set Active Example")` arm matched
+  // the English prose of a row's label, which no longer exists as a single string and would have
+  // silently stopped matching for a German shell — the id is the locale-independent key.
+  const rows = (upserts ?? []).filter((entry) => entry.actionId === SET_ACTIVE_EXAMPLE_ACTION_ID);
   if (rows.length === 0) return undefined;
   if (rows.some((entry) => entry.revertible !== false)) return rememberedExampleId || undefined;
   return bootExampleId;
@@ -583,6 +591,37 @@ export const TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS: ReadonlySet<string> = new S
 
 export const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
 export const PRESENCE_HEARTBEAT_INTERVAL_MS = 5000;
+
+/** ⏱️ How long one presence beat may wait for the document component's ephemeral snapshot before it
+ * goes out without one. Strictly below {@link PRESENCE_HEARTBEAT_INTERVAL_MS} so a slow document can
+ * never push a beat into the next interval, and the pair sits far below the hub's own
+ * `PRESENCE_LEASE_TTL_MS` (15 000) — three whole beats of headroom. The three numbers are pinned
+ * together, in both languages, by `🧫️fixtures/💓️presence-liveness-v1/🔣️.json`. */
+export const PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS = 2000;
+
+/** 💓️ One document's ephemeral snapshot, bounded. A wedged document component answers
+ * `ephemeralSnapshot` never; awaiting it bare inside the beat's single flight silenced the shell's
+ * heartbeat for that document for the rest of the session, and the hub then let the human's roster
+ * row lapse under a socket that was still open (ticket 26/09/18 slice PR1). Past the bound the beat
+ * carries no app-owned pack — the human stays present, only the app's ephemerals are dropped, which
+ * is precisely what the hub publishes for a lapsed lease. A rejection is the same answer as a
+ * timeout: presence is not the place to surface a document fault. */
+export async function presenceEphemeralSnapshotWithinBoundV1(
+  plugin: { readonly ephemeralSnapshot?: (instanceId: string) => Promise<{ readonly presence?: readonly number[] } | undefined> },
+  instanceId: string,
+  deadlineMs: number = PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS,
+): Promise<{ readonly presence?: readonly number[] } | undefined> {
+  if (plugin.ephemeralSnapshot === undefined) return undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const bound = new Promise<undefined>((resolve) => {
+    timer = setTimeout(() => resolve(undefined), deadlineMs);
+  });
+  try {
+    return await Promise.race([Promise.resolve(plugin.ephemeralSnapshot(instanceId)).catch(() => undefined), bound]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
 
 function presenceIdentityPackBase64(identity: { readonly clientId: string; readonly name: string }): string {
   return packValueToBase64(identity);

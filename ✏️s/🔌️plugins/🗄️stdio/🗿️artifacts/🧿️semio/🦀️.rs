@@ -828,9 +828,16 @@ impl<T: RetireOwned> dsl::ArtifactOwnedValueRetirementFactory<T> for SemioMutati
     }
 }
 
+/// 🧭️ Close-cursor phases in the order the disposer walks them. `ReturnedLeases` comes FIRST, as
+/// it does in the kernel's own `ArtifactStoreCursorDisposer`: the lease registry keeps its own
+/// `Arc` alias of every snapshot it ever handed out, so a snapshot a later commit evicts into the
+/// displaced-owner queue stays SHARED until its returned lease is retired. Draining displaced
+/// owners first meets that alias as a `Blocked` shared retirement and never reaches the phase that
+/// would release it.
+#[derive(Debug)]
 enum SemioStoreClosePhase {
-    DisplacedOwners,
     ReturnedLeases,
+    DisplacedOwners,
     HistoryMutations { edit_index: Option<usize> },
     HistoryEdits,
     HistoryMetadata { lane: u8 },
@@ -857,7 +864,7 @@ struct SemioStoreOwnedDisposer<P, Mutation> {
 
 impl<P, Mutation> SemioStoreOwnedDisposer<P, Mutation> {
     fn new() -> Self {
-        Self { phase: SemioStoreClosePhase::DisplacedOwners, started: false, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
+        Self { phase: SemioStoreClosePhase::ReturnedLeases, started: false, active: std::mem::ManuallyDrop::new(None), marker: PhantomData }
     }
 }
 macro_rules! member_owners {
@@ -912,16 +919,6 @@ macro_rules! member_owners {
                     };
                 }
                 match &mut self.phase {
-                    SemioStoreClosePhase::DisplacedOwners => match store.maintenance_retirements_step(maximum_items, maximum_bytes)? {
-                        dsl::SnapshotRetirementStep::Complete => {
-                            if !store.maintenance_retirements_terminal_is_empty() {
-                                return Err("semio store displaced retirement reported Complete without its terminal-empty witness".into());
-                            }
-                            self.phase = SemioStoreClosePhase::ReturnedLeases;
-                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-                        }
-                        step => Ok(step),
-                    },
                     SemioStoreClosePhase::ReturnedLeases => match store.take_returned_snapshot_read_retirement().map_err(|error| error.to_string())? {
                         Some(retirement) => {
                             *self.active = Some(retirement);
@@ -929,9 +926,19 @@ macro_rules! member_owners {
                         }
                         None if !store.snapshot_read_leases_terminal_is_empty() => Ok(dsl::SnapshotRetirementStep::Blocked),
                         None => {
+                            self.phase = SemioStoreClosePhase::DisplacedOwners;
+                            Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
+                        }
+                    },
+                    SemioStoreClosePhase::DisplacedOwners => match store.maintenance_retirements_step(maximum_items, maximum_bytes)? {
+                        dsl::SnapshotRetirementStep::Complete => {
+                            if !store.maintenance_retirements_terminal_is_empty() {
+                                return Err("semio store displaced retirement reported Complete without its terminal-empty witness".into());
+                            }
                             self.phase = SemioStoreClosePhase::HistoryMutations { edit_index: store.history_edit_count().checked_sub(1) };
                             Ok(dsl::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
                         }
+                        step => Ok(step),
                     },
                     SemioStoreClosePhase::HistoryMutations { edit_index } => {
                         let Some(index) = *edit_index else {
@@ -1136,6 +1143,10 @@ macro_rules! member_owners {
 
             fn uninstalled_terminal_is_empty(&self) -> bool {
                 !self.started && matches!(self.phase, SemioStoreClosePhase::Complete) && self.active.is_none()
+            }
+
+            fn close_phase_witness(&self) -> String {
+                format!("semio/{:?}/started={}/active={}", self.phase, self.started, self.active.is_some())
             }
         }
 

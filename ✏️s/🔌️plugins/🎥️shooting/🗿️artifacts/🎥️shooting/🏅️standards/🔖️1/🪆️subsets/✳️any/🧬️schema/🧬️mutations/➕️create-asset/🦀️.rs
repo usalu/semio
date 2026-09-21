@@ -21,8 +21,8 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for CreateAsset {
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create asset \"{}\"", self.asset.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create asset \"{}\"", self.asset.name), &format!("Asset \"{}\" erstellen", self.asset.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.asset.id.clone()]

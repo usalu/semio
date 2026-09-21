@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetEx
         vec![super::GltfMutation::ChangeAssetExtensionData(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Change Asset Extension Data".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Asset Extension Data", "Asseterweiterungsdaten ändern")
     }
 
     fn target(&self) -> Vec<String> {

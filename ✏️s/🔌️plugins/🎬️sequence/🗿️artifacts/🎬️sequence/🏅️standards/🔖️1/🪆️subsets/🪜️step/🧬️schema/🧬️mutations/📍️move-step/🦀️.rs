@@ -32,8 +32,8 @@ impl protocol::MutationKind<SequenceSnapshot, SequenceMutation> for MoveStep {
     fn inverse(&self, base: &SequenceSnapshot) -> Vec<SequenceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move step \"{}\" to ({}, {})", self.id, self.x, self.y)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move step \"{}\" to ({}, {})", self.id, self.x, self.y), &format!("Schritt \"{}\" nach ({}, {}) verschieben", self.id, self.x, self.y))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

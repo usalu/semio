@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetNamedDestination {
         match base.named_destinations.iter().find(|item| item.name == self.destination.name) { Some(previous) => vec![PdfMutation::SetNamedDestination(SetNamedDestination { destination: previous.clone() })], None => vec![PdfMutation::RemoveNamedDestination(super::remove_named_destination::RemoveNamedDestination { name: self.destination.name.clone() })] }
     }
 
-    fn label(&self) -> String {
-        format!("Set named destination {}", self.destination.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set named destination {}", self.destination.name), &format!("benannte Ziel {} setzen", self.destination.name))
     }
 
     fn target(&self) -> Vec<String> {

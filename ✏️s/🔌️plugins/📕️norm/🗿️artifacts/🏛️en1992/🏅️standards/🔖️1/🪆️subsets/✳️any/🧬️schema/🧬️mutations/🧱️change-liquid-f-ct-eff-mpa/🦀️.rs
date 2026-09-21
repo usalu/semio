@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidFCtE
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change liquid f ct eff mpa to {:?}", self.new_liquid_f_ct_eff_mpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change liquid f ct eff mpa to {:?}", self.new_liquid_f_ct_eff_mpa), &format!("Flüssigkeitsfcteffmpa auf {:?} ändern", self.new_liquid_f_ct_eff_mpa))
     }
 }
 //#endregion 🔖️ChangeLiquidFCtEffMpa

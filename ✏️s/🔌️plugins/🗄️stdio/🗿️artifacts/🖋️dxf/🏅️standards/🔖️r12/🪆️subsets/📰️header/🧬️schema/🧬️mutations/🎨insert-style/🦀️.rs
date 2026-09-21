@@ -21,8 +21,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for InsertStyle {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::InsertStyle(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-style".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-style", "Stil einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

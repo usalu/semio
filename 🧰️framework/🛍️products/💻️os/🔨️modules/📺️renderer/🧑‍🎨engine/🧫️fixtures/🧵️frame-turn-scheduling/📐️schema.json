@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.frame-turn-scheduling.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "input", "turnOwners", "requests", "runtimeTurns", "nonRunnableTurns", "textIngressTurns", "expected"],
+  "properties": {
+    "schema": { "const": "semio.frame-turn-scheduling.v1" },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lifecycle", "inputSequence", "generation"],
+      "properties": {
+        "lifecycle": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "inputSequence": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+        "generation": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+      }
+    },
+    "turnOwners": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "prefixItems": [{ "const": "frame" }],
+      "items": false
+    },
+    "requests": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["owner", "remainingTurns"],
+        "properties": {
+          "owner": { "const": "frame" },
+          "remainingTurns": { "type": "integer", "minimum": 1, "maximum": 16 }
+        }
+      }
+    },
+    "runtimeTurns": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["phase", "requestFrame", "continueFrame"],
+        "properties": {
+          "phase": { "enum": ["uploads", "finish", "terminal"] },
+          "requestFrame": { "type": "boolean" },
+          "continueFrame": { "type": "boolean" }
+        }
+      }
+    },
+    "nonRunnableTurns": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        { "type": "object", "additionalProperties": false, "required": ["owner", "requestFrame", "continueFrame"], "properties": { "owner": { "const": "future-deadline" }, "requestFrame": { "const": true }, "continueFrame": { "const": false } } },
+        { "type": "object", "additionalProperties": false, "required": ["owner", "requestFrame", "continueFrame"], "properties": { "owner": { "const": "hub-status-external" }, "requestFrame": { "const": false }, "continueFrame": { "const": false } } }
+      ],
+      "items": false
+    },
+    "textIngressTurns": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "prefixItems": [
+        { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "start" }, "committed": { "const": false }, "retiring": { "const": false }, "continueFrame": { "const": false } } },
+        { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "partial" }, "committed": { "const": false }, "retiring": { "const": false }, "continueFrame": { "const": false } } },
+        { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "commit" }, "committed": { "const": true }, "retiring": { "const": false }, "continueFrame": { "const": true } } },
+        { "type": "object", "additionalProperties": false, "required": ["phase", "committed", "retiring", "continueFrame"], "properties": { "phase": { "const": "cancel" }, "committed": { "const": false }, "retiring": { "const": true }, "continueFrame": { "const": true } } }
+      ],
+      "items": false
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ingressTrace", "callbackOwners", "frameSequences", "runtimePhases", "nonRunnableCallbacks", "runnableTextPhases", "closeOwners", "exhaustion"],
+      "properties": {
+        "ingressTrace": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 },
+        "callbackOwners": { "type": "array", "items": { "const": "frame" }, "minItems": 1, "maxItems": 16 },
+        "frameSequences": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }, "minItems": 1, "maxItems": 16 },
+        "runtimePhases": { "type": "array", "prefixItems": [{ "const": "uploads" }, { "const": "finish" }, { "const": "terminal" }], "items": false },
+        "nonRunnableCallbacks": { "type": "array", "prefixItems": [{ "const": "future-deadline" }, { "const": "hub-status-external" }], "items": false },
+        "runnableTextPhases": { "type": "array", "prefixItems": [{ "const": "commit" }, { "const": "cancel" }], "items": false },
+        "closeOwners": { "type": "array", "items": { "const": "frame" }, "minItems": 1, "maxItems": 1 },
+        "exhaustion": { "const": "fault" }
+      }
+    }
+  }
+}

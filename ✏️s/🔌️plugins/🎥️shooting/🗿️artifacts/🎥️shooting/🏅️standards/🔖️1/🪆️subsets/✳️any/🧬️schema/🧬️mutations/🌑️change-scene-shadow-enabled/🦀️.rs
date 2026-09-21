@@ -20,7 +20,7 @@ impl MutationKind<ShootingSnapshot, ShootingMutation> for ChangeSceneShadowEnabl
     fn inverse(&self, base: &ShootingSnapshot) -> Vec<ShootingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("{} shadows", if self.new_enabled { "Enable" } else { "Disable" })
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("{} shadows", if self.new_enabled { "Enable" } else { "Disable" }), &format!("{} Schatten", if self.new_enabled { "Aktivieren" } else { "Deaktivieren" }))
     }
 }

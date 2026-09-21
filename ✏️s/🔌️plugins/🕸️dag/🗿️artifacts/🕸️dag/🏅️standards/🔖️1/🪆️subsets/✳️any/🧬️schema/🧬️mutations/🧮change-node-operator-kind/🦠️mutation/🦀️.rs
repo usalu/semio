@@ -27,8 +27,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ChangeNodeOperatorKind
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change node \"{}\" operator kind", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change node \"{}\" operator kind", self.id), &format!("Knoten \"{}\" Operatorart ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

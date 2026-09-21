@@ -3,6 +3,7 @@ use ui_wgpu::wgpu::{BlockListScene, DrawList, FontAtlas, IconAtlas, InputState};
 
 fn block_list_scene(surface_id: &str, controller_id: &str, steps: Value, palette: Value) -> UiComponentSceneNode {
     UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: controller_id.into(),
         component_kind: SurfaceKind::BlockList,
@@ -66,7 +67,7 @@ fn role_rect(plan: &BlockListPlan, accepts: impl Fn(&BlockListRole) -> bool) -> 
 }
 
 fn pointer(node: &UiComponentSceneNode, input: &mut InputState<ActionDescriptor>, point: (f32, f32), down: bool, generation: u64, driver_drag: UiDriverDrag) {
-    passive_scene_pointer_button(node, Rect::new(0.0, 0.0, 600.0, 400.0), point.0, point.1, down, 0, SceneModifiers::default(), "window.pipeline", generation, driver_drag, input).expect("bounded pointer action");
+    passive_scene_pointer_button(node, Rect::new(0.0, 0.0, 600.0, 400.0), ui_render::PointerId(1), point.0, point.1, down, 0, SceneModifiers::default(), "window.pipeline", generation, driver_drag, input).expect("bounded pointer action");
 }
 
 fn center(rect: Rect) -> (f32, f32) {
@@ -114,7 +115,7 @@ fn shared_fixture_step_and_block_reorders_match_closest_center_actions() {
     let step_source = center(role_rect(&plan, |role| matches!(role, BlockListRole::StepHandle { step_id, .. } if step_id == "prepare")));
     let step_target = center(role_rect(&plan, |role| matches!(role, BlockListRole::Step { step_id, .. } if step_id == "publish")));
     pointer(&node, &mut input, step_source, true, 11, UiDriverDrag::Handle);
-    passive_scene_pointer_move(&node, bounds, step_target.0, step_target.1, "window.pipeline", 11, UiDriverDrag::Handle);
+    passive_scene_pointer_move(&node, bounds, ui_render::PointerId(1), step_target.0, step_target.1, "window.pipeline", 11, UiDriverDrag::Handle);
     pointer(&node, &mut input, step_target, false, 11, UiDriverDrag::Handle);
     let action = drain_actions(&mut input).pop().expect("moveStep action");
     assert_eq!(serde_json::to_value(action).unwrap(), fixture["journeys"][4]["expectedAction"]);
@@ -122,7 +123,7 @@ fn shared_fixture_step_and_block_reorders_match_closest_center_actions() {
     let block_source = center(role_rect(&plan, |role| matches!(role, BlockListRole::BlockHandle { block_id, .. } if block_id == "load")));
     let block_target = center(role_rect(&plan, |role| matches!(role, BlockListRole::Block { block_id, .. } if block_id == "clean")));
     pointer(&node, &mut input, block_source, true, 12, UiDriverDrag::Handle);
-    passive_scene_pointer_move(&node, bounds, block_target.0, block_target.1, "window.pipeline", 12, UiDriverDrag::Handle);
+    passive_scene_pointer_move(&node, bounds, ui_render::PointerId(1), block_target.0, block_target.1, "window.pipeline", 12, UiDriverDrag::Handle);
     pointer(&node, &mut input, block_target, false, 12, UiDriverDrag::Handle);
     let action = drain_actions(&mut input).pop().expect("moveBlock action");
     assert_eq!(serde_json::to_value(action).unwrap(), fixture["journeys"][5]["expectedAction"]);
@@ -142,7 +143,7 @@ fn shared_fixture_palette_drop_and_cancellation_paths_use_the_one_authority() {
     let mut input = InputState::<ActionDescriptor>::default();
 
     pointer(&node, &mut input, palette, true, 13, UiDriverDrag::Handle);
-    passive_scene_pointer_move(&node, bounds, publish.0, publish.1, "window.pipeline", 13, UiDriverDrag::Handle);
+    passive_scene_pointer_move(&node, bounds, ui_render::PointerId(1), publish.0, publish.1, "window.pipeline", 13, UiDriverDrag::Handle);
     pointer(&node, &mut input, publish, false, 13, UiDriverDrag::Handle);
     let action = drain_actions(&mut input).pop().expect("addBlock action");
     assert_eq!(serde_json::to_value(action).unwrap(), fixture["journeys"][6]["expectedAction"]);
@@ -153,7 +154,7 @@ fn shared_fixture_palette_drop_and_cancellation_paths_use_the_one_authority() {
     assert!(drain_actions(&mut input).is_empty());
 
     pointer(&node, &mut input, palette, true, 15, UiDriverDrag::Handle);
-    passive_scene_pointer_move(&node, bounds, publish.0, publish.1, "window.pipeline", 16, UiDriverDrag::Handle);
+    passive_scene_pointer_move(&node, bounds, ui_render::PointerId(1), publish.0, publish.1, "window.pipeline", 16, UiDriverDrag::Handle);
     pointer(&node, &mut input, publish, false, 16, UiDriverDrag::Handle);
     assert!(drain_actions(&mut input).is_empty(), "a subtree revision change retires the source before release");
 }

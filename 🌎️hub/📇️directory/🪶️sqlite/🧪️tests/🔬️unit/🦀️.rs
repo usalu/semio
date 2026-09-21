@@ -517,3 +517,19 @@ async fn credential_writes_and_facts_stay_in_one_transaction() {
     assert_eq!(final_audit.len(), after_set.len() + 1);
     assert_eq!(final_audit.last().expect("last fact").event_kind, "credential-sign-in");
 }
+
+// 🔮️ The backend-neutral share-scope corpus (`🧪️tests/🔮️backend-corpus/`) over SQLite.
+#[tokio::test]
+async fn share_scope_corpus_v1_holds_on_sqlite() {
+    let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
+    directory.seed().await.expect("seed");
+    crate::directory::backend_corpus::assert_share_scope_corpus_v1(&directory).await;
+}
+
+// 🏛️ ticket 26/09/18 slice DB3 — the five directory reads `/directory/spaces/{id}` performs, over SQLite.
+#[tokio::test]
+async fn space_administration_read_surface_v1_holds_on_sqlite() {
+    let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
+    directory.seed().await.expect("seed");
+    crate::directory::backend_corpus::assert_space_administration_read_surface_v1(&directory).await;
+}

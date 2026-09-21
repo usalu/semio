@@ -25,8 +25,8 @@ impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ScaleObject 
     fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Scale object \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Scale object \"{}\"", self.id), &format!("Objekt \"{}\" skalieren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

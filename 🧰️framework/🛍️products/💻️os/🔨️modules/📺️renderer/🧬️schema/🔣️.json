@@ -4,6 +4,31 @@
   "title": "Renderer",
   "description": "Renderer-owned presentation contracts: shell dialog/effect origin admission, tutorial drive and playback, document opening and instance admission, host identity bootstrap, extension invocation, mounted probe projection, and the runtime/graph/helper element contracts. Renderer elements (🧱️elements/*) and rendering targets (🎯️targets/*) are consumers; this module is the sole owner.",
   "$defs": {
+    "World3dInstanceInteractionV1": {
+      "type": "object",
+      "required": [
+        "id",
+        "meshId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "meshId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interactionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interactionGranularityId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "BrowserDocumentMountFixtureV1": {
       "type": "object",
       "additionalProperties": false,

@@ -620,6 +620,22 @@ impl ArtifactEditor for NotePlayApp {
         .map(semio_framework_plugin::built_to_component_tree)
     }
 
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, NoteSnapshot>,
+        cfg: &ConfigView<'_, NoConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        if body_key != NOTE_PLAY_BODY_COMPOSITE {
+            return Self::render(body_key, doc, cfg, view_state);
+        }
+        let window = crate::editor::note::window::config_from_view(cfg);
+        composite::render_with_interaction(doc.snapshot, &window.camera, note_active_utility(view_state), interaction).map(semio_framework_plugin::built_to_component_tree)
+    }
+
     fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let kind = view_state.window_instances.iter().find(|window| window.id == window_id).map(|window| window.window_kind_id.as_str());

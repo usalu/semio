@@ -23,8 +23,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertImage {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::InsertImage(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-image".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-image", "Bild einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

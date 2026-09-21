@@ -46,8 +46,8 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDeclarationM
         vec![super::XmlMutation::SetDeclaration(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Set Declaration".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Declaration", "Deklaration setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-declaration".to_string()]

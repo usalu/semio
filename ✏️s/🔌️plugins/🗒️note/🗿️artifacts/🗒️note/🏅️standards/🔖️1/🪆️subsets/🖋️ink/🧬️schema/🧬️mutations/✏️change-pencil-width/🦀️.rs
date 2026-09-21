@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangePencilWidth {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change pencil width to {:?}", self.new_width)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change pencil width to {:?}", self.new_width), &format!("Stiftbreite auf {:?} ändern", self.new_width))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

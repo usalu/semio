@@ -30,8 +30,8 @@ impl MutationKind<Grid3dSnapshot, Grid3dMutation> for MaskCell {
     fn inverse(&self, base: &Grid3dSnapshot) -> Vec<Grid3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Mask cell {}", cell_key(self.cell.x, self.cell.y, self.cell.z))
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Mask cell {}", cell_key(self.cell.x, self.cell.y, self.cell.z)), &format!("Zelle {} maskieren", cell_key(self.cell.x, self.cell.y, self.cell.z)))
     }
     fn target(&self) -> Vec<String> {
         vec![cell_key(self.cell.x, self.cell.y, self.cell.z)]

@@ -20,8 +20,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for CreateSubjec
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create dictionary subject \"{}\"", self.subject.names.preferred.text)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create dictionary subject \"{}\"", self.subject.names.preferred.text), &format!("Wörterbuchthema \"{}\" erstellen", self.subject.names.preferred.text))
     }
     fn target(&self) -> Vec<String> {
         vec![self.subject.id.clone()]

@@ -65,8 +65,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateBufferM
         vec![super::GltfMutation::CreateBuffer(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Create Buffer".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Create Buffer", "Puffer erstellen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -98,54 +98,18 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
     if (!entry.isFile() || !entry.name.endsWith(".js")) continue;
     copyFileSync(join(sourceDir, entry.name), join(preview2VendorDir, entry.name));
   }
-  patchPreview2ShimCliLineBuffer(join(preview2VendorDir, "cli.js"));
+  patchPreview2ShimGuestLogClassification(join(preview2VendorDir, "cli.js"));
 }
 
-/** 🗣️ Preview2's default `cli.js` console.errors every `write()` token. One logical guest line must be one host call, and `[DEBUG]` must not use `error`. */
-export function patchPreview2ShimCliLineBuffer(cliPath: string): void {
-  if (!existsSync(cliPath)) return;
+/** 🗣️ Preserves Preview2's streaming decoder and classifies complete guest debug lines. */
+export function patchPreview2ShimGuestLogClassification(cliPath: string): void {
   const source = readFileSync(cliPath, "utf8");
-  if (source.includes("semioGuestLogCarry")) return;
-  const patched = source.replace(
-    /const textDecoder = new TextDecoder\(\);[\s\S]*?const stdin = \{/,
-    `const textDecoder = new TextDecoder();
-const stdoutCarry = { bytes: new Uint8Array(0) };
-const stderrCarry = { bytes: new Uint8Array(0) };
-function writeSemioGuestLogLine(channel, contents, carry) {
-    const merged = new Uint8Array(carry.bytes.length + contents.length);
-    merged.set(carry.bytes);
-    merged.set(contents, carry.bytes.length);
-    let start = 0;
-    for (let i = 0; i < merged.length; i++) {
-        if (merged[i] === 10) {
-            const text = textDecoder.decode(merged.subarray(start, i));
-            if (channel === "stdout") console.log(text);
-            else if (text.startsWith("[DEBUG]")) console.debug(text);
-            else console.error(text);
-            start = i + 1;
-        }
-    }
-    carry.bytes = start === 0 ? merged : merged.subarray(start);
-}
-writeSemioGuestLogLine.semioGuestLogCarry = true;
-const stdoutStream = outputStreamCreate({
-    write(contents) {
-        writeSemioGuestLogLine("stdout", contents, stdoutCarry);
-    },
-    blockingFlush() { },
-    [symbolDispose]() { },
-});
-const stderrStream = outputStreamCreate({
-    write(contents) {
-        writeSemioGuestLogLine("stderr", contents, stderrCarry);
-    },
-    blockingFlush() { },
-    [symbolDispose]() { },
-});
-export const stdin = {`
-  );
-  if (patched === source) throw new Error(`preview2 cli.js line-buffer patch did not match: ${cliPath}`);
-  writeFileSync(cliPath, patched);
+  const original = "consoleStream((line) => console.error(line))";
+  const classified = 'consoleStream((line) => line.startsWith("[DEBUG]") ? console.debug(line) : console.error(line))';
+  const originalCount = source.split(original).length - 1, classifiedCount = source.split(classified).length - 1;
+  if (originalCount === 0 && classifiedCount === 2) return;
+  if (originalCount !== 2 || classifiedCount !== 0) throw new Error(`preview2 cli.js guest-log patch did not match: ${cliPath}`);
+  writeFileSync(cliPath, source.replaceAll(original, classified));
 }
 
 /**

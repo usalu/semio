@@ -33,8 +33,8 @@ impl MutationKind<WriterSnapshot, WriterMutation> for ChangeLanguage {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change document language to \"{}\"", self.new_language_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change document language to \"{}\"", self.new_language_id), &format!("Dokumentsprache auf \"{}\" ändern", self.new_language_id))
     }
 }
 //#endregion 🔖️Mutation

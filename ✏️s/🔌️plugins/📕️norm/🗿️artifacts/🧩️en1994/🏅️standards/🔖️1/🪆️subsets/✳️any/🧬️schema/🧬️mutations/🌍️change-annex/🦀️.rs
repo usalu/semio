@@ -20,8 +20,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeAnnex {
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change annex to {:?}", self.new_annex)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change annex to {:?}", self.new_annex), &format!("Anhang auf {:?} ändern", self.new_annex))
     }
 }
 //#endregion 🔖️Payload

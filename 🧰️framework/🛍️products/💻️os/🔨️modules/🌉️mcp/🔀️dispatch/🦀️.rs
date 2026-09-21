@@ -588,6 +588,21 @@ impl ActionAdapter {
         *self.history_undo_port.lock().expect("history undo port lock poisoned") = Some(port);
     }
 
+    /// 📖️ The LIVE document of the guest session `instance` addresses, straight off this adapter's
+    /// own channel — the same instance every `action_prepare`/`action_invoke` on that plugin drives.
+    ///
+    /// 🧊️ `artifact_snapshot` needs exactly this. Reading the persisted row instead answered the
+    /// bytes as they were when the artifact was created, so a snapshot taken after a committed
+    /// mutation was byte-identical to one taken before it and an agent following the shipped
+    /// `mutate-safely` prompt ("re-read the artifact and confirm the change landed") could not
+    /// (`📓️ce1-client-e2e-pinning-and-puzzle-bound.md` §8 gap 4).
+    pub fn read_session_artifact(&self, instance: u32) -> Result<(Vec<u8>, Vec<u8>), GatewayError> {
+        match self.exchange_one(instance, AppCommand::ReadArtifact)? {
+            AppFrame::Artifact { pack, spr } => Ok((pack, spr)),
+            other => Err(GatewayError::new(GatewayErrorCode::Internal, format!("instance {instance} answered ReadArtifact with {other:?}"))),
+        }
+    }
+
     /// ⛩️ Binds the human-in-the-loop resolution chain a parked approval is offered through
     /// (`🛡️policy::ApprovalCoordinator`). Unbound, a destructive capability still parks a handle and
     /// still answers `APPROVAL_REQUIRED` — it just says so without having asked anyone, which is the

@@ -23,6 +23,11 @@ pub struct WriterDiff {
     pub language_id: Option<String>,
     #[state(artifact)]
     pub uri: Option<String>,
+    /// ✍️ The authored body the replacement `document` handle was minted from — the persisted
+    /// payload of the composed child slot (`WriterSnapshot::text`). It travels WITH the handle so an
+    /// applied diff leaves the parent able to re-derive its child through `genesis_writer_child_pack`.
+    #[state(artifact)]
+    pub text: Option<String>,
     #[state(artifact)]
     pub document: Option<WriterDocumentChild>,
 }

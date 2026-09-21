@@ -618,7 +618,9 @@ pub struct PluginArtifactChannel {
     /// instantiate `compiled` at all.
     runtime: Arc<GuestRuntimes>,
     compiled: semio_framework_plugin_host::CompiledHandle,
-    entry: PluginRegistryEntry,
+    /// 🔌️ The plugin this channel drives. It is the id alone, never a registry ROW: the row names a
+    /// repo path this channel has no use for, and a hub-authorized component has no repo path at all.
+    plugin_id: String,
     descriptor: semio_framework::PackageDescriptor,
     app_ref: semio_framework::AppRef,
     actor_label: String,
@@ -627,6 +629,15 @@ pub struct PluginArtifactChannel {
     pending_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
     rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
     next_seq: u64,
+    /// 🗿️ The artifact id this channel's ONE live guest session document is, when the owning
+    /// workspace has bound exactly one artifact to this plugin. Every `RevisionStamp` this channel
+    /// answers names it.
+    ///
+    /// 🐛️ Before ticket 26/09/18 slice M8 the stamp carried `entry.plugin_id`, so the headless
+    /// lane's `expectedRevision` named `"note"` while `artifact_create`/`artifact_snapshot` named
+    /// `"…-typed"` — two ids for one document, and `artifact_snapshot(revisionAfter.artifactId)`
+    /// answered `no such artifact: note` (`📓️ce1-client-e2e-pinning-and-puzzle-bound.md` §8 gap 4).
+    session_artifact_id: Option<String>,
     /// 💡️ Lazily opened on the FIRST `AppCommand::Infer` — a second guest activation of the same
     /// component, dedicated to the cold `semio.infer` job lane. Deliberately separate from
     /// `instances` above: `PluginInstanceHandle` takes ownership of its `GuestInstance` and drives
@@ -915,14 +926,22 @@ impl PluginArtifactChannel {
     }
 
     pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Result<Self, GatewayError> {
-        let runtime = shared_plugin_runtime()?;
         let wasm_path = resolve_plugin_wasm_path(&repo_root, &entry)?;
         let bytes = std::fs::read(&wasm_path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", wasm_path.display())))?;
-        let compiled = shared_compiled_component(runtime.as_ref(), &entry.plugin_id, &bytes)?;
+        Self::from_component(&bytes, entry.plugin_id, descriptor, app_ref, actor_label)
+    }
+
+    /// 🧩️ Opens a channel over component bytes the caller already holds, whatever their provenance —
+    /// a repo build read from disk, or the execution-target component a Hub authorized and served.
+    /// Everything past the bytes is identical, which is exactly the point: a hub-bound agent's guest
+    /// is the SAME guest a local one gets, not a second code path with its own behaviour.
+    pub fn from_component(bytes: &[u8], plugin_id: String, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Result<Self, GatewayError> {
+        let runtime = shared_plugin_runtime()?;
+        let compiled = shared_compiled_component(runtime.as_ref(), &plugin_id, bytes)?;
         Ok(Self {
             runtime,
             compiled,
-            entry,
+            plugin_id,
             descriptor,
             app_ref,
             actor_label,
@@ -931,8 +950,24 @@ impl PluginArtifactChannel {
             pending_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
             rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
             next_seq: 1,
+            session_artifact_id: None,
             inference: None,
         })
+    }
+
+    /// 🗿️ Names the artifact this channel's guest session document is, for the stamps it answers.
+    /// `None` means the owning workspace has bound no artifact to this plugin, or more than one —
+    /// see [`Self::session_artifact_id`].
+    pub fn bind_session_artifact(&mut self, artifact_id: Option<String>) {
+        self.session_artifact_id = artifact_id;
+    }
+
+    /// 🗿️ What a `RevisionStamp` from this channel names. A channel with no bound artifact answers
+    /// the plugin-scoped session pseudo-id `plugin:<id>` — which is what the document IS in that
+    /// case, a plugin's genesis session no client can address — never the bare plugin id, which a
+    /// client would read as an artifact id and pass straight back into `artifact_snapshot`.
+    fn stamped_artifact_id(&self) -> String {
+        self.session_artifact_id.clone().unwrap_or_else(|| format!("plugin:{}", self.plugin_id))
     }
 
     /// 💡️ Opens (once) this plugin's real inference route: a fresh `GuestRuntimes` over the SAME
@@ -954,7 +989,7 @@ impl PluginArtifactChannel {
                 .collect::<Result<Vec<_>, _>>()
                 .map_err(|error| Self::not_wired("inference roster", error))?;
             if roster.is_empty() {
-                return Err(Fault { code: "capability.not-found".to_string(), message: format!("plugin `{}` declares no inference service in its committed descriptor", self.entry.plugin_id) });
+                return Err(Fault { code: "capability.not-found".to_string(), message: format!("plugin `{}` declares no inference service in its committed descriptor", self.plugin_id) });
             }
             let roster_bytes = serde_json::to_vec(&roster).map_err(|error| Self::not_wired("inference roster", error))?;
             let actor = semio_framework::io::resolve_ready(semio_framework_actor::ActorId::new(INFERENCE_ACTOR_ORDINAL, 0, 1, 0));
@@ -969,7 +1004,7 @@ impl PluginArtifactChannel {
             let instance = semio_framework_async::block_on(semio_framework_plugin_host::GuestRuntime::instantiate(runtimes.as_ref(), &self.compiled, actor, &caps, &budget)).map_err(|error| Self::not_wired("inference instantiate", error))?;
             let handle = Arc::new(semio_framework_async::block_on(semio_framework_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&runtimes), instance)));
             let router = semio_framework_plugin_host::ArtifactInferenceRouter::new();
-            semio_framework_async::block_on(router.register_plugin(&self.entry.plugin_id, &self.descriptor.manifest.dependencies, handle, &roster_bytes)).map_err(|error| Self::not_wired("inference route registration", error))?;
+            semio_framework_async::block_on(router.register_plugin(&self.plugin_id, &self.descriptor.manifest.dependencies, handle, &roster_bytes)).map_err(|error| Self::not_wired("inference route registration", error))?;
             self.inference = Some(PluginInferenceRoute { router });
         }
         Ok(self.inference.as_ref().expect("inference route was just opened"))
@@ -991,7 +1026,7 @@ impl PluginArtifactChannel {
             .cloned()
             .ok_or_else(|| Fault {
                 code: "capability.not-found".to_string(),
-                message: format!("plugin `{}` declares no inference `{}` on artifact kind `{}`", self.entry.plugin_id, command.inference_schema, command.artifact_kind),
+                message: format!("plugin `{}` declares no inference `{}` on artifact kind `{}`", self.plugin_id, command.inference_schema, command.artifact_kind),
             })?;
         let request = crate::schema::ArtifactInferenceRequestV1 {
             wire_version: crate::schema::ARTIFACT_INFERENCE_WIRE_VERSION,
@@ -1040,7 +1075,7 @@ impl PluginArtifactChannel {
     /// kind.id, …}))`) — an agent therefore addresses the very pane a human's first window is,
     /// rather than a synthetic id no shell would ever produce.
     fn addressed_action_invocation(&self, capability_id: &str, input: &serde_json::Value) -> Result<semio_framework::manifest::ActionInvocation, Fault> {
-        let plugin_id = self.entry.plugin_id.as_str();
+        let plugin_id = self.plugin_id.as_str();
         let mut address: Option<semio_framework::manifest::ActionAddress> = None;
         'apps: for app in self.descriptor.manifest.apps.iter() {
             let base_window = app.window_kinds.iter().next().map(|kind| kind.id.clone());
@@ -1801,7 +1836,7 @@ impl ArtifactChannel for PluginArtifactChannel {
                         // throughout, so an optimistic-concurrency client would have re-committed
                         // over an undo without ever seeing a `REVISION_CONFLICT`.
                         AppFrame::HistorySnapshot(RevisionStamp {
-                            artifact_id: self.entry.plugin_id.clone(),
+                            artifact_id: self.stamped_artifact_id(),
                             head_edit_id: patch.upserts.iter().find(|entry| entry.applied).map(|entry| entry.action_id.clone()).unwrap_or_default(),
                             cursor: patch.cursor.to_string(),
                         })
@@ -1989,14 +2024,77 @@ fn routing_fault(error: GatewayError) -> Fault {
 /// → committed descriptor → editor app → real `PluginArtifactChannel`) for a bare `plugin_id`,
 /// differing only in where `repo_root`/`actor_label` come from.
 #[cfg(not(target_arch = "wasm32"))]
-fn open_plugin_artifact_channel(repo_root: Option<&Path>, plugin_id: &str, actor_label: &str) -> Result<PluginArtifactChannel, GatewayError> {
-    let repo_root = repo_root.ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, "repo root not found — cannot locate the plugin registry or compiled wasm"))?.to_path_buf();
-    let registry = load_plugin_registry(&repo_root)?;
-    let entry = find_plugin_entry(&registry, plugin_id)?.clone();
-    let descriptor = load_package_descriptor(&entry.owner_root)?;
+fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_id: &str, actor_label: &str) -> Result<PluginArtifactChannel, GatewayError> {
+    let (bytes, descriptor) = match source.ok_or_else(|| {
+        GatewayError::new(GatewayErrorCode::Internal, "this workspace is bound to no plugin component source — neither a repo build tree nor an authenticated hub execution target")
+    })? {
+        PluginComponentSource::Repo(repo_root) => {
+            let registry = load_plugin_registry(repo_root)?;
+            let entry = find_plugin_entry(&registry, plugin_id)?.clone();
+            let descriptor = load_package_descriptor(&entry.owner_root)?;
+            let wasm_path = resolve_plugin_wasm_path(repo_root, &entry)?;
+            let bytes = std::fs::read(&wasm_path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", wasm_path.display())))?;
+            (bytes, descriptor)
+        }
+        PluginComponentSource::Hub(hub) => hub.resolve(plugin_id)?,
+    };
     let editor_app = descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?;
     let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: editor_app.id.clone() };
-    PluginArtifactChannel::new(repo_root, entry, descriptor, app_ref, actor_label.to_string())
+    PluginArtifactChannel::from_component(&bytes, plugin_id.to_string(), descriptor, app_ref, actor_label.to_string())
+}
+
+/// 🧩️ Where a workspace's plugin components come from. A `--folder` workspace builds them itself and
+/// reads them off the repo's own `wasm32-wasip2` deliverable tree; a `--hub` workspace has NO repo —
+/// its components are the execution targets the Hub authorized, served by the Hub, verified against
+/// the Hub's own manifest. One enum rather than an `Option<PathBuf>` that silently means "no plugins
+/// at all" for every hub-bound session, which is what made every `action_prepare` from an agent
+/// answer `repo root not found` (M8 §5.3, measured live 2026-09-21).
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone)]
+pub enum PluginComponentSource {
+    Repo(PathBuf),
+    Hub(Arc<HubPluginComponents>),
+}
+
+/// 🌎️ Resolves a plugin id to the component bytes and package descriptor the authenticated Hub
+/// selected for one of the space's own documents. The descriptor comes from the catalog snapshot the
+/// binding already verified (manifest identity, canonical projection, digest); only the component
+/// bytes are fetched here, lazily, and cached by the exact `(catalog generation, component SHA-256)`
+/// that authorized them — so a republished catalog is a different entry, never a stale hit.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct HubPluginComponents {
+    binding: Arc<HubRemoteBinding>,
+    driver: Arc<NativeHubBindingDriver>,
+    cache: Mutex<HashMap<(String, String), Arc<Vec<u8>>>>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl HubPluginComponents {
+    pub fn new(binding: Arc<HubRemoteBinding>, driver: Arc<NativeHubBindingDriver>) -> Self {
+        Self { binding, driver, cache: Mutex::new(HashMap::new()) }
+    }
+
+    /// 🧩️ The component bytes and descriptor for `plugin_id`, fetched through the document scope the
+    /// Hub itself resolved that package for. A plugin no document in this space uses is a typed
+    /// refusal naming the plugins the space's own catalog does carry — never a repo-path fallback,
+    /// because a hub-bound agent must run exactly the code the hub authorized or none.
+    pub fn resolve(&self, plugin_id: &str) -> Result<(Vec<u8>, semio_framework::PackageDescriptor), GatewayError> {
+        let catalog = self.binding.ready_catalog_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX))?;
+        let selection = catalog.selections.iter().find(|selection| selection.lease.package.plugin_id == plugin_id).ok_or_else(|| {
+            let available: Vec<&str> = catalog.selections.iter().map(|selection| selection.lease.package.plugin_id.as_str()).collect();
+            GatewayError::new(
+                GatewayErrorCode::NotFound,
+                format!("this hub space authorizes no execution target for plugin `{plugin_id}`; its catalog selects {}", if available.is_empty() { "no plugin at all".to_string() } else { available.join(", ") }),
+            )
+        })?;
+        let key = (selection.lease.catalog.generation_id.clone(), selection.lease.component.sha256.clone());
+        if let Some(bytes) = self.cache.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&key) {
+            return Ok((bytes.as_ref().clone(), selection.descriptor.clone()));
+        }
+        let bytes = Arc::new(self.driver.fetch_execution_target_component(&selection.scope, &selection.lease.component, &format!("mcp-component-{plugin_id}"))?);
+        self.cache.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, Arc::clone(&bytes));
+        Ok((bytes.as_ref().clone(), selection.descriptor.clone()))
+    }
 }
 
 /// 🚦️ `crate::actions::ArtifactChannel` implementor that picks the plugin from the CALL instead of
@@ -2013,15 +2111,31 @@ fn open_plugin_artifact_channel(repo_root: Option<&Path>, plugin_id: &str, actor
 #[cfg(not(target_arch = "wasm32"))]
 pub struct RoutingArtifactChannel {
     catalog: Arc<Catalog>,
-    repo_root: Option<PathBuf>,
+    components: Option<PluginComponentSource>,
     actor_label: String,
     channels: Mutex<HashMap<String, PluginArtifactChannel>>,
+    /// 🗿️ The owning workspace's own `artifact_id` → binding map, shared by `Arc`. Read INVERSELY
+    /// here — plugin id → the artifact this workspace bound to it — so every stamp a command answers
+    /// with names the artifact a client can address, not the plugin that happens to host it.
+    plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl RoutingArtifactChannel {
-    pub fn new(catalog: Arc<Catalog>, repo_root: Option<PathBuf>, actor_label: String) -> Self {
-        Self { catalog, repo_root, actor_label, channels: Mutex::new(HashMap::new()) }
+    pub fn new(catalog: Arc<Catalog>, components: Option<PluginComponentSource>, actor_label: String, plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>) -> Self {
+        Self { catalog, components, actor_label, channels: Mutex::new(HashMap::new()), plugin_artifacts }
+    }
+
+    /// 🗿️ The artifact `plugin_id`'s live session document IS, or `None` when this workspace has
+    /// bound none — or more than one, which no single stamp could name truthfully.
+    fn session_artifact_for(&self, plugin_id: &str) -> Option<String> {
+        let bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut matches = bound.iter().filter(|(_, binding)| binding.plugin_id == plugin_id).map(|(artifact_id, _)| artifact_id.clone());
+        let first = matches.next()?;
+        if matches.next().is_some() {
+            return None;
+        }
+        Some(first)
     }
 
     fn plugin_id_for(&self, instance: u32, commands: &[AppCommand]) -> Result<String, Fault> {
@@ -2051,12 +2165,18 @@ impl RoutingArtifactChannel {
 impl ArtifactChannel for RoutingArtifactChannel {
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         let plugin_id = self.plugin_id_for(instance, &commands)?;
+        let session_artifact_id = self.session_artifact_for(&plugin_id);
         let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
         if !channels.contains_key(&plugin_id) {
-            let channel = open_plugin_artifact_channel(self.repo_root.as_deref(), &plugin_id, &self.actor_label).map_err(routing_fault)?;
+            let channel = open_plugin_artifact_channel(self.components.as_ref(), &plugin_id, &self.actor_label).map_err(routing_fault)?;
             channels.insert(plugin_id.clone(), channel);
         }
-        channels.get_mut(&plugin_id).expect("just inserted above").exchange(instance, commands)
+        let channel = channels.get_mut(&plugin_id).expect("just inserted above");
+        // 🗿️ Re-read on every exchange, never once at open: `artifact_create` binds the artifact
+        // AFTER the channel that seeded it from the plugin's genesis was already opened, so a
+        // stamp taken from an open-time snapshot would name nothing for the very first mutation.
+        channel.bind_session_artifact(session_artifact_id);
+        channel.exchange(instance, commands)
     }
 }
 //#endregion 🔖️Routing
@@ -2117,7 +2237,14 @@ impl ShellRoutedArtifactChannel {
 impl ArtifactChannel for ShellRoutedArtifactChannel {
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         match self.binding.resolve() {
-            crate::shell_channel::ChannelKind::Shell => self.shell.exchange(instance, commands),
+            crate::shell_channel::ChannelKind::Shell => {
+                // 🎯️ Name the artifact's owner before dispatching, exactly as the headless lane
+                // does: without it a capability-less leg of the mutation protocol (`ReadArtifact`,
+                // `ReadHistory`) had nothing to resolve an instance from and refused as soon as the
+                // shell had more than one program open.
+                self.shell.pin_plugin(self.headless.plugin_id_for(instance, &commands).ok());
+                self.shell.exchange(instance, commands)
+            }
             crate::shell_channel::ChannelKind::Headless => self.headless.exchange(instance, commands),
         }
     }
@@ -2144,12 +2271,22 @@ pub struct HeadlessWorkspace {
     /// `RoutingArtifactChannel` (`open_routing_channel`). `prepare_action`/`invoke_action` delegate to
     /// it rather than duplicating that protocol — see those methods' own doc for why.
     action_adapter: Mutex<Option<Arc<ActionAdapter>>>,
+    /// 🗿️ The ROOT-owned adapter `action_prepare`/`action_invoke` actually drive
+    /// (`🦀️.rs`'s `build_server_with_workspace`), bound once before the server serves. It is the
+    /// only holder of the guest instances a committed mutation lives in, so it is the only place
+    /// `artifact_snapshot` can read a document as the agent just left it.
+    #[cfg(not(target_arch = "wasm32"))]
+    root_actions: OnceLock<Arc<ActionAdapter>>,
     /// 🗂️ `artifact_id` → the plugin-typed binding [`HeadlessWorkspace::create_plugin_artifact`]
     /// minted for it. The probe lane (`open_probes`) covers this crate's own generic document; this
     /// covers every artifact created for a REAL plugin artifact kind, and is what finally gives
     /// `artifact_export`/`semio://artifact/{id}/schema` an artifact → plugin mapping instead of the
     /// "exactly one registered plugin or bust" guess they used to make.
-    plugin_artifacts: Mutex<HashMap<String, PluginArtifactBinding>>,
+    ///
+    /// 🗿️ Shared with this workspace's [`RoutingArtifactChannel`] (`Arc`, one map, never a copy):
+    /// the channel needs the INVERSE lookup — which artifact a plugin's live session document is —
+    /// so `AppFrame::HistorySnapshot` can stamp the artifact rather than the plugin id.
+    plugin_artifacts: Arc<Mutex<HashMap<String, PluginArtifactBinding>>>,
     /// 🐚️ The session's channel decision, published once by `server_for_workspace_options`. The
     /// artifact-level verbs that open a channel of their OWN (`create_plugin_artifact`,
     /// `export_artifact_media` — they never pass through `ActionAdapter`) consult it, so a session
@@ -2158,7 +2295,10 @@ pub struct HeadlessWorkspace {
     shell_route: OnceLock<(Arc<crate::shell_channel::SessionChannelBinding>, Arc<Catalog>)>,
     hub_binding: Option<Arc<HubRemoteBinding>>,
     #[cfg(not(target_arch = "wasm32"))]
-    hub_driver: Option<NativeHubBindingDriver>,
+    hub_driver: Option<Arc<NativeHubBindingDriver>>,
+    /// 🧩️ Where this workspace's plugin components come from — see [`PluginComponentSource`].
+    #[cfg(not(target_arch = "wasm32"))]
+    plugin_components: Option<PluginComponentSource>,
 }
 
 /// 🗂️ One artifact kind an installed plugin really declares — the row `artifact_create{kind}`
@@ -2216,11 +2356,15 @@ impl HeadlessWorkspace {
             catalog,
             open_probes: Mutex::new(HashMap::new()),
             action_adapter: Mutex::new(None),
-            plugin_artifacts: Mutex::new(HashMap::new()),
+            #[cfg(not(target_arch = "wasm32"))]
+            root_actions: OnceLock::new(),
+            plugin_artifacts: Arc::new(Mutex::new(HashMap::new())),
             shell_route: OnceLock::new(),
             hub_binding: None,
             #[cfg(not(target_arch = "wasm32"))]
             hub_driver: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            plugin_components: find_repo_root().ok().map(PluginComponentSource::Repo),
         }
     }
 
@@ -2238,8 +2382,12 @@ impl HeadlessWorkspace {
             let (binding, driver, grant_source) = NativeHubBindingDriver::connect(credential.clone(), &base_url, &space_id)?;
             let descriptors = binding.ready_catalog_snapshot(i64::try_from(now_ms()).unwrap_or(i64::MAX))?.selections.iter().map(|selection| selection.descriptor.clone()).collect();
             let catalog = Arc::new(crate::catalog_from_descriptors(descriptors)?);
+            let driver = Arc::new(driver);
             let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id }, principal, scopes, catalog);
             workspace.repo_root = None;
+            // 🧩️ A hub-bound workspace runs the HUB's components, never a build tree that happens to
+            // sit on the same disk: the hub is the authority over what code opens its documents.
+            workspace.plugin_components = Some(PluginComponentSource::Hub(Arc::new(HubPluginComponents::new(Arc::clone(&binding), Arc::clone(&driver)))));
             workspace.artifact_host.set_local_hub_credential(credential);
             workspace.artifact_host.set_hub_socket_grant_source(grant_source);
             workspace.hub_binding = Some(binding);
@@ -2255,6 +2403,13 @@ impl HeadlessWorkspace {
 
     pub fn origin(&self) -> &WorkspaceOrigin {
         &self.origin
+    }
+
+    /// 🧩️ This workspace's plugin component source — the repo's own build tree for `--folder`, the
+    /// hub's authorized execution targets for `--hub`.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn plugin_components(&self) -> Option<PluginComponentSource> {
+        self.plugin_components.clone()
     }
 
     /// 🔐 The live Hub-selected package roster. Folder workspaces have no Hub authority and callers
@@ -2304,10 +2459,13 @@ impl HeadlessWorkspace {
         let Some(document) = snapshot.documents.values().find(|document| document.scope.document_id == artifact_id) else {
             return Ok(false);
         };
-        if document.view.descriptor.artifact_schema != PROBE_SCHEMA || document.view.descriptor.pack_schema_hash != PROBE_PACK_SCHEMA_HASH {
-            return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("artifact `{artifact_id}` is not the authenticated MCP probe schema")).retryable());
-        }
-        Ok(true)
+        // 🗿️ A hub document of another schema is not an ERROR, it is simply not a probe document.
+        // This used to answer a retryable `PLUGIN_UNAVAILABLE` naming the probe schema, which made
+        // `artifact_open` of EVERY real hub document fail before it ever reached
+        // [`Self::read_artifact_bytes`] — measured live on hub 7631 against a `gis.map` document
+        // (ticket 26/09/18 slice M8, `📓️m8-mcp-agent-third-participant.md` §2.3 row 4). The
+        // predicate's own name is the contract: it answers whether the probe lane owns this id.
+        Ok(document.view.descriptor.artifact_schema == PROBE_SCHEMA && document.view.descriptor.pack_schema_hash == PROBE_PACK_SCHEMA_HASH)
     }
 
     fn actor_label(&self) -> String {
@@ -2372,15 +2530,26 @@ impl HeadlessWorkspace {
             if let Some(bytes) = self.read_session_artifact_bytes(&binding.plugin_id)? {
                 return Ok(Some(bytes));
             }
+            // 🧊️ Headless lane: the live guest instance the mutation went to, never the row frozen
+            // at create time — see [`Self::read_live_session_artifact_bytes`].
+            if let Some(bytes) = self.read_live_session_artifact_bytes(&binding.plugin_id)? {
+                return Ok(Some(bytes));
+            }
         }
         if matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
             let snapshot = self.hub_snapshot()?;
-            let known = snapshot.documents.keys().any(|scope| scope.document_id == artifact_id);
-            return if known {
-                Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("artifact {artifact_id} has authenticated descriptor metadata, but canonical artifact bytes remain unavailable until P4-B")).retryable())
-            } else {
-                Ok(None)
+            let Some(scope) = snapshot.documents.keys().find(|scope| scope.document_id == artifact_id).cloned() else {
+                return Ok(None);
             };
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                return self.read_hub_canonical_pair(&scope).map(Some);
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                let _ = scope;
+                return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "native hub canonical pair transport is unavailable on wasm32").retryable());
+            }
         }
         match &self.origin {
             WorkspaceOrigin::Folder { path } => {
@@ -2389,6 +2558,17 @@ impl HeadlessWorkspace {
             }
             WorkspaceOrigin::Hub { .. } => unreachable!("hub reads return before local probe or folder access"),
         }
+    }
+
+    /// 📖️ One hub document's canonical `pack`/`spr`, off the authenticated binding's own verified
+    /// pair mount — the identical call `semio://workspace/scopes/{space}/{doc}/checkpoint` already
+    /// makes, projected to the bytes. See [`remote::NativeHubBindingDriver::read_canonical_pair_bytes`].
+    #[cfg(not(target_arch = "wasm32"))]
+    fn read_hub_canonical_pair(&self, scope: &DocumentScope) -> Result<(Vec<u8>, Vec<u8>), GatewayError> {
+        let binding = self.hub_binding.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub descriptor binding is unbound").retryable())?;
+        let driver = self.hub_driver.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub binding actor is not running").retryable())?;
+        let cancel = semio_framework_async::CancelToken::root_now();
+        driver.read_canonical_pair_bytes(binding.as_ref(), scope, &cancel).map_err(remote::pair_mount_error_to_gateway)
     }
 
     fn hub_snapshot(&self) -> Result<Arc<AuthorizedDescriptorSnapshot>, GatewayError> {
@@ -2512,7 +2692,7 @@ impl HeadlessWorkspace {
     /// and any caller that already knows exactly which plugin it wants (never duplicated).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn open_artifact_channel(&self, plugin_id: &str) -> Result<PluginArtifactChannel, GatewayError> {
-        open_plugin_artifact_channel(self.repo_root.as_deref(), plugin_id, &self.actor_label())
+        open_plugin_artifact_channel(self.plugin_components().as_ref(), plugin_id, &self.actor_label())
     }
 
     /// 🐚️ Publishes this session's channel decision into the workspace. Called once, by
@@ -2542,6 +2722,23 @@ impl HeadlessWorkspace {
     /// name — `SIDE_EFFECT_REJECTED` carrying the shell's own fault text — because a silent fall
     /// back to the frozen row is exactly the stale answer this lane exists to kill.
     #[cfg(not(target_arch = "wasm32"))]
+    /// 🔌️ Binds the root-owned `ActionAdapter` once, before the server serves. Idempotent: a second
+    /// bind is ignored rather than swapping the adapter under an in-flight call.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn bind_root_action_adapter(&self, actions: Arc<ActionAdapter>) {
+        let _ = self.root_actions.set(actions);
+    }
+
+    /// 📖️ `plugin_id`'s LIVE headless session document, off the root adapter's own guest instance —
+    /// the one a committed `action_invoke` mutated. `None` when no adapter is bound (a bare
+    /// workspace in a unit test) or when this workspace's catalog gives the plugin no instance slot.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn read_live_session_artifact_bytes(&self, plugin_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
+        let Some(actions) = self.root_actions.get() else { return Ok(None) };
+        let Some(instance) = plugin_instance_slot(&self.catalog, plugin_id) else { return Ok(None) };
+        actions.read_session_artifact(instance).map(Some)
+    }
+
     fn read_session_artifact_bytes(&self, plugin_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         let Some((binding, catalog)) = self.shell_route.get() else { return Ok(None) };
         if binding.resolve() != crate::shell_channel::ChannelKind::Shell {
@@ -2673,7 +2870,7 @@ impl HeadlessWorkspace {
     /// its ONLY call site that names this method).
     #[cfg(not(target_arch = "wasm32"))]
     pub fn open_routing_channel(&self) -> RoutingArtifactChannel {
-        RoutingArtifactChannel::new(self.catalog.clone(), self.repo_root.clone(), self.actor_label())
+        RoutingArtifactChannel::new(self.catalog.clone(), self.plugin_components(), self.actor_label(), Arc::clone(&self.plugin_artifacts))
     }
 
     /// 🎬️ Lazily builds (and caches) the real `ActionAdapter` `prepare_action`/`invoke_action`
@@ -2965,14 +3162,34 @@ impl HeadlessWorkspace {
             if !snapshot.documents.keys().any(|scope| scope.document_id == artifact_id) {
                 return Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")));
             }
-            let unavailable = match suffix {
-                None => "canonical artifact bodies remain unavailable until P4-B",
-                Some("schema") => "artifact schema remains unavailable until P4-B verifies and decodes a canonical pair",
-                Some("validation") => "artifact validation remains unavailable until P4-B verifies and decodes a canonical pair",
-                Some("history") => "artifact history remains unavailable until a revision-bound remote history surface exists",
+            // 🗿️ The body and the schema are both answerable for a hub document: the body from the
+            // authenticated binding's own verified canonical pair, the schema from the descriptor
+            // the binding already published (`DocumentDescriptor.artifact_schema` — the hub's own
+            // authority over what this document IS, never a guess). Only `history` and `validation`
+            // remain typed gaps, and they are gaps in the WIRE, not in this binding.
+            match suffix {
+                None => {
+                    let scope = snapshot.documents.keys().find(|scope| scope.document_id == artifact_id).cloned().ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")))?;
+                    let (pack, spr) = self.read_hub_canonical_pair(&scope)?;
+                    let body = serde_json::json!({ "artifactId": artifact_id, "packBytes": pack.len(), "sprBytes": spr.len(), "packBase64": base64_encode(&pack) });
+                    return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
+                }
+                // 🪢 Two vocabularies, both published, neither collapsed into the other. `schema` is
+                // the PACK schema (`gis.map`) — what the bytes are. `artifactKind` is the owning
+                // app's dialect coordinate (`s.gis.gismap`, the `s.<plugin>[.<app>]` grammar
+                // `DocumentIndexEntryV1::validate` enforces) — what a capability's `artifactKind`
+                // filter and `capabilities_search` match on. Publishing only the schema is what made
+                // an agent unable to match ANY verb to a hub document (M8 §5.4(1), measured live).
+                Some("schema") => {
+                    let document = snapshot.documents.values().find(|document| document.scope.document_id == artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")))?;
+                    let body =
+                        serde_json::json!({ "artifactId": artifact_id, "schema": document.view.descriptor.artifact_schema, "artifactKind": document.view.descriptor.artifact_kind, "spaceId": document.scope.space_id });
+                    return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
+                }
+                Some("validation") => return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "artifact validation remains unavailable until the wire protocol carries a validate query command").retryable()),
+                Some("history") => return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "artifact history remains unavailable until a revision-bound remote history surface exists").retryable()),
                 Some(_) => return Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact sub-resource for {artifact_id}"))),
-            };
-            return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, unavailable).retryable());
+            }
         }
         match suffix {
             None => match self.read_artifact_bytes(artifact_id)? {
@@ -3061,7 +3278,7 @@ impl HeadlessWorkspace {
 
     #[cfg(not(target_arch = "wasm32"))]
     fn hub_inference_driver(&self) -> Result<&NativeHubBindingDriver, GatewayError> {
-        self.hub_driver.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub binding actor is not running").retryable())
+        self.hub_driver.as_deref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub binding actor is not running").retryable())
     }
 
     /// 👤️ The live authenticated subject every inference job in this process is owned by.

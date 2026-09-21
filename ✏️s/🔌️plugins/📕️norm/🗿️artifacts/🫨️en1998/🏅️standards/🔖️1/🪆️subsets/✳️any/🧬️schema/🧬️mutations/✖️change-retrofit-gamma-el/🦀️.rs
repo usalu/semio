@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeRetrofitGa
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change retrofit confidence factor gamma_el to {}", self.new_retrofit_gamma_el)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change retrofit confidence factor gamma_el to {}", self.new_retrofit_gamma_el), &format!("Sanierungsvertrauenfaktorgamma_el auf {} ändern", self.new_retrofit_gamma_el))
     }
 }
 //#endregion 🔖️ChangeRetrofitGammaEl

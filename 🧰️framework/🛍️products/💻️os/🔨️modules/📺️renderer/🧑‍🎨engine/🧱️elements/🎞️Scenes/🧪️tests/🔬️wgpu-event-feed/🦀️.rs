@@ -56,6 +56,7 @@ fn known_tones_resolve_to_distinct_theme_tokens() {
 fn render_feed_entry(tone: Option<&str>) -> (ui_wgpu::wgpu::DrawList, Theme) {
     let entry = json!({ "id": "e1", "title": "Built", "tone": tone });
     let scene = UiComponentSceneNode {
+        host_id: "feed-paint-test".into(),
         surface_id: "feed-paint-test".into(),
         controller_id: "controller".into(),
         component_kind: SurfaceKind::EventFeed,
@@ -119,6 +120,7 @@ fn error_tone_title_is_tinted_theme_error() {
 fn row_activation_sends_surface_id_and_id_like_react() {
     let entries = json!([{ "id": "e1", "title": "Built" }, { "id": "e2", "title": "Failed" }]).to_string();
     let scene = UiComponentSceneNode {
+        host_id: "feed-press-test".into(),
         surface_id: "feed-press-test".into(),
         controller_id: "controller".into(),
         component_kind: SurfaceKind::EventFeed,
@@ -160,6 +162,7 @@ fn rows_without_an_activate_action_resolve_hover_only() {
     let (_, _) = render_feed_entry(None);
     let entries = json!([{ "id": "e1", "title": "Built" }]).to_string();
     let mut scene = UiComponentSceneNode {
+        host_id: "feed-press-inert".into(),
         surface_id: "feed-press-inert".into(),
         controller_id: "controller".into(),
         component_kind: SurfaceKind::EventFeed,

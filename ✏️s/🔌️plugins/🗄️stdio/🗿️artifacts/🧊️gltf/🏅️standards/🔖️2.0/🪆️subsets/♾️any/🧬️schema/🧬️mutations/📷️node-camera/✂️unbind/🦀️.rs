@@ -60,8 +60,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for UnbindNodeCam
         vec![super::GltfMutation::UnbindNodeCamera(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Unbind Node Camera".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Unbind Node Camera", "Knotenkamera lösen")
     }
 
     fn target(&self) -> Vec<String> {

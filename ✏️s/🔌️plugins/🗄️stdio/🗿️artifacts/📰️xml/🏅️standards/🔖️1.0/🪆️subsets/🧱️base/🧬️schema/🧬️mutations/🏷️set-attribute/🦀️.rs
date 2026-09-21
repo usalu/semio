@@ -68,8 +68,8 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetAttributeMut
         vec![super::XmlMutation::SetAttribute(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Set Attribute".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Attribute", "Attribut setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-attribute".to_string()]

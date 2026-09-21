@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeStorag
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change storage duration to {}", self.new_storage_t_h)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change storage duration to {}", self.new_storage_t_h), &format!("Speicherdauer auf {} ändern", self.new_storage_t_h))
     }
 }
 //#endregion 🔖️ChangeStorageTH

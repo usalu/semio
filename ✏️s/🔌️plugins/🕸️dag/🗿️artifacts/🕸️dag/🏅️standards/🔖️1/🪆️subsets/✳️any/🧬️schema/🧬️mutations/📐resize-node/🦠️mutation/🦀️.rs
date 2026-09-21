@@ -29,8 +29,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ResizeNode {
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Resize node \"{}\" to ({}, {})", self.id, self.width, self.height)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Resize node \"{}\" to ({}, {})", self.id, self.width, self.height), &format!("Knoten \"{}\" auf ({}, {}) skalieren", self.id, self.width, self.height))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

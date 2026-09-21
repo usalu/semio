@@ -3,7 +3,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 pub use neural_engine as neural;
 pub use protocol::value::ordered::{OrderedMap, OrderedSet};
-pub use semio_framework_os_kernel::{os_dsl, os_pack, os_spr, os_store};
+pub use semio_framework_os_kernel::{os_dsl, os_pack, os_spr, os_store, LocalizedLabel};
 #[path = "🧬️schema/📸️snapshot/🦀️.rs"]
 pub mod artifact;
 pub use artifact::*;

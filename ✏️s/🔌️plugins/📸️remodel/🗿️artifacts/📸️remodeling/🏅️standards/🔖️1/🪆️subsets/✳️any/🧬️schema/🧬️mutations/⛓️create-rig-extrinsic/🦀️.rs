@@ -33,8 +33,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CreateRi
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create rig extrinsic \"{}\"", self.extrinsic.camera_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create rig extrinsic \"{}\"", self.extrinsic.camera_id), &format!("extrinsische Rig \"{}\" erstellen", self.extrinsic.camera_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.extrinsic.camera_id.clone()]

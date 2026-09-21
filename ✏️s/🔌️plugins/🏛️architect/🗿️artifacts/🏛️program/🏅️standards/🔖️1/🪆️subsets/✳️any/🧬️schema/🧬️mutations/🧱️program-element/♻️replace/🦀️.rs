@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceProgramElement {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace program element \"{}\"", self.program_element.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace program element \"{}\"", self.program_element.header.name), &format!("Programmelement \"{}\" ersetzen", self.program_element.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.program_element.header.id.0.clone()]

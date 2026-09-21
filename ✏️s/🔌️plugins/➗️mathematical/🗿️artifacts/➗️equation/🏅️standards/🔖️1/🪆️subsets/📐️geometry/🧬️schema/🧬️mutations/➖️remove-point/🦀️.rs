@@ -20,8 +20,8 @@ impl protocol::MutationKind<EquationSnapshot, EquationMutation> for RemovePoint 
     fn inverse(&self, base: &EquationSnapshot) -> Vec<EquationMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove point at {}", self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove point at {}", self.index), &format!("Punkt an {} entfernen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec!["geometry".into(), "points".into(), self.index.to_string()]

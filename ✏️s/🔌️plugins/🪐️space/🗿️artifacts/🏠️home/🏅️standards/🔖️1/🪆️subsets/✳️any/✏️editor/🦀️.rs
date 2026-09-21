@@ -298,7 +298,16 @@ impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutatio
 
 impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for HomeConfigPreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        if !grant.permits_one() || grant.maximum_bytes < HOME_CONFIG_STEP_BYTES || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        // 🎟️ The grant is a PAGE, not the owner's whole envelope: `ArtifactStoreOneItemGrant`'s own
+        // contract is "consume at most one semantic unit", and every framework pump that drives this
+        // preparation grants `TYPED_OPERATION_RESULT_PAGE_BYTES` (4 KiB) — the typed-operation
+        // publication ladder hard-codes it (`🔌️plugin/🦀️.rs`'s `ArtifactStoreOneItemGrant { maximum_items: 1,
+        // maximum_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES }`). Demanding `HOME_CONFIG_STEP_BYTES`
+        // (1 MiB) therefore answered `Blocked` on EVERY unit for ever, and `Blocked` is a silent
+        // non-advance: the operation stayed in `Publishing`, the actor stayed in `MoreWork` with no
+        // effect, no patch and no fault, and the signed-in Home listed 0 spaces while the host's drain
+        // polled it for the whole session (ticket 26/09/18 S8, measured on serve 6190 → hub 7611).
+        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
         if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
         if self.candidate.is_none() && self.sealed_candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "Space Home config preparation lost its exact base root".to_string())?.get();
@@ -354,9 +363,11 @@ impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for 
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.closing = true; }
     fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
-        if !self.closing || grant.maximum_items == 0 { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
-        if (self.prepared.is_some() || self.sealed_candidate.is_some() || self.candidate.is_some() || self.mutation.is_some() || self.description.is_some()) && grant.maximum_bytes < HOME_CONFIG_STEP_BYTES { return Ok(store::SnapshotRetirementStep::Blocked); }
-        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: HOME_CONFIG_STEP_BYTES }); }
+        if !self.closing || !grant.permits_one() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        // 🧹️ One retained owner per granted page, never more bytes than the page granted — the same
+        // reasoning as `advance` above: an owner that answers `Blocked` until it is handed its whole
+        // declared envelope never closes under the framework's 4 KiB pumps.
+        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: grant.maximum_bytes }); }
         if let Some(base) = self.base.take() {
             if !base.return_to_registry() { return Err("Space Home config preparation could not return its exact base root".into()); }
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });

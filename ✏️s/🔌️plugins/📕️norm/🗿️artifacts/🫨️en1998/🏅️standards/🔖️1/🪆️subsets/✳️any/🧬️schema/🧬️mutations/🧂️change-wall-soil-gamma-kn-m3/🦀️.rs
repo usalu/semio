@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeWallSoilGa
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change wall backfill unit weight [kN/m3] to {}", self.new_wall_soil_gamma_kn_m3)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change wall backfill unit weight [kN/m3] to {}", self.new_wall_soil_gamma_kn_m3), &format!("Wandverfüllungseinheitsgewicht [kN/m3] auf {} ändern", self.new_wall_soil_gamma_kn_m3))
     }
 }
 //#endregion 🔖️ChangeWallSoilGammaKnM3

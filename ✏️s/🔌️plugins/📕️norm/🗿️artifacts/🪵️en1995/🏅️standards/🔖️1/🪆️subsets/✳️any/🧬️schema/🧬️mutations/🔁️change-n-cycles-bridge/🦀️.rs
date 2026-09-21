@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeNCyclesBri
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change n cycles bridge to {:?}", self.new_n_cycles_bridge)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change n cycles bridge to {:?}", self.new_n_cycles_bridge), &format!("Nzyklenbrücke auf {:?} ändern", self.new_n_cycles_bridge))
     }
 }
 //#endregion 🔖️ChangeNCyclesBridge

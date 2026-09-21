@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeDeltaTK {
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change thermal delta to {:?}", self.new_delta_t_k)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change thermal delta to {:?}", self.new_delta_t_k), &format!("Wärmendelta auf {:?} ändern", self.new_delta_t_k))
     }
 }
 //#endregion 🔖️Payload

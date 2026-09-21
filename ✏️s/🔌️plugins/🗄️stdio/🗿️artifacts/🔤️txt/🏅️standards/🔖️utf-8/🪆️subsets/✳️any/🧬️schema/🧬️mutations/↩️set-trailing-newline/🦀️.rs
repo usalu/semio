@@ -50,8 +50,8 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetTrailingNewl
         vec![super::TxtMutation::SetTrailingNewline(Self { value: base.trailing_newline })]
     }
 
-    fn label(&self) -> String {
-        "Set Trailing Newline".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Trailing Newline", "nachlaufende Zeilenumbruch setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-trailing-newline".to_string()]

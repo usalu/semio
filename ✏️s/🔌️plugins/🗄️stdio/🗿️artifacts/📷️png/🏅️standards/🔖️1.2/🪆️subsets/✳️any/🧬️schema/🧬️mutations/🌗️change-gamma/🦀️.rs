@@ -33,8 +33,8 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for ChangeGammaMutation {
         }
         vec![PngMutation::ChangeGamma(ChangeGammaMutation { gama: base.gama })]
     }
-    fn label(&self) -> String {
-        "change gamma".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("change gamma", "Gamma ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["change-gamma".into()]

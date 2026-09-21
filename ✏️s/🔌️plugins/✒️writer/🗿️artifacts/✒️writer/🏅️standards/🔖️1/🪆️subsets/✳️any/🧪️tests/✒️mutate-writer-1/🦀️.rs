@@ -60,7 +60,6 @@ const EXAMPLE_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_s_plugin_stdio_test_oracle::law;
-    use semio_s_artifact_writer_writer::attach_writer_document_text;
     use semio_s_artifact_writer_writer::standards::v1::subsets::any::io::snapshot::text::{parse_writer_dsl, print_writer_dsl};
     use semio_s_artifact_writer_writer::standards::v1::subsets::any::schema::mutations::{
         apply_writer_mutation_outcome, decode_writer_mutation_json, decode_writer_snapshot_json, encode_writer_snapshot_json, inverse_writer_mutation_steps, WriterMutation,
@@ -96,14 +95,6 @@ mod subject {
         parse_json(&encode_writer_snapshot_json(snapshot))
     }
 
-    /// 🌱 Materializes the before-snapshot's exact document handle with the committed payload's
-    /// body for the one kind whose diff oracle reads it.
-    fn seed_working_scene(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) {
-        if let WriterMutation::EditText(payload) = mutation {
-            attach_writer_document_text(&mut snapshot.document, &payload.text);
-        }
-    }
-
     /// 🚨️ The `mutation.*` codes the committed `🎯️outcome` vector declares, in declared order.
     fn declared_codes(outcome: &Json) -> Vec<String> {
         outcome.array("messages").iter().map(|message| message.str("code")).filter(|code| !code.is_empty()).collect()
@@ -120,7 +111,6 @@ mod subject {
         let expected = snapshot_at(ctx, &vector, "📸️snapshot/➡️after/🔣️.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
         let declared = parse_json(&text_at(ctx, &vector, "🎯️outcome/🔣️.json")?)?;
-        seed_working_scene(&mut base, &mutation);
         let mut current = base.clone();
         let outcome = apply_writer_mutation_outcome(&mut current, &mutation);
         let raised: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
@@ -145,7 +135,6 @@ mod subject {
         let (kind, vector) = addressed(ctx)?;
         let mut base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
-        seed_working_scene(&mut base, &mutation);
         let original = projection(&base)?;
         let mut current = base.clone();
         apply_writer_mutation_outcome(&mut current, &mutation);

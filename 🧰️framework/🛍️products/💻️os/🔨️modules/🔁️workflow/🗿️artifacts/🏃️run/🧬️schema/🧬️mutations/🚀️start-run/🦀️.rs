@@ -36,8 +36,8 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for StartRun {
     fn inverse(&self, _base: &RunArtifact) -> Vec<RunMutation> {
         Vec::new()
     }
-    fn label(&self) -> String {
-        format!("Start run for {}", self.workflow_ref)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Start run for {}", self.workflow_ref), &format!("Lauf für {} starten", self.workflow_ref))
     }
     fn target(&self) -> Vec<String> {
         vec!["run".into()]

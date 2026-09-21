@@ -180,6 +180,8 @@ fn world3d_wgsl_is_byte_identical_in_the_wgpu_target_and_the_shader_contract() {
     assert_eq!(target, WORLD3D_SHADER, "WORLD3D_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
     let target_lines = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_LINES_SHADER").expect("wgpu target declares WORLD3D_LINES_SHADER as a raw string const");
     assert_eq!(target_lines, WORLD3D_LINES_SHADER, "WORLD3D_LINES_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
+    let target_grid = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_GRID_SHADER").expect("wgpu target declares WORLD3D_GRID_SHADER as a raw string const");
+    assert_eq!(target_grid, WORLD3D_GRID_SHADER, "WORLD3D_GRID_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
     let target_textured = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_TEXTURED_SHADER").expect("wgpu target declares WORLD3D_TEXTURED_SHADER as a raw string const");
     assert_eq!(target_textured, WORLD3D_TEXTURED_SHADER, "WORLD3D_TEXTURED_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
 }

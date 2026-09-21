@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeECmMpa {
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change concrete modulus E_cm to {}", self.new_e_cm_mpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change concrete modulus E_cm to {}", self.new_e_cm_mpa), &format!("Betonmodule_cm auf {} ändern", self.new_e_cm_mpa))
     }
 }
 //#endregion 🔖️Payload

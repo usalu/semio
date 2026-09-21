@@ -31,8 +31,8 @@ impl protocol::MutationKind<WireTestSnapshot, WireTestMutation> for AddValue {
         }
     }
 
-    fn label(&self) -> String {
-        format!("Add {} to value", self.delta)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add {} to value", self.delta), &format!("{} zu Wert hinzufügen", self.delta))
     }
 
     fn target(&self) -> Vec<String> {
@@ -47,7 +47,7 @@ impl protocol::CompositeMutationKind<WireTestSnapshot, WireTestMutation> for Add
         planner.call(WireTestMutation::AddValue(self.clone()))
     }
 
-    fn label(&self) -> String {
+    fn label(&self) -> protocol::LocalizedLabel {
         <Self as protocol::MutationKind<WireTestSnapshot, WireTestMutation>>::label(self)
     }
 

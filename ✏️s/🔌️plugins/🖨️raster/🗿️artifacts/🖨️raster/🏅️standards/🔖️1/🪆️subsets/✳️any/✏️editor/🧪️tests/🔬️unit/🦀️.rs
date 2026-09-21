@@ -855,6 +855,11 @@ async fn mounted_boot_replays_the_demo_example_through_the_retained_route() {
     let composite = packed_scene_text(&render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await);
     std::mem::forget(app);
     assert!(composite.contains("composite") && composite.contains("documentSync"), "the composite window publishes its document-sync lane: {composite}");
+    // 🖼️ The pixels themselves, not just the lane: `Paint2dHost` uploads one texture per
+    // `assetsJson` entry, so a boot whose asset pool holds handles WITHOUT their materialization
+    // renders an empty canvas even though every lane, layer row and viewport looks right (play pane
+    // measured blank on :6033, 2026-09-21). `image/png` occurs only in the resolved asset lane.
+    assert!(composite.contains("image/png"), "the composite scene must carry the planted emblem's resolved pixels, not a pixel-less handle pool: {composite}");
 }
 
 /// ↩️ The five-clause bar's undo/redo half on the LIVE document shape: boot the demo carrier, paint

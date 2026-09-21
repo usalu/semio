@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangePKn {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change p kn to {:?}", self.new_p_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change p kn to {:?}", self.new_p_kn), &format!("Pkn auf {:?} ändern", self.new_p_kn))
     }
 }
 //#endregion 🔖️ChangePKn

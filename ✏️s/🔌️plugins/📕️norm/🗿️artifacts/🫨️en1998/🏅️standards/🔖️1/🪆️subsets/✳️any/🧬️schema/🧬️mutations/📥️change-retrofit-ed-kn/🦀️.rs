@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeRetrofitED
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change retrofit demand E_d [kN] to {}", self.new_retrofit_e_d_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change retrofit demand E_d [kN] to {}", self.new_retrofit_e_d_kn), &format!("Sanierungsbedarfe_d [kN] auf {} ändern", self.new_retrofit_e_d_kn))
     }
 }
 //#endregion 🔖️ChangeRetrofitEDKn

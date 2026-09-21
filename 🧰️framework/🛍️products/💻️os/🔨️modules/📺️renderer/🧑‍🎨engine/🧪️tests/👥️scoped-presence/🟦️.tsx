@@ -21,6 +21,8 @@ import {
 } from "../../🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx";
 import fixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/👥️presence-scope/🔣️.json";
 import presenceSchema from "../../../../🏪️store/👥️presence/🧬️schema/🔣️.json" with { type: "json" };
+import presenceLiveness from "../../../../../../../🔨️modules/📡️replication/🧫️fixtures/💓️presence-liveness-v1/🔣️.json" with { type: "json" };
+import { PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS, PRESENCE_HEARTBEAT_INTERVAL_MS, presenceEphemeralSnapshotWithinBoundV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 
 type Case = (typeof fixture.cases)[number];
 
@@ -122,6 +124,31 @@ describe("scope-safe Shell presence", () => {
       cleanup();
     }
     await uiI18n.changeLanguage("en");
+  });
+
+  // 💓️ ticket 26/09/18 slice PR1 — the shell half of the beat/eviction contract, read from the SAME
+  // fixture the hub's `presence_liveness_contract_matches_the_shared_fixture` reads.
+  it("beats within its own interval and never lets a wedged document component silence presence", async () => {
+    expect(presenceLiveness.schema).toBe("semio.presence.liveness/v1");
+    expect(presenceLiveness.constants.heartbeatIntervalMs).toBe(PRESENCE_HEARTBEAT_INTERVAL_MS);
+    expect(presenceLiveness.constants.ephemeralSnapshotDeadlineMs).toBe(PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS);
+    const law = (name: string) => presenceLiveness.laws.find((row) => row.name === name)!;
+    expect(PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS).toBeLessThan(PRESENCE_HEARTBEAT_INTERVAL_MS);
+    expect(presenceLiveness.constants.leaseTtlMs).toBeGreaterThanOrEqual(law("lease-outlives-three-beats").missedBeatsTolerated! * PRESENCE_HEARTBEAT_INTERVAL_MS);
+    expect(law("a-live-socket-is-always-a-row").removesRow).toEqual(["socket-close"]);
+
+    // A document component that answers never is the exact shape that silenced the heartbeat: the
+    // beat must still resolve, without a pack, well inside one interval.
+    const wedged = { ephemeralSnapshot: () => new Promise<{ readonly presence?: readonly number[] }>(() => undefined) };
+    const started = Date.now();
+    await expect(presenceEphemeralSnapshotWithinBoundV1(wedged, "instance-wedged", 30)).resolves.toBeUndefined();
+    expect(Date.now() - started).toBeLessThan(PRESENCE_HEARTBEAT_INTERVAL_MS);
+    // A thrown snapshot is the same answer: presence is not where a document fault surfaces.
+    await expect(presenceEphemeralSnapshotWithinBoundV1({ ephemeralSnapshot: () => Promise.reject(new Error("browser actor child: invocation rejected")) }, "instance-faulted", 30)).resolves.toBeUndefined();
+    // A healthy document still carries its pack.
+    await expect(presenceEphemeralSnapshotWithinBoundV1({ ephemeralSnapshot: () => Promise.resolve({ presence: [7, 7] }) }, "instance-live", 30)).resolves.toEqual({ presence: [7, 7] });
+    // A plugin with no snapshot at all beats identity-only rather than throwing.
+    await expect(presenceEphemeralSnapshotWithinBoundV1({}, "instance-packless", 30)).resolves.toBeUndefined();
   });
 
   it("decodes missing or mismatched private authority as an empty roster", () => {

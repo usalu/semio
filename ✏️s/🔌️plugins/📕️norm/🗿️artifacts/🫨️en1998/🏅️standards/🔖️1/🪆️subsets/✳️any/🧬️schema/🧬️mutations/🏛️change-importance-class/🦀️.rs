@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeImportance
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change importance class to \"{}\"", self.new_importance_class)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change importance class to \"{}\"", self.new_importance_class), &format!("Bedeutungsklasse auf \"{}\" ändern", self.new_importance_class))
     }
 }
 //#endregion 🔖️ChangeImportanceClass

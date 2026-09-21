@@ -44,8 +44,8 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTransformMut
         vec![super::SvgMutation::SetTransform(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String {
-        "Set Transform".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Transform", "Transformation setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-transform".to_string()]

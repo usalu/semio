@@ -36,8 +36,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for EditBlockInkStroke {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Edit block \"{}\" ink stroke", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Edit block \"{}\" ink stroke", self.id), &format!("Block \"{}\" Tintenstrich bearbeiten", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

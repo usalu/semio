@@ -19,8 +19,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for ChangeSelect
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change selection class to \"{}\"", self.new_class_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change selection class to \"{}\"", self.new_class_id), &format!("Auswahlklasse auf \"{}\" ändern", self.new_class_id))
     }
 }
 //#endregion 🔖️Payload

@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateHumanFactorRequire
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create human factor requirement \"{}\"", self.human_factor_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create human factor requirement \"{}\"", self.human_factor_requirement.header.name), &format!("Personenfaktoranforderung \"{}\" erstellen", self.human_factor_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.human_factor_requirement.header.id.0.clone()]

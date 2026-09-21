@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for SetNodeKin
     fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<SemioFlowMutation> {
         agg_inverse(&SemioFlowMutation::SetNodeKind(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-node-kind".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-node-kind", "Knotenart setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

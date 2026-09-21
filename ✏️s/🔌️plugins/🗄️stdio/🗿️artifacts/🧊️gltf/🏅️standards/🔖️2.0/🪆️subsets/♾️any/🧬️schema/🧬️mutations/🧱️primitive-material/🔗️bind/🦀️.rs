@@ -61,8 +61,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitive
         vec![super::GltfMutation::BindPrimitiveMaterial(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Bind Primitive Material".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Bind Primitive Material", "Primitivmaterial binden")
     }
 
     fn target(&self) -> Vec<String> {

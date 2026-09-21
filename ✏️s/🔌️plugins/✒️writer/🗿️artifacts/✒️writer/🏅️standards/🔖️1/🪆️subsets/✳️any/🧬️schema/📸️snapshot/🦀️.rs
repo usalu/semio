@@ -22,6 +22,16 @@ pub struct WriterSnapshot {
     #[state(artifact)]
     #[value(default = "crate::default_uri")]
     pub uri: String,
+    /// ✍️ The authored body the composed `document` child is derived from — the PERSISTED
+    /// payload of that child slot, mirroring `🏭️process`'s `stock_payload`/`step_payloads`. A
+    /// composed child's own content never travels inside `store::ArtifactChild` (identity only), and the
+    /// react shell answers `Effect::LoadDocument` with an EMPTY member roster, so
+    /// `crate::genesis_writer_child_pack` can only derive the child's block tree from a field the
+    /// parent's own pack/DSL round-trips: without this field every whole-document load materialised an
+    /// empty document.
+    #[state(artifact)]
+    #[value(default)]
+    pub text: String,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     pub document: WriterDocumentChild,
@@ -29,7 +39,7 @@ pub struct WriterSnapshot {
 
 impl Default for WriterSnapshot {
     fn default() -> Self {
-        Self { schema: WRITER_DOCUMENT_SCHEMA.into(), id: String::new(), language_id: "plaintext".into(), uri: crate::default_uri(), document: document_child_handle_with_text("", "", "plaintext") }
+        Self { schema: WRITER_DOCUMENT_SCHEMA.into(), id: String::new(), language_id: "plaintext".into(), uri: crate::default_uri(), text: String::new(), document: document_child_handle_with_text("", "", "plaintext") }
     }
 }
 //#endregion 🔖️Snapshot

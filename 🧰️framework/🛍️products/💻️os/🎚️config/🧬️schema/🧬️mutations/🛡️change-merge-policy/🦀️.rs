@@ -54,8 +54,8 @@ impl MutationKind<MergePolicySetting, MergePolicyConfigMutation> for ChangeMerge
         vec![MergePolicyConfigMutation::ChangeMergePolicy(ChangeMergePolicy { policy: base.policy })]
     }
 
-    fn label(&self) -> String {
-        format!("Change merge policy to \"{:?}\"", self.policy)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change merge policy to \"{:?}\"", self.policy), &format!("Zusammenführungsrichtlinie auf \"{:?}\" ändern", self.policy))
     }
 
     fn target(&self) -> Vec<String> {

@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1992Snapshot, En1992Mutation> for ChangeLiquidSRMa
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change liquid s r max mm to {:?}", self.new_liquid_s_r_max_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change liquid s r max mm to {:?}", self.new_liquid_s_r_max_mm), &format!("Flüssigkeitssrmaximalmm auf {:?} ändern", self.new_liquid_s_r_max_mm))
     }
 }
 //#endregion 🔖️ChangeLiquidSRMaxMm

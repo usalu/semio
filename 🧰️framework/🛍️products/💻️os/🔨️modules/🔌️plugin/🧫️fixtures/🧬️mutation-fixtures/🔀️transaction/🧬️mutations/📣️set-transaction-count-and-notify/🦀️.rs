@@ -46,8 +46,8 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCountAndNotify {
     fn inverse(&self, base: &TxnSnapshot) -> Vec<TxnMutation> {
         vec![SetTransactionCount { value: base.count }.into()]
     }
-    fn label(&self) -> String {
-        format!("Set transaction count and notify to {}", self.value)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set transaction count and notify to {}", self.value), &format!("Transaktionsanzahl und Benachrichtigung auf {} setzen", self.value))
     }
     fn foreign_steps(&self, _: &TxnSnapshot) -> Vec<protocol::ForeignStep> {
         vec![protocol::ForeignStep {

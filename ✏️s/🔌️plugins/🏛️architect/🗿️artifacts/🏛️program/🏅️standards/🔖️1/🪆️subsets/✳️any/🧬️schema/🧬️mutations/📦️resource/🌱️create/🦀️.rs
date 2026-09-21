@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateResource {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create resource \"{}\"", self.resource.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create resource \"{}\"", self.resource.header.name), &format!("Ressource \"{}\" erstellen", self.resource.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.resource.header.id.0.clone()]

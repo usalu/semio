@@ -23,8 +23,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for SetTinyAttribute {
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgTinyMutation> {
         agg_inverse(&SvgTinyMutation::SetTinyAttribute(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-tiny-attribute".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-tiny-attribute", "winzige Attribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

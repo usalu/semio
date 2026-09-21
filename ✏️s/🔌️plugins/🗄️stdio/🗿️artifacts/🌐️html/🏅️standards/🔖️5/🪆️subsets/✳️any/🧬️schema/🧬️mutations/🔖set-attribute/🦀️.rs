@@ -22,8 +22,8 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetAttribute {
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
         agg_inverse(&HtmlMutation::SetAttribute(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-attribute".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-attribute", "Attribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for RenameNote {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Rename note to {:?}", self.new_title)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename note to {:?}", self.new_title), &format!("Notiz in {:?} umbenennen", self.new_title))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

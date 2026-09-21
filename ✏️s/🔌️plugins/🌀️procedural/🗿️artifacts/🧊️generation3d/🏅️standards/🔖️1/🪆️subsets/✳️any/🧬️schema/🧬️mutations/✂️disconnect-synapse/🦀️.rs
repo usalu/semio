@@ -28,8 +28,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Disc
         crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Disconnect synapse \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Disconnect synapse \"{}\"", self.id), &format!("Synapse \"{}\" trennen", self.id))
     }
 
     fn target(&self) -> Vec<String> {

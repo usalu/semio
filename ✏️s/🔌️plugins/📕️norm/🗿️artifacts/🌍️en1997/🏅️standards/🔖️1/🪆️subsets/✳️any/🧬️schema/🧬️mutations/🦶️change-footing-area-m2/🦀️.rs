@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeFootingAre
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change footing area [m2] to {}", self.new_footing_area_m2)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change footing area [m2] to {}", self.new_footing_area_m2), &format!("Fundamentfläche [m2] auf {} ändern", self.new_footing_area_m2))
     }
 }
 //#endregion 🔖️ChangeFootingAreaM2

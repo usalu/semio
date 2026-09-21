@@ -22,8 +22,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for DeleteLink {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_delete_link(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete link \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete link \"{}\"", self.id), &format!("Verknüpfung \"{}\" löschen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -1,102 +1,108 @@
+// @vitest-environment jsdom
 /**
- * 🖱️ The TypeScript twin of `🧊️renderer/🦀️.rs`'s `AppWheel` law. Both read the SAME neutral oracle
- * (`🧑‍🎨engine/🧫️fixtures/🖱️wheel-application-point/🔣️.json`): the Rust law drives the production
- * accumulator, this one re-derives the rule from the fixture's own statement, so the two
- * implementations hold each other rather than one restating the other.
- *
- * The two defects both sides pin: `dispatch_normalized_event`'s `Scroll { delta_y, .. }` arm dropped
- * the position that `🎮️wgpu-browser-input-wire/🔣️.json` had already proven survives both hops from
- * the DOM, and the frame applied the coalesced delta at `last_pointer_x/y` instead; and the
- * accumulator that fixed THAT still merged notches across points, so a wheel stream that travels
- * collapsed into one application at its newest point. The wgpu tick is input-driven, so the drain
- * normally happens on a LATER event — measured on 6118 as `wheel gate x=5 y=5 delta=-480 …
- * worlds=[("procedural-preview", false)]` and, after the first fix, as five notches
- * `{x:1208,y:461} … {x:6,y:6}` that still left `wheel=0` on all 337 world3d intents
- * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-end-to-end-verification-2026-09-14.md` §5.1,
- * `📓️wgpu-wheel-zoom-a11y-live-2026-09-14.md` §2).
+ * 🖱️ Browser proof that every admitted DOM wheel owns one Scroll dispatch. The shared schema and
+ * fixture are also consumed by the native host test; this side uses jsdom's real EventTarget and
+ * WheelEvent rather than mirroring a renderer accumulator.
  */
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import Ajv2020 from "ajv/dist/2020";
 import { describe, expect, it } from "vitest";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const fixturePath = resolve(suiteRoot, "../../🧫️fixtures/🖱️wheel-application-point/🔣️.json");
+const schemaPath = resolve(suiteRoot, "../../🧬️schema/🖱️wheel-application-point/🔣️.json");
 
-type Event = { readonly kind: "scroll" | "pointer-move"; readonly x: number; readonly y: number; readonly deltaY?: number };
-type Application = { readonly x: number; readonly y: number; readonly delta: number };
-type Case = { readonly name: string; readonly events: readonly Event[]; readonly applications: readonly Application[]; readonly baselineApplications?: readonly Application[] };
-type Fixture = { readonly rule: { readonly statement: string; readonly capacity: number }; readonly cases: readonly Case[] };
-
-const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
-
-/** 🖱️ The pending wheel: notches coalesce only while their point does not move, a new point opens a
- * new application, the frame drains them oldest first, a zero delta is not a wheel, and a stream
- * longer than the declared credits merges into its newest application. */
-class PendingWheel {
-  private readonly notches: { x: number; y: number; delta: number }[] = [];
-
-  constructor(private readonly capacity: number) {}
-
-  accumulate(x: number, y: number, deltaY: number): void {
-    const newest = this.notches.at(-1);
-    if (newest && (this.notches.length >= this.capacity || (newest.x === x && newest.y === y))) {
-      newest.delta += deltaY;
-      newest.x = x;
-      newest.y = y;
-      return;
-    }
-    this.notches.push({ x, y, delta: deltaY });
-  }
-
-  take(): Application | null {
-    while (this.notches.length > 0) {
-      const oldest = this.notches.shift();
-      if (oldest && oldest.delta !== 0) return { x: oldest.x, y: oldest.y, delta: oldest.delta };
-    }
-    return null;
-  }
-
-  pending(): boolean {
-    return this.notches.some((notch) => notch.delta !== 0);
-  }
-}
-
-/** 🖱️ One frame's worth of input, in order: every application the frame makes, oldest first, plus
- * where the pointer ended up. */
-const drive = (events: readonly Event[], capacity: number): { readonly applications: Application[]; readonly pointer: readonly [number, number] } => {
-  const wheel = new PendingWheel(capacity);
-  let pointer: [number, number] = [0, 0];
-  for (const event of events) {
-    if (event.kind === "scroll") wheel.accumulate(event.x, event.y, event.deltaY ?? 0);
-    pointer = [event.x, event.y];
-  }
-  const applications: Application[] = [];
-  for (let application = wheel.take(); application !== null; application = wheel.take()) applications.push(application);
-  expect(wheel.pending()).toBe(false);
-  return { applications, pointer };
+type Modifiers = { readonly shift: boolean; readonly ctrl: boolean; readonly meta: boolean; readonly alt: boolean };
+type ScrollRow = { readonly kind: "scroll"; readonly x: number; readonly y: number; readonly deltaX: number; readonly deltaY: number; readonly modifiers: Modifiers };
+type PointerMoveRow = { readonly kind: "pointer-move"; readonly x: number; readonly y: number };
+type InputRow = ScrollRow | PointerMoveRow;
+type Application = { readonly x: number; readonly y: number; readonly deltaX: number; readonly delta: number; readonly modifiers: Modifiers };
+type Case = {
+  readonly name: string;
+  readonly events: readonly InputRow[];
+  readonly applications: readonly Application[];
+  readonly supersededApplication?: Application;
+};
+type Fixture = {
+  readonly rule: { readonly id: string; readonly statement: string };
+  readonly cases: readonly Case[];
 };
 
-describe("🖱️ wheel application point", () => {
-  it("declares the rule its cases are read against", () => {
-    expect(fixture.rule.statement).toContain("applied at its own point");
-    expect(fixture.rule.capacity).toBeGreaterThan(1);
-    expect(fixture.cases.length).toBeGreaterThan(0);
+const fixtureValue: unknown = JSON.parse(readFileSync(fixturePath, "utf8"));
+const fixture = fixtureValue as Fixture;
+const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as object;
+
+/** 🖱️ Mounts a browser event receiver and records the owned value copied from every WheelEvent. */
+const receive = (events: readonly InputRow[]): Application[] => {
+  const receiver = document.createElement("canvas");
+  const applications: Application[] = [];
+  receiver.addEventListener("wheel", (event) => {
+    applications.push({
+      x: event.clientX,
+      y: event.clientY,
+      deltaX: event.deltaX,
+      delta: event.deltaY,
+      modifiers: { shift: event.shiftKey, ctrl: event.ctrlKey, meta: event.metaKey, alt: event.altKey },
+    });
+  });
+  document.body.append(receiver);
+  for (const row of events) {
+    if (row.kind === "pointer-move") {
+      receiver.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: row.x, clientY: row.y }));
+      continue;
+    }
+    receiver.dispatchEvent(
+      new WheelEvent("wheel", {
+        bubbles: true,
+        cancelable: true,
+        clientX: row.x,
+        clientY: row.y,
+        deltaX: row.deltaX,
+        deltaY: row.deltaY,
+        shiftKey: row.modifiers.shift,
+        ctrlKey: row.modifiers.ctrl,
+        metaKey: row.modifiers.meta,
+        altKey: row.modifiers.alt,
+      }),
+    );
+  }
+  receiver.remove();
+  return applications;
+};
+
+describe("🖱️ owned Scroll dispatch", () => {
+  it("validates the shared fixture against its strict schema", () => {
+    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
+    expect(validate(fixtureValue), JSON.stringify(validate.errors)).toBe(true);
+    expect(fixture.rule.id).toBe("ownedScrollDispatch");
+    expect(fixture.rule.statement).toContain("exactly one ordered owned dispatch");
   });
 
   for (const testCase of fixture.cases) {
-    it(`applies every notch where it was scrolled — ${testCase.name}`, () => {
-      const { applications, pointer } = drive(testCase.events, fixture.rule.capacity);
-      expect(applications).toEqual(testCase.applications.map((application) => ({ ...application })));
-      expect(applications.length).toBeLessThanOrEqual(fixture.rule.capacity);
+    it(`copies every browser wheel sample into one owned dispatch — ${testCase.name}`, () => {
+      const applications = receive(testCase.events);
+      const scrollCount = testCase.events.filter((row) => row.kind === "scroll").length;
+      expect(applications).toEqual(testCase.applications);
+      expect(applications).toHaveLength(scrollCount);
+      expect(new Set(applications).size).toBe(applications.length);
 
-      // 🔍️ Both pre-fix shapes in one derivation: the whole delta as ONE application, at wherever
-      // the pointer ended up.
-      if (testCase.baselineApplications) {
-        const total = applications.reduce((sum, application) => sum + application.delta, 0);
-        const preFix = [{ x: pointer[0], y: pointer[1], delta: total }];
-        expect(preFix).toEqual(testCase.baselineApplications.map((application) => ({ ...application })));
-        expect(preFix).not.toEqual(applications);
+      if (testCase.supersededApplication) {
+        const scrolls = testCase.events.filter((row): row is ScrollRow => row.kind === "scroll");
+        const finalEvent = testCase.events.at(-1);
+        const finalScroll = scrolls.at(-1);
+        expect(finalEvent).toBeDefined();
+        expect(finalScroll).toBeDefined();
+        const superseded = {
+          x: finalEvent!.x,
+          y: finalEvent!.y,
+          deltaX: scrolls.reduce((sum, row) => sum + row.deltaX, 0),
+          delta: scrolls.reduce((sum, row) => sum + row.deltaY, 0),
+          modifiers: finalScroll!.modifiers,
+        };
+        expect(superseded).toEqual(testCase.supersededApplication);
+        expect(applications).not.toEqual([superseded]);
       }
     });
   }

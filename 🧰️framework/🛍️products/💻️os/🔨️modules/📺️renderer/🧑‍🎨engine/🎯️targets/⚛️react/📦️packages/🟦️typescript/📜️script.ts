@@ -162,7 +162,15 @@ export function directoryHomeBootstrapOracle(repoRoot: string): number {
   assert(!owner.includes("parseDirectoryProjectionReceiptV1(response.output)") && !owner.includes("parseDirectoryProjectionReceiptV1(admission.output)"));
   assert(owner.includes("owner.plugin.subscribeOperationCompletions(owner.instanceId, receive)") && owner.includes("startedDirectoryOperationIdV1(admission.output)"));
   assert(owner.indexOf("subscribeOperationCompletions") < owner.indexOf("await owner.plugin.handleAction"), "the completion subscription must open before the dispatch it settles");
-  assert(runtime.includes("terminalOutput: typedOperationTerminalOutputV1(leftover)") && runtime.includes("completionFanouts"));
+  // 🧾️ Two carriers, one delivery. A mounted operation settles either on a continuation turn the drain
+  // drove (`pendingCompletionEffects`) or inside the command turn whose own settle ran it to its
+  // terminal (`pendingTurnEffects`); reading only the first left `terminalOutput` undefined for every
+  // FAST operation, which is what the live `s` Home does once its config publication stops blocking.
+  // And the receipt's real carrier is the guest's `publish-event`, decoded through the pack projection —
+  // a raw `decodePackValue` answers integer carriers, not numbers, and the parser refuses those.
+  assert(runtime.includes("function takeTypedOperationTerminalOutputV1") && runtime.includes("terminalOutput,") && runtime.includes("completionFanouts"));
+  assert(runtime.includes("pendingTurnEffects.get(instanceId)") && runtime.includes("typedOperationTerminalOutputV1([...completionLeftover, ...carried])"));
+  assert(runtime.includes('effect.tag === "publish-event"') && runtime.includes('decodeWirePack((effect.val as { readonly payload?: unknown }).payload, "typed-operation.terminal-output")'));
   assert(owner.indexOf("await owner.plugin.handleAction") < owner.indexOf('kind: "directory-bootstrap-ack"'));
   assert(owner.includes('sessionIdentity: { userId: input.identity.userId, displayName: input.identity.displayName }'));
   assert(owner.includes('sessionIdentity: { userId: owner.identity.userId, displayName: owner.identity.displayName }'));
@@ -427,7 +435,7 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
     for (const id of ids) {
       const instance = scene.instances.find((instance) => instance.id === id);
       const target = { granularity: instance?.interactionGranularityId ?? scene.domainGranularityId, id: instance?.interactionId ?? id };
-      const key = JSON.stringify(target);
+      const key = `${target.granularity}\u0000${target.id}`;
       if (seen.has(key)) continue;
       seen.add(key);
       targets.push(target);
@@ -439,7 +447,17 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
     assert(condition, message);
     checks += 1;
   };
+  const validateInstance = ownedExport(repoRoot, "renderer", "World3dInstanceInteractionV1");
+  const utf8 = new TextEncoder();
+  for (const instance of scene.instances) {
+    check(validateInstance(instance), `instance ${instance.id} must satisfy World3dInstanceInteractionV1: ${JSON.stringify(validateInstance.errors)}`);
+    for (const value of [instance.id, instance.interactionId, instance.interactionGranularityId].filter((value): value is string => value !== undefined)) {
+      check(utf8.encode(value).byteLength <= 256, `instance ${instance.id} identifier exceeds the native interaction-id byte authority`);
+    }
+  }
   check(scene.instances.length > 1 && new Set(scene.instances.map((instance) => instance.interactionId)).size === 1, "the scene must render several instances of ONE topology target, or dedup proves nothing");
+  check(scene.instances.some((instance) => instance.interactionGranularityId === undefined), "the scene must keep one instance on the scene granularity fallback");
+  check(scene.instances.some((instance) => instance.interactionGranularityId !== undefined), "the scene must declare one per-instance granularity override");
   check(fixture.cameraDebounceMs > 0 && fixture.marqueeDragThresholdPx > 0, "camera debounce and marquee threshold must be positive");
   for (const gesture of fixture.gestures) {
     const expected = gesture.expect;

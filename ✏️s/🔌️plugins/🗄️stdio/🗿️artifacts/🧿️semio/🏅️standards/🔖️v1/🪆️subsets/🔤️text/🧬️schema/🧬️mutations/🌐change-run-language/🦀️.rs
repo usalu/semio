@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for ChangeRunL
     fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change run #{} language to {}", self.index, self.new_language)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change run #{} language to {}", self.index, self.new_language), &format!("Lauf #{} Sprache auf {} ändern", self.index, self.new_language))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

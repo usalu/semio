@@ -20,8 +20,8 @@ impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for RemoveEditionP
     fn inverse(&self, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove edition profile override for sheet {}", self.sheet)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove edition profile override for sheet {}", self.sheet), &format!("Ausgabenprofilüberschreibung für Blatt {} entfernen", self.sheet))
     }
     fn target(&self) -> Vec<String> {
         vec![self.sheet.clone()]

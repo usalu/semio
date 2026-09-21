@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeMCritKnm {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change m crit knm to {:?}", self.new_m_crit_knm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change m crit knm to {:?}", self.new_m_crit_knm), &format!("Mcritknm auf {:?} ändern", self.new_m_crit_knm))
     }
 }
 //#endregion 🔖️ChangeMCritKnm

@@ -25,8 +25,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetImageGeometry {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::SetImageGeometry(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-image-geometry".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-image-geometry", "Bildgeometrie setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

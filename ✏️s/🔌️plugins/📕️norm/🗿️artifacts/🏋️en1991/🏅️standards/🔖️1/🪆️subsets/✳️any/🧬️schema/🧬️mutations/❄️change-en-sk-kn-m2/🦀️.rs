@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeEnSKKnM2 {
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change characteristic snow load to {:?}", self.new_en_s_k_kn_m2)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change characteristic snow load to {:?}", self.new_en_s_k_kn_m2), &format!("Charakteristischschneenlast auf {:?} ändern", self.new_en_s_k_kn_m2))
     }
 }
 //#endregion 🔖️Payload

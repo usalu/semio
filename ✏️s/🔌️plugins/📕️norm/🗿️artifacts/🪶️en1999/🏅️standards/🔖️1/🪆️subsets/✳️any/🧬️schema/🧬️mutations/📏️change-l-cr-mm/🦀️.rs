@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeLCrMm {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change buckling length L_cr [mm] to {}", self.new_l_cr_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change buckling length L_cr [mm] to {}", self.new_l_cr_mm), &format!("Knickenlängenl_cr [mm] auf {} ändern", self.new_l_cr_mm))
     }
 }
 //#endregion 🔖️ChangeLCrMm

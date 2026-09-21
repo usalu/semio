@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for MoveVertex
     fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move vertex \"{}\" to ({}, {}, {})", self.vertex_id, self.new_point.x, self.new_point.y, self.new_point.z)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move vertex \"{}\" to ({}, {}, {})", self.vertex_id, self.new_point.x, self.new_point.y, self.new_point.z), &format!("Vertex \"{}\" nach ({}, {}, {}) verschieben", self.vertex_id, self.new_point.x, self.new_point.y, self.new_point.z))
     }
     fn target(&self) -> Vec<String> {
         vec![self.vertex_id.clone()]

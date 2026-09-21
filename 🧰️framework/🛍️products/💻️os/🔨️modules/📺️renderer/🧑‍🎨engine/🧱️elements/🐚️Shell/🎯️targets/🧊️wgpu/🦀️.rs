@@ -17,7 +17,7 @@ use ui_wgpu::wgpu::push_chrome_group_border;
 use ui_wgpu::wgpu::{Label, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow};
 
 use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette};
-use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, UiDocumentFrameCursor};
+use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, RetainedNodeFocusKind, UiDocumentFrameCursor};
 use crate::hub_connection::{HubDocumentRemote, HubSessionPresence, FRAMEWORK_HUB_PANEL_ID};
 use crate::hub_sign_in::{
     hub_connection_id_for_origin, parse_hub_origin, reduce_hub_session, remove_hub_connection, select_hub_connection, serialize_hub_connection_book, upsert_hub_connection, HubConnection, HubConnectionKind,
@@ -1340,6 +1340,12 @@ fn custom_ui_driver_id(label: &str) -> Option<String> {
 }
 
 //#region 🔖️ChromeThreadBoundary
+struct RetainedContentFocus {
+    node: ui_wgpu::wgpu::NodeId,
+    key: ui_wgpu::wgpu::NodeKey,
+    kind: RetainedNodeFocusKind,
+}
+
 /// 🏗️ Send-capable inputs, scratch state, and outputs consumed by chrome construction.
 #[derive(Default)]
 struct ShellChromeBuildState {
@@ -1349,7 +1355,8 @@ struct ShellChromeBuildState {
     /// `focusin` listener stores `resolveSurfaceActiveRoot(event.target)`, not a boolean). This used to
     /// be a bare `bool`, which is why `UiCommand::FocusChanged`'s node id was thrown away on arrival
     /// (ticket 26/09/17 packet W2k).
-    content_focus: HashMap<String, Option<ui_wgpu::wgpu::NodeId>>,
+    content_focus: HashMap<String, Option<RetainedContentFocus>>,
+    focused_retained_surface: Option<String>,
     tooltip_titles: HashMap<String, String>,
     /// 🚗️ The resolved `UiDriver` axes this chrome presents under — React's `UiDriverProvider` value
     /// (`🧱️elements/🚗️UiDriver/🟦️.tsx`), re-resolved from `driver_id` + `custom_drivers` every time
@@ -3080,29 +3087,85 @@ pub enum PointerHitOwner {
 /// `interactionSelect` carried empty `targets`, i.e. pressing a panel tab CLEARED the world
 /// selection (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
 /// `📓️w11a-prepared-world-mesh-missing.md` §6 family A).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct PointerCapture {
-    owner: Option<PointerHitOwner>,
+    slots: [Option<PointerCaptureSlot>; crate::interpreter::SCENE_POINTER_OWNER_CAPACITY],
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct PointerCaptureSlot {
+    pointer_id: ui_render::PointerId,
+    owner: PointerHitOwner,
+    position: [f32; 2],
 }
 
 impl PointerCapture {
-    pub fn press(&mut self, owner: PointerHitOwner) -> PointerHitOwner {
-        self.owner = Some(owner);
-        owner
+    pub fn press(&mut self, pointer_id: ui_render::PointerId, owner: PointerHitOwner, x: f32, y: f32) -> Option<PointerHitOwner> {
+        let index = self.slots.iter().position(|slot| slot.is_some_and(|slot| slot.pointer_id == pointer_id))
+            .or_else(|| self.slots.iter().position(Option::is_none))?;
+        self.slots[index] = Some(PointerCaptureSlot { pointer_id, owner, position: [x, y] });
+        Some(owner)
     }
 
     /// 🖱️⬆️ Ends the sequence and answers the layer that owned it. A release with no press before it
     /// — the pointer entered the canvas already down — is the surface's, as it is in the DOM.
-    pub fn release(&mut self) -> PointerHitOwner {
-        self.owner.take().unwrap_or(PointerHitOwner::Surface)
+    pub fn release(&mut self, pointer_id: ui_render::PointerId) -> PointerHitOwner {
+        self.slots.iter_mut().find(|slot| slot.is_some_and(|slot| slot.pointer_id == pointer_id))
+            .and_then(Option::take).map_or(PointerHitOwner::Surface, |slot| slot.owner)
     }
 
-    pub fn owner_of_move(&self, under_pointer: PointerHitOwner) -> PointerHitOwner {
-        self.owner.unwrap_or(under_pointer)
+    pub fn owner_of_move(&self, pointer_id: ui_render::PointerId, under_pointer: PointerHitOwner) -> PointerHitOwner {
+        self.holder(pointer_id).unwrap_or(under_pointer)
     }
 
-    pub fn holder(&self) -> Option<PointerHitOwner> {
-        self.owner
+    pub fn holder(&self, pointer_id: ui_render::PointerId) -> Option<PointerHitOwner> {
+        self.slots.iter().flatten().find(|slot| slot.pointer_id == pointer_id).map(|slot| slot.owner)
+    }
+
+    pub fn position(&self, pointer_id: ui_render::PointerId) -> Option<[f32; 2]> {
+        self.slots.iter().flatten().find(|slot| slot.pointer_id == pointer_id).map(|slot| slot.position)
+    }
+
+    pub fn advance(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32) -> Option<(f32, f32)> {
+        let slot = self.slots.iter_mut().flatten().find(|slot| slot.pointer_id == pointer_id)?;
+        let delta = (x - slot.position[0], y - slot.position[1]);
+        slot.position = [x, y];
+        Some(delta)
+    }
+
+    pub fn any_active(&self) -> bool {
+        self.slots.iter().any(Option::is_some)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct PresentedInputCandidateWitness(u64);
+
+struct PresentedInputGeometry {
+    dock_canvas_bounds: Rect,
+    dock_axis_separator: f32,
+    dock_drop_tab_bars: Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)>,
+    dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
+    dock_window_plan: Vec<(String, Rect)>,
+    window_content_rects: HashMap<String, Rect>,
+    window_silhouettes: HashMap<String, WindowSilhouette>,
+    modal: bool,
+    panel_rects: Vec<Rect>,
+}
+
+impl Default for PresentedInputGeometry {
+    fn default() -> Self {
+        Self {
+            dock_canvas_bounds: Rect::new(0.0, 0.0, 0.0, 0.0),
+            dock_axis_separator: 0.0,
+            dock_drop_tab_bars: Vec::new(),
+            dock_drop_bodies: Vec::new(),
+            dock_window_plan: Vec::new(),
+            window_content_rects: HashMap::new(),
+            window_silhouettes: HashMap::new(),
+            modal: false,
+            panel_rects: Vec::new(),
+        }
     }
 }
 
@@ -3175,6 +3238,7 @@ pub struct ShellState {
     pub screen_w: f32,
     pub screen_h: f32,
     pub world3d_states: AdmittedSurfaceMap<World3dState>,
+    pub world3d_window_ids: HashMap<String, String>,
     /// 🪦 Closed World3d owners, detached from input immediately and drained one bounded step per
     /// frame before Drop. Keys include a shell epoch so reopening the same window id is independent.
     pub retired_world3d_states: VecDeque<(String, World3dState)>,
@@ -3229,6 +3293,7 @@ pub struct ShellState {
     pub tree_drag: Option<TreeDragState>,
     pub tree_hovered_id: Option<String>,
     pub widget_maps: WidgetInteractionMaps<ActionDescriptor>,
+    widget_maps_staging: WidgetInteractionMaps<ActionDescriptor>,
     pub pending_tree_drag: Option<(String, HashMap<String, String>)>,
     pub tree_drag_origin: (f32, f32),
     pub dock_drag: Option<DockDragState>,
@@ -3238,6 +3303,7 @@ pub struct ShellState {
     /// 🖱️ The exact chrome control armed by a primary press and eligible to activate only when the
     /// matching release lands on that same control. Shared by dock tab labels and palette rows.
     pub pending_chrome_release: Option<String>,
+    chrome_pointer_owner: Option<ui_render::PointerId>,
     /// 🖼️ The render-only dock tree this frame paints, hit-tests and solves drop zones against —
     /// `DockState::render_view` of the committed [`Self::dock`]: the mobile flat stack below React's
     /// breakpoint, the docked-out tree while a drag floats, and the committed tree otherwise. Written
@@ -3562,6 +3628,13 @@ pub struct ShellState {
     /// is filling.
     pub retained_hit_windows: HashMap<String, (String, Rect)>,
     retained_hit_windows_staging: HashMap<String, (String, Rect)>,
+    retained_scene_hits: HashMap<String, (Rect, crate::interpreter::ScenePointerTarget)>,
+    retained_scene_hits_staging: HashMap<String, (Rect, crate::interpreter::ScenePointerTarget)>,
+    presented_input_epoch: u64,
+    next_presented_input_epoch: Option<u64>,
+    presented_input_candidate: Option<PresentedInputCandidateWitness>,
+    presented_input_geometry: PresentedInputGeometry,
+    presented_input_geometry_staging: PresentedInputGeometry,
     /// 🪟️ The pane-overlay chip rows this frame's windows registered, held back until every window
     /// BODY has been walked and registered before the first docked panel.
     ///
@@ -4313,6 +4386,13 @@ pub(crate) fn window_measures_owner(surface_id: &str) -> Option<&str> {
     surface_id.strip_suffix(semio_framework::UiRefreshSection::Measures.body_key()).and_then(|owner| owner.strip_suffix('/')).filter(|owner| !owner.is_empty())
 }
 
+/// 🪟️ Resolves only the reserved pane identities to their concrete application window.
+fn window_pane_owner(surface_id: &str) -> Option<&str> {
+    [semio_framework::UiRefreshSection::Measures.body_key(), semio_framework::UiRefreshSection::Engagements.body_key(), WINDOW_SEARCH_BODY_KEY]
+        .into_iter()
+        .find_map(|suffix| surface_id.strip_suffix(suffix).and_then(|owner| owner.strip_suffix('/')).filter(|owner| !owner.is_empty()))
+}
+
 /// 📏️ Projects one window instance's GENERAL measures (see `partition_window_measures`; a group
 /// tagged with a utility id belongs to the Utility Options rail) into the `ui_contract` records the
 /// Measures overlay paints, pre-order so every parent precedes its children. `None` when the window has
@@ -4621,7 +4701,7 @@ impl ShellState {
             let scroll_offsets = &mut self.scroll_offsets;
             let collapsed_sections = &mut self.collapsed_sections;
             let open_selects = &mut self.open_selects;
-            let widget_maps = &mut self.widget_maps;
+            let widget_maps = &mut self.widget_maps_staging;
             let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: surface.as_str() };
             let viewport_height_for_widgets = draw.screen_height();
             let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
@@ -5854,6 +5934,7 @@ impl ShellState {
             screen_w: 1280.0,
             screen_h: 720.0,
             world3d_states: AdmittedSurfaceMap::default(),
+            world3d_window_ids: HashMap::new(),
             retired_world3d_states: VecDeque::with_capacity(SCENE_SURFACE_CAPACITY),
             world3d_retirement_epoch: 0,
             world3d_retirement_sequence: 0,
@@ -5888,11 +5969,13 @@ impl ShellState {
             tree_drag: None,
             tree_hovered_id: None,
             widget_maps: WidgetInteractionMaps::default(),
+            widget_maps_staging: WidgetInteractionMaps::default(),
             pending_tree_drag: None,
             tree_drag_origin: (0.0, 0.0),
             dock_drag: None,
             pending_dock_drag: None,
             pending_chrome_release: None,
+            chrome_pointer_owner: None,
             dock_view: DockState::default(),
             dock_canvas_bounds: Rect::new(0.0, 0.0, 0.0, 0.0),
             dock_axis_separator: 0.0,
@@ -6023,6 +6106,13 @@ impl ShellState {
             window_content_rects: HashMap::new(),
             retained_hit_windows: HashMap::new(),
             retained_hit_windows_staging: HashMap::new(),
+            retained_scene_hits: HashMap::new(),
+            retained_scene_hits_staging: HashMap::new(),
+            presented_input_epoch: 0,
+            next_presented_input_epoch: Some(1),
+            presented_input_candidate: None,
+            presented_input_geometry: PresentedInputGeometry::default(),
+            presented_input_geometry_staging: PresentedInputGeometry::default(),
             pane_overlay_hits: Vec::new(),
             chrome_floor_scope: None,
             retained_hover_window: None,
@@ -6457,6 +6547,12 @@ impl ShellState {
         }
         for plugin in &self.plugins {
             for example in &plugin.manifest.examples {
+                // 📦️ A body-less row is a DECLARED example body (deferred at the leaf, or
+                // externalized by `describe` above the inline ceiling) — it carries no source to
+                // scope against, and an empty string is not one.
+                if example.artifact_json.is_empty() {
+                    continue;
+                }
                 match serde_json::from_str::<serde_json::Value>(&example.artifact_json) {
                     Ok(value) => values.push(value),
                     Err(_) => values.push(serde_json::Value::String(example.artifact_json.clone())),
@@ -6777,7 +6873,7 @@ impl ShellState {
     }
 
     fn context_window_instance_id(&self, x: f32, y: f32) -> Option<&str> {
-        self.dock_drop_bodies.iter().find(|(_, bounds, _)| bounds.contains(x, y)).map(|(_, _, window_id)| window_id.as_str())
+        self.presented_input_geometry.dock_drop_bodies.iter().find(|(_, bounds, _)| bounds.contains(x, y)).map(|(_, _, window_id)| window_id.as_str())
     }
 
     fn persist_dock_layout(&mut self) {
@@ -6797,13 +6893,25 @@ impl ShellState {
     /// the dragged window from the committed tree; an abandoned drag then had to be undone by
     /// re-applying that snapshot, and any drop that refused left the shell one `sync_dock` away from
     /// losing the user's layout.
-    fn begin_pending_dock_drag(&mut self, payload: DockDragPayload, x: f32, y: f32) {
+    fn claim_chrome_pointer(&mut self, pointer_id: ui_render::PointerId) -> bool {
+        if self.chrome_pointer_owner.is_some_and(|owner| owner != pointer_id) {
+            return false;
+        }
+        self.chrome_pointer_owner = Some(pointer_id);
+        true
+    }
+
+    fn begin_pending_dock_drag(&mut self, pointer_id: ui_render::PointerId, payload: DockDragPayload, x: f32, y: f32) -> bool {
+        if !self.claim_chrome_pointer(pointer_id) {
+            return false;
+        }
         self.pending_dock_drag = Some((payload, (x, y)));
+        true
     }
 
     /// 🧳️ Bridges one semantic Tree transfer into the dock authority before retained routing takes
     /// ownership of the gesture. Both shell-painted and retained Tree hits use this one decoder.
-    fn begin_window_template_drag_from_hit(&mut self, hit: &HitTarget<ActionDescriptor>, x: f32, y: f32) -> bool {
+    fn begin_window_template_drag_from_hit(&mut self, pointer_id: ui_render::PointerId, hit: &HitTarget<ActionDescriptor>, x: f32, y: f32) -> bool {
         let Some((item_id, drag_data)) = hit.control_id.as_deref().and_then(tree_hit_item_id).zip(hit.drag_data.as_ref()) else {
             return false;
         };
@@ -6816,6 +6924,7 @@ impl ShellState {
         let window_id = self.allocate_window_instance_id(&payload.window_kind_id);
         let ghost_label = item_id.rsplit('.').next().unwrap_or(item_id).to_string();
         self.begin_pending_dock_drag(
+            pointer_id,
             DockDragPayload {
                 kind: DockDragKind::NewWindow,
                 window_id,
@@ -6827,8 +6936,7 @@ impl ShellState {
             },
             x,
             y,
-        );
-        true
+        )
     }
 
     /// 🌫️ React's `deactivateActiveWindow` (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1455-1472`), reached by
@@ -7288,7 +7396,7 @@ impl ShellState {
         let live_windows = self.live_window_ids();
         let live_windows: Vec<&str> = live_windows.iter().map(String::as_str).collect();
         Self::trace_engine_surface_sync(&self.node_graph_states, &registrations, &live_windows);
-        let created = Self::mirror_engine_surface_states(&mut self.node_graph_states, &mut self.tiled_map_states, &mut self.board2d_states, &mut self.world3d_status, registrations, &live_windows);
+        let created = Self::mirror_engine_surface_states(&mut self.node_graph_states, &mut self.tiled_map_states, &mut self.board2d_states, &mut self.world3d_status, &mut self.world3d_window_ids, registrations, &live_windows);
         if !self.app_catalogue_json.is_empty() {
             for surface_id in created {
                 crate::engine_canvas::node_graph_set_catalogue_json(&surface_id, &self.app_catalogue_json);
@@ -7301,18 +7409,19 @@ impl ShellState {
     /// 🪟️ Retires a closed World3d window at the layout-to-input sync boundary. The scene owner and
     /// every shell-local projection keyed by that owner disappear in one bounded pass before input.
     fn retire_closed_world3d_windows(&mut self, live_window_ids: &[&str]) {
-        let retired: Vec<String> = self.world3d_states.keys().filter(|id| !live_window_ids.contains(&id.as_str())).cloned().collect();
-        for window_id in retired {
-            let Some(mut state) = self.world3d_states.remove(&window_id) else { continue };
+        let retired: Vec<String> = self.world3d_window_ids.iter().filter(|(_, window_id)| !live_window_ids.contains(&window_id.as_str())).map(|(host_id, _)| host_id.clone()).collect();
+        for host_id in retired {
+            let Some(window_id) = self.world3d_window_ids.remove(&host_id) else { continue };
+            let Some(mut state) = self.world3d_states.remove(&host_id) else { continue };
             begin_world3d_dynamic_retirement(&mut state);
             self.world3d_retirement_epoch = self.world3d_retirement_epoch.wrapping_add(1).max(1);
-            let retirement_id = format!("{window_id}#{}", self.world3d_retirement_epoch);
+            let retirement_id = format!("{host_id}#{}", self.world3d_retirement_epoch);
             assert!(self.retired_world3d_states.len() < SCENE_SURFACE_CAPACITY, "retired World3d owners share the fixed scene-owner grants");
             self.retired_world3d_states.push_back((retirement_id, state));
             assert!(self.world3d_states.set_external_reservations(self.retired_world3d_states.len()), "retired World3d reservation follows active owner removal");
-            self.world3d_status.remove(&window_id);
-            self.world3d_status_pill_trace.remove(&window_id);
-            self.settle_pump.watches.remove(&window_id);
+            self.world3d_status.remove(&host_id);
+            self.world3d_status_pill_trace.remove(&host_id);
+            self.settle_pump.watches.remove(&host_id);
             self.active_utility_by_window.remove(&window_id);
             self.action_panel_folded.remove(&window_id);
             self.utility_bar_folded.remove(&window_id);
@@ -7331,7 +7440,7 @@ impl ShellState {
             let prefix = format!("{window_id}:");
             self.staged_action_args.retain(|key, _| !key.starts_with(&prefix));
         }
-        self.world3d_status.retain(|surface_id, _| live_window_ids.contains(&surface_id.as_str()));
+        self.world3d_status.retain(|host_id, _| self.world3d_window_ids.contains_key(host_id));
     }
 
     /// 📇️ Republishes, onto every live World3d surface, the action ids its WINDOW KIND declares.
@@ -7347,8 +7456,9 @@ impl ShellState {
         let declarations: Vec<(String, Vec<String>)> = self
             .world3d_states
             .keys()
-            .map(|surface_id| {
-                let kind_id = self.live_window_kind_id(&session, surface_id);
+            .filter_map(|host_id| {
+                let window_id = self.world3d_window_ids.get(host_id)?;
+                let kind_id = self.live_window_kind_id(&session, window_id);
                 let action_ids = session
                     .app
                     .window_kinds
@@ -7356,11 +7466,11 @@ impl ShellState {
                     .find(|kind| Some(kind.id.as_str()) == kind_id)
                     .map(|kind| kind.actions.iter().map(|action| action.id.clone()).collect())
                     .unwrap_or_default();
-                (surface_id.clone(), action_ids)
+                Some((host_id.clone(), action_ids))
             })
             .collect();
-        for (surface_id, action_ids) in declarations {
-            if let Some(state) = self.world3d_states.get_mut(&surface_id) {
+        for (host_id, action_ids) in declarations {
+            if let Some(state) = self.world3d_states.get_mut(&host_id) {
                 infinite_world::world::set_world3d_declared_actions(state, &action_ids);
             }
         }
@@ -7383,7 +7493,7 @@ impl ShellState {
         let painted = registrations.iter().any(|entry| matches!(entry.detail, crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph));
         let syncs = SYNCS.fetch_add(1, Ordering::Relaxed) + 1;
         let with_graph = if painted { DRAINS_WITH_GRAPH.fetch_add(1, Ordering::Relaxed) + 1 } else { DRAINS_WITH_GRAPH.load(Ordering::Relaxed) };
-        let would_evict: Vec<&str> = states.iter().filter(|(id, _)| !registrations.iter().any(|entry| &entry.surface_id == *id)).map(|(id, _)| id.as_str()).collect();
+        let would_evict: Vec<&str> = states.iter().filter(|(id, _)| !registrations.iter().any(|entry| &entry.host_id == *id)).map(|(id, _)| id.as_str()).collect();
         let live: Vec<String> = states.iter().map(|(id, surface)| format!("{id}@{}x{}+{},{}", surface.bounds.w.round(), surface.bounds.h.round(), surface.bounds.x.round(), surface.bounds.y.round())).collect();
         Self::debug_log(&format!("[DEBUG] wgpu-shell engine surfaces syncs={syncs} drains-with-graph={with_graph} drain={} live={live:?} old-rule-would-evict={would_evict:?} windows={live_window_ids:?}", registrations.len()));
     }
@@ -7410,6 +7520,7 @@ impl ShellState {
         tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>,
         board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
         world3d_status: &mut HashMap<String, String>,
+        world3d_window_ids: &mut HashMap<String, String>,
         registrations: Vec<crate::engine_canvas::EngineSurfaceRegistration>,
         live_window_ids: &[&str],
     ) -> Vec<String> {
@@ -7427,44 +7538,48 @@ impl ShellState {
         }
         let mut constructed = Vec::new();
         for registration in registrations {
-            let crate::engine_canvas::EngineSurfaceRegistration { surface_id, window_id, bounds, controller_id, detail, created } = registration;
+            let crate::engine_canvas::EngineSurfaceRegistration { host_id, surface_id, window_id, bounds, controller_id, detail, created } = registration;
             match detail {
                 crate::engine_canvas::EngineSurfaceKindDetail::NodeGraph => {
-                    if let Some(surface) = node_graph_states.get_or_insert_with(surface_id.clone(), || NodeGraphSurface { bounds, controller_id: controller_id.clone(), window_id: window_id.clone() }) {
+                    if let Some(surface) = node_graph_states.get_or_insert_with(host_id.clone(), || NodeGraphSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), window_id: window_id.clone() }) {
+                        surface.surface_id = surface_id;
                         surface.bounds = bounds;
                         surface.controller_id = controller_id;
                         surface.window_id = window_id;
                     }
                     if created {
-                        constructed.push(surface_id);
+                        constructed.push(host_id);
                     }
                 }
                 crate::engine_canvas::EngineSurfaceKindDetail::TiledMap { selection_method } => {
-                    if let Some(surface) = tiled_map_states.get_or_insert_with(surface_id.clone(), || TiledMapSurface { bounds, controller_id: controller_id.clone(), selection_method: selection_method.clone(), window_id: window_id.clone() }) {
+                    if let Some(surface) = tiled_map_states.get_or_insert_with(host_id.clone(), || TiledMapSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), selection_method: selection_method.clone(), window_id: window_id.clone() }) {
+                        surface.surface_id = surface_id;
                         surface.bounds = bounds;
                         surface.controller_id = controller_id;
                         surface.selection_method = selection_method;
                         surface.window_id = window_id;
                     }
                     if created {
-                        constructed.push(surface_id);
+                        constructed.push(host_id);
                     }
                 }
                 crate::engine_canvas::EngineSurfaceKindDetail::Board2d { fixture_json } => {
-                    if let Some(surface) = board2d_states.get_or_insert_with(surface_id.clone(), || Board2dSurface { bounds, controller_id: controller_id.clone(), fixture_json: fixture_json.clone(), window_id: window_id.clone() }) {
+                    if let Some(surface) = board2d_states.get_or_insert_with(host_id.clone(), || Board2dSurface { surface_id: surface_id.clone(), bounds, controller_id: controller_id.clone(), fixture_json: fixture_json.clone(), window_id: window_id.clone() }) {
+                        surface.surface_id = surface_id;
                         surface.bounds = bounds;
                         surface.controller_id = controller_id;
                         surface.fixture_json = fixture_json;
                         surface.window_id = window_id;
                     }
                     if created {
-                        constructed.push(surface_id);
+                        constructed.push(host_id);
                     }
                 }
                 crate::engine_canvas::EngineSurfaceKindDetail::World3d { status_json } => {
+                    world3d_window_ids.insert(host_id.clone(), window_id);
                     match status_json {
-                        Some(status_json) => world3d_status.insert(surface_id, status_json),
-                        None => world3d_status.remove(&surface_id),
+                        Some(status_json) => world3d_status.insert(host_id, status_json),
+                        None => world3d_status.remove(&host_id),
                     };
                 }
             }
@@ -7478,8 +7593,8 @@ impl ShellState {
         if self.app_catalogue_json.is_empty() {
             return;
         }
-        for (surface_id, _) in self.node_graph_states.iter() {
-            crate::engine_canvas::node_graph_set_catalogue_json(surface_id, &self.app_catalogue_json);
+        for (host_id, _) in self.node_graph_states.iter() {
+            crate::engine_canvas::node_graph_set_catalogue_json(host_id, &self.app_catalogue_json);
         }
     }
 
@@ -7563,6 +7678,10 @@ impl ShellState {
             self.panel_documents.keys().filter(|id| !retained.contains(id)).cloned().collect()
         };
         for id in stale {
+            if !crate::interpreter::request_ui_document_close(&id) {
+                return Err(format!("shell: retained UI close registry refused surface '{id}'"));
+            }
+            self.chrome_build.clear_content_focus(&id);
             let document = if windows { self.window_ui.remove(&id) } else { self.panel_documents.remove(&id) };
             self.retire_one_surface_document(document)?;
         }
@@ -8785,7 +8904,7 @@ impl ShellState {
         }
         let mut bottom_right = vec![DockTabNode::branch(FRAMEWORK_SETTINGS_PANEL_ID, shell_chrome_string("panelToggle.settings", is_de), "settings", 0, settings_children)];
         bottom_right.push(DockTabNode::leaf(FRAMEWORK_MARKETPLACE_TAB_ID, shell_chrome_string("marketplace.tab", is_de), "circle-dot", 1));
-        bottom_right.push(DockTabNode::leaf(FRAMEWORK_TASK_MANAGER_PANEL_ID, shell_chrome_string("taskManager.title", is_de), "cpu", 2));
+        bottom_right.push(DockTabNode::leaf(FRAMEWORK_TASK_MANAGER_PANEL_ID, shell_chrome_string("panelToggle.taskManager", is_de), "cpu", 2));
         let history_offset = bottom_right.len() as i32;
         bottom_right.extend(history.into_iter().enumerate().map(|(index, tab)| DockTabNode { order: history_offset + index as i32, ..tab }));
         *dock.tabs_mut(PanelAnchor::BottomRight) = bottom_right;
@@ -10037,7 +10156,7 @@ impl ShellState {
     }
 
     pub async fn dispatch_action(&mut self, mut action: ActionDescriptor) -> Result<(), String> {
-        if let Some(owner) = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str).and_then(window_measures_owner).map(str::to_string) {
+        if let Some(owner) = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str).and_then(window_pane_owner).map(str::to_string) {
             scope_action_to_window(&mut action, &owner);
         }
         // 🎯️ The chrome ledger's one tap: this fn is the single funnel EVERY input's action crosses, so
@@ -12281,14 +12400,40 @@ impl ShellChromeBuildState {
     /// that must address the focused content node (a panel-level Copy, an inspector commit) reads this
     /// instead of re-deriving focus from the tree.
     fn content_focus_node(&self, window_id: &str) -> Option<ui_wgpu::wgpu::NodeId> {
-        self.content_focus.get(window_id).copied().flatten()
+        self.content_focus.get(window_id).and_then(Option::as_ref).map(|focus| focus.node)
     }
 
     fn note_content_focus_commands(&mut self, commands: &[ui_wgpu::wgpu::UiCommand]) {
         for command in commands {
             if let ui_wgpu::wgpu::UiCommand::FocusChanged { window_id, node } = command {
                 ShellState::debug_log(&format!("[DEBUG] wgpu-shell content focus window={window_id} node={node:?}"));
-                self.content_focus.insert(window_id.clone(), *node);
+                let focus = node.and_then(|node| {
+                    crate::interpreter::retained_node_focus_identity(window_id, node).map(|(key, kind)| RetainedContentFocus { node, key, kind })
+                });
+                if focus.is_some() {
+                    if let Some(previous) = self.focused_retained_surface.replace(window_id.clone()).filter(|previous| previous != window_id) {
+                        self.content_focus.insert(previous, None);
+                    }
+                } else if self.focused_retained_surface.as_deref() == Some(window_id.as_str()) {
+                    self.focused_retained_surface = None;
+                }
+                self.content_focus.insert(window_id.clone(), focus);
+            }
+        }
+    }
+
+    fn clear_content_focus(&mut self, surface: &str) {
+        self.content_focus.remove(surface);
+        if self.focused_retained_surface.as_deref() == Some(surface) {
+            self.focused_retained_surface = None;
+        }
+    }
+
+    fn clear_sibling_pane_focus(&mut self, surface: &str) {
+        let owner = window_pane_owner(surface).unwrap_or(surface);
+        for sibling in [owner.to_string(), window_measures_surface_id(owner), window_actions_surface_id(owner), window_search_surface_id(owner)] {
+            if sibling != surface {
+                self.clear_content_focus(&sibling);
             }
         }
     }
@@ -12328,10 +12473,13 @@ fn ui_event_from_key_action(action: &ui_wgpu::wgpu::KeyAction, modifiers: &Point
 
 impl ShellState {
     fn retained_keyboard_focus(&self) -> Option<(String, ui_wgpu::wgpu::NodeId)> {
-        let window_id = self.active_window_id.as_ref()?;
-        let measures = window_measures_surface_id(window_id);
-        let surface = if self.chrome_build.content_has_focus(&measures) { measures } else { window_id.clone() };
-        self.chrome_build.content_focus_node(&surface).map(|node| (surface, node))
+        let surface = self.chrome_build.focused_retained_surface.as_ref()?;
+        let owner = window_pane_owner(surface).unwrap_or(surface);
+        if !self.retained_surface_is_panel(surface) && self.active_window_id.as_deref() != Some(owner) {
+            return None;
+        }
+        let focus = self.chrome_build.content_focus.get(surface)?.as_ref()?;
+        crate::interpreter::retained_node_has_visible_focus(surface, focus.node, &focus.key, focus.kind).then(|| (surface.clone(), focus.node))
     }
 
     pub(crate) fn retained_select_owns_keyboard(&self) -> bool {
@@ -12372,17 +12520,25 @@ impl ShellState {
     }
 
     pub fn handle_pointer_cancel_for(&mut self, pointer_id: ui_render::PointerId, input: &mut InputState<ActionDescriptor>) {
-        if let Some(window_id) = crate::interpreter::retained_pointer_capture_window() {
+        let retained_cancelled = crate::interpreter::retained_pointer_capture_window(pointer_id);
+        if let Some(window_id) = retained_cancelled.as_ref() {
             crate::interpreter::dispatch_ui_pointer_event(&window_id, pointer_id, ui_wgpu::wgpu::UiEvent::PointerCancel, input);
         }
         let (pointer_x, pointer_y) = (input.pointer_x, input.pointer_y);
-        for cancelled in crate::interpreter::cancel_scene_pointer(pointer_id, input) {
+        let cancelled_scenes = crate::interpreter::cancel_scene_pointer(pointer_id, input);
+        let scene_cancelled = !cancelled_scenes.is_empty();
+        for cancelled in cancelled_scenes {
             match cancelled.kind {
-                ui_wgpu::wgpu::SurfaceKind::NodeGraph => { crate::engine_canvas::node_graph_pointer_cancel_into(&cancelled.surface_id); }
-                ui_wgpu::wgpu::SurfaceKind::Board2d => { crate::engine_canvas::puzzle_board_pointer_cancel_into(&cancelled.surface_id, input); }
+                ui_wgpu::wgpu::SurfaceKind::World3d => {
+                    if let Some(state) = self.world3d_states.get_mut(&cancelled.host_id) {
+                        infinite_world::world::world3d_cancel_relocate_drag(state);
+                    }
+                }
+                ui_wgpu::wgpu::SurfaceKind::NodeGraph => { crate::engine_canvas::node_graph_pointer_cancel_into(&cancelled.host_id); }
+                ui_wgpu::wgpu::SurfaceKind::Board2d => { crate::engine_canvas::puzzle_board_pointer_cancel_into(&cancelled.host_id, input); }
                 ui_wgpu::wgpu::SurfaceKind::TiledMap => {
-                    if let Some(surface) = self.tiled_map_states.get(&cancelled.surface_id) {
-                        if let Err(fault) = crate::scenes::tiled_map_pointer_up_into(&cancelled.surface_id, &surface.controller_id, surface.bounds, pointer_x, pointer_y, &mut *input) {
+                    if let Some(surface) = self.tiled_map_states.get(&cancelled.host_id).filter(|surface| surface.window_id == cancelled.window_id) {
+                        if let Err(fault) = crate::scenes::tiled_map_pointer_cancel_into(&cancelled.host_id, &surface.controller_id, surface.bounds, pointer_x, pointer_y, &mut *input) {
                             input.record_action_fault(fault);
                         }
                     }
@@ -12390,18 +12546,24 @@ impl ShellState {
                 _ => {}
             }
         }
-        crate::scenes::cancel_canvas_interactions(input);
-        crate::scenes::cancel_scene_list_transfer();
-        self.dock_tab_drag = None;
-        self.dock_drag = None;
-        self.pending_dock_drag = None;
-        self.tree_drag = None;
-        self.pending_tree_drag = None;
-        self.pending_chrome_release = None;
-        self.right_click = RightClickState::default();
-        input.pointer_down = false;
-        input.hovered_id = None;
-        input.drag = Default::default();
+        let canvas_cancelled = crate::scenes::cancel_canvas_pointer_gesture_for(pointer_id, input);
+        let transfer_cancelled = crate::scenes::cancel_scene_list_transfer_for_pointer(pointer_id);
+        let chrome_cancelled = self.chrome_pointer_owner == Some(pointer_id);
+        if chrome_cancelled {
+            self.chrome_pointer_owner = None;
+            self.dock_tab_drag = None;
+            self.dock_drag = None;
+            self.pending_dock_drag = None;
+            self.tree_drag = None;
+            self.pending_tree_drag = None;
+            self.pending_chrome_release = None;
+            self.right_click = RightClickState::default();
+        }
+        if retained_cancelled.is_some() || scene_cancelled || canvas_cancelled || transfer_cancelled || chrome_cancelled {
+            input.pointer_down = false;
+            input.hovered_id = None;
+            input.drag = Default::default();
+        }
     }
 
     /// 🖱️ One chrome pointer button, dispatched and RETURNED — the chain it armed converges on the
@@ -12421,11 +12583,17 @@ impl ShellState {
 
     pub async fn handle_pointer_button_for(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32, down: bool, button: i16, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> Result<(), String> {
         Self::debug_log(&format!("[DEBUG] wgpu-shell pointer button x={x} y={y} down={down} button={button} targets={} staged={} gen={} hit={:?}", input.hits().len(), input.staged_hits().len(), input.hit_generation(), input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone(), target.event.as_ref().map(|descriptor| descriptor.action.clone())))));
+        if !down && self.chrome_pointer_owner.is_some_and(|owner| owner != pointer_id) {
+            return Ok(());
+        }
         input.pointer_x = x;
         input.pointer_y = y;
         input.pointer_down = down;
         input.pointer_button = button;
         if !down {
+            if self.chrome_pointer_owner == Some(pointer_id) {
+                self.chrome_pointer_owner = None;
+            }
             let retained_canvas_drag = crate::interpreter::active_retained_drag_sessions()
                 .into_iter()
                 .map(|(_, _, _, drag_data)| drag_data)
@@ -12495,7 +12663,7 @@ impl ShellState {
                     }
                 }
             }
-            let captured_release = crate::interpreter::retained_pointer_capture_window().and_then(|window_id| self.retained_window_body_rect(&window_id).map(|body| (window_id, body)));
+            let captured_release = crate::interpreter::retained_pointer_capture_window(pointer_id).and_then(|window_id| self.retained_window_body_rect(&window_id).map(|body| (window_id, body)));
             let retained_release = input
                 .hit_at(x, y)
                 .cloned()
@@ -12540,6 +12708,10 @@ impl ShellState {
                 self.right_click = RightClickState { pending: true, x, y };
                 return Ok(());
             }
+            if let Some((window_id, body)) = hit.as_ref().and_then(|hit| self.retained_canvas2d_hit_window(hit, x, y)) {
+                let scene_hit = hit.as_ref().expect("the retained Canvas2d owner was resolved from this hit");
+                self.route_retained_pointer_press(&window_id, body, x, y, true, button, scene_hit.kind, scene_hit.event.clone(), pointer_id, input).await?;
+            }
             self.open_context_menu(x, y, hit).await;
             self.right_click = RightClickState { pending: true, x, y };
             return Ok(());
@@ -12550,7 +12722,7 @@ impl ShellState {
         // 🌫️ Pressing the mode canvas where no chrome and no window body answers is React's
         // `handleCanvasBackgroundPointerDown` on `[data-slot="mode-body"]` itself
         // (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1461-1471`): the mode keeps its layout and loses its focus.
-        if input.hit_at(x, y).is_none() && self.dock_canvas_bounds.contains(x, y) {
+        if input.hit_at(x, y).is_none() && self.presented_input_geometry.dock_canvas_bounds.contains(x, y) {
             self.deactivate_active_window();
         }
         if let Some(hit) = input.hit_at(x, y).cloned() {
@@ -12558,11 +12730,14 @@ impl ShellState {
             // fires through `dispatch_action`, a focusable control is routed into that body's
             // `events::EventRouter`, and none of the chrome id conventions below can claim it.
             if let Some((window_id, body)) = self.retained_hit_window(&hit) {
-                self.begin_window_template_drag_from_hit(&hit, x, y);
+                self.begin_window_template_drag_from_hit(pointer_id, &hit, x, y);
                 self.route_retained_pointer_press(&window_id, body, x, y, true, button, hit.kind, hit.event.clone(), pointer_id, input).await?;
                 return Ok(());
             }
             if hit.kind == HitKind::PanelResize {
+                if !self.claim_chrome_pointer(pointer_id) {
+                    return Ok(());
+                }
                 if let Some(id) = hit.control_id.as_deref() {
                     if let Some(window_id) = id.strip_prefix("shell.measures.resize.") {
                         self.measures_resize_window_id = Some(window_id.to_string());
@@ -12578,6 +12753,9 @@ impl ShellState {
                 return Ok(());
             }
             if matches!(hit.kind, HitKind::DockSplit | HitKind::DockJoinCorner) {
+                if !self.claim_chrome_pointer(pointer_id) {
+                    return Ok(());
+                }
                 // 🌫️ A resize gutter is canvas BACKGROUND as far as focus goes: React's
                 // `handleCanvasBackgroundPointerDown` deactivates on any `data-slot="resizable-panel"`
                 // press (`🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx:1461-1471`) and still starts the resize.
@@ -12595,8 +12773,9 @@ impl ShellState {
                                     self.split_resize_secondary_index = col_index_str.parse().unwrap_or(0);
                                     self.split_resize_origin = self.dock.begin_split_drag(&row_path);
                                     self.split_resize_secondary_origin = self.dock.begin_split_drag(&col_path);
-                                    self.split_resize_axis_total = self.dock.split_axis_extent(&row_path, self.dock_canvas_bounds, self.dock_axis_separator).unwrap_or(self.dock_canvas_bounds.w);
-                                    self.split_resize_secondary_axis_total = self.dock.split_axis_extent(&col_path, self.dock_canvas_bounds, self.dock_axis_separator).unwrap_or(self.dock_canvas_bounds.h);
+                                    let geometry = &self.presented_input_geometry;
+                                    self.split_resize_axis_total = self.dock.split_axis_extent(&row_path, geometry.dock_canvas_bounds, geometry.dock_axis_separator).unwrap_or(geometry.dock_canvas_bounds.w);
+                                    self.split_resize_secondary_axis_total = self.dock.split_axis_extent(&col_path, geometry.dock_canvas_bounds, geometry.dock_axis_separator).unwrap_or(geometry.dock_canvas_bounds.h);
                                     input.begin_drag(x, y, button, Some(id.to_string()), Some(DragAxis::Both), Some(hit.kind));
                                     return Ok(());
                                 }
@@ -12610,9 +12789,10 @@ impl ShellState {
                             self.split_resize_path = Some(path.clone());
                             self.split_resize_index = index;
                             self.split_resize_origin = self.dock.begin_split_drag(&path);
-                            self.split_resize_axis_total = self.dock.split_axis_extent(&path, self.dock_canvas_bounds, self.dock_axis_separator).unwrap_or_else(|| match hit.drag_axis {
-                                Some(DragAxis::Vertical) => self.dock_canvas_bounds.h,
-                                _ => self.dock_canvas_bounds.w,
+                            let geometry = &self.presented_input_geometry;
+                            self.split_resize_axis_total = self.dock.split_axis_extent(&path, geometry.dock_canvas_bounds, geometry.dock_axis_separator).unwrap_or_else(|| match hit.drag_axis {
+                                Some(DragAxis::Vertical) => geometry.dock_canvas_bounds.h,
+                                _ => geometry.dock_canvas_bounds.w,
                             });
                             input.begin_drag(x, y, button, Some(id.to_string()), hit.drag_axis, Some(hit.kind));
                             return Ok(());
@@ -12620,15 +12800,21 @@ impl ShellState {
                     }
                 }
             }
-            if self.begin_window_template_drag_from_hit(&hit, x, y) {
+            if self.begin_window_template_drag_from_hit(pointer_id, &hit, x, y) {
                 return Ok(());
             }
             if let Some((item_id, drag_data)) = hit.control_id.as_deref().and_then(tree_hit_item_id).zip(hit.drag_data.clone()) {
+                if !self.claim_chrome_pointer(pointer_id) {
+                    return Ok(());
+                }
                 self.tree_drag_origin = (x, y);
                 self.pending_tree_drag = Some((item_id.to_string(), drag_data));
                 return Ok(());
             }
             if button == 0 && hit.control_id.as_deref().is_some_and(|id| ShellPaletteKind::row_index(id).is_some() || ShellPaletteKind::from_close_id(id).is_some()) {
+                if !self.claim_chrome_pointer(pointer_id) {
+                    return Ok(());
+                }
                 self.pending_chrome_release = hit.control_id.clone();
                 return Ok(());
             }
@@ -12654,6 +12840,9 @@ impl ShellState {
             }
             if let Some(id) = hit.control_id.as_deref() {
                 if let Some(window_id) = dock_tab_select_window_id(id) {
+                    if !self.claim_chrome_pointer(pointer_id) {
+                        return Ok(());
+                    }
                     self.pending_chrome_release = hit.control_id.clone();
                     return Ok(());
                 }
@@ -12667,7 +12856,7 @@ impl ShellState {
                         let window_kind_id = self.dock.window_kind_id(window_id).unwrap_or(window_id).to_string();
                         let template_id = self.dock.window_template_id(window_id).map(str::to_string);
                         let ghost_label = self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == window_kind_id).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| window_id.to_string());
-                        self.begin_pending_dock_drag(DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.to_string(), window_kind_id, template_id, source_path: path, tab_index, ghost_label }, x, y);
+                        self.begin_pending_dock_drag(pointer_id, DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.to_string(), window_kind_id, template_id, source_path: path, tab_index, ghost_label }, x, y);
                         return Ok(());
                     }
                 }
@@ -12679,19 +12868,25 @@ impl ShellState {
                         let tab_index = self.dock.tab_index(&path, &active).unwrap_or(0);
                         let window_kind_id = self.dock.window_kind_id(&active).unwrap_or(&active).to_string();
                         let ghost_label = self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == window_kind_id).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| active.clone());
-                        self.begin_pending_dock_drag(DockDragPayload { kind: DockDragKind::Stack, window_id: active, window_kind_id, template_id: None, source_path: path, tab_index, ghost_label }, x, y);
+                        self.begin_pending_dock_drag(pointer_id, DockDragPayload { kind: DockDragKind::Stack, window_id: active, window_kind_id, template_id: None, source_path: path, tab_index, ghost_label }, x, y);
                         return Ok(());
                     }
                 }
             }
             if hit.kind == HitKind::PanelTab {
                 if let Some((tab_id, anchor)) = hit.control_id.as_deref().and_then(|id| Some((id.to_string(), self.panel_tab_anchor(id)?))) {
+                    if !self.claim_chrome_pointer(pointer_id) {
+                        return Ok(());
+                    }
                     self.dock_tab_drag = Some((tab_id, anchor));
                     input.begin_drag(x, y, button, hit.control_id.clone(), Some(DragAxis::Both), Some(hit.kind));
                 }
             }
             if hit.kind == HitKind::Slider {
                 if let Some(id) = hit.control_id.clone() {
+                    if !self.claim_chrome_pointer(pointer_id) {
+                        return Ok(());
+                    }
                     input.begin_drag(x, y, button, Some(id), hit.drag_axis, Some(hit.kind));
                     return Ok(());
                 }
@@ -12738,6 +12933,9 @@ impl ShellState {
     }
 
     pub fn handle_pointer_move_for(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32, down: bool, input: &mut InputState<ActionDescriptor>, theme: &Theme) {
+        if self.chrome_pointer_owner.is_some_and(|owner| owner != pointer_id) {
+            return;
+        }
         input.pointer_x = x;
         input.pointer_y = y;
         input.pointer_down = down;
@@ -12826,7 +13024,8 @@ impl ShellState {
         if let Some(drag) = &mut self.dock_drag {
             drag.x = x;
             drag.y = y;
-            drag.drop_zone = compute_dock_drop_zone(x, y, &self.dock_drop_tab_bars, &self.dock_drop_bodies, self.dock_canvas_bounds);
+            let geometry = &self.presented_input_geometry;
+            drag.drop_zone = compute_dock_drop_zone(x, y, &geometry.dock_drop_tab_bars, &geometry.dock_drop_bodies, geometry.dock_canvas_bounds);
         }
         if input.drag.active && down {
             input.update_drag(x, y);
@@ -12882,7 +13081,8 @@ impl ShellState {
         drag.x = x;
         drag.y = y;
         if drag.drop_zone.is_none() {
-            drag.drop_zone = compute_dock_drop_zone(x, y, &self.dock_drop_tab_bars, &self.dock_drop_bodies, self.dock_canvas_bounds);
+            let geometry = &self.presented_input_geometry;
+            drag.drop_zone = compute_dock_drop_zone(x, y, &geometry.dock_drop_tab_bars, &geometry.dock_drop_bodies, geometry.dock_canvas_bounds);
         }
         // 🎯️ An abandoned or refused drop is simply nothing: the committed tree was never touched, so
         // there is no snapshot to re-apply and no `sync_dock` to pay for.
@@ -12950,6 +13150,42 @@ impl ShellState {
         self.retained_hit_windows.get(hit.control_id.as_deref()?).cloned()
     }
 
+    /// 🎬️ Admits only the exact published scene hit while its originating surface remains live.
+    fn retained_scene_hit_is_live(&self, hit: &HitTarget<ActionDescriptor>, x: f32, y: f32) -> bool {
+        use ui_wgpu::wgpu::SurfaceKind;
+        let Some(control) = hit.control_id.as_deref() else { return false };
+        let Some((rect, scene)) = self.retained_scene_hits.get(control) else { return false };
+        let window = &scene.window_id;
+        if *rect != hit.rect || !rect.contains(x, y) || !self.retained_hit_windows.get(control).is_some_and(|(owner, body)| owner == window && body.contains(x, y)) {
+            return false;
+        }
+        let kind_matches = match scene.kind {
+            SurfaceKind::World3d => hit.kind == HitKind::World3d,
+            SurfaceKind::NodeGraph | SurfaceKind::Board2d | SurfaceKind::TiledMap => hit.kind == HitKind::ScrollRegion,
+            _ => false,
+        };
+        kind_matches && crate::interpreter::scene_pointer_target_is_live(scene)
+    }
+
+    /// 🖼️ Resolves the exact live Canvas2d scene beneath a secondary press before its context menu opens.
+    fn retained_canvas2d_hit_window(&self, hit: &HitTarget<ActionDescriptor>, x: f32, y: f32) -> Option<(String, Rect)> {
+        let control = hit.control_id.as_deref()?;
+        let scene_entry = self.retained_scene_hits.get(control);
+        let owner_entry = self.retained_hit_windows.get(control);
+        let live = owner_entry.and_then(|(window_id, body)| crate::interpreter::retained_scene_target_at(window_id, x - body.x, y - body.y));
+        let (rect, scene) = scene_entry?;
+        let (window_id, body) = owner_entry?;
+        let live = live?;
+        (*rect == hit.rect
+            && rect.contains(x, y)
+            && body.contains(x, y)
+            && scene.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d
+            && scene.window_id == *window_id
+            && live.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d
+            && live == *scene)
+        .then(|| (window_id.clone(), *body))
+    }
+
     /// 🧭️ A retained panel tab owns pointer routing but is not an application window instance.
     fn retained_surface_is_panel(&self, surface_id: &str) -> bool {
         self.open_anchors().into_iter().any(|anchor| self.anchor_state(anchor).active_tab() == Some(surface_id))
@@ -12961,18 +13197,70 @@ impl ShellState {
     /// registered before it.
     fn register_retained_body_hits(&mut self, window_id: &str, body: Rect, input: &mut InputState<ActionDescriptor>) {
         crate::interpreter::note_accessibility_visible_document(window_id);
-        for control_id in crate::interpreter::register_clipped_retained_hit_targets(window_id, body, input) {
+        for (control_id, scene, rect) in crate::interpreter::register_clipped_retained_hit_targets(window_id, body, input) {
+            if let Some(scene) = scene {
+                self.retained_scene_hits_staging.insert(control_id.clone(), (rect, scene));
+            } else {
+                self.retained_scene_hits_staging.remove(&control_id);
+            }
             self.retained_hit_windows_staging.insert(control_id, (window_id.to_string(), body));
         }
     }
 
-    /// 🏁️ Promotes the registry this chrome walk minted — and the owner map minted with it — to the
-    /// pointer's authority, in ONE step so the two can never disagree. Called only when a walk ran to
-    /// the end: an abandoned walk leaves the previous complete frame resolvable, which is the whole
-    /// point of the double buffer (`ui_wgpu::wgpu::HitRegistry`).
-    fn publish_retained_hit_registry(&mut self, input: &mut InputState<ActionDescriptor>) {
+    fn candidate_input_geometry(&self, theme: &Theme) -> PresentedInputGeometry {
+        let body = self.body_rect(theme);
+        let panel_rects = PanelAnchor::ALL
+            .into_iter()
+            .filter(|anchor| self.anchor_open(*anchor))
+            .map(|anchor| self.anchor_rect(anchor, body, theme))
+            .collect();
+        PresentedInputGeometry {
+            dock_canvas_bounds: self.dock_canvas_bounds,
+            dock_axis_separator: self.dock_axis_separator,
+            dock_drop_tab_bars: self.dock_drop_tab_bars.clone(),
+            dock_drop_bodies: self.dock_drop_bodies.clone(),
+            dock_window_plan: self.dock_window_plan.clone(),
+            window_content_rects: self.window_content_rects.clone(),
+            window_silhouettes: self.window_silhouettes.clone(),
+            modal: self.candidate_pointer_input_is_modal(),
+            panel_rects,
+        }
+    }
+
+    /// 🎞️ Seals the hit, owner, widget-binding and geometry candidates minted by one completed
+    /// chrome walk. They remain non-interactive until the matching GPU packet is acknowledged.
+    pub(crate) fn seal_presented_input_candidate(&mut self, theme: &Theme) -> Result<PresentedInputCandidateWitness, &'static str> {
+        let epoch = self.next_presented_input_epoch.ok_or("presented input candidate generation exhausted")?;
+        self.next_presented_input_epoch = epoch.checked_add(1);
+        let witness = PresentedInputCandidateWitness(epoch);
+        self.presented_input_geometry_staging = self.candidate_input_geometry(theme);
+        self.presented_input_candidate = Some(witness);
+        if !crate::interpreter::seal_presented_input_candidate(witness.0) {
+            self.presented_input_candidate = None;
+            return Err("retained presented input candidate could not be sealed");
+        }
+        Ok(witness)
+    }
+
+    pub(crate) fn presented_input_candidate_matches(&self, witness: PresentedInputCandidateWitness) -> bool {
+        self.presented_input_candidate == Some(witness) && crate::interpreter::presented_input_candidate_matches(witness.0)
+    }
+
+    /// 🏁️ Promotes one GPU-accepted frame's complete input authority in one runtime lock.
+    pub(crate) fn acknowledge_presented_input(&mut self, input: &mut InputState<ActionDescriptor>, witness: PresentedInputCandidateWitness) -> bool {
+        if !self.presented_input_candidate_matches(witness) {
+            return false;
+        }
+        if !crate::interpreter::acknowledge_presented_input(witness.0) {
+            return false;
+        }
         std::mem::swap(&mut self.retained_hit_windows, &mut self.retained_hit_windows_staging);
+        std::mem::swap(&mut self.retained_scene_hits, &mut self.retained_scene_hits_staging);
+        std::mem::swap(&mut self.widget_maps, &mut self.widget_maps_staging);
+        std::mem::swap(&mut self.presented_input_geometry, &mut self.presented_input_geometry_staging);
         input.publish_hits();
+        self.presented_input_epoch = witness.0;
+        self.presented_input_candidate = None;
         crate::interpreter::publish_accessibility_visible_documents();
         // ♿️ The chrome's accessible names ride the SAME promotion as its hit registry (packet W15d)
         // — a production path, not a diagnostics one, so an assistive technology reads the chrome
@@ -12980,6 +13268,24 @@ impl ShellState {
         crate::interpreter::note_chrome_accessibility(self.chrome_accessibility_nodes(input.hits()));
         crate::interpreter::note_chrome_hit_registry(input.hits(), &self.retained_hit_windows);
         crate::interpreter::note_chrome_surfaces(&self.chrome_surface_census());
+        true
+    }
+
+    pub(crate) fn discard_presented_input_candidate(&mut self, witness: PresentedInputCandidateWitness) -> bool {
+        if self.presented_input_candidate != Some(witness) {
+            return false;
+        }
+        if !crate::interpreter::discard_presented_input_candidate(witness.0) {
+            return false;
+        }
+        self.presented_input_candidate = None;
+        true
+    }
+
+    #[cfg(test)]
+    fn publish_retained_hit_registry(&mut self, input: &mut InputState<ActionDescriptor>) {
+        let witness = self.seal_presented_input_candidate(&Theme::default()).expect("test input candidate witness");
+        assert!(self.acknowledge_presented_input(input, witness));
     }
 
     /// 🪟️ Every surface this frame carries, at the LEVEL React's DOM states through `data-level` and
@@ -13034,7 +13340,7 @@ impl ShellState {
         // 🖱️ A live gesture keeps its window until release, the way a browser keeps a captured
         // pointer with the element that captured it — otherwise a `Slider`/`Ring` drag froze the
         // instant the pointer left the control's own rect and the registry answered something else.
-        let captured = crate::interpreter::retained_pointer_capture_window().and_then(|window_id| self.retained_window_body_rect(&window_id).map(|body| (window_id, body)));
+        let captured = crate::interpreter::retained_pointer_capture_window(pointer_id).and_then(|window_id| self.retained_window_body_rect(&window_id).map(|body| (window_id, body)));
         let current = captured.or_else(|| input.hit_at(x, y).cloned().and_then(|hit| self.retained_hit_window(&hit)));
         // 👋️ The body that last owned the hover must be told about the move that LEAVES it. Routing
         // only the moves that land ON a retained target left `NodeFlags::HOVERED` set forever on the
@@ -13083,9 +13389,8 @@ impl ShellState {
         // any window but the first (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
         // `📓️wgpu-generation-publication-2026-09-13.md`).
         if down && !self.retained_surface_is_panel(window_id) {
-            let owner = window_measures_owner(window_id).unwrap_or(window_id).to_string();
-            let sibling = if owner == window_id { window_measures_surface_id(&owner) } else { owner.clone() };
-            self.chrome_build.content_focus.insert(sibling, None);
+            let owner = window_pane_owner(window_id).unwrap_or(window_id).to_string();
+            self.chrome_build.clear_sibling_pane_focus(window_id);
             // 🪟️ React's `activateWindow` is `setActiveWindowInLayout(prev, windowId)` plus
             // `onActiveWindowChange` (`🧱️elements/🎨️Canvas/🟦️.tsx:1446-1452`) — the DOCK's notion of the
             // active stack moves with the shell's active window, which is what paints the stack accent.
@@ -13100,7 +13405,7 @@ impl ShellState {
             } else {
                 ui_wgpu::wgpu::UiEvent::PointerUp { x: x - body.x, y: y - body.y, button: Self::retained_pointer_button(button), modifiers: Self::retained_event_modifiers(input) }
             };
-            let commands = crate::interpreter::dispatch_ui_pointer_event(window_id, pointer_id, event, input);
+            let commands = crate::interpreter::dispatch_presented_ui_pointer_event(window_id, pointer_id, event, input);
             self.chrome_build.note_content_focus_commands(&commands);
         } else if !down {
             // 👆️ A click is press AND release, and the action fires on the RELEASE — the same rule
@@ -13127,24 +13432,6 @@ impl ShellState {
     }
     //#endregion 🎯️RetainedPointerRouting
 
-    fn scroll_region_is_scene_surface(control_id: &str) -> bool {
-        control_id.ends_with(".pane") || control_id.ends_with(".map")
-    }
-
-    pub fn wheel_propagates_to_scene_surface(hit: Option<&HitTarget<ActionDescriptor>>) -> bool {
-        if Self::pointer_hit_owner(hit) == PointerHitOwner::Chrome {
-            return false;
-        }
-        let Some(hit) = hit else {
-            return true;
-        };
-        match hit.kind {
-            HitKind::World3d | HitKind::Window => true,
-            HitKind::ScrollRegion => hit.control_id.as_deref().is_some_and(Self::scroll_region_is_scene_surface),
-            _ => false,
-        }
-    }
-
     /// 🎬️ Whether a live engine surface is painted under this point — the wheel's twin of the press
     /// path's own `state.bounds.contains(x, y)` claim, and the same set of surfaces the four wheel
     /// phases go on to offer the notch to.
@@ -13155,28 +13442,9 @@ impl ShellState {
             || self.board2d_states.values().any(|surface| surface.bounds.contains(x, y))
     }
 
-    /// 🖱️🎡 The wheel's own routing question, asked through the ONE ownership predicate: a notch over
-    /// chrome — an open menu, a dropdown, a dialog, the tour, a pane chip, an anchored panel's tab —
-    /// scrolls that chrome and never zooms the world under it, because React's wheel event is
-    /// delivered to the DOM element it is over and never reaches the `<canvas>`.
-    ///
-    /// 🩸️ The hit's own KIND is not enough to answer it. A window body registers a
-    /// `HitKind::ScrollRegion` over its whole rect before the scene node inside it registers its
-    /// `HitKind::World3d`, so whenever that scene row is missing for a frame — measured live after
-    /// `window-cap-close` → `window-reopen`, where the topmost row at the pane centre was a
-    /// `ScrollRegion` with an EMPTY control id — the notch resolved a chrome scroll region that
-    /// names no `.pane`/`.map` surface, `propagates=false`, and the wheel phase returned before the
-    /// world ever saw it: `zoom-wheel` journalled `interactionHover` alone where React journals
-    /// `noteWorldNavigation` + `setCamera` (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w12c`,
-    /// `🗑️generated/w11a-parity-run-14/wgpu/console.txt:19476`). A point the shell's chrome does not
-    /// own, inside a live scene surface's rect, is that surface's — which is what React's own wheel
-    /// delivery to the `<canvas>` under the pointer means, and it can no longer depend on which
-    /// non-chrome row happens to be topmost or on how its id is spelled.
+    /// 🎡️ A published scene hit owns its notch after modal and anchored-panel precedence.
     pub fn wheel_reaches_scene_surface(&self, x: f32, y: f32, input: &InputState<ActionDescriptor>, theme: &Theme) -> bool {
-        if self.pointer_owner_at(x, y, input, theme) != PointerHitOwner::Surface {
-            return false;
-        }
-        Self::wheel_propagates_to_scene_surface(input.hit_at(x, y)) || self.scene_surface_contains(x, y)
+        !self.pointer_input_is_modal() && !self.pointer_is_over_open_panel(x, y, theme) && input.hit_at(x, y).is_some_and(|hit| self.retained_scene_hit_is_live(hit, x, y))
     }
 
     /// 🛑️🖱️ Whether a PRESS at this hit belongs to the shell's own chrome rather than to the engine
@@ -13253,12 +13521,16 @@ impl ShellState {
     /// full-screen hit target (`ui.introduction.veil`), so it answers through
     /// [`Self::pointer_hit_owner`] too; the other three publish hit rows for their own items only,
     /// and the point BESIDE an open menu is exactly the one that used to reach the world.
-    pub fn pointer_input_is_modal(&self) -> bool {
+    fn candidate_pointer_input_is_modal(&self) -> bool {
         self.context_menu.is_some()
             || matches!(self.overlay_state, OverlayState::Search | OverlayState::Find)
             || self.chrome_build.dialog_open()
             || self.chrome_build.tour_is_open()
             || self.open_selects.values().any(|open| *open)
+    }
+
+    pub fn pointer_input_is_modal(&self) -> bool {
+        self.presented_input_geometry.modal
     }
 
     /// 📑️ Whether this point is inside an OPEN anchored panel's painted box. A panel is an opaque
@@ -13267,9 +13539,8 @@ impl ShellState {
     /// padding, a gap between tree rows, the empty space under the last one). The boxes are this
     /// frame's own, from the same [`Self::anchor_rect`] the paint, the hit test and the published
     /// panel boxes read.
-    pub fn pointer_is_over_open_panel(&self, x: f32, y: f32, theme: &Theme) -> bool {
-        let body = self.body_rect(theme);
-        PanelAnchor::ALL.into_iter().any(|anchor| self.anchor_open(anchor) && self.anchor_rect(anchor, body, theme).contains(x, y))
+    pub fn pointer_is_over_open_panel(&self, x: f32, y: f32, _theme: &Theme) -> bool {
+        self.presented_input_geometry.panel_rects.iter().any(|rect| rect.contains(x, y))
     }
 
     /// 🎯️ [`Self::pointer_hit_owner`] with this shell's live overlay LAYERS folded in — a modal
@@ -13280,10 +13551,24 @@ impl ShellState {
             return PointerHitOwner::Chrome;
         }
         let hit = input.hit_at(x, y);
-        if hit.is_some_and(|hit| self.retained_hit_window(hit).is_some()) {
-            return PointerHitOwner::Chrome;
+        if let Some(hit) = hit.filter(|hit| self.retained_hit_window(hit).is_some()) {
+            return if self.retained_scene_hit_is_live(hit, x, y) { PointerHitOwner::Surface } else { PointerHitOwner::Chrome };
         }
-        Self::pointer_hit_owner(hit)
+        PointerHitOwner::Chrome
+    }
+
+    /// 🧲️ Resolves one published scene identity after the shell's modal and panel layers.
+    pub fn scene_pointer_target_at(&self, x: f32, y: f32, input: &InputState<ActionDescriptor>, theme: &Theme) -> Option<crate::interpreter::ScenePointerTarget> {
+        if self.pointer_input_is_modal() || self.pointer_is_over_open_panel(x, y, theme) { return None; }
+        let hit = input.hit_at(x, y)?;
+        if !self.retained_scene_hit_is_live(hit, x, y) { return None; }
+        let (_, target) = self.retained_scene_hits.get(hit.control_id.as_deref()?)?;
+        crate::interpreter::scene_pointer_target_is_live(target).then(|| target.clone())
+    }
+
+    /// 🖼️ Captured input may outlive its rectangle, but never its published scene owner.
+    pub fn scene_pointer_target_is_published(&self, target: &crate::interpreter::ScenePointerTarget) -> bool {
+        self.retained_scene_hits.values().any(|(_, published)| published == target) && crate::interpreter::scene_pointer_target_is_live(target)
     }
 
     /// 🪟️ A press anywhere inside a window's own box ACTIVATES that window — React's
@@ -13303,11 +13588,11 @@ impl ShellState {
     /// menus and dialogs are portaled OUTSIDE the window element, so no capture handler of theirs
     /// ever fires), and the empty-id row the dock plans after a cap close names no window.
     /// [`Self::arm_window_activation_note`] turns the change into the history note on the next drain.
-    pub fn activate_window_under_pointer(&mut self, x: f32, y: f32) -> bool {
-        if self.pointer_input_is_modal() {
+    pub fn activate_window_under_pointer(&mut self, x: f32, y: f32, theme: &Theme) -> bool {
+        if self.pointer_input_is_modal() || self.pointer_is_over_open_panel(x, y, theme) {
             return false;
         }
-        let Some(window_id) = self.dock_window_plan.iter().rev().find(|(id, rect)| !id.is_empty() && rect.contains(x, y)).map(|(id, _)| id.clone()) else {
+        let Some(window_id) = self.presented_input_geometry.dock_window_plan.iter().rev().find(|(id, rect)| !id.is_empty() && rect.contains(x, y)).map(|(id, _)| id.clone()) else {
             return false;
         };
         if self.active_window_id.as_deref() == Some(window_id.as_str()) {
@@ -13326,15 +13611,18 @@ impl ShellState {
         drag.active && matches!(drag.kind, Some(HitKind::DockSplit | HitKind::DockJoinCorner | HitKind::PanelResize | HitKind::PanelTab))
     }
 
-    pub fn handle_pointer_wheel(&mut self, x: f32, y: f32, delta: f32, input: &mut InputState<ActionDescriptor>) -> bool {
+    pub fn handle_pointer_wheel(&mut self, x: f32, y: f32, delta_x: f32, delta_y: f32, input: &mut InputState<ActionDescriptor>) -> bool {
         let Some(hit) = input.hit_at(x, y).cloned() else {
             return false;
         };
+        if self.retained_scene_hit_is_live(&hit, x, y) {
+            return false;
+        }
         if let Some((surface, body)) = self.retained_hit_window(&hit) {
             let modifiers = Self::retained_event_modifiers(input);
             let _ = crate::interpreter::dispatch_ui_event(
                 &surface,
-                ui_wgpu::wgpu::UiEvent::Scroll { x: x - body.x, y: y - body.y, delta_x: 0.0, delta_y: delta * 24.0, modifiers },
+                ui_wgpu::wgpu::UiEvent::Scroll { x: x - body.x, y: y - body.y, delta_x, delta_y, modifiers },
                 input,
             );
             return true;
@@ -13351,14 +13639,11 @@ impl ShellState {
             let Some(menu) = self.context_menu.as_mut() else {
                 return false;
             };
-            menu.scroll_offset = (menu.scroll_offset + delta * 24.0).max(0.0);
+            menu.scroll_offset = (menu.scroll_offset + delta_y).max(0.0);
             return true;
         }
-        if Self::scroll_region_is_scene_surface(id) {
-            return false;
-        }
         let entry = self.scroll_offsets.entry(id.clone()).or_insert(0.0);
-        *entry = (*entry + delta * 24.0).max(0.0);
+        *entry = (*entry + delta_y).max(0.0);
         true
     }
 
@@ -13400,7 +13685,8 @@ impl ShellState {
             let Some(commands) = crate::interpreter::dispatch_accessibility_event(&target.window_id, target.window_generation, target.node_id, &target.node_key, event, input) else { return Ok(false) };
             self.chrome_build.note_content_focus_commands(&commands);
             if focused && !self.retained_surface_is_panel(&target.window_id) {
-                let owner = window_measures_owner(&target.window_id).unwrap_or(&target.window_id).to_string();
+                let owner = window_pane_owner(&target.window_id).unwrap_or(&target.window_id).to_string();
+                self.chrome_build.clear_sibling_pane_focus(&target.window_id);
                 self.dock.sync_active_window(&owner);
                 self.active_window_id = Some(owner);
             }
@@ -13616,11 +13902,11 @@ impl ShellState {
             // 🛑️ The World3d compute cancel — dispatches whatever id the surface's own status
             // document named, never a verb this shell knows.
             id if id.starts_with("shell.world3d.cancel::") => {
-                let surface_id = id.trim_start_matches("shell.world3d.cancel::").to_string();
-                let action = world3d_cancel_affordance(self.world3d_status.get(&surface_id).map(String::as_str));
-                let controller_id = self.world3d_states.get(&surface_id).map(|world| world.controller_id.clone());
-                if let (true, Some(controller_id)) = (action.cancellable, controller_id) {
-                    Self::debug_log(&format!("[DEBUG] shell world3d cancel {}", serde_json::json!({ "surface": surface_id, "action": action.cancel_action })));
+                let host_id = id.trim_start_matches("shell.world3d.cancel::").to_string();
+                let action = world3d_cancel_affordance(self.world3d_status.get(&host_id).map(String::as_str));
+                let owner = self.world3d_states.get(&host_id).map(|world| (world.controller_id.clone(), world.surface_id.clone()));
+                if let (true, Some((controller_id, surface_id))) = (action.cancellable, owner) {
+                    Self::debug_log(&format!("[DEBUG] shell world3d cancel {}", serde_json::json!({ "host": host_id, "surface": surface_id, "action": action.cancel_action })));
                     let mut args = action.cancel_args;
                     args.insert("surfaceId".to_string(), Value::String(surface_id));
                     self.dispatch_action(ActionDescriptor { controller_id, action: action.cancel_action, args: semio_framework::optional_json_to_dsl(Some(Value::Object(args))) }).await?;
@@ -13675,7 +13961,7 @@ impl ShellState {
                     // zero-delta camera intent a wheel settle queues, which publishes that pose
                     // through the bounded interaction lane. Both halves, or the chip changes an icon
                     // and nothing else.
-                    if let Some(world) = self.world3d_states.get_mut(&window_id) {
+                    if let Some(world) = self.world3d_state_for_window_mut(&window_id) {
                         if infinite_world::world::apply_world3d_projection_spec(world, family, orientation, oblique) {
                             let settle = WorldInteractionIntent::wheel(0.0, 0.0, 0.0, &ui_wgpu::wgpu::PointerModifiers::default());
                             let _ = enqueue_world3d_events(world, [settle]);
@@ -14147,7 +14433,7 @@ impl ShellState {
         // generation3d preview does, publishing `computing:true` on every sample of a 140 s window in
         // which nothing evaluated at all (`📓️wgpu-progress-visibility-2026-09-14.md` §3.1).
         let computing = self.live_compute_surfaces().any(|(surface_id, _)| !self.settle_pump.watches.get(&surface_id).is_some_and(|watch| watch.standing));
-        settle_pump_owes(self.settling, self.session.is_some(), armed_work, &self.owed_refresh_scope, self.settle_pump.owed, computing)
+        crate::interpreter::ui_document_close_pending() || settle_pump_owes(self.settling, self.session.is_some(), armed_work, &self.owed_refresh_scope, self.settle_pump.owed, computing)
     }
 
     /// ⏳️ Every live World3d surface whose own published status says its producer is working, with
@@ -14246,11 +14532,11 @@ impl ShellState {
         }
         let watched: Vec<String> = self.world3d_states.keys().cloned().collect();
         self.settle_pump.watches.retain(|surface_id, _| watched.contains(surface_id));
-        for (surface_id, status) in wedged {
-            let Some(controller_id) = self.world3d_states.get(&surface_id).map(|world| world.controller_id.clone()) else { continue };
+        for (host_id, status) in wedged {
+            let Some((controller_id, surface_id)) = self.world3d_states.get(&host_id).map(|world| (world.controller_id.clone(), world.surface_id.clone())) else { continue };
             Self::debug_log(&format!(
                 "[DEBUG] wgpu-shell settle pump wedge {}",
-                serde_json::json!({ "surface": surface_id, "phase": status.phase, "unitsDone": status.units_done, "unitsTotal": status.units_total, "inFlight": status.in_flight, "action": status.cancel_action, "steps": SHELL_SETTLE_STALL_STEPS })
+                serde_json::json!({ "host": host_id, "surface": surface_id, "phase": status.phase, "unitsDone": status.units_done, "unitsTotal": status.units_total, "inFlight": status.in_flight, "action": status.cancel_action, "steps": SHELL_SETTLE_STALL_STEPS })
             ));
             let mut args = status.cancel_args;
             args.insert("surfaceId".to_string(), Value::String(surface_id));
@@ -14261,7 +14547,7 @@ impl ShellState {
             self.settle_pump.owed = true;
             return ShellSettleStep::Wedged;
         }
-        let bodies: Vec<String> = funded.iter().filter_map(|surface_id| self.window_body_key(surface_id)).collect();
+        let bodies: Vec<String> = funded.iter().filter_map(|host_id| self.world3d_window_ids.get(host_id)).filter_map(|window_id| self.window_body_key(window_id)).collect();
         if bodies.is_empty() {
             // 🏁️ A working producer this shell has no window body to render is a producer it cannot
             // fund at all, so it stands down instead of asking the frame loop for a step per frame it
@@ -14733,7 +15019,7 @@ impl ShellState {
                 let kind = crate::scenes::context_menu_surface_kind_id(resolved.kind).to_string();
                 let crate::scenes::SceneContextMenuTarget { mut hits, mut selection, text } = resolved.target;
                 if resolved.kind == ui_wgpu::wgpu::SurfaceKind::World3d {
-                    if let Some(state) = self.world3d_states.get(&resolved.surface_id) {
+                    if let Some(state) = self.world3d_state_for_window(&window_id) {
                         let (world_hits, world_selection) = infinite_world::world::world3d_context_menu_surface(state);
                         hits = world_hits;
                         selection = world_selection;
@@ -15178,8 +15464,13 @@ impl ShellState {
                     .into_iter()
                     .find(|entry| command_address_stable_key(&entry.address) == command_key)
                     .map(|entry| format!("{FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX}{}", entry.definition.category));
-                self.reveal_dock_tab(category_tab.as_deref().unwrap_or(FRAMEWORK_CATEGORY_COMMAND_ID));
-                self.expanded_command_id = Some(command_key);
+                let category_tab = category_tab.as_deref().unwrap_or(FRAMEWORK_CATEGORY_COMMAND_ID);
+                let previous_expanded = self.expanded_command_id.replace(command_key);
+                if let Err(error) = self.republish_shell_panel_document(category_tab) {
+                    self.expanded_command_id = previous_expanded;
+                    return Err(error);
+                }
+                self.reveal_dock_tab(category_tab);
             }
         }
         self.search_open = false;
@@ -15257,9 +15548,10 @@ impl ShellState {
     pub fn handle_keyboard(&mut self, action: ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, input: &mut InputState<ActionDescriptor>) {
         if action == ui_wgpu::wgpu::KeyAction::Escape {
             if crate::scenes::cancel_canvas_interactions(input) {
-                if let Some(window_id) = crate::interpreter::retained_pointer_capture_window() {
-                    crate::interpreter::dispatch_ui_event(
+                if let Some((window_id, pointer_id)) = crate::interpreter::retained_any_pointer_capture() {
+                    crate::interpreter::dispatch_ui_pointer_event(
                         &window_id,
+                        pointer_id,
                         ui_wgpu::wgpu::UiEvent::PointerCancel,
                         input,
                     );
@@ -15267,9 +15559,11 @@ impl ShellState {
                 return;
             }
             if crate::scenes::cancel_scene_list_transfer() {
+                self.chrome_pointer_owner = None;
                 return;
             }
             if self.dock_drag.take().is_some() || self.pending_dock_drag.take().is_some() {
+                self.chrome_pointer_owner = None;
                 self.pending_chrome_release = None;
                 return;
             }
@@ -15842,6 +16136,12 @@ impl ShellState {
     /// and any future caller collapse the layout by the same rule, refocus `children[0]`, and tear
     /// down whatever the window was hosting.
     pub(crate) fn close_dock_window(&mut self, window_id: &str) -> bool {
+        if self.dock.window_kind_id(window_id).is_none() {
+            return false;
+        }
+        if !crate::interpreter::request_ui_document_close(window_id) {
+            return false;
+        }
         if !self.dock.close_window(window_id) {
             return false;
         }
@@ -16132,6 +16432,10 @@ mod pointer_hit_ownership_tests;
 #[cfg(test)]
 #[path = "../../🧪️tests/🎡️wgpu-wheel-and-escape-routing/🦀️.rs"]
 mod wheel_and_escape_routing_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🛟️panel-window-reservation/🦀️.rs"]
+mod panel_window_reservation_tests;
 
 #[cfg(test)]
 #[path = "../../🧪️tests/🛰️wgpu-dock-close-reopen-journals/🦀️.rs"]
@@ -17206,6 +17510,23 @@ pub(crate) struct ShellNavbarControl {
     pub icon_id: Option<&'static str>,
     pub label: String,
     pub active: bool,
+    pub width_policy: Option<ShellNavbarWidthPolicy>,
+}
+
+/// 📐️ A navbar control's authored responsive width contract. The bounds are expressed in root-em
+/// units and resolved in logical pixels before both centred-band reservation and paint.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ShellNavbarWidthPolicy {
+    RootRemClamp { minimum_rem: u16, maximum_rem: u16 },
+}
+
+/// 📐️ Resolves one control's available width through its authored width policy. The caller supplies
+/// logical pixels, so neither device density nor typography participates in root-rem conversion.
+pub(crate) fn resolve_shell_navbar_control_width(available_width: f32, policy: Option<ShellNavbarWidthPolicy>, root_rem_pixels: f32) -> f32 {
+    match policy {
+        Some(ShellNavbarWidthPolicy::RootRemClamp { minimum_rem, maximum_rem }) => available_width.clamp(minimum_rem as f32 * root_rem_pixels, maximum_rem as f32 * root_rem_pixels),
+        None => available_width,
+    }
 }
 
 /// 🗺️ What the navbar centre reads with no session open. React's `navbarItems` answers `[]` in that
@@ -17288,7 +17609,13 @@ pub(crate) fn shell_example_control(rows: &[ShellExampleRow], open: bool, is_de:
         return None;
     }
     let label = rows.iter().find(|row| row.selected).map_or_else(|| shell_chrome_string("example.picker", is_de).to_string(), |row| row.label.clone());
-    Some(ShellNavbarControl { control_id: "playground.navbar.fixture".to_string(), icon_id: Some("file"), label, active: open })
+    Some(ShellNavbarControl {
+        control_id: "playground.navbar.fixture".to_string(),
+        icon_id: Some("file"),
+        label,
+        active: open,
+        width_policy: Some(ShellNavbarWidthPolicy::RootRemClamp { minimum_rem: 12, maximum_rem: 28 }),
+    })
 }
 
 /// 🎛️ The `playground.navbar.modes.<id>` group — empty for a single-mode surface, exactly as React
@@ -17304,6 +17631,7 @@ pub(crate) fn shell_mode_controls(app: &AppDefinition, active_mode_id: Option<&s
             icon_id: None,
             label: mode.label.resolve(terminology, locale).to_string(),
             active: active_mode_id == Some(mode.id.as_str()),
+            width_policy: None,
         })
         .collect()
 }
@@ -17355,7 +17683,7 @@ pub(crate) fn shell_role_controls(apps: &[AppDefinition], app: &AppDefinition, t
             let control_id = format!("playground.navbar.roles.{}", role.as_str());
             let label = target.label.resolve(terminology, locale).to_string();
             let label = shell_control_hotkey_badge(shortcuts, &control_id).map_or_else(|| label.clone(), |badge| format!("{label} {badge}"));
-            ShellNavbarControl { control_id, icon_id: Some(icon_id), label, active: app.role == role }
+            ShellNavbarControl { control_id, icon_id: Some(icon_id), label, active: app.role == role, width_policy: None }
         })
         .collect()
 }
@@ -17597,7 +17925,13 @@ pub(crate) fn surface_overlay_controls_for(_graphs: &[(&str, Rect)], worlds: &[(
             continue;
         }
         let lead = world3d_status_pill_for(surface_id, &status, is_de).map(|pill| world3d_status_pill_width(theme, &pill) + theme.gap_standard).unwrap_or(0.0);
-        let control = ShellNavbarControl { control_id: format!("shell.world3d.cancel::{surface_id}"), icon_id: Some("x"), label: shell_chrome_string("common.cancel", is_de).to_string(), active: false };
+        let control = ShellNavbarControl {
+            control_id: format!("shell.world3d.cancel::{surface_id}"),
+            icon_id: Some("x"),
+            label: shell_chrome_string("common.cancel", is_de).to_string(),
+            active: false,
+            width_policy: None,
+        };
         let origin = surface_overlay_row_origin(theme, *bounds, panels);
         controls.push((control, [origin[0] + lead, origin[1]]));
     }
@@ -18009,13 +18343,33 @@ pub(crate) fn window_pane_chip_rect(theme: &Theme, body: Rect, anchor: PanelAnch
 }
 
 impl ShellState {
+    fn world3d_host_id_for_window(&self, window_id: &str) -> Option<&str> {
+        self.world3d_window_ids.iter().find_map(|(host_id, owner_window_id)| (owner_window_id == window_id).then_some(host_id.as_str()))
+    }
+
+    fn world3d_state_for_window(&self, window_id: &str) -> Option<&World3dState> {
+        self.world3d_states.get(self.world3d_host_id_for_window(window_id)?)
+    }
+
+    fn world3d_state_for_window_mut(&mut self, window_id: &str) -> Option<&mut World3dState> {
+        let host_id = self.world3d_host_id_for_window(window_id)?.to_string();
+        self.world3d_states.get_mut(&host_id)
+    }
+
+    fn engine_host_id_for_window(&self, window_id: &str) -> Option<&str> {
+        self.world3d_host_id_for_window(window_id)
+            .or_else(|| self.node_graph_states.iter().find_map(|(host_id, surface)| (surface.window_id == window_id).then_some(host_id.as_str())))
+            .or_else(|| self.tiled_map_states.iter().find_map(|(host_id, surface)| (surface.window_id == window_id).then_some(host_id.as_str())))
+            .or_else(|| self.board2d_states.iter().find_map(|(host_id, surface)| (surface.window_id == window_id).then_some(host_id.as_str())))
+    }
+
     /// 📐️ Hands a dock template to its World surface once the producer's delivered camera is
     /// resident. The map records template identity before scene paint creates the surface owner, so
     /// this boundary retries harmlessly until both halves exist.
     fn apply_initial_world_projection_template(&mut self, window_id: &str) {
         let Some(template_id) = self.world_projection_template.get(window_id) else { return };
         let Some(seed) = world_projection_initial_seed(template_id) else { return };
-        let Some(world) = self.world3d_states.get_mut(window_id) else { return };
+        let Some(world) = self.world3d_state_for_window_mut(window_id) else { return };
         let _ = infinite_world::world::apply_world3d_initial_projection_seed(world, seed.family, seed.orientation, seed.oblique_off_axis, seed.direction, seed.up);
     }
 
@@ -18041,7 +18395,7 @@ impl ShellState {
         if let Some(selected) = self.world_projection_template.get(window_id) {
             return world_projection_template(selected).id;
         }
-        match self.world3d_states.get(window_id).map(infinite_world::world::world3d_camera_projection) {
+        match self.world3d_state_for_window(window_id).map(infinite_world::world::world3d_camera_projection) {
             Some(ui_wgpu::wgpu::CameraProjection3d::Orthographic) => "orthographic",
             _ => WORLD_PROJECTION_DEFAULT_TEMPLATE_ID,
         }
@@ -18076,7 +18430,7 @@ impl ShellState {
             .filter_map(|chip| match chip {
                 WindowPaneChip::WindowOptions => Some((chip, self.measures_rail_folded(window_id), !self.window_measures_documents.contains_key(window_id))),
                 WindowPaneChip::Utilities => Some((chip, self.utility_bar_folded(window_id), !has_utilities)),
-                WindowPaneChip::Projection => self.world3d_states.contains_key(window_id).then_some((chip, self.projection_pane_folded(window_id), false)),
+                WindowPaneChip::Projection => self.world3d_host_id_for_window(window_id).is_some().then_some((chip, self.projection_pane_folded(window_id), false)),
                 // 🎬️ React mounts the Actions `Pane` only for `engagementVisible = !!(engagement || actionPane)`
                 // and the Search `Pane` only for a `search` spec (`🪟️Window/🟦️.tsx:205`/`:214`/`:379`/`:401`),
                 // and BOTH specs are `undefined` when their payload is empty (`windowEngagementToSpec`/
@@ -18291,7 +18645,7 @@ impl ShellState {
     /// `WORLD3D_PERSPECTIVE_CAMERA_ZOOM`) — the World3d lane's gap, not this one's.
     #[allow(clippy::too_many_arguments, reason = "the chrome walk's own paint context, forwarded unchanged")]
     fn paint_window_projection_step(&mut self, cursor: &mut ShellChromeChildCursor, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, window_id: &str, window_rect: Rect) -> bool {
-        if self.projection_pane_folded(window_id) || !self.world3d_states.contains_key(window_id) || !surface_fits_overlay(theme, window_rect) {
+        if self.projection_pane_folded(window_id) || self.world3d_host_id_for_window(window_id).is_none() || !surface_fits_overlay(theme, window_rect) {
             return true;
         }
         let Some(template) = WORLD_PROJECTION_TEMPLATES.get(cursor.scalar) else { return true };
@@ -19116,7 +19470,7 @@ impl ShellState {
             let scroll_offsets = &mut self.scroll_offsets;
             let collapsed_sections = &mut self.collapsed_sections;
             let open_selects = &mut self.open_selects;
-            let widget_maps = &mut self.widget_maps;
+            let widget_maps = &mut self.widget_maps_staging;
             let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: surface.as_str() };
             let viewport_height_for_widgets = draw.screen_height();
             let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
@@ -19633,7 +19987,8 @@ impl ShellState {
         let window_id = self.active_window_id.as_deref()?;
         let utility_id = self.active_utility_for_window(window_id)?;
         let cursor_name = session.app.utilities.iter().find(|utility| utility.id == utility_id)?.cursor.as_deref()?;
-        let visible = self.window_silhouettes.get(window_id).map_or_else(|| self.window_content_rects.get(window_id).is_some_and(|rect| rect.contains(x, y)), |silhouette| silhouette.contains(x, y));
+        let geometry = &self.presented_input_geometry;
+        let visible = geometry.window_silhouettes.get(window_id).map_or_else(|| geometry.window_content_rects.get(window_id).is_some_and(|rect| rect.contains(x, y)), |silhouette| silhouette.contains(x, y));
         visible.then(|| semio_cursor_from_name(cursor_name))
     }
 
@@ -21684,14 +22039,14 @@ fn tutorial_camera_to_orbit(state: &semio_framework::TutorialCameraState) -> Opt
 }
 
 fn tutorial_capture_camera_pose(state: &ShellState, window_id: &str) -> Option<semio_framework::TutorialCameraState> {
-    state.world3d_states.get(window_id).or_else(|| state.icon_render_states.get(window_id)).map(|world| orbit_to_tutorial_camera(&world.orbit))
+    state.world3d_state_for_window(window_id).or_else(|| state.icon_render_states.get(window_id)).map(|world| orbit_to_tutorial_camera(&world.orbit))
 }
 
 fn tutorial_apply_camera_pose(state: &mut ShellState, window_id: &str, pose: &semio_framework::TutorialCameraState) {
     let Some(orbit) = tutorial_camera_to_orbit(pose) else {
         return;
     };
-    if let Some(world) = state.world3d_states.get_mut(window_id) {
+    if let Some(world) = state.world3d_state_for_window_mut(window_id) {
         world.orbit = orbit.clone();
     }
     if let Some(world) = state.icon_render_states.get_mut(window_id) {
@@ -21833,41 +22188,38 @@ fn tutorial_resolve_gesture_point(state: &ShellState, point: &semio_framework::I
             Some((rect.x + rect.w * (*x as f32), rect.y + rect.h * (*y as f32)))
         }
         P::Scene { id, position } => {
-            let rect = state.window_content_rects.get(id).copied().or_else(|| state.world3d_states.get(id).map(|world| world.bounds))?;
-            let local = infinite_world::world::world3d_tutorial_scene_point(state.world3d_states.get(id)?, *position)?;
+            let rect = state.window_content_rects.get(id).copied().or_else(|| state.world3d_state_for_window(id).map(|world| world.bounds))?;
+            let local = infinite_world::world::world3d_tutorial_scene_point(state.world3d_state_for_window(id)?, *position)?;
             Some((rect.x + local[0], rect.y + local[1]))
         }
         P::Canvas { id, x, y } => {
-            let rect = state.window_content_rects.get(id).copied().or_else(|| state.world3d_states.get(id).map(|world| world.bounds))?;
+            let rect = state.window_content_rects.get(id).copied().or_else(|| state.world3d_state_for_window(id).map(|world| world.bounds))?;
             let local = state
-                .world3d_states
-                .get(id)
+                .world3d_state_for_window(id)
                 .and_then(|world| infinite_world::world::world3d_tutorial_scene_point(world, [*x, *y, 0.0]).map(|point| (point[0], point[1])))
-                .or_else(|| crate::engine_canvas::resolve_tutorial_surface_point(id, point))?;
+                .or_else(|| state.engine_host_id_for_window(id).and_then(|host_id| crate::engine_canvas::resolve_tutorial_surface_point(host_id, point)))?;
             Some((rect.x + local.0, rect.y + local.1))
         }
         P::Entity { id, domain, entity, .. } => {
-            let rect = state.window_content_rects.get(id).copied().or_else(|| state.world3d_states.get(id).map(|world| world.bounds))?;
+            let rect = state.window_content_rects.get(id).copied().or_else(|| state.world3d_state_for_window(id).map(|world| world.bounds))?;
             let local = state
-                .world3d_states
-                .get(id)
+                .world3d_state_for_window(id)
                 .and_then(|world| infinite_world::world::world3d_tutorial_entity_geometry(world, domain, entity).map(|geometry| (geometry.point[0], geometry.point[1])))
-                .or_else(|| crate::engine_canvas::resolve_tutorial_surface_point(id, point))?;
+                .or_else(|| state.engine_host_id_for_window(id).and_then(|host_id| crate::engine_canvas::resolve_tutorial_surface_point(host_id, point)))?;
             Some((rect.x + local.0, rect.y + local.1))
         }
         P::Curve { id, domain, entity, t } => {
-            let rect = state.window_content_rects.get(id).copied().or_else(|| state.world3d_states.get(id).map(|world| world.bounds))?;
+            let rect = state.window_content_rects.get(id).copied().or_else(|| state.world3d_state_for_window(id).map(|world| world.bounds))?;
             let local = state
-                .world3d_states
-                .get(id)
+                .world3d_state_for_window(id)
                 .and_then(|world| infinite_world::world::world3d_tutorial_entity_geometry(world, domain, entity))
                 .and_then(|geometry| geometry.polyline.and_then(|polyline| crate::engine_canvas::tutorial_polyline_point(&polyline, *t)).map(|point| (point[0], point[1])))
-                .or_else(|| crate::engine_canvas::resolve_tutorial_surface_point(id, point))?;
+                .or_else(|| state.engine_host_id_for_window(id).and_then(|host_id| crate::engine_canvas::resolve_tutorial_surface_point(host_id, point)))?;
             Some((rect.x + local.0, rect.y + local.1))
         }
         P::Domain { id, .. } => {
             let rect = *state.window_content_rects.get(id)?;
-            let local = crate::engine_canvas::resolve_tutorial_surface_point(id, point)?;
+            let local = crate::engine_canvas::resolve_tutorial_surface_point(state.engine_host_id_for_window(id)?, point)?;
             Some((rect.x + local.0, rect.y + local.1))
         }
     }
@@ -22551,8 +22903,11 @@ impl ShellState {
         let body = self.body_rect(theme);
         match cursor.phase {
             ShellChromeFramePhase::CloseDocument => {
-                let close_consumed = self.close_document_one();
+                let close_consumed = crate::interpreter::close_ui_document_one() || self.close_document_one();
                 begin_ui_document_opportunity(close_consumed);
+                if crate::interpreter::ui_document_close_pending() {
+                    return false;
+                }
                 cursor.phase = ShellChromeFramePhase::LoadPreferences;
             }
             ShellChromeFramePhase::LoadPreferences => {
@@ -22580,6 +22935,7 @@ impl ShellState {
                         // fills is cleared with it, while the last complete registry and ITS owner map
                         // stay resolvable until `publish_retained_hit_registry` swaps both in.
                         self.retained_hit_windows_staging.clear();
+                        self.retained_scene_hits_staging.clear();
                         crate::interpreter::begin_accessibility_visible_documents();
                     }
                     1 => overlay.set_screen_height(h),
@@ -22616,57 +22972,57 @@ impl ShellState {
                         }
                     }
                     7 => {
-                        if self.widget_maps.input_metas.extract_if(|_, _| true).next().is_some() {
+                        if self.widget_maps_staging.input_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     8 => {
-                        if self.widget_maps.select_metas.extract_if(|_, _| true).next().is_some() {
+                        if self.widget_maps_staging.select_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     9 => {
-                        if self.widget_maps.toggle_metas.extract_if(|_, _| true).next().is_some() {
+                        if self.widget_maps_staging.toggle_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     10 => {
-                        if self.widget_maps.slider_metas.extract_if(|_, _| true).next().is_some() {
+                        if self.widget_maps_staging.slider_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     11 => {
-                        if self.widget_maps.stepper_metas.extract_if(|_, _| true).next().is_some() {
+                        if self.widget_maps_staging.stepper_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     12 => {
-                        if self.widget_maps.ring_metas.extract_if(|_, _| true).next().is_some() {
+                        if self.widget_maps_staging.ring_metas.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     13 => {
-                        if self.widget_maps.slider_live_values.extract_if(|_, _| true).next().is_some() {
+                        if self.widget_maps_staging.slider_live_values.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     14 => {
-                        if self.widget_maps.ring_live_values.extract_if(|_, _| true).next().is_some() {
+                        if self.widget_maps_staging.ring_live_values.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     15 => {
-                        if self.widget_maps.tree_hover_commands.extract_if(|_, _| true).next().is_some() {
+                        if self.widget_maps_staging.tree_hover_commands.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     16 => {
-                        if self.widget_maps.tree_unhover_commands.extract_if(|_, _| true).next().is_some() {
+                        if self.widget_maps_staging.tree_unhover_commands.extract_if(|_, _| true).next().is_some() {
                             return false;
                         }
                     }
                     17 => {
-                        self.widget_maps.tree_selection_change = None;
+                        self.widget_maps_staging.tree_selection_change = None;
                     }
                     18 => {
                         self.chrome_build.compute_click_edge(input.pointer_down);
@@ -22832,7 +23188,6 @@ impl ShellState {
             }
             ShellChromeFramePhase::PersistPreferences => {
                 self.request_chrome_preferences_persist();
-                self.publish_retained_hit_registry(input);
                 cursor.phase = ShellChromeFramePhase::Complete;
             }
             ShellChromeFramePhase::Complete => return true,
@@ -23092,6 +23447,27 @@ impl ShellState {
         Rect::new(0.0, top, self.screen_w, self.screen_h - top - theme.footer_height)
     }
 
+    /// 🛟️ Reserves React Layout's widest visible panel band on each canvas edge.
+    fn window_canvas_rect(&self, body: Rect, theme: &Theme) -> Rect {
+        if self.mobile_panel_active() {
+            return body;
+        }
+        let mut left = 0.0_f32;
+        let mut right = 0.0_f32;
+        for anchor in PanelAnchor::ALL {
+            if !self.anchor_open(anchor) {
+                continue;
+            }
+            let width = self.anchor_state(anchor).size + 2.0 * theme.panel_inset;
+            match anchor.horizontal() {
+                "left" => left = left.max(width),
+                "right" => right = right.max(width),
+                _ => {}
+            }
+        }
+        Rect::new(body.x + left, body.y, (body.w - left - right).max(0.0), body.h)
+    }
+
     /// 🎬️ Extra vertical space the tutorial control bar reserves below the navbar while a tutorial is
     /// active — `0.0` otherwise, so `body_rect`/the canvas layout are byte-identical to before this
     /// region existed whenever no tutorial is running.
@@ -23159,14 +23535,14 @@ impl ShellState {
     }
 
     fn navbar_control_band_width(&self, atlas: &mut FontAtlas, theme: &Theme, controls: &[ShellNavbarControl]) -> f32 {
-        controls
-            .iter()
-            .map(|control| {
-                let label = self.chrome_control_label(&control.control_id, &control.label);
-                let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
-                retained_chrome_group_item_width(atlas, theme, &item).unwrap_or(0.0).max(theme.control_height)
-            })
-            .sum()
+        controls.iter().map(|control| self.navbar_control_width(atlas, theme, control).unwrap_or(0.0)).sum()
+    }
+
+    /// 📐️ The one width resolver used by both centred-band reservation and retained paint.
+    fn navbar_control_width(&self, atlas: &mut FontAtlas, theme: &Theme, control: &ShellNavbarControl) -> Option<f32> {
+        let label = self.chrome_control_label(&control.control_id, &control.label);
+        let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
+        retained_chrome_group_item_width(atlas, theme, &item).map(|width| resolve_shell_navbar_control_width(width.max(theme.control_height), control.width_policy, theme.root_rem_pixels))
     }
 
     fn navbar_center_width(&self, atlas: &mut FontAtlas, theme: &Theme) -> f32 {
@@ -23433,7 +23809,7 @@ impl ShellState {
                 if ui_wgpu::wgpu::shell_floor_paints(self.chrome_floor_scope) {
                     draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
                 }
-                cursor.rect = Some(bounds.inset(theme.panel_inset));
+                cursor.rect = Some(self.window_canvas_rect(bounds, theme).inset(theme.panel_inset));
                 cursor.phase = 1;
             }
             1 => {
@@ -23491,7 +23867,7 @@ impl ShellState {
                     let scroll_offsets = &mut self.scroll_offsets;
                     let collapsed_sections = &mut self.collapsed_sections;
                     let open_selects = &mut self.open_selects;
-                    let widget_maps = &mut self.widget_maps;
+                    let widget_maps = &mut self.widget_maps_staging;
                     let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: window_id.as_str() };
                     let viewport_height_for_widgets = draw.screen_height();
                     let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
@@ -23877,7 +24253,7 @@ impl ShellState {
             let scroll_offsets = &mut self.scroll_offsets;
             let collapsed_sections = &mut self.collapsed_sections;
             let open_selects = &mut self.open_selects;
-            let widget_maps = &mut self.widget_maps;
+            let widget_maps = &mut self.widget_maps_staging;
             let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: window };
             let viewport_height_for_widgets = panel_draw.screen_height();
             let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
@@ -23892,7 +24268,6 @@ impl ShellState {
     /// draggable between anchors), then the active leaf's retained document, then its resize handle — the
     /// wgpu twin of React's `<Panel anchor=… />` from the `ANCHORS.map` loop in `📐️Layout/🟦️.tsx`.
     fn render_panel_step(&mut self, cursor: &mut ShellChromeChildCursor, anchor: PanelAnchor, panel_draw: &mut DrawList, overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
-        const PANEL_RESIZE_HIT_PX: f32 = 20.0;
         match cursor.phase {
             0 => {
                 cursor.rect = Some(self.anchor_rect(anchor, body, theme));
@@ -24009,12 +24384,18 @@ impl ShellState {
                 // ↔ A corner or edge-middle anchor grows inward, so its one handle sits on the
                 // canvas-facing edge; a middle-column anchor is centred and grows both ways, so it
                 // carries one on each edge — React's `resizeSides` in `🖼️Panel/🟦️.tsx`.
-                let inner_left = anchor.horizontal() == "right";
-                for (side, id) in [(inner_left, format!("panel.resize.{}.inner", anchor.as_str())), (!inner_left, format!("panel.resize.{}.outer", anchor.as_str()))] {
-                    if anchor.horizontal() != "middle" && !side {
-                        continue;
-                    }
-                    let handle = if side { Rect::new(panel.x, panel.y, PANEL_RESIZE_HIT_PX, panel.h) } else { Rect::new(panel.x + panel.w - PANEL_RESIZE_HIT_PX, panel.y, PANEL_RESIZE_HIT_PX, panel.h) };
+                let sides: &[(bool, &str)] = match anchor.horizontal() {
+                    "left" => &[(false, "outer")],
+                    "right" => &[(true, "inner")],
+                    _ => &[(true, "inner"), (false, "outer")],
+                };
+                for &(left, suffix) in sides {
+                    let id = format!("panel.resize.{}.{suffix}", anchor.as_str());
+                    let handle = if left {
+                        Rect::new(panel.x, panel.y, theme.panel_inset, panel.h)
+                    } else {
+                        Rect::new(panel.x + panel.w - theme.panel_inset, panel.y, theme.panel_inset, panel.h)
+                    };
                     input.register_hit(HitTarget { rect: handle, event: None, control_id: Some(id.into()), kind: HitKind::PanelResize, drag_axis: Some(DragAxis::Horizontal), drag_data: None });
                 }
                 cursor.phase = 12;
@@ -24074,7 +24455,7 @@ impl ShellState {
                     let scroll_offsets = &mut self.scroll_offsets;
                     let collapsed_sections = &mut self.collapsed_sections;
                     let open_selects = &mut self.open_selects;
-                    let widget_maps = &mut self.widget_maps;
+                    let widget_maps = &mut self.widget_maps_staging;
                     let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: window.as_str() };
                     let viewport_height_for_widgets = panel_draw.screen_height();
                     let mut ctx = framework_widget_context(panel_draw, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
@@ -24495,12 +24876,12 @@ impl ShellState {
         let label = self.chrome_control_label(&control.control_id, &control.label);
         let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
         if cursor.rect.is_none() {
-            let Some(item_w) = retained_chrome_group_item_width(atlas, theme, &item) else {
+            let Some(item_w) = self.navbar_control_width(atlas, theme, control) else {
                 self.error = Some("Shell navbar cluster item exceeded the retained chrome boundary".to_string());
                 cursor.item += 1;
                 return false;
             };
-            cursor.rect = shell_chrome_clip_horizontal(Rect::new(cursor.x, btn_y, item_w.max(btn_h), btn_h), ShellChromeBandSpan { left: cursor.x, right: cursor.right });
+            cursor.rect = shell_chrome_clip_horizontal(Rect::new(cursor.x, btn_y, item_w, btn_h), ShellChromeBandSpan { left: cursor.x, right: cursor.right });
         }
         let Some(rect) = cursor.rect else {
             cursor.item += 1;
@@ -25572,7 +25953,7 @@ impl ShellState {
                     let scroll_offsets = &mut self.scroll_offsets;
                     let collapsed_sections = &mut self.collapsed_sections;
                     let open_selects = &mut self.open_selects;
-                    let widget_maps = &mut self.widget_maps;
+                    let widget_maps = &mut self.widget_maps_staging;
                     let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut self.world3d_states, world_resources, window_id: surface };
                     let viewport_height_for_widgets = overlay.screen_height();
                     let mut ctx = framework_widget_context(overlay, None, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
@@ -26499,6 +26880,11 @@ struct FilePrefsFlushState {
 const OS_SHELL_CONFIG_MAX_BYTES: usize = 64 * 1024;
 #[cfg(test)]
 const OS_SHELL_PREFS_FILE_MAX_BYTES: usize = OS_SHELL_CONFIG_MAX_BYTES + 4 * 1024;
+#[cfg(not(target_arch = "wasm32"))]
+static NATIVE_PREF_DOCUMENTS: std::sync::LazyLock<std::sync::Mutex<semio_framework_os_services::RetainedFixedFileDocuments>> =
+    std::sync::LazyLock::new(|| std::sync::Mutex::new(semio_framework_os_services::RetainedFixedFileDocuments::default()));
+#[cfg(not(target_arch = "wasm32"))]
+static NATIVE_PREF_DOCUMENT_GENERATION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 /// 📁️ Resolves the native prefs file path: `$SEMIO_PREFS_DIR/ui-prefs.json` when set, else a
 /// per-OS config-home fallback (XDG on linux/devcontainer, `%APPDATA%` on windows, `~/.config` on
@@ -26664,19 +27050,45 @@ fn native_pref_field_path(key: &str) -> Option<std::path::PathBuf> {
 #[cfg(not(target_arch = "wasm32"))]
 fn native_pref_read_page(key: &str) -> Option<String> {
     let path = native_pref_field_path(key)?;
-    let max_bytes = if key == OS_SHELL_CONFIG_STORAGE_KEY { OS_SHELL_CONFIG_MAX_BYTES } else { SHELL_CHROME_IO_FIELD_BYTES };
-    let page = semio_framework_os_services::storage_worker_read_fixed_file_page(&path, max_bytes).ok()?;
+    let page = if key == OS_SHELL_CONFIG_STORAGE_KEY {
+        semio_framework_os_services::storage_worker_read_fixed_file_document(&path, OS_SHELL_CONFIG_MAX_BYTES).ok()?
+    } else {
+        semio_framework_os_services::storage_worker_read_fixed_file_page(&path, SHELL_CHROME_IO_FIELD_BYTES).ok()?
+    };
     String::from_utf8(page).ok()
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn native_pref_write_page(key: &str, value: &str) -> bool {
     let Some(path) = native_pref_field_path(key) else { return false };
-    let max_bytes = if key == OS_SHELL_CONFIG_STORAGE_KEY { OS_SHELL_CONFIG_MAX_BYTES } else { SHELL_CHROME_IO_FIELD_BYTES };
-    if value.len() > max_bytes {
-        return false;
+    if key == OS_SHELL_CONFIG_STORAGE_KEY {
+        if value.len() > OS_SHELL_CONFIG_MAX_BYTES {
+            return false;
+        }
+        let generation = NATIVE_PREF_DOCUMENT_GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let mut documents = NATIVE_PREF_DOCUMENTS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Ok(token) = documents.begin_write(&path, 1, generation, value.as_bytes().to_vec(), OS_SHELL_CONFIG_MAX_BYTES) else { return false };
+        loop {
+            match documents.write_step(token) {
+                Ok(step) if step.ready_to_publish => break,
+                Ok(_) => {}
+                Err(_) => {
+                    let _ = documents.cancel(token);
+                    let _ = documents.cancel_step(token);
+                    return false;
+                }
+            }
+        }
+        return match documents.publish(token) {
+            Ok(()) => true,
+            Err(_) => {
+                let _ = documents.cancel(token);
+                let _ = documents.cancel_step(token);
+                false
+            }
+        };
     }
-    semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), max_bytes).is_ok()
+    semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), SHELL_CHROME_IO_FIELD_BYTES).is_ok()
 }
 
 /// 🗝️ One TOP-LEVEL storage key — React's `StoragePort.get` (`🖥️platform/🟦️.ts`), the flat
@@ -27532,6 +27944,8 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("panelToggle.sync", true) => "Abgleich",
         ("taskManager.title", false) => "Task Manager",
         ("taskManager.title", true) => "Task-Manager",
+        ("panelToggle.taskManager", false) => "Tasks",
+        ("panelToggle.taskManager", true) => "Aufgaben",
         ("taskManager.noRuntime", false) => "No actor runtime is attached to this shell.",
         ("taskManager.noRuntime", true) => "Mit dieser Shell ist keine Akteur-Laufzeit verbunden.",
         ("common.home", false) => "Home",
@@ -29440,3 +29854,7 @@ impl ShellState {
 #[cfg(test)]
 #[path = "../../🧪️tests/🎨️wgpu-theme-editor-and-accessibility/🦀️.rs"]
 mod theme_editor_and_accessibility_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🎯️presented-input-authority/🦀️.rs"]
+mod presented_input_authority_tests;

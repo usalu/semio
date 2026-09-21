@@ -70,8 +70,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimiti
         vec![super::GltfMutation::ChangePrimitiveExtensionData(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Change Primitive Extension Data".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Primitive Extension Data", "Primitiverweiterungsdaten ändern")
     }
 
     fn target(&self) -> Vec<String> {

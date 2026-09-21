@@ -70,8 +70,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderSceneR
         vec![super::GltfMutation::ReorderSceneRootNodes(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Reorder Scene Root Nodes".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Reorder Scene Root Nodes", "Szenenwurzelknoten umordnen")
     }
 
     fn target(&self) -> Vec<String> {

@@ -22,8 +22,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for SetComponentSa
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
         agg_inverse(&JpgBaselineMutation::SetComponentSampling(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-component-sampling".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-component-sampling", "Komponentenabtastung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

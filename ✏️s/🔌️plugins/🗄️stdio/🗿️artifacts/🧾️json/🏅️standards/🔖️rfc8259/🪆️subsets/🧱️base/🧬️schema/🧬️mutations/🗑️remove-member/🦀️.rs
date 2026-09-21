@@ -49,8 +49,8 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for RemoveMemberM
         vec![super::JsonMutation::RemoveMember(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String {
-        "Remove Member".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove Member", "Glied entfernen")
     }
     fn target(&self) -> Vec<String> {
         vec!["remove-member".to_string()]

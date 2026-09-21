@@ -33,8 +33,8 @@ impl MutationKind<BitmapSnapshot, BitmapMutation> for ChangeModel {
     fn inverse(&self, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change model to N={} symmetry={}", self.pattern_size, self.symmetry)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change model to N={} symmetry={}", self.pattern_size, self.symmetry), &format!("Modell auf N={} Symmetrie={} ändern", self.pattern_size, self.symmetry))
     }
 }
 //#endregion 🔖️ChangeModel

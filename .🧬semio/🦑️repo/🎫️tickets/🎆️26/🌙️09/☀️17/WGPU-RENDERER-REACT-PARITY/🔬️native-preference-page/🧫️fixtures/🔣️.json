@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 2,
+  "storageKey": "semio.os.config",
+  "authority": {
+    "kind": "retained-single-file-document",
+    "serviceStepBytes": 16384,
+    "configDocumentMaxBytes": 65536,
+    "documentMaxWriteSteps": 4,
+    "storedFieldMaxBytes": 4096,
+    "publishedEncoding": "raw-single-value-file",
+    "relation": "config-document-spans-four-bounded-write-steps"
+  },
+  "ownership": {
+    "tokenFields": ["owner", "generation"],
+    "exactTokenRequired": true,
+    "supersedingWriteInvalidatesPriorToken": true,
+    "cancelledWriteMayPublish": false
+  },
+  "publication": {
+    "writeTarget": "inactive-temporary-file",
+    "maximumBytesPerStep": 16384,
+    "publishAfter": "complete-length-validated",
+    "visibility": "atomic-replace",
+    "readDuringWrite": "last-committed-document",
+    "partialTemporaryRead": "refuse"
+  },
+  "cases": [
+    {
+      "id": "exact-document-round-trip",
+      "bytes": 65536,
+      "writeSteps": 4,
+      "write": "admit",
+      "publish": "admit",
+      "read": "exact"
+    },
+    {
+      "id": "one-byte-over-document",
+      "bytes": 65537,
+      "writeSteps": 0,
+      "write": "refuse",
+      "publish": "not-started",
+      "read": "prior-exact"
+    },
+    {
+      "id": "cancel-after-two-steps",
+      "bytes": 65536,
+      "writeSteps": 2,
+      "write": "cancel",
+      "publish": "refuse",
+      "read": "prior-exact"
+    },
+    {
+      "id": "supersede-after-one-step",
+      "bytes": 65536,
+      "writeSteps": 1,
+      "replacementWriteSteps": 4,
+      "write": "supersede",
+      "publish": "replacement-only",
+      "read": "replacement-exact"
+    }
+  ],
+  "integrityCases": [
+    {
+      "id": "truncated-temporary-file",
+      "publish": "refuse",
+      "read": "prior-exact"
+    },
+    {
+      "id": "trailing-temporary-byte",
+      "publish": "refuse",
+      "read": "prior-exact"
+    },
+    {
+      "id": "non-owner-token",
+      "publish": "refuse",
+      "read": "prior-exact"
+    }
+  ]
+}

@@ -69,8 +69,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for AddRequiredEx
         vec![super::GltfMutation::AddRequiredExtension(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Add Required Extension".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Add Required Extension", "erforderliche Erweiterung hinzufügen")
     }
 
     fn target(&self) -> Vec<String> {

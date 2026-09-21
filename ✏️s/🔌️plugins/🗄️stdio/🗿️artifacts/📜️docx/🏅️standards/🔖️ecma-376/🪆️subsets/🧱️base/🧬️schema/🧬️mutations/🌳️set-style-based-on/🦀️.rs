@@ -21,8 +21,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetStyleBasedOn {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::SetStyleBasedOn(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-style-based-on".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-style-based-on", "basierte Stil auf setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

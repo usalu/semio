@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:locale/localized-label",
+  "title": "LocalizedLabel",
+  "description": "🗺️ The wire shape of a LocalizedLabel: one text per (terminology, locale) cell of 🖱️ui/🎚️axes/🔣️.json. Every cell is required and no other key is admitted, so a carrier that fills one locale and leaves the other to a fallback is refused here rather than reaching a panel. The axis key sets are asserted equal to the generated Locale/Terminology enums by both this schema's readers (🌐️locale/🧪️tests/🏷️localized-label-fixture in Rust, 🎠️kernel/🧪️tests/🏷️localized-label-fixture in TypeScript), so adding an axis fails until this file carries it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["native", "reuse"],
+  "properties": {
+    "native": { "$ref": "#/definitions/localeRow" },
+    "reuse": { "$ref": "#/definitions/localeRow" }
+  },
+  "definitions": {
+    "localeRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string" },
+        "de": { "type": "string" }
+      }
+    }
+  }
+}

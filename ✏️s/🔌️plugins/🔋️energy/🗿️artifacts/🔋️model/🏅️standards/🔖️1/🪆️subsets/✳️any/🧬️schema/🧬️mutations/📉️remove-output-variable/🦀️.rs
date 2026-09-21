@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Remove
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Remove output variable \"{}\" for \"{}\"", self.name, self.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove output variable \"{}\" for \"{}\"", self.name, self.key), &format!("Ausgabenvariable \"{}\" für \"{}\" entfernen", self.name, self.key))
     }
 
     fn target(&self) -> Vec<String> {

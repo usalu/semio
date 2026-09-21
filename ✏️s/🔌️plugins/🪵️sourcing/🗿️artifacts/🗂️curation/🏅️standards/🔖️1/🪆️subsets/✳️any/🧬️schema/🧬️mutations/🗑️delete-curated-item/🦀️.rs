@@ -28,8 +28,8 @@ impl protocol::MutationKind<CurationSnapshot, SourcingMutation> for DeleteCurate
     fn inverse(&self, base: &CurationSnapshot) -> Vec<SourcingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Remove \"{}\" from curation", self.object_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove \"{}\" from curation", self.object_id), &format!("\"{}\" aus Kuratierung entfernen", self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

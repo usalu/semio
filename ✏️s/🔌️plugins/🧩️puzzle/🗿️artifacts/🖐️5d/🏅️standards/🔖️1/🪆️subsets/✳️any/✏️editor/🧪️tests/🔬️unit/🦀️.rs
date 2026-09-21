@@ -824,6 +824,28 @@ async fn every_dispatched_action_bridges_to_a_command() {
 //#endregion 🔖️Manifest
 
 //#region 🧰️ Window Actions & Utilities contract
+/// 🗨️ Every `partKind` option a user can pick is a NAMED kind of a shipped document, never a raw
+/// catalog UUID — and the select is built without materializing `capsule-dream`.
+///
+/// 🐛️ `capsule-dream`'s own `kindCatalogs.parts` is empty (its catalog is a composed child), so the
+/// inference fallback used to take its 2 880 parts' `part-kind` column, which holds that child's
+/// UUIDs. Two costs in one: the select offered unpickable ids inside a 64-row cap, and building the
+/// `AppDefinition` parsed 3 035 200 B of DSL plus ~3.5 MB of JSON on the `describe` path — which is
+/// what kept `🧩️puzzle` over its 1 800 s guest epoch (`📓️pz1-catalog-zero-diagnostics.md` §2.3).
+#[semio_framework_async_macros::async_test]
+async fn part_kind_options_are_named_kinds_and_never_catalog_uuids() {
+    let options = puzzle5d_part_kind_options();
+    assert!(!options.is_empty(), "the select must offer the shipped documents' real kinds");
+    assert!(options.len() <= PUZZLE5D_PART_KIND_OPTIONS_MAX);
+    let is_uuid = |value: &str| {
+        let bytes = value.as_bytes();
+        bytes.len() == 36 && [8usize, 13, 18, 23].iter().all(|index| bytes[*index] == b'-') && bytes.iter().all(|byte| byte.is_ascii_hexdigit() || *byte == b'-')
+    };
+    for option in &options {
+        assert!(!is_uuid(&option.value), "partKind option {:?} is a raw catalog UUID, not a kind a user can pick", option.value);
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn add_part_kind_materializes_the_declared_kind_default() {
     // 📝️ P1 arg form: addPartKind with no args materializes the declared `partKind` default and adds a part.

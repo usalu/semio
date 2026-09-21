@@ -35,8 +35,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReplaceSto
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        "Replace stock solid".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace stock solid", "Bestandkörper ersetzen")
     }
 }
 //#endregion 🔖️ReplaceStockSolid

@@ -32,8 +32,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockInkWidth {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change block \"{}\" ink width to {}", self.id, self.new_stroke_width)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change block \"{}\" ink width to {}", self.id, self.new_stroke_width), &format!("Block \"{}\" Tintenbreite auf {} ändern", self.id, self.new_stroke_width))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

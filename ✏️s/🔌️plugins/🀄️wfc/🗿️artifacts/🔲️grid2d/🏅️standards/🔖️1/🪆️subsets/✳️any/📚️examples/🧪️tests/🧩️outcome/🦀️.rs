@@ -15,7 +15,7 @@ fn every_example_decodes_into_a_document_with_tiles_and_rules() {
     for source in super::sources() {
         let id = source.id().to_string();
         assert!(!source.document().trim().is_empty(), "{id}");
-        let document = <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(source.document()).unwrap_or_else(|error| panic!("{id}: {error}"));
+        let document = <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(&source.document()).unwrap_or_else(|error| panic!("{id}: {error}"));
         assert_eq!(document.schema, crate::WFC_GRID2D_DOCUMENT_SCHEMA, "{id}");
         assert!(!document.tiles.is_empty(), "{id}");
         assert!(!document.rules.is_empty(), "{id}");

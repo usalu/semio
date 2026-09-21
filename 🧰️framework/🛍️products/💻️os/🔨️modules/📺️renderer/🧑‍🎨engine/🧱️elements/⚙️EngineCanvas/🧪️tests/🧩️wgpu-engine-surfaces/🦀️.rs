@@ -19,6 +19,7 @@ use infinite_world::world::{
 use ui_wgpu::wgpu::{Board2dScene, DrawList, FontAtlas, IconAtlas, InputState, SurfaceKind, TiledMapScene, UiPresence, World3dScene};
 
 const ENGINE_SURFACES_FIXTURE: &str = include_str!("../../🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json");
+const MAP_GESTURE_LIFECYCLE_FIXTURE: &str = include_str!("../../../../🧫️fixtures/♻️tiled-map-gesture-lifecycle/🔣️.json");
 
 fn fixture() -> Value {
     serde_json::from_str(ENGINE_SURFACES_FIXTURE).expect("committed engine-surface fixture parses")
@@ -30,6 +31,7 @@ fn json_text(value: &Value) -> String {
 
 fn scene_shell(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
     UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: "generation3d".into(),
         component_kind: kind,
@@ -82,6 +84,71 @@ fn tiled_map_scene(surface_id: &str, fixture: &Value) -> UiComponentSceneNode {
     scene
 }
 
+fn retained_map_record(id: u64, key: &str, scene: &TiledMapScene) -> ui_contract::UiNodeRecord {
+    ui_contract::UiNodeRecord {
+        id: ui_contract::UiNodeId(id),
+        key: ui_contract::UiText::try_from_str(key).expect("bounded map node key"),
+        component: ui_contract::Component::Surface(ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TiledMap, scene).expect("bounded Map scene encodes")),
+        layout: Default::default(),
+        style: Default::default(),
+        activity: Default::default(),
+        disabled: false,
+        transition: None,
+        accessibility: Default::default(),
+        bindings: Default::default(),
+        menu: None,
+        children: Default::default(),
+    }
+}
+
+fn retained_separator_record(id: u64, key: &str) -> ui_contract::UiNodeRecord {
+    ui_contract::UiNodeRecord {
+        id: ui_contract::UiNodeId(id),
+        key: ui_contract::UiText::try_from_str(key).expect("bounded replacement key"),
+        component: ui_contract::Component::Separator(ui_contract::SeparatorProps {}),
+        layout: Default::default(),
+        style: Default::default(),
+        activity: Default::default(),
+        disabled: false,
+        transition: None,
+        accessibility: Default::default(),
+        bindings: Default::default(),
+        menu: None,
+        children: Default::default(),
+    }
+}
+
+fn retained_document(surface_id: &str, generation: u64, root: u64, records: Vec<ui_contract::UiNodeRecord>) -> ui_contract::UiDocumentLease {
+    let identity = ui_contract::UiDocumentAssemblyIdentity { generation, revision: ui_contract::UiRevision(generation), root: Some(ui_contract::UiNodeId(root)), layout_epoch: 0 };
+    ui_contract::UiDocumentLease::try_publish(ui_contract::SurfaceId::try_from(surface_id).expect("bounded Map surface id"), identity, records).expect("Map lifecycle document publishes")
+}
+
+fn map_fixture_owner(window_id: &str, surface_id: &str) -> crate::interpreter::ScenePointerTarget {
+    crate::interpreter::fixture_scene_pointer_target(window_id, surface_id, "map.fixture")
+}
+
+fn paint_retained_map_document(document: &ui_contract::UiDocumentLease, surface_id: &str, bounds: Rect) -> InputState<ActionDescriptor> {
+    let mut draw = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let theme = Theme::default();
+    let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
+    let mut world3d_states = crate::scenes::AdmittedSurfaceMap::default();
+    let mut world_resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    let mut cursor = crate::interpreter::UiDocumentFrameCursor::default();
+    let complete = (0..(1 << 20)).any(|_| {
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, bounds.h);
+        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface_id };
+        let done = crate::interpreter::render_ui_document_step(&mut cursor, document, bounds, &mut ctx, surface_id, "map.lifecycle.fixture", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
+        assert!(done || !cursor.terminal_is_fault(), "Map lifecycle document faulted in phase {}", cursor.phase_name());
+        done
+    });
+    assert!(complete, "Map lifecycle document painted within its opportunity ceiling");
+    drop_world3d_states(world3d_states);
+    input
+}
+
 fn board2d_scene(surface_id: &str, fixture: &Value) -> UiComponentSceneNode {
     let board = &fixture["board2d"];
     let mut scene = scene_shell(surface_id, SurfaceKind::Board2d);
@@ -105,6 +172,48 @@ fn drop_engine_surface(surface_id: &str) {
         turns += 1;
         assert!(turns < 262_144, "the attached surface reaches a fixed terminal witness");
     }
+}
+
+/// 🪦 A component close owns the exact staged generation as well as its CPU host. Two siblings may
+/// publish the same document `surfaceId`; their runtime hosts and raster keys remain independent.
+#[test]
+fn a_component_engine_close_retires_only_its_exact_staged_host_and_preserves_the_wire_surface() {
+    let wire_surface_id = "shared-document-surface";
+    let host_a = "scene.41.3.7.1";
+    let host_b = "scene.41.4.2.1";
+    let snapshot_a = ensure_engine_surface(host_a, wire_surface_id, 32, 32).expect("first sibling reserves its engine host");
+    let snapshot_b = ensure_engine_surface(host_b, wire_surface_id, 32, 32).expect("second sibling reserves its engine host");
+    assert_ne!(snapshot_a.identity.id, snapshot_b.identity.id, "sibling runtime identities are host-derived");
+    assert_eq!(engine_surface_wire_id(host_a).map(|id| id.as_str().to_string()), Some(wire_surface_id.to_string()));
+    assert_eq!(engine_surface_wire_id(host_b).map(|id| id.as_str().to_string()), Some(wire_surface_id.to_string()));
+    for snapshot in [snapshot_a, snapshot_b] {
+        STAGED_ENGINE_SCENES.with(|cell| {
+            cell.borrow_mut().upsert(StagedEngineScene {
+                surface: snapshot,
+                document_generation: 1,
+                scene_revision: 1,
+                scene: canvas::Scene::new(),
+                clear: Color::new([0.0, 0.0, 0.0, 1.0]),
+                width: 32,
+                height: 32,
+            });
+        });
+    }
+    let token_a = ENGINE_SURFACES.with(|cell| cell.borrow_mut().token(host_a)).expect("first sibling token remains live");
+    assert_eq!(begin_engine_surface_close_token(token_a), Ok(true));
+    let mut input = InputState::<ActionDescriptor>::default();
+    for turn in 0..262_144 {
+        if with_engine_close_context(1, |context| close_engine_surface_step(token_a, context, &mut input)) {
+            break;
+        }
+        assert!(turn + 1 < 262_144, "first sibling CPU owner reaches terminal-empty");
+    }
+    let staged: Vec<EngineSurfaceId> = STAGED_ENGINE_SCENES.with(|cell| {
+        let mut staged = cell.borrow_mut();
+        std::iter::from_fn(|| staged.take_one().map(|scene| scene.surface.identity.id)).collect()
+    });
+    drop_engine_surface(host_b);
+    assert_eq!(staged, vec![snapshot_b.identity.id], "closing sibling A removes only A's staged generation and leaves sibling B");
 }
 
 /// 🧹️ Drains every attached `World3dState` through its OWN dynamic retirement ladder. The state's
@@ -288,9 +397,7 @@ fn world3d_preview_window_attaches_the_world_engine_and_paints_the_tessellated_s
 /// 🎯️ `targets` is a JSON TEXT arg, never a nested array — the world authority writes it through
 /// bounded string credits (`INTERACTION_TARGETS_OPEN`, `🌍️world/🦀️.rs:6343`), so the law parses it.
 ///
-/// ⚖️ A PICK reports `object`; only `interactionHover` reports the scene's own granularity. The
-/// shared oracle `🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json` says so in both directions —
-/// `instance-pick-replaces` expects `object`, `instance-hover` expects `handle`.
+/// ⚖️ A pick reports the scene's interaction granularity, matching the shared React gesture oracle.
 fn world3d_pointer_down_law(surface_id: &str) {
     let fixture = fixture();
     let scene = world3d_preview_scene_with_selection(surface_id, &fixture, json!({ "method": "pick", "mode": "replace", "ids": [] }).to_string());
@@ -306,6 +413,7 @@ fn world3d_pointer_down_law(surface_id: &str) {
     // press-then-click contract React's World3dHost binds, so the lane drives both halves.
     let mut actions = publish_world3d_intent(state, WorldInteractionIntent::pointer_button(screen[0], screen[1], true, 0, &PointerModifiers::default()));
     actions.extend(publish_world3d_intent(state, WorldInteractionIntent::pointer_button(screen[0], screen[1], false, 0, &PointerModifiers::default())));
+    drop_world3d_states(states);
 
     let expected_id = fixture["world3d"]["expect"]["instanceIds"][0].as_str().expect("instance id");
     let select = actions.iter().find(|action| action.action == "interactionSelect").expect("a pointer-down over an instance publishes interactionSelect");
@@ -315,10 +423,9 @@ fn world3d_pointer_down_law(surface_id: &str) {
     assert_eq!(args["merge"].as_str(), Some("replace"));
     assert_eq!(args["method"].as_str(), Some("pick"));
     let targets: Value = serde_json::from_str(args["targets"].as_str().expect("targets is written as JSON text")).expect("targets text parses");
-    assert_eq!(targets[0]["granularity"].as_str(), Some("object"));
+    assert_eq!(targets[0]["granularity"], fixture["world3d"]["domainGranularityId"]);
     let expected_channel_id = expected_id.split_once('#').map_or(expected_id, |(channel, _)| channel);
     assert_eq!(targets[0]["id"].as_str(), Some(expected_channel_id), "the target is the bare channel-qualified id React's World3dHost dispatches — never `surfaceId/id` and never the render id");
-    drop_world3d_states(states);
 }
 
 #[test]
@@ -557,6 +664,149 @@ fn tiled_map_paint_reserves_the_visible_tiles_react_fetches() {
 
     let _ = take_engine_surface_registrations();
     drop_engine_surface("tiled-map-tiles");
+}
+
+#[test]
+fn tiled_map_cancel_separates_pan_camera_settle_from_marquee_selection() {
+    let _guard = engine_surface_law_guard();
+    let contract: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json")).expect("scene cancellation contract");
+    let fixture = fixture();
+    let surface_id = contract["tiledMap"]["owner"]["surfaceId"].as_str().expect("map surface id");
+    let window_id = contract["tiledMap"]["owner"]["windowId"].as_str().expect("map window id");
+    let controller_id = "map.cancel.fixture";
+    let mut scene = tiled_map_scene(surface_id, &fixture);
+    scene.controller_id = controller_id.into();
+    let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
+    drop_engine_surface(surface_id);
+    assert!(sync_tiled_map_scene(&scene, window_id, bounds, &Theme::default()));
+    let mut input = InputState::<ActionDescriptor>::default();
+
+    let owner = map_fixture_owner(window_id, surface_id);
+    assert_eq!(crate::scenes::tiled_map_pointer_down_into(&owner, controller_id, bounds, 360.0, 260.0, 1, false, false, "rectangle", &mut input), Ok(true));
+    let _ = crate::collect_fixture_actions(&mut input);
+    assert_eq!(crate::scenes::tiled_map_pointer_move_into(&owner, controller_id, bounds, 410.0, 290.0, true, &mut input), Ok(true));
+    let _ = crate::collect_fixture_actions(&mut input);
+    assert_eq!(crate::scenes::tiled_map_pointer_cancel_into(surface_id, controller_id, bounds, 410.0, 290.0, &mut input), Ok(true));
+    let pan = crate::collect_fixture_actions(&mut input);
+    assert_eq!(pan.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setCamera"]);
+    assert!(!crate::scenes::tiled_map_drag_active(surface_id));
+    assert_eq!(crate::scenes::tiled_map_pointer_cancel_into(surface_id, controller_id, bounds, 410.0, 290.0, &mut input), Ok(false));
+    assert_eq!(crate::scenes::tiled_map_pointer_up_into(surface_id, surface_id, controller_id, bounds, 410.0, 290.0, &mut input), Ok(false));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+
+    assert_eq!(crate::scenes::tiled_map_pointer_down_into(&owner, controller_id, bounds, 120.0, 120.0, 0, false, false, "rectangle", &mut input), Ok(true));
+    assert_eq!(crate::scenes::tiled_map_pointer_move_into(&owner, controller_id, bounds, 220.0, 220.0, true, &mut input), Ok(true));
+    assert_eq!(crate::scenes::tiled_map_pointer_cancel_into(surface_id, controller_id, bounds, 220.0, 220.0, &mut input), Ok(true));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "marquee cancellation cannot publish interactionSelect");
+    assert!(!crate::scenes::tiled_map_drag_active(surface_id));
+    assert_eq!(crate::scenes::tiled_map_pointer_up_into(surface_id, surface_id, controller_id, bounds, 220.0, 220.0, &mut input), Ok(false));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "the old outside-up is inert");
+    assert_eq!(crate::scenes::tiled_map_pointer_down_into(&owner, controller_id, bounds, 140.0, 140.0, 0, false, false, "rectangle", &mut input), Ok(true));
+    assert_eq!(crate::scenes::tiled_map_pointer_cancel_into(surface_id, controller_id, bounds, 140.0, 140.0, &mut input), Ok(true));
+    assert_eq!(crate::scenes::tiled_map_pointer_cancel_into(surface_id, controller_id, bounds, 140.0, 140.0, &mut input), Ok(false));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+    drop_engine_surface(surface_id);
+}
+
+#[test]
+fn tiled_map_hover_leave_publishes_one_empty_owner_transition() {
+    let _guard = engine_surface_law_guard();
+    let contract: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json")).expect("scene cancellation contract");
+    let fixture = fixture();
+    let surface_id = contract["tiledMap"]["owner"]["surfaceId"].as_str().expect("map surface id");
+    let window_id = contract["tiledMap"]["owner"]["windowId"].as_str().expect("map window id");
+    let controller_id = "map.hover.fixture";
+    let mut scene = tiled_map_scene(surface_id, &fixture);
+    scene.controller_id = controller_id.into();
+    let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
+    drop_engine_surface(surface_id);
+    assert!(sync_tiled_map_scene(&scene, window_id, bounds, &Theme::default()));
+    let point = (0..600).step_by(4).find_map(|y| {
+        (0..800).step_by(4).find_map(|x| {
+            with_map_host(surface_id, |host| host.hit_test_feature_json(x as f64, y as f64))
+                .filter(|hit| hit != "null")
+                .map(|_| (x as f32, y as f32))
+        })
+    }).expect("fixture feature has a physical hit point");
+    let mut input = InputState::<ActionDescriptor>::default();
+    let owner = map_fixture_owner(window_id, surface_id);
+    assert_eq!(crate::scenes::tiled_map_pointer_move_into(&owner, controller_id, bounds, point.0, point.1, false, &mut input), Ok(true));
+    let entered = crate::collect_fixture_actions(&mut input);
+    assert_eq!(entered.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["interactionHover"]);
+    assert_eq!(crate::scenes::tiled_map_pointer_leave_into(surface_id, surface_id, controller_id, &mut input), Ok(true));
+    let left = crate::collect_fixture_actions(&mut input);
+    assert_eq!(left.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["interactionHover"]);
+    let args: Value = serde_json::from_str(&dsl::json::from_dsl_value(left[0].args.as_ref().expect("hover clear args")).to_string()).expect("hover clear args decode");
+    assert_eq!(args["targets"], contract["tiledMap"]["hoverLeave"]["emptyTargets"]);
+    assert_eq!(crate::scenes::tiled_map_pointer_leave_into(surface_id, surface_id, controller_id, &mut input), Ok(false));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "a null witness cannot publish a second leave");
+    assert!(!crate::scenes::tiled_map_drag_active(surface_id), "hover retirement cannot manufacture a gesture");
+    drop_engine_surface(surface_id);
+}
+
+#[test]
+fn retained_map_same_identity_refresh_preserves_the_active_gesture() {
+    let _guard = engine_surface_law_guard();
+    let contract: Value = serde_json::from_str(MAP_GESTURE_LIFECYCLE_FIXTURE).expect("Map gesture lifecycle contract");
+    let fixture = fixture();
+    let surface_id = "map.lifecycle.refresh";
+    let key = contract["owner"]["key"].as_str().expect("Map owner key");
+    let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
+    let base = tiled_map_scene(surface_id, &fixture).tiled_map.expect("fixture Map scene");
+    drop_engine_surface(surface_id);
+    let mut first = retained_document(surface_id, 1, 1, vec![retained_map_record(1, key, &base)]);
+    let _ = paint_retained_map_document(&first, surface_id, bounds);
+    let mut input = InputState::<ActionDescriptor>::default();
+    let owner = crate::interpreter::retained_scene_target_at(surface_id, bounds.x + 1.0, bounds.y + 1.0).expect("mounted Map exposes its exact retained target");
+    assert_eq!(crate::scenes::tiled_map_pointer_down_into(&owner, "map.lifecycle.fixture", bounds, 100.0, 100.0, 0, false, false, "rectangle", &mut input), Ok(true));
+    assert!(crate::scenes::tiled_map_drag_active(surface_id));
+    let mut changed = base.clone();
+    changed.camera_json = json!({ "x": 0.5, "y": 0.4, "zoom": 5.0 }).to_string();
+    let mut refresh = retained_document(surface_id, 2, 1, vec![retained_map_record(1, key, &changed)]);
+    let mut refresh_input = paint_retained_map_document(&refresh, surface_id, bounds);
+    let refresh_actions = crate::collect_fixture_actions(&mut refresh_input);
+    assert!(refresh_actions.is_empty(), "an ordinary refresh does not synthesize Map input");
+    assert!(crate::scenes::tiled_map_drag_active(surface_id), "the same retained node/key/kind/surface preserves its active gesture");
+    assert_eq!(crate::scenes::tiled_map_pointer_cancel_into(surface_id, "map.lifecycle.fixture", bounds, 100.0, 100.0, &mut input), Ok(true));
+    while !first.close_step() {}
+    while !refresh.close_step() {}
+    drop_engine_surface(surface_id);
+}
+
+#[test]
+fn retained_map_key_replacement_and_removal_retire_the_old_gesture_without_input() {
+    let _guard = engine_surface_law_guard();
+    let contract: Value = serde_json::from_str(MAP_GESTURE_LIFECYCLE_FIXTURE).expect("Map gesture lifecycle contract");
+    let fixture = fixture();
+    let surface_id = "map.lifecycle.replacement";
+    let original = contract["owner"]["key"].as_str().expect("Map owner key");
+    let successor = contract["cases"].as_array().expect("lifecycle cases").iter().find(|row| row["name"] == "key-replacement").and_then(|row| row["next"]["key"].as_str()).expect("successor key");
+    let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
+    let map = tiled_map_scene(surface_id, &fixture).tiled_map.expect("fixture Map scene");
+    drop_engine_surface(surface_id);
+    let mut first = retained_document(surface_id, 1, 1, vec![retained_map_record(1, original, &map)]);
+    let _ = paint_retained_map_document(&first, surface_id, bounds);
+    let mut gesture_input = InputState::<ActionDescriptor>::default();
+    let original_owner = crate::interpreter::retained_scene_target_at(surface_id, bounds.x + 1.0, bounds.y + 1.0).expect("mounted Map exposes its exact retained target");
+    assert_eq!(crate::scenes::tiled_map_pointer_down_into(&original_owner, "map.lifecycle.fixture", bounds, 100.0, 100.0, 0, false, false, "rectangle", &mut gesture_input), Ok(true));
+    assert!(crate::scenes::tiled_map_drag_active(surface_id));
+    let mut replacement = retained_document(surface_id, 2, 1, vec![retained_map_record(1, successor, &map)]);
+    let mut replacement_input = paint_retained_map_document(&replacement, surface_id, bounds);
+    let replacement_actions = crate::collect_fixture_actions(&mut replacement_input);
+    assert!(replacement_actions.is_empty(), "key replacement cannot synthesize PointerUp or selection");
+    assert!(!crate::scenes::tiled_map_drag_active(surface_id), "the old keyed Map gesture retires before its successor is observable");
+    let successor_owner = crate::interpreter::retained_scene_target_at(surface_id, bounds.x + 1.0, bounds.y + 1.0).expect("successor exposes its exact retained target");
+    assert_eq!(crate::scenes::tiled_map_pointer_down_into(&successor_owner, "map.lifecycle.fixture", bounds, 140.0, 140.0, 0, false, false, "rectangle", &mut gesture_input), Ok(true));
+    assert!(crate::scenes::tiled_map_drag_active(surface_id), "the keyed successor starts a fresh gesture");
+    let mut removed = retained_document(surface_id, 3, 2, vec![retained_separator_record(2, "map.removed")]);
+    let mut removal_input = paint_retained_map_document(&removed, surface_id, bounds);
+    let removal_actions = crate::collect_fixture_actions(&mut removal_input);
+    assert!(removal_actions.is_empty(), "node removal cannot synthesize PointerUp or selection");
+    assert!(!crate::scenes::tiled_map_drag_active(surface_id), "Retire clears the removed Map gesture");
+    while !first.close_step() {}
+    while !replacement.close_step() {}
+    while !removed.close_step() {}
+    drop_engine_surface(surface_id);
 }
 
 /// 🔗️ `map_tile_url` is React's own `urlTemplate.replace("{z}", …).replace("{x}", …).replace("{y}", …)`.

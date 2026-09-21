@@ -23,8 +23,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetBasicAttribute
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
         agg_inverse(&SvgBasicMutation::SetBasicAttribute(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-basic-attribute".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-basic-attribute", "grundlegende Attribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

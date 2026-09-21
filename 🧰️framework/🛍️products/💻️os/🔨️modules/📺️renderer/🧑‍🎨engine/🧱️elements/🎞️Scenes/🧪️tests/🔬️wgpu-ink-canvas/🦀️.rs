@@ -12,7 +12,7 @@ fn sample_block(id: &str, x: f64, y: f64, w: f64, h: f64) -> Value {
 #[test]
 fn hit_test_prefers_topmost_block() {
     let blocks = vec![sample_block("a", 0.0, 0.0, 100.0, 100.0), sample_block("b", 20.0, 20.0, 100.0, 100.0)];
-    let overrides = HashMap::new();
+    let overrides = BTreeMap::new();
     let hits = ink_items_at_point(&blocks, &overrides, 50.0, 50.0);
     assert_eq!(ink_item_id(hits[0]), "b");
 }
@@ -20,7 +20,7 @@ fn hit_test_prefers_topmost_block() {
 #[test]
 fn hit_test_misses_outside_bounds() {
     let blocks = vec![sample_block("a", 0.0, 0.0, 10.0, 10.0)];
-    let overrides = HashMap::new();
+    let overrides = BTreeMap::new();
     assert!(ink_items_at_point(&blocks, &overrides, 50.0, 50.0).is_empty());
 }
 
@@ -63,6 +63,7 @@ fn snap_rounds_to_nearest_grid_cell() {
 
 fn clipboard_scene(fixture: &Value, selection: &Value) -> UiComponentSceneNode {
     UiComponentSceneNode {
+        host_id: "ink.clipboard.fixture".into(),
         surface_id: "ink.clipboard.fixture".into(),
         controller_id: "ink-clipboard-controller".into(),
         component_kind: SurfaceKind::InkCanvas,
@@ -86,6 +87,7 @@ fn clipboard_scene(fixture: &Value, selection: &Value) -> UiComponentSceneNode {
             active_utility: "selectDirect".into(),
             view_mode: "edit".into(),
             interactive: true,
+            interaction_domain: None,
         }),
         graph_timeline: None,
         block_list: None,
@@ -93,6 +95,81 @@ fn clipboard_scene(fixture: &Value, selection: &Value) -> UiComponentSceneNode {
         event_feed: None,
         menu: None,
     }
+}
+
+fn domain_scene(fixture: &Value, utility: &str) -> UiComponentSceneNode {
+    let mut scene = clipboard_scene(fixture, &fixture["scene"]["selectionJson"].as_str().and_then(|value| serde_json::from_str::<Value>(value).ok()).unwrap_or_else(|| json!([])));
+    scene.surface_id = fixture["scene"]["surfaceId"].as_str().expect("surface id").into();
+    scene.controller_id = fixture["scene"]["controllerId"].as_str().expect("controller id").into();
+    let mut document = fixture["document"].clone();
+    document["activeUtility"] = Value::String(utility.into());
+    let ink = scene.ink_canvas.as_mut().expect("Ink scene");
+    ink.document_json = serde_json::to_string(&document).expect("document JSON");
+    ink.selection_json = fixture["scene"]["selectionJson"].as_str().expect("selection JSON").into();
+    ink.hovered_id = fixture["scene"]["hoveredId"].as_str().map(str::to_owned);
+    ink.interaction_domain = Some(ui_wgpu::wgpu::InkCanvasInteractionDomain {
+        id: fixture["scene"]["interactionDomain"]["id"].as_str().expect("interaction domain id").into(),
+        granularity_id: fixture["scene"]["interactionDomain"]["granularityId"].as_str().expect("interaction domain granularity").into(),
+    });
+    scene
+}
+
+fn run_domain_interaction(scene: &UiComponentSceneNode, event: InkInteractionEvent) -> Option<ActionDescriptor> {
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut job = InkInteractionJob::new(1, 1, Some(ui_render::PointerId(7)), scene, event).expect("bounded interaction").expect("interactive scene");
+    let bounds = Rect::new(0.0, 0.0, 320.0, 240.0);
+    for _ in 0..32 {
+        if matches!(job.step(1, scene, bounds, &mut input).expect("interaction step"), InkInteractionStep::Complete) {
+            break;
+        }
+    }
+    input.take_action_step().expect("action queue remains valid").map(|action| action.into_descriptor().expect("action descriptor"))
+}
+
+fn assert_domain_action(action: ActionDescriptor, expected_action: &str, expected_args: &Value) {
+    assert_eq!(action.action, expected_action);
+    let args = Value::from(action.args.as_ref().expect("action args"));
+    for key in ["domainId", "channel", "targets", "merge", "method"] {
+        if let Some(expected) = expected_args.get(key) {
+            assert_eq!(&args[key], expected, "{key}");
+        }
+    }
+}
+
+#[test]
+fn ink_canvas_domain_hover_uses_scoped_topology_ids() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json")).expect("domain fixture");
+    let scene = domain_scene(&fixture, "selectDirect");
+    let hover = run_domain_interaction(&scene, InkInteractionEvent::PointerMove { x: 40.0, y: 40.0 }).expect("hover action");
+    assert_domain_action(hover, "interactionHover", &fixture["cases"][0]["args"]);
+    let clear = run_domain_interaction(&scene, InkInteractionEvent::PointerMove { x: 300.0, y: 200.0 }).expect("hover clear");
+    assert_domain_action(clear, "interactionHover", &fixture["cases"][1]["args"]);
+}
+
+#[test]
+fn ink_canvas_domain_picks_use_scoped_topology_ids() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json")).expect("domain fixture");
+    let scene = domain_scene(&fixture, "selectDirect");
+    let replace = run_domain_interaction(&scene, InkInteractionEvent::PointerDown { x: 40.0, y: 40.0, button: 0, shift: false }).expect("replace pick");
+    assert_domain_action(replace, "interactionSelect", &fixture["cases"][2]["args"]);
+    clear_ink_pointer_state(&scene.surface_id);
+    let additive = run_domain_interaction(&scene, InkInteractionEvent::PointerDown { x: 180.0, y: 40.0, button: 0, shift: true }).expect("additive pick");
+    assert_domain_action(additive, "interactionSelect", &fixture["cases"][3]["args"]);
+    clear_ink_pointer_state(&scene.surface_id);
+    let clear = run_domain_interaction(&scene, InkInteractionEvent::PointerDown { x: 300.0, y: 200.0, button: 0, shift: false }).expect("empty pick");
+    assert_domain_action(clear, "interactionSelect", &fixture["cases"][4]["args"]);
+    clear_ink_pointer_state(&scene.surface_id);
+}
+
+#[test]
+fn ink_canvas_domain_marquee_uses_scoped_topology_ids() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️fixtures/🖋️ink-canvas-domain-interaction/🔣️.json")).expect("domain fixture");
+    let scene = domain_scene(&fixture, "selectMarquee");
+    assert!(run_domain_interaction(&scene, InkInteractionEvent::PointerDown { x: 10.0, y: 10.0, button: 0, shift: false }).is_none());
+    assert!(run_domain_interaction(&scene, InkInteractionEvent::PointerMove { x: 270.0, y: 90.0 }).is_none());
+    let marquee = run_domain_interaction(&scene, InkInteractionEvent::PointerUp { x: 270.0, y: 90.0 }).expect("rectangle selection");
+    assert_domain_action(marquee, "interactionSelect", &fixture["cases"][5]["args"]);
+    clear_ink_pointer_state(&scene.surface_id);
 }
 
 #[test]
@@ -194,6 +271,7 @@ fn item_card_background_uses_the_background_token_not_panel() {
     });
     let doc: InkDocumentJson = serde_json::from_str("{}").unwrap();
     let scene = UiComponentSceneNode {
+        host_id: "ink-paint-test".into(),
         surface_id: "ink-paint-test".into(),
         controller_id: "controller".into(),
         component_kind: SurfaceKind::InkCanvas,
@@ -247,6 +325,7 @@ fn active_ink_editor_registers_a_retained_accessible_input_over_the_surface() {
     let law: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🖋️ink-canvas-editing/🔣️.json")).expect("shared InkCanvas editing law parses");
     let surface_id = law["scene"]["surfaceId"].as_str().expect("surface id");
     let scene = UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: law["scene"]["controllerId"].as_str().expect("controller id").into(),
         component_kind: SurfaceKind::InkCanvas,
@@ -270,6 +349,7 @@ fn active_ink_editor_registers_a_retained_accessible_input_over_the_surface() {
             active_utility: "selectDirect".into(),
             view_mode: "edit".into(),
             interactive: true,
+            interaction_domain: None,
         }),
         graph_timeline: None,
         block_list: None,

@@ -382,6 +382,7 @@ pub(crate) struct MountedLayoutJob {
     row_metrics: TreeRowMetrics,
     width: f32,
     height: f32,
+    block_reversed: bool,
     admission: AdmissionPhase,
     pending_node: Option<(NodeId, Option<usize>)>,
     walk: Box<ui_contract::UiFixedList<WalkFrame, LAYOUT_DEPTH_CREDITS>>,
@@ -448,6 +449,7 @@ impl MountedLayoutJob {
             theme,
             width,
             height,
+            block_reversed,
             admission: if block_reversed { AdmissionPhase::VisitReversed } else { AdmissionPhase::Visit },
             pending_node: Some((root, None)),
             walk: Box::new(ui_contract::UiFixedList::default()),
@@ -672,7 +674,7 @@ impl MountedLayoutJob {
         if let Some(child) = frame.next_child {
             frame.next_child = tree.node(child).and_then(|node| node.next_sibling);
             self.pending_node = Some((child, Some(frame.node)));
-            self.admission = AdmissionPhase::Visit;
+            self.admission = if self.block_reversed { AdmissionPhase::VisitReversed } else { AdmissionPhase::Visit };
             return (0, 0);
         }
         self.walk.pop();
@@ -905,6 +907,7 @@ impl MountedLayoutJob {
             if let Some(root) = tree.node_mut(self.root) {
                 root.flags.set(NodeFlags::DIRTY_LAYOUT, false);
                 root.flags.set(NodeFlags::SUBTREE_DIRTY, false);
+                root.flags.set(NodeFlags::DIRTY_PAINT, true);
             }
             return LayoutJobStep::Complete;
         };

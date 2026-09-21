@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateShel
     fn inverse(&self, base: &SemioBrepSnapshot) -> Vec<SemioBrepMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create shell \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create shell \"{}\"", self.id), &format!("Schale \"{}\" erstellen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

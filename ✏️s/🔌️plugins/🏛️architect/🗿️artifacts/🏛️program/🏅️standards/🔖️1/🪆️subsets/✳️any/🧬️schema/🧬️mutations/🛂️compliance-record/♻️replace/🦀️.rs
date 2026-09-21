@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceComplianceRecord 
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace compliance record \"{}\"", self.compliance_record.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace compliance record \"{}\"", self.compliance_record.header.name), &format!("Konformitätsdatensatz \"{}\" ersetzen", self.compliance_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.compliance_record.header.id.0.clone()]

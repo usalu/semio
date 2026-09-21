@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceQualityRecord {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace quality record \"{}\"", self.quality_record.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace quality record \"{}\"", self.quality_record.header.name), &format!("Qualitätsdatensatz \"{}\" ersetzen", self.quality_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.quality_record.header.id.0.clone()]

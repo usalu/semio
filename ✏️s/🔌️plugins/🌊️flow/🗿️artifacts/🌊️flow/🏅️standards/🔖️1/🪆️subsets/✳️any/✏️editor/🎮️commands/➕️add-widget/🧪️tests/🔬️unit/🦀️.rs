@@ -1,25 +1,7 @@
 use super::*;
-use crate::editor::flow::unit_tests::context::{dispatch, flow_app};
+use crate::editor::flow::unit_tests::context::{dispatch, flow_app, flow_main_window_meta};
 use crate::editor::flow::FlowCommand;
 use store::{ArtifactPack, SpaceMember};
-
-/// 🪟️ An `ActionMeta` that names one live `flow-main` window instance. Flow's direct-store retained
-/// route reads `context.view_state` before anything else and refuses with `flow-window-view-required`
-/// without it (`✏️editor/🦀️.rs:937`), so a law that dispatches one of those verbs through the bare
-/// `meta("local")` (whose `view_state` is `None`) measures the refusal, not the command.
-fn flow_main_window_meta() -> semio_framework_plugin::ActionMeta {
-    use crate::editor::flow::modes::edit::windows::main::FLOW_PLAY_WINDOW_MAIN;
-
-    semio_framework_plugin::ActionMeta {
-        view_state: Some(semio_framework_plugin::ViewModel {
-            window_id: Some(FLOW_PLAY_WINDOW_MAIN.into()),
-            active_window_kind_id: Some(FLOW_PLAY_WINDOW_MAIN.into()),
-            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: FLOW_PLAY_WINDOW_MAIN.into() }],
-            ..Default::default()
-        }),
-        ..semio_framework_plugin::artifact_app_laws::meta("local")
-    }
-}
 
 #[test]
 fn child_add_widget_uses_the_smallest_available_identity_and_the_descriptor_default_payload() {
@@ -142,10 +124,10 @@ async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_co
     let content_before = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child").document_pack_bytes().await.expect("Flow child pack")).expect("Flow child snapshot");
     let result = dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) })).await;
     assert!(result.mutations.is_empty(), "admission must retain the child publication");
-    let first = settle_registered_typed_operation(&mut app, meta("local").instance_id).await.expect("first child publication");
+    let first = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("first child publication");
     let repeated = dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(50.0), y: Some(51.0) })).await;
     assert!(repeated.mutations.is_empty(), "repeated admission must retain the child publication");
-    let second = settle_registered_typed_operation(&mut app, meta("local").instance_id).await.expect("repeated child publication");
+    let second = settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("repeated child publication");
     let parent_after = app.snapshot().expect("snapshot");
     let content_after = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child").document_pack_bytes().await.expect("Flow child pack")).expect("Flow child snapshot");
     for receipt in [first, second] {
@@ -164,11 +146,11 @@ async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_co
     let mut after_first_undo = content_before.clone();
     after_first_undo.nodes.push(inserted[0].clone());
     for expected in [after_first_undo, content_before] {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id).await;
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", meta("local").instance_id).await;
         let content = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child after undo").document_pack_bytes().await.expect("Flow child pack after undo")).expect("Flow child snapshot after undo");
         assert_eq!(content, expected, "each inverse must restore the complete preceding child document in reverse insertion order");
     }
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut *app);
     eprintln!("[DEBUG] two acknowledged Flow child groups preserve parent identity and undo to the original child document");
 }
 
@@ -182,13 +164,13 @@ async fn rename_rejects_blank_unchanged_and_taken_ids() {
     for value in ["", " ", "slider"] {
         let result = dispatch(&mut app, FlowCommand::RenameFlowWidget(crate::editor::flow::commands::rename_flow_widget::RenameFlowWidget { old_id: "slider".into(), value: value.into() })).await;
         assert!(result.mutations.is_empty(), "rename to {value:?} must be a no-operation");
-        let lanes = settle_registered_typed_operation(&mut app, receiver).await.map(|receipt| receipt.lanes).unwrap_or_default();
+        let lanes = settle_registered_typed_operation(&mut *app, receiver).await.map(|receipt| receipt.lanes).unwrap_or_default();
         assert!(
             !lanes.iter().any(|lane| matches!(lane, TypedOperationResultLane::Artifact | TypedOperationResultLane::Child)),
             "rename to {value:?} must publish no durable lane, published {lanes:?}"
         );
     }
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut *app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -202,12 +184,12 @@ async fn patch_flow_widgets_parses_the_raw_value_string_into_the_slider() {
     )
     .await
     .expect("dispatch");
-    settle_registered_typed_operation(&mut app, meta("local").instance_id).await.expect("patchFlowWidgets publication");
+    settle_registered_typed_operation(&mut *app, meta("local").instance_id).await.expect("patchFlowWidgets publication");
     let patched = app.snapshot().expect("snapshot");
     let patched_widgets = patched.to_host_snapshot().widgets;
     assert!(
         patched_widgets.iter().any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::InputSlider { id, value, .. } if id == "slider" && (value - 7.5).abs() < f64::EPSILON)),
         "slider must carry the parsed value: {patched_widgets:?}"
     );
-    close_registered_fixture_app(&mut app);
+    close_registered_fixture_app(&mut *app);
 }

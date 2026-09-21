@@ -66,8 +66,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateBufferV
         vec![super::GltfMutation::CreateBufferView(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Create Buffer View".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Create Buffer View", "Pufferansicht erstellen")
     }
 
     fn target(&self) -> Vec<String> {

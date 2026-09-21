@@ -2161,6 +2161,17 @@
       }
     },
     {
+      "name": "📦️build🖥️s",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-s-react-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 10
+      }
+    },
+    {
       "name": "📦️build📐️cad",
       "type": "node-terminal",
       "request": "launch",
@@ -2796,6 +2807,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 408.38
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin🦀️lib",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-plugin:test --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.39
       }
     },
     {

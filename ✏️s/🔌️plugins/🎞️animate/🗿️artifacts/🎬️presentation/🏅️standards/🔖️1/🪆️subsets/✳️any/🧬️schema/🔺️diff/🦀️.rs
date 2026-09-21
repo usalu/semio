@@ -19,6 +19,14 @@ pub struct PresentationDiff {
     pub artifact: Option<Box<crate::standards::v1::subsets::any::schema::PresentationArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
+    /// 🖼️ The persisted payload the replacement `presentation` handle was minted from — it travels
+    /// WITH the handle so an applied diff leaves the parent able to re-derive its child through
+    /// `genesis_presentation_child_pack` (see `PresentationSnapshot::source`).
+    #[state(artifact)]
+    pub source: Option<crate::FigureTileSource>,
+    /// 🧱 See [`PresentationDiff::source`].
+    #[state(artifact)]
+    pub tiles: Option<Vec<crate::FigureTileDraft>>,
     #[state(artifact)]
     pub presentation: Option<PresentationChild>,
 }

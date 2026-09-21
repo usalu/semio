@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTankMassT 
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change tank mass [t] to {}", self.new_tank_mass_t)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change tank mass [t] to {}", self.new_tank_mass_t), &format!("Tankmasse [t] auf {} ändern", self.new_tank_mass_t))
     }
 }
 //#endregion 🔖️ChangeTankMassT

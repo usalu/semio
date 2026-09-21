@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeAlloy {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change aluminium alloy designation to \"{}\"", self.new_alloy)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change aluminium alloy designation to \"{}\"", self.new_alloy), &format!("Aluminiumlegierungsbezeichnung auf \"{}\" ändern", self.new_alloy))
     }
 }
 //#endregion 🔖️ChangeAlloy

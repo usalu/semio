@@ -42,8 +42,8 @@ impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetDoctypeMutat
         vec![super::SvgMutation::SetDoctype(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String {
-        "Set Doctype".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Doctype", "Dokumenttyp setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-doctype".to_string()]

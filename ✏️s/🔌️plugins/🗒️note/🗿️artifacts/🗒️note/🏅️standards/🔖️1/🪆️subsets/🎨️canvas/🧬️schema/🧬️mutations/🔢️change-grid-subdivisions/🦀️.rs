@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeGridSubdivisions {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change grid subdivisions to {:?}", self.new_subdivisions)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change grid subdivisions to {:?}", self.new_subdivisions), &format!("Rasterunterteilungen auf {:?} ändern", self.new_subdivisions))
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

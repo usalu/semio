@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for SetMapEn
     fn inverse(&self, base: &SemioValueSnapshot) -> Vec<SemioValueMutation> {
         agg_inverse(&SemioValueMutation::SetMapEntry(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-map-entry".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-map-entry", "Karteneintrag setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

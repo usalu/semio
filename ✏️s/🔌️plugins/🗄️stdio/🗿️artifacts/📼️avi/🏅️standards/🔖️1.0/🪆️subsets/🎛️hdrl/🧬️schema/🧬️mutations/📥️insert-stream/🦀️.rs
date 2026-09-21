@@ -21,8 +21,8 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for InsertStream {
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {
         agg_inverse(&AviMutation::InsertStream(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-stream".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-stream", "Strom einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

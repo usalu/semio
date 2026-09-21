@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for RemoveTa
     fn inverse(&self, base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
         agg_inverse(&SemioAudioMutation::RemoveTag(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-tag".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-tag", "Tag entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

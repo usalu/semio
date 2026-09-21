@@ -23,8 +23,8 @@ impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for RemoveSa
     fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {
         agg_inverse(&SemioVideoMutation::RemoveSample(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-sample".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-sample", "Probe entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

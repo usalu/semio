@@ -33,8 +33,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change setpoint manager {} schedule to {:?}", self.id.0, self.new_schedule_present.then_some(self.new_schedule_id.0))
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change setpoint manager {} schedule to {:?}", self.id.0, self.new_schedule_present.then_some(self.new_schedule_id.0)), &format!("Sollwertverwalter {} Zeitplan auf {:?} ändern", self.id.0, self.new_schedule_present.then_some(self.new_schedule_id.0)))
     }
 
     fn target(&self) -> Vec<String> {

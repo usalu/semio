@@ -22,8 +22,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RemoveCell {
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {
         agg_inverse(&XlsxMutation::RemoveCell(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-cell".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-cell", "Zelle entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

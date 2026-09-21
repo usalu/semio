@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceEnvironmentalRequ
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace environmental requirement \"{}\"", self.environmental_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace environmental requirement \"{}\"", self.environmental_requirement.header.name), &format!("Umweltanforderung \"{}\" ersetzen", self.environmental_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.environmental_requirement.header.id.0.clone()]

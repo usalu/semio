@@ -145,6 +145,26 @@ fn walk_mesh_stats_finds_nested_world3d_surfaces_at_their_absolute_rect() {
     assert!(surfaces[0].meshes.is_empty(), "an empty publication is an empty row list, never a missing surface");
 }
 
+#[test]
+fn sibling_world_diagnostics_read_their_exact_host_camera_and_keep_the_public_surface_id() {
+    let mut node = ui_wgpu::wgpu::build_world_3d_scene("shared-world-document", "controller", ui_wgpu::wgpu::World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into()));
+    let UiNode::ComponentScene(scene) = &mut node else { unreachable!() };
+    let mut observations = Vec::new();
+    for (host_id, position) in [("world-diagnostic-a", [1.0, 2.0, 3.0]), ("world-diagnostic-b", [4.0, 5.0, 6.0])] {
+        let camera = serde_json::json!({ "position": position });
+        WORLD_CAMERA_LEDGER.borrow_mut().insert(host_id.into(), camera.clone());
+        scene.host_id = host_id.into();
+        let surface = mesh_stats_for_scene(scene, [0.0, 0.0, 400.0, 300.0]).expect("world scene diagnostic");
+        observations.push((surface.surface_id, surface.live_camera, camera));
+    }
+    WORLD_CAMERA_LEDGER.borrow_mut().remove("world-diagnostic-a");
+    WORLD_CAMERA_LEDGER.borrow_mut().remove("world-diagnostic-b");
+    for (surface_id, camera, expected) in observations {
+        assert_eq!(surface_id, "shared-world-document");
+        assert_eq!(camera, Some(expected));
+    }
+}
+
 /// 🎬️ A scene host for a tree that declares no engine surface — it can never be called, and saying
 /// so is cheaper than pulling the real one into an introspection law.
 struct NoSceneHost;

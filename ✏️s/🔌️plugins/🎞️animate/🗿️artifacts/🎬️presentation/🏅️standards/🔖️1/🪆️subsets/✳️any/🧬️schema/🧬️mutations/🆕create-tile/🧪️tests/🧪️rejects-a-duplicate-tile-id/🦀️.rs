@@ -19,7 +19,7 @@
 //! tagged default — `{"CreateTile": { … }}`, PascalCase variant name and all.
 
 use crate::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
-use crate::{cache_presentation_working_scene, default_figure_tile_source, PresentationDiff, PresentationSnapshot};
+use crate::{default_figure_tile_source, PresentationDiff, PresentationSnapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects-a-duplicate-tile-id/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🆕create-tile/🧪️rejects-a-duplicate-tile-id/📸️snapshot/➡️after/🔣️.json");
@@ -41,7 +41,8 @@ fn before() -> PresentationSnapshot {
     let PresentationMutation::CreateTile(payload) = mutation() else {
         panic!("rejects-a-duplicate-tile-id's committed mutation must be a create-tile");
     };
-    cache_presentation_working_scene(&snapshot.presentation.child_id, &default_figure_tile_source(), std::slice::from_ref(&payload.tile));
+    assert_eq!(snapshot.tiles, vec![payload.tile], "the committed before-snapshot must persist exactly the tile the payload re-creates");
+    assert_eq!(snapshot.source, default_figure_tile_source(), "the committed before-snapshot's persisted source is the plugin's own default figure");
     snapshot
 }
 

@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetEmbeddedFile {
         match base.embedded_files.iter().find(|item| item.id == self.file.id) { Some(previous) => vec![PdfMutation::SetEmbeddedFile(SetEmbeddedFile { file: previous.clone() })], None => vec![PdfMutation::RemoveEmbeddedFile(super::remove_embedded_file::RemoveEmbeddedFile { id: self.file.id.clone() })] }
     }
 
-    fn label(&self) -> String {
-        format!("Set embedded-file {}", self.file.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set embedded-file {}", self.file.id), &format!("Eingebettete Datei {} setzen", self.file.id))
     }
 
     fn target(&self) -> Vec<String> {

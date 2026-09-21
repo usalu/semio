@@ -21,8 +21,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for InsertFrameCom
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
         agg_inverse(&JpgBaselineMutation::InsertFrameComponent(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-frame-component".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-frame-component", "Rahmenkomponente einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

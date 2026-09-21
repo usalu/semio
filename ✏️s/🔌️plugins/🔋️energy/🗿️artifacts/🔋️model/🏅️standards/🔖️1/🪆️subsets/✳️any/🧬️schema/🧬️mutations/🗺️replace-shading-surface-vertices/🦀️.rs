@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Replac
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Replace shading surface {} with a {}-vertex polygon", self.id.0, self.new_vertices_m.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace shading surface {} with a {}-vertex polygon", self.id.0, self.new_vertices_m.len()), &format!("Verschattungsoberfläche {} mit {}-Vertexpolygon ersetzen", self.id.0, self.new_vertices_m.len()))
     }
 
     fn target(&self) -> Vec<String> {

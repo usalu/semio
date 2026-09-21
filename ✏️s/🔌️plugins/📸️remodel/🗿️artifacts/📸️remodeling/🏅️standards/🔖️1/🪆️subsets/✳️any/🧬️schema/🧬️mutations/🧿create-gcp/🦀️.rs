@@ -33,8 +33,8 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CreateGc
     fn inverse(&self, base: &RemodelingSnapshot) -> Vec<RemodelingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create GCP \"{}\"", self.gcp.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create GCP \"{}\"", self.gcp.id), &format!("GCP \"{}\" erstellen", self.gcp.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.gcp.id.clone()]

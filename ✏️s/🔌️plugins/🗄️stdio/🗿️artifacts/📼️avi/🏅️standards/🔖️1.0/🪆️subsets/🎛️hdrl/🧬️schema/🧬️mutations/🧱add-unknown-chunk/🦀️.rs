@@ -21,8 +21,8 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for AddUnknownChunk {
     fn inverse(&self, base: &AviSnapshot) -> Vec<AviMutation> {
         agg_inverse(&AviMutation::AddUnknownChunk(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "add-unknown-chunk".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("add-unknown-chunk", "unbekannte Chunk hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

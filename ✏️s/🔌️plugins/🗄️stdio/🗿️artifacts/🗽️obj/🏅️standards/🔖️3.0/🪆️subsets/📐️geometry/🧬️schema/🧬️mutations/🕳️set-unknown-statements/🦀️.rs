@@ -27,8 +27,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetUnknownStatements {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::SetUnknownStatements(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-unknown-statements".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-unknown-statements", "unbekannte Anweisungen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

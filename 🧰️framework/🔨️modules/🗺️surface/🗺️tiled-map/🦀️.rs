@@ -2612,6 +2612,15 @@ impl MapHost {
         self.interaction_revision == plan.revision && map_camera_matches(&self.camera, &plan.expected_camera) && map_interaction_matches(&self.interaction, &plan.expected_interaction)
     }
 
+    pub fn cancel_interaction(&mut self) -> bool {
+        if matches!(self.interaction, MapInteraction::None) {
+            return false;
+        }
+        self.interaction = MapInteraction::None;
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        true
+    }
+
     pub fn upload_tile(&mut self, z: u32, x: u32, y: u32, png_bytes: &[u8]) -> Result<(), FrameworkSurfaceTiledMapError> {
         let key = tiles::tile_key(z, x, y);
         if self.tiles.tile_images.contains_key(&key) {

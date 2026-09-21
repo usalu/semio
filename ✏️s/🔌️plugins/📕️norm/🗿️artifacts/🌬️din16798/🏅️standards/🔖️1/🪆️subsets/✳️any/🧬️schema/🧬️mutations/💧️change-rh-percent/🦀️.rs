@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeRhPerc
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change relative humidity to {}", self.new_rh_percent)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change relative humidity to {}", self.new_rh_percent), &format!("relative Feuchte auf {} ändern", self.new_rh_percent))
     }
 }
 //#endregion 🔖️ChangeRhPercent

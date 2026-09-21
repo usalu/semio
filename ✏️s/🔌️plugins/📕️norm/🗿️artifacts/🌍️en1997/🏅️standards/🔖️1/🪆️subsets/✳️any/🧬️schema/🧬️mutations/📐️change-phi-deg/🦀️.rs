@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangePhiDeg {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change friction angle phi [deg] to {}", self.new_phi_deg)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change friction angle phi [deg] to {}", self.new_phi_deg), &format!("Reibungswinkelphi [deg] auf {} ändern", self.new_phi_deg))
     }
 }
 //#endregion 🔖️ChangePhiDeg

@@ -19,8 +19,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeApplicat
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change application type to \"{}\"", self.new_application_type)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change application type to \"{}\"", self.new_application_type), &format!("Anwendungstyp auf \"{}\" ändern", self.new_application_type))
     }
 }
 //#endregion 🔖️Payload

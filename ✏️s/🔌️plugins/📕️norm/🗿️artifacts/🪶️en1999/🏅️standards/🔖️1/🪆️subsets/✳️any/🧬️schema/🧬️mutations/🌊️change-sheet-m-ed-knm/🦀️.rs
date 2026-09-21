@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeSheetMEdKn
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change sheet design moment M_Ed [kNm] to {}", self.new_sheet_m_ed_knm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change sheet design moment M_Ed [kNm] to {}", self.new_sheet_m_ed_knm), &format!("Blattbemessungsmomentm_Ed [kNm] auf {} ändern", self.new_sheet_m_ed_knm))
     }
 }
 //#endregion 🔖️ChangeSheetMEdKnm

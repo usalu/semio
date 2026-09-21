@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for AddType {
     fn inverse(&self, base: &SemioKitSnapshot) -> Vec<SemioKitMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Add type {}", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add type {}", self.id), &format!("Typ {} hinzufügen", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

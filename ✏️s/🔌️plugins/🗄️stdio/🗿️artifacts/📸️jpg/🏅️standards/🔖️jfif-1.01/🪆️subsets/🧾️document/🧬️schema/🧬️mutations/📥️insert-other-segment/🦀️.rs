@@ -37,8 +37,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for InsertOtherSegmentMuta
             vec![JpgMutation::RemoveOtherSegment(crate::schema::mutations::RemoveOtherSegmentMutation { index: (*index).min(base.other_segments.len()) })]
         }
     }
-    fn label(&self) -> String {
-        "insert other segment".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert other segment", "sonstige Segment einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-other-segment".into()]

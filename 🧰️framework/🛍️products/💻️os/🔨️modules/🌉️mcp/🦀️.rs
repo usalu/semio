@@ -629,6 +629,9 @@ pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::
     let client = ClientInfo { name: "semio-os-mcp".to_string(), version: env!("CARGO_PKG_VERSION").to_string() };
     let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, runtime.auto_approve, client));
     actions.bind_history_undo_port(workspace.clone());
+    // 🗿️ The workspace reads this adapter's own guest instances back for `artifact_snapshot`, so a
+    // snapshot shows the document as the agent just left it rather than as it was created.
+    workspace.bind_root_action_adapter(actions.clone());
     actions.bind_approval_coordinator(runtime.approval_coordinator());
     let label = principal.label.clone();
     let tools = WorkspaceToolRegistry { workspace: workspace.clone(), actions, principal, bridge: runtime.bridge.clone(), channel_binding: runtime.channel_binding() };
@@ -768,6 +771,49 @@ impl std::fmt::Debug for HubOptions {
     }
 }
 
+/// ⏳️ How many times the hub workspace open is re-attempted while the hub itself says "retry", and
+/// the fixed step between attempts. The bound is what makes this a retry rather than a wait: a hub
+/// that stays mid-refresh for longer than `HUB_OPEN_RETRY_ATTEMPTS × HUB_OPEN_RETRY_STEP_MS` still
+/// fails, with the hub's own last message, instead of hanging a client's `initialize` forever.
+const HUB_OPEN_RETRY_ATTEMPTS: u32 = 6;
+const HUB_OPEN_RETRY_STEP_MS: u64 = 500;
+
+/// 🔁️ Opens the hub workspace, re-attempting ONLY the states the hub marks retryable — a descriptor
+/// index that is `refreshing`, a directory stream that has not re-dialled yet. Those are ordinary
+/// mid-refresh states of a live hub, not faults, and before this a client whose hub happened to be
+/// refreshing at `initialize` time saw the gateway process EXIT (measured 2026-09-21, M8 §5.4(2):
+/// `PluginUnavailable: authenticated hub descriptor index is refreshing; retry after authority
+/// refresh`, exit 1, before `initialize`). A non-retryable error — a bad credential, a space the
+/// principal is not a member of, a version boundary — is returned on its first occurrence untouched.
+fn open_hub_workspace_with_retry(hub: &HubOptions, credential: std::sync::Arc<semio_framework_os_kernel::os_directory::client::LocalHubCredential>, principal: &AgentPrincipal) -> Result<HeadlessWorkspace, GatewayError> {
+    let scopes: Vec<String> = principal.scopes.iter().map(|scope| scope.0.clone()).collect();
+    let mut attempts_made = 0;
+    loop {
+        match HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), credential.clone(), principal.id.clone(), scopes.clone()) {
+            Ok(workspace) => return Ok(workspace),
+            Err(error) => match hub_open_retry_backoff_ms(&error, attempts_made) {
+                Some(backoff_ms) => {
+                    attempts_made += 1;
+                    eprintln!("[semio-os-mcp] hub binding is not settled yet ({}); retry {attempts_made}/{HUB_OPEN_RETRY_ATTEMPTS} in {backoff_ms} ms", error.message);
+                    std::thread::sleep(std::time::Duration::from_millis(backoff_ms));
+                }
+                None => return Err(error),
+            },
+        }
+    }
+}
+
+/// ⏳️ How long to wait before re-attempting a hub open, or `None` when this failure must be
+/// returned instead — the whole retry decision as one pure predicate, so its bound is a law rather
+/// than a loop a reader has to simulate. Only the hub's OWN `retryable` marking is retried; the
+/// backoff grows linearly so the attempts spread rather than hammer, and it ends.
+pub fn hub_open_retry_backoff_ms(error: &GatewayError, attempts_made: u32) -> Option<u64> {
+    if !error.retryable || attempts_made >= HUB_OPEN_RETRY_ATTEMPTS {
+        return None;
+    }
+    Some(HUB_OPEN_RETRY_STEP_MS.saturating_mul(u64::from(attempts_made) + 1))
+}
+
 /// 🏠️ Builds the real `McpServer` for a `--folder`/`--hub`-bound session: opens a real
 /// `HeadlessWorkspace` and a `workspace::RoutingArtifactChannel`, which resolves the owning plugin
 /// per capability from the compiled catalog and lazily opens one `PluginArtifactChannel` per plugin
@@ -819,7 +865,7 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
             principal.id = agent_principal_id;
             principal.label = agent_label;
         }
-        std::sync::Arc::new(HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), credential, principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect())?)
+        std::sync::Arc::new(open_hub_workspace_with_retry(hub, credential, &principal)?)
     } else {
         return Ok(build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Unbound(UnboundArtifactChannel)), runtime));
     };

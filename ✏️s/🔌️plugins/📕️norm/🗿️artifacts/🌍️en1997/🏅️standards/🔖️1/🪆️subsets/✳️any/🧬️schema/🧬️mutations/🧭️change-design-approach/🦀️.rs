@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeDesignAppr
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change design approach to \"{}\"", self.new_design_approach)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change design approach to \"{}\"", self.new_design_approach), &format!("Bemessungsansatz auf \"{}\" ändern", self.new_design_approach))
     }
 }
 //#endregion 🔖️ChangeDesignApproach

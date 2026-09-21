@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeWallHeight
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change retaining wall height [m] to {}", self.new_wall_height_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change retaining wall height [m] to {}", self.new_wall_height_m), &format!("stützende Wandhöhe [m] auf {} ändern", self.new_wall_height_m))
     }
 }
 //#endregion 🔖️ChangeWallHeightM

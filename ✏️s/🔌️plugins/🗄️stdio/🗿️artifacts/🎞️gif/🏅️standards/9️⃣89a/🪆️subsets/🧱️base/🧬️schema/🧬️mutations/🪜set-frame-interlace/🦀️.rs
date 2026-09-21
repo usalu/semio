@@ -22,8 +22,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for SetFrameInterlace {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::SetFrameInterlace(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-frame-interlace".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-frame-interlace", "Rahmenverschränkung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

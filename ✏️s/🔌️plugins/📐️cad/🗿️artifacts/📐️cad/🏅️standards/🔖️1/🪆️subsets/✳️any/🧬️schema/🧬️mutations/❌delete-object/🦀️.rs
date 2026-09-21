@@ -26,8 +26,8 @@ impl MutationKind<CadSnapshot, CadMutation> for DeleteObject {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Delete object \"{}\"", self.object_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete object \"{}\"", self.object_id), &format!("Objekt \"{}\" löschen", self.object_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.object_id.clone()]

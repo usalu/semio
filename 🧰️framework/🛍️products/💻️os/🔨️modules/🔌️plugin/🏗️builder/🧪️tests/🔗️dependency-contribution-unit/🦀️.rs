@@ -103,7 +103,7 @@ fn contribution_plan_matches_direct_leaf() {
     let folded = protocol::fold_plan_diff(&leaf, &base).diff().apply(&base).expect("contribution result");
     assert_eq!(direct, folded);
     assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::SEMANTICS.kind, "add-value");
-    assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(&leaf), "Add 5 to value");
+    assert_eq!(<AddValue as protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp>>::label(&leaf), protocol::LocalizedLabel::native("Add 5 to value", "5 zu Wert hinzufügen"));
     let minimum = AddValue { delta: i32::MIN };
     let zero = DependencyTestSnapshot { value: 0 };
     assert_eq!(protocol::fold_plan_inverse(&minimum, &zero), vec![operation(1), operation(i32::MAX)]);

@@ -43,8 +43,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for ReplaceTagMutation {
             None => Vec::new(),
         }
     }
-    fn label(&self) -> String {
-        "replace tag".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("replace tag", "Tag ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-tag".into()]

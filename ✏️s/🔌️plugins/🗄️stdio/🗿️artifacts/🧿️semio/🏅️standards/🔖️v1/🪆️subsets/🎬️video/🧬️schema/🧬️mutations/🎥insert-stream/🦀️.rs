@@ -23,8 +23,8 @@ impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for InsertSt
     fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {
         agg_inverse(&SemioVideoMutation::InsertStream(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-stream".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-stream", "Strom einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -11,7 +11,7 @@ use crate::framework_surface_terrain::TerrainSessionCore;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use ui_wgpu::wgpu::{
     aabb_intersects_frustum, directional_shadow_frustum_planes, directional_shadow_view_projection, frustum_planes, grid_placement_anchor, paint_selection_marquee, transform_aabb, LineDraw3d, SceneLighting3d, SceneMaterial3d,
-    Mat4Math, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadow3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d, ICON_SHADOW_MAP_SIZE, WORLD_SHADOW_MAP_SIZE,
+    Mat4Math, ProceduralGrid3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadow3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d, ICON_SHADOW_MAP_SIZE, WORLD_SHADOW_MAP_SIZE,
 };
 use ui_wgpu::wgpu::{
     axis_rotate_angle, camera_grid_fade_distance, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_grid_fade_alpha, lod_grid_step_world, lod_orbit_distance_for_camera,
@@ -1575,6 +1575,7 @@ pub struct World3dState {
     draws: WorldDrawRegistry,
     pub selection_method: String,
     pub local_hover_id: Option<String>,
+    local_hover_granularity_id: Option<String>,
     pub pending_glb_urls: HashSet<String>,
     pub marquee_points: Vec<[f32; 2]>,
     pub marquee_active: bool,
@@ -1669,6 +1670,7 @@ pub struct World3dState {
     /// `instances[].interactionId`. Only the entries that actually differ are kept, so a lookup miss
     /// means "this instance is its own target" — see [`instance_interaction_id`].
     instance_interaction_ids: HashMap<String, String>,
+    instance_interaction_granularity_ids: HashMap<String, String>,
     mesh_pool: RefCountPool<String>,
     mesh_source_urls: HashMap<String, String>,
     /// 🥽️ Mesh url → the [`world_brush_mesh_revision`] THIS surface last announced it to the guest
@@ -1928,6 +1930,7 @@ impl World3dState {
             draws: WorldDrawRegistry::default(),
             selection_method: "rectangle".into(),
             local_hover_id: None,
+            local_hover_granularity_id: None,
             pending_glb_urls: HashSet::new(),
             marquee_points: Vec::new(),
             marquee_active: false,
@@ -2004,6 +2007,7 @@ impl World3dState {
             mesh_url_fallback: HashMap::new(),
             instance_positions: HashMap::new(),
             instance_interaction_ids: HashMap::new(),
+            instance_interaction_granularity_ids: HashMap::new(),
             mesh_pool: RefCountPool::new(),
             mesh_source_urls: HashMap::new(),
             brush_mesh_announced: HashMap::new(),
@@ -2335,13 +2339,34 @@ impl World3dDynamicRetirement {
                 };
                 drop(entry);
             }
+            5 => {
+                let Some(id) = state.instance_interaction_ids.keys().next().cloned() else {
+                    self.phase = 6;
+                    return false;
+                };
+                state.instance_interaction_ids.remove(&id);
+            }
+            6 => {
+                let Some(id) = state.instance_interaction_granularity_ids.keys().next().cloned() else {
+                    self.phase = 7;
+                    return false;
+                };
+                state.instance_interaction_granularity_ids.remove(&id);
+            }
+            7 => {
+                if state.local_hover_granularity_id.take().is_some() {
+                    return false;
+                }
+                self.phase = 8;
+                return false;
+            }
             _ => return true,
         }
         false
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.phase >= 5 && self.blocked.is_none()
+        self.phase >= 8 && self.blocked.is_none()
     }
 }
 
@@ -2439,6 +2464,9 @@ pub fn world3d_dynamic_retirement_terminal_is_empty(state: &World3dState) -> boo
         && state.draws.is_empty()
         && state.reference_pixels.is_empty()
         && state.mesh_paint_textures.is_empty()
+        && state.instance_interaction_ids.is_empty()
+        && state.instance_interaction_granularity_ids.is_empty()
+        && state.local_hover_granularity_id.is_none()
         && state.asset_io.terminal_is_empty()
 }
 
@@ -3994,29 +4022,30 @@ impl WorldMarqueePublishJob {
         core::str::from_utf8(&self.targets[..usize::from(self.targets_len)]).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)
     }
 
-    /// 🎯️ Whether this page's `targets` already names `id`.
+    /// 🎯️ Whether this page's `targets` already names the exact `(granularity, id)` pair.
     ///
-    /// ⚖️ A selection is a SET of topology ids: a surface renders one channel as several instances, so
-    /// a marquee that encloses both must publish that channel ONCE. React's
-    /// `interactionTargetsForInstances` dedups on the same rule, and
+    /// ⚖️ A selection is a SET of topology target pairs: several instances can share one target,
+    /// while the same id under two declared granularities remains two distinct targets. React's
+    /// `world3dInstanceInteractionTargets` dedups on the same rule, and
     /// `🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json`'s `marquee-release-replaces` case pins it.
-    fn targets_contain(&self, id: &[&str]) -> bool {
-        const KEY: &[u8] = b"\"id\":\"";
-        let length: usize = id.iter().map(|part| part.len()).sum();
+    fn targets_contain(&self, granularity: &str, id: &[&str]) -> bool {
         let text = &self.targets[..usize::from(self.targets_len)];
         let mut cursor = 0usize;
-        while let Some(found) = world_find_bytes(&text[cursor..], KEY) {
-            let start = cursor + found + KEY.len();
-            cursor = start;
-            if start + length >= text.len() || text[start + length] != b'"' {
-                continue;
-            }
+        while let Some(found) = world_find_bytes(&text[cursor..], INTERACTION_TARGETS_OPEN.as_bytes()) {
+            let start = cursor + found;
+            cursor = start + INTERACTION_TARGETS_OPEN.len();
             let mut offset = start;
-            if id.iter().all(|part| {
-                let matched = &text[offset..offset + part.len()] == part.as_bytes();
-                offset += part.len();
-                matched
-            }) {
+            let matches = [INTERACTION_TARGETS_OPEN, granularity, INTERACTION_TARGETS_MIDDLE]
+                .into_iter()
+                .chain(id.iter().copied())
+                .chain([INTERACTION_TARGETS_TAIL])
+                .all(|part| {
+                    let Some(end) = offset.checked_add(part.len()) else { return false };
+                    let matched = text.get(offset..end) == Some(part.as_bytes());
+                    offset = end;
+                    matched
+                });
+            if matches {
                 return true;
             }
         }
@@ -4034,7 +4063,7 @@ impl WorldMarqueePublishJob {
             .checked_mul(INTERACTION_TARGETS_OPEN.len() + INTERACTION_TARGETS_MIDDLE.len() + INTERACTION_TARGETS_TAIL.len() + 1)
             .and_then(|bytes| bytes.checked_add(INTERACTION_TARGETS_ARRAY_OPEN.len() + INTERACTION_TARGETS_ARRAY_CLOSE.len()))
             .ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
-        let granularities = target_count.checked_mul(WORLD_PICK_GRANULARITY_ID.len().max(resolved_domain_granularity_id(state).len())).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+        let granularities = target_count.checked_mul(maximum_instance_interaction_granularity_bytes(state)).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
         let id_prefix = if state.bound_domain_id.is_some() { 0 } else { target_count.checked_mul(state.surface_id.len() + WORLD_ITEM_PATH_DELIMITER.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)? };
         ui_wgpu::wgpu::checked_action_string_bytes(&[&state.controller_id, "interactionSelect", "domainId", resolved_domain_id(state), "targets", "merge", self.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])?
             .checked_add(target_keys)
@@ -4109,17 +4138,14 @@ impl WorldMarqueePublishJob {
         if self.stage >= 3 && self.stage < target_stage_end {
             let entry = entry.expect("marquee token resolved");
             let id = instance_interaction_id(state, entry.id.as_str());
-            // 🎯️ A marquee release is a PICK (`method: "rectangle"`), so it reports the pick
-            // granularity, exactly like a click — `🖱️pointer-gestures.json`'s
-            // `marquee-release-replaces` expects `"object"`, not the scene's hover granularity.
-            let granularity = WORLD_PICK_GRANULARITY_ID;
+            let granularity = instance_interaction_granularity_id(state, entry.id.as_str());
             let separator: &str = if self.targets_len > 1 { "," } else { "" };
             let target: [&str; 8] = if state.bound_domain_id.is_some() {
                 [separator, INTERACTION_TARGETS_OPEN, granularity, INTERACTION_TARGETS_MIDDLE, id, "", "", INTERACTION_TARGETS_TAIL]
             } else {
                 [separator, INTERACTION_TARGETS_OPEN, granularity, INTERACTION_TARGETS_MIDDLE, &state.surface_id, WORLD_ITEM_PATH_DELIMITER, id, INTERACTION_TARGETS_TAIL]
             };
-            if !self.targets_contain(&target[4..7]) {
+            if !self.targets_contain(granularity, &target[4..7]) {
                 self.push_targets(&target)?;
             }
             self.stage += 1;
@@ -4758,7 +4784,8 @@ impl WorldRayPickCursor {
         let mesh = *state.meshes.get(&draw.mesh_key).ok_or(WorldInteractionStep::Fault)?;
         let instance = draw.instances.get(usize::from(hit.instance)).ok_or(WorldInteractionStep::Fault)?;
         let target_id = instance_interaction_id(state, instance.id.as_str());
-        if self.purpose == WorldRayPickPurpose::Hover && state.local_hover_id.as_deref() == Some(target_id) {
+        let target_granularity_id = instance_interaction_granularity_id(state, instance.id.as_str());
+        if self.purpose == WorldRayPickPurpose::Hover && state.local_hover_id.as_deref() == Some(target_id) && state.local_hover_granularity_id.as_deref() == Some(target_granularity_id) {
             return Ok(None);
         }
         let mut plan = WorldInteractionPlan::new(self.revision, generation);
@@ -4777,7 +4804,7 @@ impl WorldRayPickCursor {
             },
             WorldRayPickPurpose::Instance => {
                 let domain = plan.push_string(resolved_domain_id(state)).ok_or(WorldInteractionStep::Fault)?;
-                let granularity = plan.push_string(WORLD_PICK_GRANULARITY_ID).ok_or(WorldInteractionStep::Fault)?;
+                let granularity = plan.push_string(target_granularity_id).ok_or(WorldInteractionStep::Fault)?;
                 let merge = plan.push_string(world_merge_wire_label(self.merge)).ok_or(WorldInteractionStep::Fault)?;
                 let method = plan.push_string(selection_method_wire_str(SelectionMethod::Pick)).ok_or(WorldInteractionStep::Fault)?;
                 WorldFlatAction {
@@ -4788,7 +4815,7 @@ impl WorldRayPickCursor {
             }
             WorldRayPickPurpose::Hover => {
                 let domain = plan.push_string(resolved_domain_id(state)).ok_or(WorldInteractionStep::Fault)?;
-                let granularity = plan.push_string(resolved_domain_granularity_id(state)).ok_or(WorldInteractionStep::Fault)?;
+                let granularity = plan.push_string(target_granularity_id).ok_or(WorldInteractionStep::Fault)?;
                 WorldFlatAction {
                     kind: WorldFlatActionKind::Hover,
                     strings: [Some(controller), Some(surface), Some(object), Some(domain), Some(granularity), None, None, None],
@@ -7472,9 +7499,11 @@ pub fn publish_world3d_plan_step(
                     (true, None) => {
                         state.pick_hover_key = None;
                         state.local_hover_id = None;
+                        state.local_hover_granularity_id = None;
                     }
                     (false, _) => {
                         state.local_hover_id = object.map(str::to_owned);
+                        state.local_hover_granularity_id = granularity.map(str::to_owned);
                         if object.is_none() {
                             state.pick_hover_key = None;
                         }
@@ -7546,6 +7575,7 @@ pub fn publish_world3d_plan_step(
                 state.hovered_component_mode = object.map(|_| mode.to_owned());
                 if object.is_none() {
                     state.local_hover_id = None;
+                    state.local_hover_granularity_id = None;
                 }
                 state.interaction_revision = state.interaction_revision.wrapping_add(1);
             })?;
@@ -11405,9 +11435,11 @@ struct World3dSceneInstanceEntry {
     /// 🎯️ The TOPOLOGY target this rendered instance stands for — several instances of one channel
     /// share it. Absent means "the render id is its own target", exactly React's
     /// `instances.find(e => e.id === id)?.interactionId ?? id`
-    /// (`🌐️World3dHost/🟦️.tsx`, `interactionTargetsForInstances`).
+    /// (`🌐️World3dHost/🟦️.tsx`, `world3dInstanceInteractionTarget`).
     #[serde(default)]
     interaction_id: Option<String>,
+    #[serde(default)]
+    interaction_granularity_id: Option<String>,
     #[serde(default)]
     position: Option<[f64; 3]>,
     #[serde(default)]
@@ -12048,6 +12080,19 @@ struct World3dSceneBridgeCursor {
     retiring_mesh: bool,
 }
 
+/// 🎯️ The plain-JSON instance lane may retain at most the objects and identifier bytes the
+/// interaction registry can actually address. This is the existing native authority, shared by render
+/// ids, topology ids and per-instance granularity overrides; the bridge never invents a second cap.
+fn world3d_scene_instance_interactions_are_bounded(instances: &[World3dSceneInstanceEntry]) -> bool {
+    instances.len() <= WORLD_INTERACTION_OBJECT_CAPACITY
+        && instances.iter().all(|instance| {
+            instance.id.len() <= WORLD_INTERACTION_ID_BYTE_CAPACITY
+                && instance.mesh_id.len() <= WORLD_INTERACTION_ID_BYTE_CAPACITY
+                && instance.interaction_id.as_ref().is_none_or(|id| id.len() <= WORLD_INTERACTION_ID_BYTE_CAPACITY)
+                && instance.interaction_granularity_id.as_ref().is_none_or(|id| id.len() <= WORLD_INTERACTION_ID_BYTE_CAPACITY)
+        })
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum World3dSceneBridgeStep {
     Idle,
@@ -12129,6 +12174,10 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
     context.consume_fuel(1);
     match cursor.phase {
         World3dSceneBridgePhase::Parse => {
+            if cursor.instances_json.len() > WORLD_INTERACTION_TOPOLOGY_BYTE_CAPACITY {
+                state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                return World3dSceneBridgeStep::Fault;
+            }
             cursor.meshes = serde_json::from_str::<Vec<World3dSceneMeshEntry>>(&cursor.meshes_json).unwrap_or_default();
             cursor.instances = serde_json::from_str::<Vec<World3dSceneInstanceEntry>>(&cursor.instances_json).unwrap_or_default();
             cursor.camera = serde_json::from_str::<World3dSceneCameraRecord>(&cursor.camera_json).ok();
@@ -12144,6 +12193,10 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
                 if mesh.data.normals.len() != mesh.data.positions.len() {
                     mesh.data.compute_normals();
                 }
+            }
+            if !world3d_scene_instance_interactions_are_bounded(&cursor.instances) {
+                state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                return World3dSceneBridgeStep::Fault;
             }
             cursor.instances.retain(|instance| cursor.meshes.iter().any(|mesh| mesh.id == instance.mesh_id));
             cursor.phase = World3dSceneBridgePhase::Meshes;
@@ -12311,6 +12364,10 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
     for instance in cursor.instances.iter().filter(|instance| instance.interaction_id.as_deref().is_some_and(|target| target != instance.id)) {
         state.instance_interaction_ids.insert(instance.id.clone(), instance.interaction_id.clone().expect("instance interaction id filtered above"));
     }
+    state.instance_interaction_granularity_ids.clear();
+    for instance in cursor.instances.iter().filter(|instance| instance.interaction_granularity_id.is_some()) {
+        state.instance_interaction_granularity_ids.insert(instance.id.clone(), instance.interaction_granularity_id.clone().expect("instance interaction granularity filtered above"));
+    }
     state.instance_positions.clear();
     for instance in &cursor.instances {
         state.instance_positions.insert(instance.id.clone(), instance.position.unwrap_or([0.0; 3]));
@@ -12444,6 +12501,7 @@ fn sync_world3d_scene_selection(state: &mut World3dState, selection_json: &str) 
     }
     state.selected_ids = record.ids;
     state.local_hover_id = record.hovered_id;
+    state.local_hover_granularity_id = None;
     if let Some(granularity) = record.granularity {
         state.granularity = granularity;
     }
@@ -12796,12 +12854,26 @@ pub fn render_world_3d(
         }
     }
     sync_mesh_pool(state, &needed_mesh_keys, gpu);
-    let mut line_vertices = Vec::new();
-    if state.lod.show_grid {
+    let procedural_grid = if state.lod.show_grid {
         let datum = state.lod.grid_datum.unwrap_or([0.0, 0.0, 0.0]);
-        let anchor = grid_placement_anchor(camera.target, datum);
-        append_lod_grid_lines(&mut line_vertices, current_lod, state.lod.grid_factor, anchor, &camera, inner, [theme.text_element.r, theme.text_element.g, theme.text_element.b, theme.text_element.a]);
-    }
+        lod_grid_step_world(current_lod, state.lod.grid_factor).and_then(|step| {
+            let cell_size = step as f32;
+            if !cell_size.is_finite() || cell_size <= 0.0 {
+                return None;
+            }
+            let plane_z = datum[2] as f32 + 0.001;
+            Some(ProceduralGrid3d {
+                plane_z,
+                camera_plane_projection: [camera.position.x, camera.position.y, plane_z],
+                cell_size,
+                fade_distance: camera_grid_fade_distance(&camera, datum[2] as f32, step, inner.w, inner.h),
+                cell_color: [theme.text_element.r, theme.text_element.g, theme.text_element.b],
+            })
+        })
+    } else {
+        None
+    };
+    let mut line_vertices = Vec::new();
     append_component_overlays(state, &camera, inner, &mut line_vertices);
     append_engagement_preview_lines(state, &mut line_vertices, [theme.row_hover.r, theme.row_hover.g, theme.row_hover.b, 1.0]);
     append_pick_target_hover_lines(state, theme, &camera, inner, &mut line_vertices);
@@ -12952,6 +13024,7 @@ pub fn render_world_3d(
         lighting,
         neutral_material,
         shadow,
+        procedural_grid,
         shadow_draws,
         draws: culled_draws,
         line_draws: if line_vertices.is_empty() { Vec::new() } else { vec![LineDraw3d { vertices: line_vertices }] },
@@ -13400,21 +13473,11 @@ fn resolved_domain_id(state: &World3dState) -> &str {
     state.bound_domain_id.as_deref().unwrap_or(WORLD_INTERACTION_DOMAIN_ID)
 }
 
-/// 🎯️ The granularity id to stamp on a plain HOVER target — the app-declared granularity when a
-/// domain is bound, else the `world` domain's own `"item"` granularity. A PICK reports
-/// [`WORLD_PICK_GRANULARITY_ID`] instead; see its doc.
+/// 🎯️ The scene's default granularity for a plain instance target — the app-declared
+/// granularity when a domain is bound, else the `world` domain's own `"item"` granularity.
 fn resolved_domain_granularity_id(state: &World3dState) -> &str {
     state.bound_domain_granularity_id.as_deref().unwrap_or(WORLD_ITEM_GRANULARITY_ID)
 }
-
-/// 🎯️ The granularity a whole-instance PICK reports, on every surface and in both implementations.
-///
-/// ⚖️ Hover and selection deliberately differ: hover reports the scene's own `domainGranularityId`
-/// (what the pointer is *over* in the app's vocabulary), while a pick selects the whole object and
-/// says so. `🖱️pointer-gestures.json`'s `instance-pick-*` cases expect `"object"` and its
-/// `instance-hover` case expects the scene granularity — the two are not interchangeable, and the
-/// wgpu authority used to stamp the scene granularity on both.
-const WORLD_PICK_GRANULARITY_ID: &str = "object";
 
 /// 🎯️ The TOPOLOGY target a rendered instance stands for.
 ///
@@ -13424,10 +13487,23 @@ const WORLD_PICK_GRANULARITY_ID: &str = "object";
 /// `interactionSelect targets=[{"id":"extrude@solid#0"}]` left `selectedIds` empty across hover,
 /// click and marquee (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 /// `📓️wgpu-world3d-interaction-2026-09-13.md`). React resolves the same way
-/// (`interactionTargetsForInstances`), and the fixture
+/// (`world3dInstanceInteractionTarget`), and the fixture
 /// `🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json` is the shared oracle.
 fn instance_interaction_id<'a>(state: &'a World3dState, render_id: &'a str) -> &'a str {
     state.instance_interaction_ids.get(render_id).map_or(render_id, String::as_str)
+}
+
+/// 🎯️ The granularity of one rendered instance's interaction target. An explicit record
+/// override wins; otherwise pick, hover and marquee all use the scene default, matching React's
+/// `world3dInstanceInteractionTarget`.
+fn instance_interaction_granularity_id<'a>(state: &'a World3dState, render_id: &str) -> &'a str {
+    state.instance_interaction_granularity_ids.get(render_id).map_or_else(|| resolved_domain_granularity_id(state), String::as_str)
+}
+
+/// 🧮️ Upper bound used by marquee action reservation. Every retained override is already
+/// capped by [`WORLD_INTERACTION_ID_BYTE_CAPACITY`] at bridge admission.
+fn maximum_instance_interaction_granularity_bytes(state: &World3dState) -> usize {
+    state.instance_interaction_granularity_ids.values().map(String::len).max().unwrap_or(0).max(resolved_domain_granularity_id(state).len())
 }
 
 #[cfg(test)]
@@ -13519,6 +13595,7 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
             state.hovered_component_object_id = None;
             state.hovered_component_mode = None;
             state.local_hover_id = None;
+            state.local_hover_granularity_id = None;
         }
         return;
     };
@@ -13529,6 +13606,7 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
                 state.hovered_component_object_id = None;
                 state.hovered_component_mode = None;
                 state.local_hover_id = None;
+                state.local_hover_granularity_id = None;
             } else {
                 let object_id = args.get("objectId").and_then(|value| value.as_str()).map(str::to_string);
                 let mode = args.get("mode").and_then(|value| value.as_str()).map(str::to_string);
@@ -13538,8 +13616,10 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
                 state.hovered_component_id = id;
                 if mode.as_deref() == Some("mesh") {
                     state.local_hover_id = object_id;
+                    state.local_hover_granularity_id = None;
                 } else {
                     state.local_hover_id = None;
+                    state.local_hover_granularity_id = None;
                 }
             }
         }
@@ -13582,8 +13662,9 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
             state.selected_ids = merge_string_ids(&state.selected_ids, &ids, merge);
         }
         "interactionHover" if args.get("domainId").and_then(|value| value.as_str()) == Some(resolved_domain_id(state)) => {
-            state.local_hover_id =
-                args.get("targets").and_then(|value| value.as_array()).and_then(|targets| targets.first()).and_then(|target| target.get("id").and_then(dsl_id_to_string)).and_then(|id| parse_resolved_item_id(state, &id).map(str::to_string));
+            let target = args.get("targets").and_then(|value| value.as_array()).and_then(|targets| targets.first());
+            state.local_hover_id = target.and_then(|target| target.get("id").and_then(dsl_id_to_string)).and_then(|id| parse_resolved_item_id(state, &id).map(str::to_string));
+            state.local_hover_granularity_id = target.and_then(|target| target.get("granularity").and_then(|value| value.as_str()).map(str::to_string));
         }
         "setSelection" => {
             if let Some(mode) = args.get("mode").and_then(|value| value.as_str()) {
@@ -13648,20 +13729,23 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
         state.hovered_component_object_id = None;
         state.hovered_component_mode = None;
         state.local_hover_id = None;
+        state.local_hover_granularity_id = None;
         return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "setHover".into(), args: None });
     }
     // 🖼️ Falls back to reference-image plane hit-testing when no mesh instance is under the
     // cursor — mirrors React's `hoveredId` covering both mesh instances and `"reference:"`-prefixed
     // reference planes (see `resolveWorldContextMenuTarget`'s reference tier).
     let hit = pick_instance_at(state, x, y, inner).or_else(|| pick_reference_at(state, x, y, inner).map(|url| format!("reference:{url}")));
-    if state.local_hover_id == hit {
+    let target = hit.as_deref().map(|id| (instance_interaction_id(state, id).to_string(), instance_interaction_granularity_id(state, id).to_string()));
+    if state.local_hover_id.as_deref() == target.as_ref().map(|(id, _)| id.as_str()) && state.local_hover_granularity_id.as_deref() == target.as_ref().map(|(_, granularity)| granularity.as_str()) {
         return None;
     }
-    state.local_hover_id = hit.clone();
+    state.local_hover_id = target.as_ref().map(|(id, _)| id.clone());
+    state.local_hover_granularity_id = target.as_ref().map(|(_, granularity)| granularity.clone());
     // 🕹️ `interactionHover` — empty `targets` clears the channel (see `HoverInput`/`next_hover`);
     // `domainId`/target id shape follow this surface's resolved (app-bound or `world`-fallback) domain.
-    let targets = match &hit {
-        Some(id) => json!([{ "granularity": resolved_domain_granularity_id(state), "id": resolved_item_id(state, id) }]),
+    let targets = match &target {
+        Some((id, granularity)) => json!([{ "granularity": granularity, "id": resolved_item_id(state, id) }]),
         None => json!([]),
     };
     Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "interactionHover".into(), args: action_args(json!({ "domainId": resolved_domain_id(state), "channel": "pointer", "targets": targets })) })
@@ -13715,7 +13799,10 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
         });
     }
     let hit = pick_instance_at(state, x, y, inner);
-    let targets: Vec<serde_json::Value> = hit.into_iter().map(|id| json!({ "granularity": resolved_domain_granularity_id(state), "id": resolved_item_id(state, &id) })).collect();
+    let targets: Vec<serde_json::Value> = hit
+        .into_iter()
+        .map(|id| json!({ "granularity": instance_interaction_granularity_id(state, &id), "id": resolved_item_id(state, instance_interaction_id(state, &id)) }))
+        .collect();
     Some(ActionDescriptor {
         controller_id: state.controller_id.clone(),
         action: "interactionSelect".into(),
@@ -13813,7 +13900,15 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
     // 🕹️ Marquee/lasso stays GEOMETRIC here — `screen_select_instances` above is the surface's own
     // hit-test, this just batches its raw hits into ONE `interactionSelect`; the merge/mode algebra is
     // the os-kernel `next_selection` machine's job, not this file's.
-    let targets: Vec<serde_json::Value> = ids.iter().map(|id| json!({ "granularity": resolved_domain_granularity_id(state), "id": resolved_item_id(state, id) })).collect();
+    let mut seen = HashSet::new();
+    let targets: Vec<serde_json::Value> = ids
+        .iter()
+        .filter_map(|id| {
+            let granularity = instance_interaction_granularity_id(state, id);
+            let target_id = instance_interaction_id(state, id);
+            seen.insert((granularity.to_string(), target_id.to_string())).then(|| json!({ "granularity": granularity, "id": resolved_item_id(state, target_id) }))
+        })
+        .collect();
     Some(ActionDescriptor {
         controller_id: state.controller_id.clone(),
         action: "interactionSelect".into(),

@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeRefere
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change reference primary energy demand Q_p [kWh] to {}", self.new_reference_q_p_kwh)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change reference primary energy demand Q_p [kWh] to {}", self.new_reference_q_p_kwh), &format!("Referenzprimärenergienbedarfq_p [kWh] auf {} ändern", self.new_reference_q_p_kwh))
     }
 }
 //#endregion 🔖️ChangeReferenceQPKwh

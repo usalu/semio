@@ -2825,7 +2825,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         }
     }
 
-    pub fn try_step_on_caller(&self) -> Result<(WorkerJobTicket, WorkerJobPoll), WorkerJobContention> {
+    fn try_step_inline(&self) -> Result<(WorkerJobTicket, WorkerJobPoll), WorkerJobContention> {
         if self.inner.phase.compare_exchange(SESSION_IDLE, SESSION_TRANSITION, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return Err(self.contention());
         }
@@ -2837,6 +2837,15 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
         }
         unsafe { self.inner.put_authority(authority, if terminal { SESSION_TERMINAL } else { SESSION_OUTCOME }) };
         Ok((ticket, if terminal { WorkerJobPoll::Terminal } else { WorkerJobPoll::Outcome }))
+    }
+
+    pub fn try_step_on_caller(&self) -> Result<(WorkerJobTicket, WorkerJobPoll), WorkerJobContention> {
+        self.try_step_inline()
+    }
+
+    /// 🧵️ Executes one exact owner turn from a retained scheduler already running inside its worker.
+    pub fn try_step_on_worker(&self) -> Result<(WorkerJobTicket, WorkerJobPoll), WorkerJobContention> {
+        self.try_step_inline()
     }
 
     pub fn register_wake(&self, waker: &Waker) -> Result<(), WorkerJobContention> {

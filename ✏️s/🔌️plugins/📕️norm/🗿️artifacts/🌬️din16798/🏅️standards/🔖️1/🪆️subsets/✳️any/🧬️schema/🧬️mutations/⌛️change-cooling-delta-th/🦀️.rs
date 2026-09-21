@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeCoolin
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change cooling degree hours to {}", self.new_cooling_delta_t_h)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change cooling degree hours to {}", self.new_cooling_delta_t_h), &format!("Kühlungsgradstunden auf {} ändern", self.new_cooling_delta_t_h))
     }
 }
 //#endregion 🔖️ChangeCoolingDeltaTH

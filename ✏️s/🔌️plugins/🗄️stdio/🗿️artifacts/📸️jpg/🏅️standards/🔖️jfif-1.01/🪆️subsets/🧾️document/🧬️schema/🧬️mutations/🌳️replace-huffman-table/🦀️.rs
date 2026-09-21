@@ -40,8 +40,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplaceHuffmanTableMut
             }
         }
     }
-    fn label(&self) -> String {
-        "replace huffman table".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("replace huffman table", "Huffmantabelle ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-huffman-table".into()]

@@ -1,6 +1,6 @@
-import { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_SCHEMA, childBindingMatches, childRecord, childSha256, measureChildValue, type BrowserActorChildBinding, type BrowserActorChildValue } from "./🧬️schema/🟦️.ts";
-export { BROWSER_ACTOR_CHILD_LIMITS } from "./🧬️schema/🟦️.ts";
-export type { BrowserActorChildValue } from "./🧬️schema/🟦️.ts";
+import { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_SCHEMA, childBindingMatches, childLoadStageDeadlineMs, childRecord, childRejectionText, childSha256, isChildLoadProgress, isChildRejectionReason, measureChildValue, type BrowserActorChildBinding, type BrowserActorChildLoadProgressV1, type BrowserActorChildRejectionV1, type BrowserActorChildValue } from "./🧬️schema/🟦️.ts";
+export { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_LOAD_STAGES, BROWSER_ACTOR_CHILD_REJECTION_LIMITS, boundChildText, childLoadDeadlineMs, childLoadStageDeadlineMs, childRejectionReason, childRejectionText, isChildRejectionReason } from "./🧬️schema/🟦️.ts";
+export type { BrowserActorChildLoadProgressV1, BrowserActorChildLoadStageV1, BrowserActorChildRejectionV1, BrowserActorChildValue } from "./🧬️schema/🟦️.ts";
 
 type ChildAdmission = Readonly<{ actorId: string; activationGeneration: bigint; bundleSha256: string; bundleByteLength: number }>;
 type ChildPhase = "booting" | "ready" | "loading" | "active" | "closed";
@@ -43,7 +43,14 @@ class BrowserActorChild {
   private source: ArrayBuffer | null = null;
   private resultTransfersDetached = 0;
   private binding: BrowserActorChildBinding;
+  private lastRejection: BrowserActorChildRejectionV1 | null = null;
+  private onProgress: ((progress: BrowserActorChildLoadProgressV1) => void) | null = null;
   private readonly onAbort = () => this.close("cancelled");
+
+  /** 🩻️ The guest's own last refusal, exactly as the child named it, or `null` when it never spoke. */
+  get rejection(): BrowserActorChildRejectionV1 | null {
+    return this.lastRejection;
+  }
 
   constructor(private readonly admission: ChildAdmission, private readonly release: () => void, private readonly signal?: AbortSignal) {
     this.binding = Object.freeze({ schema: BROWSER_ACTOR_CHILD_SCHEMA, nonce: crypto.randomUUID(), generation: admission.activationGeneration.toString() });
@@ -70,13 +77,19 @@ class BrowserActorChild {
     return Object.freeze({ phase: this.phase, activeInvocations: this.pending ? 1 : 0, sourceDetached: this.sourceDetached, resultTransfersDetached: this.resultTransfersDetached });
   }
 
-  /** 📥️ Consumes a shape-valid buffer synchronously, then owns verification, transfer and cancellation. */
-  async load(bytes: ArrayBuffer): Promise<void> {
+  /** 📥️ Consumes a shape-valid buffer synchronously, then owns verification, transfer and cancellation.
+   *
+   * `onProgress` receives the child's own stage frames. Each one re-arms the budget for the stage it
+   * names, so the load is bounded stage by stage instead of by one flat total: a load that stops
+   * moving now faults under the name of the stage it stopped in, and one that legitimately takes
+   * longer than the total because every stage kept advancing is never cut off. */
+  async load(bytes: ArrayBuffer, onProgress?: (progress: BrowserActorChildLoadProgressV1) => void): Promise<void> {
     if (this.phase !== "ready") throw new Error("browser actor child: not ready");
     if (!(bytes instanceof ArrayBuffer) || (bytes as ArrayBuffer & { resizable?: boolean }).resizable || bytes.byteLength !== this.admission.bundleByteLength) { this.close("load shape"); throw new Error("browser actor child: load shape"); }
     try { this.source = structuredClone(bytes, { transfer: [bytes] }); }
     catch (error) { this.close("source ownership"); throw error; }
-    this.phase = "loading"; this.deadline(BROWSER_ACTOR_CHILD_LIMITS.loadMs);
+    this.onProgress = onProgress ?? null;
+    this.phase = "loading"; this.stageDeadline("received");
     const source = this.source;
     const loaded = new Promise<void>((resolve, reject) => { this.operation = { resolve, reject }; });
     void (async () => {
@@ -105,7 +118,7 @@ class BrowserActorChild {
   close(reason = "closed"): void {
     if (this.phase === "closed") return;
     this.phase = "closed";
-    clearTimeout(this.timer); this.timer = undefined;
+    clearTimeout(this.timer); this.timer = undefined; this.onProgress = null;
     this.signal?.removeEventListener("abort", this.onAbort);
     try { this.post({ kind: "close" }); } catch {}
     if (this.port) { this.port.onmessage = null; this.port.onmessageerror = null; this.port.close(); this.port = null; }
@@ -119,8 +132,13 @@ class BrowserActorChild {
     this.release(); pending?.reject(error); operation?.reject(error);
   }
 
-  private deadline(ms: number): void {
-    clearTimeout(this.timer); this.timer = setTimeout(() => this.close("deadline"), ms);
+  private deadline(ms: number, stage?: string): void {
+    const phase = this.phase, named = stage === undefined ? phase : phase + " stage " + stage;
+    clearTimeout(this.timer); this.timer = setTimeout(() => this.close("deadline " + named + " " + ms + "ms bundle " + this.admission.bundleByteLength + "B"), ms);
+  }
+
+  private stageDeadline(stage: BrowserActorChildLoadProgressV1["stage"]): void {
+    this.deadline(childLoadStageDeadlineMs(stage, this.admission.bundleByteLength), stage);
   }
 
   private post(value: Record<string, unknown>, transfer: Transferable[] = []): void {
@@ -135,8 +153,15 @@ class BrowserActorChild {
       this.phase = "ready"; clearTimeout(this.timer);
       const operation = this.operation; this.operation = undefined; operation?.resolve(); return;
     }
+    if (value.kind === "progress" && exact("stage", "completedBytes", "totalBytes") && this.phase === "loading" && isChildLoadProgress({ stage: value.stage, completedBytes: value.completedBytes, totalBytes: value.totalBytes })) {
+      const progress: BrowserActorChildLoadProgressV1 = Object.freeze({ stage: value.stage, completedBytes: value.completedBytes, totalBytes: value.totalBytes });
+      this.stageDeadline(progress.stage);
+      try { this.onProgress?.(progress); }
+      catch { this.close("progress sink"); }
+      return;
+    }
     if (value.kind === "loaded" && exact("byteLength", "sha256") && this.phase === "loading" && value.byteLength === this.admission.bundleByteLength && value.sha256 === this.admission.bundleSha256) {
-      this.phase = "active"; clearTimeout(this.timer);
+      this.phase = "active"; clearTimeout(this.timer); this.onProgress = null;
       const operation = this.operation; this.operation = undefined; operation?.resolve(); return;
     }
     const pending = this.pending;
@@ -148,9 +173,14 @@ class BrowserActorChild {
       if (value.kind === "transferred" && exact("sequence", "detached") && pending.result && value.detached === pending.result.transfers) {
         clearTimeout(this.timer); this.pending = undefined; this.resultTransfersDetached += value.detached; pending.resolve(pending.result.value); return;
       }
-      if (value.kind === "rejected" && exact("sequence") && !pending.result) {
-        clearTimeout(this.timer); this.pending = undefined; pending.reject(new Error("browser actor child: invocation rejected")); return;
+      if (value.kind === "rejected" && exact("sequence", "reason") && isChildRejectionReason(value.reason) && !pending.result) {
+        clearTimeout(this.timer); this.pending = undefined; this.lastRejection = value.reason;
+        pending.reject(new Error("browser actor child: invocation rejected: " + childRejectionText(value.reason))); return;
       }
+    }
+    if (value.kind === "fault" && (exact() || (exact("reason") && isChildRejectionReason(value.reason)))) {
+      if (isChildRejectionReason(value.reason)) this.lastRejection = value.reason;
+      this.close(value.reason === undefined ? "guest fault" : "guest fault: " + childRejectionText(value.reason)); return;
     }
     this.close("protocol violation");
   }

@@ -43,6 +43,8 @@ fn encode_presentation_snapshot_binary(s: &PresentationSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
+    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&s.source));
+    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&s.tiles));
     write_child(&mut out, &s.presentation);
     write_child(&mut out, &s.animation);
     out
@@ -55,9 +57,11 @@ fn decode_presentation_snapshot_binary(bytes: &[u8]) -> Result<PresentationSnaps
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
+    let source = dsl::os_pack::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|error| error.to_string())?;
+    let tiles = dsl::os_pack::json::from_json_str(&read_str_lp(&mut reader)?).map_err(|error| error.to_string())?;
     let presentation = read_child(&mut reader)?;
     let animation = read_child(&mut reader)?;
-    Ok(PresentationSnapshot { schema, presentation, animation })
+    Ok(PresentationSnapshot { schema, source, tiles, presentation, animation })
 }
 //#endregion 🔖️BinaryPrimitives
 

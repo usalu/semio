@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeHeated
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change heated floor area [m2] to {}", self.new_heated_area_m2)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change heated floor area [m2] to {}", self.new_heated_area_m2), &format!("Heizgeschossfläche [m2] auf {} ändern", self.new_heated_area_m2))
     }
 }
 //#endregion 🔖️ChangeHeatedAreaM2

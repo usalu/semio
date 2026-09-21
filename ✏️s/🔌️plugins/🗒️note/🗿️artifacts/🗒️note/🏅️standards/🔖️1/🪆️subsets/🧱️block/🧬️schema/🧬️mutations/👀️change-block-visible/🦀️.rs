@@ -32,8 +32,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for ChangeBlockVisible {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change block \"{}\" visible to {}", self.id, self.new_visible)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change block \"{}\" visible to {}", self.id, self.new_visible), &format!("Block \"{}\" sichtbar auf {} ändern", self.id, self.new_visible))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateServiceRequirement
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create service requirement \"{}\"", self.service_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create service requirement \"{}\"", self.service_requirement.header.name), &format!("Dienstanforderung \"{}\" erstellen", self.service_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.service_requirement.header.id.0.clone()]

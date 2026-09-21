@@ -56,3 +56,31 @@ The bounded repair gives nested TreeItems the same live disclosure authority sec
 - Up-flow label and gutter registrations share the painted bottom-row band.
 
 `a_childful_up_flow_tree_item_registers_label_and_gutter_on_its_painted_bottom_row` covers the direct retained registration geometry. The real Display law still owns open, child publication, close, and child retirement. This repair is source-coherent for UI60 and Native58; no green receipt is claimed before root's run.
+
+## Nested close invalidation
+
+Full Native59 reached the complete physical interaction and reduced the Display failure to the last retirement assertion: the Parallel gutter opened, Orthographic published, and the same gutter closed, but the old child hit remained. Full UI61 was otherwise green at 649 passed and 0 skipped.
+
+The language-agnostic retained-section law now reproduces the Display shape with a Tree nested below a panel Stack. It requires the first real gutter click to open, the child hit to end exactly at the stable header row, the second real gutter click to close immediately, the exact same header rectangle after both layout changes, no closed child hit, and a zero-height accepted child layout when closed.
+
+UI62 established the focused red: after the close, the accepted child height remained 24 instead of returning to 0. UI63 added the immediate disclosure and non-overlap checks; both passed before the same stale-height failure. This separates pointer routing from layout invalidation: the physical gutter changes retained disclosure state correctly, but no closing layout generation is scheduled.
+
+The accepted layout commit clears layout and subtree dirtiness on the root. Intermediate Section and TreeItem flags remain marked. The following close marks its branch, encounters the already-marked Section, and the previous bubbling rule stops there under the false assumption that every ancestor above is still marked. The root is already clean, so `layout_is_dirty` answers false and leaves both accepted child geometry and the hit generation stale.
+
+The repair makes the root the explicit scheduling authority: an already-marked intermediate ancestor can stop bubbling only while the root still owns a layout obligation. A successful layout commit also marks the root paint-dirty so the accepted geometry is followed by a new paint and hit publication. Finally, the window's Up-flow bit remains attached to every admitted descendant, including a Tree nested below the Display panel Stack; this keeps child rows above the exact same header row.
+
+Focused UI64 passed the strengthened Up-flow law (1 selected passed, 649 outside the filter) in 23.4 seconds. The paired Down-flow law owns the same physical open/re-close, stable header, zero-height collapsed child, and hit-retirement invariants, with its open child beginning exactly at the header's bottom edge. Full UI65 passed 651 of 651 tests with 0 skipped in 39.9 seconds, including both nested-close directions. The next native Display run owns the remaining renderer receipt.
+
+## Checkpoint 17 panel resize interception
+
+Checkpoint 17 rendered the Display parallel projection row, including its real nested-tree gutter, but WGPU published `panel.resize.bottom-left.outer` across the gutter. The evidence separated the completed tree repair from panel chrome geometry: the row was `[6.4, 876.8, 293.6, 24]`, its gutter was `[6.4, 876.8, 14, 24]`, and the WGPU resize hit was `[3.2, 849.6, 20, 124.8]`. React mounts left-column panel resize only on the right edge; WGPU mounted it on the left and widened it to 20 px.
+
+The shared `panel-resize` fixture and draft-2020-12 schema declare all eight anchors, their physical edges, native suffixes, drag factors, and one compact-spacing width. The real React `Panel` oracle validates that fixture with Ajv, mounts every anchor, observes each real handle class, and applies a 10 px pointer delta. Native65 reached the intended resize RED in the production `render_panel_step`: `top-left/right uses one compact spacing unit` failed at the native law's line 217. This was part of a four-test focused run with 1 pass and 3 failures; the other selected assertions belong to separate root-owned window/reservation work.
+
+The repair registers left-column anchors at their right/outer edge, right-column anchors at their left/inner edge, and middle-column anchors at both edges. Every rail is exactly `theme.panel_inset`; panel content receives no compensating padding. The focused actual React oracle passed through Nx with 1 selected pass, 565 skipped, in 6.82 seconds Vitest / 8.8 seconds Nx. The command was:
+
+```sh
+bun nx run @semio-tech/ui-react:test -- --run '../../🟦️.tsx' -t 'Panel realizes the schema-owned resize edge, width token, and drag factor for every anchor'
+```
+
+Receipt: `🗑️generated/astra-runtime/panel-resize-react-3.log`. A prior attempt addressed the extracted registration module directly; Vitest correctly collected no file because this suite is registered by the React target's in-source test entry. It is not a behavior receipt.

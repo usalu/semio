@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfEMutation> for RemoveLaunchAction {
         support::action_with(base, "Launch", "F", &self.target).map(|_| PdfEMutation::InsertLaunchAction(InsertLaunchAction { target: self.target.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        "Remove launch action".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove launch action", "Startaktion entfernen")
     }
 
     fn target(&self) -> Vec<String> {

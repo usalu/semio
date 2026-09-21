@@ -6,7 +6,7 @@ use crate::schema::snapshot::binary::{decode_into, encode};
 use crate::schema::snapshot::Grid2dSnapshot;
 
 fn examples() -> Vec<Grid2dSnapshot> {
-    crate::examples::grid2d::sources().iter().map(|source| <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(source.document()).expect("example parses")).collect()
+    crate::examples::grid2d::sources().iter().map(|source| <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(&source.document()).expect("example parses")).collect()
 }
 
 #[test]

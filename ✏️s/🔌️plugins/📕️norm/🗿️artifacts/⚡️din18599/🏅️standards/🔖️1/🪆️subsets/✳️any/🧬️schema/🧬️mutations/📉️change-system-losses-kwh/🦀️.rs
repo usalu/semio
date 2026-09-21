@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeSystem
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change system losses [kWh] to {}", self.new_system_losses_kwh)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change system losses [kWh] to {}", self.new_system_losses_kwh), &format!("Systemverluste [kWh] auf {} ändern", self.new_system_losses_kwh))
     }
 }
 //#endregion 🔖️ChangeSystemLossesKwh

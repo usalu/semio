@@ -59,8 +59,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeletePrimiti
         vec![super::GltfMutation::DeletePrimitive(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Delete Primitive".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Delete Primitive", "Primitiv löschen")
     }
 
     fn target(&self) -> Vec<String> {

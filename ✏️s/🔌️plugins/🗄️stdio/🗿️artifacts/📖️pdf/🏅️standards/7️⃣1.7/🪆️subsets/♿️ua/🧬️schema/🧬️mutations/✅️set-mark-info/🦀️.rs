@@ -34,8 +34,8 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetMarkInfo {
         }
     }
 
-    fn label(&self) -> String {
-        format!("Set PDF/UA marked flag to {}", self.marked)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set PDF/UA marked flag to {}", self.marked), &format!("PDF/markierte UAschalter auf {} setzen", self.marked))
     }
 
     fn target(&self) -> Vec<String> {

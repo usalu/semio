@@ -33,8 +33,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DragBlocks {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Drag {} blocks", self.ids.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Drag {} blocks", self.ids.len()), &format!("{} Blöcke ziehen", self.ids.len()))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()

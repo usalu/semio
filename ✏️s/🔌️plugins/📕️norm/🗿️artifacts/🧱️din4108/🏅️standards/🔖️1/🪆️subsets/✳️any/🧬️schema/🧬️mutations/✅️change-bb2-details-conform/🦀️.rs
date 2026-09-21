@@ -19,8 +19,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeBb2Detai
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change bb2 details conform to {}", self.new_bb2_details_conform)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change bb2 details conform to {}", self.new_bb2_details_conform), &format!("bb2 konforme Details auf {} ändern", self.new_bb2_details_conform))
     }
 }
 //#endregion 🔖️Payload

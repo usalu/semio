@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeFC0K {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change f c 0 k to {:?}", self.new_f_c_0_k)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change f c 0 k to {:?}", self.new_f_c_0_k), &format!("Fc 0 k auf {:?} ändern", self.new_f_c_0_k))
     }
 }
 //#endregion 🔖️ChangeFC0K

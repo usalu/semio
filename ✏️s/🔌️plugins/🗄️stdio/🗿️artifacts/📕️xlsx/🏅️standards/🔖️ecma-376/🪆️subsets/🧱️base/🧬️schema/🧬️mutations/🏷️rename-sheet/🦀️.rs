@@ -21,8 +21,8 @@ impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RenameSheet {
     fn inverse(&self, base: &XlsxSnapshot) -> Vec<XlsxMutation> {
         agg_inverse(&XlsxMutation::RenameSheet(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "rename-sheet".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("rename-sheet", "Blatt umbenennen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

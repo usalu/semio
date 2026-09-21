@@ -27,6 +27,7 @@ fn missing_file_node_kind_id_defaults_to_the_file_kind() {
 //#region VirtualFileSystemPointerTests
 fn vfs_scene(surface_id: &str, rows: Value) -> UiComponentSceneNode {
     UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: "controller".into(),
         component_kind: SurfaceKind::VirtualFileSystem,

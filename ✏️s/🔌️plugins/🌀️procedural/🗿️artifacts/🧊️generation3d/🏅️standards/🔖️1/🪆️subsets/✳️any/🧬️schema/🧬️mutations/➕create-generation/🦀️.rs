@@ -27,8 +27,8 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Crea
         crate::standards::v1::subsets::any::schema::mutations::create_generation::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Create generation \"{}\"", self.generation.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create generation \"{}\"", self.generation.name), &format!("Erzeugung \"{}\" erstellen", self.generation.name))
     }
 
     fn target(&self) -> Vec<String> {

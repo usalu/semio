@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetColorSpace {
         match base.color_spaces.iter().find(|item| item.name == self.color_space.name) { Some(previous) => vec![PdfMutation::SetColorSpace(SetColorSpace { color_space: previous.clone() })], None => vec![PdfMutation::RemoveColorSpace(super::remove_color_space::RemoveColorSpace { name: self.color_space.name.clone() })] }
     }
 
-    fn label(&self) -> String {
-        format!("Set color-space {}", self.color_space.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set color-space {}", self.color_space.name), &format!("Farbraum {} setzen", self.color_space.name))
     }
 
     fn target(&self) -> Vec<String> {

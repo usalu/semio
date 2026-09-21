@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1991Snapshot, En1991Mutation> for ChangeAreaM2 {
     fn inverse(&self, base: &En1991Snapshot) -> Vec<En1991Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change area to {:?}", self.new_area_m2)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change area to {:?}", self.new_area_m2), &format!("Fläche auf {:?} ändern", self.new_area_m2))
     }
 }
 //#endregion 🔖️Payload

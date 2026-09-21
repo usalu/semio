@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for ScaleO
     fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Scale object to ({}, {}, {})", self.scale.x, self.scale.y, self.scale.z)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Scale object to ({}, {}, {})", self.scale.x, self.scale.y, self.scale.z), &format!("Objekt auf ({}, {}, {}) skalieren", self.scale.x, self.scale.y, self.scale.z))
     }
     fn target(&self) -> Vec<String> {
         vec!["transform".to_string()]

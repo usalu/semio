@@ -24,6 +24,12 @@ impl PresentationDiff {
             if let Some(schema) = &self.schema {
                 next.schema = schema.clone();
             }
+            if let Some(source) = &self.source {
+                next.source = source.clone();
+            }
+            if let Some(tiles) = &self.tiles {
+                next.tiles = tiles.clone();
+            }
             if let Some(presentation) = &self.presentation {
                 next.presentation = presentation.clone();
             }
@@ -41,6 +47,12 @@ impl MutationDiff<PresentationSnapshot> for PresentationDiff {
             let mut next = snapshot.clone();
             if let Some(schema) = &self.schema {
                 next.schema = schema.clone();
+            }
+            if let Some(source) = &self.source {
+                next.source = source.clone();
+            }
+            if let Some(tiles) = &self.tiles {
+                next.tiles = tiles.clone();
             }
             if let Some(presentation) = &self.presentation {
                 next.presentation = presentation.clone();
@@ -61,6 +73,8 @@ impl MutationDiff<PresentationSnapshot> for PresentationDiff {
             };
         }
         take!(schema);
+        take!(source);
+        take!(tiles);
         take!(presentation);
     }
 }
@@ -68,11 +82,11 @@ impl MutationDiff<PresentationSnapshot> for PresentationDiff {
 
 //#region 🔖️Helpers
 /// 🔺️ Mints a new content-addressed `presentation` handle for a whole `(source, tiles)`
-/// replacement and seeds the working-scene cache with it (`presentation_child_handle_and_cache`) —
-/// real handcrafted construction, never apply-then-capture, never a snapshot clone. The standard
-/// builder every mutation triad in this facet's `🧬️mutations` uses.
+/// replacement and carries that exact payload beside it — real handcrafted construction, never
+/// apply-then-capture, never a snapshot clone. The standard builder every mutation triad in this
+/// facet's `🧬️mutations` uses.
 pub fn diff_set_presentation(source: &crate::FigureTileSource, tiles: &[crate::FigureTileDraft]) -> PresentationDiff {
-    PresentationDiff { presentation: Some(crate::presentation_child_handle_and_cache(source, tiles)), ..Default::default() }
+    PresentationDiff { source: Some(source.clone()), tiles: Some(tiles.to_vec()), presentation: Some(crate::presentation_child_handle(source, tiles)), ..Default::default() }
 }
 //#endregion 🔖️Helpers
 

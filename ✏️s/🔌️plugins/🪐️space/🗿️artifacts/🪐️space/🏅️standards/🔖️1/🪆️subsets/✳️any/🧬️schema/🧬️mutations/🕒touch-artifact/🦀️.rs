@@ -29,8 +29,8 @@ impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for TouchArtifact {
     fn inverse(&self, base: &SSpaceSnapshot) -> Vec<SSpaceMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Touch artifact \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Touch artifact \"{}\"", self.id), &format!("Berührungsartefakt \"{}\"", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

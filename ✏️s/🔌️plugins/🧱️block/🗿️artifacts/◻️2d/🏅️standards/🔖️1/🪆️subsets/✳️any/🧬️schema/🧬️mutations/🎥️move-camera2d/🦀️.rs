@@ -31,8 +31,8 @@ impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for MoveCamera2d {
     fn inverse(&self, base: &Block2dSnapshot) -> Vec<Block2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move camera to ({}, {})", self.new_x, self.new_y)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move camera to ({}, {})", self.new_x, self.new_y), &format!("Kamera nach ({}, {}) verschieben", self.new_x, self.new_y))
     }
 }
 //#endregion 🔖️Mutation

@@ -35,8 +35,8 @@ impl MutationKind<BitmapSnapshot, BitmapMutation> for SetInputPixels {
     fn inverse(&self, base: &BitmapSnapshot) -> Vec<BitmapMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Paint {}×{} at ({}, {})", self.width, self.height, self.x, self.y)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Paint {}×{} at ({}, {})", self.width, self.height, self.x, self.y), &format!("{}×{} an ({}, {}) malen", self.width, self.height, self.x, self.y))
     }
 }
 //#endregion 🔖️SetInputPixels

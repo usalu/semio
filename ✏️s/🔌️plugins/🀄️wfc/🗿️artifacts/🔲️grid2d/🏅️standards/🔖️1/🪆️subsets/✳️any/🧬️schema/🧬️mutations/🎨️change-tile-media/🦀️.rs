@@ -29,8 +29,8 @@ impl MutationKind<Grid2dSnapshot, Grid2dMutation> for ChangeTileMedia {
     fn inverse(&self, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change media of tile \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change media of tile \"{}\"", self.id), &format!("Medien von Kachel \"{}\" ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

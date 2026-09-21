@@ -21,8 +21,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for SetViewBox {
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
         agg_inverse(&SvgBasicMutation::SetViewBox(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-view-box".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-view-box", "Ansichtkasten setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

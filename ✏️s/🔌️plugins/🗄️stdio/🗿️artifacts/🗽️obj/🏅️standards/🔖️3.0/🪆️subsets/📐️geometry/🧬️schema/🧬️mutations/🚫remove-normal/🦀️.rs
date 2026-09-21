@@ -27,8 +27,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveNormal {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::RemoveNormal(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-normal".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-normal", "Normale entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

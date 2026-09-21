@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceConstraintRecord 
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace constraint record \"{}\"", self.constraint_record.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace constraint record \"{}\"", self.constraint_record.header.name), &format!("Randbedingungsdatensatz \"{}\" ersetzen", self.constraint_record.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.constraint_record.header.id.0.clone()]

@@ -460,6 +460,16 @@ impl TextEditAuthority {
         self.reserved_bytes
     }
 
+    /// 🏃️ Whether one retained text unit can advance without another ingress page or command.
+    pub fn runnable_work_pending(&self) -> bool {
+        self.queue_head.is_some()
+            || self.active.is_some()
+            || self.cancelled_active.is_some()
+            || self.retirement_count != 0
+            || !self.disposer.is_empty()
+            || self.retired_roots.iter().any(Option::is_some)
+    }
+
     pub const fn generation(&self) -> u64 {
         self.generation
     }

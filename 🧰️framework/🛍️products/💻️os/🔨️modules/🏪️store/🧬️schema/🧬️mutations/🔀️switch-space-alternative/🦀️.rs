@@ -27,8 +27,8 @@ impl crate::os_spr::MutationKind<SpaceHistorySnapshot, SpaceHistoryMutation> for
     fn inverse(&self, base: &SpaceHistorySnapshot) -> Vec<SpaceHistoryMutation> {
         vec![SpaceHistoryMutation::RestoreActiveSpaceAlternative(RestoreActiveSpaceAlternative { alternative_id: base.active_alternative_id.clone() })]
     }
-    fn label(&self) -> String {
-        format!("Switch space alternative {}", self.alternative_id)
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Switch space alternative {}", self.alternative_id), &format!("Schalterraumalternative {}", self.alternative_id))
     }
     fn target(&self) -> Vec<String> {
         vec!["activeAlternativeId".into()]

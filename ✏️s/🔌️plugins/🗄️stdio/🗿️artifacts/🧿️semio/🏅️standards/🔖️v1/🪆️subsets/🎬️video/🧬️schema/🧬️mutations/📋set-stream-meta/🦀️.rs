@@ -27,8 +27,8 @@ impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for SetStrea
     fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {
         agg_inverse(&SemioVideoMutation::SetStreamMeta(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-stream-meta".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-stream-meta", "Strommeta setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change fenestration {} overhang offset to {} m", self.id.0, self.new_overhang_offset_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change fenestration {} overhang offset to {} m", self.id.0, self.new_overhang_offset_m), &format!("Fenster {} Auskragungsversatz auf {} m ändern", self.id.0, self.new_overhang_offset_m))
     }
 
     fn target(&self) -> Vec<String> {

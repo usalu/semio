@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeNCycles {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change number of fatigue cycles to {}", self.new_n_cycles)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change number of fatigue cycles to {}", self.new_n_cycles), &format!("Nummer von Ermüdungszyklen auf {} ändern", self.new_n_cycles))
     }
 }
 //#endregion 🔖️ChangeNCycles

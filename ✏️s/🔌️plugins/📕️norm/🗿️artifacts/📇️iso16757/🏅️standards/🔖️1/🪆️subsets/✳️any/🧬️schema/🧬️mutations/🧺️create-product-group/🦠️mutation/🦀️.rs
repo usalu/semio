@@ -20,8 +20,8 @@ impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for CreateProduc
     fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create product group \"{}\"", self.product_group.names.preferred.text)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create product group \"{}\"", self.product_group.names.preferred.text), &format!("Produktgruppe \"{}\" erstellen", self.product_group.names.preferred.text))
     }
     fn target(&self) -> Vec<String> {
         vec![self.product_group.id.clone()]

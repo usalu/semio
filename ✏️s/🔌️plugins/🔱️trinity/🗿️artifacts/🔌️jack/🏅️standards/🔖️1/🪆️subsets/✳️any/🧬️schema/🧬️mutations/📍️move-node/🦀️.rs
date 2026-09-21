@@ -27,8 +27,8 @@ impl protocol::MutationKind<JackSnapshot, TrinityGraphMutation> for MoveNode {
     fn inverse(&self, base: &JackSnapshot) -> Vec<TrinityGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Move node \"{}\" to ({}, {})", self.id, self.x, self.y)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Move node \"{}\" to ({}, {})", self.id, self.x, self.y), &format!("Knoten \"{}\" nach ({}, {}) verschieben", self.id, self.x, self.y))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

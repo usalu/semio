@@ -20,8 +20,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for RemoveAlternat
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxStrictMutation> {
         agg_inverse(&PptxStrictMutation::RemoveAlternateContent(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-alternate-content".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-alternate-content", "alternative Inhalt entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

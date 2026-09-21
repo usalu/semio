@@ -21,8 +21,8 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveRow {
     fn inverse(&self, base: &PlySnapshot) -> Vec<PlyMutation> {
         agg_inverse(&PlyMutation::RemoveRow(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-row".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-row", "Zeile entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

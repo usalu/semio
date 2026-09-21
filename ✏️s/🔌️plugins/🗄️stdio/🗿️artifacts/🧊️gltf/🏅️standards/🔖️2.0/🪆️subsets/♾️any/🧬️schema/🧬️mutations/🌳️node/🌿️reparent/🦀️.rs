@@ -81,8 +81,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeParen
         vec![super::GltfMutation::MoveNodeParent(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Move Node Parent".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Move Node Parent", "Knotenelternteil verschieben")
     }
 
     fn target(&self) -> Vec<String> {

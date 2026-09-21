@@ -16,7 +16,6 @@ const SURFACE_SWITCH_FIXTURE: &str = include_str!("../../../🏛️ShellHost/�
 const SURFACE_CONTROLS_FIXTURE: &str = include_str!("../../🧫️fixtures/🛑️surface-controls/🔣️.json");
 const BOOT_EXAMPLE_FIXTURE: &str = include_str!("../../🧫️fixtures/📚️boot-example/🔣️.json");
 const WGPU_SHELL_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
-const WGPU_RENDERER_SOURCE: &str = include_str!("../../../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
 
 /// 🪪️ A dialect with no coordinate at all — how this target spells the fixture's `"dialect": null`
 /// rows (`AppDefinition.dialect` is not optional in Rust, and an empty coordinate matches nothing,
@@ -580,14 +579,7 @@ fn a_press_on_the_overlay_chrome_over_a_surface_belongs_to_the_shell() {
     assert!(!ShellState::pointer_press_belongs_to_shell_chrome(Some(&surface)), "a press on the surface body still orbits the scene");
     assert!(!ShellState::pointer_press_belongs_to_shell_chrome(None), "a press on nothing is nobody's chrome");
 
-    // 🩺️ The renderer's press path must actually consult it, BEFORE the world3d claim — a predicate
-    // nothing calls is exactly the shape the defect had. The question is now asked ONCE per pointer
-    // sequence, through the capture (packet W12a), so the anchor is that single line.
-    let guard = "let owner = if down { self.pointer_capture.press(self.shell.pointer_owner_at(x, y, &self.input, &self.theme)) } else { self.pointer_capture.release() };";
-    let claim = "        let over_world = self.shell.world3d_states.values().any(|state| state.bounds.contains(x, y));";
-    let press = WGPU_RENDERER_SOURCE.rfind(guard).expect("the renderer press path consults the predicate");
-    let world = WGPU_RENDERER_SOURCE[press..].find(claim).expect("the world3d claim follows it");
-    assert!(world > 0, "the shell-chrome question is asked BEFORE a surface may claim the press");
+    super::shell_input_tests::retained_world_sequence_probe("chrome");
     eprintln!("[DEBUG] wgpu overlay press routing: cancel anchored at {anchor:?} inside {bounds:?}, renderer asks the shell first");
 }
 

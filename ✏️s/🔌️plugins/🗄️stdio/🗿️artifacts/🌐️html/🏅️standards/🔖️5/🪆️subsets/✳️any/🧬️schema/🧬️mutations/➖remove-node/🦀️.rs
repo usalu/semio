@@ -21,8 +21,8 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for RemoveNode {
     fn inverse(&self, base: &HtmlSnapshot) -> Vec<HtmlMutation> {
         agg_inverse(&HtmlMutation::RemoveNode(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-node".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-node", "Knoten entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

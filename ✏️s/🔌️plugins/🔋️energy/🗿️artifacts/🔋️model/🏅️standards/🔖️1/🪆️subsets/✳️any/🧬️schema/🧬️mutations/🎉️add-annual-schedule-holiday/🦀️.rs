@@ -35,8 +35,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddAnn
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Add holiday {}-{}-{} to annual schedule {}", self.year, self.month, self.day, self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Add holiday {}-{}-{} to annual schedule {}", self.year, self.month, self.day, self.id.0), &format!("Feiertag {}-{}-{} zu Jahreszeitplan {} hinzufügen", self.year, self.month, self.day, self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

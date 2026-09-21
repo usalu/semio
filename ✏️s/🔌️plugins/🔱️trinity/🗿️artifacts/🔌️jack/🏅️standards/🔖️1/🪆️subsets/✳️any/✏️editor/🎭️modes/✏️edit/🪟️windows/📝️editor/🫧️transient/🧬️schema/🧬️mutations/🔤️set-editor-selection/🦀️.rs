@@ -24,8 +24,8 @@ impl protocol::MutationKind<JackEditorWindowTransient, JackEditorWindowTransient
         vec![Self { selection: base.selection.clone() }.into()]
     }
 
-    fn label(&self) -> String {
-        "Set Editor Window Selection".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Editor Window Selection", "Editorfensterauswahl setzen")
     }
 
     fn target(&self) -> Vec<String> {

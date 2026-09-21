@@ -24,8 +24,8 @@ impl MutationKind<Counter, CounterMutation> for AddCounter {
             vec![CounterMutation::AddCounter(AddCounter { delta: -self.delta })]
         }
     }
-    fn label(&self) -> String {
-        format!("Add {}", self.delta)
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Add {}", self.delta), &format!("{} hinzufügen", self.delta))
     }
     fn target(&self) -> Vec<String> {
         vec!["value".into()]

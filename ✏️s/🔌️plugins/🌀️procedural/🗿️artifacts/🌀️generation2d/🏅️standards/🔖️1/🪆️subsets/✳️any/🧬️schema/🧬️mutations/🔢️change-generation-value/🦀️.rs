@@ -27,8 +27,8 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ChangeGenerati
     fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change generation \"{}\" value \"{}\"", self.id, self.question_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change generation \"{}\" value \"{}\"", self.id, self.question_id), &format!("Erzeugung \"{}\" Wert \"{}\" ändern", self.id, self.question_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone(), self.question_id.clone()]

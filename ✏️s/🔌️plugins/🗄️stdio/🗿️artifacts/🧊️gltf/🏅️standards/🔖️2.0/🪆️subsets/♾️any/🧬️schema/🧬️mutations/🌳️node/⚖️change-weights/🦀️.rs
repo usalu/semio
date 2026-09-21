@@ -70,8 +70,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeNodeMor
         vec![super::GltfMutation::ChangeNodeMorphWeights(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Change Node Morph Weights".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Node Morph Weights", "Knotenmorphgewichte ändern")
     }
 
     fn target(&self) -> Vec<String> {

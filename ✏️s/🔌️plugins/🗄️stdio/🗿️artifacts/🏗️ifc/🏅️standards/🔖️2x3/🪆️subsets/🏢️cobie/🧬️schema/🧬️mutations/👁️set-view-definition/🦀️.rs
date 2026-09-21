@@ -20,8 +20,8 @@ impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetViewDefi
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Vec<Ifc2x3CobieMutation> {
         agg_inverse(&Ifc2x3CobieMutation::SetViewDefinition(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-view-definition".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-view-definition", "Ansichtdefinition setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -7,11 +7,12 @@
     "version",
     "cases",
     "focusLossCases",
+    "retirementCases",
     "fullscreenCases"
   ],
   "properties": {
     "version": {
-      "const": 1
+      "const": 2
     },
     "cases": {
       "type": "array",
@@ -136,6 +137,48 @@
               },
               "shift": {
                 "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "retirementCases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "retiredNodeKey",
+          "expectedFocus",
+          "reopenKey",
+          "modifiers"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "retiredNodeKey": {
+            "const": "ui.search.input"
+          },
+          "expectedFocus": {
+            "const": "canvas"
+          },
+          "reopenKey": {
+            "const": "p"
+          },
+          "modifiers": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "meta"
+            ],
+            "properties": {
+              "meta": {
+                "const": true
               }
             }
           }

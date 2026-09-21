@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change outdoor air system {} economizer setting to {:?}", self.id.0, self.new_economizer_enabled)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change outdoor air system {} economizer setting to {:?}", self.id.0, self.new_economizer_enabled), &format!("Außenluftsystem {} Economizereinstellung auf {:?} ändern", self.id.0, self.new_economizer_enabled))
     }
 
     fn target(&self) -> Vec<String> {

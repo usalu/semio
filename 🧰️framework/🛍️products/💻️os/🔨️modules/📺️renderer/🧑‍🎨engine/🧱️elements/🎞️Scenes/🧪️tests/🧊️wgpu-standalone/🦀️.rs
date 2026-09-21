@@ -222,7 +222,7 @@ pub fn handle_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y:
                 state.viewport.zoom = (state.viewport.zoom * factor).clamp(0.125, 8.0);
                 state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
             });
-            schedule_scene_camera_dispatch(&scene.surface_id);
+            schedule_scene_camera_dispatch(&scene.host_id, &scene.surface_id);
             Vec::new()
         }
         SurfaceKind::Paint2d => {
@@ -236,7 +236,7 @@ pub fn handle_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y:
                     state.viewport.zoom = (state.viewport.zoom * factor).clamp(0.05, 32.0);
                     state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
                 });
-                schedule_scene_camera_dispatch(&scene.surface_id);
+                schedule_scene_camera_dispatch(&scene.host_id, &scene.surface_id);
             }
             Vec::new()
         }
@@ -280,7 +280,7 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                         state.viewport.y -= drag_dy / vp.zoom.max(0.01);
                         state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
                     });
-                    schedule_scene_camera_dispatch(&scene.surface_id);
+                    schedule_scene_camera_dispatch(&scene.host_id, &scene.surface_id);
                 }
                 SceneDragMode::MapMarquee { start_x, start_y, method, .. } => {
                     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
@@ -588,14 +588,14 @@ fn test_find_ink_item<'a>(blocks: &'a [Value], id: &str) -> Option<&'a Value> {
 }
 
 #[cfg(test)]
-fn ink_items_at_point<'a>(blocks: &'a [Value], overrides: &HashMap<String, Value>, x: f64, y: f64) -> Vec<&'a Value> {
+fn ink_items_at_point<'a>(blocks: &'a [Value], overrides: &BTreeMap<String, Value>, x: f64, y: f64) -> Vec<&'a Value> {
     let mut flat = flatten_ink_items(blocks);
     flat.reverse();
     flat.into_iter().filter(|block| ink_effective_bounds(block, overrides).contains_point(x, y)).collect()
 }
 
 #[cfg(test)]
-fn ink_items_intersecting_rect(blocks: &[Value], overrides: &HashMap<String, Value>, rect: InkBoundsF) -> Vec<String> {
+fn ink_items_intersecting_rect(blocks: &[Value], overrides: &BTreeMap<String, Value>, rect: InkBoundsF) -> Vec<String> {
     flatten_ink_items(blocks).into_iter().filter(|block| ink_effective_bounds(block, overrides).intersects(&rect)).map(|block| ink_item_id(block).to_string()).collect()
 }
 
@@ -786,7 +786,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
                 };
                 actions.push(ink_set_selection_action(scene, &next_selection));
                 let move_ids: Vec<String> = if selected_ids.contains(&top_id) { selected_ids.clone() } else { vec![top_id.clone()] };
-                let mut origins = HashMap::new();
+                let mut origins = BTreeMap::new();
                 for id in &move_ids {
                     if let Some(b) = test_find_ink_item(&doc.blocks, id) {
                         let eff = state.ink_overrides.get(id).unwrap_or(b);

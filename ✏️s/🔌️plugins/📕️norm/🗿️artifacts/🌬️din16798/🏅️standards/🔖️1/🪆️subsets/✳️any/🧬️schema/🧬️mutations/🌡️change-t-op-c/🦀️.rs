@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeTOpC {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change operative temperature to {}", self.new_t_op_c)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change operative temperature to {}", self.new_t_op_c), &format!("operative Temperatur auf {} ändern", self.new_t_op_c))
     }
 }
 //#endregion 🔖️ChangeTOpC

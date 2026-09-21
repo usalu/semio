@@ -28,8 +28,8 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for CreateRule {
     fn inverse(&self, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create rule \"{}\"", self.rule.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create rule \"{}\"", self.rule.id), &format!("Regel \"{}\" erstellen", self.rule.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.rule.id.clone()]

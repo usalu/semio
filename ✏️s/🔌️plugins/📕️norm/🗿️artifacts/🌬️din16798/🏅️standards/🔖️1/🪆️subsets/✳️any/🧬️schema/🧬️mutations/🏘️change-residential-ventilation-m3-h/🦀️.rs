@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeReside
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change residential ventilation air flow to {}", self.new_residential_ventilation_m3_h)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change residential ventilation air flow to {}", self.new_residential_ventilation_m3_h), &format!("Wohnlüftungsluftfluss auf {} ändern", self.new_residential_ventilation_m3_h))
     }
 }
 //#endregion 🔖️ChangeResidentialVentilationM3H

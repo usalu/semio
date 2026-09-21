@@ -20,8 +20,8 @@ impl protocol::MutationKind<Wfc2dConfig, Wfc2dConfigMutation> for ChangeActiveTi
     fn inverse(&self, base: &Wfc2dConfig) -> Vec<Wfc2dConfigMutation> {
         vec![Wfc2dConfigMutation::ChangeActiveTile(ChangeActiveTile { tile_id: base.active_tile_id.clone() })]
     }
-    fn label(&self) -> String {
-        "Change Active Tile".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Active Tile", "aktive Kachel ändern")
     }
     fn target(&self) -> Vec<String> {
         vec!["active-tile".into()]

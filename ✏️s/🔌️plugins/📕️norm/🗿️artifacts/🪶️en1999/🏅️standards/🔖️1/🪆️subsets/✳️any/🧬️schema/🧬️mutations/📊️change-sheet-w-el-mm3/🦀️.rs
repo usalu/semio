@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeSheetWElMm
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change sheet elastic section modulus [mm3] to {}", self.new_sheet_w_el_mm3)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change sheet elastic section modulus [mm3] to {}", self.new_sheet_w_el_mm3), &format!("Blattelastizitätsabschnittmodul [mm3] auf {} ändern", self.new_sheet_w_el_mm3))
     }
 }
 //#endregion 🔖️ChangeSheetWElMm3

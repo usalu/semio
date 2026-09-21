@@ -31,8 +31,8 @@ impl MutationKind<CadSnapshot, CadMutation> for ReplaceReferenceMedia {
     fn inverse(&self, base: &CadSnapshot) -> Vec<CadMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace media of reference \"{}\"", self.reference_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace media of reference \"{}\"", self.reference_id), &format!("Medien von Referenz \"{}\" ersetzen", self.reference_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.model_definition_id.clone(), self.reference_id.clone()]

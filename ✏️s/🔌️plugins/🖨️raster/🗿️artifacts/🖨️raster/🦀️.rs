@@ -685,6 +685,20 @@ pub fn raster_asset(assets: &RasterOwnedMap<RasterAssetChild>, asset_id: &str) -
     let image = handle.local_owner::<SemioImageSnapshot>()?;
     io::raster_asset_from_semio_image_snapshot(image.as_ref()).ok()
 }
+
+/// 🪆 Carries one asset child's immutable materialization onto another handle for the SAME asset —
+/// the single move every fixed-capacity, field-by-field rebuild of a handle goes through (the
+/// retained `add-layer-asset` apply and the snapshot clone authority in `🧬️mutations/💾️binary`).
+/// Those authorities cannot `Clone` a child (they rebuild each string into exact-capacity storage),
+/// and a rebuilt handle without its owner is a handle whose pixels are gone: `raster_asset` returns
+/// `None`, `assets_json` renders `{}` and the composite surface stays empty (react boot of ticket
+/// 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). A source without materialized content leaves the
+/// target untouched rather than clearing it.
+pub fn adopt_raster_asset_owner(source: &RasterAssetChild, target: &mut RasterAssetChild) {
+    if let Some(owner) = source.local_owner::<SemioImageSnapshot>() {
+        target.set_local_owner(owner);
+    }
+}
 //#endregion 🧩️Composition
 
 //#region 🔖️Operations

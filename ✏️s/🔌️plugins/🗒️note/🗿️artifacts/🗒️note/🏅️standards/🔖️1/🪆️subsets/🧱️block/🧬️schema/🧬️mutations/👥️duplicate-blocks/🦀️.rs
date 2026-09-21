@@ -31,8 +31,8 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DuplicateBlocks {
     fn inverse(&self, base: &NoteSnapshot) -> Vec<NoteMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Duplicate {} blocks", self.source_ids.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Duplicate {} blocks", self.source_ids.len()), &format!("{} Blöcke duplizieren", self.source_ids.len()))
     }
     fn target(&self) -> Vec<String> {
         self.source_ids.clone()

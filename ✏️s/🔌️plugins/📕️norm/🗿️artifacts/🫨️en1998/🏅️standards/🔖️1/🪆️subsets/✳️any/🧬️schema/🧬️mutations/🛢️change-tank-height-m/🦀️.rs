@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTankHeight
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change tank height [m] to {}", self.new_tank_height_m)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change tank height [m] to {}", self.new_tank_height_m), &format!("Tankhöhe [m] auf {} ändern", self.new_tank_height_m))
     }
 }
 //#endregion 🔖️ChangeTankHeightM

@@ -21,8 +21,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for RemoveFrame {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::RemoveFrame(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-frame".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-frame", "Rahmen entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

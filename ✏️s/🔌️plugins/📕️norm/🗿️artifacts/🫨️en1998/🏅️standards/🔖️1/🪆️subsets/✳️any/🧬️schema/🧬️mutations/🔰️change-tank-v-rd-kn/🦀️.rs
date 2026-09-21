@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeTankVRdKn 
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change tank shear resistance V_Rd [kN] to {}", self.new_tank_v_rd_kn)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change tank shear resistance V_Rd [kN] to {}", self.new_tank_v_rd_kn), &format!("Tankschubwiderstandv_Rd [kN] auf {} ändern", self.new_tank_v_rd_kn))
     }
 }
 //#endregion 🔖️ChangeTankVRdKn

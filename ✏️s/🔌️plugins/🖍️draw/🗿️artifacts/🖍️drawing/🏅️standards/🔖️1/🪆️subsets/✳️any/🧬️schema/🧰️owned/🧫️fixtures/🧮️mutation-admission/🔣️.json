@@ -1,0 +1,39 @@
+{
+  "schema": "drawing.mutation-admission/v1",
+  "bootstrapYield": {
+    "deadlineUs": 1,
+    "clockReadsUs": [0, 1],
+    "expectedStages": ["yielded", "resumed"],
+    "expectedAllocationDelta": 0
+  },
+  "limits": {
+    "documentBytes": 262144,
+    "fieldBytes": 4096
+  },
+  "cases": [
+    {
+      "id": "exact-field-page",
+      "source": { "profile": "nested", "documentBytes": 262144 },
+      "mutation": { "operation": "rename-layer", "fieldBytes": 4096 },
+      "expected": { "disposition": "applied", "fault": null, "workClasses": ["fixed-arena", "overlay-page"] }
+    },
+    {
+      "id": "field-page-plus-one",
+      "source": { "profile": "nested", "documentBytes": 262144 },
+      "mutation": { "operation": "rename-layer", "fieldBytes": 4097 },
+      "expected": { "disposition": "rejected", "fault": "drawing-store.mutation-field-capacity", "workClasses": ["none"] }
+    },
+    {
+      "id": "source-document-plus-one",
+      "source": { "profile": "document-plus-one", "documentBytes": 262145 },
+      "mutation": { "operation": "set-layer-visible", "fieldBytes": 0 },
+      "expected": { "disposition": "rejected", "fault": "drawing-store.preflight-byte-capacity", "workClasses": ["none"] }
+    },
+    {
+      "id": "duplicate-subtree",
+      "source": { "profile": "nested", "documentBytes": 262144 },
+      "mutation": { "operation": "duplicate-layer", "fieldBytes": 0 },
+      "expected": { "disposition": "applied", "fault": null, "workClasses": ["fixed-arena", "clone-subtree"] }
+    }
+  ]
+}

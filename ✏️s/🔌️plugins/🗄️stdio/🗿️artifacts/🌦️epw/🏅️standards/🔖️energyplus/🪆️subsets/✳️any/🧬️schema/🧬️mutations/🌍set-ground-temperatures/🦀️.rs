@@ -22,8 +22,8 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetGroundTemperatures 
     fn inverse(&self, base: &EpwSnapshot) -> Vec<EpwMutation> {
         agg_inverse(&EpwMutation::SetGroundTemperatures(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-ground-temperatures".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-ground-temperatures", "Bodentemperaturen setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

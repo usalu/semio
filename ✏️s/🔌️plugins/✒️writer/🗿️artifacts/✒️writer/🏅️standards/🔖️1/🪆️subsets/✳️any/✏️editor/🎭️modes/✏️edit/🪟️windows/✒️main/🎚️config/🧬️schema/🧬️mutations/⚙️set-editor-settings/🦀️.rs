@@ -22,8 +22,8 @@ impl protocol::MutationKind<WriterMainWindowConfig, WriterMainWindowConfigMutati
         vec![Self { settings: base.editor_settings.clone() }.into()]
     }
 
-    fn label(&self) -> String {
-        "Set Writer Window Editor Settings".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Writer Window Editor Settings", "Schreiberfenstereditoreinstellungen setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["editor_settings".into()]

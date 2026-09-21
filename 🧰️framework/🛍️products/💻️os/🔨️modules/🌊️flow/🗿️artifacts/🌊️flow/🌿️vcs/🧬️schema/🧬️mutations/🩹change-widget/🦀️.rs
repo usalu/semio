@@ -22,7 +22,9 @@ impl MutationKind<FlowHostSnapshot, FlowMutation> for ChangeWidget {
     fn inverse(&self, base: &FlowHostSnapshot) -> Vec<FlowMutation> {
         base.widgets.iter().find(|item| item.id() == &self.id).map(|previous| FlowMutation::ChangeWidget(Self { id: self.widget.id().clone(), widget: previous.clone() })).into_iter().collect()
     }
-    fn label(&self) -> String { format!("Change widget {}", self.id) }
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native(&format!("Change widget {}", self.id), &format!("Widget {} ändern", self.id))
+    }
     fn target(&self) -> Vec<String> { vec!["widgets".into(), self.id.clone()] }
 }
 

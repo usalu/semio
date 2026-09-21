@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "interactionDomain": {
+    "id": "graph",
+    "nodeTargetPrefix": "flow-play-document.widget.",
+    "edgeTargetPrefix": "flow-play-document.synapse.",
+    "handleTargetPrefix": "flow-play-document.handle."
+  },
+  "identity": {
+    "incomingPaintIds": "raw",
+    "missingDomain": "publish-no-interaction",
+    "prefixExactlyOnce": true
+  },
+  "cases": [
+    {
+      "id": "mixed-selection",
+      "input": { "nodeIds": ["add"], "edgeIds": ["wire-1"], "handleIds": ["add@result"] },
+      "action": "interactionSelect",
+      "args": {
+        "domainId": "graph",
+        "targets": "[{\"granularity\":\"node\",\"id\":\"flow-play-document.widget.add\"},{\"granularity\":\"edge\",\"id\":\"flow-play-document.synapse.wire-1\"},{\"granularity\":\"handle\",\"id\":\"flow-play-document.handle.add@result\"}]",
+        "merge": "replace",
+        "method": "pick"
+      }
+    },
+    {
+      "id": "node-hover",
+      "input": { "nodeId": "add" },
+      "action": "interactionHover",
+      "args": {
+        "domainId": "graph",
+        "channel": "pointer",
+        "targets": "[{\"granularity\":\"node\",\"id\":\"flow-play-document.widget.add\"}]"
+      }
+    },
+    {
+      "id": "handle-hover",
+      "input": { "nodeId": "add", "portId": "result" },
+      "action": "interactionHover",
+      "args": {
+        "domainId": "graph",
+        "channel": "pointer",
+        "targets": "[{\"granularity\":\"handle\",\"id\":\"flow-play-document.handle.add@result\"}]"
+      }
+    },
+    {
+      "id": "hover-clear",
+      "input": { "nodeId": null },
+      "action": "interactionHover",
+      "args": { "domainId": "graph", "channel": "pointer", "targets": "[]" }
+    }
+  ]
+}

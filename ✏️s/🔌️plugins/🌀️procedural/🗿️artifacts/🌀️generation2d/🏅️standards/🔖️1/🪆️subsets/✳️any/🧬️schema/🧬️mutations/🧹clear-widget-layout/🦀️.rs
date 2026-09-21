@@ -30,8 +30,8 @@ impl MutationKind<Generation2dSnapshot, Generation2dMutation> for ClearWidgetLay
     fn inverse(&self, base: &Generation2dSnapshot) -> Vec<Generation2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Clear layout for widget \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Clear layout for widget \"{}\"", self.id), &format!("Layout für Widget \"{}\" leeren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

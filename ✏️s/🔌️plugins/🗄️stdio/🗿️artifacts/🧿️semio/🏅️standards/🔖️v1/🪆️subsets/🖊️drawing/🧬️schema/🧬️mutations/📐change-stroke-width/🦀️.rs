@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Chan
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change stroke width of style \"{}\"", self.style_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change stroke width of style \"{}\"", self.style_name), &format!("Strichbreite von Stil \"{}\" ändern", self.style_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.style_name.clone()]

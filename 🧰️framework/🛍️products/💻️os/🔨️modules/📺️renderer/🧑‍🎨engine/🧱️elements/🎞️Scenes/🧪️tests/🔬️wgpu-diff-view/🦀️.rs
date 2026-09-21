@@ -59,6 +59,7 @@ fn oversized_inputs_use_the_positional_fallback_without_panicking() {
 /// technique as `render_entry_tests::Fixture`.
 fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (ui_wgpu::wgpu::DrawList, Theme) {
     let scene = UiComponentSceneNode {
+        host_id: "diff-paint-test".into(),
         surface_id: "diff-paint-test".into(),
         controller_id: "controller".into(),
         component_kind: SurfaceKind::DiffView,

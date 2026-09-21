@@ -34,8 +34,8 @@ impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for ReplaceLayerFi
     fn inverse(&self, base: &DrawingSnapshot) -> Vec<DrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace layer \"{}\" fill", self.layer_id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace layer \"{}\" fill", self.layer_id), &format!("Ebene \"{}\" Füllung ersetzen", self.layer_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.layer_id.clone()]

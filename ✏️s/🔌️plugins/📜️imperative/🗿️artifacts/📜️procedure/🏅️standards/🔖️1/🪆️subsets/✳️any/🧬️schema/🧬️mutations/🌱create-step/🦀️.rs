@@ -29,8 +29,8 @@ impl protocol::MutationKind<ProcedureSnapshot, ProcedureMutation> for CreateStep
     fn inverse(&self, base: &ProcedureSnapshot) -> Vec<ProcedureMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create step \"{}\"", self.step.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create step \"{}\"", self.step.id), &format!("Schritt \"{}\" erstellen", self.step.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.step.id.clone()]

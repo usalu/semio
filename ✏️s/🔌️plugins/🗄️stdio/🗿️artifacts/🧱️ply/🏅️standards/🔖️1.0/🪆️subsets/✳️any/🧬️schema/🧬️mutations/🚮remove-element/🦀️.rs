@@ -20,8 +20,8 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveElement {
     fn inverse(&self, base: &PlySnapshot) -> Vec<PlyMutation> {
         agg_inverse(&PlyMutation::RemoveElement(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-element".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-element", "Element entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

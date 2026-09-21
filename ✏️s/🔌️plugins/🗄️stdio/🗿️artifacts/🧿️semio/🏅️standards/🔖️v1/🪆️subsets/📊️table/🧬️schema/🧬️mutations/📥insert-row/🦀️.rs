@@ -21,8 +21,8 @@ impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for InsertRo
     fn inverse(&self, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Insert row at #{}", self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Insert row at #{}", self.index), &format!("Zeile an #{} einfügen", self.index))
     }
     fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]

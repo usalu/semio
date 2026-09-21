@@ -57,8 +57,8 @@ impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for SetMemberMuta
         vec![super::JsonMutation::SetMember(Self::Restore(inverse))]
     }
 
-    fn label(&self) -> String {
-        "Set Member".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Member", "Glied setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-member".to_string()]

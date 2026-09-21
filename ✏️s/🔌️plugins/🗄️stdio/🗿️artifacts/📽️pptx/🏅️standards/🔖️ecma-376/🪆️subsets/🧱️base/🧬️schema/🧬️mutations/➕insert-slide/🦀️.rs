@@ -21,8 +21,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertSlide {
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxMutation> {
         agg_inverse(&PptxMutation::InsertSlide(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-slide".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-slide", "Folie einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

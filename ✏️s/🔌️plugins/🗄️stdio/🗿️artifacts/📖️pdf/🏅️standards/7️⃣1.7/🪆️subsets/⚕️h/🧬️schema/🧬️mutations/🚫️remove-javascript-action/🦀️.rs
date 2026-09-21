@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveJavascriptAction {
         support::action_with(base, "JavaScript", "JS", &self.script).map(|_| PdfHMutation::InsertJavascriptAction(InsertJavascriptAction { script: self.script.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        "Remove JavaScript action".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Remove JavaScript action", "JavaScriptaktion entfernen")
     }
 
     fn target(&self) -> Vec<String> {

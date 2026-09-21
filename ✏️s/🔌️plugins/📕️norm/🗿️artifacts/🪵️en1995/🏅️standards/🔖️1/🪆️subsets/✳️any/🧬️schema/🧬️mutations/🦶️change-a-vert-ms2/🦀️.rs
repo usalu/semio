@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1995Snapshot, En1995Mutation> for ChangeAVertMS2 {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change a vert m s2 to {:?}", self.new_a_vert_m_s2)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change a vert m s2 to {:?}", self.new_a_vert_m_s2), &format!("Vertms2 auf {:?} ändern", self.new_a_vert_m_s2))
     }
 }
 //#endregion 🔖️ChangeAVertMS2

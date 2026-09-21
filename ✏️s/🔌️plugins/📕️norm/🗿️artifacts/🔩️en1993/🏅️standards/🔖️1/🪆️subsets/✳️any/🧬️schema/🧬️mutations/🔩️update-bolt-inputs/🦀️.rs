@@ -28,8 +28,8 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateBoltInputs
     fn inverse(&self, base: &En1993Snapshot) -> Vec<En1993Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Update EN 1993-1-8 bolted connection inputs".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update EN 1993-1-8 bolted connection inputs", "EN 1993-1-8 geschraubte Verbindungseingaben aktualisieren")
     }
 }
 //#endregion 🔖️Payload

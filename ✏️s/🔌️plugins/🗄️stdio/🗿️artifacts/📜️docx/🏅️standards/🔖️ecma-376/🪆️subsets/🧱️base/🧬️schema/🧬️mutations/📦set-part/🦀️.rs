@@ -22,8 +22,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetPart {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::SetPart(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-part".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-part", "Bauteil setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

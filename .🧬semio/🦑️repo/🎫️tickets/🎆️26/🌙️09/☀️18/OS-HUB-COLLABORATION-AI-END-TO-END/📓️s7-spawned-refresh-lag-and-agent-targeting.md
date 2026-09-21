@@ -9,7 +9,14 @@ source only.
 
 ## 0. tl;dr
 
-(filling)
+| item | result |
+|---|---|
+| **the two-dispatch lag** | **root found, fixed, measured before and after.** It is none of the delivery queues: the in-page hook shows the spawned instance's `OperationCompleted` arriving on every dispatch, with its `historyPatch`. The shell kept **one history projection for the whole window**, so a spawned program's patches were admitted against ANOTHER document's cursor and silently discarded (`patchCursor 1, currentCursor 3, applied false`, twice). One projection **per program** — `applied:false` → the ledger now reads 1 row after dispatch 1 and 2 after dispatch 2, and `#s-checkin` reads `(1)`/`(2)` (§2) |
+| **the sweep, re-run** | **35/35 kinds spawn (72 windows), 35/35 publish their own Actions rail, 34/35 dispatch a document verb, and 22/35 show the COMPLETE mutate → undo → redo** — against S6's `3 / 35`. Same probe, same serve, same verbs (§4) |
+| **the 3 kinds with no palette entry** | **they had one — it was unreachable.** `spawn.<pluginId>` was emitted once per APP (so one id named up to five programs) and the only searchable text was a breadcrumb that, for an aggregate plugin, names a DIFFERENT plugin's artifact. Unique ids + the plugin id in the searchable description; all three now spawn inside `s`, and `mathematical` passes the full round trip (§5) |
+| **per-instance progress** | `subscribeOperationProgress` / `subscribeSpawnedJobProgress` now run per spawned program (§3) — and the shell's own agent artifact route was the last session-only site of all (§6.3) |
+| **agent targeting** | **the live agent gate inside `s` is 21 / 21, exit 0** — up from S6's 11/21, with every `(f)` step driving the SPAWNED `note` editor (instance 3), not the landing app. Three faults, each named by the gate after the previous fix: the gateway had no rule for a capability-less command (`ShellArtifactChannel::for_plugin`, ambiguity refused **by name with its candidates**), the shell's OWN artifact route still bound the session alone (the last session-only site), and the routed channel could not pin a plugin at construction (`pin_plugin` per exchange). `data-semio-artifact-id` now names the focused program (§6) |
+| **laws** | `🪟️spawned-program-session` **20 → 33 tests, all green**, including the REGRESSION that reproduces the shared-projection drop, plus **2 new gateway laws** (`shell_channel::` 18/18) (§7) |
 
 ## 1. Inherited state (measured)
 
@@ -92,7 +99,7 @@ The temporary hook was removed after the second run; the tree carries none of it
 ## 3. Per-spawned-instance progress subscriptions
 
 `subscribeOperationProgress` / `subscribeSpawnedJobProgress` were wired for `session.instanceId`
-alone (S6 §2, last paragraph) — the last of the six session-only decision sites S5 started on. A
+alone (S6 §2, last paragraph) — one more of the session-only decision sites S5 started on. A
 spawned editor's running operation (a tool run's trace, a mounted analysis's provisional pieces, a
 fill plan's progress) reached no window at all: a frozen canvas until the terminal completion landed.
 
@@ -103,13 +110,118 @@ Verified by type-check and by the laws in §7; a live mid-operation trace on a s
 
 The agent census S6 wrote inline is now the owned unit's `spawnedBridgeCensusV1` (§6).
 
-## 4. The sweep, re-run
+## 4. The sweep, re-run — **35/35 spawn, 22/35 full round trip**
 
-(filling)
+S6's `🐍️s6-all-kinds-sweep.mjs` is permanent and unchanged; re-run against the same serve `:6071`,
+same sign-in, same `S6_VERBS` map (reconstructed from S6's own captures), in the same four chunks
+plus a fifth for the three kinds §5 unblocked: `🗑️generated/s6-sweep-s7{a,b,c,d,e}.txt`.
 
-## 5. The three kinds with no palette entry
+```
+                            S6           S7
+spawned windows inside s    32 / 35      35 / 35   (67 → 72 windows)
+Actions rail published      32 / 32      35 / 35
+document verb dispatched    24 / 32      34 / 35
+FULL round trip             3  / 35      22 / 35
+zero fault lines            23 / 35      27 / 35
+```
 
-(filling)
+| kind | windows | rail rows | verb | moved | undo/redo lane | redo ≠ undo | faults | verdict |
+|---|---|---|---|---|---|---|---|---|
+| `animate` | 1 | 26 | `addTile` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `architect` | 4 | 33 | `setAdjacencyKind` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `block` | 1 | 22 | `addHandleKind` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `cad` | 4 | 37 | `addNode` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `dag` | 2 | 24 | `addNode` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `demonstrator` | 1 | 11 | `changeSchema` | **yes** | rail / rail | **yes** | 1 | full round trip; the fault is the probe's own `replace-text` attempt |
+| `draw` | 1 | 17 | `addLayer` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `energy` | 4 | 34 | `set-surface-property` | **yes** | — / — | no | 0 | |
+| `fem` | 2 | 34 | `addNode` | **yes** | — / — | no | 0 | |
+| `flow` | 2 | 27 | `addWidget` | **yes** | — / — | no | 1 | |
+| `forms` | 2 | 35 | `addStep` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `gis` | 1 | 31 | `addFeature` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `imperative` | 2 | 23 | `addStep` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `layout` | 2 | 19 | `addPage` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `lowpoly` | 1 | 59 | `addPrimitive` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `mathematical` | 2 | 16 | `nodeGraphEdit` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** (was unreachable) |
+| `norm` | 2 | 12 | `setSnapshot` | **yes** | — / — | no | 2 | |
+| `note` | 2 | 19 | `addBlock` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `playbook` | 1 | 21 | `addStep` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `playbook-module-procedural` | 2 | 11 | `importSolidGeometry` | **yes** | — / — | no | 1 | was unreachable; verb refused `BatchOnlyPendingRewrite` |
+| `procedural` | 2 | 23 | `nodeGraphEdit` | **yes** | — / — | no | 0 | |
+| `process` | 1 | 19 | `addStep` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `puzzle` | 3 | 30 | `addNode` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `raster` | 2 | 15 | `addLayer` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `reasoning` | 1 | 18 | `addNode` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `remodel` | 2 | 40 | `addStream` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `sequence` | 3 | 29 | `addStep` | **yes** | — / — | no | 2 | |
+| `shooting` | 2 | 47 | `addShot` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `sourcing` | 4 | 16 | `stockFromCatalogue` | **yes** | — / — | no | 0 | |
+| `space` | 1 | 24 | — | — | — / — | no | 4 | none of its rail rows moved the ledger |
+| `stdio` | 1 | 10 | `paste` | **yes** | — / — | no | 2 | |
+| `trinity` | 6 | 22 | `patchNodes` | **yes** | — / — | no | 1 | |
+| `vcs` | 2 | 19 | `incrementCounter` | **yes** | rail / rail | **yes** | 0 | ✅ **PASS** |
+| `wfc` | 2 | 25 | `set-input-pixels` | **yes** | — / — | no | 0 | |
+| `writer` | 1 | 16 | `paste` | **yes** | — / — | no | 0 | |
+
+**What moved, and why.** Eight kinds that S6 scored "none of its rail rows moved the document"
+(`block`, `cad`, `playbook`, `procedural`, `reasoning`, `norm`, `vcs`) now dispatch a verb, and
+nineteen more kinds now show the complete mutate → undo → redo. That is §2's fix: S6's `no` meant
+"not demonstrated, because the reading is two dispatches behind", and the readings were being
+DISCARDED. With each program's ledger its own, the same probe, the same rail rows and the same undo
+lane answer.
+
+**What is still `no` (13 kinds).** They fall into two groups the captures name:
+
+- a verb moved the document but the undo lane did not answer — `energy`, `fem`, `flow`, `norm`,
+  `procedural`, `sequence`, `sourcing`, `stdio`, `trinity`, `wfc`, `writer`,
+  `playbook-module-procedural`. Their `edits` arrays read `[0,0,0,0]` with the applied-row count
+  frozen after the verb, which is a DIFFERENT shape from the one §2 fixed (there the rows arrived,
+  just against the wrong cursor). Several carry their own named refusal —
+  `playbook-module-procedural`'s is `interactive-job classification BatchOnlyPendingRewrite`, a known
+  hard-dead classification — and several are the 3d/simulation kinds whose verb starts a job rather
+  than an edit. Not chased by this slice.
+- `space`: none of its 24 rail rows moved the ledger, with 4 fault lines. Unchanged from S6.
+
+## 5. The three kinds with "no palette entry" — they had one; it could not be reached
+
+`🐍️s7-palette-census.mjs` dumps every `spawn.*` palette item instead of typing a plugin id at it.
+Measured (`🗑️generated/s7-palette-census.txt`):
+
+```
+spawn.demonstrator               | Spawn semio · cad
+spawn.playbook-module-procedural | Spawn semio · forms
+```
+
+Both entries existed all along. Two defects kept them unreachable, and both are now fixed in
+`🏛️ShellHost/🟦️.tsx`'s palette block:
+
+1. **The id named a plugin, not a program.** `spawn.${program.pluginId}` was emitted once per APP, so
+   `spawn.space` was five different items and `spawn.stdio`/`spawn.cad`/`spawn.note` two each — a DOM
+   id that names several programs, which is exactly what every probe and the live agent gate address.
+   The first program of a plugin keeps the bare `spawn.<pluginId>` id (so nothing that already
+   addresses it breaks); its siblings take `spawn.<pluginId>.<appId>`.
+2. **The searchable text was the breadcrumb alone**, and an aggregate plugin's breadcrumb resolves to
+   ANOTHER plugin's artifact (`demonstrator` declares apps whose ids are `s.cad.cad@1/*#editor`,
+   `s.gis.gismap@1/*#editor`, …). `ShellSearch` ranks `label + description + category`, so the
+   description now carries `<pluginId> · <appId>`.
+
+After, same probe:
+
+```
+typed "demonstrator"               → spawn.demonstrator | Spawn semio · playground  (+9 siblings)
+typed "mathematical"               → spawn.mathematical | Spawn semio · equation
+typed "playbook-module-procedural" → spawn.playbook-module-procedural | Spawn semio · forms
+```
+
+and the sweep's fifth chunk (`s6-sweep-s7e.txt`) drives all three inside `s`: `demonstrator` opens
+`demonstrator-4::framework.window.text` with an 11-row rail and completes `changeSchema` → undo →
+redo; `mathematical` opens two windows and PASSES outright; `playbook-module-procedural` opens two
+windows and its verb moves the document.
+
+**Home's space rows, for DB1:** `0` in the same run (`s7-palette-census.txt`, `home.treeRows: []`,
+`tableRows: []`) — so DB1's symptom is still live on `:6071` after this slice's fix, which is the
+honest answer to the coordinator's question: it is a DIFFERENT fault (a mounted operation parking
+inside its second `await settle()`), not the one measured in §2.
 
 ## 6. Agent targeting — one instance, deterministically
 
@@ -148,14 +260,56 @@ the session alone (WR4 §4's single-instance case), and the LANDING app's id the
 editor is open. The census is now built by `spawnedBridgeCensusV1` and published **focused-first**,
 so entry 0 — and therefore the DOM attribute (f5) asserts — is the program that owns the canvas.
 
-### 6.3 The live gate
+### 6.3 The last session-only decision site — the shell's OWN artifact route
 
-**Not re-run by this slice**, and the reason is preamble rule 26, measured rather than assumed:
-`ps -axo command | grep -c "cargo test -p semio-framework-os-mcp"` answered **2** at the time of the
-gateway change, and `live-agent-loop-check` builds that crate. Starting a third builder is forbidden.
-The gate's own recipe (`S_OS_MCP_LIVE_SHELL_URL=http://127.0.0.1:6071 S_OS_MCP_LIVE_PLUGIN=note
-S_OS_MCP_LIVE_SPAWN=note …`) is unchanged and the next owner can run it directly. **11/21 stands as
-the last measured number**; this slice's §6.1/§6.2 are type-checked, not gate-measured.
+With §6.1 landed the gate named a new fault, which is how each of these was found:
+
+```
+SIDE_EFFECT_REJECTED: `note` rejected ReadArtifact (plugin.unavailable):
+this shell's live instance is `1`, not `3` — the agent addressed an instance this shell has closed
+```
+
+Instance 3 was exactly the spawned `note` editor the human was looking at. `agentArtifactRouteRef`
+(`🏛️ShellHost/🟦️.tsx:10618`) bound `sessionRef.current` and refused every other instance by name —
+the LAST of the session-only sites S5 started on (five), S6 continued (the census) and §3 finished
+(progress). It now resolves the request's instance against the session **or any spawned program**,
+and an instance the shell really does not hold is refused listing what IS open.
+
+One more leg then refused: `action_prepare` travels `ShellRoutedArtifactChannel`, which serves every
+plugin of a session and so cannot pin one at construction. It now names the owner per exchange the
+way the headless lane already does (`RoutingArtifactChannel::plugin_id_for` — the command's
+capability, else the instance slot `prepare_action` minted) and hands it to the shell channel
+(`ShellArtifactChannel::pin_plugin`), so both lanes answer "which instance is this?" identically.
+
+### 6.4 The gate — **21 / 21, exit 0**
+
+```
+cd 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust
+S_OS_MCP_LIVE_SHELL_URL="http://127.0.0.1:6071" S_OS_MCP_LIVE_PLUGIN=note S_OS_MCP_LIVE_SPAWN=note \
+  bun ./📜️script.ts live-agent-loop-check
+```
+
+| run | gateway | shell | result | capture |
+|---|---|---|---|---|
+| 1 | binary of 22:44 (pre-fix) | this slice's TS | **11 / 21** — same as S6, `(f1)` refused `no capability to resolve an instance` | `s7-agent-gate-s.txt` |
+| 2 | rebuilt with `for_plugin` | same | **11 / 21**, `(f1)` now refused by the SHELL: `live instance is 1, not 3` | `s7-agent-gate-s2.txt` |
+| 3 | same | route resolves spawned programs | **11 / 21** with **`(f1)` PASS** (and one flaky `boot`), `(f2)` refused on the routed channel | `s7-agent-gate-s3.txt` |
+| 4 | `pin_plugin` per exchange | same | **21 passed, 0 failed, 0 skipped of 21** | `s7-agent-gate-s4.txt` |
+
+```
+PASS (f3) action_invoke changes the head :: status=SUCCEEDED
+     before={"artifactId":"note:s.note.note@1/*#editor:3","cursor":"0","headEditId":""}
+     after ={"artifactId":"note:s.note.note@1/*#editor:3","cursor":"1","headEditId":"apply"}
+PASS (f5) the live shell shows the same artifact :: agent id live-agent-loop-muacadjm →
+     shell route ref note:s.note.note@1/*#editor:3, carried by [data-semio-artifact-id] in the live DOM
+PASS (f8) artifact_export :: contentBase64=1476 char(s)
+os-mcp-live-agent-loop: 21 passed, 0 failed, 0 skipped of 21
+```
+
+Instance **3** throughout: every (f) step drove the SPAWNED `note` editor inside `s`, not the
+landing app — which is outcome 4's acceptance, an MCP agent editing a spawned editor inside the real
+`s` host. Preamble rule 26 was checked before each build: `ps … grep -c "cargo test -p
+semio-framework-os-mcp"` answered **0**.
 
 ## 7. Laws
 
@@ -187,9 +341,20 @@ edits, none in a hunk it wrote — `🗑️generated/s7-tsc-1.txt`, `s7-tsc-2.tx
 Property 'consumes'` is the one S5 and S6 also recorded; the other five are in `👥️PresenceBar`,
 `🪪️WasmSessionLoader`, `🧪️space-artifact-creation-owner` and `♻️mit-bestand`).
 
-`cargo check -p semio-framework-os-mcp --lib` after the gateway change: **0 errors**, 15 warnings,
-3m49s (`🗑️generated/s7-mcp-check.txt`). Preamble rule 26 honoured: `ps` showed 2 peer
-`cargo test -p semio-framework-os-mcp` runs, so no third test build was started by this slice.
+`cargo check -p semio-framework-os-mcp --lib` and `--all-targets` after the gateway change:
+**0 errors** (`🗑️generated/s7-mcp-check.txt`). Two laws added in
+`🌉️mcp/🐚️channel/🧪️tests/🔬️quick/🦀️.rs` —
+`a_capability_less_command_resolves_the_one_open_instance_of_its_own_plugin` and
+`an_ambiguous_artifact_handle_is_refused_by_name_with_its_candidates`:
+
+```
+CARGO_TARGET_DIR=…/⚡️cache/cargo/target-s7 cargo test -p semio-framework-os-mcp --lib shell_channel::
+test result: ok. 18 passed; 0 failed
+```
+
+Preamble rule 26 honoured at every build: `ps -axo command | grep -c "cargo test -p
+semio-framework-os-mcp"` answered **0** each time, and rule 25's private target dir was used for the
+test run.
 
 ## 8. Measured vs unverified, honest gaps
 
@@ -201,16 +366,19 @@ Property 'consumes'` is the one S5 and S6 also recorded; the other five are in `
 - the sweep re-run inside the real `s` host, all 35 kinds (§4), captures `s6-sweep-s7{a,b,c,d}.txt`
 - `🪟️spawned-program-session` **33 passed**; scoped `tsc` the same 6 pre-existing errors;
   `cargo check -p semio-framework-os-mcp --lib` and `--all-targets` 0 errors (§7)
+- the palette census before and after the fix (`s7-palette-census.txt`, §5)
+- **the live agent gate inside `s`, 21 / 21, exit 0** — four runs, each capture kept (§6.4)
+- the two new gateway laws, `cargo test -p semio-framework-os-mcp --lib shell_channel::` →
+  **18 passed / 0 failed** under a private target dir (rule 25) — `s7-mcp-laws.txt`
 
 **Not done / unverified**:
 
-- **The live agent gate was not re-run** — preamble rule 26: two peer `cargo test -p
-  semio-framework-os-mcp` builds were running, and `live-agent-loop-check` builds that crate. 11/21
-  (S6) stands; §6.1/§6.2 are type-checked and check-compiled, not gate-measured.
-- **No Rust law for the new `ReadArtifact` resolution.** A `#[cfg(test)]` law in
-  `🐚️channel/🧪️tests/🔬️quick` would be compiled and RUN by the two peer test builds already in
-  flight, and an untested assertion of mine failing inside a sibling's gate is worse than none. It is
-  the next owner's first ten minutes, with the crate free.
+- **One flaky `boot` step** — gate run 3 reported `boot :: ready=null error=s` while every later
+  step against that same page passed, and run 4 booted clean. Not chased; if it recurs it is a boot
+  beacon race in the gate's own step 0, not a route fault.
+- **`(e1)`/`(e2)` passed only in run 4.** They were failing on the approval affordance in runs 1–3
+  (`timed out waiting for the approval affordance after 30000ms`) and passed once the (f) chain
+  stopped cascading. The gate is green as a whole; those two steps were not independently bisected.
 - **A spawned program's mid-operation progress** (§3) is type-checked and pinned by a source law;
   no live trace was driven through it.
 - **DB1's Home-lists-spaces symptom** — see §5; separate lane, separate fault (a mounted operation
@@ -223,10 +391,11 @@ Property 'consumes'` is the one S5 and S6 also recorded; the other five are in `
 | file | change |
 |---|---|
 | `…/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪟️spawned-program/🟦️.ts` | new `🧾️ProgramHistory` region (`programHistoryKeyV1`, `programHistoryProjectionV1`, `programHistoryProjectionsAfterPatchV1`, `programHistoryProjectionsRetainedV1`) and new `📇️SpawnedBridgeCensus` region (`BridgeProgramRefV1`, `spawnedBridgeCensusV1`) |
-| `…/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx` | per-program history projection (state, `applyHistoryPatch(…, owner)` at every call site, owner-resolved `refreshHistorySnapshot`, per-program staleness order, the focused-program derivation, a spawned program's first snapshot, eviction); per-spawned-instance `subscribeOperationProgress`/`subscribeSpawnedJobProgress`; the agent census through the owned unit, published focused-first |
+| `…/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx` | per-program history projection (state, `applyHistoryPatch(…, owner)` at every call site, owner-resolved `refreshHistorySnapshot`, per-program staleness order, the focused-program derivation, a spawned program's first snapshot, eviction); per-spawned-instance `subscribeOperationProgress`/`subscribeSpawnedJobProgress`; the agent census through the owned unit, published focused-first; `agentArtifactRouteRef` resolves a spawned program as well as the session; unique `spawn.*` palette ids with the plugin id in the searchable description |
 | `…/🧑‍🎨engine/🧪️tests/🪟️spawned-program-session/🟦️.tsx` | +13 laws (§7) |
-| `🌉️mcp/🐚️channel/🦀️.rs` | `ShellArtifactChannel::for_plugin`; a capability-less command resolves the pinned plugin's single open instance and refuses an ambiguous handle by name, listing the candidates |
-| `🌉️mcp/🏠️workspace/🦀️.rs` | both shell-channel construction sites pass the plugin id they already resolved |
+| `🌉️mcp/🐚️channel/🦀️.rs` | `ShellArtifactChannel::for_plugin` / `pin_plugin`; a capability-less command resolves the pinned plugin's single open instance and refuses an ambiguous handle by name, listing the candidates |
+| `🌉️mcp/🐚️channel/🧪️tests/🔬️quick/🦀️.rs` | +2 laws: the single-instance resolution and the by-name ambiguity refusal |
+| `🌉️mcp/🏠️workspace/🦀️.rs` | both direct shell-channel construction sites pass the plugin id they already resolved; `ShellRoutedArtifactChannel::exchange` names the owner per exchange through `RoutingArtifactChannel::plugin_id_for` |
 | `🐍️s7-history-hook-probe.mjs` (ticket) | **new** — the in-page hook that separated the three candidate queues (§2) |
 | `🐍️s7-palette-census.mjs` (ticket) | **new** — every `spawn.*` palette item with an EMPTY query, plus Home's space rows (§5) |
 

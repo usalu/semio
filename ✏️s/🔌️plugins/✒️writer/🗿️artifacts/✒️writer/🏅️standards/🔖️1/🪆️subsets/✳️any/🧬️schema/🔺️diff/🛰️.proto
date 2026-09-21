@@ -9,5 +9,6 @@ message WriterDiff {
   optional string id = 3;
   optional string language_id = 4;
   optional string uri = 5;
-  semio.os.store.ArtifactChild document = 6;
+  optional string text = 6;
+  semio.os.store.ArtifactChild document = 7;
 }

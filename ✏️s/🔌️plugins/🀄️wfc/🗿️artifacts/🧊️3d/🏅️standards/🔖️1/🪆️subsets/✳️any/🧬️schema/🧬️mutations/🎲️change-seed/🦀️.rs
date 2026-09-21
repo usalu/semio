@@ -27,8 +27,8 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for ChangeSeed {
     fn inverse(&self, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change seed to {}", self.seed)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change seed to {}", self.seed), &format!("Startwert auf {} ändern", self.seed))
     }
 }
 //#endregion 🔖️ChangeSeed

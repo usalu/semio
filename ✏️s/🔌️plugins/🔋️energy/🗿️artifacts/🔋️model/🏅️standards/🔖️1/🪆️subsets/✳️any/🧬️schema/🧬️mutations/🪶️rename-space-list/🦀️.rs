@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Rename
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Rename Space List of space list {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Rename Space List of space list {}", self.id.0), &format!("Raumliste von Raumliste {} umbenennen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

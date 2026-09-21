@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change fenestration {} U-value to {} W/(m²·K)", self.id.0, self.new_u_value_w_m2k)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change fenestration {} U-value to {} W/(m²·K)", self.id.0, self.new_u_value_w_m2k), &format!("Fenster {} U-Wert auf {} W/(m²·K) ändern", self.id.0, self.new_u_value_w_m2k))
     }
 
     fn target(&self) -> Vec<String> {

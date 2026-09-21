@@ -1,0 +1,32 @@
+{
+  "$schema": "./📐️schema.json",
+  "schema": "semio.frame-turn-scheduling.v1",
+  "input": { "lifecycle": 1, "inputSequence": 41, "generation": 7 },
+  "turnOwners": ["frame"],
+  "requests": [{ "owner": "frame", "remainingTurns": 2 }],
+  "runtimeTurns": [
+    { "phase": "uploads", "requestFrame": true, "continueFrame": true },
+    { "phase": "finish", "requestFrame": true, "continueFrame": true },
+    { "phase": "terminal", "requestFrame": true, "continueFrame": false }
+  ],
+  "nonRunnableTurns": [
+    { "owner": "future-deadline", "requestFrame": true, "continueFrame": false },
+    { "owner": "hub-status-external", "requestFrame": false, "continueFrame": false }
+  ],
+  "textIngressTurns": [
+    { "phase": "start", "committed": false, "retiring": false, "continueFrame": false },
+    { "phase": "partial", "committed": false, "retiring": false, "continueFrame": false },
+    { "phase": "commit", "committed": true, "retiring": false, "continueFrame": true },
+    { "phase": "cancel", "committed": false, "retiring": true, "continueFrame": true }
+  ],
+  "expected": {
+    "ingressTrace": ["enqueue:41", "batch-accepted:41"],
+    "callbackOwners": ["frame", "frame"],
+    "frameSequences": [1, 2],
+    "runtimePhases": ["uploads", "finish", "terminal"],
+    "nonRunnableCallbacks": ["future-deadline", "hub-status-external"],
+    "runnableTextPhases": ["commit", "cancel"],
+    "closeOwners": ["frame"],
+    "exhaustion": "fault"
+  }
+}

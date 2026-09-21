@@ -1,11 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://semio.tech/schema/renderer/scene-pointer-cancellation-v1.json",
+  "$id": "https://semio.tech/schema/renderer/scene-pointer-cancellation-v2.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "owner", "cases"],
+  "required": ["schemaVersion", "owner", "tiledMap", "cases"],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": { "const": 2 },
     "owner": {
       "type": "object",
       "additionalProperties": false,
@@ -21,6 +21,42 @@
         "afterCancel": { "const": "next-down-accepted" }
       }
     },
+    "tiledMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "cancel", "hoverLeave"],
+      "properties": {
+        "owner": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["windowId", "surfaceId", "peerSurfaceId"],
+          "properties": {
+            "windowId": { "type": "string", "minLength": 1 },
+            "surfaceId": { "type": "string", "minLength": 1 },
+            "peerSurfaceId": { "type": "string", "minLength": 1 }
+          }
+        },
+        "cancel": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "$ref": "#/definitions/tiledMapCancel" }
+        },
+        "hoverLeave": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["prior", "emptyTargets", "publications", "repeatPublications", "peerPublications", "gestureFanout"],
+          "properties": {
+            "prior": { "type": "string", "minLength": 1 },
+            "emptyTargets": { "const": "[]" },
+            "publications": { "const": 1 },
+            "repeatPublications": { "const": 0 },
+            "peerPublications": { "const": 0 },
+            "gestureFanout": { "const": [] }
+          }
+        }
+      }
+    },
     "cases": {
       "type": "array",
       "minItems": 6,
@@ -29,6 +65,21 @@
     }
   },
   "definitions": {
+    "tiledMapCancel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "button", "cameraPublications", "selectionPublications", "clearsDrag", "nextDown", "duplicateCancel", "outsideUp"],
+      "properties": {
+        "mode": { "enum": ["pan", "marquee", "none"] },
+        "button": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "cameraPublications": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "selectionPublications": { "const": 0 },
+        "clearsDrag": { "type": "boolean" },
+        "nextDown": { "const": "accepted" },
+        "duplicateCancel": { "const": "inert" },
+        "outsideUp": { "const": "inert" }
+      }
+    },
     "case": {
       "type": "object",
       "additionalProperties": false,

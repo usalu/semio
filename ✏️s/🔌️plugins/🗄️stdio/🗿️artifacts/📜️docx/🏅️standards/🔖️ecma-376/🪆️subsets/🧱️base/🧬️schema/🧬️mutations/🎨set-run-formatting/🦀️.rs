@@ -24,8 +24,8 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetRunFormatting {
     fn inverse(&self, base: &DocxSnapshot) -> Vec<DocxMutation> {
         agg_inverse(&DocxMutation::SetRunFormatting(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-run-formatting".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-run-formatting", "Laufformatierung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

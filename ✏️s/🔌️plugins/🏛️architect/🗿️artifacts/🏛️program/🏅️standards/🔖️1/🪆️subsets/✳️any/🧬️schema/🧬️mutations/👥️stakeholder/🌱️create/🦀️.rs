@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateStakeholder {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create stakeholder \"{}\"", self.stakeholder.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create stakeholder \"{}\"", self.stakeholder.header.name), &format!("Beteiligter \"{}\" erstellen", self.stakeholder.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.stakeholder.header.id.0.clone()]

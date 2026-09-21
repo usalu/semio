@@ -38,6 +38,162 @@ fn test_layout_pool() -> semio_framework_async::WorkerPool {
     semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1))
 }
 
+fn scene_lifetime_document(window_id: &str, generation: u64, scene: bool) -> UiDocumentTree {
+    let component = if scene {
+        serde_json::json!({ "type": "surface", "kind": "world-3d", "docSchema": "world3d@1", "doc": { "bytes": [] } })
+    } else {
+        serde_json::json!({ "type": "container" })
+    };
+    let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 1,
+        "key": "scene-lifetime/root",
+        "component": component,
+        "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {},
+        "children": []
+    }))
+    .expect("scene lifetime record");
+    let mut document = UiDocumentTree::new(UiDocumentLeaseHeader {
+        generation,
+        surface: SurfaceId::try_from(window_id).expect("scene lifetime surface"),
+        revision: UiRevision(generation),
+        root: UiNodeId(1),
+        layout_epoch: generation,
+        node_count: 1,
+    })
+    .expect("scene lifetime document");
+    document.try_upsert_record(record).expect("scene lifetime record admits");
+    document
+}
+
+fn captured_slider_document(window_id: &str, generation: u64, value: f64) -> UiDocumentTree {
+    let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
+        "id": 1,
+        "key": "captured-slider",
+        "component": { "type": "slider", "value": value, "min": 0, "max": 10, "step": 1 },
+        "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
+        "style": {},
+        "activity": "idle",
+        "accessibility": { "label": "Captured slider" },
+        "bindings": [{ "trigger": "change", "action": { "scope": "fixture", "name": "setValue", "version": 1 } }],
+        "children": []
+    }))
+    .expect("captured slider record");
+    let mut document = UiDocumentTree::new(UiDocumentLeaseHeader {
+        generation,
+        surface: SurfaceId::try_from(window_id).expect("captured slider surface"),
+        revision: UiRevision(generation),
+        root: UiNodeId(1),
+        layout_epoch: generation,
+        node_count: 1,
+    })
+    .expect("captured slider document");
+    document.try_upsert_record(record).expect("captured slider record admits");
+    document
+}
+
+fn reconcile_scene_lifetime_candidate(ui: &mut Ui, window_id: &str, generation: u64, scene: bool) {
+    assert!(ui.publish_document(window_id, scene_lifetime_document(window_id, generation, scene)));
+    drive_scene_lifetime_reconcile(ui, window_id, generation);
+}
+
+fn drive_scene_lifetime_reconcile(ui: &mut Ui, window_id: &str, generation: u64) {
+    let operation = semio_framework_job::allocate_operation_id();
+    let cancel = semio_framework_job::CancelToken::root_now();
+    let mut sequence = 0;
+    for _ in 0..4096 {
+        let mut cx = StepContext::new(operation, semio_framework_job::Generation(generation), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), test_clock, &mut sequence);
+        match ui.step_document_reconcile(window_id, "scene-lifetime", &mut cx) {
+            UiDocumentReconcileStep::Pending => {}
+            UiDocumentReconcileStep::Complete => return,
+            UiDocumentReconcileStep::Fault(fault) => panic!("scene lifetime reconcile fault: {fault:?}"),
+        }
+    }
+    panic!("scene lifetime reconcile exceeded its fixed budget");
+}
+
+fn acknowledge_scene_lifetime_candidate(ui: &mut Ui, window_id: &str, witness: u64) {
+    assert!(ui.seal_presented_input_candidate(witness, &[window_id.to_string()]));
+    assert!(ui.acknowledge_presented_input(witness));
+}
+
+fn root_scene_host(tree: &UiTree) -> Option<String> {
+    let node = tree.root.and_then(|root| tree.node(root))?;
+    let UiNode::ComponentScene(scene) = &node.spec.0 else { return None };
+    Some(scene.host_id.clone())
+}
+
+#[test]
+fn candidate_scene_removal_retires_only_after_presentation_acknowledgement() {
+    let window_id = "candidate-scene-removal";
+    let mut ui = Ui::new();
+    reconcile_scene_lifetime_candidate(&mut ui, window_id, 1, true);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 11);
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
+    let presented_host = ui.windows.get(window_id).and_then(|window| root_scene_host(&window.presented_tree)).expect("presented scene host");
+
+    reconcile_scene_lifetime_candidate(&mut ui, window_id, 2, false);
+    assert_eq!(ui.windows.get(window_id).and_then(|window| root_scene_host(&window.presented_tree)).as_deref(), Some(presented_host.as_str()));
+    assert!(ui.take_retired_component_scene(window_id).is_none(), "candidate topology cannot retire still-presented pixels");
+    assert!(ui.seal_presented_input_candidate(12, &[window_id.to_string()]));
+    assert!(ui.discard_presented_input_candidate(12));
+    assert!(ui.take_retired_component_scene(window_id).is_none(), "discarding the presentation witness preserves the presented scene");
+    assert!(ui.seal_presented_input_candidate(13, &[window_id.to_string()]));
+    assert!(ui.acknowledge_presented_input(13));
+    assert_eq!(ui.take_retired_component_scene(window_id).map(|retired| retired.host_id), Some(presented_host));
+}
+
+#[test]
+fn component_scene_host_survives_alternating_arenas_and_readd_gets_a_fresh_mount() {
+    let window_id = "alternating-scene-host";
+    let mut ui = Ui::new();
+    reconcile_scene_lifetime_candidate(&mut ui, window_id, 1, true);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 21);
+    let first = ui.windows.get(window_id).and_then(|window| root_scene_host(&window.presented_tree)).expect("first presented host");
+
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
+    reconcile_scene_lifetime_candidate(&mut ui, window_id, 2, true);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 22);
+    assert_eq!(ui.windows.get(window_id).and_then(|window| root_scene_host(&window.presented_tree)).as_deref(), Some(first.as_str()));
+
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 2);
+    reconcile_scene_lifetime_candidate(&mut ui, window_id, 3, false);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 23);
+    assert_eq!(ui.take_retired_component_scene(window_id).map(|retired| retired.host_id), Some(first.clone()));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 3);
+    reconcile_scene_lifetime_candidate(&mut ui, window_id, 4, true);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 24);
+    let readded = ui.windows.get(window_id).and_then(|window| root_scene_host(&window.presented_tree)).expect("re-added presented host");
+    assert_ne!(readded, first);
+}
+
+#[test]
+fn held_pointer_capture_transfers_to_the_accepted_candidate_and_releases_once() {
+    let window_id = "presented-captured-slider";
+    let mut ui = Ui::new();
+    assert!(ui.publish_document(window_id, captured_slider_document(window_id, 1, 2.0)));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
+    let mut atlas = FontAtlas::builtin();
+    drive_layout(&mut ui, window_id, 200.0, 40.0, &mut atlas);
+    acknowledge_scene_lifetime_candidate(&mut ui, window_id, 31);
+    ui.dispatch_pointer_event(window_id, 77, UiEvent::PointerDown { x: 40.0, y: 20.0, button: PointerButton::Primary, modifiers: Default::default() });
+    assert!(ui.windows.get(window_id).and_then(|window| window.presented_router.capture()).is_some());
+
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 1);
+    assert!(ui.publish_document(window_id, captured_slider_document(window_id, 2, 3.0)));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, 2);
+    drive_layout(&mut ui, window_id, 200.0, 40.0, &mut atlas);
+    assert!(ui.seal_presented_input_candidate(32, &[window_id.to_string()]), "a surviving captured control cannot block pixel publication");
+    assert!(ui.acknowledge_presented_input(32));
+    assert!(ui.windows.get(window_id).and_then(|window| window.presented_router.capture()).is_some(), "the exact pointer owner transfers with accepted pixels");
+
+    ui.dispatch_pointer_event(window_id, 77, UiEvent::PointerMove { x: 120.0, y: 20.0, modifiers: Default::default() });
+    ui.dispatch_pointer_event(window_id, 77, UiEvent::PointerUp { x: 120.0, y: 20.0, button: PointerButton::Primary, modifiers: Default::default() });
+    assert!(ui.windows.get(window_id).and_then(|window| window.presented_router.capture()).is_none());
+}
+
 fn retained_walk_leaf(discriminant: u32, ordinal: u32, value: &str) -> crate::wgpu::tree::Node {
     crate::wgpu::tree::Node::new(
         crate::wgpu::tree::NodeKey::Positional(discriminant, ordinal),
@@ -372,6 +528,105 @@ fn accessibility_dispatch_uses_current_window_generation_and_node_identity() {
     assert!(ui.dispatch_accessibility_event(window_id, second_generation, 2, "#width", AccessibilityUiEvent::Focus).is_some());
 }
 
+fn close_surface_to_terminal(ui: &mut Ui, token: UiSurfaceToken) {
+    let id = ui.windows.id(token).unwrap().clone();
+    let generation = ui.surface_generation(id.as_ref()).unwrap();
+    let tree = ui.tree(id.as_ref()).unwrap();
+    let mut pending = tree.root.into_iter().collect::<Vec<_>>();
+    let mut expected_scenes = Vec::new();
+    while let Some(node_id) = pending.pop() {
+        let node = tree.node(node_id).unwrap();
+        if let UiNode::ComponentScene(scene) = &node.spec.0 {
+            expected_scenes.push((node_id, node.key.clone(), node.component_generation(), scene.component_kind, scene.surface_id.clone()));
+        }
+        pending.extend(tree.children(node_id));
+    }
+    assert!(ui.begin_surface_close(token));
+    for _ in 0..262_144 {
+        match ui.close_surface_one(token) {
+            UiSurfaceCloseStep::Pending => {}
+            UiSurfaceCloseStep::RetiredScene(retired) => {
+                assert_eq!(retired.window_id, id.as_ref());
+                assert_eq!(retired.window_generation, generation);
+                let actual = (retired.node, retired.key, retired.component_generation, retired.kind, retired.surface_id);
+                let index = expected_scenes.iter().position(|scene| *scene == actual).expect("one exact external scene retirement, before slot release");
+                expected_scenes.remove(index);
+                assert_eq!(ui.surface_token(id.as_ref()), Some(token));
+            }
+            UiSurfaceCloseStep::Complete => {
+                assert!(expected_scenes.is_empty(), "all external scene owners leave before the registry slot");
+                return;
+            }
+        }
+    }
+    panic!("the complete surface owner exceeded its finite retirement opportunity ceiling");
+}
+
+#[test]
+fn closed_surface_token_and_document_epoch_cannot_alias_a_same_id_successor() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
+    let mut ui = Ui::new();
+    let window_id = "surface-close-same-id";
+    publish_accessibility_document(&mut ui, window_id);
+    let old_token = ui.surface_token(window_id).unwrap();
+    let old_generation = ui.surface_generation(window_id).unwrap();
+    close_surface_to_terminal(&mut ui, old_token);
+    assert!(ui.surface_token(window_id).is_none());
+    publish_accessibility_document(&mut ui, window_id);
+    let token = ui.surface_token(window_id).unwrap();
+    let generation = ui.surface_generation(window_id).unwrap();
+    assert_ne!(token, old_token);
+    assert!(generation > old_generation);
+    assert_eq!(law["sameIdSuccessor"]["rejectPreviousIdentity"], true);
+    assert!(!ui.begin_surface_close(old_token));
+    assert!(matches!(ui.close_surface_one(old_token), UiSurfaceCloseStep::Complete));
+    assert_eq!(ui.surface_token(window_id), Some(token));
+    assert_eq!(law["sameIdSuccessor"]["preserveSuccessor"], true);
+    assert!(ui.dispatch_accessibility_event(window_id, old_generation, 2, "#width", AccessibilityUiEvent::Activate).is_none());
+    assert!(ui.dispatch_accessibility_event(window_id, generation, 2, "#width", AccessibilityUiEvent::Focus).is_some());
+    close_surface_to_terminal(&mut ui, token);
+}
+
+#[test]
+fn surface_close_releases_queued_layout_capacity_for_every_sequential_window() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
+    let count = law["sequentialMounts"].as_u64().unwrap() as usize;
+    let mut ui = Ui::new();
+    for index in 0..count {
+        let id = format!("queued-surface-{index}");
+        publish_accessibility_document(&mut ui, &id);
+        let token = ui.surface_token(&id).unwrap();
+        assert!(ui.windows.get_token(token).unwrap().queued);
+        assert!(ui.layout_queues.iter().any(|lane| lane.len() > 0));
+        close_surface_to_terminal(&mut ui, token);
+        assert_eq!(ui.window_ids().count(), law["closedSurfaces"].as_u64().unwrap() as usize);
+        assert!(ui.layout_queues.iter().all(|lane| lane.len() == 0));
+        assert!(ui.layout_pressure.is_none());
+    }
+}
+
+#[test]
+fn surface_close_silently_discards_a_focused_blur_commit() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
+    let mut ui = Ui::new();
+    let id = "silent-input-unmount";
+    publish_blur_commit_input_document(&mut ui, id);
+    let generation = ui.surface_generation(id).unwrap();
+    let token = ui.surface_token(id).unwrap();
+    assert!(ui.dispatch_accessibility_event(id, generation, 2, "framework.settings.driver.saveLabel", AccessibilityUiEvent::Focus).is_some());
+    let staged = ui.dispatch_accessibility_event(id, generation, 2, "framework.settings.driver.saveLabel", AccessibilityUiEvent::Value(law["silentBlurCommit"]["draft"].as_str().unwrap().into())).unwrap();
+    assert!(!staged.iter().any(|command| matches!(command, UiCommand::App { .. })));
+    ui.drain_commands();
+    assert!(ui.begin_surface_close(token));
+    assert!(ui.try_admit_surface(id).is_err());
+    assert!(ui.dispatch_accessibility_event(id, generation, 2, "framework.settings.driver.saveLabel", AccessibilityUiEvent::Blur).is_none());
+    assert!(ui.dispatch_event(id, UiEvent::PointerCancel).is_empty());
+    assert!(ui.advance_clock(1000.0).is_empty());
+    close_surface_to_terminal(&mut ui, token);
+    assert_eq!(ui.drain_commands().len(), law["silentBlurCommit"]["actions"].as_u64().unwrap() as usize);
+    assert_eq!(ui.window_ids().count(), law["closedSurfaces"].as_u64().unwrap() as usize);
+}
+
 #[test]
 fn accessibility_blur_input_stages_values_and_commits_exactly_once_on_blur() {
     let mut ui = Ui::new();
@@ -514,7 +769,7 @@ fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
 }
 
 #[test]
-fn dispatch_event_emits_a_button_click_command_and_it_is_also_drainable() {
+fn dispatch_event_emits_a_button_click_command_once() {
     let mut ui = Ui::new();
     let mut atlas = FontAtlas::builtin();
     ui.apply_tree("main", &stack_ui(vec![button_ui("go", "Go")]));
@@ -525,9 +780,7 @@ fn dispatch_event_emits_a_button_click_command_and_it_is_also_drainable() {
     let commands = ui.dispatch_event("main", UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { intent, .. } if intent.descriptor() == action())));
-    let drained = ui.drain_commands();
-    assert!(!drained.is_empty(), "commands dispatched should also be queryable via drain_commands");
-    assert!(ui.drain_commands().is_empty(), "a second drain with nothing new dispatched must be empty");
+    assert!(ui.drain_commands().is_empty(), "synchronous commands have the return value as their single consumption owner");
 }
 
 #[test]
@@ -777,6 +1030,7 @@ fn mounted_layout_replay_and_resize_supersede_are_deterministic() {
 //#region 🔖️SceneHostTests
 fn component_scene_ui(surface_id: &str) -> UiNode {
     UiNode::ComponentScene(UiComponentSceneNode {
+        host_id: surface_id.into(),
         surface_id: surface_id.into(),
         controller_id: "ctrl".into(),
         component_kind: SurfaceKind::World3d,
@@ -1563,6 +1817,7 @@ fn golden_image_known_gap() {
 #[test]
 fn golden_component_scene_known_gap() {
     let node = UiNode::ComponentScene(UiComponentSceneNode {
+        host_id: "surf".into(),
         surface_id: "surf".into(),
         controller_id: "ctrl".into(),
         component_kind: SurfaceKind::World3d,

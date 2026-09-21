@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeBearingDRd
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change bearing design displacement capacity D_Rd [mm] to {}", self.new_bearing_d_rd_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change bearing design displacement capacity D_Rd [mm] to {}", self.new_bearing_d_rd_mm), &format!("Lagerbemessungsverschiebungskapazitätsd_Rd [mm] auf {} ändern", self.new_bearing_d_rd_mm))
     }
 }
 //#endregion 🔖️ChangeBearingDRdMm

@@ -19,8 +19,8 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeSolarAbs
     fn inverse(&self, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change solar absorptance to {}", self.new_solar_absorptance)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change solar absorptance to {}", self.new_solar_absorptance), &format!("Solarabsorptionsgrad auf {} ändern", self.new_solar_absorptance))
     }
 }
 //#endregion 🔖️Payload

@@ -29,8 +29,8 @@ impl MutationKind<Grid2dSnapshot, Grid2dMutation> for ChangeTileWeight {
     fn inverse(&self, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change weight of tile \"{}\" to {}", self.id, self.weight)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change weight of tile \"{}\" to {}", self.id, self.weight), &format!("Gewicht von Kachel \"{}\" auf {} ändern", self.id, self.weight))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

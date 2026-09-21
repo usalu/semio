@@ -1825,7 +1825,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#semantics_arms),* }
             }
-            fn label(&self) -> String {
+            fn label(&self) -> ::semio_framework_os_kernel::LocalizedLabel {
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#label_arms),* }
             }
@@ -1918,7 +1918,7 @@ fn expand_composite_mutation(input: &DeriveInput) -> syn::Result<proc_macro2::To
             fn inverse(&self, base: &#snapshot_ty) -> Vec<#op_ty> {
                 ::semio_framework_os_kernel::fold_plan_inverse(self, base)
             }
-            fn label(&self) -> String {
+            fn label(&self) -> ::semio_framework_os_kernel::LocalizedLabel {
                 ::semio_framework_os_kernel::CompositeMutationKind::label(self)
             }
             fn timestamp(&self) -> Option<::semio_framework_os_kernel::HybridLogicalTimestamp> {

@@ -18,8 +18,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for UpdateNodePo
     fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
         Vec::new()
     }
-    fn label(&self) -> String {
-        "Update workflow node ports".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Update workflow node ports", "Arbeitsablaufknotenanschlüsse aktualisieren")
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into()]

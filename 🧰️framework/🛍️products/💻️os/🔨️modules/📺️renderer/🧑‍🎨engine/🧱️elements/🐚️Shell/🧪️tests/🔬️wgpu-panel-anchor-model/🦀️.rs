@@ -179,6 +179,50 @@ fn panel_default_width_is_uniform_and_wider_than_the_former_document_panel() {
     assert!(DEFAULT_PANEL_WIDTH_PX > 280.0);
 }
 
+/// ↔️ The real panel walk publishes exactly React's resize edges and one compact-spacing hit rail.
+#[test]
+fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
+    let fixture: Value = serde_json::from_str(include_str!("../../🧪️fixtures/↔️panel-resize/🔣️.json")).expect("panel resize fixture");
+    let theme = Theme::default();
+    assert_eq!(fixture["widthUiSpacing"], serde_json::json!(1));
+    for case in fixture["cases"].as_array().expect("resize cases") {
+        let anchor_id = case["anchor"].as_str().expect("anchor");
+        let anchor = PanelAnchor::from_str(anchor_id).expect("known fixture anchor");
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        *shell.dock_tabs.tabs_mut(anchor) = vec![DockTabNode::leaf("fixture.resize", "Resize", "panel-right", 0)];
+        shell.anchor_state_mut(anchor).path = vec!["fixture.resize".into()];
+        shell.anchor_state_mut(anchor).visible = true;
+        let body = Rect::new(0.0, 40.0, 1200.0, 700.0);
+        let panel = shell.anchor_rect(anchor, body, &theme);
+        let mut draw = DrawList::default();
+        draw.set_screen_height(800.0);
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+        let mut cursor = ShellChromeChildCursor::default();
+        assert!((0..32).any(|_| shell.render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources)), "{anchor_id} panel walk completes");
+        input.publish_hits();
+        let actual: Vec<&HitTarget<ActionDescriptor>> = input.hits().iter().filter(|hit| hit.kind == HitKind::PanelResize).collect();
+        let expected = case["handles"].as_array().expect("handles");
+        assert_eq!(actual.len(), expected.len(), "{anchor_id} resize handle count");
+        for handle in expected {
+            let edge = handle["edge"].as_str().expect("edge");
+            let suffix = handle["nativeSuffix"].as_str().expect("native suffix");
+            let expected_factor = handle["deltaFactor"].as_i64().expect("delta factor");
+            let id = format!("panel.resize.{anchor_id}.{suffix}");
+            let hit = actual.iter().find(|hit| hit.control_id.as_deref() == Some(id.as_str())).unwrap_or_else(|| panic!("↔️ {anchor_id} must publish {id}: {actual:?}"));
+            let actual_factor: i64 = (if anchor.horizontal() == "middle" { 2 } else { 1 }) * if suffix == "inner" { -1 } else { 1 };
+            assert_eq!(actual_factor, expected_factor, "{anchor_id}/{edge} keeps React's drag sign and middle multiplier");
+            assert!((hit.rect.w - theme.panel_inset).abs() < 0.01, "{anchor_id}/{edge} uses one compact spacing unit");
+            let expected_x = if edge == "left" { panel.x } else { panel.x + panel.w - theme.panel_inset };
+            assert!((hit.rect.x - expected_x).abs() < 0.01, "{anchor_id}/{edge} sits on React's same physical edge: {:?}", hit.rect);
+            assert_eq!(hit.rect.y, panel.y);
+            assert_eq!(hit.rect.h, panel.h);
+        }
+    }
+}
+
 //#region 🧭️DefaultDockFixture
 /// 🧭️ The shared default-dock fixture both renderers assert against — the id-only skeleton React's
 /// `defaultDock` (`🏛️ShellHost/🟦️.tsx`'s 🧭️DockAssembly) and this shell's `default_dock` must agree on.

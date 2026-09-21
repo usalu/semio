@@ -4,7 +4,7 @@ use super::*;
 fn label_names_role_and_dialect() {
     let dialect = ArtifactDialect { artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() };
     let payload = SetDefaultApp { dialect, role: AppRole::Editor, app: AppRef { plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() } };
-    assert_eq!(MutationKind::<OpeningPreferences, OpeningConfigMutation>::label(&payload), "Set default editor for \"s.cad.cad@1/*\"");
+    assert_eq!(MutationKind::<OpeningPreferences, OpeningConfigMutation>::label(&payload), protocol::LocalizedLabel::native("Set default editor for \"s.cad.cad@1/*\"", "Standard-Editor für \"s.cad.cad@1/*\" festlegen"));
 }
 
 #[test]

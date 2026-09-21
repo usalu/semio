@@ -13,6 +13,7 @@ use ui_wgpu::wgpu::{BlockListScene, Canvas2dScene, DiffViewScene, EventFeedScene
 
 fn scene(kind: SurfaceKind) -> UiComponentSceneNode {
     UiComponentSceneNode {
+        host_id: "surface-1".into(),
         surface_id: "surface-1".into(),
         controller_id: "controller".into(),
         component_kind: kind,

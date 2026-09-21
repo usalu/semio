@@ -16,7 +16,7 @@
         "windowId": { "const": "flow-main" },
         "surfaceId": { "const": "flow.play.main" },
         "surfaceKind": { "const": "node-graph" },
-        "reactSelector": { "const": "[data-surface-id=\"flow.play.main\"]" },
+        "reactSelector": { "const": "[data-ui-node-key=\"flow.play.main\"] [data-surface-id=\"window:flow-main\"]" },
         "urls": {
           "type": "object",
           "additionalProperties": false,
@@ -31,8 +31,9 @@
     "specimen": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["minimumNodes", "preferredNodeIds"],
+      "required": ["minimumNodes", "preferredNodeIds", "interactionNodeId"],
       "properties": {
+        "interactionNodeId": { "const": "add" },
         "minimumNodes": { "type": "integer", "minimum": 3, "maximum": 16 },
         "preferredNodeIds": {
           "type": "array",
@@ -45,8 +46,8 @@
     },
     "cases": {
       "type": "array",
-      "minItems": 5,
-      "maxItems": 5,
+      "minItems": 7,
+      "maxItems": 7,
       "items": {
         "oneOf": [
           {
@@ -63,6 +64,36 @@
                 "minItems": 2,
                 "maxItems": 2
               },
+              "consequence": { "type": "string", "minLength": 1 }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "gesture", "from", "to", "expectedAction", "operation", "expectedPersistedEdge", "consequence"],
+            "properties": {
+              "id": { "const": "connect-free-input" },
+              "gesture": { "const": "output-handle-to-input-handle" },
+              "from": { "$ref": "#/$defs/outputHandle" },
+              "to": { "$ref": "#/$defs/inputHandle" },
+              "expectedAction": { "const": "nodeGraphEdit" },
+              "operation": { "const": "connect" },
+              "expectedPersistedEdge": { "$ref": "#/$defs/persistedEdge" },
+              "consequence": { "type": "string", "minLength": 1 }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "gesture", "from", "emptyCanvasOffset", "expectedAction", "operation", "expectedPersistedEdge", "consequence"],
+            "properties": {
+              "id": { "const": "disconnect-wired-input" },
+              "gesture": { "const": "input-handle-to-empty-canvas" },
+              "from": { "$ref": "#/$defs/inputHandle" },
+              "emptyCanvasOffset": { "$ref": "#/$defs/canvasOffset" },
+              "expectedAction": { "const": "nodeGraphEdit" },
+              "operation": { "const": "disconnect" },
+              "expectedPersistedEdge": { "$ref": "#/$defs/persistedEdge" },
               "consequence": { "type": "string", "minLength": 1 }
             }
           },
@@ -135,6 +166,44 @@
     }
   },
   "$defs": {
+    "outputHandle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "direction"],
+      "properties": {
+        "id": { "const": "slider@number" },
+        "direction": { "const": "out" }
+      }
+    },
+    "inputHandle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "direction"],
+      "properties": {
+        "id": { "const": "add@b" },
+        "direction": { "const": "in" }
+      }
+    },
+    "persistedEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "fromPort", "to", "toPort"],
+      "properties": {
+        "from": { "const": "slider" },
+        "fromPort": { "const": "number" },
+        "to": { "const": "add" },
+        "toPort": { "const": "b" }
+      }
+    },
+    "canvasOffset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number", "minimum": 4, "maximum": 24 },
+        "y": { "type": "number", "minimum": 4, "maximum": 24 }
+      }
+    },
     "delta": {
       "type": "object",
       "additionalProperties": false,

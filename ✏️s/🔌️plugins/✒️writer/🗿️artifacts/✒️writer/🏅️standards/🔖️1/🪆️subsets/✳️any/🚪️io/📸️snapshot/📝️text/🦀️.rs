@@ -49,7 +49,7 @@ fn dec_child(s: &str) -> Result<WriterDocumentChild, String> {
 
 //#region 🔖️TextPrimitives
 fn print_writer_snapshot_body(s: &WriterSnapshot) -> String {
-    format!("schema={}\nid={}\nlanguageId={}\nuri={}\ndocument={}", enc_str(&s.schema), enc_str(&s.id), enc_str(&s.language_id), enc_str(&s.uri), enc_child(&s.document))
+    format!("schema={}\nid={}\nlanguageId={}\nuri={}\ntext={}\ndocument={}", enc_str(&s.schema), enc_str(&s.id), enc_str(&s.language_id), enc_str(&s.uri), enc_str(&s.text), enc_child(&s.document))
 }
 fn parse_writer_snapshot_body(body: &str) -> Result<WriterSnapshot, String> {
     let mut snapshot = WriterSnapshot::default();
@@ -68,6 +68,8 @@ fn parse_writer_snapshot_body(body: &str) -> Result<WriterSnapshot, String> {
             snapshot.language_id = dec_str(rest)?;
         } else if let Some(rest) = line.strip_prefix("uri=") {
             snapshot.uri = dec_str(rest)?;
+        } else if let Some(rest) = line.strip_prefix("text=") {
+            snapshot.text = dec_str(rest)?;
         } else if let Some(rest) = line.strip_prefix("document=") {
             snapshot.document = dec_child(rest)?;
         } else {
@@ -77,6 +79,7 @@ fn parse_writer_snapshot_body(body: &str) -> Result<WriterSnapshot, String> {
     if !saw_schema {
         return Err("writer snapshot: missing schema line".to_string());
     }
+    crate::attach_writer_document_text(&mut snapshot.document, &snapshot.text.clone());
     Ok(snapshot)
 }
 //#endregion 🔖️TextPrimitives
@@ -113,16 +116,7 @@ pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️
 /// 📄️ The `dag.jack` example document, handcrafted in the `.writer` DSL — see {@link JACK_EXAMPLE_TEXT}.
 pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🧪️dag-example/🗣️.dsl.semio");
 
-/// ✍️ The `jack`/`dag.jack` examples' real query text. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`:
-/// `WriterSnapshot::document` is a composed `s.stdio.semio`/`document` CHILD HANDLE now, so
-/// `JACK_EXAMPLE_TEXT`/`DAG_JACK_EXAMPLE_TEXT` themselves only carry the opaque
-/// `document=[childId,target]` pair (content-addressed, matching every other composed-child DSL
-/// fixture in this ticket — cad's `shapeModel=`/lowpoly's `mesh=` lines are equally opaque). These
-/// constants are the honest source of the actual text those handles were minted from — the working-
-/// scene cache (`writer_text`) has no way to recover it from the handle alone otherwise, exactly the
-/// documented `WriterWorkingScene` gap (`🗿️artifacts/✒️writer/🦀️.rs`'s module doc comment).
-const JACK_QUERY_TEXT: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name";
-const DAG_JACK_QUERY_TEXT: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a, b";
+
 
 /// 📖️ Parses `.writer` DSL text into a `WriterSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<WriterSnapshot, store::TextError> {
@@ -155,9 +149,7 @@ pub fn print_writer_dsl(snapshot: &WriterSnapshot) -> String {
 /// call site below (`setActiveExample`, `.example("jack", ...)`, tests, "file-text"); never re-embed the
 /// raw text.
 pub fn jack_example_document() -> WriterSnapshot {
-    let mut document = parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| schema::empty_writer_snapshot());
-    crate::attach_writer_document_text(&mut document.document, JACK_QUERY_TEXT);
-    document
+    parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| schema::empty_writer_snapshot())
 }
 
 /// 📄️ JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
@@ -168,9 +160,7 @@ pub fn jack_example_json() -> String {
 
 /// 📄️ The `dag.jack` example, parsed once from {@link DAG_JACK_EXAMPLE_TEXT} — see {@link jack_example_document}.
 pub fn dag_jack_example_document() -> WriterSnapshot {
-    let mut document = parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| schema::empty_writer_snapshot());
-    crate::attach_writer_document_text(&mut document.document, DAG_JACK_QUERY_TEXT);
-    document
+    parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| schema::empty_writer_snapshot())
 }
 
 /// 📄️ JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.

@@ -108,7 +108,7 @@ for (const row of treeProjection.cases) {
     if (depth >= treeProjection.maximumDepth || remaining-- <= 0) throw new Error("tree-limit");
     if (node.rejected) throw new Error("rejected-children");
     if (new Set(node.children.map((child: any) => child.key)).size !== node.children.length) throw new Error("duplicate-key");
-    return { key: node.key, component: node.component, children: node.children.map((child: any) => project(child, depth + 1)) };
+    return { key: node.key, component: node.component, bindings: [], accessibility: {}, children: node.children.map((child: any) => project(child, depth + 1)) };
   };
   if (row.error) assert.throws(() => project(row.input, 0), { message: row.error });
   else assert.deepEqual(JSON.parse(stableStringify(project(row.input, 0))), row.expected);
@@ -455,17 +455,15 @@ console.log("[DEBUG] Flow presence-owner oracle: 3 rosters, 3 grants, UTF-8 coun
 const transientOwners = await Bun.file(new URL("../../🧫️fixtures/🫧️transient-owners/🔣️.json", import.meta.url)).json();
 const validateTransientOwners = flowExport("FlowTransientOwners");
 assert(validateTransientOwners(transientOwners), JSON.stringify(validateTransientOwners.errors));
-let transientRetired = false;
-for (const row of transientOwners.trace) {
-  const status = transientRetired ? "complete" : "pending";
-  transientRetired ||= row.items > 0 && row.bytes > 0;
-  assert.equal(row.status, status);
-  assert.equal(row.retired, transientRetired);
+for (const [index, row] of transientOwners.trace.entries()) {
+  assert.equal(row.status, index === 10 ? "complete" : "pending");
+  assert.equal(row.rootRetired, index >= 3);
+  assert.equal(row.terminalEmpty, index >= 9);
 }
 assert.equal(new TextEncoder().encode("").byteLength, transientOwners.payloadBytes);
 assert.equal(Buffer.byteLength(""), transientOwners.payloadBytes);
 assert(editorOwnerSource.includes("fn build_transient_store_disposer("), "Flow must supply an exact NoTransient store close adapter");
-console.log("[DEBUG] Flow transient-owner oracle: 4 exact zero-payload trace steps; native owner identity remains separate");
+console.log("[DEBUG] Flow transient-owner oracle: 11 exact zero-payload owner-transfer steps; native weak/terminal identities remain separate");
 //#endregion 🫧️TransientOwnerOracle
 //#region 🗃️SharedDocumentOwnerAuthority
 const documentOwnerFile = Bun.file(new URL("../../../../../../../♻️retirement/🦀️.rs", import.meta.url));

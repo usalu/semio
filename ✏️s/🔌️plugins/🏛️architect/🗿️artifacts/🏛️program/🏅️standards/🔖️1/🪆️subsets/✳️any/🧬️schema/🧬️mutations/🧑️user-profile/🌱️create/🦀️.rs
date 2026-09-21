@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateUserProfile {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create user profile \"{}\"", self.user_profile.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create user profile \"{}\"", self.user_profile.header.name), &format!("Benutzerprofil \"{}\" erstellen", self.user_profile.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.user_profile.header.id.0.clone()]

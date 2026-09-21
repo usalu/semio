@@ -115,6 +115,8 @@ impl ArtifactEditor for En1992PlayApp {
         command.command_id()
     }
 
+    semio_s_artifact_norm_contract::norm_command_from_action!(En1992Command, crate::standards::v1::subsets::any::schema::snapshot::decode_en1992_snapshot_json);
+
     fn handle(
         command: &En1992Command,
         doc: &ArtifactView<'_, En1992Snapshot>,
@@ -214,7 +216,7 @@ pub fn create_en1992_app() -> semio_framework_plugin::AppDefinition {
             .mutation("setSnapshot", LocalizedLabel::native("Set Snapshot", "Dokument setzen"))
             .action_destructive("setSnapshot")
             .action_with(semio_framework_plugin::ActionDefinition::new("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"), semio_framework_plugin::ActionKind::View, "hash"))
-            .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "AusgewÃ¤hlte PrÃ¼fung setzen"))
+            .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "Ausgewählte Prüfung setzen"))
             .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("evaluate", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::Migrated)

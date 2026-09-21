@@ -19,8 +19,8 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeDMm {
     fn inverse(&self, base: &En1994Snapshot) -> Vec<En1994Mutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change stud diameter d to {}", self.new_d_mm)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change stud diameter d to {}", self.new_d_mm), &format!("Ständerdurchmesserd auf {} ändern", self.new_d_mm))
     }
 }
 //#endregion 🔖️Payload

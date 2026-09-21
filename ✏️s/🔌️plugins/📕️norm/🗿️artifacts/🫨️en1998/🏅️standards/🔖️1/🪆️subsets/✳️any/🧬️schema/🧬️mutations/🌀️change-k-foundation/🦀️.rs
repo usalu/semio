@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1998Snapshot, En1998Mutation> for ChangeKFoundatio
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change foundation stiffness k [kN/m] to {}", self.new_k_foundation)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change foundation stiffness k [kN/m] to {}", self.new_k_foundation), &format!("Gründungssteifigkeitsk [kN/m] auf {} ändern", self.new_k_foundation))
     }
 }
 //#endregion 🔖️ChangeKFoundation

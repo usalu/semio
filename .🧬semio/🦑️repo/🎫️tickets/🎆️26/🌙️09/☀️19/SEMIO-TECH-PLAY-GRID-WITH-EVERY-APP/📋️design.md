@@ -11,7 +11,7 @@ locked to **English + native terminology** (the demonstrator is German + `reuse`
 - The demonstrator is one Vite page that mounts one `FrameworkOsShell` per grid cell (4×2, eight branded
   panes). It needs the component union of all its panes and gets it by merging several os-dev activation
   lanes (`generator`, `energy`, `fem3d`).
-- Every pane boots its own plugin closure, so play's union is the union of the 58 per-pane closures:
+- Every pane boots its own plugin closure, so play's union is the union of the 60 per-pane closures:
   53 components. The `s` host lane would cover them but also needs `stdio`, whose wasm component cannot
   link (1,000,000-function ceiling) — its activation fails. Play therefore activates the fewest PANE
   lanes covering the union (greedy, deterministic): 26 lanes, merged into one play-owned receipt
@@ -28,7 +28,7 @@ Every `PLAYGROUND_BUILD_TARGETS` row except:
   koordinator, aggregator, aussuchen, bearbeiten, verfolgen);
 - the `s` host row (the OS shell itself, i.e. the launcher play replaces).
 
-That is 58 panes. Rows without an `app` column (animate, architect, dag, flow, imperative, playbook,
+That is 60 panes. Rows without an `app` column (animate, architect, dag, flow, imperative, playbook,
 reasoning-wires, sequence, vcs, writer) boot their plugin's default editor app exactly as os-dev does.
 A unit test pins the pane list to this rule (no drift when a new playground appears) and checks every
 source descriptor editor app (except the space host apps) is reachable through some pane.

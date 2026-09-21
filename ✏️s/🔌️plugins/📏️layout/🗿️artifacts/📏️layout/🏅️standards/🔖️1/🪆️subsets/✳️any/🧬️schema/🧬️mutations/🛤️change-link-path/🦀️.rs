@@ -23,8 +23,8 @@ impl MutationKind<LayoutSnapshot, LayoutMutation> for ChangeLinkPath {
     fn inverse(&self, base: &LayoutSnapshot) -> Vec<LayoutMutation> {
         inverse_change_link_path(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change link \"{}\" path", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change link \"{}\" path", self.id), &format!("Verknüpfung \"{}\" Pfad ändern", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

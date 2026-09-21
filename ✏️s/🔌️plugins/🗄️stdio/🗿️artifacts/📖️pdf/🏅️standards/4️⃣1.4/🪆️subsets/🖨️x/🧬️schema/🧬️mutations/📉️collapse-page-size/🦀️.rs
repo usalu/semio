@@ -38,8 +38,8 @@ impl MutationKind<PdfSnapshot, PdfX1Mutation> for CollapsePageSize {
         vec![PdfX1Mutation::SetPageSize(super::SetPageSize { width: base.pages[0].width, height: base.pages[0].height })]
     }
 
-    fn label(&self) -> String {
-        "collapse page size".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("collapse page size", "Einklappenseitengröße")
     }
 
     fn target(&self) -> Vec<String> {

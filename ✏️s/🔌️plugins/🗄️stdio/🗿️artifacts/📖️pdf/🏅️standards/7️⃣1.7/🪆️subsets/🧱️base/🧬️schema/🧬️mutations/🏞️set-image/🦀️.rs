@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetImage {
         match base.images.iter().find(|item| item.id == self.image.id) { Some(previous) => vec![PdfMutation::SetImage(SetImage { image: previous.clone() })], None => vec![PdfMutation::RemoveImage(super::remove_image::RemoveImage { id: self.image.id.clone() })] }
     }
 
-    fn label(&self) -> String {
-        format!("Set image {}", self.image.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set image {}", self.image.id), &format!("Bild {} setzen", self.image.id))
     }
 
     fn target(&self) -> Vec<String> {

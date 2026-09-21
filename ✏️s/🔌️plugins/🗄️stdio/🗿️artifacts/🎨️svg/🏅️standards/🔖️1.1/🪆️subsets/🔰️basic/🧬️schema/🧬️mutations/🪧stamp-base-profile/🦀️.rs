@@ -26,8 +26,8 @@ impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for StampBaseProfile 
     fn inverse(&self, base: &SvgSnapshot) -> Vec<SvgBasicMutation> {
         agg_inverse(&SvgBasicMutation::StampBaseProfile(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "stamp-base-profile".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("stamp-base-profile", "Basisprofil stempeln")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

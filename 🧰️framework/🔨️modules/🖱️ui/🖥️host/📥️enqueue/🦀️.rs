@@ -9,11 +9,9 @@
 //! under-measured. A byte-for-byte fixed representation would have to silently truncate a paste or an
 //! IME composition, which is a correctness bug, not an optimization. The honest design instead splits
 //! by REPLACEABILITY, matching the design doc's own §3.2 table exactly:
-//! - Replaceable samples (pointer move, scroll, metrics/resize) — [`CoalesceSlot`]: three fixed `Copy`
-//!   fields, no heap allocation ever, latest-wins (scroll deltas accumulate rather than overwrite, so a
-//!   burst of wheel ticks before the next drain is not lost — only the final position/size is
-//!   "latest").
-//! - Discrete, lossless events (pointer down/up, key down/up, ime, paste) — a bounded `VecDeque` sized
+//! - Replaceable samples (pointer move and metrics/resize) — [`CoalesceSlot`]: two fixed `Copy`
+//!   fields, no heap allocation ever, latest-wins.
+//! - Ordered, lossless events (scroll, pointer down/up, key down/up, ime, paste) — a bounded `VecDeque` sized
 //!   generously (`DISCRETE_QUEUE_CAPACITY`) for any realistic per-frame input burst. This is a bounded
 //!   queue, not a lock-free zero-allocation ring — the variable-length string payloads make true
 //!   zero-allocation impossible for this subset without the same truncation bug above. What IS
@@ -128,18 +126,6 @@ pub struct PointerMoveSample {
     pub generation: InputGeneration,
 }
 
-/// 🎡️ The accumulated scroll delta since the last drain — deltas ADD (a burst of wheel ticks before a
-/// drain must not lose earlier ticks' magnitude), but position is latest-wins like pointer move.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct ScrollSample {
-    pub x: f32,
-    pub y: f32,
-    pub delta_x: f32,
-    pub delta_y: f32,
-    pub modifiers: ui_render::EventModifiers,
-    pub generation: InputGeneration,
-}
-
 /// 📐️ The latest resize/scale-factor sample.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct MetricsSample {
@@ -149,12 +135,11 @@ pub struct MetricsSample {
     pub generation: InputGeneration,
 }
 
-/// 🖱️ Fixed, `Copy`-only, three-field coalescing state for the events the design doc's §3.2 table
-/// marks replaceable. No heap allocation on any path — every field is a plain `Option<Copy struct>`.
+/// 🖱️ Fixed, `Copy`-only coalescing state for replaceable pointer and metrics samples. No heap
+/// allocation on any path — every field is a plain `Option<Copy struct>`.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct CoalesceSlot {
     pointer_move: Option<PointerMoveSample>,
-    scroll: Option<ScrollSample>,
     metrics: Option<MetricsSample>,
 }
 
@@ -170,38 +155,27 @@ impl CoalesceSlot {
         self.pointer_move = Some(sample);
     }
 
-    /// 🎡️ Accumulates delta, replaces position — see this struct's own doc for why deltas add.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn coalesce_scroll(&mut self, sample: ScrollSample) {
-        match self.scroll.as_mut() {
-            Some(existing) => {
-                existing.x = sample.x;
-                existing.y = sample.y;
-                existing.delta_x += sample.delta_x;
-                existing.delta_y += sample.delta_y;
-                existing.modifiers = sample.modifiers;
-                existing.generation = sample.generation;
-            }
-            None => self.scroll = Some(sample),
-        }
-    }
-
     /// 📐️ Overwrites any pending metrics sample — only the latest size/scale matters.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn coalesce_metrics(&mut self, sample: MetricsSample) {
         self.metrics = Some(sample);
     }
 
-    /// 🚿️ Drains every coalesced sample, leaving the slot empty — a caller calls this once per drain
-    /// cycle (typically once per frame build) and applies each `Some` result at most once.
+    /// 🚿️ Takes the retained pointer sample once its generation can enter the current ordered page.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn drain(&mut self) -> (Option<PointerMoveSample>, Option<ScrollSample>, Option<MetricsSample>) {
-        (self.pointer_move.take(), self.scroll.take(), self.metrics.take())
+    fn take_pointer_move(&mut self) -> Option<PointerMoveSample> {
+        self.pointer_move.take()
+    }
+
+    /// 🚿️ Takes the latest metrics sample independently of input dispatch order.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn take_metrics(&mut self) -> Option<MetricsSample> {
+        self.metrics.take()
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn is_empty(&self) -> bool {
-        self.pointer_move.is_none() && self.scroll.is_none() && self.metrics.is_none()
+        self.pointer_move.is_none() && self.metrics.is_none()
     }
 }
 
@@ -289,10 +263,6 @@ impl EventQueue {
                 self.coalesced.coalesce_pointer_move(PointerMoveSample { pointer, x, y, modifiers, generation });
                 EnqueueOutcome::Accepted
             }
-            DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => {
-                self.coalesced.coalesce_scroll(ScrollSample { x, y, delta_x, delta_y, modifiers, generation });
-                EnqueueOutcome::Accepted
-            }
             other => self.push_discrete(other, generation),
         };
         if outcome == EnqueueOutcome::Accepted {
@@ -331,20 +301,24 @@ impl EventQueue {
         EnqueueOutcome::Accepted
     }
 
-    /// 🚿️ Drains everything accumulated since the last drain — coalesced samples first (design doc
-    /// ordering: replaceable state settles before discrete events replay against it), then every
-    /// discrete event in arrival order. Requires [`WorkerContext`]: draining feeds a frame build, which
-    /// is worker-only work per this ticket's capability split.
+    /// 🚿️ Drains one bounded ordered page and only exposes a retained pointer sample when no older
+    /// ordered event remains for a later page. Requires [`WorkerContext`]: draining feeds a frame
+    /// build, which is worker-only work per this ticket's capability split.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn drain_page(&mut self, _worker: WorkerContext) -> DrainedEvents {
-        let (pointer_move, scroll, metrics) = self.coalesced.drain();
+        let metrics = self.coalesced.take_metrics();
         let mut discrete = std::array::from_fn(|_| None);
         for slot in &mut discrete {
             let Some(event) = self.discrete.pop_front() else { break };
             self.discrete_bytes = self.discrete_bytes.saturating_sub(event_owned_bytes(&event.event));
             *slot = Some(event);
         }
-        DrainedEvents { pointer_move, scroll, metrics, discrete }
+        let pointer_move = match (self.coalesced.pointer_move.as_ref(), self.discrete.front()) {
+            (Some(pointer), Some(next)) if next.generation < pointer.generation => None,
+            (Some(_), _) => self.coalesced.take_pointer_move(),
+            (None, _) => None,
+        };
+        DrainedEvents { pointer_move, metrics, discrete }
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -364,7 +338,7 @@ impl EventQueue {
 
     pub fn close_step(&mut self) -> bool {
         if !self.coalesced.is_empty() {
-            self.coalesced.drain();
+            self.coalesced = CoalesceSlot::new();
             return false;
         }
         if let Some(event) = self.discrete.pop_front() {
@@ -393,7 +367,6 @@ impl Default for EventQueue {
 #[derive(Debug, Default)]
 pub struct DrainedEvents {
     pub pointer_move: Option<PointerMoveSample>,
-    pub scroll: Option<ScrollSample>,
     pub metrics: Option<MetricsSample>,
     pub discrete: [Option<DiscreteEvent>; DISCRETE_DRAIN_PAGE_CAPACITY],
 }

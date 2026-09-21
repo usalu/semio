@@ -1704,7 +1704,7 @@ function toolJobMountedDispatchOneTurnExact(raw: string): boolean {
   const setup = toolJobRetainedDispatchSetup(source);
   if (!inner || !setup) return false;
   const direct = "self.start_typed_command_operation(command, admission, meta, operation_id, None).await";
-  const stages = ["dispatch_wire_retained_with_spec", "MountedWorkerJobSession::try_new", "self.tool_operations.insert_admitted(", "active.drive_worker_step(&pool)"];
+  const stages = ["dispatch_wire_retained_with_spec", "MountedWorkerJobSession::try_new", "self.tool_operations.insert_admitted(", "active.drive_worker_step(&pool, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)"];
   const offsets = stages.map((token) => setup.indexOf(token));
   return count(inner.body, direct) === 1 && stages.every((token) => count(setup, token) === 1)
     && offsets.every((offset, index) => offset >= 0 && (index === 0 || offset > offsets[index - 1]!))
@@ -2005,7 +2005,7 @@ function toolJobTypedPersistentFoundation(source: string): boolean {
     preAdmission > guard &&
     session > preparation &&
     retained > session &&
-    setup.includes("active.drive_worker_step(&pool)?") &&
+    setup.includes("active.drive_worker_step(&pool, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)?") &&
     dispatch.body.includes('DslValue::String(operation_id.0.to_string())') &&
     !setup.includes("session.step(&pool") &&
     !setup.includes("let outcome = loop") &&
@@ -2022,7 +2022,7 @@ function toolJobTypedPersistentFoundation(source: string): boolean {
     maintenance.body.includes("self.tool_operations.entry(index)") &&
     maintenance.body.includes("every_operation_awaits_presented_ack") &&
     maintenance.body.includes("PluginCloseStep::AwaitingInput") &&
-    maintenance.body.includes(".drive_worker_step(&pool)") &&
+    maintenance.body.includes(".drive_worker_step(&pool, maximum_bytes)") &&
     maintenance.body.includes("operation.retirement_step(maximum_items.min(1), maximum_bytes)?") &&
     active.body.includes("fn terminal_is_empty") &&
     source.includes("retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document")
@@ -7492,7 +7492,7 @@ export class VerifyScript extends Script {
       const { testNoteEmptyConfigOwnership } = await import(oracle);
       testNoteEmptyConfigOwnership();
       const workerSource = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
-      const initialDrive = "let _ = active.drive_worker_step(&pool)?;";
+      const initialDrive = "let _ = active.drive_worker_step(&pool, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)?;";
       if (!toolJobMountedDispatchOneTurnExact(workerSource)
         || toolJobMountedDispatchOneTurnExact(workerSource.replace(initialDrive, ""))
         || toolJobMountedDispatchOneTurnExact(workerSource.replace(initialDrive, `${initialDrive} ${initialDrive}`))) throw new Error("Note worker dispatch must perform exactly one initial drive");
@@ -11182,6 +11182,27 @@ export function interactivityMountedLayoutTextFailures(mountedSource: string, en
 //#endregion 🧵️P5cMountedLayoutText
 
 //#region 🔄️P5aMountedFrameTransaction
+/** 🧭️ Extracts one uniquely declared Rust item through the shared literal/comment-aware block scanner. */
+function interactivityCheckedRustBlockScope(source: string, marker: string, name: string, failures: string[]): string | undefined {
+  const escaped = marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const declarations = [...source.matchAll(new RegExp(`^[\\t ]*${escaped}`, "gmu"))];
+  const stale = `P5a policy boundary is stale: ${name}`;
+  if (declarations.length !== 1) {
+    if (!failures.includes(stale)) failures.push(stale);
+    return undefined;
+  }
+  const start = source.indexOf(marker, declarations[0]!.index);
+  const headerEnd = start + marker.length;
+  const open = source.indexOf("{", headerEnd);
+  const semicolon = source.indexOf(";", headerEnd);
+  const block = open < 0 || (semicolon >= 0 && semicolon < open) ? undefined : toolJobRustBlock(source, open);
+  if (!block) {
+    if (!failures.includes(stale)) failures.push(stale);
+    return undefined;
+  }
+  return policyStripRustCommentsAndStrings(source.slice(start, block.end));
+}
+
 export function interactivityMountedFrameTransactionFailures(
   glueSource: string,
   frameJobSource: string,
@@ -11218,51 +11239,97 @@ export function interactivityMountedFrameTransactionFailures(
   const sceneSlots = interactivityProductionSource(sceneSlotsSource);
   const scenes = interactivityProductionSource(scenesSource);
   const services = interactivityProductionSource(servicesSource);
+  const failures: string[] = [];
+  const scope = (source: string, marker: string, name: string) => interactivityCheckedRustBlockScope(source, marker, name, failures);
+  const scopes = (...parts: (string | undefined)[]) => parts.every((part) => part !== undefined) ? parts.join("\n") : undefined;
   const transaction = glue.slice(glue.indexOf("pub(crate) struct FrameTransaction"), glue.indexOf("pub(crate) struct AppFramePresentation"));
   const frameCursors = glue.slice(glue.indexOf("struct FrameBuildCursor"), glue.indexOf("struct FrameWheelCursor"));
   const buildBoundary = glue.slice(glue.indexOf("fn frame_before_input_step"), glue.indexOf("fn frame_after_input_step"));
   const finishBoundary = glue.slice(glue.indexOf("fn frame_after_input_step"), glue.indexOf("impl AppInteractionState"));
   const deferredBoundary = glue.slice(glue.indexOf("fn start_frame_deferred"), glue.indexOf("fn apply_step", glue.indexOf("fn start_frame_deferred")));
   const maintenanceOwnerBoundary = glue.slice(glue.indexOf("struct FrameDeferredCursor"), glue.indexOf("enum RuntimeApply"));
+  const maintenanceNativeOwnerBoundary = glueSource.slice(glueSource.indexOf("struct FrameDeferredCursor"), glueSource.indexOf("enum RuntimeApply"));
+  const maintenanceCloseBoundary = scope(maintenanceNativeOwnerBoundary, "fn begin_close(&mut self)", "native maintenance close");
   const maintenanceExecutionBoundary = glue.slice(glue.indexOf("struct FrameMaintenanceExecutionRegistry"), glue.indexOf("impl RuntimeMailbox {"));
   const maintenanceRegistryBoundary = glue.slice(glue.indexOf("struct FrameMaintenanceExecutionRegistry"), glue.indexOf("struct FrameMaintenanceAuthority"));
   const maintenanceSpawnBoundary = glue.slice(glue.indexOf("fn try_spawn_frame_maintenance_reserved"), glue.indexOf("#[cfg(target_arch = \"wasm32\")]", glue.indexOf("fn try_spawn_frame_maintenance_reserved")));
   const maintenanceTerminalBoundary = glue.slice(glue.indexOf("fn frame_maintenance_terminal_fault"), glue.indexOf("enum RuntimeApply"));
   const maintenanceWorkerTerminalStart = maintenanceSpawnBoundary.indexOf("if let Some(fault) = frame_maintenance_terminal_fault");
   const maintenanceWorkerTerminalBoundary = maintenanceSpawnBoundary.slice(maintenanceWorkerTerminalStart, maintenanceSpawnBoundary.indexOf("            } else {", maintenanceWorkerTerminalStart));
-  const chromeBoundary = shell.slice(shell.indexOf("pub(crate) struct ShellChromeFrameCursor"), shell.indexOf("fn body_rect"));
+  const chromeBoundary = scopes(
+    scope(shell, "pub(crate) struct ShellChromeFrameCursor", "Shell chrome cursor"),
+    scope(shell, "enum ShellChromeFramePhase", "Shell chrome phase"),
+    scope(shell, "pub(crate) fn render_chrome_step", "Shell chrome step"),
+  );
   const engineBoundary = engineCanvas.slice(engineCanvas.indexOf("const ENGINE_CANVAS_FRAME_PACKET_CAPACITY"), engineCanvas.indexOf("struct EngineGpuSurface"));
   const worldBoundary = world3d.slice(world3d.indexOf("const WORLD3D_FRAME_RESOURCE_CAPACITY"), world3d.indexOf("//#endregion 📦️PreparedWorldResources"));
   const atlasBoundary = prepared.slice(prepared.indexOf("pub const PREPARED_ATLAS_PAGE_BYTES"), prepared.indexOf("impl PreparedRasterPages"));
   const atlasGpuBoundary = gpu.slice(gpu.indexOf("struct PreparedAtlasUploadCursor"), gpu.indexOf("pub fn finish_prepared"));
   const atlasDrawBoundary = draw.slice(draw.indexOf("upload_glyph_atlas_page"), draw.indexOf("pub fn render_frame"));
-  const shellChildren = interactivityProductionSource(shellSource.slice(shellSource.indexOf("fn render_main_window_step"), shellSource.indexOf("fn render_navbar(")));
-  const chromeNavbarBoundary = shellChildren.slice(shellChildren.indexOf("fn render_navbar_step"), shellChildren.indexOf("fn render_tutorial_bar_step"));
-  const chromeTutorialBoundary = shellChildren.slice(shellChildren.indexOf("fn render_tutorial_bar_step"), shellChildren.indexOf("fn render_footer_step"));
-  const chromeFooterBoundary = shellChildren.slice(shellChildren.indexOf("fn render_footer_step"), shellChildren.indexOf("fn render_overlay_step"));
-  const chromeOverlayBoundary = shellChildren.slice(shellChildren.indexOf("fn render_overlay_step"));
+  const chromeMainBoundary = scope(shell, "fn render_main_window_step", "Shell main window");
+  const chromePanelBoundary = scope(shell, "fn render_panel_step", "Shell panel");
+  const chromeNavbarBoundary = scope(shell, "fn render_navbar_step", "Shell navbar");
+  const chromeTutorialBoundary = scope(shell, "fn render_tutorial_bar_step", "Shell tutorial");
+  const chromeFooterBoundary = scope(shell, "fn render_footer_step", "Shell footer");
+  const chromeOverlayStepBoundary = scope(shell, "fn render_overlay_step", "Shell overlay");
+  const chromeContextMenuBoundary = scope(shell, "fn render_context_menu_step", "Shell context menu");
+  const chromeTooltipBoundary = scope(shell, "fn render_chrome_tooltip_step", "Shell tooltip");
+  const chromeDialogBoundary = scope(shell, "fn render_chrome_dialog_step", "Shell dialog");
+  const chromeTourBoundary = scope(shell, "fn render_chrome_tour_step", "Shell tour");
+  const chromeOverlayBoundary = scopes(chromeOverlayStepBoundary, chromeContextMenuBoundary, chromeTooltipBoundary, chromeDialogBoundary, chromeTourBoundary);
+  const shellChildren = scopes(chromeMainBoundary, chromePanelBoundary, chromeNavbarBoundary, chromeTutorialBoundary, chromeFooterBoundary, chromeOverlayBoundary);
   const documentBoundary = interactivityProductionSource(interpreterSource.slice(interpreterSource.indexOf("pub struct UiDocumentFrameCursor"), interpreterSource.indexOf("pub fn render_ui_document(")));
   const uiFrameBoundary = uiEngine.slice(uiEngine.indexOf("const RETAINED_PAINT_DEPTH_CREDITS"), uiEngine.indexOf("pub fn frame<H"));
-  const paintNodeBoundary = paint.slice(paint.indexOf("pub const RETAINED_NODE_TEXT_MAX_BYTES"), paint.indexOf("pub(crate) fn paint_tree"));
-  const interactiveSyncBoundary = paint.slice(paint.indexOf("const RETAINED_SYNC_COLLECTION_ITEMS"), paint.indexOf("fn find_child_by_key"));
-  const sceneNodeBoundary = sceneSlots.slice(sceneSlots.indexOf("pub struct ScenePaintCursor"), sceneSlots.indexOf("fn collect_scene_slots_node"));
+  const paintNodeBoundary = scopes(
+    scope(paint, "pub struct RetainedGlyphCursor", "paint glyph cursor"),
+    scope(paint, "pub(crate) struct RetainedNodePaintCursor", "paint node cursor"),
+    scope(paint, "impl RetainedNodePaintCursor", "paint node cursor implementation"),
+    scope(paint, "fn paint_retained_glyph_step_inner", "paint retained glyph step"),
+    scope(paint, "fn retained_fixed_output_budgeted", "paint output credit"),
+    scope(paint, "fn retained_text_node_step_weighted", "paint retained text"),
+    scope(paint, "fn retained_control_is_bounded", "paint bounded control"),
+    scope(paint, "fn retained_tree_node_step", "paint retained tree"),
+    scope(paint, "pub(crate) fn paint_node_step(", "paint node step"),
+    scope(paint, "pub(crate) fn paint_node_step_with_driver", "paint node driver step"),
+  );
+  const interactiveSyncBoundary = scopes(
+    scope(paint, "struct RetainedSyncTreeFrame", "interactive sync tree frame"),
+    scope(paint, "struct RetainedSyncTreeRecord", "interactive sync tree record"),
+    scope(paint, "pub(crate) struct RetainedInteractiveSyncCursor", "interactive sync cursor"),
+    scope(paint, "impl RetainedInteractiveSyncCursor", "interactive sync cursor implementation"),
+    scope(paint, "pub(crate) fn sync_interactive_state_node_step", "interactive sync step"),
+  );
+  const sceneNodeBoundary = scopes(
+    scope(sceneSlots, "pub struct ScenePaintCursor", "scene paint cursor"),
+    scope(sceneSlots, "impl ScenePaintCursor", "scene paint cursor implementation"),
+    scope(sceneSlots, "pub trait SceneHost", "scene host contract"),
+    scope(sceneSlots, "pub(crate) fn scene_slot_for_node", "scene slot node resolver"),
+  );
   const sceneHostBoundary = interpreter.slice(interpreter.indexOf("impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost"), interpreter.indexOf("fn drive_mounted_layout_text_one"));
   const retainedImageBoundary = interpreter.slice(interpreter.indexOf("fn render_ui_image_step"), interpreter.indexOf("fn render_ui_image("));
   const retainedSceneBoundary = scenes.slice(scenes.indexOf("pub fn render_component_scene_step"), scenes.indexOf("pub fn render_component_scene("));
   const findBoundary = shell.slice(shell.indexOf("pub struct ShellFindItems"), shell.indexOf("fn context_menu_action_kind_str"));
   const maintenanceBoundary = shell.slice(shell.indexOf("struct ShellChromeMaintenance"), shell.indexOf("fn body_rect"));
-  const chromeTextBoundary = shell.slice(shell.indexOf("fn chrome_text_step"), shell.indexOf("fn chrome_icon"));
-  const chromeGroupBoundary = shell.slice(shell.indexOf("enum RetainedChromeGroupStep"), shell.indexOf("struct WindowMeasuresRailOutcome"));
-  const chromeDialogBoundary = shell.slice(shell.indexOf("fn render_chrome_dialog_step"), shell.indexOf("fn render_chrome_tour_step"));
-  const chromeTourBoundary = interactivityProductionSource(shellSource.slice(shellSource.indexOf("fn render_chrome_tour_step"), shellSource.indexOf("#[cfg(test)]\n    fn render_navbar", shellSource.indexOf("fn render_chrome_tour_step"))));
+  const chromeTextBoundary = scopes(
+    scope(shell, "fn chrome_text_step", "Shell chrome text step"),
+    scope(shell, "fn chrome_text_complete_step", "Shell chrome text completion"),
+  );
+  const chromeGroupWidthBoundary = scope(shell, "fn retained_chrome_group_item_width", "Shell chrome group width");
+  const chromeGroupStepBoundary = scopes(
+    scope(shell, "enum RetainedChromeGroupStep", "Shell chrome group phase"),
+    scope(shell, "fn render_retained_chrome_group_item_step(", "Shell chrome group step"),
+    scope(shell, "fn render_retained_chrome_group_item_step_with_trailing", "Shell chrome group trailing step"),
+  );
+  const chromeGroupBoundary = scopes(chromeGroupWidthBoundary, chromeGroupStepBoundary);
   const prefsBoundary = shell.slice(shell.indexOf("fn native_pref_field_path"), shell.indexOf("//#endregion 🗄️PrefsStore"));
   const nativePrefsBoundary = prefsBoundary.slice(0, prefsBoundary.indexOf("fn prefs_get("));
   const fixedFilePageBoundary = services.slice(services.indexOf("//#region 📄️FixedFilePage"), services.indexOf("//#endregion 📄️FixedFilePage"));
-  const failures: string[] = [];
-  const requireAll = (source: string, needles: readonly string[], label: string) => {
+  const requireAll = (source: string | undefined, needles: readonly string[], label: string) => {
+    if (source === undefined) return;
     if (needles.some((needle) => !source.includes(needle))) failures.push(label);
   };
-  const requireExactlyOne = (source: string, needle: string, label: string) => {
+  const requireExactlyOne = (source: string | undefined, needle: string, label: string) => {
+    if (source === undefined) return;
     if (source.split(needle).length - 1 !== 1) failures.push(label);
   };
   requireAll(transaction, [
@@ -11336,14 +11403,13 @@ export function interactivityMountedFrameTransactionFailures(
   ], "P5a post-input boundary does not page atlas work and retain draw/overlay/deferred transfers");
   for (const forbidden of ["frame_before_input(", "frame_after_input(", "drive_pending_frame_deferred", "take_packets(", "append_to(", "self.draw.clear()", "self.overlay.clear()", "self.icons.pixels.clone()", "self.atlas.pixels.clone()"])
     if (glue.includes(forbidden)) failures.push(`P5a mounted call graph retains opaque whole-work callee ${forbidden}`);
-  requireAll(deferredBoundary, ["cursor_value.take_next()", "spawn_frame_deferred_reserved", "try_spawn_frame_maintenance_reserved", "pending_frame_maintenance_refusal", "FrameDeferredCursor::close_step", "runtime.interaction = Some(interaction)"], "P5a deferred boundary does not take, refuse, close, and resume exactly one retained work owner");
+  requireAll(deferredBoundary, ["cursor_value.take_next()", "spawn_frame_deferred_reserved", "try_spawn_frame_maintenance_reserved", "pending_frame_maintenance_refusal", "FrameDeferredCursor::close_step", "runtime.return_interaction(interaction)"], "P5a deferred boundary does not take, refuse, close, and resume exactly one retained work owner");
   for (const forbidden of [".expect(", ".unwrap(", "loop {", "while "])
     if (deferredBoundary.includes(forbidden)) failures.push(`P5a deferred boundary retains panicking or run-to-completion ${forbidden}`);
   requireAll(maintenanceOwnerBoundary, [
     "generation: u64",
     "cancel: semio_framework_async::CancelToken",
     "closing: bool",
-    "fn begin_close(&mut self)",
     "struct FrameMaintenanceOwner",
     "deadline_ms: Option<u64>",
     "struct FrameMaintenanceOwnerCell<T>",
@@ -11354,9 +11420,11 @@ export function interactivityMountedFrameTransactionFailures(
     "struct FrameMaintenanceAuthority",
     "fn is_live(&self, generation: u64) -> bool",
     "fn release(&self, generation: u64) -> bool",
-    "self.generation.store(0, std::sync::atomic::Ordering::Release)",
+    "self.generation.store(0, Ordering::Release)",
     "compare_exchange(1, 0",
   ], "P5a maintenance authority is not generation/cancel/deadline-qualified with nonblocking exact-owner refusal handback");
+  requireAll(maintenanceNativeOwnerBoundary, ["#[cfg(any(not(target_arch = \"wasm32\"), test))]"], "P5a native maintenance close is not available in production");
+  requireAll(maintenanceCloseBoundary, ["self.closing = true"], "P5a native maintenance close does not retain its closing state");
   requireAll(maintenanceExecutionBoundary, [
     "struct FrameMaintenanceExecutionRegistry",
     "const QUEUED: u8 = 2",
@@ -11423,21 +11491,23 @@ export function interactivityMountedFrameTransactionFailures(
     "request_presence_preview",
     "request_chrome_preferences_persist",
     "pub(crate) fn advance_chrome_maintenance_step",
-    "prefs_get_bounded",
-    "prefs_set_bounded",
+    "read_ui_preferences()",
+    "stored_field_get(",
+    "stored_field_set(",
+    "persist_ui_preferences(",
   ], "P5a Shell persistence/presence work is not a retained one-field/page child");
   requireAll(prefsBoundary, [
     "fn native_pref_field_path",
     "key.len() > SHELL_CHROME_IO_FIELD_BYTES",
     "fn native_pref_read_page",
+    "semio_framework_os_services::storage_worker_read_fixed_file_document(&path, OS_SHELL_CONFIG_MAX_BYTES)",
     "semio_framework_os_services::storage_worker_read_fixed_file_page(&path, SHELL_CHROME_IO_FIELD_BYTES)",
     "String::from_utf8(page)",
     "fn native_pref_write_page",
-    "value.len() > SHELL_CHROME_IO_FIELD_BYTES",
     "semio_framework_os_services::storage_worker_write_fixed_file_page(&path, value.as_bytes(), SHELL_CHROME_IO_FIELD_BYTES)",
-    "prefs_get_bounded",
-    "prefs_set_bounded",
-  ], "P5a native preference maintenance does not delegate one fixed owned field page to the host-storage service");
+    "fn prefs_get(",
+    "fn prefs_set(",
+  ], "P5a native preference maintenance does not delegate document and field pages to the host-storage service");
   requireAll(fixedFilePageBoundary, [
     "pub const STORAGE_FIXED_FILE_PAGE_BYTES: usize = 16 * 1024",
     "pub fn storage_worker_read_fixed_file_page",
@@ -11455,12 +11525,13 @@ export function interactivityMountedFrameTransactionFailures(
   for (const forbidden of ["PREFS_STORE", "Mutex", ".lock()", "serde_json::from_", "serde_json::to_", "OS_SHELL_CONFIG_STORAGE_KEY", "Vec::with_capacity", "vec![", "loop {", "while ", "std::fs::", "std::io::"])
     if (nativePrefsBoundary.includes(forbidden)) failures.push(`P5a native preference field page retains blocking, dynamic, or whole-config ${forbidden}`);
   for (const forbidden of ["load_ui_prefs_once()", "read_stored_introduction_seen(", "persist_panel_layout_if_changed()", "write_stored_introduction_seen(", "persist_ui_prefs_if_changed()", "publish_presence_heartbeat()"])
-    if (chromeBoundary.includes(forbidden)) failures.push(`P5a chrome frame still reaches synchronous maintenance ${forbidden}`);
+    if (chromeBoundary?.includes(forbidden)) failures.push(`P5a chrome frame still reaches synchronous maintenance ${forbidden}`);
   requireAll(glue, ["FrameDeferredWork::ShellMaintenance", "shell_maintenance: bool", "semio_framework_async::Lane::Io", "PreparedAtlasPages::close_abandoned_step()"], "P5a Shell I/O or abandoned atlas close is not mounted on the shared retained boundary");
   requireAll(chromeBoundary, [
     "ShellChromeFramePhase::MainWindow",
-    "ShellChromeFramePhase::LeftPanel",
-    "ShellChromeFramePhase::RightPanel",
+    "ShellChromeFramePhase::PaneOverlayHits",
+    "ShellChromeFramePhase::Panels",
+    "ShellChromeFramePhase::AgentChatHeader",
     "ShellChromeFramePhase::Navbar",
     "ShellChromeFramePhase::TutorialBar",
     "ShellChromeFramePhase::Footer",
@@ -11470,18 +11541,19 @@ export function interactivityMountedFrameTransactionFailures(
   ], "P5a shell chrome boundary is not a retained one-child cursor");
   requireAll(chromeBoundary, [
     "render_main_window_step(&mut cursor.child",
-    "render_panel_step(&mut cursor.child, true",
-    "render_panel_step(&mut cursor.child, false",
+    "render_mobile_panel_step(&mut cursor.child",
+    "render_panel_step(&mut cursor.child, anchor",
+    "render_agent_chat_header_step(&mut cursor.child",
     "render_navbar_step(&mut cursor.child",
     "render_tutorial_bar_step(&mut cursor.child",
     "render_footer_step(&mut cursor.child",
     "render_overlay_step(&mut cursor.child",
-    "cursor.advance(ShellChromeFramePhase::LeftPanel)",
+    "cursor.advance(ShellChromeFramePhase::PaneOverlayHits)",
   ], "P5a shell chrome phases do not remain parked on retained child cursors");
   for (const forbidden of ["self.render_main_window(", "self.render_left_panel(", "self.render_right_panel(", "self.render_navbar(", "self.render_tutorial_bar(", "self.render_footer(", "self.render_overlay(", "self.render_tree_drag_overlay(", "render_tutorial_gesture_overlay("])
-    if (chromeBoundary.includes(forbidden)) failures.push(`P5a shell chrome cursor reaches whole child ${forbidden}`);
+    if (chromeBoundary?.includes(forbidden)) failures.push(`P5a shell chrome cursor reaches whole child ${forbidden}`);
   for (const forbidden of ["render_chrome(", "render_chrome_build(", ".clear()", "std::mem::take(&mut self.chrome_build.introduction_seen_writes)", "for app_id in", "while "])
-    if (chromeBoundary.includes(forbidden)) failures.push(`P5a shell chrome cursor retains whole-work ${forbidden}`);
+    if (chromeBoundary?.includes(forbidden)) failures.push(`P5a shell chrome cursor retains whole-work ${forbidden}`);
   requireAll(shellChildren, [
     "fn render_main_window_step",
     "render_ui_document_step(",
@@ -11489,7 +11561,6 @@ export function interactivityMountedFrameTransactionFailures(
     "fn render_navbar_step",
     "fn render_tutorial_bar_step",
     "fn render_footer_step",
-    "footer_utility_at_path",
     "fn render_overlay_step",
     "fn render_context_menu_step",
     "fn render_chrome_tooltip_step",
@@ -11497,7 +11568,7 @@ export function interactivityMountedFrameTransactionFailures(
     "fn render_chrome_tour_step",
   ], "P5a live Shell children are not retained node/widget cursors");
   for (const forbidden of ["render_main_window(", "render_left_panel(", "render_right_panel(", "render_navbar(", "render_tutorial_bar(", "render_footer(", "render_overlay(", "render_ui_document(", "render_context_menu(", "render_chrome_tour(", "measure_chrome_group_item(", "render_chrome_group("])
-    if (shellChildren.includes(forbidden)) failures.push(`P5a live Shell child body reaches whole subtree ${forbidden}`);
+    if (shellChildren?.includes(forbidden)) failures.push(`P5a live Shell child body reaches whole subtree ${forbidden}`);
   requireAll(chromeTextBoundary, [
     "fn chrome_text_step",
     "paint_retained_glyph_step",
@@ -11510,7 +11581,7 @@ export function interactivityMountedFrameTransactionFailures(
   requireAll(chromeGroupBoundary, [
     "enum RetainedChromeGroupStep",
     "fn retained_chrome_group_item_width",
-    "label_bytes > ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES",
+    "label.len() > ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES",
     "fn render_retained_chrome_group_item_step",
     "group_phase: &mut u8",
     "glyph: &mut RetainedGlyphCursor",
@@ -11526,20 +11597,20 @@ export function interactivityMountedFrameTransactionFailures(
   for (const forbidden of ["fn measure_chrome_group_item", "fn render_chrome_group"])
     if (shell.includes(forbidden)) failures.push(`P5a production Shell retains legacy whole-string chrome-group reachability ${forbidden}`);
   for (const forbidden of ["draw_text(", "chrome_text(", "measure_text(", "for ch in", "for item in", "loop {", "while "])
-    if (chromeGroupBoundary.includes(forbidden)) failures.push(`P5a retained Shell chrome group reaches whole work ${forbidden}`);
+    if (chromeGroupStepBoundary?.includes(forbidden)) failures.push(`P5a retained Shell chrome group reaches whole work ${forbidden}`);
   requireAll(chromeDialogBoundary, ["chrome_text_complete_step", "&mut cursor.glyph", "Ok(false) => return false", "cursor.scalar += 1"], "P5a live dialog does not park on the retained glyph cursor");
   requireAll(chromeTourBoundary, ["chrome_text_complete_step", "&mut cursor.glyph", "Ok(false) => return false", "cursor.scalar += 1"], "P5a live tour does not park on the retained glyph cursor");
   requireAll(chromeTutorialBoundary, ["fn render_tutorial_bar_step", "chrome_text_complete_step", "&mut cursor.glyph", "Ok(false) => return false"], "P5a mounted tutorial bar does not park dynamic text on the retained glyph cursor");
   requireAll(chromeTutorialBoundary, ["render_retained_chrome_group_item_step", "retained_chrome_group_item_width", "RetainedChromeGroupStep::Pending => return false"], "P5a mounted tutorial groups do not park each output and glyph opportunity");
-  requireAll(chromeFooterBoundary, ["render_footer_utility_node(cursor", "render_sync_status_and_checkin(cursor", "Ok(None) => return false"], "P5a mounted footer does not park on retained dynamic utility and sync labels");
+  requireAll(chromeFooterBoundary, ["render_retained_panel_chrome_item_step", "render_footer_status_step", "Ok(false) => return false"], "P5a mounted footer does not park on retained dynamic utility and sync labels");
   requireAll(chromeOverlayBoundary, ["fn render_overlay_step", "fn render_context_menu_step", "fn render_chrome_tooltip_step", "fn render_chrome_dialog_step", "fn render_chrome_tour_step", "chrome_text_complete_step", "&mut cursor.glyph", "Ok(false) => return false"], "P5a mounted overlay children do not park dynamic text on the retained glyph cursor");
   requireAll(chromeBoundary, ["ShellChromeFramePhase::Error", "chrome_text_complete_step(draw, atlas, error", "&mut cursor.child.glyph", "Ok(false) => return false"], "P5a mounted Shell error path does not park on the retained glyph cursor");
   for (const [boundary, label] of [[chromeTextBoundary, "text callee"], [chromeDialogBoundary, "dialog"], [chromeTourBoundary, "tour"]] as const)
     for (const forbidden of ["draw_text(", "chrome_text(", "for ch in", "for character in", ".chars().for_each", ".chars().count()", "loop {", "while "])
-      if (boundary.includes(forbidden)) failures.push(`P5a Shell ${label} retains whole-string work ${forbidden}`);
+      if (boundary?.includes(forbidden)) failures.push(`P5a Shell ${label} retains whole-string work ${forbidden}`);
   for (const [boundary, label] of [[chromeNavbarBoundary, "navbar"], [chromeTutorialBoundary, "tutorial"], [chromeFooterBoundary, "footer"], [chromeOverlayBoundary, "overlay"]] as const)
     for (const forbidden of ["draw_text(", "chrome_text(", ".chars().count()", "for ch in", "for character in", "loop {", "while "])
-      if (boundary.includes(forbidden)) failures.push(`P5a mounted Shell ${label} reaches whole-string work ${forbidden}`);
+      if (boundary?.includes(forbidden)) failures.push(`P5a mounted Shell ${label} reaches whole-string work ${forbidden}`);
   requireAll(shellSource, ["dialog_and_tour_text_advance_one_scalar_and_one_glyph_per_grant", "dialog_and_tour_text_max_plus_one_fails_without_output", "dynamic_chrome_group_retains_every_glyph_and_border_opportunity", "dynamic_chrome_group_max_plus_one_is_identity_preserving"], "P5a Shell multi-megabyte one-scalar, chrome-group, or MAX + 1 law is missing");
   requireAll(documentBoundary, [
     "pub struct UiDocumentFrameCursor",
@@ -11575,11 +11646,13 @@ export function interactivityMountedFrameTransactionFailures(
   ], "P5a retained UI frame does not advance one fixed visit/node/scene/publication unit");
   for (const forbidden of ["paint_tree(", "sync_interactive_state_node(&mut", "collect_scene_slots(", "window.draw.clear()", "for slot in"])
     if (uiFrameBoundary.includes(forbidden)) failures.push(`P5a live UI frame reaches whole subtree ${forbidden}`);
-  requireAll(interactiveSyncBoundary, [
+  requireAll(paint, [
     "RETAINED_SYNC_COLLECTION_ITEMS: usize = 256",
     "RETAINED_SYNC_OUTPUTS: usize = RETAINED_SYNC_COLLECTION_ITEMS * 2",
     "RETAINED_SYNC_DEPTH: usize = 64",
     "RETAINED_SYNC_KEY_BYTES: usize = 256",
+  ], "P5a mounted interactive synchronization fixed limits are missing");
+  requireAll(interactiveSyncBoundary, [
     "struct RetainedSyncTreeFrame",
     "items_pointer: usize",
     "items_len: usize",
@@ -11594,12 +11667,11 @@ export function interactivityMountedFrameTransactionFailures(
     "RetainedInteractiveSyncPhase::TreeApplyWrite",
     "RetainedInteractiveSyncPhase::TreeClose",
     "pub(crate) fn close_step(&mut self) -> bool",
-    "pub(crate) fn terminal_is_empty(&self) -> bool",
   ], "P5a mounted interactive synchronization lacks fixed retained item/depth/output ownership");
   for (const forbidden of ["Vec<", ".clone()", ".collect::<Vec", "tree.children(id)", "sync_tree_row_layout", "sync_tree_item_layout", "for index in", "for child in", "while ", "loop {"])
-    if (interactiveSyncBoundary.includes(forbidden)) failures.push(`P5a mounted interactive synchronization retains whole collection/depth work ${forbidden}`);
+    if (interactiveSyncBoundary?.includes(forbidden)) failures.push(`P5a mounted interactive synchronization retains whole collection/depth work ${forbidden}`);
+  requireAll(paint, ["RETAINED_NODE_TEXT_MAX_BYTES: usize = 4 * 1024 * 1024"], "P5a retained node text bound is missing");
   requireAll(paintNodeBoundary, [
-    "RETAINED_NODE_TEXT_MAX_BYTES: usize = 4 * 1024 * 1024",
     "pub(crate) struct RetainedNodePaintCursor",
     "glyph: RetainedGlyphCursor",
     "phase: u16",
@@ -11609,7 +11681,7 @@ export function interactivityMountedFrameTransactionFailures(
     "line: usize",
     "pen_x: f32",
     "pub(crate) fn paint_node_step",
-    "draw.begin_retained_output(1, std::mem::size_of::<crate::wgpu::draw::UiInstance>())",
+    "draw.begin_retained_output(strikes, strikes * size_of::<crate::wgpu::draw::UiInstance>())",
     "draw.finish_retained_output()",
     "value[cursor.byte..].chars().next()",
     "cursor.byte = next_byte",
@@ -11621,11 +11693,9 @@ export function interactivityMountedFrameTransactionFailures(
     "UiNode::Tree(tree_node) => retained_tree_node_step",
     "fn retained_tree_node_step",
     "retained_control_is_bounded",
-    "pub(crate) fn close_step",
-    "terminal_is_empty",
   ], "P5a paint child authority is not retained by byte, glyph, line, output credit, and close state");
   for (const forbidden of ["wrap_text(", ".collect::<Vec", "for (index, line)", "for ch in", "for character in", "paint_stack(tree", "paint_node(tree", "paint_node_self(", "paint_control(", "for child in", "loop {", "while "])
-    if (paintNodeBoundary.includes(forbidden)) failures.push(`P5a paint node recursively reaches child work ${forbidden}`);
+    if (paintNodeBoundary?.includes(forbidden)) failures.push(`P5a paint node recursively reaches child work ${forbidden}`);
   requireAll(paintSource, [
     "retained_text_paint_emits_at_most_one_glyph_per_grant",
     "retained_multi_megabyte_input_advances_one_scalar_per_grant",
@@ -11651,13 +11721,13 @@ export function interactivityMountedFrameTransactionFailures(
     "item: usize",
     "page: usize",
     "byte: usize",
-    "pub fn advance_byte(&mut self) -> Result<(), ()>",
+    "pub fn advance_byte(&mut self) -> Result<(), ScenePaintCursorError>",
     "fn paint_slot_step",
     "pub(crate) fn scene_slot_for_node",
     "UiNode::ComponentScene",
     "UiNode::Image",
   ], "P5a scene child authority is not one-node and producer-cursor addressable");
-  if (sceneNodeBoundary.includes("collect_scene_slots(")) failures.push("P5a one-node scene authority reaches whole scene collection");
+  if (sceneNodeBoundary?.includes("collect_scene_slots(")) failures.push("P5a one-node scene authority reaches whole scene collection");
   requireAll(sceneSlotsSource, ["scene_paint_cursor_rejects_stale_node_without_consuming_owner", "scene_paint_cursor_advances_one_scalar_and_closes_one_bound_owner"], "P5a scene stale-owner, scalar, or close law is missing");
   requireAll(sceneHostBoundary, ["fn paint_slot_step", "cursor.bind(slot.node)", "render_component_scene_step", "render_ui_image_step"], "P5a Framework scene host does not resume exact retained scene/image consumers");
   for (const forbidden of ["render_component_scene(", "render_ui_image(", "fn paint_slot("])

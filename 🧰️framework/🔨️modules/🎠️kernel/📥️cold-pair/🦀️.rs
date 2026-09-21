@@ -1,7 +1,6 @@
 //#region 🧊️ColdDocumentPairIngress
 pub const COLD_PAIR_PAGE_MAXIMUM_BYTES: usize = 64 * 1024;
 pub const COLD_PAIR_MAXIMUM_BYTES: usize = 4 * 1024 * 1024;
-const COLD_PAIR_ID_MAXIMUM_BYTES: usize = 512;
 
 pub use semio_framework_actor::cold_pair::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_PAGES};
 
@@ -30,14 +29,7 @@ impl ColdDocumentPairHeader {
         if self.descriptor_sha256 == [0; 32] || self.pack_sha256 == [0; 32] || self.spr_sha256 == [0; 32] || self.aggregate_sha256 == [0; 32] {
             return Err("cold-pair.hash");
         }
-        if self.baseline_frontier.document_id.is_empty()
-            || self.baseline_frontier.document_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
-            || self.baseline_frontier.head_edit_id.is_empty()
-            || self.baseline_frontier.head_edit_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
-            || self.baseline_frontier.last_commit_seq > self.baseline_frontier.head_edit_ordinal
-        {
-            return Err("cold-pair.frontier");
-        }
+        self.baseline_frontier.validate()?;
         if self.pack_length == 0 || self.spr_length == 0 || total > COLD_PAIR_MAXIMUM_BYTES as u64 {
             return Err("cold-pair.length");
         }

@@ -32,8 +32,8 @@ impl MutationKind<GisMapSnapshot, GisMapMutation> for DeleteRoute {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Delete route \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete route \"{}\"", self.id), &format!("Route \"{}\" löschen", self.id))
     }
 }
 //#endregion 🔹Payload

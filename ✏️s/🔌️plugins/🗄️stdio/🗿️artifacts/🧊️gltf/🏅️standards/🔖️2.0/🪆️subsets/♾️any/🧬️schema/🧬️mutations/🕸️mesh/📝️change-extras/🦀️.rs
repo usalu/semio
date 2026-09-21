@@ -68,8 +68,8 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeMeshExt
         vec![super::GltfMutation::ChangeMeshExtraData(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Change Mesh Extra Data".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Change Mesh Extra Data", "zusätzliche Netzdaten ändern")
     }
 
     fn target(&self) -> Vec<String> {

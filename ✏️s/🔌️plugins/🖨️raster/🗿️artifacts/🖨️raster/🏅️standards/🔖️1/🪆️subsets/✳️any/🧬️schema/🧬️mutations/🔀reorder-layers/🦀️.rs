@@ -27,8 +27,8 @@ pub mod mutation {
             super::super::inverse::inverse(self, base)
         }
 
-        fn label(&self) -> String {
-            format!("Reorder layer {}", self.layer_id)
+        fn label(&self) -> protocol::LocalizedLabel {
+            protocol::LocalizedLabel::native(&format!("Reorder layer {}", self.layer_id), &format!("Ebene {} umordnen", self.layer_id))
         }
 
         fn target(&self) -> Vec<String> {

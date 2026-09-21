@@ -366,7 +366,7 @@ fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     assert_eq!(mutation.descriptor(), &RenameMini::DESCRIPTOR);
     assert_eq!(MiniMutation::kinds(), &[<RenameMini as MutationKind<MiniDoc, MiniMutation>>::SEMANTICS]);
     assert_eq!(mutation.semantics().record, "RenamedMini");
-    assert_eq!(mutation.label(), "Rename mini to \"b\"");
+    assert_eq!(mutation.label(), crate::LocalizedLabel::native("Rename mini to \"b\"", "Mini in \"b\" umbenennen"));
     assert!(mutation.target().is_empty());
     register_mini_mutation_descriptors(crate::os_spr::StateClass::Artifact).unwrap();
     register_mini_mutation_descriptors(crate::os_spr::StateClass::Artifact).unwrap();

@@ -27,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for InsertSignatureField {
         vec![PdfHMutation::RemoveSignatureField(RemoveSignatureField { name: self.name.clone() })]
     }
 
-    fn label(&self) -> String {
-        format!("Insert signature field \"{}\"", self.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Insert signature field \"{}\"", self.name), &format!("Signaturfeld \"{}\" einfügen", self.name))
     }
 
     fn target(&self) -> Vec<String> {

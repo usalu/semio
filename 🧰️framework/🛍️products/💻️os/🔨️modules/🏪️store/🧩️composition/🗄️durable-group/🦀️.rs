@@ -672,7 +672,18 @@ where
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreRevisionAccumulatorRetirement::new(previous_revision)));
     }
     let previous_current = std::mem::replace(&mut *store.current, root.current.take().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?);
-    retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, snapshot_factory.retire(previous_current));
+    // 🪢️ Staging cached the pre-commit snapshot as this group's tail-undo entry
+    // (`Arc::clone(&store.current)`), so the outgoing current and the incoming tail are the SAME
+    // owner. Displacing it here would queue a retirement the tail cache still aliases, and the
+    // close cursor drains displaced owners nine phases BEFORE `TailSnapshot` — it would meet an
+    // `Arc` it cannot unwrap and answer `Blocked` forever. The tail cache keeps the owner instead,
+    // exactly as the symmetric guards below and in `commit_document_roots_retained` do.
+    let next_tail = root.tail_undo_cache.take();
+    if next_tail.as_ref().is_some_and(|(_, snapshot)| Arc::ptr_eq(snapshot, &previous_current)) {
+        drop(previous_current);
+    } else {
+        retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, snapshot_factory.retire(previous_current));
+    }
     if let Some(previous_actor) = std::mem::replace(&mut *store.local_actor_id, root.local_actor_id.take()) {
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStoreStringRetirement::new(previous_actor)));
     }
@@ -682,7 +693,7 @@ where
             retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, snapshot_factory.retire(snapshot));
         }
     }
-    *store.tail_undo_cache = root.tail_undo_cache.take();
+    *store.tail_undo_cache = next_tail;
     let previous_report = std::mem::take(&mut *store.pending_report);
     if previous_report.edit_ids.as_ref().is_some_and(|ids| !ids.is_empty() || ids.capacity() != 0) || !previous_report.messages.is_empty() || previous_report.messages.capacity() != 0 || previous_report.worst.is_some() {
         retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, Box::new(super::ArtifactStorePendingReportRetirement::new(previous_report)));

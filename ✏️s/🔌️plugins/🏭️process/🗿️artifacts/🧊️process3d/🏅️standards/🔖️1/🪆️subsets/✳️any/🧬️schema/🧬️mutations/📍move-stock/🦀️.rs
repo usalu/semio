@@ -30,8 +30,8 @@ impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for MoveStock 
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        "Move stock".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Move stock", "Bestand verschieben")
     }
 }
 //#endregion 🔖️MoveStock

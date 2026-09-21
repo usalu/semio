@@ -116,7 +116,7 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
     assert_eq!(stepped_operator.operator_id, "brep.bool.cut");
     let registry = neural_engine::ColdOwner::new(module_registry().await);
     let (box_out, cylinder_out) = bored_box_operands(&registry).await;
-    let (a, b) = (channel_payload(&box_out, "geometry").await, channel_payload(&cylinder_out, "geometry").await);
+    let (a, b) = (channel_payload(&box_out, "geometryOut").await, channel_payload(&cylinder_out, "geometryOut").await);
     let node_hash = 0x_bee_f00_u64;
     // ⌛️ One microsecond: every step overruns it, so the round trip yields after exactly one unit.
     let request = cut_request_json(&a, &b, node_hash, 1, 1);
@@ -161,7 +161,7 @@ async fn a_long_set_operation_answers_within_the_wall_allowance_and_resumes() {
     reset_test_kernel().await;
     let control_registry = neural_engine::ColdOwner::new(module_registry().await);
     let (box_out, cylinder_out) = bored_box_operands(&control_registry).await;
-    let (a, b) = (channel_payload(&box_out, "geometry").await, channel_payload(&cylinder_out, "geometry").await);
+    let (a, b) = (channel_payload(&box_out, "geometryOut").await, channel_payload(&cylinder_out, "geometryOut").await);
     let one_shot_json = pack::json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&control_registry, cut_request_json(&a, &b, 0, 1_000_000, 3_600_000_000).as_bytes()).expect("evaluate"))
         .expect("envelope json")
         .get("outputJson")
@@ -186,7 +186,7 @@ async fn a_cancel_between_round_trips_retires_the_parked_evaluation() {
     reset_test_kernel().await;
     let registry = neural_engine::ColdOwner::new(module_registry().await);
     let (box_out, cylinder_out) = bored_box_operands(&registry).await;
-    let (a, b) = (channel_payload(&box_out, "geometry").await, channel_payload(&cylinder_out, "geometry").await);
+    let (a, b) = (channel_payload(&box_out, "geometryOut").await, channel_payload(&cylinder_out, "geometryOut").await);
     let node_hash = 0x_c0_1d_u64;
     let request = cut_request_json(&a, &b, node_hash, 1, 1);
     let first = pack::json::parse_bytes(&flow_extension_sdk::evaluate_invoke_json(&registry, request.as_bytes()).expect("evaluate")).expect("envelope json");

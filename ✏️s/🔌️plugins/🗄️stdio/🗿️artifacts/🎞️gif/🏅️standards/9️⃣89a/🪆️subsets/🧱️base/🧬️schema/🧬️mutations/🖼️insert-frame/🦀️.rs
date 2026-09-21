@@ -23,8 +23,8 @@ impl protocol::MutationKind<GifSnapshot, GifMutation> for InsertFrame {
     fn inverse(&self, base: &GifSnapshot) -> Vec<GifMutation> {
         agg_inverse(&GifMutation::InsertFrame(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "insert-frame".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert-frame", "Rahmen einfügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

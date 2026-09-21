@@ -34,8 +34,8 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for CreateNode {
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create node \"{}\"", self.node.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create node \"{}\"", self.node.id), &format!("Knoten \"{}\" erstellen", self.node.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node.id.clone()]

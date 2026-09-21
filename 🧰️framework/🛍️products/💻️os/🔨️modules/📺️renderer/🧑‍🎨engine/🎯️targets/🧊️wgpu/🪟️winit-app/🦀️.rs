@@ -231,7 +231,7 @@ impl OsHost {
         if !self.events.is_empty() && self.runtime.has_lossless_capacity() {
             let generation = self.events.current_generation();
             let drained = self.events.drain_page(ui_host::WorkerContext::new(generation));
-            let drained_shape = format!("move={} scroll={} metrics={} discrete={}", drained.pointer_move.is_some(), drained.scroll.is_some(), drained.metrics.is_some(), drained.discrete.iter().filter(|slot| slot.is_some()).count());
+            let drained_shape = format!("move={} metrics={} ordered={}", drained.pointer_move.is_some(), drained.metrics.is_some(), drained.discrete.iter().filter(|slot| slot.is_some()).count());
             let admitted = self.runtime.enqueue_apply(None, true, crate::RuntimeApply::DispatchEvents(Some(crate::RuntimeDispatchCursor::new_for_generation(drained, self.frame_generation))));
             crate::log_debug(&format!("[DEBUG] os_host drain events generation={generation:?} {drained_shape} enqueue-apply={admitted}"));
         }
@@ -369,12 +369,8 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
             app.handle_pointer_button(pointer.id, x, y, false, pointer_button_to_i16(button), modifiers).await;
         }
         DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(pointer.id),
-        // 🖱️ The wheel's OWN point, not the pointer's last known one — see `AppWheel`.
-        DispatchEvent::Scroll { x, y, delta_y, modifiers, .. } => {
-            let modifiers = event_modifiers_to_pointer(modifiers);
-            app.modifiers = modifiers.clone();
-            app.input.modifiers = modifiers;
-            app.wheel.accumulate(x, y, delta_y);
+        DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => {
+            app.handle_pointer_wheel(x, y, delta_x, delta_y, event_modifiers_to_pointer(modifiers));
         }
         DispatchEvent::KeyDown { key, modifiers } => {
             app.modifiers = event_modifiers_to_pointer(modifiers);

@@ -34,8 +34,8 @@ impl MutationKind<WriterSnapshot, WriterMutation> for EditText {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        "Edit document text".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Edit document text", "Dokumenttext bearbeiten")
     }
 }
 //#endregion 🔖️Mutation

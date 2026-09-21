@@ -33,8 +33,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplacePixelsMutation 
         }
         vec![JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: base.pixels.clone() })]
     }
-    fn label(&self) -> String {
-        "replace pixels".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("replace pixels", "Pixel ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["replace-pixels".into()]

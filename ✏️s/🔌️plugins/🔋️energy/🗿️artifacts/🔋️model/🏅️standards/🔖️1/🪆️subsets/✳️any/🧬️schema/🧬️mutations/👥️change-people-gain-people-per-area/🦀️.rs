@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Change
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change People Gain People Per Area of people gain {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change People Gain People Per Area of people gain {}", self.id.0), &format!("Personengewinnpersonen pro Fläche von Personengewinn {} ändern", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

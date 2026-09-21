@@ -28,8 +28,8 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Repl
     fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace fill of style \"{}\"", self.style_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace fill of style \"{}\"", self.style_name), &format!("Füllung von Stil \"{}\" ersetzen", self.style_name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.style_name.clone()]

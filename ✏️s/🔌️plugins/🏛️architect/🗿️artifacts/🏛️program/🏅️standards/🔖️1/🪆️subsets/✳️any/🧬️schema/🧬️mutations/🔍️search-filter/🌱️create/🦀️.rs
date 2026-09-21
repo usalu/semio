@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateSearchFilter {
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create search filter \"{}\"", self.search_filter.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create search filter \"{}\"", self.search_filter.header.name), &format!("Suchfilter \"{}\" erstellen", self.search_filter.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.search_filter.header.id.0.clone()]

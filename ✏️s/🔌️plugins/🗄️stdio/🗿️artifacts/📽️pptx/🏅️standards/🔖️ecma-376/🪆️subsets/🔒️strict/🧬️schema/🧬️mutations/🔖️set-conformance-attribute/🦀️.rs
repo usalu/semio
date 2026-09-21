@@ -20,8 +20,8 @@ impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for SetConformance
     fn inverse(&self, base: &PptxSnapshot) -> Vec<PptxStrictMutation> {
         agg_inverse(&PptxStrictMutation::SetConformanceAttribute(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-conformance-attribute".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-conformance-attribute", "Konformitätsattribut setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

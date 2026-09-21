@@ -55,8 +55,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertPage {
         vec![PdfMutation::RemovePage(super::RemovePage { index: self.index })]
     }
 
-    fn label(&self) -> String {
-        "insert page".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("insert page", "Seite einfügen")
     }
 
     fn target(&self) -> Vec<String> {

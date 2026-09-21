@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din18599Snapshot, Din18599Mutation> for ChangeUseCla
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change building use class to {:?}", self.new_use_class)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change building use class to {:?}", self.new_use_class), &format!("Gebäudennutzungsklasse auf {:?} ändern", self.new_use_class))
     }
 }
 //#endregion 🔖️ChangeUseClass

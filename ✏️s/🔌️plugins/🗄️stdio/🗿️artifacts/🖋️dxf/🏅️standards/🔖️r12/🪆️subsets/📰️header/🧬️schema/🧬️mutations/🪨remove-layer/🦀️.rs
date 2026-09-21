@@ -20,8 +20,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveLayer {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::RemoveLayer(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-layer".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-layer", "Ebene entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

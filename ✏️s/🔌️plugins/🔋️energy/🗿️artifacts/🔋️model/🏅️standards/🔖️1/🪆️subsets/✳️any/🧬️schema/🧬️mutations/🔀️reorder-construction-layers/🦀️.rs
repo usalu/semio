@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Reorde
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Reorder construction {} into {} layers", self.id.0, self.new_layer_material_ids.len())
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Reorder construction {} into {} layers", self.id.0, self.new_layer_material_ids.len()), &format!("Konstruktion {} in {} Ebenen umordnen", self.id.0, self.new_layer_material_ids.len()))
     }
 
     fn target(&self) -> Vec<String> {

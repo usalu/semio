@@ -7,7 +7,14 @@ mod plugin_builder_contract_tests {
     //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
     use dsl::DslValue;
     use semio_framework_value_derive::{FromValue, ToValue};
-    use ui_wgpu::wgpu::LocalizedLabel;
+    use ui_wgpu::wgpu::{Locale, LocalizedLabel, Terminology};
+
+    /// 🌐️ One locale cell of a history row's label carrier. Every assertion below names the locale
+    /// it reads, so a row that carries only English cannot pass by accident; the carrier's own
+    /// locale axis is asserted by `a_shell_noted_row_carries_the_same_text_in_every_locale`.
+    fn label_in(label: &LocalizedLabel, locale: Locale) -> &str {
+        label.resolve(Terminology::Native, locale)
+    }
 
     /// 🌉️ Test-only convenience: builds a `serde_json::json!` literal, then bridges it to the
     /// `DslValue` `handle_action`/`dispatch_action`/`command_from_action` speak at the trait
@@ -317,6 +324,14 @@ mod plugin_builder_contract_tests {
         SetLabelViaCommand { value: String },
         #[dsl(key = "set-active-utility")]
         SetActiveUtility { utility_id: String },
+        /// 🪟️ The addressed-window action's own verb. Every dispatch admits under the action id it was
+        /// invoked with and `dispatch_typed_command_inner` then requires `command_id` to decode back to
+        /// that same id, so a window-addressed action needs its own command, not an alias of another.
+        #[dsl(key = "target-window")]
+        TargetWindow { window_id: String },
+        /// 🎚️ The mode-owned command's own verb, for the same identity reason as `TargetWindow`.
+        #[dsl(key = "mode-increment")]
+        ModeIncrement,
         /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): exercises `Emit.child_emits` — emits a
         /// parent-document op alongside a `ChildEmit` targeting whichever `(slot, child_id)` the
         /// test registered via `VcsArtifactApp::register_child` beforehand.
@@ -797,6 +812,8 @@ mod plugin_builder_contract_tests {
             TestCommand::WatchdogOverrun => "watchdogOverrun",
             TestCommand::SetLabelViaCommand { .. } => "setLabelViaCommand",
             TestCommand::SetActiveUtility { .. } => "setActiveUtility",
+            TestCommand::TargetWindow { .. } => "targetWindow",
+            TestCommand::ModeIncrement => "mode.increment",
             TestCommand::CompositeEdit { .. } => "compositeEdit",
             TestCommand::ProbeChild { .. } => "probeChild",
             TestCommand::SpawnCountTask => "spawnCountTask",
@@ -812,7 +829,8 @@ mod plugin_builder_contract_tests {
     /// and a direct one can never diverge.
     fn test_app_reduce(command: &TestCommand, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> Result<Emit<TestMutation, TestConfigMutation, NoDraftMutation>, Fault> {
         match command {
-            TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: doc.snapshot.count + 1 })], description: Some("increment".into()), ..Default::default() }),
+            TestCommand::Increment | TestCommand::IncrementViaCommand | TestCommand::ModeIncrement => Ok(Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: doc.snapshot.count + 1 })], description: Some("increment".into()), ..Default::default() }),
+            TestCommand::TargetWindow { window_id } => Ok(Emit { artifact_mutations: vec![TestMutation::SetLabel(SetLabel { value: window_id.clone() })], description: Some("targetWindow".into()), ..Default::default() }),
             TestCommand::WatchdogOverrun => {
                 let started = std::time::Instant::now();
                 while started.elapsed() < std::time::Duration::from_millis(10) {
@@ -991,9 +1009,10 @@ mod plugin_builder_contract_tests {
 
         async fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
             match action {
-                "incrementViaCommand" | "mode.increment" => Ok(TestCommand::IncrementViaCommand),
+                "incrementViaCommand" => Ok(TestCommand::IncrementViaCommand),
+                "mode.increment" => Ok(TestCommand::ModeIncrement),
                 "setLabelViaCommand" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("value")).and_then(DslValue::as_str).unwrap_or_default().to_string() }),
-                "targetWindow" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("windowId")).and_then(DslValue::as_str).unwrap_or_default().to_string() }),
+                "targetWindow" => Ok(TestCommand::TargetWindow { window_id: args.and_then(|value| value.get("windowId")).and_then(DslValue::as_str).unwrap_or_default().to_string() }),
                 "probeChild" => Ok(TestCommand::ProbeChild {
                     slot: args.and_then(|value| value.get("slot")).and_then(DslValue::as_str).unwrap_or_default().to_string(),
                     child_id: args.and_then(|value| value.get("childId")).and_then(DslValue::as_str).unwrap_or_default().to_string(),
@@ -1721,9 +1740,7 @@ mod plugin_builder_contract_tests {
         let id = 41;
         let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
         app.bind_instance_id(id).await;
-        let mut child = new_test_child("child-1").await.expect("construct child");
-        let TestMembers::Child(child_store) = &mut child;
-        child_store.install_document_store_owners_exact(<TestSnapshot as store::MemberStoreOwner<TestMutation>>::member_store_owners());
+        let child = new_test_child("child-1").await.expect("construct child");
         app.register_child("slot", "child-1", test_child_dialect().await, child).await.expect("register child");
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.expect("admit retained child gesture");
 
@@ -2125,6 +2142,69 @@ mod plugin_builder_contract_tests {
             }
             Ok(admitted)
         }
+
+        /// ⏪️ The addressed twin of {@link ContractApp::dispatch_typed}. `dispatch_action` admits in two
+        /// different two-phase shapes and a law that reads the store right after a bare one observes the
+        /// pre-dispatch revision in BOTH: a framework-reserved history verb (`undo`/`redo`/the
+        /// checkpoint family) comes back as an `Effect::SpawnJob { kind: FRAMEWORK_RESERVED_JOB_KIND }`
+        /// the caller has to run before the store ever sees `ArtifactCommand::Undo`, and an app verb
+        /// hands its reducer to a worker. This drives both, exactly as
+        /// {@link artifact_app_laws::settle_history_verb} does for the raw wrapper, and rebuilds the
+        /// settled mutations/inverse through the same `result_from_last_edit`.
+        async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<semio_framework::InvocationResult, Fault> {
+            let before_edit_id = self.0.test_last_edit_id();
+            let before_tail = self.0.test_edit_tail_lengths();
+            let admitted = self.0.dispatch_action(action, args, meta).await?;
+            let mut admitted = artifact_app_laws::settle_framework_reserved_admission(&mut self.0, admitted).await?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
+            admitted.requested_effects.extend(receipt.effects);
+            admitted.events.extend(receipt.events);
+            if let Some(scope) = receipt.ui_scope {
+                admitted.ui_scope = scope;
+            }
+            let after_edit_id = self.0.test_last_edit_id();
+            if after_edit_id.is_some() {
+                let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
+                let settled = self.0.test_result_from_last_edit(action, meta, tail_offset).await;
+                admitted.mutations = settled.mutations;
+                admitted.inverse_group = settled.inverse_group;
+            }
+            Ok(admitted)
+        }
+    }
+
+    /// 🎯️ The intent twin of {@link ContractApp::dispatch_typed}: `handle_intent_frame` answers with the
+    /// same admission receipt every migrated dispatch answers with, so a law that reads the store right
+    /// after it observed the previous revision. Settles the operation and rebuilds the settled
+    /// mutations/inverse through the SAME `result_from_last_edit` the direct route uses.
+    async fn handle_intent_settled(app: &mut ContractApp, intent: &UiIntent, meta: &ActionMeta) -> Result<semio_framework::InvocationResult, Fault> {
+        let verb = intent.action.name.to_string();
+        let before_edit_id = app.0.test_last_edit_id();
+        let before_tail = app.0.test_edit_tail_lengths();
+        let mut admitted = PluginApp::handle_intent_frame(&mut app.0, intent, meta).await?;
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id).await?;
+        admitted.requested_effects.extend(receipt.effects);
+        admitted.events.extend(receipt.events);
+        if let Some(scope) = receipt.ui_scope {
+            admitted.ui_scope = scope;
+        }
+        let after_edit_id = app.0.test_last_edit_id();
+        if after_edit_id.is_some() {
+            let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
+            let settled = app.0.test_result_from_last_edit(&verb, meta, tail_offset).await;
+            admitted.mutations = settled.mutations;
+            admitted.inverse_group = settled.inverse_group;
+            admitted.history_patch = settled.history_patch;
+        }
+        Ok(admitted)
+    }
+
+    /// ⏳️ Drives the admission a manifest-addressed dispatch answers with to its publication, the way
+    /// {@link ContractApp::dispatch_typed} does for the direct route: an addressed action or command
+    /// hands its reducer to a worker too, so a law that reads the store right after one observed the
+    /// pre-dispatch revision.
+    async fn settle_contract_app(app: &mut ContractApp) {
+        artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id).await.expect("registered fixture settles its addressed dispatch");
     }
 
     async fn contract_app_under_test() -> ContractApp {
@@ -2632,13 +2712,20 @@ mod plugin_builder_contract_tests {
             }
         };
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
-        app.maintenance_stage = 11;
-        assert_eq!(PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("ordinary maintenance preserves unconsumed completed output"), PluginCloseStep::Complete);
+        // 🔢️ Swept over every declared stage instead of a frozen stage index: which ordinal owns the
+        // completed-record lane is an implementation detail that moves whenever a stage is added, while
+        // the law — ordinary maintenance never retires an unconsumed completed output — is not.
+        for stage in 0..MAINTENANCE_STAGES {
+            app.maintenance_stage = stage;
+            let _ = PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("ordinary maintenance preserves unconsumed completed output");
+        }
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
         app.envelope_completed_records.try_request_close(ticket).expect("cancelled consumer hands exact completed output to maintenance");
         for _ in 0..6 {
-            app.maintenance_stage = 11;
-            let _ = PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("production maintenance pumps one completed-record owner");
+            for stage in 0..MAINTENANCE_STAGES {
+                app.maintenance_stage = stage;
+                let _ = PluginApp::maintenance_step(&mut app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("production maintenance pumps one completed-record owner");
+            }
         }
         match app.envelope_completed_records.try_detach(ticket) {
             Err(fault) => assert_eq!(fault, store::ArtifactEnvelopeCompletedRecordFault::Stale),
@@ -2653,13 +2740,14 @@ mod plugin_builder_contract_tests {
         assert!(app.envelope_completed_records.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
         assert_eq!(app.drive_envelope_completed_record_returns(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, true).expect("close observes exact completed terminal state"), PluginCloseStep::Complete);
+        artifact_app_laws::close_registered_fixture_app(&mut app);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_close_step_drains_at_most_one_segment_and_one_chunk_budget() {
         let mut app = contract_app_under_test().await;
         app.close_started = true;
-        app.close_cancellation_cursor = TOOL_CANCELLATION_SLOTS;
+        app.close_cancellation_cursor = TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OUTPUT_SLOTS;
         app.close_media_cursor = ARTIFACT_LIVE_OUTPUT_SLOTS;
         app.close_media_cleanup_cursor = ARTIFACT_LIVE_OUTPUT_SLOTS;
         let chunks = ArtifactOutputChunks::new(ARTIFACT_OUTPUT_CHUNK_BYTES * 2);
@@ -3880,6 +3968,18 @@ mod plugin_builder_contract_tests {
     async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
         let mut envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
         envelope.dialect = Some(test_child_dialect().await);
+        let mut child = store::ArtifactStore::new(envelope).await?;
+        child.install_document_store_owners_exact(<TestSnapshot as store::MemberStoreOwner<TestMutation>>::member_store_owners());
+        Ok(TestMembers::Child(Box::new(child)))
+    }
+
+    /// @emoji 🫙️ The owner-less twin of {@link new_test_child}, for the laws whose whole subject is a
+    /// member that has NOT yet adopted its bounded retirement authority. Every product path mints a
+    /// member through `create_member_store`/`open_member_store`, which install the catalog, so this
+    /// shape exists only to drive the refusal those laws assert.
+    async fn new_bare_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
+        let mut envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
+        envelope.dialect = Some(test_child_dialect().await);
         Ok(TestMembers::Child(Box::new(store::ArtifactStore::new(envelope).await?)))
     }
 
@@ -3914,6 +4014,19 @@ mod plugin_builder_contract_tests {
     impl store::SnapshotRetirementFactory<TestSnapshot> for TestSnapshotRetirementFactory {
         fn retire(&self, snapshot: std::sync::Arc<TestSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
             Box::new(TestSnapshotRetirement { snapshot: Some(snapshot), lie_about_terminal: self.lie_about_terminal })
+        }
+    }
+
+    /// @emoji 🎭️ The owned-value twin of {@link TestSnapshotRetirementFactory}: `retire_snapshot_read_erased`
+    /// draws the child's returned-read retirement from the INITIAL snapshot owner, so a law whose subject
+    /// is a lying terminal witness has to plant its lie there.
+    struct TestLyingOwnedValueRetirementFactory {
+        lie_about_terminal: bool,
+    }
+
+    impl store::ArtifactOwnedValueRetirementFactory<TestSnapshot> for TestLyingOwnedValueRetirementFactory {
+        fn retire_owned(&self, value: TestSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
+            Box::new(TestSnapshotRetirement { snapshot: Some(std::sync::Arc::new(value)), lie_about_terminal: self.lie_about_terminal })
         }
     }
 
@@ -3956,9 +4069,22 @@ mod plugin_builder_contract_tests {
         }
     }
 
+    /// @emoji 🔐️ Adopts the exact member owner catalog a product child carries from
+    /// `create_member_store`, for a law that first drove the refusal an owner-less member owes and
+    /// then has to close the app it registered that member into.
+    fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
+        let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child owner").member;
+        child.install_document_store_owners_exact(<TestSnapshot as store::MemberStoreOwner<TestMutation>>::member_store_owners());
+    }
+
     fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str, lie_about_terminal: bool) {
         let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child retirement owner").member;
-        child.install_snapshot_retirement_factory(std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal })).expect("install exact child snapshot retirement factory once");
+        child.install_document_store_owners_exact(store::DocumentStoreOwners::new(
+            std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal }),
+            std::sync::Arc::new(TestLyingOwnedValueRetirementFactory { lie_about_terminal }),
+            std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestMutation>(std::marker::PhantomData)),
+            Box::new(store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new()),
+        ));
     }
 
     async fn test_child_dialect() -> ArtifactDialect {
@@ -4203,7 +4329,7 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn child_snapshot_retirement_rejection_preserves_exact_erased_owner() {
         let mut app = contract_composed_app_raw().await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
         app.maintenance_stage = 4;
@@ -4211,20 +4337,31 @@ mod plugin_builder_contract_tests {
         let retirement = app.child_content_retirements.get(2).expect("retirement remains registered after rejected transfer");
         let entry = retirement.pending.as_ref().expect("exact rejected snapshot remains pending");
         assert!(entry.snapshot.typed::<TestSnapshot>().is_some(), "rejection preserves the exact erased owner and type identity");
+        install_test_member_owners(&mut app, "child-a");
         drain_and_close_composed_fixture(&mut app);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn child_root_maintenance_requires_terminal_empty_before_reclaim() {
         let mut app = contract_composed_app_raw().await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", true);
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
         app.maintenance_stage = 4;
         assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("transfer retirement authority"), PluginCloseStep::Pending { .. }));
-        app.maintenance_stage = 4;
-        let fault = PluginApp::maintenance_step(&mut app, 1, 4096).expect_err("lying Complete must fail before registry removal");
+        let mut faulted = None;
+        for _ in 0..64 {
+            app.maintenance_stage = 4;
+            match PluginApp::maintenance_step(&mut app, 1, 4096) {
+                Ok(step) => assert!(matches!(step, PluginCloseStep::Pending { .. }), "the lying owner must never reach a terminal step: {step:?}"),
+                Err(fault) => {
+                    faulted = Some(fault);
+                    break;
+                }
+            }
+        }
+        let fault = faulted.expect("lying Complete must fail before registry removal");
         assert_eq!(fault.code.0, "interactive-job.child-snapshot-terminal-not-empty");
         assert!(!app.child_content_retirements.is_empty(), "terminal witness failure retains the registry authority");
     }
@@ -4232,17 +4369,21 @@ mod plugin_builder_contract_tests {
     #[semio_framework_async_macros::async_test]
     async fn child_root_maintenance_reclaims_completed_owner_for_later_publication() {
         let mut app = contract_composed_app_raw().await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", false);
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
-        for _ in 0..4 {
+        for _ in 0..64 {
+            if app.child_content_retirements.is_empty() {
+                break;
+            }
             app.maintenance_stage = 4;
             let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded retirement progress");
         }
         assert!(app.child_content_retirements.is_empty(), "terminal-empty retirement is reclaimed while the app remains live");
         let generation = app.admit_child_content_publication().expect("later publication can reuse the fixed retirement registry");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("later publication after bounded reclaim");
+        drain_and_close_composed_fixture(&mut app);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4334,6 +4475,27 @@ mod plugin_builder_contract_tests {
         assert!(result.requested_effects.is_empty());
         // A view command never advances the document.
         assert_eq!(app.test_snapshot().await, TestSnapshot::default());
+    }
+
+    /// ✅️ A row's `applied` must ask every lane the row can publish into, not only the parent
+    /// document store. `build_history_view` asked `applied_edit_ids` alone, so a `Config`- or
+    /// `Child`-lane row reported `applied: false` — which the host reads as UNDONE: the History panel
+    /// dims the row and `uncommittedEditCount` (the `#s-checkin` badge) never counts it. Three kinds
+    /// rode on that one defect inside the `s` host (🌊️flow `addWidget` and 🎬️sequence `addStep` on
+    /// `Child`, 🌀️procedural `generate` on `Config`), each of which moved its document and still read
+    /// `edits 0` (ticket 26/09/18 S10 §4; PB3 §3.6 named the child half). `revertible` already asked
+    /// all three lanes, which is why the same rows were revertible while claiming to be unapplied.
+    #[semio_framework_async_macros::async_test]
+    async fn config_lane_row_reports_itself_applied_so_the_host_can_count_it() {
+        let mut app = contract_app().await;
+        app.dispatch_typed(TestCommand::Select { id: Some("node-1".into()) }, &meta()).await.expect("select");
+        let history = app.test_history().await;
+        let select = history.commands.iter().find(|entry| entry.action_id == "select").expect("the config-lane select row");
+        assert!(select.config_edit_id.is_some(), "the select row is config edit-linked, so this law measures the Config lane");
+        assert!(select.edit_id.is_none(), "the select row publishes NO parent document edit — that is exactly why the old one-lane predicate read it as unapplied");
+        assert!(select.applied, "a config edit-linked row is applied; reporting false makes the host dim it and drop it from the uncommitted-edit count");
+        assert!(select.revertible, "and it stays revertible, the clause that already consulted all three lanes");
+        close_reserved_app(&mut app);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4638,7 +4800,7 @@ mod plugin_builder_contract_tests {
         )
         .await;
         let before = app.test_history().await;
-        assert_eq!(before.commands.iter().map(|entry| entry.label.as_str()).collect::<Vec<_>>(), ["Resize Window", "Set Active Example"]);
+        assert_eq!(before.commands.iter().map(|entry| label_in(&entry.label, Locale::En)).collect::<Vec<_>>(), ["Resize Window", "Set Active Example"]);
         assert!(before.can_undo);
         assert!(!before.can_redo);
 
@@ -4755,8 +4917,8 @@ mod plugin_builder_contract_tests {
         .await;
         assert_eq!(app.test_snapshot().await.count, 1);
         let before = app.test_history().await;
-        assert!(before.commands.iter().any(|entry| entry.label.contains("Set Active Example")));
-        assert_eq!(before.commands.first().map(|entry| entry.label.as_str()), Some("Resize Window"));
+        assert!(before.commands.iter().any(|entry| label_in(&entry.label, Locale::En).contains("Set Active Example")));
+        assert_eq!(before.commands.first().map(|entry| label_in(&entry.label, Locale::En)), Some("Resize Window"));
 
         let first = reserved_action(&mut app, "undo", None).await;
         assert_eq!(
@@ -4833,7 +4995,7 @@ mod plugin_builder_contract_tests {
             reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(entry.clone()))).await;
         }
         let before = app.test_history().await;
-        assert_eq!(before.commands.iter().map(|entry| entry.label.as_str()).collect::<Vec<_>>(), ["Activate Window", "Resize Window", "Set Active Example"]);
+        assert_eq!(before.commands.iter().map(|entry| label_in(&entry.label, Locale::En)).collect::<Vec<_>>(), ["Activate Window", "Resize Window", "Set Active Example"]);
         for skipped in fixture["undo"]["skippedActionIds"].as_array().expect("skippedActionIds") {
             let action_id = skipped.as_str().expect("skipped action id");
             let entry = before.commands.iter().find(|entry| entry.action_id == action_id).expect("undeclared-inverse chrome is still logged");
@@ -4886,7 +5048,7 @@ mod plugin_builder_contract_tests {
         )
         .await;
         let before = app.test_history().await;
-        assert_eq!(before.commands.first().map(|entry| entry.label.as_str()), Some("Activate Window"), "the window activation is the newest row");
+        assert_eq!(before.commands.first().map(|entry| label_in(&entry.label, Locale::En)), Some("Activate Window"), "the window activation is the newest row");
         assert!(before.commands.iter().find(|entry| entry.action_id == "shell.windowActivate").is_some_and(|entry| !entry.revertible), "a note that declared no inverse is not an undo target");
         assert_eq!(app.test_snapshot().await.count, 1);
         let undone = reserved_action(&mut app, "undo", None).await;
@@ -4930,7 +5092,11 @@ mod plugin_builder_contract_tests {
         assert_eq!(history.commands.len(), 1);
         let entry = &history.commands[0];
         assert_eq!(entry.action_id, "increment");
-        assert_eq!(entry.label.as_str(), "increment");
+        // 🏷️ `increment` IS declared by `migrated_contract_registry` (the fixture every law here now uses),
+        // so the row carries its DECLARED label — still `LocalizedLabel::data`, so still locale-invariant
+        // rather than untranslated English, which is the property this clause exists for.
+        assert_eq!(label_in(&entry.label, Locale::En), "Increment");
+        assert_eq!(label_in(&entry.label, Locale::De), "Increment", "a declared label is locale-invariant data, never untranslated English");
         assert_eq!(entry.kind, ActionKind::Mutation);
         assert!(entry.edit_id.is_some());
         assert!(!entry.op_lines.is_empty(), "operation entry must carry printed op-text");
@@ -5027,7 +5193,7 @@ mod plugin_builder_contract_tests {
                 CommandView {
                     seq: 1,
                     action_id: "increment".into(),
-                    label: "Increment".into(),
+                    label: LocalizedLabel::native("Increment", "Erhöhen"),
                     kind: ActionKind::Mutation,
                     timestamp: "0".into(),
                     edit_id: Some("e1".into()),
@@ -5042,7 +5208,7 @@ mod plugin_builder_contract_tests {
                 CommandView {
                     seq: 2,
                     action_id: "undo".into(),
-                    label: "Undo".into(),
+                    label: LocalizedLabel::native("Undo", "Rückgängig"),
                     kind: ActionKind::History,
                     timestamp: "1".into(),
                     edit_id: None,
@@ -5098,7 +5264,7 @@ mod plugin_builder_contract_tests {
             commands: vec![CommandView {
                 seq: 1,
                 action_id: "fill".into(),
-                label: "Fill".into(),
+                label: LocalizedLabel::native("Fill", "Füllen"),
                 kind: ActionKind::Mutation,
                 timestamp: "0".into(),
                 edit_id: Some("e1".into()),
@@ -5129,7 +5295,7 @@ mod plugin_builder_contract_tests {
         let entry = |seq: u64, count: u32| CommandView {
             seq,
             action_id: "duplicateSelection".into(),
-            label: long_label.clone(),
+            label: LocalizedLabel::data(long_label.clone()),
             kind: ActionKind::Mutation,
             timestamp: "0".into(),
             edit_id: Some("e1".into()),
@@ -5163,7 +5329,7 @@ mod plugin_builder_contract_tests {
         let entry = move |seq: u64| CommandView {
             seq,
             action_id: "translateSelection".into(),
-            label: format!("Move {seq}"),
+            label: LocalizedLabel::data(format!("Move {seq}")),
             kind: ActionKind::Mutation,
             timestamp: "0".into(),
             edit_id: Some(format!("edit-{seq}")),
@@ -5315,13 +5481,31 @@ mod plugin_builder_contract_tests {
         let entry = &history.commands[0];
         assert_eq!(entry.action_id, "os.setThemeId");
         assert_eq!(entry.kind, ActionKind::Shell);
-        assert!(entry.label.contains("dark"));
+        assert!(label_in(&entry.label, Locale::En).contains("dark"));
 
         reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args)).await;
         assert!(app.test_app().await.received_actions.borrow().is_empty());
         let history = app.test_history().await;
         assert_eq!(history.commands.len(), 2);
         assert!(history.commands.iter().all(|entry| entry.count == 1));
+        artifact_app_laws::close_registered_fixture_app(&mut *app);
+    }
+
+    /// 🌐️ A shell-noted row's text is the shell's own already-rendered copy, so the row stores it as
+    /// locale-INVARIANT data (`LocalizedLabel::data`) — every cell of the matrix carries it. The row
+    /// therefore never claims to be English, and the History panel renders it unchanged in a German
+    /// shell instead of leaking a locale it does not have.
+    #[semio_framework_async_macros::async_test]
+    async fn a_shell_noted_row_carries_the_same_text_in_every_locale() {
+        let mut app = contract_app().await;
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" })))).await;
+        let history = app.test_history().await;
+        let label = &history.commands[0].label;
+        for terminology in Terminology::ALL {
+            for locale in Locale::ALL {
+                assert_eq!(label.resolve(terminology, locale), "Set Theme", "{terminology:?}/{locale:?}");
+            }
+        }
         artifact_app_laws::close_registered_fixture_app(&mut *app);
     }
 
@@ -5671,7 +5855,12 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn reserved_section_carrier_pages_a_payload_past_one_node_of_children() {
-        let payload = serde_json::to_string(&(0..1_200).map(|index| (format!("window-{index:04}"), format!("measure-{index:04}"))).collect::<BTreeMap<_, _>>()).unwrap();
+        // 🧮️ Sized FROM the two ceilings rather than against a frozen literal: the law's whole subject is
+        // a payload one whole node of children cannot hold, so its precondition has to follow whatever
+        // `UI_TEXT_MAX_BYTES`/`UI_BUILT_CHILDREN_MAX` currently are. Each map row is at least 24 bytes of
+        // JSON (`"window-0000":"measure-0000",`), so this many rows always overflows the product.
+        let rows = UI_TEXT_MAX_BYTES * UI_BUILT_CHILDREN_MAX / 24;
+        let payload = serde_json::to_string(&(0..rows).map(|index| (format!("window-{index:04}"), format!("measure-{index:04}"))).collect::<BTreeMap<_, _>>()).unwrap();
         assert!(payload.len() > UI_TEXT_MAX_BYTES * UI_BUILT_CHILDREN_MAX);
         let tree = section_component_tree(UiRefreshSection::Measures, &payload).unwrap();
         let projected: Value = serde_json::from_str(&artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap()).unwrap();
@@ -5947,10 +6136,11 @@ mod plugin_builder_contract_tests {
             input: None,
             seq: 1,
         };
-        let result = app.handle_intent_frame(&intent, &meta()).await.expect("an Activate intent on a Mutation-kind action must dispatch");
+        let result = handle_intent_settled(&mut app, &intent, &meta()).await.expect("an Activate intent on a Mutation-kind action must dispatch");
         assert_eq!(app.test_snapshot().await.count, 1, "the mutation must have applied");
         assert_eq!(result.mutations.len(), 1, "the returned invocation carries the one mutation the intent caused");
-        assert!(result.history_patch.is_some(), "a command-log entry must have been recorded for the intent");
+        let history = app.test_history().await;
+        assert!(history.commands.iter().any(|entry| entry.action_id == "incrementViaCommand"), "a command-log entry must have been recorded for the intent");
     }
 
     /// 🎯️ M1 acceptance: a `View`-kind action arriving as an intent and returning artifact ops
@@ -5971,7 +6161,7 @@ mod plugin_builder_contract_tests {
             input: None,
             seq: 2,
         };
-        let error = app.handle_intent_frame(&intent, &meta()).await.expect_err("a View-kind intent emitting operations must be rejected");
+        let error = handle_intent_settled(&mut app, &intent, &meta()).await.expect_err("a View-kind intent emitting operations must be rejected");
         assert!(error.message.contains("must not emit operations"), "unexpected error: {}", error.message);
         assert_eq!(app.test_snapshot().await, TestSnapshot::default(), "kind discipline must block the mutation");
     }
@@ -6066,6 +6256,7 @@ mod plugin_builder_contract_tests {
         let mut app = contract_app_under_test().await;
         let valid = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into() }, command_id: "incrementViaCommand".into() }, arguments: Default::default() };
         app.handle_command(&valid, Some("edit"), &meta()).await.expect("app-owned command");
+        settle_contract_app(&mut app).await;
         assert_eq!(app.test_snapshot().await.count, 1);
         let unknown = CommandInvocation { address: CommandAddress { command_id: "nope".into(), ..valid.address }, arguments: Default::default() };
         let error = app.handle_command(&unknown, Some("edit"), &meta()).await.expect_err("undeclared app command");
@@ -6107,6 +6298,7 @@ mod plugin_builder_contract_tests {
         };
         let mut app = contract_app_under_test().await;
         app.handle_command(&invocation, Some("edit"), &meta()).await.expect("active mode-owned command");
+        settle_contract_app(&mut app).await;
         assert_eq!(app.test_snapshot().await.count, 1);
         let error = app.handle_command(&invocation, None, &meta()).await.expect_err("inactive mode command");
         assert!(error.message.contains("not owned by active mode edit"), "unexpected error: {}", error.message);
@@ -6121,6 +6313,7 @@ mod plugin_builder_contract_tests {
         };
         let mut app = contract_app_under_test().await;
         app.handle_action_invocation(&invocation, Some("edit"), &meta()).await.expect("addressed window action");
+        settle_contract_app(&mut app).await;
         assert_eq!(app.test_snapshot().await.label, "main-instance-2");
     }
 

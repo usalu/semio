@@ -21,8 +21,8 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetEntity {
     fn inverse(&self, base: &DxfSnapshot) -> Vec<DxfMutation> {
         agg_inverse(&DxfMutation::SetEntity(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-entity".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-entity", "Entität setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -24,8 +24,8 @@ impl protocol::MutationKind<Din16798Snapshot, Din16798Mutation> for ChangeFloorA
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change floor area to {}", self.new_floor_area_m2)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change floor area to {}", self.new_floor_area_m2), &format!("Geschossfläche auf {} ändern", self.new_floor_area_m2))
     }
 }
 //#endregion 🔖️ChangeFloorAreaM2

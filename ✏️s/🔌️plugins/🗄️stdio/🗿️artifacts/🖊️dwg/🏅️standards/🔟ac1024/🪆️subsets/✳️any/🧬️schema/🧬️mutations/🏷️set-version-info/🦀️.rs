@@ -23,8 +23,8 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetVersionInfo {
     fn inverse(&self, base: &DwgSnapshot) -> Vec<DwgMutation> {
         agg_inverse(&DwgMutation::SetVersionInfo(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-version-info".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-version-info", "Versionsinfo setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

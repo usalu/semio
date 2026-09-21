@@ -27,8 +27,8 @@ impl MutationKind<Wfc3dSnapshot, Wfc3dMutation> for UnpinSlot {
     fn inverse(&self, base: &Wfc3dSnapshot) -> Vec<Wfc3dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Unpin slot \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Unpin slot \"{}\"", self.id), &format!("Platz \"{}\" abheften", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

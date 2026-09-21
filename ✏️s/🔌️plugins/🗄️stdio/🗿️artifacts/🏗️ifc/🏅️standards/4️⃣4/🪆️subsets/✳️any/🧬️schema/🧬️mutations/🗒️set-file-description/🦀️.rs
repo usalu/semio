@@ -21,8 +21,8 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetFileDescription {
     fn inverse(&self, base: &IfcSnapshot) -> Vec<IfcMutation> {
         agg_inverse(&IfcMutation::SetFileDescription(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-file-description".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-file-description", "Dateibeschreibung setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -29,8 +29,8 @@ impl MutationKind<Grid2dSnapshot, Grid2dMutation> for UnpinCell {
     fn inverse(&self, base: &Grid2dSnapshot) -> Vec<Grid2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Unpin cell ({}, {})", self.x, self.y)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Unpin cell ({}, {})", self.x, self.y), &format!("Zelle ({}, {}) abheften", self.x, self.y))
     }
     fn target(&self) -> Vec<String> {
         vec![format!("{},{}", self.x, self.y)]

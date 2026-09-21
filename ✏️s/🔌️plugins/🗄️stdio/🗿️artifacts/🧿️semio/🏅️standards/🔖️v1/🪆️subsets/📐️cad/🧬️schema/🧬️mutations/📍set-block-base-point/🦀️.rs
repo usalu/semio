@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for SetBlockBase
     fn inverse(&self, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {
         agg_inverse(&SemioCadMutation::SetBlockBasePoint(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-block-base-point".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-block-base-point", "Blockbasispunkt setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

@@ -69,6 +69,7 @@ fn lane_guide_lines_are_translucent_not_the_opaque_separator_token() {
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
     let scene = UiComponentSceneNode {
+        host_id: "timeline-paint-test".into(),
         surface_id: "timeline-paint-test".into(),
         controller_id: "controller".into(),
         component_kind: SurfaceKind::GraphTimeline,
@@ -117,6 +118,7 @@ fn lane_guide_lines_are_translucent_not_the_opaque_separator_token() {
 #[test]
 fn row_press_dispatches_checkout_checkpoint_for_the_row_under_the_pointer() {
     let scene = UiComponentSceneNode {
+        host_id: "timeline-press-test".into(),
         surface_id: "timeline-press-test".into(),
         controller_id: "controller".into(),
         component_kind: SurfaceKind::GraphTimeline,

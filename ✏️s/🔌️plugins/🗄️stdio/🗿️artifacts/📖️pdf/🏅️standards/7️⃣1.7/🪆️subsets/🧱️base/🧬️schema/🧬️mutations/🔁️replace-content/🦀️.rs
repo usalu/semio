@@ -30,8 +30,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for ReplaceContent {
         base.pages.get(self.index).and_then(|page| page.content.get(self.at)).map(|op| PdfMutation::ReplaceContent(ReplaceContent { index: self.index, at: self.at, op: op.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Replace operator {} on page {}", self.at, self.index)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace operator {} on page {}", self.at, self.index), &format!("Operator {} auf Seite {} ersetzen", self.at, self.index))
     }
 
     fn target(&self) -> Vec<String> {

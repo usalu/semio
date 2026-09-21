@@ -28,8 +28,8 @@ impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for ChangeCounter {
     fn inverse(&self, base: &VcsSnapshot) -> Vec<VcsDemoMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Change counter to {}", self.new_counter)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change counter to {}", self.new_counter), &format!("Zähler auf {} ändern", self.new_counter))
     }
 }
 //#endregion 🔖️Mutation

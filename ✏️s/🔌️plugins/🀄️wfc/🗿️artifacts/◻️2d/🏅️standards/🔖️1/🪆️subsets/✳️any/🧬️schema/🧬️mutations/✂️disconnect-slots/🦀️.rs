@@ -28,8 +28,8 @@ impl MutationKind<Wfc2dSnapshot, Wfc2dMutation> for DisconnectSlots {
     fn inverse(&self, base: &Wfc2dSnapshot) -> Vec<Wfc2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Disconnect Slots".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Disconnect Slots", "Plätze trennen")
     }
 }
 //#endregion 🔖️DisconnectSlots

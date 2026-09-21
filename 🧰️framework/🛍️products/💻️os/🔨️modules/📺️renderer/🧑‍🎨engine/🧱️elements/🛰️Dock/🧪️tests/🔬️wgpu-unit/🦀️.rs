@@ -118,13 +118,15 @@ fn split_axis_extent_uses_row_width_not_canvas_max() {
 }
 
 #[test]
-fn panel_scroll_region_blocks_scene_wheel() {
-    let panel_scroll = HitTarget { rect: Rect::new(0.0, 0.0, 200.0, 400.0), event: None, control_id: Some("panel.left.lowpoly".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None };
-    assert!(!ShellState::wheel_propagates_to_scene_surface(Some(&panel_scroll)));
-    let world = HitTarget { rect: Rect::new(0.0, 0.0, 800.0, 600.0), event: None, control_id: Some("world-surface".into()), kind: HitKind::World3d, drag_axis: None, drag_data: None };
-    assert!(ShellState::wheel_propagates_to_scene_surface(Some(&world)));
-    let graph_pane = HitTarget { rect: Rect::new(0.0, 0.0, 800.0, 600.0), event: None, control_id: Some("graph-surface.pane".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None };
-    assert!(ShellState::wheel_propagates_to_scene_surface(Some(&graph_pane)));
+fn unregistered_world_and_pane_identifiers_cannot_claim_scene_wheel() {
+    let shell = ShellState::new(Vec::new(), String::new());
+    let theme = Theme::default();
+    for (kind, id) in [(HitKind::ScrollRegion, "panel.left.lowpoly"), (HitKind::World3d, "world-surface"), (HitKind::ScrollRegion, "graph-surface.pane"), (HitKind::ScrollRegion, "map-surface.map")] {
+        let mut input = InputState::<ActionDescriptor>::default();
+        input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 800.0, 600.0), event: None, control_id: Some(id.into()), kind, drag_axis: None, drag_data: None });
+        input.publish_hits();
+        assert!(!shell.wheel_reaches_scene_surface(400.0, 300.0, &input, &theme), "{id} has no published scene provenance");
+    }
 }
 
 #[test]

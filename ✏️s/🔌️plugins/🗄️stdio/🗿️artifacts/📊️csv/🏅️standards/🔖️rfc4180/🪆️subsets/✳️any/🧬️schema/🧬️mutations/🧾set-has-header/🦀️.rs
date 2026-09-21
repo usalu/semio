@@ -20,8 +20,8 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetHasHeader {
     fn inverse(&self, base: &CsvSnapshot) -> Vec<CsvMutation> {
         agg_inverse(&CsvMutation::SetHasHeader(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-has-header".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-has-header", "Kopf setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

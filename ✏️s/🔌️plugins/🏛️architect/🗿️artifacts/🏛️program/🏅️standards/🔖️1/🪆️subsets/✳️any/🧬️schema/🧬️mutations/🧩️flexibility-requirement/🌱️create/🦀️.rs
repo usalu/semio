@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateFlexibilityRequire
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create flexibility requirement \"{}\"", self.flexibility_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create flexibility requirement \"{}\"", self.flexibility_requirement.header.name), &format!("Flexibilitätsanforderung \"{}\" erstellen", self.flexibility_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.flexibility_requirement.header.id.0.clone()]

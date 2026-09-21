@@ -23,8 +23,8 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleVertices {
     fn inverse(&self, base: &StlSnapshot) -> Vec<StlMutation> {
         agg_inverse(&StlMutation::SetTriangleVertices(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-triangle-vertices".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-triangle-vertices", "Dreieckvertices setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

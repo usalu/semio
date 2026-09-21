@@ -43,8 +43,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Create
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Create humidistat {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create humidistat {}", self.id.0), &format!("Feuchteregler {} erstellen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

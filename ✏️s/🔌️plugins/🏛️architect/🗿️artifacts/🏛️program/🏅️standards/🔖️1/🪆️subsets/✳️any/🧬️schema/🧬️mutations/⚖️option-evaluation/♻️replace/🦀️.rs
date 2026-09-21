@@ -25,8 +25,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for ReplaceOptionEvaluation 
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Replace option evaluation \"{}\"", self.option_evaluation.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Replace option evaluation \"{}\"", self.option_evaluation.header.name), &format!("Optionsbewertung \"{}\" ersetzen", self.option_evaluation.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.option_evaluation.header.id.0.clone()]

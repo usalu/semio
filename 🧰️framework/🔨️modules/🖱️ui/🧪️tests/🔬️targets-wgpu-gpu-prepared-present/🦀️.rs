@@ -303,7 +303,22 @@ fn every_world_color_cursor_uses_the_encoded_attachment_in_scene_and_foreground_
     assert!(draw_source.contains("let world_encoded_format = format.remove_srgb_suffix();"));
     assert!(draw_source.contains("scene_color_world_encoded"));
     assert!(draw_source.contains("prepared_composite_world_encoded_view"));
-    assert_eq!(draw_source.matches("format: world_encoded_format, blend:").count(), 9, "standard, depth-writing standard translucent, painted, celebration, line and textured pipelines all target the encoded UNORM view");
+    let encoded_world_pipelines = [
+        "world3d_pipeline",
+        "world3d_pipeline_translucent",
+        "world3d_line_pipeline",
+        "world3d_standard_translucent_pipeline",
+        "world3d_painted_pipeline",
+        "world3d_painted_pipeline_translucent",
+        "world3d_celebration_pipeline",
+        "world3d_celebration_pipeline_translucent",
+        "world3d_textured_pipeline",
+        "world3d_grid_pipeline",
+    ];
+    for label in encoded_world_pipelines {
+        assert!(draw_source.contains(&format!("label: Some(\"{label}\")")), "the {label} encoded-color pipeline remains registered");
+    }
+    assert_eq!(draw_source.matches("format: world_encoded_format, blend:").count(), encoded_world_pipelines.len(), "standard, translucent, painted, celebration, line, textured and procedural-grid pipelines all target the encoded UNORM view exactly once");
     assert!(draw_source.contains("shadow: [if pass.shadow.enabled { 1.0 } else { 0.0 }, 0.0, 0.0, 1.0]"), "the legacy WGPU producer declares that its World attachment expects encoded output");
 }
 

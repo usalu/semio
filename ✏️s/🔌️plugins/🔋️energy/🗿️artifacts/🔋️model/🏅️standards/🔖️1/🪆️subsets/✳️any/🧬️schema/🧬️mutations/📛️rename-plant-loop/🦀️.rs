@@ -32,8 +32,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Rename
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change plant loop {} name to {:?}", self.id.0, self.new_name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change plant loop {} name to {:?}", self.id.0, self.new_name), &format!("Anlagenkreis {} Name auf {:?} ändern", self.id.0, self.new_name))
     }
 
     fn target(&self) -> Vec<String> {

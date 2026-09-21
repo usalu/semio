@@ -19,8 +19,8 @@ impl protocol::MutationKind<SemioObjectSnapshot, SemioObjectMutation> for Delete
     fn inverse(&self, base: &SemioObjectSnapshot) -> Vec<SemioObjectMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        "Delete brep child".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Delete brep child", "Brepkind löschen")
     }
     fn target(&self) -> Vec<String> {
         vec!["brep".to_string()]

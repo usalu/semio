@@ -28,8 +28,8 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for InsertEncryptionDictionary {
         vec![PdfXMutation::RemoveEncryptionDictionary(RemoveEncryptionDictionary { version: self.version, revision: self.revision })]
     }
 
-    fn label(&self) -> String {
-        format!("Insert encryption dictionary V{} R{}", self.version, self.revision)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Insert encryption dictionary V{} R{}", self.version, self.revision), &format!("Verschlüsselungswörterbuchv{} R{} einfügen", self.version, self.revision))
     }
 
     fn target(&self) -> Vec<String> {

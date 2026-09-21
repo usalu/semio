@@ -59,8 +59,8 @@ impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for InsertLineMutat
         vec![super::TxtMutation::RemoveLine(super::RemoveLineMutation { index })]
     }
 
-    fn label(&self) -> String {
-        "Insert Line".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Insert Line", "Linie einfügen")
     }
     fn target(&self) -> Vec<String> {
         vec!["insert-line".to_string()]

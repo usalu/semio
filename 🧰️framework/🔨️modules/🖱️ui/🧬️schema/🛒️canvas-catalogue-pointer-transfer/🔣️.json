@@ -27,10 +27,11 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "rawPayload", "moves", "terminal", "terminalPoint", "expectedActions"],
+        "required": ["id", "rawPayload", "types", "moves", "terminal", "terminalPoint", "expectedActions"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "rawPayload": { "type": "string", "minLength": 1 },
+          "types": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
           "moves": {
             "type": "array",
             "minItems": 1,

@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "limits": {
+    "documentNodes": 128,
+    "retiredScenes": 64,
+    "retirementUnitsPerOpportunity": 1
+  },
+  "identity": {
+    "wireSurfaceCanRepeat": true,
+    "hostScope": ["windowGeneration", "componentMountEpoch"],
+    "survivorMatch": ["documentNodeId", "key", "componentKind", "surfaceId"]
+  },
+  "rows": [
+    {
+      "id": "candidate-removal-does-not-retire-presented-scene",
+      "presented": ["scene-a"],
+      "candidate": [],
+      "beforeAcknowledge": { "live": ["scene-a"], "retiring": [] },
+      "afterAcknowledge": { "live": [], "retiring": ["scene-a"] }
+    },
+    {
+      "id": "aborted-removal-preserves-presented-scene",
+      "presented": ["scene-a"],
+      "candidate": [],
+      "abort": true,
+      "afterAcknowledge": { "live": ["scene-a"], "retiring": [] }
+    },
+    {
+      "id": "unchanged-scene-retains-host-across-alternating-arenas",
+      "presented": ["scene-a"],
+      "candidate": ["scene-a"],
+      "expectedHostRelation": "equal"
+    },
+    {
+      "id": "remove-and-readd-allocates-a-fresh-host",
+      "presented": ["scene-a"],
+      "candidate": [],
+      "successor": ["scene-a"],
+      "expectedHostRelation": "different"
+    },
+    {
+      "id": "held-capture-transfers-to-the-accepted-survivor",
+      "presented": ["slider-a"],
+      "candidate": ["slider-a"],
+      "capture": "slider-a",
+      "beforeAcknowledge": { "dispatch": "presented", "candidateReady": true },
+      "afterAcknowledge": { "dispatch": "candidate", "terminalEvents": 1 }
+    },
+    {
+      "id": "changed-capture-target-cannot-inherit-the-gesture",
+      "presented": ["slider-a"],
+      "candidate": ["slider-b"],
+      "capture": "slider-a",
+      "beforeAcknowledge": { "dispatch": "presented", "candidateReady": false },
+      "afterAcknowledge": { "dispatch": "presented", "terminalEvents": 1 }
+    }
+  ]
+}

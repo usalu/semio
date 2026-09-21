@@ -14,12 +14,68 @@ package = "semio:stdio"
 [package.metadata.semio]
 role = "plugin"
 
-# 🎮️ The stdio playground: the `md` editor of the shipped document fleet on the commonmark demo
-# document, so `semio-tech play` shows this plugin the same way it shows every other one.
+# 🎮️ The stdio playgrounds: ONE row per app of the shipped document fleet, the way `block` ships
+# block2d/3d/5d from one crate. Every row pins its own `app`, because a playground row that pins none
+# boots `apps[0]` and reaches only that dialect's editor⇄viewer pair — `semio-tech play`'s coverage
+# laws ("reaches every editor app a plugin descriptor declares" / "reaches every viewer app through
+# its pane's editor⇄viewer switch") are satisfied exactly when every shipped app owns a row.
+# `variant = "stdio"` stays the markdown row: it is the one app of the fleet that publishes an example
+# and the lane `semio-tech play` activates the whole component from. Ports: the 6110/6210 pair markdown
+# already held, plus one contiguous 6211–6218 / 6311–6318 block — every port below 6211 is claimed by
+# another variant's react or wgpu launcher, and the catalog gate forbids sharing one.
 [[package.metadata.semio.playground]]
 variant = "stdio"
 app = "s.stdio.md@commonmark/*#editor"
+aliases = ["stdio markdown"]
 ports = { react = 6110, wgpu = 6210 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-txt"
+app = "s.stdio.txt@utf-8/*#editor"
+aliases = ["stdio text"]
+ports = { react = 6211, wgpu = 6311 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-csv"
+app = "s.stdio.csv@rfc4180/*#editor"
+aliases = ["stdio csv"]
+ports = { react = 6212, wgpu = 6312 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-tsv"
+app = "s.stdio.tsv@iana/*#editor"
+aliases = ["stdio tsv"]
+ports = { react = 6213, wgpu = 6313 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-json"
+app = "s.stdio.json@rfc8259/*#editor"
+aliases = ["stdio json"]
+ports = { react = 6214, wgpu = 6314 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-json-i"
+app = "s.stdio.json@rfc8259/i-json#editor"
+aliases = ["stdio i-json"]
+ports = { react = 6215, wgpu = 6315 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-xml"
+app = "s.stdio.xml@1.0/*#editor"
+aliases = ["stdio xml"]
+ports = { react = 6216, wgpu = 6316 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-xml-valid"
+app = "s.stdio.xml@1.0/valid#editor"
+aliases = ["stdio valid xml"]
+ports = { react = 6217, wgpu = 6317 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-html"
+app = "s.stdio.html@5/*#editor"
+aliases = ["stdio html"]
+ports = { react = 6218, wgpu = 6318 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]

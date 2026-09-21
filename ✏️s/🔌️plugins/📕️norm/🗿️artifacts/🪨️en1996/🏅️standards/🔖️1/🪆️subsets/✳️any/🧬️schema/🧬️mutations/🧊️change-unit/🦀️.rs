@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeUnit {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change masonry unit material to \"{}\"", self.new_unit)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change masonry unit material to \"{}\"", self.new_unit), &format!("Mauerwerkeinheitsmaterial auf \"{}\" ändern", self.new_unit))
     }
 }
 //#endregion 🔖️ChangeUnit

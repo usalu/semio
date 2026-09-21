@@ -1,5 +1,17 @@
 {
   "schema": "animate.presentation",
+  "source": {
+    "src": "/fixture-deck.png",
+    "kind": "figure",
+    "frame": {
+      "x": 0,
+      "y": 0,
+      "width": 1,
+      "height": 1
+    },
+    "sourceAspect": 1.5
+  },
+  "tiles": [],
   "presentation": {
     "childId": "presentation-replace-source-identical",
     "target": {

@@ -29,8 +29,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetCatalogEntry {
         match base.catalog_extra.iter().find(|entry| entry.key == self.key) { Some(entry) => vec![PdfMutation::SetCatalogEntry(SetCatalogEntry { key: self.key.clone(), value: entry.value.clone() })], None => vec![PdfMutation::RemoveCatalogEntry(super::remove_catalog_entry::RemoveCatalogEntry { key: self.key.clone() })] }
     }
 
-    fn label(&self) -> String {
-        format!("Set catalog entry {}", self.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set catalog entry {}", self.key), &format!("Katalogeintrag {} setzen", self.key))
     }
 
     fn target(&self) -> Vec<String> {

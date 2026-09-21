@@ -20,8 +20,8 @@ impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for SetId3v1 {
     fn inverse(&self, base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
         agg_inverse(&Mp3Mutation::SetId3v1(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-id3v1".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-id3v1", "id3v1 setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

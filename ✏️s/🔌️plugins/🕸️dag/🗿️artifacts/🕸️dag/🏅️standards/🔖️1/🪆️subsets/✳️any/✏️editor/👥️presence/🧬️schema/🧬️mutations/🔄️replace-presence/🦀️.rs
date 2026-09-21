@@ -21,8 +21,8 @@ impl protocol::MutationKind<DagPresence, DagPresenceMutation> for ReplacePresenc
     fn inverse(&self, base: &DagPresence) -> Vec<DagPresenceMutation> {
         vec![DagPresenceMutation::ReplacePresence(ReplacePresence { presence: base.clone() })]
     }
-    fn label(&self) -> String {
-        "Replace Presence".into()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace Presence", "Präsenz ersetzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["presence".into()]

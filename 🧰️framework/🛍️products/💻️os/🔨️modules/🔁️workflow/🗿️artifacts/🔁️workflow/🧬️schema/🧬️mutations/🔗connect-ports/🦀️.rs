@@ -20,8 +20,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ConnectPorts
     fn inverse(&self, _base: &WorkflowSnapshot) -> Vec<WorkflowMutation> {
         vec![WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: self.edge.id.clone() })]
     }
-    fn label(&self) -> String {
-        format!("Connect workflow ports {}", self.edge.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Connect workflow ports {}", self.edge.id), &format!("Arbeitsablaufanschlüsse {} verbinden", self.edge.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["edges".into(), self.edge.id.clone()]

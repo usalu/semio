@@ -28,8 +28,8 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetObject {
     fn inverse(&self, base: &ObjSnapshot) -> Vec<ObjMutation> {
         agg_inverse(&ObjMutation::SetObject(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-object".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-object", "Objekt setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

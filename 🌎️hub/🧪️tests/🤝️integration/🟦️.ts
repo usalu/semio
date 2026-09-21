@@ -309,9 +309,11 @@ describe("hub harness quick contract", () => {
         }
       }
       if (digest.digest("hex") !== profile.selectedClosureSha256) throw new Error("selected closure digest differs");
-      const target = packages.get(profile.openTarget.package.pluginId);
-      if (!selected.has(target?.pluginId) || target.packageId !== profile.openTarget.package.packageId || target.version !== profile.openTarget.package.version
-        || !target.openTargets.some((candidate: any) => JSON.stringify(candidate) === JSON.stringify(profile.openTarget.target))) throw new Error("open target outside selected closure");
+      for (const selection of profile.openTargets) {
+        const target = packages.get(selection.package.pluginId);
+        if (!selected.has(target?.pluginId) || target.packageId !== selection.package.packageId || target.version !== selection.package.version
+          || !target.openTargets.some((candidate: any) => JSON.stringify(candidate) === JSON.stringify(selection.target))) throw new Error("open target outside selected closure");
+      }
       const visiting = new Set<string>();
       const visited = new Set<string>();
       const order: string[] = [];
@@ -343,7 +345,7 @@ describe("hub harness quick contract", () => {
     changedDigest.profiles[0].selectedClosureSha256 = "2".repeat(64);
     expect(() => dependencyFirst(changedDigest, "fixture")).toThrow("digest");
     const changedTarget = structuredClone(fixture.bundle);
-    changedTarget.profiles[0].openTarget.package.packageId = "unselected";
+    changedTarget.profiles[0].openTargets[0].package.packageId = "unselected";
     expect(() => dependencyFirst(changedTarget, "fixture")).toThrow("outside selected closure");
 
     const componentMaximum = structuredClone(fixture.bundle);

@@ -32,8 +32,8 @@ impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ResizeTarget
     fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Resize target region \"{}\"", self.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Resize target region \"{}\"", self.id), &format!("Zielregion \"{}\" skalieren", self.id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.id.clone()]

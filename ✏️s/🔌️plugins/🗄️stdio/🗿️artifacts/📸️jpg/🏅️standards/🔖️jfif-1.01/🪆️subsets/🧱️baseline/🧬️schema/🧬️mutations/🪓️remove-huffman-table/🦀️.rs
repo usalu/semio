@@ -20,8 +20,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgBaselineMutation> for RemoveHuffmanT
     fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgBaselineMutation> {
         agg_inverse(&JpgBaselineMutation::RemoveHuffmanTable(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-huffman-table".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-huffman-table", "Huffmantabelle entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

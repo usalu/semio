@@ -23,8 +23,8 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for RemovePoint {
     fn inverse(&self, base: &LasSnapshot) -> Vec<LasMutation> {
         agg_inverse(&LasMutation::RemovePoint(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-point".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-point", "Punkt entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

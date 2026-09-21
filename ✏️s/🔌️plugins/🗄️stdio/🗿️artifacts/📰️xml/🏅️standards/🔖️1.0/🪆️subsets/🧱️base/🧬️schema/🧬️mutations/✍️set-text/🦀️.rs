@@ -47,8 +47,8 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetTextMutation
         vec![super::XmlMutation::SetText(Self::Restore(Box::new(inverse)))]
     }
 
-    fn label(&self) -> String {
-        "Set Text".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Set Text", "Text setzen")
     }
     fn target(&self) -> Vec<String> {
         vec!["set-text".to_string()]

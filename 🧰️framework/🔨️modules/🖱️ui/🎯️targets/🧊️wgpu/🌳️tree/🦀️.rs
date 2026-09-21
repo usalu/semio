@@ -20,6 +20,7 @@ pub enum UiDocumentTreeFault {
     MissingChild,
     MultipleParents,
     Cycle,
+    Credits,
 }
 
 #[derive(Debug)]
@@ -68,6 +69,32 @@ impl UiDocumentTree {
 
     pub fn root_id(&self) -> UiNodeId {
         self.root
+    }
+
+    pub(crate) fn node_count(&self) -> usize {
+        self.node_count
+    }
+
+    /// 🪙 Starts an independently credited copy of this admitted document. Records are copied by
+    /// [`UiDocumentTree::credited_record_at`] one bounded unit at a time; this header alone owns no
+    /// component, binding, or menu payload credits.
+    pub(crate) fn credited_baseline(&self) -> Self {
+        Self {
+            generation: self.generation,
+            surface: self.surface.clone(),
+            revision: self.revision,
+            root: self.root,
+            layout_epoch: self.layout_epoch,
+            node_count: self.node_count,
+            nodes: UiNodeTable::default(),
+        }
+    }
+
+    /// 🪙 Copies one record through the contract's explicit credit-accounting seam. A record is
+    /// never duplicated with `Clone`: component values, action bindings, and menu references must
+    /// each acquire their own bounded owner or the whole candidate copy is refused.
+    pub(crate) fn credited_record_at(&self, index: usize) -> Result<UiNodeRecord, UiDocumentTreeFault> {
+        self.nodes.get_index(index).ok_or(UiDocumentTreeFault::Count)?.credited_clone().ok_or(UiDocumentTreeFault::Credits)
     }
 
     pub fn record(&self, id: UiNodeId) -> Option<&UiNodeRecord> {
@@ -318,6 +345,7 @@ pub struct Node {
     pub next_sibling: Option<NodeId>,
     pub key: NodeKey,
     pub spec: WidgetSpec,
+    pub(crate) component_generation: u64,
     /// 📐️ The AUTHORED layout for this node — `Some` exactly when a `UiNodeRecord` published one
     /// (`record.layout`, the same value React's `layoutSpecStyle` reads), `None` for the legacy
     /// declarative `UiNode` chrome path that carries no layout vocabulary of its own. `flex` picks
@@ -339,6 +367,7 @@ pub struct Node {
 
 impl Node {
     pub fn new(key: NodeKey, spec: WidgetSpec) -> Self {
+        let component_generation = u64::from(matches!(&spec.0, UiNode::ComponentScene(_)));
         let disclosure_open = match &spec.0 {
             UiNode::Section(section) => Some(section.default_open.unwrap_or(true)),
             _ => None,
@@ -351,6 +380,7 @@ impl Node {
             next_sibling: None,
             key,
             spec,
+            component_generation,
             layout_spec: None,
             state: WidgetState { disclosure_open, ..WidgetState::default() },
             layout: LayoutBucket::default(),
@@ -359,6 +389,20 @@ impl Node {
             flags: NodeFlags::empty(),
             intent: None,
         }
+    }
+
+    pub const fn component_generation(&self) -> u64 {
+        self.component_generation
+    }
+
+    pub(crate) fn interaction_identity_matches(&self, other: &Self) -> bool {
+        self.key == other.key
+            && self.component_generation == other.component_generation
+            && std::mem::discriminant(&self.spec.0) == std::mem::discriminant(&other.spec.0)
+            && match (&self.spec.0, &other.spec.0) {
+                (UiNode::ComponentScene(left), UiNode::ComponentScene(right)) => left.host_id == right.host_id,
+                _ => true,
+            }
     }
 }
 
@@ -641,6 +685,38 @@ impl UiTree {
         &self.document_nodes
     }
 
+    pub(crate) fn component_scene_host_is_mounted(&self, host_id: &str) -> bool {
+        self.document_nodes.iter().any(|(_, node)| {
+            self.node(*node).is_some_and(|node| matches!(&node.spec.0, UiNode::ComponentScene(scene) if scene.host_id == host_id))
+        })
+    }
+
+    /// 🎞️ Copies one retained interaction record shared by the same authored identity and widget
+    /// kind. Candidate structure, specs, layout, paint, and document ownership stay independent.
+    /// Returns `true` once `index` is beyond the fixed document ledger.
+    pub(crate) fn transfer_interaction_record_from(&mut self, presented: &UiTree, index: usize) -> bool {
+        let Some((document_id, target_id)) = self.document_nodes.get(index).copied() else {
+            if let Some(root) = self.root {
+                self.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+                self.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+            }
+            return true;
+        };
+        let Some(source_id) = presented.document_node(document_id) else { return false };
+        let Some(source) = presented.node(source_id) else { return false };
+        let Some(target) = self.node_mut(target_id) else { return false };
+        if !source.interaction_identity_matches(target) {
+            return false;
+        }
+        target.state = source.state.clone();
+        for flag in [NodeFlags::HOVERED, NodeFlags::ACTIVE, NodeFlags::FOCUSED, NodeFlags::FOCUS_VISIBLE, NodeFlags::OVERLAY] {
+            target.flags.set(flag, source.flags.contains(flag));
+        }
+        target.flags.set(NodeFlags::DIRTY_LAYOUT, true);
+        target.flags.set(NodeFlags::DIRTY_PAINT, true);
+        false
+    }
+
     /// 🧹️ Drops the binding at `index` and returns the arena node it named.
     pub(crate) fn unbind_document_node_at(&mut self, index: usize) -> Option<NodeId> {
         if index >= self.document_nodes.len() {
@@ -826,16 +902,54 @@ impl UiTree {
     /// 🧹️ Retires one document identity binding per call, freeing the arena slot it named — the
     /// retirement half of the ledger, driven by `Ui::close_document_step` so a surface that drops its
     /// document does not keep its records' arena nodes alive. `true` once the ledger is empty.
-    pub(crate) fn close_document_binding_step(&mut self) -> bool {
+    pub(crate) fn close_document_binding_step(&mut self, retire_scene: &mut impl FnMut(NodeId, &Node) -> bool) -> bool {
         // 🔽️ Synthesized composite rows go FIRST: they hang off document-bound owners, so freeing the
         // owner before the row would leave the row pointing at a dead slot.
         if !self.retire_composite_row_step() {
             return false;
         }
-        let Some((_, node)) = self.document_nodes.pop() else { return true };
+        let Some((_, node)) = self.document_nodes.last().copied() else { return true };
+        let Some(retained) = self.arena.get(node) else {
+            self.document_nodes.pop();
+            return false;
+        };
+        if matches!(&retained.spec.0, UiNode::ComponentScene(_)) && !retire_scene(node, retained) {
+            return false;
+        }
+        self.document_nodes.pop();
         self.clear_links(node);
         self.remove_detached(node);
         false
+    }
+    /// 🧹️ Releases the empty tree's remaining indices after document retirement.
+    pub(crate) fn close_storage_step(&mut self, retire_scene: &mut impl FnMut(NodeId, &Node) -> bool) -> bool {
+        if self.document.is_some() || !self.document_nodes.is_empty() || !self.composite_rows.is_empty() {
+            return false;
+        }
+        if self.overlay_origins.pop().is_some() {
+            return false;
+        }
+        if self.overlay_origins.capacity() > 0 {
+            self.overlay_origins = Vec::new();
+            return false;
+        }
+        if self.document_nodes.capacity() > 0 {
+            self.document_nodes = Vec::new();
+            return false;
+        }
+        if self.composite_rows.capacity() > 0 {
+            self.composite_rows = Vec::new();
+            return false;
+        }
+        if let Some((id, node)) = self.arena.last() {
+            if matches!(&node.spec.0, UiNode::ComponentScene(_)) && !retire_scene(id, node) {
+                return false;
+            }
+            self.clear_links(id);
+            self.remove_detached(id);
+            return false;
+        }
+        self.arena.close_vacant_step()
     }
     //#endregion 🪪️DocumentIdentity
 
@@ -915,14 +1029,15 @@ impl UiTree {
     }
 
     /// 🚨️ Sets `flags` on `id` (setting `DIRTY_LAYOUT` implies `DIRTY_PAINT`, since layout changes
-    /// always require a repaint), then bubbles `SUBTREE_DIRTY` up the parent chain, stopping at the
-    /// first ancestor that already carries it — every ancestor above it is necessarily already
-    /// marked too, so walking further is wasted work.
+    /// always require a repaint), then bubbles `SUBTREE_DIRTY` to the root that owns scheduling.
+    /// An accepted generation clears the root before descendant flags, so an already-marked
+    /// intermediate ancestor is terminal only while that root still carries a layout obligation.
     pub fn mark_dirty(&mut self, id: NodeId, flags: NodeFlags) {
         let mut flags = flags;
         if flags.contains(NodeFlags::DIRTY_LAYOUT) {
             flags.set(NodeFlags::DIRTY_PAINT, true);
         }
+        let root_layout_dirty = self.root.and_then(|root| self.arena.get(root)).is_some_and(|root| root.flags.contains(NodeFlags::DIRTY_LAYOUT) || root.flags.contains(NodeFlags::SUBTREE_DIRTY));
         let parent = match self.arena.get_mut(id) {
             Some(node) => {
                 node.flags.set(flags, true);
@@ -933,7 +1048,7 @@ impl UiTree {
         let mut cursor = parent;
         while let Some(ancestor_id) = cursor {
             let Some(ancestor) = self.arena.get_mut(ancestor_id) else { break };
-            if ancestor.flags.contains(NodeFlags::SUBTREE_DIRTY) {
+            if root_layout_dirty && ancestor.flags.contains(NodeFlags::SUBTREE_DIRTY) {
                 break;
             }
             ancestor.flags.set(NodeFlags::SUBTREE_DIRTY, true);

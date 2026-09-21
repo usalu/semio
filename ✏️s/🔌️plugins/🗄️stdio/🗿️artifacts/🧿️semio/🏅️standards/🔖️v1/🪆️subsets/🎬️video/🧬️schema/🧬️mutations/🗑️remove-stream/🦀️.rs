@@ -22,8 +22,8 @@ impl protocol::MutationKind<SemioVideoSnapshot, SemioVideoMutation> for RemoveSt
     fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<SemioVideoMutation> {
         agg_inverse(&SemioVideoMutation::RemoveStream(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "remove-stream".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("remove-stream", "Strom entfernen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

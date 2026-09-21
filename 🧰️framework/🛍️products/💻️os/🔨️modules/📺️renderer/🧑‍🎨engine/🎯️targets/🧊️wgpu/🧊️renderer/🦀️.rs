@@ -9530,35 +9530,31 @@ mod boot_axis_parity_tests;
 struct RuntimeDispatchCursor {
     events: ui_host::DrainedEvents,
     generation: u64,
-    phase: u8,
     discrete_index: usize,
 }
 
 impl RuntimeDispatchCursor {
     fn new(mut events: ui_host::DrainedEvents) -> Self {
         events.metrics = None;
-        Self { events, generation: frame_latency::latest_frame_generation(), phase: 0, discrete_index: 0 }
+        Self { events, generation: frame_latency::latest_frame_generation(), discrete_index: 0 }
     }
 
     fn new_for_generation(mut events: ui_host::DrainedEvents, generation: u64) -> Self {
         events.metrics = None;
-        Self { events, generation, phase: 0, discrete_index: 0 }
+        Self { events, generation, discrete_index: 0 }
     }
 
     fn take_next(&mut self) -> Option<ui_render::DispatchEvent> {
-        if self.phase == 0 {
-            self.phase = 1;
-            if let Some(sample) = self.events.pointer_move.take() {
-                return Some(ui_render::DispatchEvent::PointerMove { pointer: sample.pointer, x: sample.x, y: sample.y, modifiers: sample.modifiers });
-            }
+        while self.discrete_index < self.events.discrete.len() && self.events.discrete[self.discrete_index].is_none() {
+            self.discrete_index += 1;
         }
-        if self.phase == 1 {
-            self.phase = 2;
-            if let Some(sample) = self.events.scroll.take() {
-                return Some(ui_render::DispatchEvent::Scroll { x: sample.x, y: sample.y, delta_x: sample.delta_x, delta_y: sample.delta_y, modifiers: sample.modifiers });
-            }
+        let pointer_generation = self.events.pointer_move.as_ref().map(|sample| sample.generation);
+        let discrete_generation = self.events.discrete.get(self.discrete_index).and_then(Option::as_ref).map(|event| event.generation);
+        if pointer_generation.is_some() && (discrete_generation.is_none() || pointer_generation < discrete_generation) {
+            let sample = self.events.pointer_move.take().expect("present retained pointer");
+            return Some(ui_render::DispatchEvent::PointerMove { pointer: sample.pointer, x: sample.x, y: sample.y, modifiers: sample.modifiers });
         }
-        while self.discrete_index < self.events.discrete.len() {
+        if self.discrete_index < self.events.discrete.len() {
             let index = self.discrete_index;
             self.discrete_index += 1;
             if let Some(event) = self.events.discrete[index].take() {
@@ -9570,9 +9566,10 @@ impl RuntimeDispatchCursor {
 
     #[cfg(test)]
     fn close_step(&mut self) -> bool {
-        self.events.pointer_move = None;
-        self.events.scroll = None;
         self.events.metrics = None;
+        if self.events.pointer_move.take().is_some() {
+            return false;
+        }
         while self.discrete_index < self.events.discrete.len() {
             let index = self.discrete_index;
             self.discrete_index += 1;
@@ -9584,7 +9581,7 @@ impl RuntimeDispatchCursor {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.events.pointer_move.is_none() && self.events.scroll.is_none() && self.events.metrics.is_none() && self.events.discrete.iter().all(Option::is_none)
+        self.events.pointer_move.is_none() && self.events.metrics.is_none() && self.events.discrete.iter().all(Option::is_none)
     }
 }
 
@@ -12169,89 +12166,6 @@ struct AppRuntime {
     native_reload_pending: bool,
 }
 
-/// 🖱️ One pending wheel application: a delta and the point the notches that made it were scrolled at.
-#[derive(Clone, Copy, Default)]
-struct AppWheelNotch {
-    delta: f32,
-    x: f32,
-    y: f32,
-}
-
-/// 🎟️ How many distinct wheel POINTS one frame may owe before the stream coalesces into its newest
-/// application. Fixed credits, like every other per-frame queue in this transaction: a browser can
-/// deliver an unbounded wheel stream and a frame may not grow with it.
-const WHEEL_PENDING_APPLICATIONS: usize = 8;
-
-/// 🖱️ The wheel a frame has yet to apply, AT THE POINTS the wheel events carried — never at wherever
-/// the pointer has since wandered, and never merged across points.
-///
-/// 🩸️ `DispatchEvent::Scroll { x, y, delta_x, delta_y }` carries its own position all the way from
-/// the browser wire (`🎮️input-wire`) and from winit, and `dispatch_normalized_event` dropped it
-/// (`Scroll { delta_y, .. } => app.wheel_delta += delta_y`). The frame then applied the accumulated
-/// delta at `last_pointer_x/y`. The wgpu tick is input-driven, so a wheel is normally drained by the
-/// NEXT pointer event — by which time the pointer is somewhere else, and both the scene-surface gate
-/// and `state.bounds.contains` answer for that other point. Measured on 6118: four wheel notches over
-/// the preview centre arrived as one `wheel gate x=5 y=5 delta=-480 … worlds=[("procedural-preview",
-/// false)]`, so the World3d authority saw `wheel=0` on every one of its intents and the camera never
-/// moved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-/// `📓️wgpu-end-to-end-verification-2026-09-14.md` §5.1).
-///
-/// 🩸️ Carrying only the NEWEST point left exactly the same hole one notch wide: a stream that
-/// travels — the battery's own `h7_wheel_zoom` scrolls over the preview centre and nudges the
-/// pointer 1 px into the corner between notches, and every browser wheel stream travels when the
-/// user moves while scrolling — still collapsed into ONE application, in the corner. Measured on
-/// 6118 (2026-09-14 15:30 battery, `world3d-editor`): `Scroll { x: 1208, y: 461 }` followed by
-/// `{ x: 3, y: 3 }`, `{ x: 4, y: 4 }`, `{ x: 5, y: 5 }`, `{ x: 6, y: 6 }` published `wheel=0` on all
-/// 337 world3d intents and left the camera at `[4,-4,3]->[0,0,0]/45deg`. A notch over the geometry
-/// and a notch in the corner are two gestures, so they are two applications.
-#[derive(Clone, Copy, Default)]
-pub(crate) struct AppWheel {
-    notches: [AppWheelNotch; WHEEL_PENDING_APPLICATIONS],
-    len: usize,
-}
-
-impl AppWheel {
-    /// 🖱️ Coalesces one wheel event into the pending applications: into the newest one while the
-    /// point has not moved (a stationary burst is one zoom), otherwise as a new application at its
-    /// own point. A stream longer than the credits merges into its newest application.
-    pub(crate) fn accumulate(&mut self, x: f32, y: f32, delta_y: f32) {
-        let saturated = self.len >= WHEEL_PENDING_APPLICATIONS;
-        if let Some(newest) = self.len.checked_sub(1).and_then(|index| self.notches.get_mut(index)) {
-            if saturated || (newest.x == x && newest.y == y) {
-                newest.delta += delta_y;
-                newest.x = x;
-                newest.y = y;
-                return;
-            }
-        }
-        if let Some(slot) = self.notches.get_mut(self.len) {
-            *slot = AppWheelNotch { delta: delta_y, x, y };
-            self.len += 1;
-        }
-    }
-
-    /// 🖱️ Takes the OLDEST pending application and its point, leaving the rest. Applications whose
-    /// notches cancelled out are dropped on the way — a zero delta is not a wheel. `None` when
-    /// nothing is pending.
-    pub(crate) fn take(&mut self) -> Option<(f32, f32, f32)> {
-        while self.len > 0 {
-            let oldest = self.notches[0];
-            self.notches.copy_within(1..self.len, 0);
-            self.len -= 1;
-            if oldest.delta.abs() > 0.0 {
-                return Some((oldest.delta, oldest.x, oldest.y));
-            }
-        }
-        None
-    }
-
-    /// 🖱️ Whether another application is still owed, so the frame's wheel ladder runs again for it
-    /// instead of leaving a notch for the next input event that happens to arrive.
-    pub(crate) fn pending(&self) -> bool {
-        self.notches.iter().take(self.len).any(|notch| notch.delta.abs() > 0.0)
-    }
-}
-
 pub(crate) struct AppInteractionState {
     shell: ShellState,
     input: InputState<ActionDescriptor>,
@@ -12268,7 +12182,6 @@ pub(crate) struct AppInteractionState {
     /// pointer travels over in between.
     pointer_capture: PointerCapture,
     modifiers: PointerModifiers,
-    wheel: AppWheel,
     space_pressed: bool,
     wheel_zoom_deadline_ms: f64,
     caret_blink_at_ms: f64,
@@ -12432,6 +12345,7 @@ impl FrameEnginePackets {
 
 pub(crate) struct AppFrameBuild {
     input: ui_wgpu::wgpu::PreparedRenderInput,
+    input_candidate: Option<shell::PresentedInputCandidateWitness>,
     engine_packets: FrameEnginePackets,
     generation: semio_framework_trace::Generation,
     pub(crate) cursor: SemioCursor,
@@ -12444,6 +12358,7 @@ pub(crate) struct AppFrameBuild {
 
 struct AppFrameAfterChrome {
     resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
+    input_candidate: Option<shell::PresentedInputCandidateWitness>,
     upload_rejected: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
     draw_rejected: Option<ui_wgpu::wgpu::PreparedRenderInputRejected>,
     engine_packets: Option<FrameEnginePackets>,
@@ -12457,6 +12372,7 @@ struct AppFrameAfterChrome {
 struct FrameBuildCursor {
     phase: FrameBuildPhase,
     presentation_witness: RuntimePresentationWitness,
+    input_candidate: Option<shell::PresentedInputCandidateWitness>,
     fullscreen: Option<bool>,
     previous_draw: Option<DrawList>,
     previous_overlay: Option<DrawList>,
@@ -12520,6 +12436,7 @@ impl FrameBuildCursor {
         Self {
             phase: FrameBuildPhase::Deferred,
             presentation_witness,
+            input_candidate: None,
             fullscreen: None,
             previous_draw: None,
             previous_overlay: None,
@@ -12646,6 +12563,7 @@ impl FrameBuildCursor {
                 AppFrameBuild {
                     generation: semio_framework_trace::Generation(input.preview_generation),
                     input,
+                    input_candidate: self.input_candidate.take(),
                     engine_packets: std::mem::take(&mut self.engine_packets),
                     cursor: SemioCursor::Default,
                     theme_dark: false,
@@ -12739,14 +12657,6 @@ enum FrameFinishBoundaryStep {
     Fault(&'static str),
 }
 
-struct FrameWheelCursor {
-    delta: f32,
-    x: f32,
-    y: f32,
-    ctrl: bool,
-    index: usize,
-}
-
 impl AppFrameAfterChrome {
     fn close_step(&mut self) -> bool {
         if let Some(rejected) = self.draw_rejected.as_mut() {
@@ -12773,6 +12683,7 @@ impl AppFrameAfterChrome {
             let build = AppFrameBuild {
                 generation: semio_framework_trace::Generation(input.preview_generation),
                 input,
+                input_candidate: self.input_candidate.take(),
                 engine_packets: match self.engine_packets.take() {
                     Some(packets) => packets,
                     None => return false,
@@ -12813,7 +12724,6 @@ pub(crate) struct FrameTransaction {
     build_cursor: Option<FrameBuildCursor>,
     finish_cursor: Option<FrameFinishCursor>,
     after_chrome: Option<AppFrameAfterChrome>,
-    wheel: Option<FrameWheelCursor>,
     raster_uploads: Option<scenes::PendingRasterUploadCursor>,
     raster_rejected: Option<ui_wgpu::wgpu::PreparedRasterProducer>,
 }
@@ -12888,11 +12798,6 @@ enum AppFrameTransactionPhase {
     BoardAuthority,
     World3dSnapshot,
     World3dAuthority,
-    WheelStart,
-    WheelWorld3d,
-    WheelGraph,
-    WheelMap,
-    WheelBoard,
     RasterUploads,
     Finish,
     Terminal,
@@ -12915,7 +12820,6 @@ impl FrameTransaction {
             build_cursor: None,
             finish_cursor: None,
             after_chrome: None,
-            wheel: None,
             raster_uploads: None,
             raster_rejected: None,
         }
@@ -13311,8 +13215,8 @@ impl FrameTransaction {
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
                 let Some(surface_id) = interaction.shell.world3d_states.id_at(self.world3d_authority_cursor) else {
                     self.world3d_authority_cursor = 0;
-                    self.stage = FrameTransactionStage::PresentSurface;
-                    self.phase = AppFrameTransactionPhase::WheelStart;
+                    self.stage = FrameTransactionStage::ReconcileTree;
+                    self.phase = AppFrameTransactionPhase::RasterUploads;
                     return AppFrameTransactionStep::Pending;
                 };
                 if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES {
@@ -13365,182 +13269,6 @@ impl FrameTransaction {
                         AppFrameTransactionStep::Fault
                     }
                 }
-            }
-            AppFrameTransactionPhase::WheelStart => {
-                let Some((delta, x, y)) = app.wheel.take() else {
-                    self.stage = FrameTransactionStage::ReconcileTree;
-                    self.phase = AppFrameTransactionPhase::RasterUploads;
-                    return AppFrameTransactionStep::Pending;
-                };
-                let ctrl = app.modifiers.ctrl;
-                let owes_another_application = app.interaction.as_ref().is_some_and(|interaction| interaction.wheel.pending());
-                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
-                interaction.shell.handle_pointer_wheel(x, y, delta, &mut interaction.input);
-                let propagates = interaction.shell.wheel_reaches_scene_surface(x, y, &interaction.input, &interaction.theme);
-                let gate = interaction.input.hit_at(x, y);
-                log_debug(&format!(
-                    "[DEBUG] wheel apply x={x:.1} y={y:.1} delta={delta} hit={:?} control={:?} propagates={propagates} owed={owes_another_application}",
-                    gate.map(|hit| hit.kind),
-                    gate.and_then(|hit| hit.control_id.as_deref())
-                ));
-                if !propagates {
-                    self.phase = if owes_another_application {
-                        AppFrameTransactionPhase::WheelStart
-                    } else {
-                        self.stage = FrameTransactionStage::ReconcileTree;
-                        AppFrameTransactionPhase::RasterUploads
-                    };
-                    return AppFrameTransactionStep::Pending;
-                }
-                let surface_fault =
-                    interaction.shell.world3d_states.take_fault().or_else(|| interaction.shell.node_graph_states.take_fault()).or_else(|| interaction.shell.tiled_map_states.take_fault()).or_else(|| interaction.shell.board2d_states.take_fault());
-                if let Some(fault) = surface_fault {
-                    runtime.record_frame_fault(fault);
-                    self.phase = AppFrameTransactionPhase::Terminal;
-                    return AppFrameTransactionStep::Fault;
-                }
-                self.wheel = Some(FrameWheelCursor { delta, x, y, ctrl, index: 0 });
-                self.phase = AppFrameTransactionPhase::WheelWorld3d;
-                AppFrameTransactionStep::Pending
-            }
-            AppFrameTransactionPhase::WheelWorld3d => {
-                let Some(wheel) = self.wheel.as_mut() else {
-                    runtime.record_frame_fault("world3d wheel phase lost its retained cursor");
-                    self.phase = AppFrameTransactionPhase::Terminal;
-                    return AppFrameTransactionStep::Fault;
-                };
-                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
-                let Some(surface_id) = interaction.shell.world3d_states.id_at(wheel.index).map(str::to_owned) else {
-                    wheel.index = 0;
-                    self.phase = AppFrameTransactionPhase::WheelGraph;
-                    return AppFrameTransactionStep::Pending;
-                };
-                wheel.index += 1;
-                let Some(state) = interaction.shell.world3d_states.get_mut(&surface_id) else {
-                    runtime.record_frame_fault("world3d surface order lost ownership");
-                    self.phase = AppFrameTransactionPhase::Terminal;
-                    return AppFrameTransactionStep::Fault;
-                };
-                if state.bounds.contains(wheel.x, wheel.y) {
-                    if state.surface_id.len() > WORLD3D_DEADLINE_ID_BYTES || state.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                        runtime.record_frame_fault("world3d wheel identifier exceeded fixed credits");
-                        self.phase = AppFrameTransactionPhase::Terminal;
-                        return AppFrameTransactionStep::Fault;
-                    }
-                    let modifiers = PointerModifiers { ctrl: wheel.ctrl, ..PointerModifiers::default() };
-                    if enqueue_world3d_event(state, WorldInteractionIntent::wheel(wheel.x, wheel.y, wheel.delta, &modifiers)).is_err() {
-                        runtime.record_frame_fault("world3d wheel intent credits exceeded");
-                        self.phase = AppFrameTransactionPhase::Terminal;
-                        return AppFrameTransactionStep::Fault;
-                    }
-                }
-                AppFrameTransactionStep::Pending
-            }
-            AppFrameTransactionPhase::WheelGraph => {
-                let Some(wheel) = self.wheel.as_mut() else {
-                    runtime.record_frame_fault("graph wheel phase lost its retained cursor");
-                    self.phase = AppFrameTransactionPhase::Terminal;
-                    return AppFrameTransactionStep::Fault;
-                };
-                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
-                let Some(surface_id) = interaction.shell.node_graph_states.id_at(wheel.index).map(str::to_owned) else {
-                    wheel.index = 0;
-                    self.phase = AppFrameTransactionPhase::WheelMap;
-                    return AppFrameTransactionStep::Pending;
-                };
-                wheel.index += 1;
-                let Some(surface) = interaction.shell.node_graph_states.get(&surface_id) else {
-                    runtime.record_frame_fault("node graph surface order lost ownership");
-                    self.phase = AppFrameTransactionPhase::Terminal;
-                    return AppFrameTransactionStep::Fault;
-                };
-                if surface.bounds.contains(wheel.x, wheel.y) {
-                    if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES || surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                        runtime.record_frame_fault("node graph wheel identifier exceeded fixed credits");
-                        self.phase = AppFrameTransactionPhase::Terminal;
-                        return AppFrameTransactionStep::Fault;
-                    }
-                    if let Err(fault) = engine_canvas::node_graph_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, wheel.ctrl, &mut interaction.input) {
-                        interaction.input.record_action_fault(fault);
-                        runtime.record_frame_fault("node graph wheel action admission failed");
-                        self.phase = AppFrameTransactionPhase::Terminal;
-                        return AppFrameTransactionStep::Fault;
-                    }
-                    interaction.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
-                }
-                AppFrameTransactionStep::Pending
-            }
-            AppFrameTransactionPhase::WheelMap => {
-                let Some(wheel) = self.wheel.as_mut() else {
-                    runtime.record_frame_fault("map wheel phase lost its retained cursor");
-                    self.phase = AppFrameTransactionPhase::Terminal;
-                    return AppFrameTransactionStep::Fault;
-                };
-                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
-                let Some(surface_id) = interaction.shell.tiled_map_states.id_at(wheel.index).map(str::to_owned) else {
-                    wheel.index = 0;
-                    self.phase = AppFrameTransactionPhase::WheelBoard;
-                    return AppFrameTransactionStep::Pending;
-                };
-                wheel.index += 1;
-                let Some(surface) = interaction.shell.tiled_map_states.get(&surface_id) else {
-                    runtime.record_frame_fault("tiled map surface order lost ownership");
-                    self.phase = AppFrameTransactionPhase::Terminal;
-                    return AppFrameTransactionStep::Fault;
-                };
-                if surface.bounds.contains(wheel.x, wheel.y) {
-                    if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES || surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                        runtime.record_frame_fault("tiled map wheel identifier exceeded fixed credits");
-                        self.phase = AppFrameTransactionPhase::Terminal;
-                        return AppFrameTransactionStep::Fault;
-                    }
-                    if let Err(fault) = engine_canvas::tiled_map_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, wheel.ctrl, &mut interaction.input) {
-                        interaction.input.record_action_fault(fault);
-                        runtime.record_frame_fault("tiled map wheel action admission failed");
-                        self.phase = AppFrameTransactionPhase::Terminal;
-                        return AppFrameTransactionStep::Fault;
-                    }
-                }
-                AppFrameTransactionStep::Pending
-            }
-            AppFrameTransactionPhase::WheelBoard => {
-                let Some(wheel) = self.wheel.as_mut() else {
-                    runtime.record_frame_fault("board wheel phase lost its retained cursor");
-                    self.phase = AppFrameTransactionPhase::Terminal;
-                    return AppFrameTransactionStep::Fault;
-                };
-                let owes_another_application = app.interaction.as_ref().is_some_and(|interaction| interaction.wheel.pending());
-                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
-                let Some(surface_id) = interaction.shell.board2d_states.id_at(wheel.index).map(str::to_owned) else {
-                    self.wheel = None;
-                    self.phase = if owes_another_application {
-                        AppFrameTransactionPhase::WheelStart
-                    } else {
-                        self.stage = FrameTransactionStage::ReconcileTree;
-                        AppFrameTransactionPhase::RasterUploads
-                    };
-                    return AppFrameTransactionStep::Pending;
-                };
-                wheel.index += 1;
-                let Some(surface) = interaction.shell.board2d_states.get(&surface_id) else {
-                    runtime.record_frame_fault("board surface order lost ownership");
-                    self.phase = AppFrameTransactionPhase::Terminal;
-                    return AppFrameTransactionStep::Fault;
-                };
-                if surface.bounds.contains(wheel.x, wheel.y) {
-                    if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES || surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                        runtime.record_frame_fault("board wheel identifier exceeded fixed credits");
-                        self.phase = AppFrameTransactionPhase::Terminal;
-                        return AppFrameTransactionStep::Fault;
-                    }
-                    if let Err(fault) = scenes::puzzle_board_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, &mut interaction.input) {
-                        interaction.input.record_action_fault(fault);
-                        runtime.record_frame_fault("board wheel action admission failed");
-                        self.phase = AppFrameTransactionPhase::Terminal;
-                        return AppFrameTransactionStep::Fault;
-                    }
-                }
-                AppFrameTransactionStep::Pending
             }
             AppFrameTransactionPhase::RasterUploads => {
                 // 🖼️ One bitmap per step off `ui_wgpu`'s own image ledger — the drain
@@ -13680,7 +13408,6 @@ impl FrameTransaction {
             self.finish_cursor = None;
             return false;
         }
-        self.wheel = None;
         if let Some(partial) = self.after_chrome.as_mut() {
             if !partial.close_step() {
                 return false;
@@ -13718,7 +13445,6 @@ impl FrameTransaction {
             && self.build_cursor.is_none()
             && self.finish_cursor.is_none()
             && self.after_chrome.is_none()
-            && self.wheel.is_none()
             && self.raster_uploads.is_none()
             && self.raster_rejected.is_none()
             && self.scene_camera_cursor.terminal_is_empty()
@@ -13727,6 +13453,7 @@ impl FrameTransaction {
 
 pub(crate) struct AppFramePresentation {
     packet: Option<ui_wgpu::wgpu::PreparedRenderPacket>,
+    input_candidate: Option<shell::PresentedInputCandidateWitness>,
     engine_packets: FrameEnginePackets,
     generation: semio_framework_trace::Generation,
     pub(crate) cursor: SemioCursor,
@@ -13741,6 +13468,7 @@ impl AppFrameBuild {
     pub(crate) fn into_preparation(self) -> AppFramePreparation {
         let AppFrameBuild {
             input,
+            input_candidate,
             engine_packets,
             generation,
             cursor,
@@ -13757,6 +13485,7 @@ impl AppFrameBuild {
         AppFramePreparation {
             job,
             job_rejected,
+            input_candidate,
             session: None,
             rejected: None,
             engine_packets: Some(engine_packets),
@@ -13776,6 +13505,7 @@ impl AppFrameBuild {
 pub(crate) struct AppFramePreparation {
     job: Option<ui_wgpu::wgpu::PreparedRenderJob>,
     job_rejected: Option<ui_wgpu::wgpu::PreparedRenderJobRejected>,
+    input_candidate: Option<shell::PresentedInputCandidateWitness>,
     session: Option<semio_framework_job::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>,
     rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::PreparedRenderJob>>,
     engine_packets: Option<FrameEnginePackets>,
@@ -13885,6 +13615,7 @@ impl AppFramePreparation {
         self.session.as_mut()?.begin_close();
         Some(AppFramePresentation {
             packet: Some(packet),
+            input_candidate: self.input_candidate.take(),
             engine_packets: self.engine_packets.take()?,
             generation: self.generation,
             cursor: self.cursor,
@@ -13967,6 +13698,7 @@ pub(crate) struct AppPresenter {
     gpu: GpuContext,
     engine: engine_canvas::EngineCanvasPresenter,
     gate: ui_wgpu::wgpu::PreparedRenderGate,
+    runtime: RuntimeMailbox,
     presentation_authority: RuntimePresentationAuthority,
     raster_operation_authority: RuntimeRasterOperationAuthority,
     window: Option<Arc<Window>>,
@@ -14405,6 +14137,24 @@ impl AppPresenter {
             return Ok(false);
         }
         if let Some(mut cursor) = self.pending.take() {
+            if let Some(input_candidate) = cursor.frame.input_candidate {
+                let runtime = self.runtime.clone();
+                let Ok(mut runtime) = runtime.try_lock() else {
+                    self.pending = Some(cursor);
+                    return Ok(false);
+                };
+                let Some(interaction) = runtime.interaction.as_mut() else {
+                    self.pending = Some(cursor);
+                    return Ok(false);
+                };
+                if !interaction.shell.discard_presented_input_candidate(input_candidate) {
+                    self.pending = Some(cursor);
+                    return Err("presenter close lost its staged input witness".to_string());
+                }
+                cursor.frame.input_candidate = None;
+                self.pending = Some(cursor);
+                return Ok(false);
+            }
             if let Some(gpu_cursor) = cursor.gpu_cursor.as_mut() {
                 gpu_cursor.begin_close();
                 if !gpu_cursor.close_step() {
@@ -14602,6 +14352,15 @@ impl AppPresenter {
                     cursor.gpu_cursor = None;
                     return Ok(AppPresentStep::Pending);
                 }
+                if let Some(input_candidate) = cursor.frame.input_candidate {
+                    let runtime = self.runtime.clone();
+                    let Ok(mut runtime) = runtime.try_lock() else { return Ok(AppPresentStep::Pending) };
+                    let Some(interaction) = runtime.interaction.as_mut() else { return Ok(AppPresentStep::Pending) };
+                    if !interaction.shell.discard_presented_input_candidate(input_candidate) {
+                        return Err("aborted presentation lost its staged input witness".to_string());
+                    }
+                    cursor.frame.input_candidate = None;
+                }
                 let Some(mut aborted) = self.pending.take() else { return Err("aborted presentation cursor was missing".to_string()) };
                 let retirement = self.retirement.get_or_insert_with(|| AppPresentedRetirement::new(None));
                 if retirement.completed_frame.is_some() {
@@ -14768,6 +14527,21 @@ impl AppPresenter {
                 Ok(AppPresentStep::Pending)
             }
             AppPresentPhase::Render => {
+                let Some(input_candidate) = cursor.frame.input_candidate else {
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err("prepared frame input candidate witness was missing before submit".to_string());
+                };
+                let runtime = self.runtime.clone();
+                let Ok(runtime) = runtime.try_lock() else { return Ok(AppPresentStep::Pending) };
+                let Some(interaction) = runtime.interaction.as_ref() else { return Ok(AppPresentStep::Pending) };
+                if !interaction.shell.presented_input_candidate_matches(input_candidate) {
+                    drop(runtime);
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err("prepared frame input authority was stale before submit".to_string());
+                }
+                drop(runtime);
                 let Some(witness) = cursor.witness.as_ref() else {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.phase = AppPresentPhase::Aborted;
@@ -14835,7 +14609,7 @@ impl AppPresenter {
                 Ok(AppPresentStep::Pending)
             }
             AppPresentPhase::Acknowledge => {
-                let Some(witness) = cursor.witness.take() else {
+                let Some(witness) = cursor.witness.as_ref() else {
                     cursor.frame.packet = self.gate.abort_pending();
                     cursor.phase = AppPresentPhase::Aborted;
                     return Err("prepared frame presenter witness was missing".to_string());
@@ -14851,6 +14625,20 @@ impl AppPresenter {
                     cursor.phase = AppPresentPhase::Aborted;
                     return Err("raster operation authority was stale before acknowledgement".to_string());
                 }
+                let runtime = self.runtime.clone();
+                let Ok(mut runtime) = runtime.try_lock() else { return Ok(AppPresentStep::Pending) };
+                let Some(interaction) = runtime.interaction.as_mut() else { return Ok(AppPresentStep::Pending) };
+                let Some(input_candidate) = cursor.frame.input_candidate else {
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err("prepared frame input candidate witness was missing before acknowledgement".to_string());
+                };
+                if !interaction.shell.presented_input_candidate_matches(input_candidate) {
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err("prepared frame input authority was stale before acknowledgement".to_string());
+                }
+                let Some(witness) = cursor.witness.take() else { return Err("prepared frame presenter witness was lost during acknowledgement".to_string()) };
                 let mut replacement = match self.gate.acknowledge_presented(witness) {
                     Ok(replacement) => replacement,
                     Err(_) => {
@@ -14859,6 +14647,12 @@ impl AppPresenter {
                         return Err("prepared frame presenter witness was stale or duplicated".to_string());
                     }
                 };
+                let AppInteractionState { shell, input, .. } = interaction;
+                if !shell.acknowledge_presented_input(input, input_candidate) {
+                    return Err("prepared frame input authority could not be acknowledged".to_string());
+                }
+                cursor.frame.input_candidate = None;
+                drop(runtime);
                 self.raster_operation_authority.release(raster_witness).map_err(str::to_owned)?;
                 cursor.raster_witness = None;
                 self.retirement = Some(AppPresentedRetirement::commit(replacement.take_previous(), raster_witness));
@@ -15300,6 +15094,11 @@ impl AppRuntime {
                 let Some(interaction) = interaction.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost interaction state") };
                 let Some(world_resources) = cursor.world_resources.as_mut() else { return FrameBuildBoundaryStep::Fault("frame chrome lost world resources") };
                 if interaction.shell.render_chrome_step(&mut cursor.chrome, draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme, world_resources) {
+                    let input_candidate = match interaction.shell.seal_presented_input_candidate(&interaction.theme) {
+                        Ok(witness) => witness,
+                        Err(_) => return FrameBuildBoundaryStep::Fault("presented input candidate generation exhausted"),
+                    };
+                    cursor.input_candidate = Some(input_candidate);
                     interaction.shell.sync_engine_surface_states();
                     cursor.phase = FrameBuildPhase::JobProgressTake;
                 }
@@ -15393,6 +15192,7 @@ impl AppRuntime {
                 let engine_packets = std::mem::take(&mut cursor.engine_packets);
                 return FrameBuildBoundaryStep::Complete(AppFrameAfterChrome {
                     resource_input: Some(resource_input),
+                    input_candidate: cursor.input_candidate.take(),
                     upload_rejected: None,
                     draw_rejected: None,
                     engine_packets: Some(engine_packets),
@@ -15555,6 +15355,7 @@ impl AppRuntime {
                 return FrameFinishBoundaryStep::Complete(AppFrameBuild {
                     generation: semio_framework_trace::Generation(input.preview_generation),
                     input,
+                    input_candidate: partial.input_candidate.take(),
                     engine_packets,
                     cursor: cursor.cursor,
                     theme_dark: self.theme_dark,
@@ -15625,9 +15426,8 @@ impl AppInteractionState {
         true
     }
 
-    #[cfg(target_arch = "wasm32")]
     fn has_pending_text_work(&self) -> bool {
-        self.input.text_buffer.reserved_bytes() != 0 || self.text_streams.iter().any(Option::is_some) || self.text_cancel_pending
+        self.input.text_buffer.runnable_work_pending() || self.text_cancel_pending
     }
 
     fn drive_text_operation(&mut self) {
@@ -15729,55 +15529,99 @@ impl AppInteractionState {
 
     /// 🛑️ Clears pointer ownership without manufacturing a successful release.
     fn handle_pointer_cancel(&mut self, pointer_id: ui_render::PointerId) {
-        self.pointer_down = false;
-        self.pointer_capture.release();
+        if let Some([x, y]) = self.pointer_capture.position(pointer_id) {
+            self.input.pointer_x = x;
+            self.input.pointer_y = y;
+        }
+        self.pointer_capture.release(pointer_id);
+        self.pointer_down = self.pointer_capture.any_active();
         self.shell.handle_pointer_cancel_for(pointer_id, &mut self.input);
-        for state in self.shell.world3d_states.values_mut() {
-            infinite_world::world::world3d_cancel_relocate_drag(state);
+    }
+
+    /// 🎡️ Applies one owned normalized wheel event before the next dispatch can change its target.
+    fn handle_pointer_wheel(&mut self, x: f32, y: f32, delta_x: f32, delta_y: f32, modifiers: PointerModifiers) {
+        self.modifiers = modifiers.clone();
+        self.input.modifiers = modifiers.clone();
+        let target = self.shell.scene_pointer_target_at(x, y, &self.input, &self.theme);
+        let fault = self.shell.world3d_states.take_fault()
+            .or_else(|| self.shell.node_graph_states.take_fault())
+            .or_else(|| self.shell.tiled_map_states.take_fault())
+            .or_else(|| self.shell.board2d_states.take_fault());
+        if let Some(fault) = fault {
+            self.frame_fault = Some(fault.to_owned());
+            return;
+        }
+        if let Some(target) = target {
+            if let Err(fault) = self.apply_scene_wheel(&target, x, y, delta_y, &modifiers) {
+                self.frame_fault = Some(fault.to_owned());
+            }
+        } else {
+            self.shell.handle_pointer_wheel(x, y, delta_x, delta_y, &mut self.input);
         }
     }
 
+    /// 🎡️ Applies one notch to the captured published scene, never to overlapping peers.
+    fn apply_scene_wheel(&mut self, target: &interpreter::ScenePointerTarget, x: f32, y: f32, delta: f32, modifiers: &PointerModifiers) -> Result<(), &'static str> {
+        use ui_wgpu::wgpu::SurfaceKind;
+        if !self.shell.scene_pointer_target_is_published(target) { return Ok(()); }
+        let surface_id = &target.surface_id;
+        let host_id = &target.host_id;
+        if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES { return Err("scene wheel identifier exceeded fixed credits"); }
+        let outcome = match target.kind {
+            SurfaceKind::World3d => self.shell.world3d_states.get_mut(host_id).map(|state| {
+                if state.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES { return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits); }
+                enqueue_world3d_event(state, WorldInteractionIntent::wheel(x, y, delta, modifiers)).map(|_| ()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits)
+            }),
+            SurfaceKind::NodeGraph => self.shell.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES { return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits); }
+                let outcome = engine_canvas::node_graph_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, modifiers.ctrl, &mut self.input).map(|_| ());
+                if outcome.is_ok() { self.wheel_zoom_deadline_ms = app_now_ms() + 120.0; }
+                outcome
+            }),
+            SurfaceKind::TiledMap => self.shell.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES { return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits); }
+                engine_canvas::tiled_map_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, modifiers.ctrl, &mut self.input).map(|_| ())
+            }),
+            SurfaceKind::Board2d => self.shell.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES { return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits); }
+                scenes::puzzle_board_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, &mut self.input).map(|_| ())
+            }),
+            _ => None,
+        };
+        if let Some(Err(fault)) = outcome {
+            self.input.record_action_fault(fault);
+            return Err("scene wheel action admission failed");
+        }
+        Ok(())
+    }
+
     async fn handle_pointer_button(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
+        use ui_wgpu::wgpu::SurfaceKind;
         self.last_pointer_x = x;
         self.last_pointer_y = y;
         self.pointer_down = down;
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
-        if !down {
-            interpreter::release_scene_pointer(pointer_id);
-        }
+        self.input.modifiers = modifiers.clone();
+        self.input.pointer_x = x;
+        self.input.pointer_y = y;
+        self.input.pointer_down = down;
         if down && button == 0 {
             interpreter::blur_focused_ink_editor_at(x, y, &mut self.input);
         }
-        // ⌨️🖱️ The AGGREGATE input state learns the modifier set too, not just this runtime's own
-        // field. Everything the shell resolves off the flat hit registry reads `InputState::modifiers`
-        // — the virtual file system's shift/ctrl row selection (`vfs_selection_for_click`), the text
-        // editor's alt-click completions — and the retained router's pointer events carry it onward
-        // into every `UiCommand::Scene`.
-        //
-        // 🩸️ NOTHING wrote it. `InputState::modifiers` was constructed at `PointerModifiers::default()`
-        // and stayed there for the whole session on both doors: the ui crate's own winit helper
-        // (`🖱️ui/🎯️targets/🧊️wgpu/🏃️host/🦀️.rs:28`) is not on this path, and this runtime kept the set in
-        // its OWN `self.modifiers` instead. So the one production call that already asked for
-        // shift/ctrl — `let additive = input.modifiers.meta || input.modifiers.ctrl` — could only ever
-        // read `false`, and ctrl/shift multi-select was dead on every list surface however the press
-        // was routed (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-        // `📓️audit-w14-scenes-residual.md` C1).
-        self.input.modifiers = modifiers.clone();
-        // 🎯️ ONE owner per pointer sequence. The press resolves it once and the release consumes it,
-        // so a gesture that began on chrome ends on chrome — React's DOM target capture, which is why
-        // pressing a navbar panel tab, a pane chip, a window cap or the split gutter never produced an
-        // `interactionHover`/`interactionSelect` in the reference journal while wgpu produced both on
-        // every one of them (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-        // `📓️w11a-prepared-world-mesh-missing.md` §6 family A). The shell's chrome is painted INSIDE a
-        // pane's rect — the top-right panel's tabs at `+1380,57.6` and the pane chips at `+6.4,57.6`
-        // both sit over `puzzle3d-main-*@…+3,54` — so `bounds.contains` alone can never answer it.
-        let owner = if down { self.pointer_capture.press(self.shell.pointer_owner_at(x, y, &self.input, &self.theme)) } else { self.pointer_capture.release() };
-        // 🪟️ React's window activation is a CAPTURE-phase handler on the window element
-        // (`🪟️Window/🟦️.tsx`'s `onPointerDownCapture`), so it runs before the press is routed to
-        // anything inside — the window's own chrome or the scene canvas filling its body alike.
+        let target = if down { self.shell.scene_pointer_target_at(x, y, &self.input, &self.theme) } else { None };
+        let owner = if down {
+            let Some(owner) = self.pointer_capture.press(pointer_id, if target.is_some() { PointerHitOwner::Surface } else { PointerHitOwner::Chrome }, x, y) else {
+                self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                return;
+            };
+            owner
+        } else {
+            self.pointer_capture.release(pointer_id)
+        };
+        self.pointer_down = self.pointer_capture.any_active();
         if down {
-            self.shell.activate_window_under_pointer(x, y);
+            self.shell.activate_window_under_pointer(x, y, &self.theme);
         }
         if owner == PointerHitOwner::Chrome {
             if let Err(err) = self.shell.handle_pointer_button_for(pointer_id, x, y, down, button, &mut self.input, &self.theme).await {
@@ -15785,197 +15629,75 @@ impl AppInteractionState {
             }
             return;
         }
-        if !down {
-            let map_had_active_drag = self.shell.tiled_map_states.keys().any(|surface_id| scenes::tiled_map_drag_active(surface_id));
-            for (surface_id, surface) in &self.shell.tiled_map_states {
-                if !surface.bounds.contains(x, y) && !scenes::tiled_map_drag_active(surface_id) {
-                    continue;
-                }
-                if let Err(fault) = scenes::tiled_map_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, &mut self.input) {
-                    self.input.record_action_fault(fault);
-                    return;
-                }
-            }
-            let board_had_active_drag = self.shell.board2d_states.keys().any(|surface_id| scenes::board2d_drag_active(surface_id));
-            for (surface_id, surface) in &self.shell.board2d_states {
-                if !surface.bounds.contains(x, y) && !scenes::board2d_drag_active(surface_id) {
-                    continue;
-                }
-                if let Err(fault) = scenes::puzzle_board_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input) {
-                    self.input.record_action_fault(fault);
-                    return;
-                }
-            }
-            let board_consumed = self.shell.board2d_states.values().any(|surface| surface.bounds.contains(x, y)) || board_had_active_drag;
-            let map_consumed = self.shell.tiled_map_states.values().any(|surface| surface.bounds.contains(x, y)) || map_had_active_drag;
-            if map_consumed || board_consumed {
-                return;
-            }
-            if let Err(err) = self.shell.handle_pointer_button_for(pointer_id, x, y, down, button, &mut self.input, &self.theme).await {
-                log_debug(&format!("pointer failed: {err}"));
-            }
-            let mut world_consumed = false;
-            for state in self.shell.world3d_states.values_mut() {
-                if !state.bounds.contains(x, y) {
-                    continue;
-                }
-                world_consumed = true;
-                if enqueue_world3d_event(state, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).is_err() {
-                    self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
-                    return;
-                }
-            }
-            if world_consumed {
-                return;
-            }
-            for (surface_id, surface) in &self.shell.node_graph_states {
-                if !surface.bounds.contains(x, y) {
-                    continue;
-                }
-                // 🩺️ The release half of a press on a retained graph.
-                let outcome = engine_canvas::node_graph_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input);
-                log_debug(&format!("[DEBUG] wgpu-shell graph button surface={surface_id} down=false x={x} y={y} outcome={outcome:?}"));
-                if let Err(fault) = outcome {
-                    self.input.record_action_fault(fault);
-                    return;
-                }
-            }
+        let Some(target) = (if down { target } else { interpreter::release_scene_pointer(pointer_id) }).filter(|target| self.shell.scene_pointer_target_is_published(target)) else { return };
+        if down && !interpreter::claim_scene_pointer_owner(target.clone(), pointer_id) {
+            self.pointer_capture.release(pointer_id);
+            self.pointer_down = self.pointer_capture.any_active();
+            self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
             return;
         }
-        // 🖱️📋️ A PLAIN secondary press on a world pane is the context menu's, not the surface's —
-        // React's orbit map binds the right button to nothing unmodified and to pan/orbit under
-        // Shift/Alt (`resolveWorldOrbitRightMouseAction`), and its `onContextMenu` handler opens the
-        // menu straight off the host element. The shell's `open_context_menu` already fills a World3d
-        // surface's `hits`/`selection` from `world3d_context_menu_surface`; it simply never ran,
-        // because a `HitKind::World3d` target is not chrome and the press was handed to the surface
-        // instead. So the wgpu pane answered a right-click with a dead `worldContextMenuAt` verb and
-        // no menu at all (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-        // `📓️w10a-world-interaction-journal-parity.md`).
-        //
-        // 🩸️ It used to RETURN here, so the pane itself received no press at all — and React's does:
-        // `onContextMenu` opens the menu off the host `<div>` while the very same `pointerdown` still
-        // reaches the `<canvas>` under it, where R3F answers it with the selection
-        // `plan_world3d_non_primary_press_pick` is the twin of. React's `context-menu` step journals
-        // `interactionSelect`; the wgpu pane journalled none
-        // (`🗑️generated/w12c-parity-run-19/steps.json` step 23, ticket 26/09/17 packet W13c §1).
-        // The menu opens AND the surface is pressed, in that order, exactly as the DOM delivers them.
-        let over_world = self.shell.world3d_states.values().any(|state| state.bounds.contains(x, y));
-        if over_world && button == 2 && !modifiers.shift && !modifiers.alt && !modifiers.meta {
+        if down && target.kind == SurfaceKind::World3d && button == 2 && !modifiers.shift && !modifiers.alt && !modifiers.meta {
             if let Err(err) = self.shell.handle_pointer_button_for(pointer_id, x, y, down, button, &mut self.input, &self.theme).await {
                 log_debug(&format!("pointer failed: {err}"));
             }
         }
-        if over_world {
-            for state in self.shell.world3d_states.values_mut() {
-                if !state.bounds.contains(x, y) {
-                    continue;
+        let host_id = &target.host_id;
+        let outcome = match target.kind {
+            SurfaceKind::World3d => self.shell.world3d_states.get_mut(host_id).map(|state| {
+                enqueue_world3d_event(state, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits)
+            }),
+            SurfaceKind::NodeGraph => self.shell.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                if down {
+                    engine_canvas::node_graph_pointer_down_into(host_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed, &mut self.input).map(|_| ())
+                } else {
+                    engine_canvas::node_graph_pointer_up_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
                 }
-                if enqueue_world3d_event(state, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).is_err() {
-                    self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
-                    return;
+            }),
+            SurfaceKind::TiledMap => self.shell.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                if down {
+                    scenes::tiled_map_pointer_down_into(&target, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &surface.selection_method, &mut self.input).map(|_| ())
+                } else {
+                    scenes::tiled_map_pointer_up_into(host_id, &surface.surface_id, &surface.controller_id, surface.bounds, x, y, &mut self.input).map(|_| ())
                 }
-            }
-            return;
-        }
-        for (surface_id, surface) in &self.shell.node_graph_states {
-            if !surface.bounds.contains(x, y) {
-                continue;
-            }
-            if down && !interpreter::claim_scene_pointer_owner(&surface.window_id, surface_id, ui_wgpu::wgpu::SurfaceKind::NodeGraph, pointer_id) {
-                self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
-                return;
-            }
-            // 🩺️ One line per real press on a retained engine surface — the witness that a graph
-            // whose window did not repaint this frame is still pointer-dispatchable.
-            let outcome = if down {
-                engine_canvas::node_graph_pointer_down_into(surface_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed, &mut self.input)
-            } else {
-                engine_canvas::node_graph_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input)
-            };
-            log_debug(&format!("[DEBUG] wgpu-shell graph button surface={surface_id} down={down} x={x} y={y} outcome={outcome:?}"));
-            if let Err(fault) = outcome {
-                self.input.record_action_fault(fault);
-                return;
-            }
-        }
-        let mut map_pointer_on_surface = false;
-        for (surface_id, surface) in &self.shell.tiled_map_states {
-            if !surface.bounds.contains(x, y) {
-                continue;
-            }
-            map_pointer_on_surface = true;
-            if down {
-                if !interpreter::claim_scene_pointer_owner(&surface.window_id, surface_id, ui_wgpu::wgpu::SurfaceKind::TiledMap, pointer_id) {
-                    self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
-                    return;
+            }),
+            SurfaceKind::Board2d => self.shell.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                if down {
+                    scenes::puzzle_board_pointer_down(host_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta());
+                    Ok(())
+                } else {
+                    scenes::puzzle_board_pointer_up_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
                 }
-                if let Err(fault) = scenes::tiled_map_pointer_down_into(surface_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &surface.selection_method, &mut self.input) {
-                    self.input.record_action_fault(fault);
-                    return;
-                }
-            }
-        }
-        if map_pointer_on_surface && (button == 0 || button == 1) {
-            return;
-        }
-        let mut board_pointer_on_surface = false;
-        for (surface_id, surface) in &self.shell.board2d_states {
-            if !surface.bounds.contains(x, y) {
-                continue;
-            }
-            board_pointer_on_surface = true;
-            if down {
-                if !interpreter::claim_scene_pointer_owner(&surface.window_id, surface_id, ui_wgpu::wgpu::SurfaceKind::Board2d, pointer_id) {
-                    self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
-                    return;
-                }
-                scenes::puzzle_board_pointer_down(surface_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta());
-            }
-        }
-        if board_pointer_on_surface && (button == 0 || button == 1) {
-            return;
-        }
-        if let Err(err) = self.shell.handle_pointer_button_for(pointer_id, x, y, down, button, &mut self.input, &self.theme).await {
-            log_debug(&format!("pointer failed: {err}"));
+            }),
+            _ => None,
+        };
+        if let Some(Err(fault)) = outcome {
+            self.input.record_action_fault(fault);
         }
     }
 
     async fn handle_pointer_move(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
-        let drag_dx = x - self.last_pointer_x;
-        let drag_dy = y - self.last_pointer_y;
+        use ui_wgpu::wgpu::SurfaceKind;
+        let (drag_dx, drag_dy) = self.pointer_capture.advance(pointer_id, x, y).unwrap_or((0.0, 0.0));
         self.last_pointer_x = x;
         self.last_pointer_y = y;
-        self.pointer_down = down;
+        self.pointer_down = self.pointer_capture.any_active();
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
-        // ⌨️🖱️ Same refresh as `handle_pointer_button`'s — see the comment there.
         self.input.modifiers = modifiers.clone();
-        self.shell.handle_pointer_move_for(pointer_id, x, y, down, &mut self.input, &self.theme);
-        log_debug(&format!("[DEBUG] os_host pointer hit x={x} y={y} targets={} staged={} gen={} hit={:?}", self.input.hits().len(), self.input.staged_hits().len(), self.input.hit_generation(), self.input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone()))));
-        // 🖱️ A live shell-chrome drag CAPTURES the pointer, exactly as React's resize handle does with
-        // `setPointerCapture`: the shell above has already applied this move to the split it is
-        // dragging, and the surfaces the pointer happens to sweep over must not also receive it.
-        //
-        // 🩸️ They did. Dragging the dock's split gutter travels straight across the pane on its right,
-        // so every move was ALSO enqueued into that pane's world — one intent per move, each carrying
-        // the gutter's own huge delta — and the retained interaction authority answered `Fault`, which
-        // is a frame fault, which kills the page (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-        // `📓️w9c-behaviour-parity-run-2.md` step 15, run 3's `world3d retained interaction authority
-        // faulted`).
-        if ShellState::drag_captures_pointer(&self.input.drag) {
-            return;
+        self.input.pointer_x = x;
+        self.input.pointer_y = y;
+        self.input.pointer_down = down;
+        let target = match self.pointer_capture.holder(pointer_id) {
+            Some(PointerHitOwner::Surface) => interpreter::captured_scene_pointer(pointer_id),
+            Some(PointerHitOwner::Chrome) => None,
+            None => self.shell.scene_pointer_target_at(x, y, &self.input, &self.theme),
+        }.filter(|target| self.shell.scene_pointer_target_is_published(target));
+        if target.is_none() && self.pointer_capture.holder(pointer_id) != Some(PointerHitOwner::Surface) {
+            self.shell.handle_pointer_move_for(pointer_id, x, y, down, &mut self.input, &self.theme);
         }
-        // 🚪️ A move the CHROME owns — because the sequence was captured by a press on chrome, or
-        // because this point is over a panel, a menu, the tour or a pane's own chips — leaves every
-        // engine surface instead of reaching it. React's canvas receives no `pointermove` at all
-        // while a DOM layer above it is under the pointer; what it does receive is r3f's
-        // `onPointerOut`, which clears the hover it published. So does this: a surface with a
-        // published hover is handed exactly one [`WorldInteractionIntent::pointer_leave`], and a
-        // surface with none is handed nothing at all.
-        let chrome_owns_pointer = self.pointer_capture.owner_of_move(self.shell.pointer_owner_at(x, y, &self.input, &self.theme)) == PointerHitOwner::Chrome;
-        for state in self.shell.world3d_states.values_mut() {
-            let reaches_surface = state.bounds.contains(x, y) && !chrome_owns_pointer;
-            let intent = if reaches_surface {
+        let world_id = target.as_ref().filter(|target| target.kind == SurfaceKind::World3d).map(|target| target.host_id.as_str());
+        for (host_id, state) in self.shell.world3d_states.iter_mut() {
+            let intent = if Some(host_id.as_str()) == world_id {
                 WorldInteractionIntent::pointer_move(x, y, drag_dx, drag_dy, down, button, &modifiers)
             } else if world3d_hover_is_published(state) {
                 WorldInteractionIntent::pointer_leave(x, y)
@@ -15987,52 +15709,39 @@ impl AppInteractionState {
                 return;
             }
         }
-        if chrome_owns_pointer {
-            for (surface_id, surface) in &self.shell.board2d_states {
-                if let Err(fault) = scenes::puzzle_board_pointer_leave_into(surface_id, &surface.controller_id, modifiers.alt, &mut self.input) {
-                    self.input.record_action_fault(fault);
-                    return;
-                }
-            }
-            return;
-        }
-        for (surface_id, surface) in &self.shell.node_graph_states {
-            if surface.bounds.contains(x, y) {
-                if let Err(fault) = engine_canvas::node_graph_pointer_move_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input) {
-                    // 🩺️ A bounded fault here is not recoverable in practice: the session stops
-                    // publishing afterwards, and without a line it looks like the pointer simply
-                    // stopped working. Measured on 6118 under a fast sweep as `ItemCredits`
-                    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-                    log_debug(&format!("[DEBUG] wgpu-shell graph move fault surface={surface_id} fault={fault:?}"));
-                    self.input.record_action_fault(fault);
-                    return;
-                }
-            }
-        }
-        for (surface_id, surface) in &self.shell.tiled_map_states {
-            if !surface.bounds.contains(x, y) && !scenes::tiled_map_drag_active(surface_id) {
-                continue;
-            }
-            if let Err(fault) = scenes::tiled_map_pointer_move_into(surface_id, &surface.controller_id, surface.bounds, x, y, down, &mut self.input) {
+        for (host_id, surface) in &self.shell.board2d_states {
+            if target.as_ref().is_some_and(|target| target.kind == SurfaceKind::Board2d && target.host_id == *host_id) { continue; }
+            if let Err(fault) = scenes::puzzle_board_pointer_leave_into(host_id, &surface.controller_id, modifiers.alt, &mut self.input) {
                 self.input.record_action_fault(fault);
                 return;
             }
         }
-        for (surface_id, surface) in &self.shell.board2d_states {
-            let inside = surface.bounds.contains(x, y);
-            if inside {
-                if let Err(fault) = scenes::puzzle_board_pointer_move_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input) {
-                    self.input.record_action_fault(fault);
-                    return;
-                }
-            } else {
-                if let Err(fault) = scenes::puzzle_board_pointer_leave_into(surface_id, &surface.controller_id, modifiers.alt, &mut self.input) {
-                    self.input.record_action_fault(fault);
-                    return;
-                }
+        for (host_id, surface) in &self.shell.tiled_map_states {
+            if target.as_ref().is_some_and(|target| target.kind == SurfaceKind::TiledMap && target.host_id == *host_id && target.window_id == surface.window_id) { continue; }
+            if let Err(fault) = scenes::tiled_map_pointer_leave_into(host_id, &surface.surface_id, &surface.controller_id, &mut self.input) {
+                self.input.record_action_fault(fault);
+                return;
             }
         }
+        let Some(target) = target else { return };
+        let host_id = &target.host_id;
+        let outcome = match target.kind {
+            SurfaceKind::NodeGraph => self.shell.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                engine_canvas::node_graph_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
+            }),
+            SurfaceKind::TiledMap => self.shell.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                scenes::tiled_map_pointer_move_into(&target, &surface.controller_id, surface.bounds, x, y, down, &mut self.input).map(|_| ())
+            }),
+            SurfaceKind::Board2d => self.shell.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                scenes::puzzle_board_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())
+            }),
+            _ => None,
+        };
+        if let Some(Err(fault)) = outcome {
+            self.input.record_action_fault(fault);
+        }
     }
+
 }
 
 //#region 🔖️OsHostDecomposition — SemioApp deletion
@@ -16198,7 +15907,6 @@ async fn boot_runtime(
             pointer_button: 0,
             pointer_capture: PointerCapture::default(),
             modifiers: PointerModifiers::default(),
-            wheel: AppWheel::default(),
             space_pressed: false,
             wheel_zoom_deadline_ms: 0.0,
             caret_blink_at_ms: 0.0,
@@ -16234,6 +15942,7 @@ async fn boot_runtime(
         gpu,
         engine: engine_canvas::EngineCanvasPresenter::default(),
         gate: ui_wgpu::wgpu::PreparedRenderGate::default(),
+        runtime: runtime.clone(),
         presentation_authority: runtime.presentation_authority(),
         raster_operation_authority: runtime.raster_operation_authority(),
         window: Some(window.clone()),

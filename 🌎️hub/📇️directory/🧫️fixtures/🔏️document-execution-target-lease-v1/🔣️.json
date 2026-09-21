@@ -57,7 +57,7 @@
     "browserActor": {
       "kind": "closed-browser-actor",
       "schema": "semio.os.closed-browser-actor.v1",
-      "codegenPolicy": "semio.os.browser-jco-1.27.0-jspi.v1",
+      "codegenPolicy": "semio.os.browser-jco-1.34.0-jspi.v1",
       "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
       "sourceComponentSha256": "0fb19bbf5000750836d0343893c24471a0d65cbc0ef8e7a9ef9ce4208d58cb5c",
       "sourceDescriptorByteSha256": "f79f15ed0429a8d99cd9056e5eb1bb096788ec8117fda123e2e9054193150936",
@@ -157,7 +157,7 @@
     "browserActor": {
       "kind": "closed-browser-actor",
       "schema": "semio.os.closed-browser-actor.v1",
-      "codegenPolicy": "semio.os.browser-jco-1.27.0-jspi.v1",
+      "codegenPolicy": "semio.os.browser-jco-1.34.0-jspi.v1",
       "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
       "sourceComponentSha256": "0fb19bbf5000750836d0343893c24471a0d65cbc0ef8e7a9ef9ce4208d58cb5c",
       "sourceDescriptorByteSha256": "f79f15ed0429a8d99cd9056e5eb1bb096788ec8117fda123e2e9054193150936",

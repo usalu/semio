@@ -64,6 +64,48 @@ fn nested_snapshot() -> DrawingSnapshot {
     snapshot
 }
 
+fn document_over_byte_bound_snapshot() -> DrawingSnapshot {
+    let mut snapshot = crate::schema::default_drawing_document("drawing-document-plus-one", None);
+    snapshot.layers.clear();
+    snapshot.layers.try_reserve_exact(24).expect("D + 1 fixture root container");
+    for index in 0..24 {
+        snapshot.layers.push(crate::schema::create_drawing_path_layer(&format!("bounded-layer-{index}"), Vec::new()));
+    }
+    let source_bytes = |snapshot: &DrawingSnapshot| {
+        let mut owners = (1, size_of::<DrawingSnapshot>(), 0, 0);
+        DrawingSnapshotBoundsAuthority::merge(&mut owners, DrawingSnapshotBoundsAuthority::string_owner(&snapshot.schema));
+        DrawingSnapshotBoundsAuthority::merge(&mut owners, DrawingSnapshotBoundsAuthority::string_owner(&snapshot.id));
+        if let Some(title) = snapshot.title.as_ref() {
+            DrawingSnapshotBoundsAuthority::merge(&mut owners, DrawingSnapshotBoundsAuthority::string_owner(title));
+        }
+        DrawingSnapshotBoundsAuthority::merge(&mut owners, DrawingSnapshotBoundsAuthority::vec_owner(&snapshot.layers));
+        owners.1 += size_of_val(&snapshot.assets);
+        snapshot.layers.iter().fold(owners.1, |bytes, layer| bytes + DrawingSnapshotBoundsAuthority::direct_shape(layer).1)
+    };
+    for index in 0..snapshot.layers.len() {
+        for field in 0..3 {
+            let current = source_bytes(&snapshot);
+            if current == DRAWING_MAXIMUM_NESTED_BYTES + 1 {
+                return snapshot;
+            }
+            let layer = &mut snapshot.layers[index];
+            let value = match field {
+                0 => &mut crate::schema::layer_base_mut(layer).id,
+                1 => &mut crate::schema::layer_base_mut(layer).name,
+                _ => &mut crate::schema::layer_base_mut(layer).blend_mode,
+            };
+            let increase = (DRAWING_MAXIMUM_NESTED_BYTES + 1 - current).min(DRAWING_OWNED_FIELD_BYTES.saturating_sub(value.capacity()));
+            let target = value.capacity() + increase;
+            let mut replacement = String::new();
+            replacement.try_reserve_exact(target).expect("D + 1 fixture field capacity");
+            replacement.push_str(value);
+            *value = replacement;
+        }
+    }
+    assert_eq!(source_bytes(&snapshot), DRAWING_MAXIMUM_NESTED_BYTES + 1, "fixture materializes the exact D + 1 retained-source boundary");
+    snapshot
+}
+
 fn drain_snapshot(value: DrawingSnapshot) {
     let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&DrawingSnapshotRetirementFactory, value);
     for _ in 0..100_000 {
@@ -149,7 +191,7 @@ fn apply(mut source: DrawingSnapshot, mutation: &DrawingMutation) -> Result<Draw
     panic!("Drawing mutation candidate did not terminate")
 }
 
-fn live_reservation(source: &mut DrawingSnapshot, mutation: &DrawingMutation) -> Result<DrawingMutationAggregateReservation, &'static str> {
+fn live_workset(source: &mut DrawingSnapshot, mutation: &DrawingMutation) -> Result<DrawingMutationWorksetPlan, &'static str> {
     initialize_drawing_mutation_arena_pool_for_test();
     let operation = semio_framework_job::OperationId(8_004);
     let generation = semio_framework_job::Generation(84);
@@ -159,15 +201,41 @@ fn live_reservation(source: &mut DrawingSnapshot, mutation: &DrawingMutation) ->
     for _ in 0..100_000 {
         let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
         authority.step(source, mutation, &mut context)?;
-        if let Some(reservation) = authority.reservation {
+        if let Some(workset) = authority.workset {
             close_candidate(&mut authority, Some(source));
             drop(authority);
-            return Ok(reservation);
+            return Ok(workset);
         }
     }
     close_candidate(&mut authority, Some(source));
     drop(authority);
     Err("drawing-store.test-mutation-preflight-incomplete")
+}
+
+fn planned_clone_workset(source: &mut DrawingSnapshot, mutation: &DrawingMutation) -> Result<(DrawingMutationWorksetPlan, DrawingCloneWorkTotals), &'static str> {
+    initialize_drawing_mutation_arena_pool_for_test();
+    let operation = semio_framework_job::OperationId(8_006);
+    let generation = semio_framework_job::Generation(86);
+    let cancel = semio_framework_job::root_cancel_token();
+    let mut preview_sequence = 0;
+    let mut authority = DrawingMutationCandidateAuthority::try_new(operation, generation)?;
+    for _ in 0..100_000 {
+        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
+        authority.step(source, mutation, &mut context)?;
+        if authority.phase == DrawingMutationCandidatePhase::BindOverlay {
+            let workset = authority.workset.ok_or("drawing-store.test-clone-workset-missing")?;
+            let totals = authority.clone_work.as_ref().and_then(DrawingLayerCloneWorkAuthority::totals).ok_or("drawing-store.test-clone-work-false-terminal")?;
+            if authority.overlay.is_some() {
+                return Err("drawing-store.test-clone-bound-overlay-too-early");
+            }
+            close_candidate(&mut authority, Some(source));
+            drop(authority);
+            return Ok((workset, totals));
+        }
+    }
+    close_candidate(&mut authority, Some(source));
+    drop(authority);
+    Err("drawing-store.test-clone-work-preflight-incomplete")
 }
 
 fn digest(mutation: &DrawingMutation) -> Result<[u8; 32], &'static str> {
@@ -354,6 +422,57 @@ fn step_arena_bootstrap(bootstrap: &mut DrawingMutationArenaPoolBootstrap) -> Re
     bootstrap.step(&mut context)
 }
 
+thread_local! {
+    static BOOTSTRAP_YIELD_CLOCK: std::cell::Cell<u64> = const { std::cell::Cell::new(0) };
+}
+
+fn bootstrap_yield_clock() -> Option<u64> {
+    Some(BOOTSTRAP_YIELD_CLOCK.with(|clock| {
+        let now = clock.get();
+        clock.set(now + 1);
+        now
+    }))
+}
+
+#[test]
+fn retained_drawing_arena_bootstrap_deadline_between_guards_preserves_and_resumes_its_owner() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️mutation-admission/🔣️.json")).unwrap();
+    let law = &fixture["bootstrapYield"];
+    let mut bootstrap = DrawingMutationArenaPoolBootstrap::production(DrawingMutationArenaBootstrapAdmission::fixed().unwrap());
+    assert_eq!(step_arena_bootstrap(&mut bootstrap), Ok(false));
+    assert_eq!(step_arena_bootstrap(&mut bootstrap), Ok(false));
+    let allocation = bootstrap.allocation;
+    let operation = semio_framework_job::OperationId(7_906);
+    let generation = semio_framework_job::Generation(79);
+    let mut job = DrawingMutationArenaBootstrapJob::new(operation, generation).unwrap();
+    let mut state = DrawingMutationArenaProcessState::Building(bootstrap);
+    let cancel = semio_framework_job::root_cancel_token();
+    let mut preview_sequence = 0;
+    BOOTSTRAP_YIELD_CLOCK.with(|clock| clock.set(law["clockReadsUs"][0].as_u64().unwrap()));
+    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, law["deadlineUs"].as_u64().unwrap()), cancel.clone(), bootstrap_yield_clock, &mut preview_sequence);
+    assert!(!context.should_yield(), "the outer admission guard still has time");
+    let yielded = job.step_locked(&mut state, &mut context);
+    let retained = match &state {
+        DrawingMutationArenaProcessState::Building(owner) => Some((owner.allocation - allocation, owner.fault)),
+        _ => None,
+    };
+    let mut terminal = None;
+    for _ in 0..1_000 {
+        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
+        match job.step_locked(&mut state, &mut context) {
+            DrawingMutationArenaBootstrapStep::Pending { .. } | DrawingMutationArenaBootstrapStep::Blocked => {}
+            outcome => { terminal = Some(outcome); break; }
+        }
+    }
+    let actual = [if retained.is_some() { "yielded" } else { "retired" }, if terminal == Some(DrawingMutationArenaBootstrapStep::Ready) { "resumed" } else { "faulted" }];
+    assert!(job.terminal, "the resumed or faulted owner completes its bounded lifecycle");
+    drop(state);
+    assert_eq!(yielded, DrawingMutationArenaBootstrapStep::Pending { advanced_items: 1 });
+    assert_eq!(retained, Some((law["expectedAllocationDelta"].as_u64().unwrap() as usize, None)), "budget exhaustion preserves the exact building owner without allocating or faulting");
+    assert_eq!(serde_json::to_value(actual).unwrap(), law["expectedStages"]);
+    println!("[DEBUG] Drawing bootstrap crossed its deadline between guards, retained its allocation, and resumed to Ready");
+}
+
 fn close_arena_bootstrap_step(bootstrap: &mut DrawingMutationArenaPoolBootstrap) -> store::SnapshotRetirementStep {
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
@@ -451,6 +570,8 @@ fn retained_drawing_arena_bootstrap_exact_cap_and_plus_one_rejection_preserve_ev
     build_arena_bootstrap_owners(&mut exact);
     let admitted_items = exact.admitted_items;
     let admitted_bytes = exact.admitted_bytes;
+    let fixed = DrawingMutationArenaBootstrapAdmission::fixed().expect("four-slot bootstrap derives its claim from one configured arena owner");
+    assert_eq!((fixed.maximum_items, fixed.maximum_bytes), (admitted_items, admitted_bytes), "boot4 is exactly pool4 multiplied by the actual one-owner A");
     exact.maximum_items = admitted_items;
     exact.maximum_bytes = admitted_bytes;
     assert_eq!(step_arena_bootstrap(&mut exact), Ok(true), "allocator-returned Drawing arena capacities admit at the exact boundary");
@@ -582,7 +703,7 @@ fn retained_drawing_container_false_terminal_saturation_and_interrupted_close_pr
     let mut snapshot = crate::schema::default_drawing_document("rebuild-reservation", None);
     snapshot.layers = vec![crate::schema::create_drawing_path_layer("first", Vec::new()), crate::schema::create_drawing_path_layer("second", Vec::new())];
     let mutation = DrawingMutation::CreateLayer(CreateLayer { parent_id: None, index: Some(1), layer: Box::new(crate::schema::create_drawing_path_layer("pending", Vec::new())) });
-    let reservation = live_reservation(&mut snapshot, &mutation).expect("live Drawing rebuild reservation admitted");
+    let workset = live_workset(&mut snapshot, &mutation).expect("live Drawing rebuild workset admitted");
     let source = std::mem::take(&mut snapshot.layers);
     let DrawingMutation::CreateLayer(mut create) = mutation else { unreachable!() };
     let pending = *std::mem::replace(&mut create.layer, Box::new(crate::schema::create_drawing_path_layer("retired-placeholder", Vec::new())));
@@ -595,7 +716,7 @@ fn retained_drawing_container_false_terminal_saturation_and_interrupted_close_pr
     let source_owner = source.as_ptr();
     let reverse_owner = reverse.as_ptr();
     let output_owner = output.as_ptr();
-    let mut authority = DrawingContainerRebuildAuthority::new(source, Some(0), Some(1), Some(pending), reverse, output, reservation).unwrap_or_else(|_| panic!("fixed Drawing rebuild admitted"));
+    let mut authority = DrawingContainerRebuildAuthority::new(source, Some(0), Some(1), Some(pending), reverse, output, workset).unwrap_or_else(|_| panic!("fixed Drawing rebuild admitted"));
     assert!(authority.take().is_none(), "false terminal cannot expose a partially rebuilt owner");
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
@@ -1023,14 +1144,26 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
 }
 
 #[test]
-fn retained_drawing_aggregate_credit_admits_exact_4096_rejects_plus_one_with_owner_handback() {
-    let exact_source = nested_snapshot();
+fn retained_drawing_workset_admits_exact_field_page_and_keeps_document_mutation_arena_and_clone_bounds_independent() {
+    let mut exact_source = nested_snapshot();
     let exact_owner = exact_source.layers.as_ptr();
     let exact_target = match exact_source.layers.last().expect("Drawing exact-boundary group") {
         DrawingLayerNode::Group(group) => crate::schema::layer_id(&group.children[0]).to_string(),
         _ => unreachable!("Drawing exact-boundary group remains exact"),
     };
     let exact = DrawingMutation::RenameLayer(RenameLayer { layer_id: exact_target, new_name: "x".repeat(DRAWING_OWNED_FIELD_BYTES) });
+    let workset = live_workset(&mut exact_source, &exact).expect("an exact field page obtains its independent fixed workset");
+    let (configured_arena_items, configured_arena_bytes) = DrawingMutationArenaOwner::configured_totals().expect("the fixed arena has one derived owner claim");
+    assert_eq!((workset.arena_items, workset.arena_bytes), (configured_arena_items, configured_arena_bytes), "one arena owner is charged exactly once");
+    assert_eq!((workset.clone_items, workset.clone_bytes), (0, 0), "an overlay-only rename does not invent clone credit");
+    assert_eq!(workset.workset_items().expect("workset item total"), workset.arena_items + workset.authority_items);
+    assert_eq!(workset.workset_bytes().expect("workset byte total"), workset.arena_bytes + workset.authority_bytes);
+    assert_eq!(
+        workset.architectural_maximum_bytes().expect("derived architectural maximum"),
+        DRAWING_MAXIMUM_NESTED_BYTES * 2 + DRAWING_OWNED_FIELD_BYTES + workset.arena_bytes + workset.authority_bytes,
+        "the simultaneous maximum is derived from 2D + P + A + Q",
+    );
+    assert!(workset.simultaneous_bytes().expect("actual simultaneous ownership") <= workset.architectural_maximum_bytes().expect("derived architectural maximum"));
     let exact_source = apply(exact_source, &exact).expect("an exact 4096-byte retained overlay page is admitted");
     assert_eq!(exact_source.layers.as_ptr(), exact_owner, "exact boundary publication retains the source container owner");
     drain_mutation(exact);
@@ -1049,33 +1182,100 @@ fn retained_drawing_aggregate_credit_admits_exact_4096_rejects_plus_one_with_own
     drain_mutation(plus_one);
     drain_snapshot(plus_source);
 
-    let mut source = crate::schema::default_drawing_document("aggregate-owner", None);
-    let mutation = DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: crate::schema::layer_id(&source.layers[0]).into(), visible: false });
-    let mut last_admitted = None;
-    for index in 0..DRAWING_MUTATION_AGGREGATE_ITEMS {
-        source.layers.push(crate::schema::create_drawing_path_layer(&format!("layer-{index}"), Vec::new()));
-        let owner = source.layers.as_ptr();
-        match live_reservation(&mut source, &mutation) {
-            Ok(reservation) => {
-                assert_eq!(source.layers.as_ptr(), owner, "live aggregate census never replaces the exact source owner");
-                last_admitted = Some((source.layers.len(), reservation.total_items().expect("live item total"), reservation.total_bytes().expect("live byte total")));
-            }
-            Err("drawing-store.mutation-aggregate-item-capacity" | "drawing-store.mutation-aggregate-byte-capacity") => {
-                assert_eq!(source.layers.as_ptr(), owner, "aggregate +1 rejection returns the exact source backing");
-                break;
-            }
-            Err(error) => panic!("unexpected live Drawing aggregate rejection: {error}"),
-        }
-    }
-    let (admitted_layers, admitted_items, admitted_bytes) = last_admitted.expect("at least one live aggregate owner is admitted");
-    assert_eq!(source.layers.len(), admitted_layers + 1, "the first additional real layer owner is the +1 rejection");
-    assert!(admitted_items <= DRAWING_MUTATION_AGGREGATE_ITEMS && admitted_bytes <= DRAWING_MUTATION_AGGREGATE_BYTES);
-    let last_valid_id = source.id.clone();
-    let (source, error) = apply(source, &mutation).expect_err("aggregate +1 rejects");
-    assert_eq!(error, "drawing-store.mutation-aggregate-item-capacity");
-    assert_eq!(source.id, last_valid_id, "aggregate rejection returns the exact source authority without partial publication");
+    let source = document_over_byte_bound_snapshot();
+    let target = crate::schema::layer_id(&source.layers[0]).to_string();
+    let source_owner = source.layers.as_ptr();
+    let mutation = DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: target, visible: false });
+    let (source, error) = apply(source, &mutation).expect_err("a D + 1 source rejects independently of a small mutation");
+    assert_eq!(error, "drawing-store.preflight-byte-capacity");
+    assert_eq!(source.layers.as_ptr(), source_owner, "document rejection returns the exact source authority before overlay handoff");
     drain_mutation(mutation);
     drain_snapshot(source);
+}
+
+#[test]
+fn retained_drawing_duplicate_plans_exact_clone_work_before_overlay_and_source_handoff() {
+    let mut source = nested_snapshot();
+    let source_owner = source.layers.as_ptr();
+    let target = match source.layers.last().expect("Drawing clone-plan group") {
+        DrawingLayerNode::Group(group) => group.base.id.clone(),
+        _ => unreachable!("Drawing clone-plan group remains exact"),
+    };
+    let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target });
+    let (workset, actual_clone) = planned_clone_workset(&mut source, &mutation).expect("duplicate clone construction and census finish before binding the overlay");
+    assert_eq!(source.layers.as_ptr(), source_owner, "clone planning retains the exact source owner");
+    assert_eq!((workset.clone_items, workset.clone_bytes), (actual_clone.items, actual_clone.bytes), "workset clone credit equals the retained clone traversal's actual capacities");
+    assert!(workset.clone_items > 0 && workset.clone_bytes > size_of::<DrawingLayerCloneAuthority>(), "a nested duplicate carries real subtree backing in addition to its clone cursor");
+    assert_eq!(workset.workset_items().expect("duplicate workset items"), workset.arena_items + workset.authority_items + workset.clone_items);
+    assert_eq!(workset.workset_bytes().expect("duplicate workset bytes"), workset.arena_bytes + workset.authority_bytes + workset.clone_bytes);
+
+    let initial_layers = source.layers.len();
+    let original_id = crate::schema::layer_id(source.layers.last().expect("original duplicate source")).to_string();
+    let source = apply(source, &mutation).expect("a planned nested duplicate applies");
+    assert_eq!(source.layers.len(), initial_layers + 1);
+    assert_ne!(crate::schema::layer_id(source.layers.last().expect("published duplicate")), original_id.as_str());
+    drain_mutation(mutation);
+    drain_snapshot(source);
+}
+
+#[test]
+fn drawing_mutation_admission_fixture_matches_native_dispositions_and_serde_json_carriers() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧮️mutation-admission/🔣️.json")).expect("neutral Drawing mutation-admission fixture parses through serde_json 1");
+    assert_eq!(fixture["schema"], "drawing.mutation-admission/v1");
+    assert_eq!(fixture["limits"]["documentBytes"].as_u64(), Some(DRAWING_MAXIMUM_NESTED_BYTES as u64));
+    assert_eq!(fixture["limits"]["fieldBytes"].as_u64(), Some(DRAWING_OWNED_FIELD_BYTES as u64));
+    let cases = fixture["cases"].as_array().expect("neutral admission cases");
+    let case = |id: &str| cases.iter().find(|value| value["id"] == id).expect("declared neutral admission case");
+    assert_eq!(case("exact-field-page")["expected"]["workClasses"], serde_json::json!(["fixed-arena", "overlay-page"]));
+    assert_eq!(case("field-page-plus-one")["expected"]["fault"], "drawing-store.mutation-field-capacity");
+    assert_eq!(case("source-document-plus-one")["expected"]["fault"], "drawing-store.preflight-byte-capacity");
+    assert_eq!(case("duplicate-subtree")["expected"]["workClasses"], serde_json::json!(["fixed-arena", "clone-subtree"]));
+
+    let exact_source = nested_snapshot();
+    let exact_target = match exact_source.layers.last().expect("neutral exact-field group") {
+        DrawingLayerNode::Group(group) => crate::schema::layer_id(&group.children[0]).to_string(),
+        _ => unreachable!("neutral exact-field group remains exact"),
+    };
+    let exact_mutation = DrawingMutation::RenameLayer(RenameLayer { layer_id: exact_target, new_name: "x".repeat(DRAWING_OWNED_FIELD_BYTES) });
+    let exact_source = apply(exact_source, &exact_mutation).expect("neutral exact field-page disposition is applied");
+    let exact_carrier: serde_json::Value = serde_json::from_str(&serde_json::to_string(&exact_source).expect("serde_json carrier writes exact-field result")).expect("serde_json carrier reads exact-field result");
+    assert!(exact_carrier.to_string().contains(&format!("\"{}\"", "x".repeat(DRAWING_OWNED_FIELD_BYTES))), "third-party carrier exposes the changed layer name");
+    drain_mutation(exact_mutation);
+    drain_snapshot(exact_source);
+
+    let plus_source = nested_snapshot();
+    let plus_before = serde_json::to_value(&plus_source).expect("serde_json carrier records +1 source");
+    let plus_target = match plus_source.layers.last().expect("neutral +1 group") {
+        DrawingLayerNode::Group(group) => crate::schema::layer_id(&group.children[0]).to_string(),
+        _ => unreachable!("neutral +1 group remains exact"),
+    };
+    let plus_mutation = DrawingMutation::RenameLayer(RenameLayer { layer_id: plus_target, new_name: "x".repeat(DRAWING_OWNED_FIELD_BYTES + 1) });
+    let (plus_source, plus_fault) = apply(plus_source, &plus_mutation).expect_err("neutral field-page +1 disposition is rejected");
+    assert_eq!(plus_fault, case("field-page-plus-one")["expected"]["fault"].as_str().expect("neutral +1 fault"));
+    assert_eq!(serde_json::to_value(&plus_source).expect("serde_json carrier records returned +1 source"), plus_before);
+    drain_mutation(plus_mutation);
+    drain_snapshot(plus_source);
+
+    let bounded_source = document_over_byte_bound_snapshot();
+    let bounded_target = crate::schema::layer_id(&bounded_source.layers[0]).to_string();
+    let bounded_before = serde_json::to_value(&bounded_source).expect("serde_json carrier records D + 1 source");
+    let bounded_mutation = DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: bounded_target, visible: false });
+    let (bounded_source, bounded_fault) = apply(bounded_source, &bounded_mutation).expect_err("neutral D + 1 disposition is rejected");
+    assert_eq!(bounded_fault, case("source-document-plus-one")["expected"]["fault"].as_str().expect("neutral source fault"));
+    assert_eq!(serde_json::to_value(&bounded_source).expect("serde_json carrier records returned D + 1 source"), bounded_before);
+    drain_mutation(bounded_mutation);
+    drain_snapshot(bounded_source);
+
+    let duplicate_source = nested_snapshot();
+    let initial_layers = duplicate_source.layers.len();
+    let duplicate_target = crate::schema::layer_id(duplicate_source.layers.last().expect("neutral duplicate source")).to_string();
+    let duplicate_mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: duplicate_target.clone() });
+    let duplicate_source = apply(duplicate_source, &duplicate_mutation).expect("neutral duplicate disposition is applied");
+    let duplicate_carrier: serde_json::Value = serde_json::from_str(&serde_json::to_string(&duplicate_source).expect("serde_json carrier writes duplicate result")).expect("serde_json carrier reads duplicate result");
+    assert_eq!(duplicate_carrier["layers"].as_array().expect("carrier layers").len(), initial_layers + 1);
+    assert_ne!(crate::schema::layer_id(duplicate_source.layers.last().expect("neutral published duplicate")), duplicate_target.as_str());
+    drain_mutation(duplicate_mutation);
+    drain_snapshot(duplicate_source);
 }
 
 #[test]
@@ -1087,7 +1287,9 @@ fn retained_drawing_duplicate_hash_frames_domain_id_and_name_lengths_without_con
         base.id.clear();
         base.id.push_str(id);
         admit_layer_string_destinations(&mut layer);
-        source.layers = vec![layer];
+        source.layers.clear();
+        source.layers.try_reserve_exact(2).expect("duplicate framing fixture admits the destination slot");
+        source.layers.push(layer);
         let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: id.into() });
         let source = apply(source, &mutation).expect("framed duplicate mutation applies");
         let duplicate = source.layers.get(1).map(crate::schema::layer_id).expect("duplicated layer remains retained").to_string();
@@ -1106,7 +1308,9 @@ fn retained_drawing_duplicate_name_uses_preadmitted_page_and_returns_exact_rejec
     admit_layer_string_destinations(&mut layer);
     let target = crate::schema::layer_id(&layer).to_string();
     let original_name_owner = crate::schema::layer_base_mut(&mut layer).name.as_ptr();
-    source.layers = vec![layer];
+    source.layers.clear();
+    source.layers.try_reserve_exact(2).expect("duplicate name fixture admits the destination slot");
+    source.layers.push(layer);
     let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target });
     let source = apply(source, &mutation).expect("duplicate name suffix uses only pre-admitted destination and fixed scratch page");
     assert_eq!(crate::schema::layer_base(&source.layers[0]).name.as_ptr(), original_name_owner, "last-valid name backing remains exact");
@@ -1128,19 +1332,20 @@ fn retained_drawing_duplicate_name_uses_preadmitted_page_and_returns_exact_rejec
 }
 
 #[test]
-fn retained_drawing_cancel_stale_each_replay_candidate_container_stage_preserves_last_valid() {
+fn retained_drawing_cancel_stale_each_precommit_replay_candidate_container_stage_preserves_last_valid() {
     let stages = [
         DrawingMutationCandidatePhase::PreflightSource,
         DrawingMutationCandidatePhase::PreflightMutation,
+        DrawingMutationCandidatePhase::LocateCloneSource,
+        DrawingMutationCandidatePhase::PrepareOwnedValue,
+        DrawingMutationCandidatePhase::PlanOwnedValue,
         DrawingMutationCandidatePhase::BindOverlay,
         DrawingMutationCandidatePhase::LocatePrimary,
         DrawingMutationCandidatePhase::LocateSecondary,
-        DrawingMutationCandidatePhase::PrepareOwnedValue,
         DrawingMutationCandidatePhase::Apply,
         DrawingMutationCandidatePhase::RebuildSource,
         DrawingMutationCandidatePhase::LocateDestination,
         DrawingMutationCandidatePhase::RebuildDestination,
-        DrawingMutationCandidatePhase::Complete,
     ];
     for stage in stages {
         for stale in [false, true] {
@@ -1152,6 +1357,7 @@ fn retained_drawing_cancel_stale_each_replay_candidate_container_stage_preserves
             let last_valid_id = source.id.clone();
             let mutation = match stage {
                 DrawingMutationCandidatePhase::LocateSecondary => DrawingMutation::CreateLayer(CreateLayer { parent_id: Some(group_id), index: Some(0), layer: Box::new(crate::schema::create_drawing_path_layer("cancel-create", Vec::new())) }),
+                DrawingMutationCandidatePhase::LocatePrimary => DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id: target, visible: false }),
                 DrawingMutationCandidatePhase::RebuildSource | DrawingMutationCandidatePhase::LocateDestination => DrawingMutation::ReorderLayer(ReorderLayer { layer_id: target, parent_id: Some(group_id), index: 2 }),
                 _ => DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target }),
             };
@@ -1186,5 +1392,47 @@ fn retained_drawing_cancel_stale_each_replay_candidate_container_stage_preserves
             drain_mutation(mutation);
             drain_snapshot(source);
         }
+    }
+}
+
+#[test]
+fn retained_drawing_committed_candidate_finishes_exact_owner_return_after_late_cancel_or_stale_context() {
+    for stale in [false, true] {
+        let mut source = nested_snapshot();
+        let initial_layers = source.layers.len();
+        let target = crate::schema::layer_id(source.layers.last().expect("Drawing duplicate source")).to_string();
+        let mutation = DrawingMutation::DuplicateLayer(DuplicateLayer { layer_id: target });
+        let operation = semio_framework_job::OperationId(8_004);
+        let generation = semio_framework_job::Generation(84);
+        let mut authority = DrawingMutationCandidateAuthority::try_new(operation, generation).expect("Drawing candidate fixed owner arenas admit");
+        let cancel = semio_framework_job::root_cancel_token();
+        let mut preview_sequence = 0;
+        for _ in 0..100_000 {
+            if authority.phase == DrawingMutationCandidatePhase::Complete {
+                break;
+            }
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
+            assert!(!authority.step(&mut source, &mutation, &mut context).expect("Drawing candidate reaches its committed phase"));
+        }
+        assert_eq!(authority.phase, DrawingMutationCandidatePhase::Complete);
+        if !stale {
+            cancel.cancel_now();
+        }
+        let terminal_generation = if stale { semio_framework_job::Generation(generation.0 + 1) } else { generation };
+        let mut terminal = false;
+        for _ in 0..100_000 {
+            let mut context = semio_framework_job::StepContext::new(operation, terminal_generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
+            if authority.step(&mut source, &mutation, &mut context).expect("a committed candidate finishes exact arena return despite a late context change") {
+                terminal = true;
+                break;
+            }
+        }
+        assert!(terminal, "committed Drawing candidate reaches its terminal witness");
+        authority.take().expect("committed Drawing candidate exact terminal owner handoff");
+        assert!(authority.terminal_is_empty());
+        assert_eq!(source.layers.len(), initial_layers + 1, "late cancellation or staleness cannot roll back an already-published duplicate");
+        drop(authority);
+        drain_mutation(mutation);
+        drain_snapshot(source);
     }
 }

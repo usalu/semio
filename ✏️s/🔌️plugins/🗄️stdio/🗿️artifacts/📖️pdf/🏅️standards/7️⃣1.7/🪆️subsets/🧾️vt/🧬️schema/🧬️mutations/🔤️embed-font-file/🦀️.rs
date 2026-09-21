@@ -39,8 +39,8 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for EmbedFontFile {
         }
     }
 
-    fn label(&self) -> String {
-        format!("Embed {} on font descriptor {}", self.key, self.descriptor_ordinal)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Embed {} on font descriptor {}", self.key, self.descriptor_ordinal), &format!("{} auf Schriftdeskriptor {} einbetten", self.key, self.descriptor_ordinal))
     }
 
     fn target(&self) -> Vec<String> {

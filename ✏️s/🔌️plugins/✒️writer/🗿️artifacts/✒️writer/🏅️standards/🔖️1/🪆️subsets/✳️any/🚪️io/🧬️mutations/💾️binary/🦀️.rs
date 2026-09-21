@@ -1167,7 +1167,7 @@ impl WriterStoreInitializationAuthority {
             candidate: std::mem::ManuallyDrop::new(None),
             active: std::mem::ManuallyDrop::new(None),
             envelope_retirement: std::mem::ManuallyDrop::new(None),
-            initial: std::mem::ManuallyDrop::new(Some(WriterSnapshot { schema: String::new(), id: String::new(), language_id: String::new(), uri: String::new(), document: empty_document })),
+            initial: std::mem::ManuallyDrop::new(Some(WriterSnapshot { schema: String::new(), id: String::new(), language_id: String::new(), uri: String::new(), text: String::new(), document: empty_document })),
             initial_digest: std::mem::ManuallyDrop::new(Some(store::ArtifactStoreInitializationDigest::new(b"writer.initial"))),
             edit_digest: std::mem::ManuallyDrop::new(None),
             phase: WriterStoreInitializationPhase::ValidateEnvelope,

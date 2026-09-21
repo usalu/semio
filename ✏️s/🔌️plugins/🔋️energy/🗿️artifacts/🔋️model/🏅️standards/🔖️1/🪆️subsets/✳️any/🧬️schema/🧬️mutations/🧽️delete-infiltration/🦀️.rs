@@ -31,8 +31,8 @@ impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for Delete
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Delete Infiltration {}", self.id.0)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Delete Infiltration {}", self.id.0), &format!("Infiltration {} löschen", self.id.0))
     }
 
     fn target(&self) -> Vec<String> {

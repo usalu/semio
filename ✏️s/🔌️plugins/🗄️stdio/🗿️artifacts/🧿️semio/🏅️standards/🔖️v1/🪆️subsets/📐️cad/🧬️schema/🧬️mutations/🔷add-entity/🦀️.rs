@@ -20,8 +20,8 @@ impl protocol::MutationKind<SemioCadSnapshot, SemioCadMutation> for AddEntity {
     fn inverse(&self, base: &SemioCadSnapshot) -> Vec<SemioCadMutation> {
         agg_inverse(&SemioCadMutation::AddEntity(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "add-entity".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("add-entity", "Entität hinzufügen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

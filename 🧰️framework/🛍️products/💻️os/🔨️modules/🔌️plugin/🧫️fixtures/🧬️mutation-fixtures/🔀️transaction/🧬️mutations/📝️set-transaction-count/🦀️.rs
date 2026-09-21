@@ -46,7 +46,7 @@ impl MutationKind<TxnSnapshot, TxnMutation> for SetTransactionCount {
     fn inverse(&self, base: &TxnSnapshot) -> Vec<TxnMutation> {
         vec![Self { value: base.count }.into()]
     }
-    fn label(&self) -> String {
-        format!("Set transaction count to {}", self.value)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Set transaction count to {}", self.value), &format!("Transaktionsanzahl auf {} setzen", self.value))
     }
 }

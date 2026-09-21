@@ -61,11 +61,24 @@ fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
 //#endregion 🔖️ChildCodecPrimitives
 
 //#region 🔖️TextPrimitives
+/// 🖼️ The persisted `source`/`tiles` payload the composed `presentation` deck is derived from, hex
+/// encoded exactly like every other field of this handcrafted surface — their canonical value JSON is
+/// the one lossless notation both records already own (`value_derive::ToValue`/`FromValue`), and this
+/// codec has no record grammar of its own to print them with.
+fn enc_payload<T: dsl::ToValue>(value: &T) -> String {
+    enc_str(&dsl::os_pack::json::to_json_string(value))
+}
+fn dec_payload<T: dsl::FromValue>(s: &str) -> Result<T, String> {
+    dsl::os_pack::json::from_json_str(&dec_str(s)?).map_err(|error| error.to_string())
+}
+
 fn print_presentation_snapshot_body(s: &PresentationSnapshot) -> String {
-    format!("schema={}\npresentation={}\nanimation={}", enc_str(&s.schema), enc_child(&s.presentation), enc_child(&s.animation))
+    format!("schema={}\nsource={}\ntiles={}\npresentation={}\nanimation={}", enc_str(&s.schema), enc_payload(&s.source), enc_payload(&s.tiles), enc_child(&s.presentation), enc_child(&s.animation))
 }
 fn parse_presentation_snapshot_body(body: &str) -> Result<PresentationSnapshot, String> {
     let mut schema = None;
+    let mut source = None;
+    let mut tiles = None;
     let mut presentation = None;
     let mut animation = None;
     for line in body.lines() {
@@ -75,6 +88,10 @@ fn parse_presentation_snapshot_body(body: &str) -> Result<PresentationSnapshot, 
         }
         if let Some(rest) = line.strip_prefix("schema=") {
             schema = Some(dec_str(rest)?);
+        } else if let Some(rest) = line.strip_prefix("source=") {
+            source = Some(dec_payload(rest)?);
+        } else if let Some(rest) = line.strip_prefix("tiles=") {
+            tiles = Some(dec_payload(rest)?);
         } else if let Some(rest) = line.strip_prefix("presentation=") {
             presentation = Some(dec_child(rest)?);
         } else if let Some(rest) = line.strip_prefix("animation=") {
@@ -85,6 +102,8 @@ fn parse_presentation_snapshot_body(body: &str) -> Result<PresentationSnapshot, 
     }
     Ok(PresentationSnapshot {
         schema: schema.ok_or_else(|| "presentation snapshot: missing schema line".to_string())?,
+        source: source.ok_or_else(|| "presentation snapshot: missing source line".to_string())?,
+        tiles: tiles.ok_or_else(|| "presentation snapshot: missing tiles line".to_string())?,
         presentation: presentation.ok_or_else(|| "presentation snapshot: missing presentation line".to_string())?,
         animation: animation.ok_or_else(|| "presentation snapshot: missing animation line".to_string())?,
     })

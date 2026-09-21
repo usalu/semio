@@ -7,7 +7,7 @@
 //! the cutover to this module is later-phase renderer-thinning work (see the plan). `events` is
 //! purely additive: it depends on `tree`/`component`/`geometry` only, never on `input`.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use crate::wgpu::arena::NodeId;
 use crate::wgpu::chrome::UiDriverDrag;
@@ -300,12 +300,19 @@ pub enum CaptureKind {
 /// what's actually under the pointer, until released on `PointerUp` (or explicit `release`).
 #[derive(Clone, Copy, Debug, Default)]
 struct CaptureState {
-    target: Option<(NodeId, CaptureKind)>,
+    target: Option<(u64, NodeId, CaptureKind)>,
 }
 
 impl CaptureState {
-    fn release(&mut self) -> Option<(NodeId, CaptureKind)> {
-        self.target.take()
+    fn release(&mut self, pointer_id: u64) -> Option<(NodeId, CaptureKind)> {
+        if !self.target.is_some_and(|(owner, _, _)| owner == pointer_id) {
+            return None;
+        }
+        self.target.take().map(|(_, node, kind)| (node, kind))
+    }
+
+    fn release_any(&mut self) -> Option<(NodeId, CaptureKind)> {
+        self.target.take().map(|(_, node, kind)| (node, kind))
     }
 }
 //#endregion 🔖️Capture
@@ -986,6 +993,37 @@ pub enum UiCommand {
 /// 🎯️ A `set_drop_accept` predicate — see `EventRouter::drop_accept`.
 type DropAcceptPredicate = Box<dyn Fn(&DragPayload) -> bool + Send + Sync>;
 
+struct RetiringDragPayload {
+    entries: std::collections::hash_map::IntoIter<String, String>,
+    entry: Option<(String, String)>,
+}
+
+impl RetiringDragPayload {
+    fn new(payload: DragPayload) -> Self {
+        Self { entries: payload.into_iter(), entry: None }
+    }
+
+    fn close_step(&mut self) -> bool {
+        if let Some((key, value)) = self.entry.as_mut() {
+            if value.pop().is_some() || key.pop().is_some() {
+                return false;
+            }
+            if value.capacity() > 0 {
+                *value = String::new();
+                return false;
+            }
+            if key.capacity() > 0 {
+                *key = String::new();
+                return false;
+            }
+            self.entry = None;
+            return false;
+        }
+        self.entry = self.entries.next();
+        self.entry.is_none()
+    }
+}
+
 pub(crate) struct EventRouter {
     window_id: String,
     capture: CaptureState,
@@ -1006,13 +1044,14 @@ pub(crate) struct EventRouter {
     tree_drag_handle_press: Option<NodeId>,
     /// 🫳️ Per-node `DragPayload` a `Press` capture on that node may promote into, set via
     /// `set_drag_payload`.
-    drag_payloads: HashMap<NodeId, DragPayload>,
+    drag_payloads: BTreeMap<NodeId, DragPayload>,
     /// 🎯️ Per-node accept predicate refining plain `NodeFlags::DROP_TARGET` membership, set via
     /// `set_drop_accept`. Absent from this map but flagged `DROP_TARGET` still accepts everything.
-    drop_accept: HashMap<NodeId, DropAcceptPredicate>,
+    drop_accept: BTreeMap<NodeId, DropAcceptPredicate>,
     /// 🖱️ Scrollbar-thumb node id → (its owning `NodeFlags::SCROLLABLE` node, drag axis), set via
     /// `register_scroll_thumb`.
-    scroll_thumbs: HashMap<NodeId, (NodeId, ScrollAxis)>,
+    scroll_thumbs: BTreeMap<NodeId, (NodeId, ScrollAxis)>,
+    retiring_payload: Option<RetiringDragPayload>,
     /// 🖱️ `(pointer_x, pointer_y, scroll_offset_x, scroll_offset_y)` captured at the start of a
     /// `ScrollThumb` drag, for `update_scroll_thumb`'s delta-computation baseline.
     thumb_start: Option<(f32, f32, f32, f32)>,
@@ -1061,9 +1100,10 @@ impl EventRouter {
             tree_drag_driver: UiDriverDrag::Handle,
             tree_drag_metrics: TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default()),
             tree_drag_handle_press: None,
-            drag_payloads: HashMap::new(),
-            drop_accept: HashMap::new(),
-            scroll_thumbs: HashMap::new(),
+            drag_payloads: BTreeMap::new(),
+            drop_accept: BTreeMap::new(),
+            scroll_thumbs: BTreeMap::new(),
+            retiring_payload: None,
             thumb_start: None,
             clock_seconds: 0.0,
             hover_since: None,
@@ -1074,6 +1114,127 @@ impl EventRouter {
             flow: UiFlow::DEFAULT,
             focus_visible: false,
         }
+    }
+
+    /// 🎞️ Rebinds presented interaction owners into a separately reconciled candidate tree. Only
+    /// exact document identity, key, and widget-kind matches transfer; candidate registrations stay
+    /// owned by the candidate paint.
+    pub(crate) fn transfer_interaction_from(&mut self, presented: &EventRouter, presented_tree: &UiTree, candidate_tree: &UiTree) {
+        let remap = |source: NodeId| {
+            let document_id = presented_tree.document_bindings().iter().find_map(|(document, node)| (*node == source).then_some(*document))?;
+            let target = candidate_tree.document_node(document_id)?;
+            let source_node = presented_tree.node(source)?;
+            let target_node = candidate_tree.node(target)?;
+            source_node.interaction_identity_matches(target_node).then_some(target)
+        };
+        self.capture.target = presented.capture.target.and_then(|(pointer, node, kind)| remap(node).map(|node| (pointer, node, kind)));
+        self.focus.focused = presented.focus.focused.and_then(remap);
+        self.focus.tab_order.clear();
+        self.focus.tab_order.extend(presented.focus.tab_order.iter().filter_map(|node| remap(*node)));
+        self.hovered = presented.hovered.and_then(remap);
+        self.hover_chain.clear();
+        self.hover_chain.extend(presented.hover_chain.iter().filter_map(|node| remap(*node)));
+        self.press_origin = self.capture.target.and(presented.press_origin);
+        self.overlays.open.clear();
+        self.overlays.open.extend(presented.overlays.open.iter().filter_map(|overlay| {
+            let root = remap(overlay.root)?;
+            let anchor = match overlay.anchor {
+                OverlayAnchor::Node(node) => OverlayAnchor::Node(remap(node)?),
+                point => point,
+            };
+            Some(OpenOverlay { root, anchor, ..*overlay })
+        }));
+        self.drag = presented.drag.as_ref().and_then(|drag| {
+            Some(DragSession { source: remap(drag.source)?, payload: drag.payload.clone(), ghost: drag.ghost.clone(), pointer_x: drag.pointer_x, pointer_y: drag.pointer_y, drop_target: drag.drop_target.and_then(remap) })
+        });
+        self.tree_drag_driver = presented.tree_drag_driver;
+        self.tree_drag_metrics = presented.tree_drag_metrics;
+        self.tree_drag_handle_press = presented.tree_drag_handle_press.and_then(remap);
+        self.thumb_start = presented.thumb_start;
+        self.clock_seconds = presented.clock_seconds;
+        self.hover_since = presented.hover_since.and_then(|(node, at)| remap(node).map(|node| (node, at)));
+        self.hover_revealed = presented.hover_revealed.and_then(remap);
+        self.tooltip_dismiss_at = presented.tooltip_dismiss_at;
+        self.select_typeahead = presented.select_typeahead.clone();
+        self.intents = presented.intents.clone();
+        self.flow = presented.flow;
+        self.focus_visible = presented.focus_visible;
+    }
+
+    /// 🧹️ Silently retires one input owner or storage scalar during surface unmount.
+    pub(crate) fn close_step(&mut self) -> bool {
+        if self.capture.release_any().is_some() || self.focus.focused.take().is_some() || self.hovered.take().is_some() || self.press_origin.take().is_some() || self.tree_drag_handle_press.take().is_some() || self.thumb_start.take().is_some() || self.hover_since.take().is_some() || self.hover_revealed.take().is_some() || self.tooltip_dismiss_at.take().is_some() {
+            return false;
+        }
+        if self.focus.tab_order.pop().is_some() || self.hover_chain.pop().is_some() || self.overlays.open.pop().is_some() {
+            return false;
+        }
+        if self.focus.tab_order.capacity() > 0 {
+            self.focus.tab_order = Vec::new();
+            return false;
+        }
+        if self.hover_chain.capacity() > 0 {
+            self.hover_chain = Vec::new();
+            return false;
+        }
+        if self.overlays.open.capacity() > 0 {
+            self.overlays.open = Vec::new();
+            return false;
+        }
+        if let Some(payload) = self.retiring_payload.as_mut() {
+            if payload.close_step() {
+                self.retiring_payload = None;
+            }
+            return false;
+        }
+        if let Some(drag) = self.drag.as_mut() {
+            if !drag.payload.is_empty() || drag.payload.capacity() > 0 {
+                self.retiring_payload = Some(RetiringDragPayload::new(std::mem::take(&mut drag.payload)));
+                return false;
+            }
+            if let Some(ghost) = drag.ghost.as_mut() {
+                if ghost.label.pop().is_some() {
+                    return false;
+                }
+                if ghost.label.capacity() > 0 {
+                    ghost.label = String::new();
+                    return false;
+                }
+                drag.ghost = None;
+                return false;
+            }
+            self.drag = None;
+            return false;
+        }
+        if let Some((_, payload)) = self.drag_payloads.pop_first() {
+            self.retiring_payload = Some(RetiringDragPayload::new(payload));
+            return false;
+        }
+        if self.drop_accept.pop_first().is_some() || self.scroll_thumbs.pop_first().is_some() {
+            return false;
+        }
+        if let Some((query, _)) = self.select_typeahead.as_mut() {
+            if query.pop().is_some() {
+                return false;
+            }
+            if query.capacity() > 0 {
+                *query = String::new();
+                return false;
+            }
+            self.select_typeahead = None;
+            return false;
+        }
+        if !self.intents.close_step() {
+            return false;
+        }
+        if self.window_id.pop().is_some() {
+            return false;
+        }
+        if self.window_id.capacity() > 0 {
+            self.window_id = String::new();
+            return false;
+        }
+        true
     }
 
     fn toggle_disclosure(&mut self, tree: &mut UiTree, id: NodeId) -> bool {
@@ -1127,11 +1288,11 @@ impl EventRouter {
     }
 
     fn cancel_tree_drag(&mut self, tree: &mut UiTree) -> Option<UiCommand> {
-        let (source, kind) = self.capture.target?;
+        let (_, source, kind) = self.capture.target?;
         if find_tree_item_spec(tree, source).and_then(tree_drag_role).is_none() {
             return None;
         }
-        let _ = self.capture.release();
+        let _ = self.capture.release_any();
         self.press_origin = None;
         self.tree_drag_handle_press = None;
         self.drag_payloads.remove(&source);
@@ -1207,7 +1368,7 @@ impl EventRouter {
 
     fn resolve_target(&self, tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
         match self.capture.target {
-            Some((id, _)) => Some(id),
+            Some((_, id, _)) => Some(id),
             None => self.overlays.topmost().and_then(|overlay| self.hit_test_subtree(tree, overlay.root, x, y)).or_else(|| self.hit_test(tree, root, x, y)),
         }
     }
@@ -1461,13 +1622,13 @@ impl EventRouter {
     /// 🫳️ Promotes a `Press` capture on a `drag_payloads`-registered node to `CaptureKind::Drag` once
     /// the pointer has moved past `DRAG_PROMOTE_THRESHOLD_SQ` from `press_origin`.
     fn maybe_promote_to_drag(&mut self, x: f32, y: f32) {
-        let Some((id, CaptureKind::Press)) = self.capture.target else { return };
+        let Some((pointer_id, id, CaptureKind::Press)) = self.capture.target else { return };
         let Some(payload) = self.drag_payloads.get(&id).cloned() else { return };
         let Some((origin_x, origin_y)) = self.press_origin else { return };
         if (x - origin_x).powi(2) + (y - origin_y).powi(2) < DRAG_PROMOTE_THRESHOLD_SQ {
             return;
         }
-        self.capture.target = Some((id, CaptureKind::Drag));
+        self.capture.target = Some((pointer_id, id, CaptureKind::Drag));
         self.drag = Some(DragSession { source: id, payload, ghost: None, pointer_x: x, pointer_y: y, drop_target: None });
     }
 
@@ -1733,7 +1894,11 @@ impl EventRouter {
     /// 🖱️ What this window's retained content currently holds pointer capture on — read by
     /// `engine::Ui::window_with_pointer_capture` so a host keeps feeding a live drag its moves.
     pub(crate) fn capture(&self) -> Option<(NodeId, CaptureKind)> {
-        self.capture.target
+        self.capture.target.map(|(_, node, kind)| (node, kind))
+    }
+
+    pub(crate) fn capture_pointer_id(&self) -> Option<u64> {
+        self.capture.target.map(|(pointer_id, _, _)| pointer_id)
     }
 
     /// 🎯️ Read-only: whether this window's retained content currently holds keyboard focus — see
@@ -1859,11 +2024,20 @@ impl EventRouter {
     }
 
     pub(crate) fn dispatch(&mut self, tree: &mut UiTree, root: NodeId, event: &UiEvent) -> Vec<UiCommand> {
+        self.dispatch_pointer(tree, root, 1, event)
+    }
+
+    pub(crate) fn dispatch_pointer(&mut self, tree: &mut UiTree, root: NodeId, pointer_id: u64, event: &UiEvent) -> Vec<UiCommand> {
+        if matches!(event, UiEvent::PointerCancel | UiEvent::PointerDown { .. } | UiEvent::PointerUp { .. } | UiEvent::PointerMove { .. })
+            && self.capture.target.is_some_and(|(owner, _, _)| owner != pointer_id)
+        {
+            return Vec::new();
+        }
         self.prune_dead_registrations(tree);
         let mut commands = Vec::new();
         match event {
             UiEvent::PointerCancel => {
-                if let Some((id, _)) = self.capture.release() {
+                if let Some((id, _)) = self.capture.release(pointer_id) {
                     if let Some(node) = tree.node_mut(id) {
                         node.flags.set(NodeFlags::ACTIVE, false);
                     }
@@ -1880,11 +2054,11 @@ impl EventRouter {
             UiEvent::PointerMove { x, y, .. } => {
                 self.maybe_promote_to_drag(*x, *y);
                 match self.capture.target {
-                    Some((_, CaptureKind::Drag)) => self.update_drag(tree, root, *x, *y),
-                    Some((scrollable, CaptureKind::ScrollThumb(axis))) => self.update_scroll_thumb(tree, scrollable, axis, *x, *y),
+                    Some((_, _, CaptureKind::Drag)) => self.update_drag(tree, root, *x, *y),
+                    Some((_, scrollable, CaptureKind::ScrollThumb(axis))) => self.update_scroll_thumb(tree, scrollable, axis, *x, *y),
                     // 🎚️ A captured `Slider`/`Ring` reports EVERY intermediate value, not only the
                     // release — Radix's own behaviour, which React's `SliderView`/`RingView` delegate to.
-                    Some((pressed, CaptureKind::Press)) => {
+                    Some((_, pressed, CaptureKind::Press)) => {
                         if tree.node(pressed).is_some_and(|node| commits_while_dragging(&node.spec.0)) {
                             commands.extend(self.pointer_commit(tree, pressed, *x, *y));
                         }
@@ -1922,14 +2096,14 @@ impl EventRouter {
                     }
                     if let Some(&(scrollable, axis)) = self.scroll_thumbs.get(&id) {
                         let offset = tree.node(scrollable).map(|node| node.state.scroll_offset).unwrap_or_default();
-                        self.capture.target = Some((scrollable, CaptureKind::ScrollThumb(axis)));
+                        self.capture.target = Some((pointer_id, scrollable, CaptureKind::ScrollThumb(axis)));
                         self.thumb_start = Some((*x, *y, offset.0, offset.1));
                     } else {
                         if let Some(node) = tree.node_mut(id) {
                             node.flags.set(NodeFlags::ACTIVE, true);
                         }
                         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
-                        self.capture.target = Some((id, CaptureKind::Press));
+                        self.capture.target = Some((pointer_id, id, CaptureKind::Press));
                         let focusable = node_is_focusable(tree, id);
                         if focusable {
                             if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(id), false) {
@@ -1965,8 +2139,8 @@ impl EventRouter {
                 }
             }
             UiEvent::PointerUp { x, y, .. } => {
-                let captured_scene = self.capture.target.and_then(|(id, _)| self.scene_command(tree, id, event).map(|command| (id, command)));
-                if let Some((active_id, kind)) = self.capture.release() {
+                let captured_scene = self.capture.target.and_then(|(_, id, _)| self.scene_command(tree, id, event).map(|command| (id, command)));
+                if let Some((active_id, kind)) = self.capture.release(pointer_id) {
                     match kind {
                         CaptureKind::Press => {
                             let suppress_tree_handle_click = self.tree_drag_handle_press.take() == Some(active_id);

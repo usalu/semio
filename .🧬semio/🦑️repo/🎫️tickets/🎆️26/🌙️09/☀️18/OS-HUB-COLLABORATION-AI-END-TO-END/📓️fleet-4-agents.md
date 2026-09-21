@@ -97,3 +97,11 @@ Fleet-4 ids above do NOT resolve from any live session ("No transcript found") �
 | HT9 (hub final three → 📓️ht9-hub-suite-final-three.md) | opus | afd0ba4e593288b0a |
 | CE1 (client-e2e pinning, lazy example sources / puzzle bound, remaining descriptors → 📓️ce1-….md) | opus | ad2cdfbc3d7fc0331 |
 | S7 (spawned refresh lag, per-instance subscriptions, agent targeting in s → 📓️s7-….md) | opus | ab3032f8552e1f4c3 |
+| C3 (two-user collaboration scenario on hub 7611 → 📓️c3-….md) | opus | a7bb3090253ce007c |
+| HT10 (hub final three after the stack fix → 📓️ht10-….md) | opus | a2cbb1bd67f8e0030 |
+| S8 (typed-operation drain stall, Home spaces, undo gaps in s → 📓️s8-….md) | opus | acd647a37e8ecda34 |
+| HT11 (hub final two → 📓️ht11-hub-suite-final-two.md) | opus | ab414628146cb9cf1 |
+| C4 (browser-actor activation integrity failure → live edit → 📓️c4-….md) | opus | a0d8d082e153ee249 |
+| JC1 (jco async task.return bug, law, catalog re-publish → 📓️jc1-….md) | opus | a3862e0f110a38796 |
+| HT12 (shared close defect of the last two hub laws → 📓️ht12-….md) | opus | abd67288194a4f580 |
+| S9 (Home studio table, sweep staged forms → 📓️s9-….md) | opus | ab877e6b2e2a78bfd |

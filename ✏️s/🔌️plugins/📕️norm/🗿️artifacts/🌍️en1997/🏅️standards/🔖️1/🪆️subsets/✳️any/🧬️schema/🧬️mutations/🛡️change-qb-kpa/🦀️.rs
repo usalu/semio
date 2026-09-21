@@ -24,8 +24,8 @@ impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeQBKpa {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Change base resistance q_b [kPa] to {}", self.new_q_b_kpa)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Change base resistance q_b [kPa] to {}", self.new_q_b_kpa), &format!("Basiswiderstandq_b [kPa] auf {} ändern", self.new_q_b_kpa))
     }
 }
 //#endregion 🔖️ChangeQBKpa

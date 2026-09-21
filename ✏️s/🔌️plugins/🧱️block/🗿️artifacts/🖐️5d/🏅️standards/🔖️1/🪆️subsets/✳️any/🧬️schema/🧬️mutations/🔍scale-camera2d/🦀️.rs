@@ -30,8 +30,8 @@ impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for ScaleCamera2d 
     fn inverse(&self, base: &Block5dSnapshot) -> Vec<Block5dMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Scale 2D camera to {}", self.new_zoom)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Scale 2D camera to {}", self.new_zoom), &format!("2Dkamera auf {} skalieren", self.new_zoom))
     }
 }
 //#endregion 🔖️Mutation

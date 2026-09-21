@@ -27,8 +27,8 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveTrailerEntry {
         base.trailer.iter().find(|entry| entry.key == self.key).map(|entry| PdfMutation::SetTrailerEntry(SetTrailerEntry { key: self.key.clone(), value: entry.value.clone() })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove trailer entry {}", self.key)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove trailer entry {}", self.key), &format!("Nachspanneintrag {} entfernen", self.key))
     }
 
     fn target(&self) -> Vec<String> {

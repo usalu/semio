@@ -25,8 +25,8 @@ pub mod mutation {
             super::super::inverse::inverse(self, base)
         }
 
-        fn label(&self) -> String {
-            format!("Rename layer {} to \"{}\"", self.layer_id, self.new_name)
+        fn label(&self) -> protocol::LocalizedLabel {
+            protocol::LocalizedLabel::native(&format!("Rename layer {} to \"{}\"", self.layer_id, self.new_name), &format!("Ebene {} in \"{}\" umbenennen", self.layer_id, self.new_name))
         }
 
         fn target(&self) -> Vec<String> {

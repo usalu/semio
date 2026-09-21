@@ -18,8 +18,8 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for CreateNode {
     fn inverse(&self, _base: &DagSnapshot) -> Vec<DagMutation> {
         vec![DagMutation::DeleteNode(DeleteNode { id: self.node.id.clone() })]
     }
-    fn label(&self) -> String {
-        format!("Create node {}", self.node.id)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create node {}", self.node.id), &format!("Knoten {} erstellen", self.node.id))
     }
     fn target(&self) -> Vec<String> {
         vec!["nodes".into(), self.node.id.clone()]

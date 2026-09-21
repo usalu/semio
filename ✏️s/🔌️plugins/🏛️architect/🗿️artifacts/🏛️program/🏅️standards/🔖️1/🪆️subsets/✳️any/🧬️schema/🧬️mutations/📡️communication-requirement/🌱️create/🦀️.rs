@@ -24,8 +24,8 @@ impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateCommunicationRequi
     fn inverse(&self, base: &ProgramSnapshot) -> Vec<ProgramMutation> {
         super::inverse::inverse(self, base)
     }
-    fn label(&self) -> String {
-        format!("Create communication requirement \"{}\"", self.communication_requirement.header.name)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Create communication requirement \"{}\"", self.communication_requirement.header.name), &format!("Kommunikationsanforderung \"{}\" erstellen", self.communication_requirement.header.name))
     }
     fn target(&self) -> Vec<String> {
         vec![self.communication_requirement.header.id.0.clone()]

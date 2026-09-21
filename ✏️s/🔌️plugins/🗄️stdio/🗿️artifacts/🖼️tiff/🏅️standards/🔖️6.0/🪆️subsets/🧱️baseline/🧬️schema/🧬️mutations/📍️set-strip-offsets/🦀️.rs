@@ -20,8 +20,8 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetStripOffs
     fn inverse(&self, base: &TiffSnapshot) -> Vec<TiffBaselineMutation> {
         agg_inverse(&TiffBaselineMutation::SetStripOffsets(self.clone()), base)
     }
-    fn label(&self) -> String {
-        "set-strip-offsets".to_string()
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("set-strip-offsets", "Streifenversätze setzen")
     }
     fn target(&self) -> Vec<String> {
         Vec::new()

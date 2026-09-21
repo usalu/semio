@@ -30,8 +30,8 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveEncryptionDictionary {
         support::encryption_dictionary_with(base, self.version, self.revision).map(|_| PdfVtMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: self.version, revision: self.revision })).into_iter().collect()
     }
 
-    fn label(&self) -> String {
-        format!("Remove encryption dictionary V{} R{}", self.version, self.revision)
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(&format!("Remove encryption dictionary V{} R{}", self.version, self.revision), &format!("Verschlüsselungswörterbuchv{} R{} entfernen", self.version, self.revision))
     }
 
     fn target(&self) -> Vec<String> {
