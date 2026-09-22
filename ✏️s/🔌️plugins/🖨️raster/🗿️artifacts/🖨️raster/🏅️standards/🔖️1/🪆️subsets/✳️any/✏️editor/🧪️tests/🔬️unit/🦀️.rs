@@ -352,12 +352,22 @@ async fn raster_labels_resolve_german_locale() {
 async fn composite_scene_syncs_document_and_assets() {
     let mut app = semio_app().await;
     let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
-    // 🧾️ A `scene_surface` node publishes its payload as a PACKED document, so the lanes are read
-    // back out of the packed bytes rather than out of the projected tree text.
-    let text = packed_scene_text(&json);
+    // 🧾️ A `scene_surface` node publishes the scene's SPINE inside the fixed-capacity surface doc and
+    // every lane `Paint2dScene::split_lanes` declares (`documentSync`, `assets`) as its own
+    // `paged_text_carrier` child BESIDE that doc — unconditionally, both lanes, every render. Reading
+    // them off the packed doc bytes (`packed_scene_text`) therefore never saw a single asset byte: the
+    // spine carries only the lane manifest (`SceneLaneRef { lane, bytes, hash }`). The assembled scene
+    // a render host actually reads is the doc PLUS its lanes.
+    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::Paint2dScene>(&json).expect("paint-2d scene with its lanes");
     assert!(json.contains("\"kind\":\"paint-2d\""), "{json}");
-    assert!(text.contains("composite"), "{text}");
-    assert!(text.contains("image/png"), "the semio fixture's embedded asset must resolve to real pixels: {text}");
+    assert_eq!(scene.view_mode, "composite");
+    assert!(scene.document_sync_json.contains("\"layers\""), "the documentSync lane carries the layer forest: {}", scene.document_sync_json);
+    // 🖼️ The pixels themselves: a document that was packed (`print_document_pack`) and reopened
+    // (`load_document_pack`) must still resolve its composed asset children to real bytes, because
+    // `Paint2dHost` uploads one texture per `assetsJson` entry and a pixel-less handle pool renders a
+    // blank canvas (play pane measured blank on :6033, 2026-09-21).
+    assert!(scene.assets_json.contains("semio-emblem"), "the reopened document keeps its asset entry: {}", scene.assets_json);
+    assert!(scene.assets_json.contains("image/png"), "the semio fixture's embedded asset must resolve to real pixels: {}", scene.assets_json);
     let document = crate::standards::v1::subsets::any::schema::semio_example_document();
     let sync_json = document_sync_json(&document);
     assert!(!sync_json.contains("\"assets\""), "sync json must omit assets");
@@ -536,8 +546,13 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     dispatch(&mut instance_a, RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() })).await;
     dispatch(&mut instance_b, RasterCommand::PatchLayer(patch_layer::PatchLayer { layer_id: background_id, field: "name".into(), value: "Renamed By B".into() })).await;
 
-    instance_a.handle_action("commitCheckpoint", None, &artifact_app_laws::meta("actor-a")).await.expect("pump a");
-    instance_b.handle_action("commitCheckpoint", None, &artifact_app_laws::meta("actor-b")).await.expect("pump b");
+    // 🔀️ Publishing an edit only PUTS it on the backbone; a replica folds what the other side put
+    // there when it ticks. `commitCheckpoint` is a history verb on the LOCAL store and never pulled
+    // anything in, so without these two ticks each instance still read only its own edit — the exact
+    // exchange `artifact_app_laws::assert_two_registered_instances_converge` performs for the apps
+    // whose genesis document is enough to carry both commands.
+    instance_a.tick_backbone().await.expect("a folds b's events");
+    instance_b.tick_backbone().await.expect("b folds a's events");
 
     let projection_a = instance_a.snapshot().expect("projection a");
     let projection_b = instance_b.snapshot().expect("projection b");
@@ -545,6 +560,19 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     assert_eq!(projection_b.layers.len(), 2, "B converges on A's added layer");
     assert_eq!(layer_name(&projection_a.layers[0]), "Renamed By B", "A converges on B's rename");
     assert_eq!(layer_name(&projection_b.layers[0]), "Renamed By B", "B keeps its rename");
+
+    // 🔀️ A replicated CHECKPOINT keeps both sides converged too — the second half of the framework's
+    // own convergence law, run here against the shared seeded base.
+    let local = artifact_app_laws::meta("local");
+    let admitted = instance_a.handle_action("commitCheckpoint", None, &local).await.expect("a commits a checkpoint");
+    semio_framework_plugin::plugin_app_close_prelude::settle_framework_reserved_admission(&mut *instance_a, admitted).await.expect("a's checkpoint commit settles");
+    artifact_app_laws::settle_registered_typed_operation(&mut *instance_a, local.instance_id).await.expect("a's checkpoint publication settles");
+    instance_b.tick_backbone().await.expect("b folds a's checkpoint");
+    assert_eq!(instance_a.snapshot().expect("projection a").layers.len(), instance_b.snapshot().expect("projection b").layers.len(), "a replicated checkpoint keeps both instances converged");
+
+    // 🧷️ Paired backbone ends block the fixtures' close ladder until both are released.
+    instance_a.detach_backbone().await.expect("a releases its backbone");
+    instance_b.detach_backbone().await.expect("b releases its backbone");
 }
 
 /// 🔁️ The REGISTERED idempotency law: raster publishes bounded tool proofs, so the registry-less
@@ -570,7 +598,9 @@ async fn utility_registry_declares_utilities_scoped_to_the_composite_window() {
     let composite = definition.window_kinds.iter().find(|window| window.id == composite::RASTER_PLAY_WINDOW_COMPOSITE).expect("composite window");
     assert_eq!(composite.utilities.len(), definition.utilities.len(), "every utility is scoped to the composite window kind");
     // The framework auto-injects the setActiveUtility View action once utilities are declared; no doc operation survives.
-    assert!(composite.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));
+    // 🧩️ The framework injects `setActiveUtility` into the APP definition's action surface (the
+    // builder's `!self.utilities.is_empty()` arm), not into each window kind's own list.
+    assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));
     assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == "setActiveUtility" && !matches!(action.kind, ActionKind::View)));
 }
 
@@ -590,11 +620,37 @@ async fn raster_io_declares_image_in_out_and_export_media_covers_all_ports() {
 #[semio_framework_async_macros::async_test]
 async fn raster_import_media_appends_layer_from_incoming_image() {
     let mut app = app().await;
-    let before = app.snapshot().expect("snapshot").layers.len();
-    let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "aGVsbG8=".into() } };
-    let result = app.import_media("image:in", media, &artifact_app_laws::meta("local")).await.expect("import image:in");
-    assert!(!result.mutations.is_empty(), "image:in import must emit a real document operation");
-    assert_eq!(app.snapshot().expect("snapshot").layers.len(), before + 1);
+    let boot = app.snapshot().expect("snapshot");
+    let before = boot.layers.len();
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(boot);
+    // 🖼️ A REAL PNG — the crate's own committed emblem. The former `"aGVsbG8="` ("hello") decoded to
+    // five bytes with no PNG signature, so `mint_raster_asset_child` fell through to its content-less
+    // fallback and the law proved nothing about the pixels an import is for.
+    let media = Media {
+        media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+        payload: MediaPayload::Structured { schema: "2d.image".into(), json: base64_codec::base64_standard_encode(crate::examples::art_raster_demo::emblem_image_asset().data) },
+    };
+    // 🔌️ A MOUNTED app's `InvocationResult.mutations` is always EMPTY (the host settles the typed
+    // publication), so the import is read off the DOCUMENT, exactly as sequence/animate read theirs.
+    app.import_media("image:in", media, &artifact_app_laws::meta("local")).await.expect("import image:in");
+    // 🧹️ `ArtifactApp::snapshot` hands back an OWNED `RasterSnapshot`, and after the import that
+    // snapshot owns a POPULATED asset pool: reading `.layers.len()` off the temporary dropped a
+    // `RasterOwnedMap` that still held its page backing, which is exactly what its fail-closed `Drop`
+    // refuses ("Raster owned map reached Drop before every entry and page backing was explicitly
+    // retired", `🗑️generated/raster/test-26.txt`). Every observation is taken first, then the
+    // snapshot is retired through the artifact's own helper.
+    let imported = app.snapshot().expect("snapshot");
+    let layers = imported.layers.len();
+    let image_key = match imported.layers.last().expect("imported layer") {
+        RasterLayerNode::Pixel { image_key, .. } => image_key.clone().expect("the imported pixel layer names its asset"),
+        other => panic!("image:in must import a pixel layer, got {other:?}"),
+    };
+    // 🖼️ The imported asset resolves to real pixels through the same composer the composite reads —
+    // an import that lands a content-less handle renders an empty layer.
+    let pixels = crate::raster_asset(&imported.assets, &image_key).is_some_and(|asset| asset.mime == "image/png" && !asset.data.is_empty());
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(imported);
+    assert_eq!(layers, before + 1, "image:in must append one pixel layer");
+    assert!(pixels, "the imported asset resolves to real pixels");
 }
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order — TEMPLATE.md §7's
@@ -652,13 +708,18 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     // 🧵️ Every retained plugin command id must be UI-dispatchable.
     let definition = create_raster_app();
     for tool_id in RASTER_RETAINED_TOOL_IDS {
-        let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} declared"));
+        let action = definition
+            .actions
+            .iter()
+            .chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter()))
+            .find(|action| action.id == *tool_id)
+            .unwrap_or_else(|| panic!("action {tool_id} declared"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id} must be UI-dispatchable");
     }
     // ⚖️ No declaration in raster's catalog may stay `Unclassified` — that is the release-blocking
     // gate `validate_interactive_job_classification` enforces. Every action lands on a window kind
     // (both app-declared and framework-injected ones), so this sweep sees the whole action surface.
-    for action in definition.window_kinds.iter().flat_map(|window| window.actions.iter()) {
+    for action in definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())) {
         assert_ne!(action.semantics.execution.interactive_job, InteractiveJobClassification::Unclassified, "action {} is unclassified", action.id);
     }
     for command in definition.commands.iter() {
@@ -670,8 +731,13 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     // `bounded_first_step_tool_proofs().len()` above, and the macro derives the proofs from the same
     // literal list), so a route that is proven but left unclassified — or classified but unproven —
     // fails here instead of at runtime with `interactive-job.catalog-authority`.
-    let migrated_ids: BTreeSet<&str> =
-        definition.window_kinds.iter().flat_map(|window| window.actions.iter()).filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated).map(|action| action.id.as_str()).collect();
+    let migrated_ids: BTreeSet<&str> = definition
+        .actions
+        .iter()
+        .chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter()))
+        .filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated)
+        .map(|action| action.id.as_str())
+        .collect();
     assert_eq!(RasterCommand::TOOL_JOB_IDS.iter().copied().filter(|tool_id| migrated_ids.contains(tool_id)).collect::<BTreeSet<_>>(), retained, "every bounded-first-step proof entry must be Migrated, and every Migrated tool-job row must be proven");
 }
 

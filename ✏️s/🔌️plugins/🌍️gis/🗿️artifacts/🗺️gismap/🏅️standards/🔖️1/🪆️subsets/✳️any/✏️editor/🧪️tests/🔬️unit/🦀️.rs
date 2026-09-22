@@ -211,6 +211,33 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
     assert!(semio_framework_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &store));
 }
 
+/// 🧾️ LAW: every parent snapshot this crate can hand a live document replacement projects into the
+/// bounded child authority the replacement pump demands before it opens a single member. The pump
+/// calls `ChildRestoreProjection::from_snapshot` on the CANDIDATE parent and reports only
+/// `candidate parent child projection is invalid`, so the exact
+/// `ChildRestoreProjectionError` has to be named here, on each snapshot the fixture below can
+/// produce and on each codec round trip that reaches the candidate store.
+#[test]
+fn every_gis_map_parent_snapshot_projects_its_canonical_child_handles() {
+    use store::ArtifactPack;
+
+    let admit = |label: &str, snapshot: &GisMapSnapshot| {
+        let projection = store::ChildRestoreProjection::from_snapshot(snapshot).unwrap_or_else(|error| panic!("{label} parent is not projectable: {error:?} (drawing {:?}/{:?}, image {:?}, value {:?}/{:?})", snapshot.drawing.child_id, snapshot.drawing.target, snapshot.image, snapshot.value.child_id, snapshot.value.target));
+        assert_eq!(projection.len(), 2, "{label} parent declares exactly the drawing and value children");
+        for index in 0..projection.len() {
+            let (slot, fields) = projection.get(index).expect("admitted row");
+            assert_eq!(fields.child_id, fields.artifact_id, "{label} parent slot {slot}: a composed child's id IS its target artifact id");
+            assert_eq!(fields.artifact_kind, "s.stdio.semio", "{label} parent slot {slot} kind");
+        }
+    };
+
+    for (label, snapshot) in [("empty", crate::schema::empty_gis_map_snapshot()), ("default-document", crate::schema::default_document())] {
+        admit(label, &snapshot);
+        admit(&format!("{label} pack round trip"), &GisMapSnapshot::decode_pack(&snapshot.encode_pack()).unwrap_or_else(|error| panic!("{label} parent pack round trip: {error}")));
+        admit(&format!("{label} dsl round trip"), &<GisMapSnapshot as store::ArtifactDsl>::parse_dsl(&<GisMapSnapshot as store::ArtifactDsl>::print_dsl(&snapshot)).unwrap_or_else(|error| panic!("{label} parent dsl round trip: {error}")));
+    }
+}
+
 fn gis_map_envelope_wire() -> Vec<u8> {
     use store::ArtifactPack;
 

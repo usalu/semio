@@ -1016,6 +1016,7 @@ mod tests {
         assert!(h.encoded_scene_hint() > 0);
         h.set_fixture_drop_preview_json("").unwrap();
         assert!(h.encoded_scene_hint() > 0);
+        close_board_host(h);
     }
 
     #[test]
@@ -1043,6 +1044,7 @@ mod tests {
         h.set_fixture_drop_preview_json("").unwrap();
         let hint_cleared = h.encoded_scene_hint();
         assert!(hint_cleared != hint_with_preview || hint_with_preview > 0);
+        close_board_host(h);
     }
 
     #[test]

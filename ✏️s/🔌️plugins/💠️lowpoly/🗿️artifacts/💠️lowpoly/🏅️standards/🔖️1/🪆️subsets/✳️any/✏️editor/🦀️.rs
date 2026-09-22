@@ -2261,6 +2261,7 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .mutation("replaceSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"))
             // 📤️ Shell effects: a mesh download, a file-open request, and the import the shell answers it with.
             .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+            .action_destructive("deleteSelection")
             .mutation("duplicateObject", LocalizedLabel::native("Duplicate Object", "Objekt duplizieren"))
             .shell_action("exportMesh", LocalizedLabel::native("Export Mesh", "Mesh exportieren"))
             .shell_action("loadMeshRequest", LocalizedLabel::native("Load Mesh…", "Mesh laden…"))

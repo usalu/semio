@@ -5339,7 +5339,12 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             // 🎥️ `setCamera` is session-only view state, so it belongs in this View-kind group.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
-            .action_with(puzzle2d_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::View))
+            // ⌨️ A submitted engagement line ("move 50 25", "connect …") EDITS the document — its own
+            // publication contract declares the Artifact lane — so it is a `Mutation`, exactly as
+            // `📐️cad` and `🏭️process`'s identical verb declare it. Declared `View`, kind discipline
+            // refused every submitted line at dispatch with "View-kind command 'engagementSubmit' must
+            // not emit operations", i.e. the command line could not move, connect or place anything.
+            .action_with(puzzle2d_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"), ActionKind::View, "hand") })
             .action_with(puzzle2d_internal_action("setLodModeForPane", LocalizedLabel::native("Set LOD Mode For Pane", "LOD-Modus für Bereich festlegen"), ActionKind::View))

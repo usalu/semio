@@ -15,7 +15,7 @@
 //! were previously `widgets`-module-private); `crate::wgpu::geometry`/`crate::wgpu::input`/`crate::wgpu::text`/
 //! `crate::wgpu::theme` are the other top-level engine mods `widgets` itself also depends on.
 
-use crate::wgpu::component::ui::UiTreeWindow;
+use crate::wgpu::component::ui::{UiTreeWindow, UiTreeWindowRowExtent};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
 use crate::wgpu::text::FontAtlas;
@@ -95,8 +95,20 @@ pub(crate) fn measure_tree_sections<E>(sections: &[TreeSection<E>]) -> f32 {
 /// wgpu tree shows only whatever first-paint window its guest chose and scrolling into a spacer band
 /// reveals empty pitch, not streamed rows. Closing that needs a wgpu-side scroll/open observer
 /// feeding the same `ViewModel` field — out of scope for this packet.
+fn tree_window_row_extent(extent: UiTreeWindowRowExtent) -> f32 {
+    match extent {
+        UiTreeWindowRowExtent::Standard => TREE_ROW_HEIGHT,
+        UiTreeWindowRowExtent::CompactText => crate::wgpu::chrome::SIZE_TINY * 1.5,
+        UiTreeWindowRowExtent::CompactSmallControl => (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::CONTROL_HEIGHT_SMALL_UI_SPACING) as f32,
+        UiTreeWindowRowExtent::CompactControl => (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::CONTROL_HEIGHT_UI_SPACING) as f32,
+    }
+}
+
 fn tree_window_pitch(window: Option<&UiTreeWindow>, materialised: usize) -> (f32, f32) {
-    window.map_or((0.0, 0.0), |window| (window.leading_rows() as f32 * TREE_ROW_HEIGHT, window.trailing_rows(materialised) as f32 * TREE_ROW_HEIGHT))
+    window.map_or((0.0, 0.0), |window| {
+        let extent = tree_window_row_extent(window.row_extent);
+        (window.leading_rows() as f32 * extent, window.trailing_rows(materialised) as f32 * extent)
+    })
 }
 
 /// 🪟️ Whether a row folds open: either it already carries materialised children, or its window

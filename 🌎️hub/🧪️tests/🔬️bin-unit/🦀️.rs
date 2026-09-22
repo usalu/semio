@@ -97,19 +97,21 @@ fn readiness_v1_is_redacted_and_never_claims_public_session_issuance() {
     assert_eq!(hub_readiness(HubMode::Development, "network", ready.run_id, true, true, false, true, true, false, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
 }
 
-/// ⏳️ A trusted-catalog load that runs out of its startup budget is a CLOSED READINESS GATE with a
-/// reason of its own, never an abort and never a claim that the catalog is unloadable. Until ticket
-/// 26/09/18 slice M9 the budget was an `Err` propagated out of the boot function, so a hub on a busy
-/// machine EXITED (measured twice on a 612 MB warm catalog, M8 §2.1) and looked to an operator
-/// exactly like a corrupt data root. The law pins both halves: the outcome carries no authority, and
-/// the reason it publishes is distinguishable from every other closed reason.
+/// ⏳️ A trusted-catalog load that STALLS is a CLOSED READINESS GATE with a reason of its own, never
+/// an abort and never a claim that the catalog is unloadable. Until ticket 26/09/18 slice M9 the
+/// bound was an `Err` propagated out of the boot function, so a hub on a busy machine EXITED
+/// (measured twice on a 612 MB warm catalog, M8 §2.1) and looked to an operator exactly like a
+/// corrupt data root; slice HT16 then replaced the total wall budget behind it with a no-progress
+/// span, so "busy" and "stopped" are no longer the same fact. The law pins both halves: the outcome
+/// carries no authority, and the reason it publishes is distinguishable from every other closed
+/// reason — in particular it never reads as a calendar overrun.
 #[test]
-fn a_trusted_catalog_budget_overrun_closes_the_gate_and_never_claims_the_catalog_is_unloadable() {
-    assert!(StartupArtifactAuthority::BudgetExceeded.is_none());
-    assert!(StartupArtifactAuthority::BudgetExceeded.configured().is_none());
+fn a_stalled_trusted_catalog_load_closes_the_gate_and_never_claims_the_catalog_is_unloadable() {
+    assert!(StartupArtifactAuthority::Stalled.is_none());
+    assert!(StartupArtifactAuthority::Stalled.configured().is_none());
     assert!(StartupArtifactAuthority::Absent.is_none());
-    assert_eq!(artifact_authority_closed_reason(true, true, true), "trusted-catalog-load-exceeded-its-startup-budget");
-    assert_eq!(artifact_authority_closed_reason(true, true, false), "trusted-catalog-load-exceeded-its-startup-budget");
+    assert_eq!(artifact_authority_closed_reason(true, true, true), "trusted-catalog-load-stalled-before-it-finished");
+    assert_eq!(artifact_authority_closed_reason(true, true, false), "trusted-catalog-load-stalled-before-it-finished");
     assert_eq!(artifact_authority_closed_reason(true, false, true), "trusted-catalog-pointer-present-but-not-loadable");
     assert_eq!(artifact_authority_closed_reason(true, false, false), "trusted-catalog-never-published-in-this-data-root");
     assert_eq!(artifact_authority_closed_reason(false, true, true), "native-artifact-execution-feature-not-compiled");
@@ -125,7 +127,7 @@ fn a_trusted_catalog_budget_overrun_closes_the_gate_and_never_claims_the_catalog
     assert_eq!(distinct.len(), reasons.len(), "every closed artifactAuthority reason must name a different fact");
     let blocked = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, true, false, false, artifact_authority_closed_reason(true, true, false));
     assert_eq!(blocked.status, "not-ready");
-    assert!(blocked.blocked_by.iter().any(|gate| gate.gate == "artifactAuthority" && gate.reason == "trusted-catalog-load-exceeded-its-startup-budget"));
+    assert!(blocked.blocked_by.iter().any(|gate| gate.gate == "artifactAuthority" && gate.reason == "trusted-catalog-load-stalled-before-it-finished"));
 }
 
 /// 🤖️ `features.mcpWorkspace` answers whether a `semio-os-mcp --hub … --credential-file …` gateway
@@ -7712,3 +7714,81 @@ async fn the_saga_drain_supervisor_stops_and_drains_once_more_on_shutdown() {
     assert!(sink.records_for("server.saga.drain").is_empty(), "nothing was queued, so nothing is reported");
 }
 //#endregion 🗄️InstanceStores
+
+/// 🧭️ Every frontier the hub puts on the wire names the DOCUMENT the client opened, never
+/// `db_artifact_id`'s internal `v1:<len>:<len>:<space><document>` key.
+///
+/// The db engine keys documents by that composite — the db and fanout catalogs are flat and a bare
+/// document id is not unique across spaces — and stamps it into every `Frontier` it returns, which
+/// the replication wire carried through unchanged into `Welcome`, `Ack` and `Commands`. It stayed
+/// invisible only because the client assigned the welcome frontier without checking it; C7 §1.4
+/// measured `server_frontier.document_id = v1:36:41:01a0c314-…artifact-0954e2…` against a store
+/// worker (`validateArtifactBootstrapIdentity`) that refuses exactly that pair. The law pins the
+/// whole round trip: both of a `Welcome`'s bootstrap frontiers as well as its own, the two frames a
+/// live session repeats it on, an untouched frame with no frontier, and the ingress direction —
+/// a client frontier is re-keyed onto the db id, and one naming another document is REFUSED rather
+/// than quietly rewritten into the identity the hub wanted to see.
+#[test]
+fn every_wire_frontier_the_hub_sends_names_the_document_not_its_internal_db_key() {
+    let scope = DocumentScope::new("01a0c314-e41f-780d-a980-3adda40ca9f7", "artifact-0954e2d10d8fff9605f101b0dba34f3b");
+    let db_id = db_artifact_id(&scope);
+    assert_ne!(db_id.0, scope.document_id, "the internal key is deliberately not the document id");
+    let internal = |ordinal: u64| RuntimeFrontierSummary { document_id: db_id.clone(), head_edit_ordinal: ordinal, head_edit_id: format!("edit:{ordinal}"), last_commit_seq: ordinal, chain_hash: [ordinal.to_le_bytes()[0]; 32] };
+    let named = |frontier: &RuntimeFrontierSummary| frontier.document_id.0.clone();
+
+    let mut welcome = ServerFrame::Welcome {
+        session_id: "session".into(),
+        resume_token: "resume".into(),
+        server_frontier: internal(9),
+        bootstrap: Bootstrap::ArtifactBootstrap(Box::new(protocol::ArtifactBootstrap {
+            format_version: protocol::ARTIFACT_BOOTSTRAP_FORMAT_VERSION,
+            descriptor_hash: [1; 32],
+            artifact_schema: "s.gis.gismap@1/*".into(),
+            artifact_kind: "gis.map".into(),
+            pack_schema_hash: [2; 32],
+            baseline_frontier: internal(0),
+            pack_hash: [3; 32],
+            spr_hash: [4; 32],
+            pack_length: 81_038,
+            spr_length: 237,
+            chunk_count: 1,
+            aggregate_hash: [5; 32],
+            required_tail_frontier: internal(9),
+            inline: None,
+        })),
+    };
+    project_server_frame(&mut welcome, &scope.document_id);
+    let ServerFrame::Welcome { server_frontier, bootstrap, .. } = &welcome else { panic!("welcome") };
+    assert_eq!(named(server_frontier), scope.document_id);
+    let Bootstrap::ArtifactBootstrap(artifact) = bootstrap else { panic!("artifact bootstrap") };
+    assert_eq!(named(&artifact.baseline_frontier), scope.document_id);
+    assert_eq!(named(&artifact.required_tail_frontier), scope.document_id);
+    assert_eq!(server_frontier.head_edit_ordinal, 9, "only the identity is projected; the position is untouched");
+    assert_eq!(server_frontier.chain_hash, [9u8; 32]);
+
+    let mut ack = ServerFrame::Ack { batch_id: 1, stages: vec![AckStage::Received], frontier: internal(10) };
+    project_server_frame(&mut ack, &scope.document_id);
+    let ServerFrame::Ack { frontier, .. } = &ack else { panic!("ack") };
+    assert_eq!(named(frontier), scope.document_id);
+
+    let mut commands = ServerFrame::Commands { envelopes: Vec::new(), origin: ActorId("actor".into()), frontier: internal(11) };
+    project_server_frame(&mut commands, &scope.document_id);
+    let ServerFrame::Commands { frontier, .. } = &commands else { panic!("commands") };
+    assert_eq!(named(frontier), scope.document_id);
+
+    assert!(frame_carries_frontier(&welcome) && frame_carries_frontier(&ack) && frame_carries_frontier(&commands));
+    let mut session = ServerFrame::Session { actor: "actor".into(), color: 3 };
+    let untouched = session.clone();
+    assert!(!frame_carries_frontier(&session));
+    project_server_frame(&mut session, &scope.document_id);
+    assert_eq!(session, untouched);
+
+    let mut advertised = RuntimeFrontierSummary { document_id: WireArtifactId(scope.document_id.clone()), head_edit_ordinal: 4, head_edit_id: "edit:4".into(), last_commit_seq: 4, chain_hash: [4; 32] };
+    assert!(wire_frontier_to_db(&mut advertised, &scope.document_id, &db_id));
+    assert_eq!(advertised.document_id, db_id);
+    assert_eq!(advertised.head_edit_ordinal, 4);
+
+    let mut foreign = RuntimeFrontierSummary { document_id: WireArtifactId("artifact-somebody-elses".into()), head_edit_ordinal: 4, head_edit_id: "edit:4".into(), last_commit_seq: 4, chain_hash: [4; 32] };
+    assert!(!wire_frontier_to_db(&mut foreign, &scope.document_id, &db_id));
+    assert_eq!(foreign.document_id.0, "artifact-somebody-elses", "a refused frontier is left exactly as the client sent it");
+}

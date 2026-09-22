@@ -26,7 +26,9 @@ fn retained_payload_physical_close_preserves_short_pages_until_the_exact_backing
             page.commit();
             let mut payload = writer.finish().unwrap();
             let pointer = payload.page(0).unwrap().as_ptr();
-            let refused = payload.close_step(1, row["insufficientGrant"].as_u64().unwrap() as usize);
+            let insufficient_grant = row["insufficientGrant"].as_u64().unwrap() as usize;
+            assert_eq!(payload.close_step(1, 0), JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 }, "a zero-byte grant buys nothing");
+            let refused = payload.close_step(1, insufficient_grant);
             let retained_pointer = payload.page(0).map(|page| page.as_ptr()) == Some(pointer);
             let released = payload.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
             let remaining_logical_bytes = payload.len();
@@ -39,11 +41,11 @@ fn retained_payload_physical_close_preserves_short_pages_until_the_exact_backing
                 "refusedItems": refused_items, "refusedBytes": refused_bytes, "retainedPointer": retained_pointer,
                 "releasedItems": released_items, "releasedBytes": released_bytes,
                 "remainingLogicalBytes": remaining_logical_bytes, "remainingPages": remaining_pages,
+                "chargedTotal": refused_bytes + released_bytes,
             });
             assert_eq!(actual, fixture["expected"], "{stream:?}/{}", row["name"]);
         }
     }
-    eprintln!("[DEBUG] Job payload five-stream physical grants preserve exact short-page pointers and release each 16KiB backing exactly");
 }
 
 #[test]
@@ -74,13 +76,91 @@ fn retained_writer_physical_close_preserves_staged_and_rejected_backing() {
         }
         while !writer.terminal_is_empty() { writer.close_step(1, JOB_PAYLOAD_PAGE_BYTES); }
         assert!(ledger.terminal_is_empty());
+        let insufficient_grant = row["insufficientGrant"].as_u64().unwrap() as usize;
         for (staged, refused, retained_pointer, released) in observations {
-            assert_eq!(refused, JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 }, "staged={staged} {}", row["name"]);
+            assert_eq!(refused, JobPayloadCloseStep::Pending { released_items: 0, released_bytes: insufficient_grant }, "staged={staged} {}", row["name"]);
             assert!(retained_pointer, "staged={staged} {}", row["name"]);
-            assert_eq!(released, JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES }, "staged={staged} {}", row["name"]);
+            assert_eq!(released, JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES - insufficient_grant }, "staged={staged} {}", row["name"]);
         }
     }
-    eprintln!("[DEBUG] Job writer staged and rejected pages retain their backing until an exact physical page grant");
+}
+
+struct ShortGrantCloseJob {
+    backing: Option<Box<u8>>,
+    closing: bool,
+}
+
+impl InteractiveJob for ShortGrantCloseJob {
+    fn step(&mut self, _cx: &mut StepContext<'_>) -> StepOutcome {
+        StepOutcome::Yield
+    }
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+        if maximum_items == 0 {
+            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        if self.backing.take().is_some() {
+            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        InteractiveJobCloseStep::Complete
+    }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.backing.is_none()
+    }
+}
+
+/// 🔭️ A bounded close completes on ANY positive byte grant, and reports which named phase its
+/// cursor is in on the way. Every session owns one pre-admitted 16 KiB terminal-fault page; a
+/// caller closing on a SHORTER granule (the store's retirement ladders run on 4 KiB) used to park
+/// on that page forever, answering `Pending { 0, 0 }` — "progress, call again" — from the turn
+/// after `begin_close` onwards, with nothing in the protocol able to say so.
+#[test]
+fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
+    let grant = 4_096;
+    assert!(grant < JOB_PAYLOAD_PAGE_BYTES, "this law is about a grant shorter than one physical page");
+    let mut mounted = MountedWorkerJobSession::try_new(ShortGrantCloseJob { backing: Some(Box::new(51)), closing: false }, params(OperationId(90_030), Generation(23), root_cancel_token()))
+        .unwrap_or_else(|_| panic!("short-grant close fixture admission"));
+    assert_eq!(mounted.close_phase(), WorkerJobClosePhase::Open);
+    mounted.begin_close();
+    let mut ladder = Vec::new();
+    let mut charged = 0;
+    let mut turns = 0;
+    for _ in 0..64 {
+        let phase = mounted.close_phase();
+        if ladder.last() != Some(&phase) {
+            ladder.push(phase);
+        }
+        if mounted.terminal_is_empty() {
+            break;
+        }
+        turns += 1;
+        match mounted.close_step(1, grant) {
+            WorkerJobCloseStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1, "a one-item grant releases at most one owner: {released_items}");
+                assert!(released_bytes <= grant, "a close turn never spends more than its own byte grant: {released_bytes}");
+                charged += released_bytes;
+            }
+            WorkerJobCloseStep::Complete => {}
+            WorkerJobCloseStep::Blocked => panic!("a mounted close on a positive grant is never blocked"),
+        }
+    }
+    assert!(mounted.terminal_is_empty(), "a bounded close completes on any positive byte grant, not only on a whole physical page");
+    assert_eq!(charged, JOB_PAYLOAD_PAGE_BYTES, "the pre-admitted fault page costs exactly one physical page of grant, however many turns pay it");
+    assert_eq!(turns, JOB_PAYLOAD_PAGE_BYTES / grant + 6, "the short-grant close is bounded: one charging turn per grant-sized slice of the fault page, plus the fixed phase ladder");
+    assert_eq!(
+        ladder,
+        vec![
+            WorkerJobClosePhase::BeginClose,
+            WorkerJobClosePhase::PreadmittedFault,
+            WorkerJobClosePhase::Job,
+            WorkerJobClosePhase::ParamsRelease,
+            WorkerJobClosePhase::RetirementSlot,
+            WorkerJobClosePhase::Empty,
+        ],
+        "the close cursor walks its named phases in order and never revisits one"
+    );
 }
 
 fn wait_for(session: &WorkerJobSession<HostileJob>, expected: WorkerJobPoll) {
@@ -342,24 +422,26 @@ fn worker_authority_keeps_one_heap_identity_through_mounted_submit_and_checkout(
     .unwrap_or_else(|_| panic!("heap authority fixture admission"));
     assert!(size_of::<WorkerJobAuthorityOwner<HostileJob>>() < size_of::<WorkerJobAuthority<HostileJob>>());
     let admitted_identity = unsafe { (&*mounted.session.inner.authority.get()).as_ref().expect("idle session owns its authority").0.as_ptr() };
-    assert!(matches!(mounted.pump_one(&pool, Lane::Interactive), Ok(WorkerJobPoll::Submitted)));
+    assert!(matches!(mounted.pump_one(&pool, Lane::Background), Ok(WorkerJobPoll::Submitted)), "a non-interactive lane submits to the pool");
     for _ in 0..4_096 {
         if mounted.poll() == WorkerJobPoll::Outcome {
             break;
         }
         std::thread::yield_now();
     }
-    assert!(matches!(mounted.pump_one(&pool, Lane::Interactive), Ok(WorkerJobPoll::Outcome)));
+    assert!(matches!(mounted.pump_one(&pool, Lane::Background), Ok(WorkerJobPoll::Outcome)));
     let checked_out_identity = mounted.checked_out.as_ref().and_then(|outcome| outcome.authority.as_ref()).expect("mounted outcome owns exact authority").0.as_ptr();
     assert_eq!(checked_out_identity, admitted_identity);
     assert!(matches!(mounted.take_checked_out_outcome(), Some(StepOutcome::Yield)));
     mounted.resume().expect("empty yielded outcome returns the same authority");
+    assert!(matches!(mounted.pump_one(&pool, Lane::Interactive), Ok(WorkerJobPoll::Terminal)), "the interactive lane runs the step on the caller and checks its terminal out in one pump");
+    let terminal_identity = mounted.checked_out.as_ref().and_then(|outcome| outcome.authority.as_ref()).expect("mounted terminal owns exact authority").0.as_ptr();
+    assert_eq!(terminal_identity, admitted_identity, "the caller-run interactive step keeps the same heap authority as the pooled one");
     mounted.begin_close();
     while !mounted.terminal_is_empty() {
         let _ = mounted.close_step(1, JOB_PAYLOAD_PAGE_BYTES);
     }
     let _ = pool.shutdown();
-    eprintln!("[DEBUG] worker authority retained one heap identity across mounted submit and checkout");
 }
 
 #[test]

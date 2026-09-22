@@ -613,30 +613,31 @@ async fn paged_generic_decoder_crosses_a_two_page_field_boundary_without_concate
 
 #[semio_framework_async_macros::async_test]
 async fn paged_generic_decoder_admits_document_config_and_projection_commands_used_during_browser_boot() {
+    // 🧮️ Each row carries the EXACT number of bounded cursor turns its paged decode costs: one
+    // header turn plus one turn per length-prefixed field. A two-member document archive is
+    // 1 + 3 (parent pack, parent spr, member count) + 2 x 12 member phases = 28 — a shape the
+    // earlier uniform four-turn budget could never reach, which is why this law read red from the
+    // day the archive rows were admitted into it.
     let commands = vec![
-        AppCommand::LoadDocument { seq: 1, pack: vec![1, 2], spr: vec![3] },
-        AppCommand::ReadDocument { seq: 2 },
-        AppCommand::LoadDocumentArchive { seq: 10, archive: sample_document_archive() },
-        AppCommand::ReadDocumentArchive { seq: 11 },
-        AppCommand::LoadConfig { seq: 3, pack: vec![4], spr: vec![5, 6] },
-        AppCommand::ReadConfig { seq: 4 },
-        AppCommand::ReadChildren { seq: 5 },
-        AppCommand::ReadHistory { seq: 6 },
-        AppCommand::ReadConflicts { seq: 7 },
-        AppCommand::LoadWindowConfig { seq: 8, entry: WindowConfigPackEntry { window_id: "w1".into(), window_kind_id: "graph".into(), envelope_pack: vec![7, 8] } },
-        AppCommand::ReadWindowConfigs { seq: 9 },
+        (AppCommand::LoadDocument { seq: 1, pack: vec![1, 2], spr: vec![3] }, 3),
+        (AppCommand::ReadDocument { seq: 2 }, 2),
+        (AppCommand::LoadDocumentArchive { seq: 10, archive: sample_document_archive() }, 28),
+        (AppCommand::ReadDocumentArchive { seq: 11 }, 2),
+        (AppCommand::LoadConfig { seq: 3, pack: vec![4], spr: vec![5, 6] }, 3),
+        (AppCommand::ReadConfig { seq: 4 }, 2),
+        (AppCommand::ReadChildren { seq: 5 }, 2),
+        (AppCommand::ReadHistory { seq: 6 }, 2),
+        (AppCommand::ReadConflicts { seq: 7 }, 2),
+        (AppCommand::LoadWindowConfig { seq: 8, entry: WindowConfigPackEntry { window_id: "w1".into(), window_kind_id: "graph".into(), envelope_pack: vec![7, 8] } }, 4),
+        (AppCommand::ReadWindowConfigs { seq: 9 }, 2),
     ];
-    for expected in commands {
+    for (expected, turns) in commands {
         let encoded = encode_app_command(&expected).await.unwrap();
         let mut cursor = PagedAppCommandDecodeCursor::new(encoded);
-        let mut decoded = None;
-        for _ in 0..4 {
-            decoded = cursor.step().unwrap();
-            if decoded.is_some() {
-                break;
-            }
+        for turn in 1..turns {
+            assert_eq!(cursor.step().unwrap(), None, "turn {turn} of {expected:?} must not yield the command early");
         }
-        assert_eq!(decoded, Some(expected));
+        assert_eq!(cursor.step().unwrap(), Some(expected));
         assert!(cursor.terminal_is_empty());
     }
 }

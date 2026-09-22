@@ -1,0 +1,9 @@
+{
+  "title": "Wfc End To End",
+  "emoji": "🀄️",
+  "status": "open",
+  "description": "Get wave function collapse working end to end on every artifact (bitmap, grid2d, wfc2d, grid3d, wfc3d). Every output must be tested. The fill algorithm must be interactive the way puzzle 3d fill is: a framework tool run the user can start, pause, resume, step, and abort, with the preview window painting the partial collapse on each step and the finished collapse surviving after the run completes.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [],
+  "note": "Opened on disk 2026-09-22 because the repo MCP server is not connected in this session (FetchMcpResource: Server repo not found). Goal association read from .🧬semio/🦑️repo/🎯️goals/R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/🎯️goal.json. Execution contract: 📓️contract.md."
+}

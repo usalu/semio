@@ -42,7 +42,7 @@ pub(crate) async fn poll_with_output_failure<PA: crate::app::PluginApp>(runtime:
 
 /// ▶️ The exact `run_until_idle` call `poll` makes after routing events, exposed directly.
 pub(crate) async fn run_until_idle(max_iterations: u32) -> bool {
-    TEST_FUTURE_EXECUTOR.with(|executor| executor.run_until_idle(max_iterations))
+    TASK_EXECUTOR.with(|executor| executor.run_until_idle(max_iterations))
 }
 
 /// ✅️ The exact `REGISTRY::resolve` call `poll`'s `Event::Completed` arm makes, exposed
@@ -100,7 +100,7 @@ pub(crate) async fn poll_instance_tasks_once(instance: u32) -> usize {
     let ids: Vec<_> = (0..REACTOR_TASK_SLOTS).filter_map(|index| TASK_RECORDS.with(|records| records.borrow().entry_at(index).and_then(|(id, record)| (record.instance == instance).then_some(id)))).collect();
     let mut completed = 0;
     for id in ids {
-        if TEST_FUTURE_EXECUTOR.with(|executor| executor.poll_one(id)) == executor::TaskPoll::Complete {
+        if TASK_EXECUTOR.with(|executor| executor.poll_one(id)) == executor::TaskPoll::Complete {
             TASK_RECORDS.with(|records| drop(records.borrow_mut().remove(id)));
             completed += 1;
         }

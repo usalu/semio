@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/fill/tick-payload/schema.json",
+  "title": "Wfc3dFillTickPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["assignments", "contradiction", "done"],
+  "properties": {
+    "assignments": {
+      "type": "object",
+      "description": "Slot id to tile id when decided, or null when still open.",
+      "additionalProperties": {
+        "type": ["string", "null"]
+      }
+    },
+    "contradiction": { "type": "boolean" },
+    "done": { "type": "boolean" }
+  }
+}

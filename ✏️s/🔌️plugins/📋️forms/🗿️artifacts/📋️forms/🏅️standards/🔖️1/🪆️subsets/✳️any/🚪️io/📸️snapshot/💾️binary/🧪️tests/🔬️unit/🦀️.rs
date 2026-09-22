@@ -45,10 +45,10 @@ async fn onboarding_fixture_pack_agrees_with_dsl() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::{op::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
+    use store::{create_document_envelope, ArtifactCommand};
 
     let document = crate::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, &[FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }]);
-    let mut store: ArtifactStore<FormsSnapshot, FormMutation> = ArtifactStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None)).await.expect("valid artifact store fixture");
+    let mut store = super::new_forms_store(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None)).await.expect("valid artifact store fixture");
     let step = FormStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
     store.dispatch(ArtifactCommand::Apply { mutations: vec![FormMutation::CreateStep(crate::mutations::create_step::mutation::CreateStep { step, index: None })], description: None }).await.expect("apply");
     let edit: &Edit<FormMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");

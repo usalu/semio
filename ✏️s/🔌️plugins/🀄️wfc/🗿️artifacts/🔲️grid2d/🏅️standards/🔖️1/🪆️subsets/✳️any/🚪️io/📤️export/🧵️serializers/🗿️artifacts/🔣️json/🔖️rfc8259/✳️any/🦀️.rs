@@ -29,3 +29,9 @@ impl Serializer<Grid2dSnapshot> for Grid2dIntoJson {
         Ok(IoOutcome::clean(IoPayload::Binary(bytes)))
     }
 }
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

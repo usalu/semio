@@ -24,6 +24,7 @@ semio-framework-dispatch-macros = { workspace = true }
 semio-framework-geometry = { workspace = true }
 semio-framework-graph = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-tool-run = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }

@@ -16,7 +16,7 @@ use ui_wgpu::wgpu::push_chrome_group_border;
 // panel bodies now, so the whole `UiNode` vocabulary they author has to compile on every target.
 use ui_wgpu::wgpu::{
     Label, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
-    UiTreeSectionNode, UiTreeWindow,
+    UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent,
 };
 
 use crate::dock::{DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette, compute_dock_drop_zone, drop_zone_indicator_rect, parse_path};
@@ -1394,8 +1394,6 @@ const SHELL_CHROME_IO_FIELD_BYTES: usize = 4 * 1024;
 struct ShellChromeMaintenance {
     load_requested: bool,
     load_phase: u8,
-    locale_refresh_generation: u64,
-    locale_refresh: Option<Box<ShellLocalizedPanelRefreshCursor>>,
     introduction_read: Option<String>,
     introduction_write: Option<String>,
     layout_requested: bool,
@@ -1406,14 +1404,8 @@ struct ShellChromeMaintenance {
 
 impl ShellChromeMaintenance {
     fn pending(&self) -> bool {
-        self.load_requested || self.locale_refresh.is_some() || self.introduction_read.is_some() || self.introduction_write.is_some() || self.layout_requested || self.presence_requested || self.persist_requested
+        self.load_requested || self.introduction_read.is_some() || self.introduction_write.is_some() || self.layout_requested || self.presence_requested || self.persist_requested
     }
-}
-
-struct ShellLocalizedPanelRefreshCursor {
-    generation: u64,
-    locale_id: String,
-    pending: VecDeque<String>,
 }
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -3615,6 +3607,7 @@ pub struct ShellState {
     presented_input_candidate: Option<PresentedInputCandidateWitness>,
     presented_input_geometry: PresentedInputGeometry,
     presented_input_geometry_staging: PresentedInputGeometry,
+    presented_chrome_accessibility: Vec<ui_contract::AccessibilityProjectionNode>,
     /// 🪟️ The pane-overlay chip rows this frame's windows registered, held back until every window
     /// BODY has been walked and registered before the first docked panel.
     ///
@@ -4697,6 +4690,10 @@ impl ShellState {
         let surface = window_measures_surface_id(window_id);
         crate::interpreter::set_ui_document_flow(&surface, ui_contract::UiFlow::for_anchor(ui_contract::Anchor::TopEnd));
         let rect = self.window_measures_rect(window_id, window_rect, theme);
+        if !cursor.flag && cursor.document.layout_is_accepted() && cursor.rect.is_some_and(|previous| previous != rect) {
+            cursor.document.restart_viewport_after_host_reflow();
+        }
+        cursor.rect = Some(rect);
         if !cursor.flag && cursor.document.phase_name() == "paint" {
             draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.panel);
             cursor.flag = true;
@@ -5028,7 +5025,13 @@ impl PanelProjection<'_> {
                     let Some(action) = action else { continue };
                     bindings.try_push(measure_binding(trigger, action, None)?).map_err(|_| format!("panel input '{}' binds more moments than one record admits", input.id))?;
                 }
-                self.place(id, key, ui_contract::Component::Input(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
+                self.place(
+                    id,
+                    key,
+                    ui_contract::Component::Input(props),
+                    Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None),
+                    PanelRecord { bindings, activity, disabled, label: input.accessibility_label.as_ref().map(|label| measure_label(label.as_str())), ..PanelRecord::default() },
+                )
             }
             UiNode::KeyValue(list) => {
                 let key = self.key(None);
@@ -5115,7 +5118,16 @@ impl PanelProjection<'_> {
         let props = ui_contract::TreeSectionProps {
             label: section.label.as_ref().map(|label| measure_label(label.as_str())),
             default_open: section.default_open,
-            window: section.window.map(|window| ui_contract::TreeWindow { total: window.total, offset: window.offset }),
+            window: section.window.map(|window| ui_contract::TreeWindow {
+                total: window.total,
+                offset: window.offset,
+                row_extent: match window.row_extent {
+                    UiTreeWindowRowExtent::Standard => ui_contract::TreeWindowRowExtent::Standard,
+                    UiTreeWindowRowExtent::CompactText => ui_contract::TreeWindowRowExtent::CompactText,
+                    UiTreeWindowRowExtent::CompactSmallControl => ui_contract::TreeWindowRowExtent::CompactSmallControl,
+                    UiTreeWindowRowExtent::CompactControl => ui_contract::TreeWindowRowExtent::CompactControl,
+                },
+            }),
         };
         self.place(id, key, ui_contract::Component::TreeSection(props), Self::stack_layout(ui_contract::Axis::Vertical, ui_contract::SpaceToken::None), PanelRecord { children, ..PanelRecord::default() })
     }
@@ -5150,7 +5162,16 @@ impl PanelProjection<'_> {
             draggable: item.draggable,
             drag_data: self.drag_data(&item.id, item.drag_data.as_ref())?,
             dimmed: item.dimmed,
-            window: item.window.map(|window| ui_contract::TreeWindow { total: window.total, offset: window.offset }),
+            window: item.window.map(|window| ui_contract::TreeWindow {
+                total: window.total,
+                offset: window.offset,
+                row_extent: match window.row_extent {
+                    UiTreeWindowRowExtent::Standard => ui_contract::TreeWindowRowExtent::Standard,
+                    UiTreeWindowRowExtent::CompactText => ui_contract::TreeWindowRowExtent::CompactText,
+                    UiTreeWindowRowExtent::CompactSmallControl => ui_contract::TreeWindowRowExtent::CompactSmallControl,
+                    UiTreeWindowRowExtent::CompactControl => ui_contract::TreeWindowRowExtent::CompactControl,
+                },
+            }),
             granularity: None,
             row_actions: Default::default(),
         };
@@ -5361,6 +5382,7 @@ fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
                     input_kind: "number".into(),
                     value: format_measure_number(*value),
                     placeholder: None,
+                    accessibility_label: None,
                     commit: Some("enterOrBlur".into()),
                     min: *min,
                     max: *max,
@@ -5616,6 +5638,7 @@ fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef
             input_kind: "number".into(),
             value: value.to_string(),
             placeholder: Some(Label::data(label.clone())),
+            accessibility_label: None,
             commit: Some("blur".into()),
             min,
             max,
@@ -5633,6 +5656,7 @@ fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef
             input_kind: "text".into(),
             value: value.to_string(),
             placeholder: Some(Label::data(label.clone())),
+            accessibility_label: None,
             commit: Some("blur".into()),
             min: None,
             max: None,
@@ -6128,6 +6152,7 @@ impl ShellState {
             presented_input_candidate: None,
             presented_input_geometry: PresentedInputGeometry::default(),
             presented_input_geometry_staging: PresentedInputGeometry::default(),
+            presented_chrome_accessibility: Vec::new(),
             pane_overlay_hits: Vec::new(),
             chrome_floor_scope: None,
             retained_hover_window: None,
@@ -7815,6 +7840,7 @@ impl ShellState {
                 input_kind: "text".into(),
                 value: self.driver_save_label.clone(),
                 placeholder: Some(Label::data(shell_chrome_string("settings.driver.savePlaceholder", is_de))),
+                accessibility_label: None,
                 commit: Some("blur".into()),
                 min: None,
                 max: None,
@@ -7967,7 +7993,11 @@ impl ShellState {
     /// 🚗️ Every selectable driver id with its display label — the two built-ins plus whatever the
     /// preferences carry, React's `uiDriverList = [...builtinUiDrivers(), ...customDrivers]`.
     fn driver_rows(&self) -> Vec<(String, String)> {
-        let mut rows = vec![("default".to_string(), "Default".to_string()), ("compact".to_string(), "Compact".to_string())];
+        let is_de = self.locale_id == "de";
+        let mut rows = vec![
+            ("default".to_string(), shell_chrome_string("settings.driver.default", is_de).to_string()),
+            ("compact".to_string(), shell_chrome_string("settings.driver.compact", is_de).to_string()),
+        ];
         for (id, driver) in &self.chrome_build.preferences.custom_drivers {
             if !rows.iter().any(|(existing, _)| existing == id) {
                 rows.push((id.clone(), driver.label.clone()));
@@ -8182,6 +8212,7 @@ impl ShellState {
                         input_kind: "text".into(),
                         value: self.layout_save_label.clone(),
                         placeholder: Some(Label::data(shell_chrome_string("display.saveLayoutPlaceholder", is_de))),
+                        accessibility_label: None,
                         commit: None,
                         min: None,
                         max: None,
@@ -8449,6 +8480,7 @@ impl ShellState {
             input_kind: "longText".into(),
             value: self.agent_chat_draft.clone(),
             placeholder: Some(Label::data(shell_chrome_string("chat.placeholder", is_de))),
+            accessibility_label: Some(Label::data(shell_chrome_string("chat.draftLabel", is_de))),
             // ⌨️ React's composer submits on a bare Enter (Shift+Enter keeps the newline), which the
             // retained input expresses as `commit: "enter"` plus an `on_submit` verb — the same
             // `sendChatDraft` the Send button dispatches, so both routes are one code path.
@@ -8514,6 +8546,7 @@ impl ShellState {
                 input_kind: "text".into(),
                 value: self.sync_card_draft.clone(),
                 placeholder: Some(Label::data(placeholder)),
+                accessibility_label: None,
                 commit: None,
                 min: None,
                 max: None,
@@ -10095,25 +10128,30 @@ impl ShellState {
                 "setLocale" => {
                     if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
                         let changed = self.locale_id != value;
-                        let locale_refresh_generation = changed.then(|| self.chrome_present.maintenance.locale_refresh_generation.checked_add(1).ok_or_else(|| "shell: localized panel refresh generation exhausted".to_string())).transpose()?;
                         self.locale_id = value.to_string();
                         if let Some(status) = self.plugin_fault_status() {
                             self.error = Some(status);
                         }
                         self.trace_resolved_locale("setLocale");
                         self.note_shell_setting_command("os.setLocale", Some(value)).await?;
-                        if let Some(generation) = locale_refresh_generation {
+                        if changed {
                             self.sync_dock_tabs();
-                            self.arm_localized_panel_refresh(generation);
+                            self.owe_refresh(UiDirtyScope::Full);
+                            self.owe_settle();
                         }
                     }
                     return Ok(());
                 }
                 "setTerminology" => {
                     if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        let changed = self.terminology_id != value;
                         self.terminology_id = value.to_string();
                         self.note_shell_setting_command("os.setTerminology", Some(value)).await?;
-                        self.republish_shell_panel_document(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)?;
+                        if changed {
+                            self.sync_dock_tabs();
+                            self.owe_refresh(UiDirtyScope::Full);
+                            self.owe_settle();
+                        }
                     }
                     return Ok(());
                 }
@@ -13024,7 +13062,8 @@ impl ShellState {
         // ♿️ The chrome's accessible names ride the SAME promotion as its hit registry (packet W15d)
         // — a production path, not a diagnostics one, so an assistive technology reads the chrome
         // whether or not `SEMIO_RUNTIME_DIAGNOSTICS` is armed.
-        crate::interpreter::note_chrome_accessibility(self.chrome_accessibility_nodes(input.hits()));
+        self.presented_chrome_accessibility = self.chrome_accessibility_nodes(input.hits());
+        crate::interpreter::note_chrome_accessibility(self.presented_input_epoch, self.presented_chrome_accessibility.clone());
         crate::interpreter::note_chrome_hit_registry(input.hits(), &self.retained_hit_windows);
         crate::interpreter::note_chrome_surfaces(&self.chrome_surface_census());
         true
@@ -13390,6 +13429,9 @@ impl ShellState {
     }
 
     pub fn handle_pointer_wheel(&mut self, x: f32, y: f32, delta_x: f32, delta_y: f32, input: &mut InputState<ActionDescriptor>) -> bool {
+        if self.widget_maps.scroll_select_popup_at(input, &mut self.scroll_offsets, x, y, delta_y) {
+            return true;
+        }
         let Some(hit) = input.hit_at(x, y).cloned() else {
             return false;
         };
@@ -13417,7 +13459,8 @@ impl ShellState {
             return true;
         }
         let entry = self.scroll_offsets.entry(id.clone()).or_insert(0.0);
-        *entry = (*entry + delta_y).max(0.0);
+        let delta = if id.starts_with("shell.panel.tabs.") && delta_x != 0.0 { delta_x } else { delta_y };
+        *entry = (*entry + delta).max(0.0);
         true
     }
 
@@ -13466,11 +13509,10 @@ impl ShellState {
             }
             return Ok(true);
         }
-        if target.window_generation != crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION {
+        if target.window_generation != self.presented_input_epoch {
             return Ok(false);
         }
-        let nodes = self.chrome_accessibility_nodes(input.hits());
-        if !nodes.iter().any(|node| node.node_id == target.node_id && node.key == target.node_key) {
+        if !self.presented_chrome_accessibility.iter().any(|node| node.node_id == target.node_id && node.key == target.node_key) {
             return Ok(false);
         }
         let palette_kind = match self.overlay_state {
@@ -13519,6 +13561,28 @@ impl ShellState {
                     self.set_palette_query(kind, value.clone(), input);
                 }
                 ui_render::AccessibilityEvent::Value(_) => {}
+            }
+            return Ok(true);
+        }
+        if let Some(anchor) = self.panel_tab_anchor(&target.node_key) {
+            match event {
+                ui_render::AccessibilityEvent::Focus => {
+                    input.blur_input();
+                    self.accessibility_focused_control_id = Some(target.node_key.clone());
+                    self.reveal_panel_tab_row(anchor, &target.node_key);
+                }
+                ui_render::AccessibilityEvent::Blur => {
+                    if self.accessibility_focused_control_id.as_deref() == Some(target.node_key.as_str()) {
+                        self.accessibility_focused_control_id = None;
+                    }
+                }
+                ui_render::AccessibilityEvent::Activate => {
+                    input.blur_input();
+                    self.accessibility_focused_control_id = Some(target.node_key.clone());
+                    self.reveal_panel_tab_row(anchor, &target.node_key);
+                    self.select_panel_tab(anchor, &target.node_key).await?;
+                }
+                ui_render::AccessibilityEvent::Value(_) => return Ok(false),
             }
             return Ok(true);
         }
@@ -18877,6 +18941,7 @@ fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework
             input_kind: "number".into(),
             value: value.to_string(),
             placeholder: Some(Label::data(label.clone())),
+            accessibility_label: None,
             commit: Some("blur".into()),
             min,
             max,
@@ -18894,6 +18959,7 @@ fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework
             input_kind: "text".into(),
             value: value.to_string(),
             placeholder: Some(Label::data(label.clone())),
+            accessibility_label: None,
             commit: Some("blur".into()),
             min: None,
             max: None,
@@ -19182,6 +19248,7 @@ impl ShellState {
             input_kind: "text".into(),
             value: draft.clone(),
             placeholder: Some(Label::data(placeholder)),
+            accessibility_label: None,
             commit: None,
             min: None,
             max: None,
@@ -20363,34 +20430,6 @@ impl ShellState {
         self.panel_documents.insert(tab_id.to_string(), document);
         self.drain_retained_document_arenas();
         Ok(())
-    }
-
-    /// 🌐️ Snapshots only mounted shell-owned leaves for one locale generation; absent and guest
-    /// documents cannot enter the refresh lane and a newer locale supersedes the exact older roster.
-    fn arm_localized_panel_refresh(&mut self, generation: u64) {
-        let pending = self.shell_owned_panel_leaves().into_iter().filter(|tab_id| self.panel_documents.contains_key(tab_id)).collect::<VecDeque<_>>();
-        self.chrome_present.maintenance.locale_refresh_generation = generation;
-        self.chrome_present.maintenance.locale_refresh = (!pending.is_empty()).then(|| Box::new(ShellLocalizedPanelRefreshCursor { generation, locale_id: self.locale_id.clone(), pending }));
-    }
-
-    /// 🌐️ Replaces at most one mounted localized owner per frame-maintenance step. Admission
-    /// refusal leaves that exact surface at the cursor head so its readable prior lease can retry.
-    fn advance_localized_panel_refresh_step(&mut self) {
-        let Some((generation, locale_id, tab_id)) = self.chrome_present.maintenance.locale_refresh.as_ref().and_then(|cursor| cursor.pending.front().map(|tab_id| (cursor.generation, cursor.locale_id.clone(), tab_id.clone()))) else {
-            self.chrome_present.maintenance.locale_refresh = None;
-            return;
-        };
-        if locale_id != self.locale_id || self.republish_shell_panel_document(&tab_id).is_err() {
-            return;
-        }
-        let Some(cursor) = self.chrome_present.maintenance.locale_refresh.as_mut() else { return };
-        if cursor.generation != generation || cursor.locale_id != locale_id || cursor.pending.front() != Some(&tab_id) {
-            return;
-        }
-        cursor.pending.pop_front();
-        if cursor.pending.is_empty() {
-            self.chrome_present.maintenance.locale_refresh = None;
-        }
     }
 
     /// 🎛️ One category leaf's body — the wgpu twin of React's `buildCommandCategoryTree`
@@ -22839,6 +22878,7 @@ impl ShellState {
                         }
                     }
                     17 => {
+                        self.widget_maps_staging.clear_select_popup_wheel();
                         self.widget_maps_staging.tree_selection_change = None;
                     }
                     18 => {
@@ -23121,8 +23161,6 @@ impl ShellState {
             self.advance_world3d_retirement_step();
         } else if self.chrome_present.maintenance.load_requested {
             self.advance_chrome_preferences_load_step();
-        } else if self.chrome_present.maintenance.locale_refresh.is_some() {
-            self.advance_localized_panel_refresh_step();
         } else if let Some(seen_key) = self.chrome_present.maintenance.introduction_read.take() {
             let key = format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{seen_key}");
             let seen = stored_field_get(&key).as_deref() == Some("true");
@@ -23296,27 +23334,6 @@ impl ShellState {
     fn body_rect(&self, theme: &Theme) -> Rect {
         let top = theme.navbar_height + self.tutorial_bar_reserve(theme);
         Rect::new(0.0, top, self.screen_w, self.screen_h - top - theme.footer_height)
-    }
-
-    /// 🛟️ Reserves React Layout's widest visible panel band on each canvas edge.
-    fn window_canvas_rect(&self, body: Rect, theme: &Theme) -> Rect {
-        if self.mobile_panel_active() {
-            return body;
-        }
-        let mut left = 0.0_f32;
-        let mut right = 0.0_f32;
-        for anchor in PanelAnchor::ALL {
-            if !self.anchor_open(anchor) {
-                continue;
-            }
-            let width = self.anchor_state(anchor).size + 2.0 * theme.panel_inset;
-            match anchor.horizontal() {
-                "left" => left = left.max(width),
-                "right" => right = right.max(width),
-                _ => {}
-            }
-        }
-        Rect::new(body.x + left, body.y, (body.w - left - right).max(0.0), body.h)
     }
 
     /// 🎬️ Extra vertical space the tutorial control bar reserves below the navbar while a tutorial is
@@ -23658,7 +23675,7 @@ impl ShellState {
                 if ui_wgpu::wgpu::shell_floor_paints(self.chrome_floor_scope) {
                     draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
                 }
-                cursor.rect = Some(self.window_canvas_rect(bounds, theme).inset(theme.panel_inset));
+                cursor.rect = Some(bounds.inset(theme.panel_inset));
                 cursor.phase = 1;
             }
             1 => {
@@ -23992,6 +24009,16 @@ impl ShellState {
         flowed_anchor_content_rect(anchor.flow().block, panel, bar, theme.gap_standard)
     }
 
+    fn panel_tab_scroll_id(anchor: PanelAnchor, row_index: usize) -> String {
+        format!("shell.panel.tabs.{}.{}.scroll", anchor.as_str(), row_index)
+    }
+
+    fn reveal_panel_tab_row(&mut self, anchor: PanelAnchor, tab_id: &str) {
+        if let Some(row_index) = self.anchor_panel_tab_rows(anchor).iter().position(|row| row.iter().any(|node| node.id == tab_id)) {
+            self.scroll_offsets.insert(Self::panel_tab_scroll_id(anchor, row_index), f32::MAX);
+        }
+    }
+
     /// 📑️ Paints and hit-tests one anchor's tab bar: a branch row toggles open/shut, a leaf row selects,
     /// and every row is a `PanelTab` drag source so a tab can be carried to another anchor.
     ///
@@ -24007,9 +24034,20 @@ impl ShellState {
         let row_h = theme.control_height;
         let dragging = self.dock_tab_drag.is_some();
         for (row_index, row) in rows.iter().enumerate() {
-            let mut x = panel.x + theme.gap_standard;
             let y = flowed_anchor_tab_row_y(anchor.flow().block, panel, row_index, rows.len(), row_h);
-            let preview = dragging.then(|| self.dock_tab_insert_preview(row, atlas, theme, panel, Rect::new(panel.x, y, panel.w, row_h), input.pointer_x, input.pointer_y)).flatten();
+            let row_rect = Rect::new(panel.x + theme.gap_standard, y, (panel.w - theme.gap_standard * 2.0).max(0.0), row_h);
+            let total_width = row.iter().map(|node| {
+                let item = ChromeGroupItem { control_id: node.id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: false, disabled: false, kind: HitKind::PanelTab };
+                retained_panel_chrome_item_width(atlas, theme, &item).unwrap_or(theme.control_height)
+            }).sum::<f32>() + theme.gap_standard * row.len().saturating_sub(1) as f32;
+            let max_offset = (total_width - row_rect.w).max(0.0);
+            let scroll_id = Self::panel_tab_scroll_id(anchor, row_index);
+            let offset = self.scroll_offsets.get(&scroll_id).copied().unwrap_or_default().clamp(0.0, max_offset);
+            self.scroll_offsets.insert(scroll_id.clone(), offset);
+            input.register_hit(HitTarget { rect: row_rect, event: None, control_id: Some(scroll_id), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
+            let mut x = row_rect.x - offset;
+            let preview = dragging.then(|| self.dock_tab_insert_preview(row, atlas, theme, row_rect, offset, input.pointer_x, input.pointer_y)).flatten();
+            draw.push_scissor(row_rect);
             for node in row {
                 if preview == Some(x) {
                     draw.push_rounded([x, y + theme.gap_standard, TAB_INSERT_PREVIEW_WIDTH_PX, (row_h - theme.gap_standard * 2.0).max(0.0)], theme.accent, TAB_INSERT_PREVIEW_WIDTH_PX * 0.5);
@@ -24017,9 +24055,6 @@ impl ShellState {
                 let is_active = active.get(row_index + active_offset).is_some_and(|id| id == &node.id);
                 let item = ChromeGroupItem { control_id: node.id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: is_active, disabled: false, kind: HitKind::PanelTab };
                 let chip_w = retained_panel_chrome_item_width(atlas, theme, &item).unwrap_or(theme.control_height);
-                if x + chip_w > panel.x + panel.w {
-                    break;
-                }
                 let chip = Rect::new(x, y + (row_h - theme.control_height) * 0.5, chip_w, theme.control_height);
                 if is_active {
                     draw.push_rounded([chip.x, chip.y, chip.w, chip.h], theme.accent, theme.border_radius);
@@ -24029,13 +24064,21 @@ impl ShellState {
                 chrome_icon(draw, icons, icon_id, chip.x + theme.padding_standard, chip.y + (chip.h - PANEL_CHROME_ICON_TINY) * 0.5, PANEL_CHROME_ICON_TINY, fg);
                 chrome_text(draw, atlas, input, theme, &node.label, chip.x + theme.padding_standard + PANEL_CHROME_ICON_TINY + theme.gap_standard, chip.y + (chip.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, fg);
                 chrome_icon(draw, icons, "grip-vertical", chip.x + chip.w - theme.padding_standard - PANEL_CHROME_GRIP_SIZE, chip.y + (chip.h - PANEL_CHROME_GRIP_SIZE) * 0.5, PANEL_CHROME_GRIP_SIZE, fg);
-                input.register_hit(HitTarget { rect: chip, event: None, control_id: Some(node.id.as_str().into()), kind: HitKind::PanelTab, drag_axis: Some(DragAxis::Both), drag_data: None });
-                self.chrome_build.register_element_rect(panel_tab_introduction_element_id(&node.id), chip);
+                let left = chip.x.max(row_rect.x);
+                let top = chip.y.max(row_rect.y);
+                let right = (chip.x + chip.w).min(row_rect.x + row_rect.w);
+                let bottom = (chip.y + chip.h).min(row_rect.y + row_rect.h);
+                if right > left && bottom > top {
+                    let visible = Rect::new(left, top, right - left, bottom - top);
+                    input.register_hit(HitTarget { rect: visible, event: None, control_id: Some(node.id.clone()), kind: HitKind::PanelTab, drag_axis: Some(DragAxis::Both), drag_data: None });
+                    self.chrome_build.register_element_rect(panel_tab_introduction_element_id(&node.id), visible);
+                }
                 x += chip_w + theme.gap_standard;
             }
             if preview == Some(x) {
                 draw.push_rounded([x, y + theme.gap_standard, TAB_INSERT_PREVIEW_WIDTH_PX, (row_h - theme.gap_standard * 2.0).max(0.0)], theme.accent, TAB_INSERT_PREVIEW_WIDTH_PX * 0.5);
             }
+            draw.pop_scissor();
         }
         let divider_y = flowed_anchor_tab_divider_y(anchor.flow().block, panel, rows.len() as f32 * row_h);
         let divider_y = if anchor.flow().block.is_reversed() { divider_y } else { divider_y - theme.stroke_hairline };
@@ -24048,18 +24091,15 @@ impl ShellState {
     /// every chip inserts at the row's end. The dragged tab's own chip is excluded, exactly as React's
     /// `excludedIds` excludes the dragged subtree.
     #[allow(clippy::too_many_arguments, reason = "the tab row's own geometry, forwarded unchanged")]
-    fn dock_tab_insert_preview(&self, row: &[DockTabNode], atlas: &mut FontAtlas, theme: &Theme, panel: Rect, row_rect: Rect, pointer_x: f32, pointer_y: f32) -> Option<f32> {
+    fn dock_tab_insert_preview(&self, row: &[DockTabNode], atlas: &mut FontAtlas, theme: &Theme, row_rect: Rect, offset: f32, pointer_x: f32, pointer_y: f32) -> Option<f32> {
         if !row_rect.contains(pointer_x, pointer_y) {
             return None;
         }
         let dragged = self.dock_tab_drag.as_ref().map(|(tab_id, _)| tab_id.as_str());
-        let mut x = panel.x + theme.gap_standard;
+        let mut x = row_rect.x - offset;
         for node in row {
             let item = ChromeGroupItem { control_id: node.id.as_str(), icon_id: Some(node.icon_id.as_str()), label: Some(node.label.as_str()), active: false, disabled: false, kind: HitKind::PanelTab };
             let chip_w = retained_panel_chrome_item_width(atlas, theme, &item).unwrap_or(theme.control_height);
-            if x + chip_w > panel.x + panel.w {
-                break;
-            }
             if dragged != Some(node.id.as_str()) && pointer_x >= x && pointer_x < x + chip_w {
                 let fraction = if chip_w > 0.0 { (pointer_x - x) / chip_w } else { 0.5 };
                 return Some(if fraction >= 0.5 { x + chip_w + theme.gap_standard } else { x });
@@ -27618,6 +27658,10 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("settings.tab.driver", true) => "Steuerung",
         ("settings.driver.dirty", false) => "Modified",
         ("settings.driver.dirty", true) => "Geändert",
+        ("settings.driver.default", false) => "Default",
+        ("settings.driver.default", true) => "Standard",
+        ("settings.driver.compact", false) => "Compact",
+        ("settings.driver.compact", true) => "Kompakt",
         ("settings.driver.labels", false) => "Labels",
         ("settings.driver.labels", true) => "Beschriftungen",
         ("settings.driver.labelsOption.full", false) => "Full",
@@ -27736,6 +27780,8 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("chat.disconnected", true) => "Nicht mit einem Agent verbunden — Nachrichten können nicht gesendet werden.",
         ("chat.placeholder", false) => "Tell the agent what to do…",
         ("chat.placeholder", true) => "Sag dem Agent, was zu tun ist…",
+        ("chat.draftLabel", false) => "Message to the agent",
+        ("chat.draftLabel", true) => "Nachricht an den Agent",
         ("chat.send", false) => "Send",
         ("chat.send", true) => "Senden",
         ("common.clear", false) => "Clear",
@@ -28995,6 +29041,7 @@ fn theme_editor_input_item(id: &str, label: &str, value: &str, action: &str, arg
             input_kind: "text".into(),
             value: value.to_string(),
             placeholder: None,
+            accessibility_label: None,
             commit: Some("blur".into()),
             min: None,
             max: None,
@@ -29065,7 +29112,7 @@ impl ShellState {
         let last = visible.end.saturating_sub(*cursor).min(total).max(first);
         *cursor += total;
         let materialized: Vec<_> = rows.into_iter().skip(first).take(last - first).collect();
-        let window = (materialized.len() != total).then_some(UiTreeWindow { total: total as u32, offset: first as u32 });
+        let window = (materialized.len() != total).then_some(UiTreeWindow { row_extent: UiTreeWindowRowExtent::Standard, total: total as u32, offset: first as u32 });
         (materialized, window)
     }
 
@@ -29073,7 +29120,7 @@ impl ShellState {
         *cursor += 1;
         let open = self.theme_section_open(id, false);
         let total = rows.len();
-        let (items, window) = if open { self.theme_window_rows(rows, cursor, visible) } else { (Vec::new(), Some(UiTreeWindow { total: total as u32, offset: 0 })) };
+        let (items, window) = if open { self.theme_window_rows(rows, cursor, visible) } else { (Vec::new(), Some(UiTreeWindow { row_extent: UiTreeWindowRowExtent::Standard, total: total as u32, offset: 0 })) };
         UiTreeSectionNode { id: id.to_string(), label: Some(Label::data(label)), default_open: Some(open), presence: UiPresence::default(), items, window }
     }
 
@@ -29164,7 +29211,7 @@ impl ShellState {
                 let group_open = self.theme_item_open(&section_id);
                 let rows = entries.iter().map(|(key, value)| theme_editor_input_item(&format!("{section_id}.{key}"), key, &value.as_text(), "setThemeMetric", crate::action_args_json!({ "section": section, "key": key }))).collect();
                 let total = entries.len();
-                let (children, window) = if group_open { self.theme_window_rows(rows, cursor, visible) } else { (Vec::new(), Some(UiTreeWindow { total: total as u32, offset: 0 })) };
+                let (children, window) = if group_open { self.theme_window_rows(rows, cursor, visible) } else { (Vec::new(), Some(UiTreeWindow { row_extent: UiTreeWindowRowExtent::Standard, total: total as u32, offset: 0 })) };
                 items.push(UiTreeItemNode { id: section_id, label: Label::data(section), default_open: Some(group_open), items: Some(children), window, ..UiTreeItemNode::base(String::new(), Label::data(String::new())) });
             }
         }
@@ -29200,7 +29247,7 @@ impl ShellState {
                             ));
                         }
                         let total = rows.len();
-                        let (children, window) = if group_open { self.theme_window_rows(rows, cursor, visible) } else { (Vec::new(), Some(UiTreeWindow { total: total as u32, offset: 0 })) };
+                        let (children, window) = if group_open { self.theme_window_rows(rows, cursor, visible) } else { (Vec::new(), Some(UiTreeWindow { row_extent: UiTreeWindowRowExtent::Standard, total: total as u32, offset: 0 })) };
                         groups.push(UiTreeItemNode {
                             id: group_id,
                             label: Label::data(shell_chrome_string(*label_key, is_de)),
@@ -29599,10 +29646,9 @@ impl ShellState {
         }
         let shortcuts = self.shortcut_table();
         with_chrome_control_names(|names| {
-            hits.iter()
+            let mut nodes = hits
+                .iter()
                 .filter_map(|hit| hit.control_id.as_deref().filter(|id| !id.is_empty()).map(|id| (id, hit)))
-                // 🪟️ A retained BODY's own rows already reach the reader through the document
-                // projection; this window announces the chrome around them exactly once.
                 .filter(|(id, _)| !self.retained_hit_windows.contains_key(*id))
                 .take(SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY)
                 .enumerate()
@@ -29643,7 +29689,45 @@ impl ShellState {
                     value_text: ShellPaletteKind::from_input_id(id).map(|kind| self.palette_query(kind).to_string()).or_else(|| self.widget_maps.input_metas.get(id).map(|meta| meta.value.clone())),
                     busy: false,
                 })
-                .collect()
+                .collect::<Vec<_>>();
+            for anchor in PanelAnchor::ALL.into_iter().filter(|anchor| self.anchor_open(*anchor)) {
+                for row in self.anchor_panel_tab_rows(anchor) {
+                    for tab in row {
+                        if nodes.len() >= SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY || nodes.iter().any(|node| node.key == tab.id) {
+                            continue;
+                        }
+                        nodes.push(ui_contract::AccessibilityProjectionNode {
+                            node_id: nodes.len() as u64 + 1,
+                            key: tab.id.clone(),
+                            role: "tab".to_string(),
+                            depth: 0,
+                            label: Some(tab.label.clone()),
+                            description: None,
+                            live: ui_contract::liveness_name(ui_contract::Liveness::Off).to_string(),
+                            shortcut: shell_control_hotkey_badge(&shortcuts, &tab.id),
+                            hidden: false,
+                            disabled: false,
+                            focusable: true,
+                            actionable: true,
+                            focused: self.accessibility_focused_control_id.as_deref() == Some(tab.id.as_str()),
+                            checked: None,
+                            selected: Some(self.anchor_state(anchor).path.iter().any(|id| id == &tab.id)),
+                            expanded: None,
+                            editable: false,
+                            controls: None,
+                            active_descendant: None,
+                            level: None,
+                            rect: None,
+                            value_min: None,
+                            value_max: None,
+                            value_now: None,
+                            value_text: None,
+                            busy: false,
+                        });
+                    }
+                }
+            }
+            nodes
         })
     }
 }

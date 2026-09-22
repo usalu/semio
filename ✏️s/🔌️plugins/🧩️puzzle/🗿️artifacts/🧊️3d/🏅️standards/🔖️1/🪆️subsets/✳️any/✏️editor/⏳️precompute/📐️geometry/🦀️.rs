@@ -1259,7 +1259,6 @@ impl CollisionQueryCursor {
         self.candidates.len()
     }
 
-    #[cfg(test)]
     pub(crate) fn truncated(&self) -> bool {
         self.truncated
     }

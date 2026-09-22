@@ -241,6 +241,106 @@ async fn mutation_inverse_law_panics_when_forward_outcome_is_rejected() {
     assert_mutation_inverse_law(&10i64, &CounterMutation::AddRejectedCounter(AddRejectedCounter {})).await;
 }
 
+//#region 🧊️ColdOperationOwnership
+std::thread_local! {
+    /// 🔢️ How many [`ColdCounterMutation`]s this thread retired explicitly.
+    static COLD_COUNTER_RETIREMENTS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+/// 🧊️ A counter operation with a FAIL-CLOSED drop, standing in for every real technology whose
+/// operation owns a root that cannot be plain-dropped — `neural_engine::Dictionary` (`final
+/// Dictionary ownership must be explicitly retired or owned by a cold boundary`), an `OrderedMap`,
+/// a retirement ladder. Its only legal disposal is [`crate::os_spr::Mutation::retire_cold`].
+#[derive(Clone, Debug, PartialEq)]
+struct ColdCounterMutation {
+    inner: CounterMutation,
+    live: bool,
+}
+
+impl ColdCounterMutation {
+    fn wrap(inner: CounterMutation) -> Self {
+        Self { inner, live: true }
+    }
+
+    fn add(delta: i64) -> Self {
+        Self::wrap(CounterMutation::AddCounter(AddCounter { delta }))
+    }
+}
+
+impl Drop for ColdCounterMutation {
+    fn drop(&mut self) {
+        assert!(!self.live || std::thread::panicking(), "final ColdCounterMutation ownership must be explicitly retired");
+    }
+}
+
+impl protocol::value::ToValue for ColdCounterMutation {
+    fn to_value(&self) -> protocol::value::DslValue {
+        protocol::value::ToValue::to_value(&self.inner)
+    }
+}
+
+impl protocol::value::FromValue for ColdCounterMutation {
+    fn from_value(value: protocol::value::DslValue) -> Result<Self, protocol::value::ValueError> {
+        <CounterMutation as protocol::value::FromValue>::from_value(value).map(Self::wrap)
+    }
+}
+
+impl crate::os_spr::Mutation<i64> for ColdCounterMutation {
+    type Diff = CounterDiff;
+    const DESCRIPTORS: &'static [crate::os_spr::MutationLeafDescriptor] = <CounterMutation as crate::os_spr::Mutation<i64>>::DESCRIPTORS;
+
+    fn descriptor(&self) -> &'static crate::os_spr::MutationLeafDescriptor {
+        crate::os_spr::Mutation::<i64>::descriptor(&self.inner)
+    }
+
+    fn diff(&self, base: &i64) -> crate::os_spr::MutationOutcome<Self::Diff> {
+        crate::os_spr::Mutation::<i64>::diff(&self.inner, base)
+    }
+
+    fn inverse(&self, base: &i64) -> Vec<Self> {
+        crate::os_spr::Mutation::<i64>::inverse(&self.inner, base).into_iter().map(Self::wrap).collect()
+    }
+
+    fn retire_cold(mut self) {
+        self.live = false;
+        COLD_COUNTER_RETIREMENTS.with(|count| count.set(count.get() + 1));
+    }
+}
+
+/// ✅️ LAW: [`assert_mutation_inverse_law`] itself owns everything it MINTS. `mutation.inverse(base)`
+/// hands the law a fresh `Vec<Op>` and every step raises an outcome that owns a diff; both are
+/// routed through `Mutation::retire_cold`/`MutationDiff::retire_cold` rather than dropped, so a
+/// technology whose operation carries a fail-closed root can use the plain (non-`_cold`) law
+/// whenever only its PROJECTION is plain-droppable. Regression for the bucket that aborted every
+/// imperative/sequence `*_inverse_law` in ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP.
+#[semio_framework_async_macros::async_test]
+async fn mutation_inverse_law_retires_every_operation_it_mints() {
+    COLD_COUNTER_RETIREMENTS.with(|count| count.set(0));
+    let operation = ColdCounterMutation::add(5);
+    let minted = crate::os_spr::Mutation::<i64>::inverse(&operation, &10i64);
+    let minted_count = minted.len();
+    assert!(minted_count > 0, "the fixture operation must mint at least one inverse for this law to mean anything");
+    for undo in minted {
+        crate::os_spr::Mutation::<i64>::retire_cold(undo);
+    }
+    COLD_COUNTER_RETIREMENTS.with(|count| count.set(0));
+    assert_mutation_inverse_law(&10i64, &operation).await;
+    assert_eq!(COLD_COUNTER_RETIREMENTS.with(std::cell::Cell::get), minted_count, "the inverse law must retire every inverse operation it minted, never drop it");
+    crate::os_spr::Mutation::<i64>::retire_cold(operation);
+}
+
+/// ✅️ LAW: the `_cold` twin retires the minted inverses too — the same seam, with the projection
+/// and the diffs additionally routed through the caller's closures.
+#[semio_framework_async_macros::async_test]
+async fn mutation_inverse_law_cold_retires_every_operation_it_mints() {
+    COLD_COUNTER_RETIREMENTS.with(|count| count.set(0));
+    let operation = ColdCounterMutation::add(5);
+    assert_mutation_inverse_law_cold(&10i64, &operation, drop, drop).await;
+    assert_eq!(COLD_COUNTER_RETIREMENTS.with(std::cell::Cell::get), 1, "the cold inverse law must retire the inverse operation it minted");
+    crate::os_spr::Mutation::<i64>::retire_cold(operation);
+}
+//#endregion 🧊️ColdOperationOwnership
+
 #[semio_framework_async_macros::async_test]
 async fn diff_algebra_between_law_holds_for_add() {
     assert_diff_algebra_between_law::<i64, CounterDiff>(&10, &17).await;

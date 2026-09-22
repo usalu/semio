@@ -20,18 +20,29 @@
       "menu": {
         "x": 8,
         "y": 8,
-        "width": 120,
+        "width": 128,
         "height": 50
       },
       "scroll": 0,
       "firstRow": 0,
-      "lastRowExclusive": 2
+      "lastRowExclusive": 1
+    },
+    "wheel": {
+      "point": { "x": 20, "y": 33 },
+      "delta": 34,
+      "expectedScroll": 34,
+      "expectedFirstRow": 1,
+      "rowHeight": 25.6,
+      "viewportPadding": 3.2,
+      "expectedMaximum": 515.2,
+      "unrelatedScroll": 0,
+      "commandCount": 0
     },
     "downPress": {
       "direction": 1,
-      "expectedScroll": 34,
-      "expectedFirstRow": 1,
-      "expectedLastRowExclusive": 3
+      "expectedScroll": 24,
+      "expectedFirstRow": 0,
+      "expectedLastRowExclusive": 1
     }
   },
   "image": {

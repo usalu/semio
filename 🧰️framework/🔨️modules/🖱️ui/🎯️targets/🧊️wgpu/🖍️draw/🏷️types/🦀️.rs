@@ -120,6 +120,23 @@ impl ScissorRect {
         let y1 = (self.y + self.h).min(other.y + other.h);
         Self { x: x0, y: y0, w: x1.saturating_sub(x0), h: y1.saturating_sub(y0) }
     }
+
+    fn subtract(&self, other: &Self) -> [Option<Self>; 4] {
+        let overlap = self.intersect(other);
+        if overlap.w == 0 || overlap.h == 0 {
+            return [Some(*self), None, None, None];
+        }
+        let right = self.x + self.w;
+        let bottom = self.y + self.h;
+        let overlap_right = overlap.x + overlap.w;
+        let overlap_bottom = overlap.y + overlap.h;
+        [
+            (self.y < overlap.y).then_some(Self { x: self.x, y: self.y, w: self.w, h: overlap.y - self.y }),
+            (overlap_bottom < bottom).then_some(Self { x: self.x, y: overlap_bottom, w: self.w, h: bottom - overlap_bottom }),
+            (self.x < overlap.x).then_some(Self { x: self.x, y: overlap.y, w: overlap.x - self.x, h: overlap.h }),
+            (overlap_right < right).then_some(Self { x: overlap_right, y: overlap.y, w: right - overlap_right, h: overlap.h }),
+        ]
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -134,11 +151,28 @@ impl ClipRegion {
         Self { scissors }
     }
 
-    fn pieces_overlap(&self) -> bool {
-        (0..self.scissors.len()).any(|left| {
-            (left + 1..self.scissors.len()).any(|right| {
-                let overlap = self.scissors[left].intersect(&self.scissors[right]);
-                overlap.w > 0 && overlap.h > 0
+    fn from_disjoint_rects(rects: &[crate::wgpu::geometry::Rect], screen_h: f32) -> Self {
+        let mut scissors = Vec::new();
+        for rect in rects {
+            let candidate = ScissorRect::from_rect(*rect, screen_h);
+            if candidate.w == 0 || candidate.h == 0 {
+                continue;
+            }
+            let mut pieces = vec![candidate];
+            for prior in &scissors {
+                pieces = pieces.into_iter().flat_map(|piece| piece.subtract(prior).into_iter().flatten()).collect();
+            }
+            scissors.extend(pieces);
+        }
+        Self { scissors }
+    }
+
+    fn source_pieces_overlap(rects: &[crate::wgpu::geometry::Rect]) -> bool {
+        (0..rects.len()).any(|left| {
+            (left + 1..rects.len()).any(|right| {
+                let left = rects[left];
+                let right = rects[right];
+                left.x.max(right.x) < (left.x + left.w.max(0.0)).min(right.x + right.w.max(0.0)) && left.y.max(right.y) < (left.y + left.h.max(0.0)).min(right.y + right.h.max(0.0))
             })
         })
     }
@@ -903,20 +937,20 @@ impl DrawList {
 
     /// 🪟️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
     pub fn begin_silhouette_clip(&mut self, rects: &[crate::wgpu::geometry::Rect]) {
-        let Some(items) = rects.len().checked_add(2) else {
+        if ClipRegion::source_pieces_overlap(rects) {
+            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
+            return;
+        }
+        let candidate = ClipRegion::from_disjoint_rects(rects, self.screen_h);
+        let Some(items) = candidate.scissors.len().checked_add(2) else {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };
-        let Some(bytes) = rects.len().checked_mul(size_of::<ScissorRect>()).and_then(|bytes| bytes.checked_add(size_of::<DrawLayer>())) else {
+        let Some(bytes) = candidate.scissors.len().checked_mul(size_of::<ScissorRect>()).and_then(|bytes| bytes.checked_add(size_of::<DrawLayer>())) else {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         };
         if !self.claim_retained_output(items, bytes) {
-            return;
-        }
-        let candidate = ClipRegion::from_rects(rects, self.screen_h);
-        if candidate.pieces_overlap() {
-            let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
         }
         let mut clip = candidate;

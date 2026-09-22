@@ -68,6 +68,24 @@ fn admit_prepared_gpu_opportunity(run: u32, elapsed_us: u64) -> Result<u32, u32>
     }
 }
 
+/// ⌛️ Times every successful advancement, including metadata and phase-only transitions.
+fn measure_prepared_gpu_opportunity(
+    cursor: &mut PreparedGpuPresentCursor,
+    command: Option<(u32, Option<DrawMeasureCursor>)>,
+    mut now: impl FnMut() -> Option<u64>,
+    advance: impl FnOnce(&mut PreparedGpuPresentCursor) -> Result<bool, String>,
+) -> Result<bool, String> {
+    let started = now().ok_or_else(|| "GPU opportunity requires a real monotonic clock".to_string())?;
+    let opportunity = cursor.phase;
+    let before = cursor.progress();
+    let complete = advance(cursor)?;
+    let elapsed = now().and_then(|now| now.checked_sub(started)).ok_or_else(|| "prepared GPU opportunity lost its monotonic clock".to_string())?;
+    cursor.overrun_run = admit_prepared_gpu_opportunity(cursor.overrun_run, elapsed).map_err(|run| {
+        format!("prepared GPU opportunity exceeded the two millisecond ceiling for {run} consecutive opportunities: {opportunity:?} took {elapsed} us; command_kind={:?} draw={:?} progress={before:?}->{:?}", command.map(|command| command.0), command.and_then(|command| command.1), cursor.progress())
+    })?;
+    Ok(complete)
+}
+
 const PREPARED_GPU_ABANDONMENT_SLOTS: usize = 64;
 static PREPARED_GPU_ABANDONMENT_STATE: [AtomicU8; PREPARED_GPU_ABANDONMENT_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_GPU_ABANDONMENT_SLOTS];
 static PREPARED_GPU_ABANDONMENT_OWNER: [AtomicPtr<PreparedGpuPresentCursor>; PREPARED_GPU_ABANDONMENT_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_GPU_ABANDONMENT_SLOTS];
@@ -603,14 +621,25 @@ impl GpuContext {
     /// a browser `OffscreenCanvas`: `ClearScene` 2 601 µs against the 2 000 µs ceiling), and failing
     /// that one sample quarantined the whole surface before it had ever presented
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Only a RUN of consecutive over-ceiling
-    /// opportunities — a cursor that is genuinely not converging — is terminal; any admitted
-    /// opportunity clears the run.
+    /// opportunities is terminal; any under-ceiling opportunity clears the run.
     pub fn prepared_present_step(&mut self, packet: &PreparedRenderPacket, cursor: &mut PreparedGpuPresentCursor) -> Result<bool, String> {
         if !cursor.matches(packet) || cursor.phase == PreparedGpuPresentPhase::Closing {
             return Err("prepared GPU cursor was stale, uncredited, or closing".to_string());
         }
-        let started = semio_framework_job::default_now_us().ok_or_else(|| "GPU opportunity requires a real monotonic clock".to_string())?;
-        let opportunity = cursor.phase;
+        if cursor.phase == PreparedGpuPresentPhase::Complete {
+            return Ok(true);
+        }
+        let command = packet.command_pages().get(cursor.command).map(|command| (command.kind().code(), command.draw_cursor()));
+        measure_prepared_gpu_opportunity(cursor, command, semio_framework_job::default_now_us, |cursor| {
+            let complete = self.advance_prepared_present(packet, cursor)?;
+            if !cursor.matches(packet) {
+                return Err("prepared GPU cursor became stale after a platform call".to_string());
+            }
+            Ok(complete)
+        })
+    }
+
+    fn advance_prepared_present(&mut self, packet: &PreparedRenderPacket, cursor: &mut PreparedGpuPresentCursor) -> Result<bool, String> {
         match cursor.phase {
             PreparedGpuPresentPhase::EnsureTarget => {
                 self.ensure_prepared_targets();
@@ -733,16 +762,6 @@ impl GpuContext {
             }
             PreparedGpuPresentPhase::Complete => return Ok(true),
             PreparedGpuPresentPhase::Closing => return Err("prepared GPU cursor was closing".to_string()),
-        }
-        if !cursor.matches(packet) {
-            return Err("prepared GPU cursor became stale after a platform call".to_string());
-        }
-        let Some(elapsed) = semio_framework_job::default_now_us().and_then(|now| now.checked_sub(started)) else {
-            return Err("prepared GPU opportunity lost its monotonic clock".to_string());
-        };
-        match admit_prepared_gpu_opportunity(cursor.overrun_run, elapsed) {
-            Ok(run) => cursor.overrun_run = run,
-            Err(run) => return Err(format!("prepared GPU opportunity exceeded the two millisecond ceiling for {run} consecutive opportunities: {opportunity:?} took {elapsed} us")),
         }
         Ok(cursor.phase == PreparedGpuPresentPhase::Complete)
     }

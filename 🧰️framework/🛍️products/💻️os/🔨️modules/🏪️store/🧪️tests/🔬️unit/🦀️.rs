@@ -1274,13 +1274,32 @@ fn envelope_field_registry_capacity_and_contention_return_the_exact_decoder_befo
     assert!(registry.terminal_is_empty());
 }
 
+/// 🎟️ A lease is returned EXACTLY ONCE, on either of the registry's two return paths, and the
+/// path a return takes is decided by whether its root is still aliased outside the registry.
+///
+/// An aliased root has nothing for the retirement pump to dispose, so `try_release_aliased`
+/// reclaims its slot on the returning thread and the pump never sees it. A sole-owner root is the
+/// last `Arc` in the process, so it is counted into `returned` and handed to the pump, which
+/// retires its domain tree in bounded steps. Both paths must refuse a second return of the same
+/// generation: a lease that answered twice once leaked a `returned` credit against a slot that had
+/// already been freed and reissued.
 #[test]
 fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
     let registry = Arc::new(SnapshotReadLeaseRegistry::new());
-    let owner = Arc::new(11u32);
-    let mut lease = registry.try_issue(owner.clone()).expect("exact lease");
+    let aliased_root = Arc::new(11u32);
+    let mut aliased = registry.try_issue(aliased_root.clone()).expect("exact aliased lease");
+    assert!(aliased.return_now());
+    assert!(!aliased.return_now(), "the same generation cannot be returned twice on the aliased path");
+    assert_eq!(registry.returned.load(std::sync::atomic::Ordering::Acquire), 0, "an aliased root is reclaimed on the returning thread, not charged to the pump");
+    assert_eq!(Arc::strong_count(&aliased_root), 1, "the aliased slot released its own owner alias in the same call");
+    assert!(registry.try_take_one_returned::<u32>().expect("one fixed return probe").is_none(), "the pump has nothing to reclaim for an aliased return");
+    drop(aliased);
+    drop(aliased_root);
+    assert!(registry.terminal_is_empty());
+
+    let mut lease = registry.try_issue(Arc::new(11u32)).expect("exact sole-owner lease");
     assert!(lease.return_now());
-    assert!(!lease.return_now(), "the same generation cannot be returned twice");
+    assert!(!lease.return_now(), "the same generation cannot be returned twice on the pump path");
     assert_eq!(registry.returned.load(std::sync::atomic::Ordering::Acquire), 1);
     let mut reclaimed = None;
     for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY {
@@ -1291,8 +1310,8 @@ fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
     }
     assert_eq!(reclaimed.as_deref(), Some(&11));
     assert_eq!(registry.returned.load(std::sync::atomic::Ordering::Acquire), 0);
+    assert!(registry.try_take_one_returned::<u32>().expect("one fixed return probe").is_none(), "a reclaimed generation is never handed out a second time");
     drop(reclaimed);
-    drop(owner);
     drop(lease);
     assert!(registry.terminal_is_empty());
 }
@@ -2475,9 +2494,7 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
         assert_eq!(publication.progress().completed_bytes, 0);
         assert!(matches!(member.advance_one_item_publication(&mut *publication, ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 }), Ok(ArtifactStoreOneItemAdvance::Blocked)));
         let mut published = false;
-        let mut turns = 0usize;
         for _ in 0..byte_count + 32 {
-            turns += 1;
             let before = publication.progress();
             match member.advance_one_item_publication(&mut *publication, grant).expect("bounded retained member unit") {
                 ArtifactStoreOneItemAdvance::Published(receipt) => {
@@ -2489,7 +2506,6 @@ async fn retained_member_publication_preserves_order_group_identity_and_exact_ma
                 step => panic!("member publication did not progress: {step:?}"),
             }
         }
-        eprintln!("[KN2PROBE] row {sequence} bytes={byte_count} turns={turns} published={published} phase={:?} progress={:?}", publication.phase(), publication.progress());
         assert!(published);
         assert!(publication.retry());
         assert!(matches!(member.advance_one_item_publication(&mut *publication, grant), Ok(ArtifactStoreOneItemAdvance::AwaitingAck(_))));
@@ -2599,7 +2615,6 @@ async fn retained_member_group_preparation_reserves_real_history_without_partial
         let mut reserved = false;
         for _ in 0..32 {
             let step = members[index].prepare_one_item_publication(&mut *publications[index], grant).expect("one group preparation or reservation turn");
-            eprintln!("[KN2PROBE] group member {index} phase={:?} step={:?}", publications[index].phase(), step);
             for other in 0..members.len() {
                 assert_eq!(members[other].one_item_publication_identity(), before[other]);
                 assert!(members[other].envelope().vcs.edits.is_empty());
@@ -2953,38 +2968,13 @@ fn close_durable_publication(publication: &mut ArtifactStoreBatchPublication<Dem
 }
 
 fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
-    let mut last = SnapshotRetirementStep::Complete;
-    let mut histogram: std::collections::BTreeMap<String, (usize, usize)> = std::collections::BTreeMap::new();
-    for turn in 0..4_096 {
-        let phase = store.close_owned_phase_witness().split('/').next().unwrap_or("?").to_string();
+    for _ in 0..4_096 {
         let step = SpaceMember::close_owned_step(store, 1, 512).expect("demo artifact store closes under its bounded owner grant");
-        let entry = histogram.entry(phase).or_default();
-        entry.0 += 1;
-        if let SnapshotRetirementStep::Pending { released_bytes, .. } = step {
-            entry.1 += released_bytes;
-        }
         if step == SnapshotRetirementStep::Complete {
             assert!(SpaceMember::close_owned_terminal_is_empty(store));
-            eprintln!("[KN2PROBE] close_demo_artifact_store id={} turns={turn}", store.envelope.id);
             return;
         }
-        last = step;
     }
-    eprintln!("[KN2PROBE] histogram {histogram:?}");
-    eprintln!("[KN2PROBE] close_demo_artifact_store STUCK id={} last={last:?} edits={} applied={} witness={}", store.envelope.id, store.envelope.vcs.edits.len(), store.applied_edit_ids().len(), store.close_owned_phase_witness());
-    let mut extra = 0usize;
-    let mut bytes = 0usize;
-    for _ in 0..4_000_000 {
-        extra += 1;
-        let step = SpaceMember::close_owned_step(store, 1, 512).expect("demo artifact store closes under its bounded owner grant");
-        if let SnapshotRetirementStep::Pending { released_bytes, .. } = step {
-            bytes += released_bytes;
-        }
-        if step == SnapshotRetirementStep::Complete {
-            break;
-        }
-    }
-    eprintln!("[KN2PROBE] close_demo_artifact_store EXTRA turns={extra} bytes={bytes} witness={}", store.close_owned_phase_witness());
     panic!("demo artifact store did not reach its exact terminal-empty witness");
 }
 

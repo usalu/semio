@@ -178,11 +178,11 @@ async fn a_window_request_materialises_exactly_its_own_range() {
     let document = oversized();
     let tree = build(&document, &viewing(48, vec![request(LAYOUT_DOCUMENT_SECTIONS[3], None, 100, 12), request(LAYOUT_DOCUMENT_SECTIONS[8], Some(true), 40, 6)]));
     let frames = section_node(&tree, LAYOUT_DOCUMENT_SECTIONS[3]);
-    assert_eq!(window_or_empty(frames), Some(TreeWindow { total: 300, offset: 100 }));
+    assert_eq!(window_or_empty(frames), Some(TreeWindow { row_extent: Default::default(), total: 300, offset: 100 }));
     let expected: Vec<String> = frame_ids(&document)[100..112].to_vec();
     assert_eq!(row_keys(frames), expected.iter().map(String::as_str).collect::<Vec<_>>(), "exactly frames [100, 112) keyed by their raw ids");
     let styles = section_node(&tree, LAYOUT_DOCUMENT_SECTIONS[8]);
-    assert_eq!(window_or_empty(styles), Some(TreeWindow { total: section_totals(&document)[8] as u32, offset: 40 }));
+    assert_eq!(window_or_empty(styles), Some(TreeWindow { row_extent: Default::default(), total: section_totals(&document)[8] as u32, offset: 40 }));
     assert_eq!(styles.children.len(), 6, "an authored-closed section opens on the host's word and honours its window");
 }
 

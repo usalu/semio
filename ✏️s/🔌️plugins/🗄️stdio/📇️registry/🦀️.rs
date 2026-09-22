@@ -262,7 +262,7 @@ pub fn native_codec_artifact_kinds() -> Vec<semio_framework_plugin::ArtifactKind
 }
 
 #[cfg(feature = "full-artifact-catalog")]
-fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt]) -> Result<(), PluginAssemblyError> {
+fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt], factories: &[NativeCodecFactory]) -> Result<(), PluginAssemblyError> {
     let provider: NativeOpenableProviderSourceV1 = pack::from_json_str(include_str!("📜️native-codec-factories.json")).map_err(|error| failure(format!("cannot parse native codec receipt projection: {error}")))?;
     if provider.schema != "semio.stdio.native-openable-catalog-provider/v1" || provider.provider_id != "stdio/native-codecs/v1" || provider.plugin_id != "stdio" || provider.package_id != "semio:stdio" || provider.receipts.len() != receipts.len() {
         return Err(failure("native codec receipt projection identity or closure is invalid"));
@@ -270,7 +270,7 @@ fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt]) -
     let mut ordered = receipts.iter().collect::<Vec<_>>();
     ordered.sort_by(|left, right| left.factory_id.cmp(&right.factory_id));
     for (projected, receipt) in provider.receipts.iter().zip(ordered) {
-        let factory = native_codec_factories().into_iter().find(|factory| factory.id == receipt.factory_id).ok_or_else(|| failure("native codec projection has no exact verified private factory"))?;
+        let factory = factories.iter().find(|factory| factory.id == receipt.factory_id).ok_or_else(|| failure("native codec projection has no exact verified private factory"))?;
         let artifact = factory.artifact;
         if projected.artifact != artifact
             || projected.factory_id != receipt.factory_id
@@ -409,7 +409,7 @@ impl NativeCatalogProjectionBudget {
 }
 
 #[cfg(feature = "full-artifact-catalog")]
-fn preflight_native_catalog_projection(assemblies: &[ArtifactAssembly], receipts: &[NativeCodecFactoryReceipt]) -> Result<NativeCatalogProjectionBudget, PluginAssemblyError> {
+fn preflight_native_catalog_projection(assemblies: &[ArtifactAssembly], receipts: &[NativeCodecFactoryReceipt], factories: &[NativeCodecFactory]) -> Result<NativeCatalogProjectionBudget, PluginAssemblyError> {
     if assemblies.len() != 36 || receipts.len() != 26 {
         return Err(failure("native catalog projection requires 36 definitions and 26 codecs"));
     }
@@ -453,7 +453,7 @@ fn preflight_native_catalog_projection(assemblies: &[ArtifactAssembly], receipts
     }
     budget.array(receipts.len())?;
     for receipt in receipts {
-        let factory = native_codec_factories().into_iter().find(|factory| factory.id == receipt.factory_id).ok_or_else(|| failure("native catalog codec has no private artifact owner"))?;
+        let factory = factories.iter().find(|factory| factory.id == receipt.factory_id).ok_or_else(|| failure("native catalog codec has no private artifact owner"))?;
         budget.object(&["factoryId", "definitionIdentity", "descriptorCodecId", "runtimeCapabilityId", "artifactKind", "schema", "extension", "packSchemaSha256"])?;
         budget.string(&[&receipt.factory_id], 16384)?;
         budget.string(&["s.stdio.", factory.artifact], 4096)?;
@@ -476,8 +476,9 @@ fn native_artifact_catalog(assemblies: &[ArtifactAssembly]) -> Result<NativeArti
     if assemblies.len() != 36 {
         return Err(failure("native catalog commitment requires all 36 artifact definitions"));
     }
-    let receipts = native_codec_factory_receipts()?;
-    preflight_native_catalog_projection(assemblies, &receipts)?;
+    let receipts = native_codec_factory_receipts_for(assemblies)?;
+    let factories = native_codec_factories();
+    preflight_native_catalog_projection(assemblies, &receipts, &factories)?;
     let mut definitions = Vec::with_capacity(36);
     for assembly in assemblies {
         let definition = assembly.definition();
@@ -507,7 +508,7 @@ fn native_artifact_catalog(assemblies: &[ArtifactAssembly]) -> Result<NativeArti
     }
     let mut codecs = Vec::with_capacity(26);
     for receipt in receipts {
-        let factory = native_codec_factories().into_iter().find(|factory| factory.id == receipt.factory_id).ok_or_else(|| failure("native catalog codec has no private artifact owner"))?;
+        let factory = factories.iter().find(|factory| factory.id == receipt.factory_id).ok_or_else(|| failure("native catalog codec has no private artifact owner"))?;
         let definition_identity = format!("s.stdio.{}", factory.artifact);
         if !identities.contains(definition_identity.as_str()) {
             return Err(failure("native catalog codec omits its declared definition owner"));
@@ -637,12 +638,23 @@ pub fn validate_native_codec_artifact_kinds(kinds: &[semio_framework_plugin::Art
 /// 🧷 Emits receipts only when schema data explicitly authorizes the exact native factory.
 #[cfg(feature = "full-artifact-catalog")]
 pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>, PluginAssemblyError> {
+    native_codec_factory_receipts_for(&artifact_assemblies()?)
+}
+
+/// 🧷 The same receipts, derived from assemblies the caller ALREADY owns.
+///
+/// The only thing the assemblies are read for here is which artifacts carry a runtime declaration,
+/// and `native_artifact_catalog` is handed the complete 36-assembly slice by `plugin()`. Building a
+/// second, identical set just to answer that question re-parsed, re-validated and re-BUILT every
+/// definition a second time — the single largest avoidable cost of the guest's `describe()`.
+#[cfg(feature = "full-artifact-catalog")]
+fn native_codec_factory_receipts_for(assemblies: &[ArtifactAssembly]) -> Result<Vec<NativeCodecFactoryReceipt>, PluginAssemblyError> {
     let contributions = selected_contributions();
     validate_catalog(&contributions)?;
-    let runtime_artifacts = artifact_assemblies()?
-        .into_iter()
+    let runtime_artifacts = assemblies
+        .iter()
         .filter_map(|assembly| match assembly {
-            ArtifactAssembly::Runtime(declaration) => declaration.definition().identity().as_str().strip_prefix("s.stdio.").map(str::to_owned),
+            ArtifactAssembly::Runtime(declaration) => declaration.definition().identity().as_str().strip_prefix("s.stdio."),
             ArtifactAssembly::Definition(_) => None,
         })
         .collect::<BTreeSet<_>>();
@@ -667,7 +679,7 @@ pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>,
     if receipts.len() != 26 || factories.len() != 26 || factory_ids.len() != 26 || descriptor_ids.len() != 26 || receipt_keys.len() != 26 {
         return Err(failure("native codec receipts and selected artifact factories are not a complete bijection"));
     }
-    validate_native_openable_projection(&receipts)?;
+    validate_native_openable_projection(&receipts, &factories)?;
     Ok(receipts)
 }
 //#endregion NativeCodecFactoryReceipts

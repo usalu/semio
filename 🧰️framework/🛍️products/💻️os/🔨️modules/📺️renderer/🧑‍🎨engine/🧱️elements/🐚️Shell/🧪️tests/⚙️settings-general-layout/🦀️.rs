@@ -61,53 +61,6 @@ fn retained_control_state(shell: &ShellState, surface: &str, control_id: &str) -
     "absent".into()
 }
 
-fn retained_has_record_label(shell: &ShellState, surface: &str, expected: &str) -> bool {
-    let read = shell.panel_documents.get(surface).expect("mounted localized document").try_read().expect("localized document remains readable");
-    (0..read.len()).any(|ordinal| {
-        let Some(record) = read.node_at(ordinal) else { return false };
-        matches!(&record.component, ui_contract::Component::Container(container) if container.label.as_ref().is_some_and(|label| label.0.as_str() == expected))
-            || matches!(&record.component, ui_contract::Component::TreeSection(section) if section.label.as_ref().is_some_and(|label| label.0.as_str() == expected))
-    })
-}
-
-fn dock_tab_label<'a>(shell: &'a ShellState, surface: &str) -> &'a str {
-    let (anchor, path) = shell.dock_tabs.locate(surface).expect("localized dock tab remains mounted");
-    shell.dock_tabs.node_at(anchor, &path).expect("localized dock tab path remains valid").label.as_str()
-}
-
-fn retained_header_identity(shell: &ShellState, surface: &str) -> (u64, ui_contract::UiRevision) {
-    let header = shell.panel_documents.get(surface).expect("mounted localized document").header().expect("localized document header");
-    (header.generation, header.revision)
-}
-
-fn dock_roster(shell: &ShellState) -> Vec<(String, String)> {
-    fn collect(nodes: &[DockTabNode], roster: &mut Vec<(String, String)>) {
-        for node in nodes {
-            roster.push((node.id.clone(), node.label.clone()));
-            collect(&node.children, roster);
-        }
-    }
-    let mut roster = Vec::new();
-    for anchor in PanelAnchor::ALL {
-        collect(shell.dock_tabs.tabs(anchor), &mut roster);
-    }
-    roster
-}
-
-fn mount_localized_fixture_documents(shell: &mut ShellState, contract: &Value) -> Vec<String> {
-    shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::default() });
-    shell.sync_dock_tabs();
-    let mounted = contract["mountedSurfaceIds"].as_array().unwrap().iter().map(|value| value.as_str().unwrap().to_string()).collect::<Vec<_>>();
-    let roster = dock_roster(shell);
-    let missing = mounted.iter().filter(|surface| !roster.iter().any(|(id, _)| id == *surface)).collect::<Vec<_>>();
-    assert!(missing.is_empty(), "the real test session must mount every localized fixture leaf: missing={missing:?} roster={roster:?}");
-    for surface in &mounted {
-        let document = shell.publish_shell_panel_document(surface).expect("localized panel publication").expect("fixture panel owns a retained document");
-        shell.panel_documents.insert(surface.clone(), document);
-    }
-    mounted
-}
-
 #[test]
 fn general_projection_is_the_react_tree_with_inline_controls() {
     let shell = ShellState::new(Vec::new(), String::new());
@@ -498,16 +451,16 @@ fn host_preference_dispatch_republishes_general_without_a_guest_refresh() {
     let fixture = fixture();
     let contract = &fixture["retainedPreferencePublication"];
     let surface = contract["surfaceId"].as_str().unwrap();
-    assert!(!contract["requiresGuestRefresh"].as_bool().unwrap());
     let mut shell = ShellState::new(Vec::new(), String::new());
     shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::default() });
     shell.chrome_present.maintenance.load_requested = false;
     let initial = shell.publish_shell_panel_document(surface).expect("initial General publication").expect("General owns a retained document");
     shell.panel_documents.insert(surface.to_string(), initial);
 
-    for vector in contract["cases"].as_array().unwrap() {
+    for vector in contract["cases"].as_array().unwrap().iter().filter(|vector| vector["requiresGuestRefresh"].as_bool() == Some(false)) {
         let action = vector["action"].as_str().unwrap();
         let publication_lane = vector["publicationLane"].as_str().unwrap();
+        assert_eq!(publication_lane, "dispatch", "host-only preferences publish in dispatch");
         let control_id = vector["controlId"].as_str().unwrap();
         let initial_value = vector["initialValue"].as_str().unwrap();
         let next_value = vector["nextValue"].as_str().unwrap();
@@ -517,14 +470,7 @@ fn host_preference_dispatch_republishes_general_without_a_guest_refresh() {
         semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: crate::action_args_json!({ "value": next_value }) })).expect("host preference dispatch");
 
         let after_dispatch = shell.panel_documents.get(surface).expect("dispatch keeps General published").header().expect("General header after dispatch");
-        if publication_lane == "maintenance" {
-            assert_eq!(after_dispatch, before, "{action} keeps the exact readable owner until bounded maintenance");
-            let cursor = shell.chrome_present.maintenance.locale_refresh.as_ref().expect("locale dispatch arms mounted-owner maintenance");
-            assert_eq!(cursor.pending.front().map(String::as_str), Some(surface));
-            shell.advance_chrome_maintenance_step();
-        } else {
-            assert!(after_dispatch.revision != before.revision && after_dispatch.generation > before.generation, "{action} republishes in dispatch");
-        }
+        assert!(after_dispatch.revision != before.revision && after_dispatch.generation > before.generation, "{action} republishes in dispatch");
         let after = shell.panel_documents.get(surface).expect("preference keeps General published").header().expect("updated General header");
         assert!(after.revision != before.revision && after.generation > before.generation, "{action} publishes through its declared lane");
         assert_eq!(retained_select_value(&shell, surface, control_id), next_value, "{action} publishes the accepted value without guest refresh");
@@ -593,54 +539,11 @@ fn general_republication_refusal_preserves_the_exact_readable_owner_and_retries(
 }
 
 #[test]
-fn locale_refresh_republishes_one_exact_mounted_shell_owner_per_maintenance_step() {
-    let contract = locale_refresh_fixture();
-    assert_eq!(contract["maxPanelsPerStep"].as_u64(), Some(1));
-    assert_eq!(contract["requiresGuestRefresh"].as_bool(), Some(false));
-    let mut shell = ShellState::new(Vec::new(), String::new());
-    shell.chrome_present.maintenance.load_requested = false;
-    shell.locale_id = contract["initialLocale"].as_str().unwrap().into();
-    let mounted = mount_localized_fixture_documents(&mut shell, &contract);
-    let unmounted = contract["unmountedSurfaceIds"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>();
-    let initial_headers = mounted.iter().map(|surface| (surface.clone(), retained_header_identity(&shell, surface))).collect::<HashMap<_, _>>();
-
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setLocale".into(), args: crate::action_args_json!({ "value": contract["nextLocale"].as_str().unwrap() }) }))
-        .expect("locale host mutation arms retained refresh");
-
-    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_GENERAL_TAB_ID), "Allgemein");
-    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_THEME_TAB_ID), "Thema");
-    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID), "Tastenkürzel");
-
-    let cursor = shell.chrome_present.maintenance.locale_refresh.as_ref().expect("mounted localized roster cursor");
-    assert_eq!(cursor.locale_id, contract["nextLocale"].as_str().unwrap());
-    assert_eq!(cursor.pending.iter().cloned().collect::<Vec<_>>(), mounted, "the cursor snapshots the exact mounted shell-owned inventory");
-    assert!(unmounted.iter().all(|surface| !shell.panel_documents.contains_key(*surface)), "locale refresh never creates an unmounted leaf");
-    assert!(mounted.iter().all(|surface| retained_header_identity(&shell, surface) == initial_headers[surface]), "dispatch itself performs no unbounded publication loop");
-
-    for (index, surface) in mounted.iter().enumerate() {
-        shell.advance_chrome_maintenance_step();
-        for (candidate_index, candidate) in mounted.iter().enumerate() {
-            let current = retained_header_identity(&shell, candidate);
-            if candidate_index <= index {
-                assert!(current.0 > initial_headers[candidate].0 && current.1 != initial_headers[candidate].1, "step {index} has refreshed {candidate}");
-            } else {
-                assert_eq!(current, initial_headers[candidate], "step {index} leaves later owner {candidate} untouched");
-            }
-        }
-        assert!(retained_header_identity(&shell, surface).0 > initial_headers[surface].0);
-        assert!(shell.closing_documents.terminal_is_empty(), "each replaced locale owner retires before the next step");
-    }
-    assert!(shell.chrome_present.maintenance.locale_refresh.is_none());
-    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "Allgemein"));
-    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_THEME_TAB_ID, "Design"));
-    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, "Tastenkürzel"));
-    assert!(shell.owed_refresh_scope.asks_for_nothing(), "host localization never requests a guest refresh");
-}
-
-#[test]
 fn locale_and_terminology_changes_require_one_full_guest_refresh_and_settle() {
     let contract = locale_refresh_fixture();
     assert_eq!(contract["requiresGuestRefresh"].as_bool(), Some(true));
+    assert_eq!(contract["refreshScope"].as_str(), Some("full"));
+    assert_eq!(contract["settleRequired"].as_bool(), Some(true));
     for (action, value) in [("setLocale", contract["nextLocale"].as_str().unwrap()), ("setTerminology", "de")] {
         let mut shell = ShellState::new(Vec::new(), String::new());
         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::default() });
@@ -649,43 +552,6 @@ fn locale_and_terminology_changes_require_one_full_guest_refresh_and_settle() {
             .expect("locale-bearing host mutation");
         assert!(matches!(shell.owed_refresh_scope, semio_framework::kernel::UiDirtyScope::Full), "{action} must rebuild guest bodies and Window Measures from the new ViewModel axes");
         assert!(shell.settle_pump_pending(), "{action} arms the bounded settle owner for the full guest refresh");
-        assert!(shell.chrome_present.maintenance.locale_refresh.is_none(), "{action} must not schedule a duplicate shell-only locale publication lane");
+        assert!(!shell.chrome_present.maintenance.pending(), "{action} must not schedule a duplicate shell-only locale publication lane");
     }
-}
-
-#[test]
-fn locale_refresh_refusal_and_supersession_preserve_exact_owner_and_generation() {
-    let contract = locale_refresh_fixture();
-    let mut shell = ShellState::new(Vec::new(), String::new());
-    shell.chrome_present.maintenance.load_requested = false;
-    shell.locale_id = "en".into();
-    let mounted = mount_localized_fixture_documents(&mut shell, &contract);
-    let first = mounted.first().unwrap();
-    let prior = retained_header_identity(&shell, first);
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setLocale".into(), args: crate::action_args_json!({ "value": "de" }) })).expect("German cursor");
-    let first_generation = shell.chrome_present.maintenance.locale_refresh.as_ref().unwrap().generation;
-    let vacancy = shell.closing_documents.first_vacant_index().expect("retirement vacancy");
-    shell.closing_documents.epochs[vacancy] = u64::MAX;
-    shell.advance_chrome_maintenance_step();
-    assert_eq!(retained_header_identity(&shell, first), prior, "admission refusal keeps the exact readable prior owner");
-    assert_eq!(shell.chrome_present.maintenance.locale_refresh.as_ref().unwrap().pending.front(), Some(first), "refusal retries the same cursor head");
-
-    shell.closing_documents.epochs[vacancy] = 0;
-    shell.advance_chrome_maintenance_step();
-    assert!(retained_header_identity(&shell, first).0 > prior.0, "returned admission refreshes the refused owner");
-    semio_framework_async::block_on(shell.dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "setLocale".into(), args: crate::action_args_json!({ "value": "en" }) })).expect("newer English cursor supersedes German work");
-    let successor = shell.chrome_present.maintenance.locale_refresh.as_ref().unwrap();
-    assert!(successor.generation > first_generation);
-    assert_eq!(successor.locale_id, "en");
-    assert_eq!(successor.pending.iter().cloned().collect::<Vec<_>>(), mounted, "supersession restarts the exact current mounted roster");
-    while shell.chrome_present.maintenance.locale_refresh.is_some() {
-        shell.advance_chrome_maintenance_step();
-    }
-    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_GENERAL_TAB_ID), "General");
-    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_THEME_TAB_ID), "Theme");
-    assert_eq!(dock_tab_label(&shell, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID), "Hotkeys");
-    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_GENERAL_TAB_ID, "General"));
-    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_THEME_TAB_ID, "Theme"));
-    assert!(retained_has_record_label(&shell, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, "Hotkeys"));
-    assert!(shell.owed_refresh_scope.asks_for_nothing());
 }

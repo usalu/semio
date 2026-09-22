@@ -12056,6 +12056,7 @@ export function interactivityMountedPreparedRenderFailures(preparedSource: strin
   const inputBoundary = prepared.slice(prepared.indexOf("pub struct PreparedRenderInput"), prepared.indexOf("//#endregion 📦️Packet"));
   const jobBoundary = prepared.slice(prepared.indexOf("pub struct PreparedRenderJob"), prepared.indexOf("//#endregion ⚙️PreparationJob"));
   const gpuBoundary = gpu.slice(gpu.indexOf("pub struct PreparedGpuPresentCursor"), gpu.indexOf("pub fn upload_font_atlas"));
+  const gpuTimingBoundary = gpu.slice(gpu.indexOf("fn measure_prepared_gpu_opportunity("), gpu.indexOf("const PREPARED_GPU_ABANDONMENT_SLOTS"));
   const drawBoundary = draw.slice(draw.indexOf("pub fn clear_prepared_scene"), draw.indexOf("pub fn render_scene_content"));
   const preparationBoundary = glue.slice(glue.indexOf("impl AppFrameBuild"), glue.indexOf("pub(crate) struct AppPresenter"));
   const presenterBoundary = glue.slice(glue.indexOf("AppPresentPhase::Stage =>"), glue.indexOf("AppPresentPhase::Acknowledge =>"));
@@ -12125,14 +12126,22 @@ export function interactivityMountedPreparedRenderFailures(preparedSource: strin
     "PreparedGpuPresentPhase::SnapshotBackdrop",
     "PreparedGpuPresentPhase::CompositeGlass",
     "command.draw_cursor()",
-    "encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay())",
+    "encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay(), None)",
+    "encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay(), Some(scissor))",
+    "measure_prepared_gpu_opportunity(cursor, command, semio_framework_job::default_now_us",
+    "self.advance_prepared_present(packet, cursor)?",
     "prepared_glass_command(packet, cursor.command)?",
     "blit_prepared_composite(&self.device, &mut encoder, scene.mip_view(0), composite)",
     "cursor.command.checked_add(1)",
     "cursor.blur_mip.checked_add(1)",
-    "admit_prepared_gpu_opportunity(cursor.overrun_run, elapsed)",
     "impl Drop for PreparedGpuPresentCursor",
   ], "P5d GPU consumer does not retain one command/mip/glass/platform opportunity with watchdog and Drop handback");
+  requireAll(gpuTimingBoundary, [
+    "let complete = advance(cursor)?",
+    "now().and_then(|now| now.checked_sub(started))",
+    "admit_prepared_gpu_opportunity(cursor.overrun_run, elapsed)",
+    "Ok(complete)",
+  ], "P5d GPU timing must admit every successful bounded advancement before returning");
   for (const forbidden of ["render_prepared(", "finish_prepared(", "render_scene_content(", "composite_to_swapchain(", "run_blur_chain(", "while ", "loop {"])
     if (gpuBoundary.includes(forbidden)) failures.push(`P5d GPU consumer reaches whole work ${forbidden}`);
   requireAll(drawBoundary, [

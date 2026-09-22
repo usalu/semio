@@ -105,9 +105,19 @@ async fn a_semio_member_mints_and_reopens_a_real_child_envelope() {
 }
 
 /// 🪤 A snapshot read lease ALIASES the very snapshot the next commit displaces, so the displaced
-/// owner cannot become unique until the returned lease is retired. The store disposer must
-/// therefore drain returned read leases BEFORE displaced owners — draining them the other way
-/// round wedges the close on a lease its own cursor has not reached yet.
+/// owner cannot become unique while that lease is still in the registry. The store disposer must
+/// therefore reach the lease registry BEFORE displaced owners — walking them the other way round
+/// wedges the close on an alias its own cursor has not reached yet.
+///
+/// 🔄️ Restated for `SnapshotReadLeaseRegistry::try_release_aliased` (framework `🏪️store`, landed
+/// 2026-09-22): a read handed back while its root is STILL aliased — exactly this case, because the
+/// displaced-owner queue owns the snapshot the lease aliased — now frees its slot on the returning
+/// thread and never parks in the returned queue. `returned_snapshot_read_count() == 2` was therefore
+/// asserting the OLD return path, not this law, and is gone. What the law forbids is unchanged and
+/// is pinned directly instead: the cursor starts in `ReturnedLeases`, it REFUSES (`Blocked`) while
+/// any lease is still in the registry rather than walking on into the displaced-owner queue, and
+/// once the registry is clear the same close converges to `Complete` with its terminal-empty
+/// witness.
 #[semio_framework_async_macros::async_test]
 async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them() {
     use crate::standards::v1::subsets::value::schema::mutations::{set_snapshot::SetSnapshot, SemioValueMutation};
@@ -125,7 +135,7 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
     drop(first);
     drop(second);
     assert_eq!(store.outstanding_snapshot_read_count(), 0, "both leases were handed back");
-    assert_eq!(store.returned_snapshot_read_count(), 2, "both leases are waiting to be retired");
+    assert!(store.returned_snapshot_read_count() <= 2, "a returned lease may be reclaimed eagerly or parked, never double-counted");
 
     // The first commit parks the aliased snapshot in the tail-undo cache; the SECOND one evicts it
     // into the displaced-owner queue, which is where the close cursor meets it.
@@ -137,6 +147,15 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
     // The laws this pins reach their close through a SECOND decision — an undo of the commit they
     // just applied, which is what repopulates the tail-undo cache from a displaced snapshot.
     SpaceMember::undo(&mut store).await.expect("derived undo of the last commit");
+
+    // 🚧️ The ordering itself: a lease still in the registry must stop the cursor IN its first phase.
+    // If the disposer walked displaced owners first it would meet this alias as a shared retirement
+    // it can never release and the close would wedge instead of waiting here.
+    let outstanding = store.snapshot_read().expect("third snapshot read lease");
+    assert!(store.close_owned_phase_witness().starts_with("semio/ReturnedLeases/"), "the close cursor must open on the lease registry, got {}", store.close_owned_phase_witness());
+    assert_eq!(store.close_owned_step(1, 4096).expect("bounded value-store close"), dsl::SnapshotRetirementStep::Blocked, "a close that still holds a snapshot read must refuse, not advance past the lease registry");
+    assert!(store.close_owned_phase_witness().starts_with("semio/ReturnedLeases/"), "a refused close stays in the lease phase, got {}", store.close_owned_phase_witness());
+    drop(outstanding);
 
     for _ in 0..100_000 {
         match store.close_owned_step(1, 4096).expect("bounded value-store close") {

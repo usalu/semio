@@ -22,7 +22,7 @@ use crate::wgpu::UiTreeActionPlacement;
 use crate::wgpu::arena::NodeId;
 #[cfg(test)]
 use crate::wgpu::chrome::chrome_item_bg;
-use crate::wgpu::chrome::{ICON_TINY, SIZE_TINY, UiDriverDrag, item_bg, item_text, push_chrome_border, push_control_border, push_icon};
+use crate::wgpu::chrome::{foreground_on_fill, ICON_TINY, SIZE_TINY, UiDriverDrag, item_bg, item_text, push_chrome_border, push_control_border, push_icon};
 use crate::wgpu::component::ui::{UI_INSPECTOR_MIXED_PLACEHOLDER, UiControlNode, UiNode, UiPresence, UiProgressNode, UiStackNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode};
 #[cfg(test)]
 use crate::wgpu::component::ui::{
@@ -586,7 +586,8 @@ fn retained_tree_node_step(
             let offset = TREE_TOGGLE_WIDTH + TREE_ICON_SIZE + theme.gap_standard * 2.0;
             let label_x = if inline.is_rtl() { bounds.x } else { bounds.x + offset };
             let label_bounds = Rect::new(label_x, header_y, (bounds.w - offset).max(0.0), header_height);
-            match retained_tree_text_step(label.as_str(), label_bounds, font_size, color, inline, atlas, draw, cursor) {
+            let header_font_size = if tree.presentation == ui_contract::TreePresentation::Compact { SIZE_TINY } else { theme.font_size_small };
+            match retained_tree_text_step(label.as_str(), label_bounds, header_font_size, color, inline, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
                     if !reversed {
                         cursor.row_y += header_height;
@@ -633,10 +634,11 @@ fn retained_tree_node_step(
             let Some((row, open)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
             let selected = item.presence.selected;
             let previewed = item.presence.state == UiState::Previewed;
+            let on_hover_fill = previewed || item.presence.hover;
             let result = retained_fixed_output(draw, |draw| {
                 if selected {
                     draw.push_rounded([row.x, row.y, row.w, row.h], theme.selected, theme.border_radius);
-                } else if previewed {
+                } else if on_hover_fill {
                     draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
                 }
                 let ring_color = if selected { theme.selected } else { theme.border_normal };
@@ -658,11 +660,11 @@ fn retained_tree_node_step(
                     if let Some(icons) = icons {
                         let chevron = if open { if reversed { "chevron-up" } else { "chevron-down" } } else if reversed == inline.is_rtl() { "chevron-right" } else { "chevron-left" };
                         let x = if inline.is_rtl() { bounds.x + bounds.w - (indent - bounds.x) } else { indent - TREE_TOGGLE_WIDTH };
-                        push_icon(draw, icons, chevron, x, row.y + (row.h - SIZE_TINY) * 0.5, SIZE_TINY, theme.text_element);
+                        push_icon(draw, icons, chevron, x, row.y + (row.h - SIZE_TINY) * 0.5, SIZE_TINY, foreground_on_fill(theme, theme.text_element, selected, on_hover_fill));
                     }
                 }
                 if let (Some(icons), Some(icon_id)) = (icons, item.icon_id) {
-                    let color = if selected || previewed { theme.active_foreground } else { theme.text_element };
+                    let color = foreground_on_fill(theme, theme.text_element, selected, on_hover_fill);
                     let x = if inline.is_rtl() { bounds.x + bounds.w - (indent - bounds.x) - TREE_ICON_SIZE } else { indent };
                     push_icon(draw, icons, icon_id.as_str(), x, row.y + (row.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
                 }
@@ -681,7 +683,8 @@ fn retained_tree_node_step(
             let label_x = indent + if item.icon_id.is_some() { TREE_ICON_SIZE + theme.gap_standard } else { 0.0 };
             let selected = item.presence.selected;
             let previewed = item.presence.state == UiState::Previewed;
-            let color = if selected || previewed { theme.active_foreground } else { theme.text_element };
+            let on_hover_fill = previewed || item.presence.hover;
+            let color = foreground_on_fill(theme, theme.text_element, selected, on_hover_fill);
             let color = if item.dimmed.unwrap_or(false) || item.presence.state == UiState::Disabled { color.with_alpha(color.a * 0.5) } else { color };
             let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
             let value_width = if item.control.is_some() { metrics.control_width + metrics.gap * 2.0 } else { 0.0 };
@@ -707,7 +710,9 @@ fn retained_tree_node_step(
             let description_x = indent + TREE_ICON_SIZE + theme.gap_standard + offset;
             let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
             let description_width = (bounds.x + bounds.w - trailing - description_x).max(1.0);
-            match retained_tree_text_step(description, Rect::new(description_x, row.y, description_width, row.h), theme.font_size_small, theme.text_muted, inline, atlas, draw, cursor) {
+            let emphasized = item.presence.selected || item.presence.state == UiState::Previewed || item.presence.hover;
+            let description_ink = foreground_on_fill(theme, theme.text_muted, item.presence.selected, emphasized && !item.presence.selected);
+            match retained_tree_text_step(description, Rect::new(description_x, row.y, description_width, row.h), theme.font_size_small, description_ink, inline, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
                     cursor.advance(6);
                     RetainedNodePaintStep::Pending
@@ -724,7 +729,8 @@ fn retained_tree_node_step(
                         let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
                         let handle = tree_drag_handle_rect(bounds.w, &metrics.for_item(item));
                         let icon = if role == TreeDragRole::Transfer { "move" } else { "grip-vertical" };
-                        let color = if item.presence.selected || item.presence.state == UiState::Previewed { theme.active_foreground } else { theme.text_muted };
+                        let on_hover_fill = item.presence.state == UiState::Previewed || item.presence.hover;
+                        let color = foreground_on_fill(theme, theme.text_muted, item.presence.selected, on_hover_fill);
                         let result = retained_fixed_output(draw, |draw| push_icon(draw, icons, icon, bounds.x + handle.x, row.y + handle.y, handle.w, color));
                         return if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending };
                     }
@@ -746,7 +752,8 @@ fn retained_tree_node_step(
             let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
             let result = retained_fixed_output(draw, |draw| {
                 if let Some(icons) = icons {
-                    push_icon(draw, icons, action.icon_id.as_str(), x, row.y + (row.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
+                    let on_hover_fill = item.presence.state == UiState::Previewed || item.presence.hover;
+                    push_icon(draw, icons, action.icon_id.as_str(), x, row.y + (row.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, foreground_on_fill(theme, theme.text_element, item.presence.selected, on_hover_fill));
                 }
             });
             if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending }
@@ -932,7 +939,7 @@ pub(crate) fn paint_node_step_with_driver(
                 let result = retained_fixed_output(draw, |draw| {
                     push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, false, hovered));
                     if let Some(icons) = icons {
-                        push_icon(draw, icons, button.icon_id.as_str(), bounds.x + theme.padding_standard, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+                        push_icon(draw, icons, button.icon_id.as_str(), bounds.x + theme.padding_standard, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, false, hovered));
                     }
                 });
                 cursor.advance(1);
@@ -982,7 +989,7 @@ pub(crate) fn paint_node_step_with_driver(
                     let result = retained_fixed_output(draw, |draw| {
                         push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, if hovered { theme.button_hover } else { theme.input_bg });
                         if let Some(icons) = icons {
-                            push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+                            push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, foreground_on_fill(theme, theme.text_element, false, hovered));
                         }
                     });
                     cursor.advance(1);
@@ -1015,6 +1022,7 @@ pub(crate) fn paint_node_step_with_driver(
                     let result = retained_fixed_output(draw, |draw| {
                         let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], theme.border_radius, theme.glass(Level::Menu));
                         draw.begin_glass_content(glass);
+                        push_chrome_border(draw, popup.menu, theme.stroke_hairline, theme.border_normal, true, true, true, true);
                         draw.push_scissor(popup.menu);
                         opened = true;
                     });
@@ -1091,8 +1099,8 @@ pub(crate) fn paint_node_step_with_driver(
                         if let (Some(up), Some(down), Some(icons)) = (popup.up, popup.down, icons) {
                             let chevron = SIZE_TINY;
                             let center_x = popup.menu.x + (popup.menu.w - chevron) * 0.5;
-                            push_icon(draw, icons, "chevron-up", center_x, up.y + theme.padding_standard, chevron, theme.text_muted);
-                            push_icon(draw, icons, "chevron-down", center_x, down.y + theme.padding_standard, chevron, theme.text_muted);
+                            push_icon(draw, icons, "chevron-up", center_x, up.y + (up.h - chevron) * 0.5, chevron, theme.text_muted);
+                            push_icon(draw, icons, "chevron-down", center_x, down.y + (down.h - chevron) * 0.5, chevron, theme.text_muted);
                         }
                     });
                     cursor.advance(7);
@@ -1763,8 +1771,18 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                     cursor.select_height = layout.height;
                     let Some(trigger) = tree.absolute_rect(id) else { return retained_sync_fault(cursor, line!()) };
                     let viewport_h = tree.root.and_then(|root| tree.accepted_layout(root)).map_or(0.0, |layout| layout.height);
-                    let (offset, direction) = tree.node(id).map_or((0.0, 0.0), |node| (node.state.scroll_offset.1, node.state.scroll_offset.0));
-                    let popup = crate::wgpu::select::select_popup_geometry(trigger, select.items.len(), theme, viewport_h, offset, direction);
+                    let opening_index = node
+                        .state
+                        .select_popup
+                        .is_none()
+                        .then(|| node.state.highlighted.or_else(|| select.items.iter().position(|item| item.value == select.value)))
+                        .flatten();
+                    let (offset, direction) = (node.state.scroll_offset.1, node.state.scroll_offset.0);
+                    let mut popup = crate::wgpu::select::select_popup_geometry(trigger, select.items.len(), theme, viewport_h, offset, direction);
+                    if let Some(index) = opening_index {
+                        let revealed = crate::wgpu::select::select_revealed_scroll(popup, index, theme);
+                        popup = crate::wgpu::select::select_popup_geometry(trigger, select.items.len(), theme, viewport_h, revealed, 0.0);
+                    }
                     cursor.select_menu_top = popup.menu.y - trigger.y;
                     cursor.select_first_row = popup.first_row;
                     cursor.select_last_row = popup.last_row;
@@ -2513,7 +2531,7 @@ fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool,
     let label = node.items.iter().find(|item| item.value == node.value).map_or_else(|| node.placeholder.as_ref().map(Label::as_str).unwrap_or("Select…"), |item| item.label.as_str());
     draw_text_on(draw, atlas, label, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
     if let Some(icons) = icons {
-        push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+        push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, foreground_on_fill(theme, theme.text_element, false, hovered));
     }
     if !open {
         return;
@@ -2785,10 +2803,11 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
     let row = Rect::new(x, y, width, metrics.row_height);
     let selected = item.presence.selected;
     let previewed = item.presence.state == UiState::Previewed;
+    let on_hover_fill = previewed || item.presence.hover;
     let dimmed = item.dimmed.unwrap_or(false) || item.presence.state == UiState::Disabled;
     if selected {
         draw.push_rounded([row.x, row.y, row.w, row.h], theme.selected, theme.border_radius);
-    } else if previewed {
+    } else if on_hover_fill {
         draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
     }
     let ring_color = if selected { theme.selected } else { theme.border_normal };
@@ -2811,14 +2830,14 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
     if expandable {
         if let Some(icons) = icons {
             let chevron = if item.default_open.unwrap_or(false) { "chevron-down" } else { "chevron-right" };
-            push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (metrics.row_height - SIZE_TINY) * 0.5, SIZE_TINY, theme.text_element);
+            push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (metrics.row_height - SIZE_TINY) * 0.5, SIZE_TINY, foreground_on_fill(theme, theme.text_element, selected, on_hover_fill));
         }
     }
     // 🎨️ `widgets::render_tree_item`'s `text_color`: selected/previewed rows use `active_foreground`
     // for both icon tint and label (previously this always used `text_element`/`theme.text`);
     // `dimmed` (the eye-toggle "hidden in scene" domain flag, or `presence.state == Disabled`) halves
     // its alpha without skipping the row — it stays visible and clickable to un-hide/re-enable.
-    let text_color = if selected || previewed { theme.active_foreground } else { theme.text_element };
+    let text_color = foreground_on_fill(theme, theme.text_element, selected, on_hover_fill);
     let text_color = if dimmed { text_color.with_alpha(text_color.a * 0.5) } else { text_color };
     if let (Some(icons), Some(icon_id)) = (icons, item.icon_id) {
         push_icon(draw, icons, icon_id.as_str(), indent, row.y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
@@ -2827,7 +2846,7 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
     draw_text_on(draw, atlas, item.label.as_str(), label_x, row.y + (metrics.row_height + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, text_color);
     if let Some(description) = &item.description {
         let (label_w, _) = atlas.measure_text(item.label.as_str(), theme.font_size_body);
-        draw_text_on(draw, atlas, description, label_x + label_w + theme.gap_standard, row.y + (metrics.row_height + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
+        draw_text_on(draw, atlas, description, label_x + label_w + theme.gap_standard, row.y + (metrics.row_height + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, selected, on_hover_fill));
     }
     let mut actions_x = row.x + row.w - theme.gap_standard;
     if let Some(icons) = icons {
@@ -2836,7 +2855,7 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
                 continue;
             }
             actions_x -= TREE_ICON_SIZE + theme.padding_standard;
-            push_icon(draw, icons, action.icon_id.as_str(), actions_x, row.y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
+            push_icon(draw, icons, action.icon_id.as_str(), actions_x, row.y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, foreground_on_fill(theme, theme.text_element, selected, on_hover_fill));
         }
     }
     // 🎛️ An inline per-row control (e.g. a small toggle/select embedded in a tree row), static data

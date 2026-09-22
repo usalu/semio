@@ -173,3 +173,51 @@ audit-visual adc299625bf483222 · audit-artifacts a41c9ecc4a2af26d6 · audit-int
   slot for a re-run (~25 min, nx-cached).
 - 20:40 describe failures explained: norm wasm-dev component > 256 MiB describe bound (peer-owned, told them); puzzle owned describe() hit the 30-min epoch deadline under load (→ block-puzzle to check eager work at describe time). Re-run queued as 20260921235850-88484-play after the peer's tc3d (~60–90 min).
 - 21:35 mutex ticket moved to 20260921205000-<pid>-play (peer: right after the running s10 restage).
+- 22:45 mutex job 2 (started 21:36): describe pass again loses stdio + puzzle on the 1 800 s guest epoch (peer PZ1 note:
+  stdio describes in 1 764 s on a quiet machine; puzzle has a known `puzzle5d_part_kind_options()` cliff + 4.8 MB > 4 MiB
+  descriptor bound), gis describe killed by an external SIGTERM, one plugin hit the peer's momentary ui
+  `accessibility_label` break. Waiting for the activate-dev phase. media DONE (shooting/vcs/demonstrator green,
+  sequence 44 red → test-side only, guest peer-owned). knowledge-children pass 2 landed (3 production defects in
+  architect, writer body paging), verification run queued. block-puzzle: block2d/5d green, block3d 350/2, puzzle2d
+  851/28, puzzle3d 734/10, puzzle5d hang root-caused.
+- 01:30 (2026-09-22) coordinator process restarted at ~23:00; supervisor, watchdog and the mutex job died with it (describe pass had failed cad/puzzle/gis/stdio/vcs/trinity, activate phase never ran). Relaunched all three fully detached (setsid); queue was empty, load 34.
+- 01:35 fleet v4 wave 4 (successors after the restart): raster, block-puzzle, stdio-b, knowledge, cad-content, media, knowledge-children, engineering, design relaunched from their STATUS.md/📓️ reports. Mutex job queued (ticket 20260922012728-play) behind the peer's rb1 run 4 (lock 01:27).
+- 01:45 :6033 crash-looped again on the demonstrator/flow lane sha conflict (the 18:55 partial activation restored nx-cached lane outputs); re-aligned the demonstrator receipt to the flow lane rows.
+- 02:25 15 native cargos idle at 0 % CPU = starved behind the describe pass's exclusive prebuild lock (not a flock cycle: the wasm cargo has live rustc children); nothing killed.
+- 02:40 peer killed the parked cargo set at 02:27 (incl. my cad/stdio describe builds; that is the 'SIGTERM source'). Cut my own describe-all nx run so the wrapper proceeds straight to activate-dev (28 lanes); descriptors get targeted serial describes later (📜️describe-plugins.sh, one project per nx invocation, --parallel=1).
+- 03:20 activate-dev run 3 SUCCEEDED (28 lanes, 217 tasks, rc=0 at 03:04; describe phase cut). Recycling :6033 onto it; next: strict test-e2e + visual audit 2.
+- 03:35 describe run 3 actually refreshed 30/34 descriptors before it was cut (failed: cad, stdio, gis, puzzle); activation 03:04 carries them. Fleet serialized on 📜️native-test-mutex.sh; leftover describe processes killed.
+- 03:40 strict test-e2e launched detached (🗑️generated/e2e/test-e2e-0340.txt); audit-visual-2 launched on :6033.
+- 03:55 strict test-e2e on activation 03:04: 66/70 (7.1 min). Reds: wfc2d/wfc3d/grid3d shell error (→ design), playbook presence-retirement-owner console error (peer S10, routed). block-puzzle successor: block3d pane FIXED (slab+columns visible), puzzle5d now frames geometry but loads the wrong document (capacity-bounded setActiveExample) → resumed.
+- 04:00 audit-visual-2 (📓️audit-visual-2.md): 66/69 ready, console spam 0 on 68/69, block3d + animate + 9 stdio panes fixed live; still broken live: raster blank, architect Waiting, reasoning-wires empty (fix agents re-tasked with live probes); wfc2d/wfc3d/grid3d wasm unreachable traps at app registration (design); playbook refused setActiveExample (peer).
+- 04:05 cad-content: 428/2 (cad pane renders 4 chromed canvases with Demo geometry, 0 errors — question answered green); engineering: kernel 1118/0, energy/sourcing green, process3d 352/7, presence-lease O(1) release in store, shared DSL parse_op/print_op. Both resumed on the residual reds; stdio-b gets the mesh short-format-id task.
+- 04:10 knowledge-children pass 2 verified: architect 2084/1, animate 14 red + abort, writer 24 red + abort (both bucket-2 close guards); live: writer demo VISIBLE, architect children materialise (the 'Waiting' crop is the Graph window placing node 2 at x=540 in a 469 px window), animate deck loads but its figure 🖼️bauteilbörse.png does not exist → resumed for graph fit + real figure + aborts.
+
+## 2026-09-22 10:50 — session 6 (coordinator Fable 5.1 restarted; goal unchanged: play end to end, all plugins)
+- Found: :6033 up on the 03:04 activation (supervisor 03:20 alive; killed a duplicate 01:27 supervisor and an orphaned
+  14:21 serve process of mine); wasm mutex free + queue empty; 0 cargos; load 13; swap 12.7/14 GB; 55 GB disk free.
+  Last auto-commit still 09-21 21:41 (≈420 files uncommitted). Peer `End-to-end repo completion` restarted 10:50.
+- Fleet v4 results since 04:10 (from the run logs): cad 429/1 (run15), knowledge-children architect 2084/1 · animate
+  14 red + abort · writer 24 red + abort · plugin-architect descriptor stale (pass2-5), knowledge dag 199/9 ·
+  imperative-procedure 125/19 · mathematical 356/28 · note 364/32 · reasoning-wires 169/18 · plugin-mathematical 3/1
+  (pass1), block-puzzle block2d 262/0 · block3d 350/2 · block5d 366/0 · puzzle2d abort · puzzle3d 741/6 · puzzle5d
+  abort (run12), media sequence 200/7 (run23), design run-d4 died on a wfc-2d compile error
+  (`Wfc2dRetainedCommandJobFactory`), raster test-25 died on a compile error (`settle_framework_reserved_admission`),
+  engineering chain11–13 produced nothing (`--no-fail-fast` passed after `--`).
+- 10:58 queued ONE wasm mutex job `📜️describe-serial-then-activate.sh` (30 describes one hold each, peer-owned
+  norm/space/procedural/playbook excluded, puzzle+stdio last → activate-dev 28 lanes --parallel=1 → :6033 recycle).
+  Log `🗑️generated/activation/describe-activate-0922-1058.txt`.
+- 11:05 fleet v5 (`📋️fleet-brief-v5.md`): Opus raster · design · block-puzzle · knowledge · knowledge-children · media ·
+  engineering · cad-content · stdio-b · xcut-dict; Sonnet audits audit-descriptors · audit-coverage-2 ·
+  audit-native-summary · audit-e2e-strictness (tracked reports `📓️audit-*.md`).
+- 11:05 mutex chain re-queued at the fixed stamp 20260922110250 (agreed with the peer: after their tc3e stdio/gis/note
+  wasm-release build, before their ce3/ca1 describes) via `📜️wasm-build-mutex-play-stamped.sh` (PLAY_MUTEX_STAMP); the
+  first chain's animate describe hold (pid 22197) finishes on its own. Log `describe-activate-0922-1106.txt`. Peer
+  lanes this session: c8 gis2d activation, s11 space/playbook/norm restage (they ping when done), tc3e release build.
+  Peer keeps engineering's uncommitted 🏪️store edits (FP11 builds on them).
+- 11:20 audit-coverage-2 DONE (`📓️audit-coverage-2.md`): all 34 plugins / 76 editor + 71 viewer apps reachable, 69
+  panes ↔ 28 lanes, union = all 60 registry components; only gaps: stdio's committed descriptor predates the
+  stdio-examples fix (8 stdio panes "example not published", 1 inert) → needs the stdio describe; play unit 61/63
+  (same cause). audit-native-summary DONE (`📓️audit-native-summary.md`, `summary.tsv`): 100 green · 21 red ·
+  6 abort · 5 compile-error · 31 never-run (norm 17, playbook 3, procedural 3, space 3 peer-owned; wfc-3d/grid2d/
+  grid3d/plugin-wfc/wfc-engine 5 never built — design's batches died on earlier compile errors).

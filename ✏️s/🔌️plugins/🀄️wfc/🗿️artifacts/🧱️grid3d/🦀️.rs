@@ -446,6 +446,16 @@ pub mod editor {
                 pub use component::*;
 
                 #[path = "."]
+                pub mod tools {
+                    #[path = "."]
+                    pub mod fill {
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+
+                #[path = "."]
                 pub mod windows {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️grid/🦀️.rs"]
                     pub mod grid;

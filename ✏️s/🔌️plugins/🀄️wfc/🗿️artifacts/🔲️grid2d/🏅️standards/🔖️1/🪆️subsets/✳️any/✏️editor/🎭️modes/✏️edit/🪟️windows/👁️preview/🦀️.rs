@@ -1,15 +1,15 @@
 //! 👁️ 2D-grid editor — the `preview` window: a read-only `Canvas2d` pane that draws each SOLVED
 //! cell's tile media scaled into that cell's rect.
 //!
-//! The assignment it draws comes from the `s.wfc.grid2d.solve` INFERENCE, cached as JSON in this
-//! pane's own window config by the `solve` command — never from the document, which persists only
-//! the problem. Until `solve` has run the pane draws the bare cell outlines, which is the honest
-//! "nothing inferred yet" state rather than a spinner that never ends.
+//! The assignment it draws comes from a live fill tool-run payload while the run is non-terminal,
+//! else from `Grid2dWindowConfig.solve_json` written when fill completes — never from the document,
+//! which persists only the problem. Until either source exists the pane draws bare cell outlines.
 
+use crate::editor::grid2d::modes::edit::tools::fill::{self, Grid2dFillPayload};
 use crate::editor::grid2d::window::Grid2dWindowConfig;
 use crate::schema::inferences::Grid2dInferenceCommit;
 use crate::schema::snapshot::{decode_palette_indices, Grid2dSnapshot, WfcColor, WfcPathSegment, WfcTile2d, WfcTileMedia2d};
-use semio_framework_plugin::{ActionDefinition, ActionKind, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{ActionDefinition, ActionKind, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, ToolRunView, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -34,6 +34,7 @@ const MAX_BOARD_LAYERS: usize = 256;
 pub fn definition() -> WindowKindDefinition {
     let mut actions = vec![
         ActionDefinition::bounded_catalog("solve", LocalizedLabel::native("Solve", "Lösen"), ActionKind::View),
+        ActionDefinition::bounded_catalog("commit-fill", LocalizedLabel::native("Commit Fill", "Füllen übernehmen"), ActionKind::View),
         ActionDefinition::bounded_catalog("set-camera", LocalizedLabel::native("Set Camera", "Kamera setzen"), ActionKind::View),
         ActionDefinition::bounded_catalog("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation),
     ];
@@ -219,7 +220,7 @@ pub fn layers_json(document: &Grid2dSnapshot, commit: Option<&Grid2dInferenceCom
     Value::Array(layers).to_string()
 }
 
-/// 🏁 The cached commit this pane draws, or `None` when `solve` has not run in this pane yet — or
+/// 🏁 The cached commit this pane draws, or `None` when fill has not completed in this pane yet — or
 /// when the cache no longer belongs to the document in front of it.
 ///
 /// 🧊️ The cache is per-pane window config and the DOCUMENT can be replaced under it (the navbar
@@ -239,14 +240,29 @@ pub fn cached_commit(document: &Grid2dSnapshot, config: &Grid2dWindowConfig) -> 
     fits.then_some(commit)
 }
 
-pub fn scene(document: &Grid2dSnapshot, config: &Grid2dWindowConfig) -> Canvas2dScene {
-    let commit = cached_commit(document, config);
+/// 🪣 Live fill payload while the run is non-terminal, else `None`.
+pub fn live_fill_payload(tool_run: Option<&ToolRunView>) -> Option<Grid2dFillPayload> {
+    let run = fill::live_fill_run(tool_run)?;
+    let bytes = run.payload.as_ref()?;
+    Grid2dFillPayload::decode(bytes)
+}
+
+/// 👁️ The commit the pane paints: live fill payload first, else `solve_json`.
+pub fn paint_commit(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, tool_run: Option<&ToolRunView>) -> Option<Grid2dInferenceCommit> {
+    if let Some(payload) = live_fill_payload(tool_run) {
+        return Some(payload.as_commit());
+    }
+    cached_commit(document, config)
+}
+
+pub fn scene(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, tool_run: Option<&ToolRunView>) -> Canvas2dScene {
+    let commit = paint_commit(document, config, tool_run);
     let (camera_x, camera_y, zoom) = crate::editor::grid2d::window::effective_camera(document, config);
     Canvas2dScene::base(camera_x, camera_y, zoom, layers_json(document, commit.as_ref()))
 }
 
-pub fn render(document: &Grid2dSnapshot, config: &Grid2dWindowConfig) -> UiAssemblyResult<BuiltNode> {
-    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene(document, config))
+pub fn render(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, tool_run: Option<&ToolRunView>) -> UiAssemblyResult<BuiltNode> {
+    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene(document, config, tool_run))
 }
 //#endregion 🔖️Render
 

@@ -46,6 +46,7 @@ fn input_ui(id: &str, value: &str) -> UiNode {
         input_kind: "text".into(),
         value: value.into(),
         placeholder: None,
+        accessibility_label: None,
         commit: None,
         min: None,
         max: None,
@@ -159,6 +160,81 @@ fn hit_test_skips_hit_transparent_node_but_still_matches_its_children() {
 
     assert_eq!(hit_test(&tree, root, 30.0, 30.0), Some(child));
     assert_eq!(hit_test(&tree, root, 150.0, 150.0), None, "hit-transparent node itself must never match outside its children");
+}
+
+#[test]
+fn wheel_over_an_escaped_select_popup_scrolls_its_accepted_viewport_only() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).unwrap();
+    let law = &fixture["select"]["wheel"];
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 160.0, 100.0));
+    set_flag(&mut tree, root, NodeFlags::SCROLLABLE);
+    let viewport = leaf(&mut tree, Some(root), 1, stack_ui(), (8.0, 62.0, 120.0, 22.4));
+    set_flag(&mut tree, viewport, NodeFlags::CLIPS_CHILDREN);
+    let mut authored = select_ui("long.item.owner", "0");
+    if let UiNode::Select(select) = &mut authored {
+        select.items = (0..20).map(|index| UiSelectItem { value: index.to_string(), label: Label::data(index.to_string()) }).collect();
+    }
+    let select = leaf(&mut tree, Some(viewport), 1, authored, (0.0, 0.0, 120.0, 22.4));
+    leaf(&mut tree, Some(root), 2, text_ui("outer extent"), (0.0, 200.0, 120.0, 100.0));
+    let mut router = EventRouter::new("wheel-select");
+    router.toggle_select_popup(&mut tree, select);
+    let theme = crate::wgpu::theme::Theme::default();
+    let popup = crate::wgpu::select::select_popup_geometry(Rect::new(8.0, 62.0, 120.0, 22.4), 20, &theme, 100.0, 0.0, 0.0);
+    tree.node_mut(select).unwrap().state.select_popup = Some(popup);
+    let event = UiEvent::Scroll { x: law["point"]["x"].as_f64().unwrap() as f32, y: law["point"]["y"].as_f64().unwrap() as f32, delta_x: 0.0, delta_y: law["delta"].as_f64().unwrap() as f32, modifiers: Default::default() };
+    let commands = router.dispatch(&mut tree, root, &event);
+    assert_eq!(commands.len(), law["commandCount"].as_u64().unwrap() as usize);
+    assert_eq!(tree.node(root).unwrap().state.scroll_offset.1, law["unrelatedScroll"].as_f64().unwrap() as f32);
+    assert_eq!(tree.node(select).unwrap().state.scroll_offset.1, law["expectedScroll"].as_f64().unwrap() as f32);
+    assert!(tree.node(select).unwrap().state.open);
+    for delta in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
+        router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 20.0, y: 33.0, delta_x: 0.0, delta_y: delta, modifiers: Default::default() });
+        assert_eq!(tree.node(select).unwrap().state.scroll_offset.1, 34.0);
+    }
+    let mut oracle = taffy::TaffyTree::<()>::new();
+    oracle.disable_rounding();
+    let rows: Vec<_> = (0..20).map(|_| oracle.new_leaf(taffy::Style { size: taffy::geometry::Size { width: taffy::style::Dimension::length(120.0), height: taffy::style::Dimension::length(law["rowHeight"].as_f64().unwrap() as f32) }, flex_shrink: 0.0, ..Default::default() }).unwrap()).collect();
+    let stack = oracle.new_with_children(taffy::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() }, &rows).unwrap();
+    oracle.compute_layout(stack, taffy::geometry::Size { width: taffy::style::AvailableSpace::MaxContent, height: taffy::style::AvailableSpace::MaxContent }).unwrap();
+    let maximum = oracle.layout(stack).unwrap().size.height + law["viewportPadding"].as_f64().unwrap() as f32 * 2.0 - crate::wgpu::select::select_popup_viewport_rect(popup).h;
+    assert!((maximum - law["expectedMaximum"].as_f64().unwrap() as f32).abs() < 0.001);
+    router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 20.0, y: 33.0, delta_x: 0.0, delta_y: 10_000.0, modifiers: Default::default() });
+    assert!((tree.node(select).unwrap().state.scroll_offset.1 - maximum).abs() < 0.001);
+    router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 20.0, y: 33.0, delta_x: 0.0, delta_y: -10_000.0, modifiers: Default::default() });
+    assert_eq!(tree.node(select).unwrap().state.scroll_offset.1, 0.0);
+    println!("[DEBUG] escaped Select wheel offset={} outer={}", tree.node(select).unwrap().state.scroll_offset.1, tree.node(root).unwrap().state.scroll_offset.1);
+}
+
+#[test]
+fn keyboard_movement_reveals_the_highlighted_select_row_without_committing_it() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️select-popup-geometry/🔣️.json")).expect("Select popup geometry fixture");
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, fixture["cases"][1]["viewportHeight"].as_f64().expect("viewport height") as f32));
+    let mut authored = select_ui("reveal", "row-1");
+    if let UiNode::Select(select) = &mut authored {
+        select.items = (0..fixture["optionCount"].as_u64().expect("option count") as usize)
+            .map(|index| UiSelectItem { value: format!("row-{index}"), label: Label::data(format!("Row {index}")) })
+            .collect();
+    }
+    let trigger = Rect::new(20.0, 120.0, fixture["triggerWidth"].as_f64().expect("trigger width") as f32, 22.4);
+    let select = leaf(&mut tree, Some(root), 1, authored, (trigger.x, trigger.y, trigger.w, trigger.h));
+    let theme = crate::wgpu::theme::Theme::default();
+    let popup = crate::wgpu::select::select_popup_geometry(trigger, fixture["optionCount"].as_u64().expect("option count") as usize, &theme, tree.node(root).unwrap().layout.height, 0.0, 0.0);
+    let mut router = EventRouter::new("select-reveal");
+    router.focus.set_focus(&mut tree, Some(select), true);
+    router.toggle_select_popup(&mut tree, select);
+    tree.node_mut(select).unwrap().state.select_popup = Some(popup);
+
+    router.dispatch(&mut tree, root, &key("End"));
+
+    let state = &tree.node(select).expect("mounted Select").state;
+    assert_eq!(state.highlighted, Some(6));
+    assert!(state.scroll_offset.1 > 0.0, "moving the active descendant to an offscreen row requests nearest-edge reveal");
+    let revealed = crate::wgpu::select::select_popup_geometry(trigger, 7, &theme, tree.node(root).unwrap().layout.height, state.scroll_offset.1, 0.0);
+    let row = crate::wgpu::select::select_popup_row_hit_rect(trigger, 6, revealed, &theme);
+    assert!(row.h > 0.0, "the highlighted row enters the accepted viewport");
+    assert!(matches!(&tree.node(select).unwrap().spec.0, UiNode::Select(node) if node.value == "row-1"), "revealing a highlight does not commit it");
 }
 
 #[test]
@@ -1353,6 +1429,7 @@ fn search_line_ui(id: &str, value: &str, repeat_last: bool) -> UiNode {
         input_kind: "text".into(),
         value: value.into(),
         placeholder: None,
+        accessibility_label: None,
         commit: None,
         min: None,
         max: None,

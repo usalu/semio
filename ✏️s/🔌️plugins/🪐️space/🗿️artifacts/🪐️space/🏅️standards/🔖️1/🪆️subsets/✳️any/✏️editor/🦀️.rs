@@ -259,6 +259,26 @@ impl ArtifactEditor for SpaceIndexEditor {
         crate::space_core::space_retained_store_preparation::<Self::Config, Self::ConfigMutation>("space-index-config-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
     }
 
+    /// 🧍 Every durable space-index gesture reads local presence on its ephemeral leg, and
+    /// `PresenceStore::local_read` fails closed with `presence local read requires a live exact local
+    /// retirement owner` while `local_retirement_factory` is `None` — measured inside `s` on
+    /// 2026-09-22 as `createArtifact`, `renameArtifact` AND `touchArtifact` all refused with that one
+    /// sentence, the refusal that replaced 🪐️space's store-footprint one. A disposer is not a
+    /// retirement owner. `Presence = NoPresence` here, so the framework's own `NoPresence`-typed
+    /// owners fit exactly, as the sibling 🏠️home editor's bounded `HomePresence` ones do for its real
+    /// presence type.
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(SpaceIndexRetainedCommandJobFactory::new(&controller))

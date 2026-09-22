@@ -46,6 +46,17 @@
       "aliases": [],
       "neutral": true,
       "status": "declared"
+    },
+    {
+      "id": "s.stdio.gltf.standard.2-0.representation.binary",
+      "standard": "s.stdio.gltf.standard.2-0",
+      "representation": "binary",
+      "mimes": ["model/gltf-binary"],
+      "extensions": [".glb"],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
     }
   ],
   "codecs": [
@@ -302,6 +313,21 @@
         {
           "namespace": "extension",
           "value": ".gltf"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.gltf.standard.2-0.representation.mime-model-gltf-binary-extension-glb",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:model/gltf-binary|extension:.glb",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "model/gltf-binary"
+        },
+        {
+          "namespace": "extension",
+          "value": ".glb"
         }
       ]
     },

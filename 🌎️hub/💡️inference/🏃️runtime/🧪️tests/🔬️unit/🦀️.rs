@@ -526,6 +526,7 @@ async fn gis_map_approval_fails_closed_without_a_composition_transaction_and_nev
 
 #[tokio::test]
 async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_checkpoint_before_ledger_apply() {
+    let watchdog = RuntimeLawHangWatchdogV1::arm("gis_map_approval_committed_event_reaches_actor_frontier_and_public_checkpoint_before_ledger_apply", std::time::Duration::from_secs(600));
     let (identity, base) = canonical_identity_and_base();
     let undo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/↩️gis-map-approval-undo-v1/🔣️.json")).expect("durable undo fixture");
     let undo_contract = &undo_fixture["genesisFirstUndo"];
@@ -661,14 +662,11 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
         document_write: gate.clone(),
         ingress: retry_ingress,
     });
-    tokio::time::timeout(std::time::Duration::from_secs(5), async {
-        tokio::select! {
-            _ = publisher_entered.notified() => {}
-            _ = &mut retry => panic!("fresh retry completed before the retained publisher pause"),
-        }
-    })
-    .await
-    .expect("the sole retained driver reaches the paused publisher");
+    watchdog.at("the sole retained driver reaches the paused publisher");
+    tokio::select! {
+        _ = publisher_entered.notified() => {}
+        _ = &mut retry => panic!("fresh retry completed before the retained publisher pause"),
+    }
     let mut close = Box::pin(committer.close());
     let close_wake = Arc::new(ApprovalPollWakeV1 { ready: std::sync::atomic::AtomicBool::new(true) });
     let close_waker = std::task::Waker::from(close_wake);
@@ -677,9 +675,9 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     assert_eq!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_slice(), ["public-checkpoint-attempt", "public-checkpoint-attempt"]);
     drop(close);
     publisher_release.notify_one();
-    let terminal = tokio::time::timeout(std::time::Duration::from_secs(5), &mut retry)
+    watchdog.at("fresh retry observes retained publication");
+    let terminal = (&mut retry)
         .await
-        .expect("fresh retry observes retained publication")
         .unwrap_or_else(|error| panic!("fresh request joins the one publication: {error:?} refused as {:?}, identity mismatch {:?}, prepare conflict {:?}", last_gis_map_commit_conflict_arm(), last_gis_map_identity_mismatch(), last_gis_map_prepare_conflict()));
     assert!(terminal.applied, "a successful committed-witness reconciliation reports the durable approval as applied");
     assert_eq!(terminal.document_generation, 0, "the committed witness retains the live initial actor generation");

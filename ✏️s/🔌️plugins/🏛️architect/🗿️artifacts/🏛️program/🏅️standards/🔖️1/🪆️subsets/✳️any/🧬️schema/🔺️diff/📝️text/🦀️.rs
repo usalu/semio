@@ -1132,9 +1132,13 @@ where
             return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "added entity identity already exists").at(["added".to_string(), index.to_string()]));
         }
     }
+    // 🧲️ A patch may address an entity this SAME delta adds: `MutationDiff::absorb` folds a
+    // `create` and a later `patch` of that entity into one delta (`added` + `patched`), and the
+    // `absorb(d1, d2).apply(base) == d2.apply(&d1.apply(base))` law only holds if the fold's own
+    // additions are visible to its own patches — hence `added` is applied BEFORE `patched` below too.
     for (index, (id, _)) in patched.iter().enumerate() {
         let eid = EntityId(id.clone());
-        if !items.iter().any(|item| item.id() == &eid) {
+        if !items.iter().any(|item| item.id() == &eid) && !added.iter().any(|item| item.id() == &eid) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "patched entity does not exist").at(["patched".to_string(), index.to_string()]));
         }
         if removed.contains(id) {
@@ -1149,11 +1153,11 @@ where
         let eid = EntityId(id.clone());
         candidate.retain(|item| item.id() != &eid);
     }
+    candidate.extend(added.iter().cloned());
     for (id, patch) in patched {
         let eid = EntityId(id.clone());
         candidate.iter_mut().find(|item| item.id() == &eid).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched entity does not exist").at(["patched".to_string(), id.clone()]))?.apply_patch(patch);
     }
-    candidate.extend(added.iter().cloned());
     for (index, item) in candidate.iter().enumerate() {
         if candidate[..index].iter().any(|prior| prior.id() == item.id()) {
             return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "patch produced a duplicate entity identity").at(["patched"]));

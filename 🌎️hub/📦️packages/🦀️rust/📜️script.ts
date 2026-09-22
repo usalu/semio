@@ -107,7 +107,7 @@ import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelaySpac
 import { issueLocalCredential } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type LocalProfile, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
-import { finishLocalHub, freeLoopbackPort, HUB_DEV_BINARY_TARGET, hubBinaryPath, hubDevBinaryPath, hubDevPostgresBinaryPath, LOCAL_READINESS_DEADLINE_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { finishLocalHub, freeLoopbackPort, HUB_DEV_BINARY_TARGET, hubBinaryPath, hubDevBinaryPath, hubDevPostgresBinaryPath, LOCAL_READINESS_STALL_BOUND_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 type AdminLiveJourneyFixture = {
   readonly schema: "semio.hub.admin-live-journey/v1";
@@ -599,16 +599,27 @@ function startLocalBrowserRelay(hubOrigin: string, uiOrigin: string, envelope: R
 }
 
 async function waitForUiReadiness(origin: string, child: ChildProcess): Promise<void> {
-  const deadline = Date.now() + LOCAL_READINESS_DEADLINE_MS;
-  while (Date.now() < deadline) {
+  let observation = "";
+  let observedAt = Date.now();
+  for (;;) {
     if (child.exitCode !== null) throw new Error("secure local UI exited before readiness");
+    let answer = "no-answer";
     try {
       const response = await fetch(`${origin}/`, { redirect: "error", signal: AbortSignal.timeout(500) });
       if (response.ok && response.url === `${origin}/`) return;
-    } catch {}
+      answer = `http=${response.status} url=${response.url}`;
+    } catch (error) {
+      answer = error instanceof Error ? `unreachable=${error.message}` : "unreachable";
+    }
+    const now = Date.now();
+    if (answer !== observation) {
+      observation = answer;
+      observedAt = now;
+    } else if (now - observedAt >= LOCAL_READINESS_STALL_BOUND_MS) {
+      throw new Error(`secure local UI readiness stalled — nothing changed for ${now - observedAt} ms; last observation: ${answer}`);
+    }
     await Bun.sleep(50);
   }
-  throw new Error("secure local UI readiness deadline exceeded");
 }
 
 function openExternalBrowser(url: string): void {

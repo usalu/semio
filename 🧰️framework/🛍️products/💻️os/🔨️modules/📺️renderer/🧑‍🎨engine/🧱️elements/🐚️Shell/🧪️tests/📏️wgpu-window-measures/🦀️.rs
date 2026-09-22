@@ -55,6 +55,13 @@ fn window_options_hug_their_tree_below_the_chip_and_retire_folded_children() {
         assert!(hit.rect.h <= law["expected"]["maximumRowHeight"].as_f64().unwrap() as f32 + 0.02, "measure controls use the measured React compact row metrics");
         assert!(hit.rect.x + hit.rect.w * 0.5 < rect.x + rect.w * 0.5, "right-anchored measure values live left of their labels");
     }
+    let checkbox_id = format!("{window}/grid-visible");
+    let select_id = format!("{window}/grid-mode");
+    let checkbox = first.input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(checkbox_id.as_str())).expect("checkbox hit");
+    let select = first.input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(select_id.as_str())).expect("select hit");
+    assert!((checkbox.rect.w - law["expected"]["checkboxWidth"].as_f64().unwrap() as f32).abs() < 0.02, "checkbox hit follows React's tiny-width wrapper");
+    assert!((select.rect.w - law["expected"]["controlColumnWidth"].as_f64().unwrap() as f32).abs() < 0.02, "select owns the compact value column");
+    assert!((checkbox.rect.x + checkbox.rect.w - (select.rect.x + select.rect.w)).abs() < 0.02, "RTL checkbox sits at the right edge of the physical-left value column");
     for (id, height) in law["expected"]["rowHeights"].as_object().unwrap() {
         let key = format!("tree.label.{window}/{id}.row");
         let hit = first.input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(key.as_str())).expect("each visible tree row publishes its own hit");

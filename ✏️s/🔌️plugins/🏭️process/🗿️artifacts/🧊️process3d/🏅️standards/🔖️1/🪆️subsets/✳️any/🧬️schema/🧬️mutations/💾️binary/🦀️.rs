@@ -223,9 +223,6 @@ struct Process3dPublicationLease {
     maximum_controls: usize,
     closing: bool,
     terminal: bool,
-    /// 🔐️ Admitted by the app's own initializer for a host-begun replacement (production), as
-    /// opposed to a lease a test host admitted and releases itself.
-    app_admitted: bool,
 }
 
 impl semio_framework_job::FixedOperationOwner for Process3dPublicationLease {
@@ -348,81 +345,105 @@ pub fn process3d_admit_publication_authority(
     leases
         .admit(
             process3d_publication_key(operation, generation),
-            Process3dPublicationLease { operation: operation.0, generation: generation.0, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls, closing: false, terminal: false, app_admitted: false },
+            Process3dPublicationLease { operation: operation.0, generation: generation.0, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls, closing: false, terminal: false },
         )
         .map_err(|_| "process3d-publication.saturated")
 }
 
-/// 🔐️ The lease the app grants ITSELF for a replacement the host began (`Effect::LoadDocument` →
-/// `build_document_store_initialization_job`): base, parent and live revision are all the generation
-/// the host started the replacement on — the only publication that commit can accept — with the
-/// domain's own credits. A test host that admitted its own lease first keeps it (`Err` when one is
-/// present). The host drives one replacement per instance at a time, so every app-admitted lease
-/// still lying in the four-slot table belongs to a load the host already rejected before this app
-/// ever validated it (a stale generation, an incomplete closure) — it is evicted here rather than
-/// left to collide with the new key's direct-mapped slot; the happy path releases through
-/// `process3d_release_app_publication_authority` at validation or initializer retirement.
+/// 🔐️ The ONE lease the app grants ITSELF for a replacement the host began (`Effect::LoadDocument`
+/// → `build_document_store_initialization_job`): base, parent and live revision are all the
+/// generation the host started the replacement on — the only publication that commit can accept —
+/// with the domain's own credits. A holder that admitted a HOST lease for the same operation first
+/// keeps it (`Err`).
+///
+/// A self-grant is NOT a host publication and does not live in the host's fixed table. That table
+/// is four DIRECT-MAPPED slots: a self-grant lying in it refuses an unrelated host publication
+/// whose key happens to map to the same slot (`process3d-publication.saturated`) while three slots
+/// stay free — which is exactly what a test binary hosting several app instances beside the
+/// fixture laws produces. The host drives one replacement per instance at a time, so this
+/// authority holds exactly one lease and a new self-grant supersedes the load the host already
+/// abandoned; the happy path releases through `process3d_release_app_publication_authority` at
+/// validation or initializer retirement.
+fn process3d_app_publication_lease() -> &'static std::sync::Mutex<Option<(semio_framework_job::FixedOperationKey, Process3dPublicationLease)>> {
+    static LEASE: std::sync::OnceLock<std::sync::Mutex<Option<(semio_framework_job::FixedOperationKey, Process3dPublicationLease)>>> = std::sync::OnceLock::new();
+    LEASE.get_or_init(|| std::sync::Mutex::new(None))
+}
+
+/// 🔎️ One lease by its exact key, from the host table first and the app self-grant second.
+fn process3d_publication_lease_by_key(key: semio_framework_job::FixedOperationKey) -> Result<Option<Process3dPublicationLease>, &'static str> {
+    let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
+    if let Some(lease) = leases.get(key) {
+        return Ok(Some(*lease));
+    }
+    drop(leases);
+    let app = process3d_app_publication_lease().try_lock().map_err(|_| "process3d-publication.contended")?;
+    Ok(app.as_ref().filter(|(held, _)| *held == key).map(|(_, lease)| *lease))
+}
+
+/// 🔎️ One lease by operation, from the host table first and the app self-grant second.
+fn process3d_publication_lease_by_operation(operation: semio_framework_job::OperationId) -> Result<Option<Process3dPublicationLease>, &'static str> {
+    let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
+    if let Some((_, lease)) = leases.get_operation(operation) {
+        return Ok(Some(*lease));
+    }
+    drop(leases);
+    let app = process3d_app_publication_lease().try_lock().map_err(|_| "process3d-publication.contended")?;
+    Ok(app.as_ref().filter(|(_, lease)| lease.operation == operation.0).map(|(_, lease)| *lease))
+}
+
 pub fn process3d_admit_app_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<(), &'static str> {
-    let mut leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
+    let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
     if leases.get_operation(operation).is_some() {
         return Err("process3d-publication.operation-duplicate");
     }
-    let mut app_keys = process3d_app_publication_keys().try_lock().map_err(|_| "process3d-publication.contended")?;
-    for key in app_keys.drain(..) {
-        leases.take(key);
+    drop(leases);
+    let mut app = process3d_app_publication_lease().try_lock().map_err(|_| "process3d-publication.contended")?;
+    if app.as_ref().is_some_and(|(_, lease)| lease.operation == operation.0) {
+        return Err("process3d-publication.operation-duplicate");
     }
-    let key = process3d_publication_key(operation, generation);
-    app_keys.push(key);
-    leases
-        .admit(
-            key,
-            Process3dPublicationLease {
-                operation: operation.0,
-                generation: generation.0,
-                base_revision: generation.0,
-                parent_revision: generation.0,
-                live_revision: generation.0,
-                maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS,
-                maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS,
-                maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS,
-                closing: false,
-                terminal: false,
-                app_admitted: true,
-            },
-        )
-        .map_err(|_| "process3d-publication.saturated")
+    *app = Some((
+        process3d_publication_key(operation, generation),
+        Process3dPublicationLease {
+            operation: operation.0,
+            generation: generation.0,
+            base_revision: generation.0,
+            parent_revision: generation.0,
+            live_revision: generation.0,
+            maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS,
+            maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS,
+            maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS,
+            closing: false,
+            terminal: false,
+        },
+    ));
+    Ok(())
 }
 
 /// 🔐️ Releases the app-admitted lease of `operation` (a host-admitted one is the host's to release).
 pub fn process3d_release_app_publication_authority(operation: semio_framework_job::OperationId) -> bool {
-    let Ok(mut leases) = process3d_publication_leases().try_lock() else { return false };
-    let Some((key, lease)) = leases.get_operation(operation).map(|(key, lease)| (key, *lease)) else { return false };
-    if !lease.app_admitted {
+    let Ok(mut app) = process3d_app_publication_lease().try_lock() else { return false };
+    if app.as_ref().is_none_or(|(_, lease)| lease.operation != operation.0) {
         return false;
     }
-    if let Ok(mut app_keys) = process3d_app_publication_keys().try_lock() {
-        app_keys.retain(|candidate| *candidate != key);
-    }
-    leases.take(key).is_some()
-}
-
-/// 🗝️ The keys of every lease the app admitted for itself and has not released yet — the registry
-/// has no iterator, and eviction of a load the host abandoned must find its lease by key.
-fn process3d_app_publication_keys() -> &'static std::sync::Mutex<Vec<semio_framework_job::FixedOperationKey>> {
-    static KEYS: std::sync::OnceLock<std::sync::Mutex<Vec<semio_framework_job::FixedOperationKey>>> = std::sync::OnceLock::new();
-    KEYS.get_or_init(|| std::sync::Mutex::new(Vec::with_capacity(PROCESS3D_PUBLICATION_SLOTS)))
+    app.take().is_some()
 }
 
 pub fn process3d_refresh_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_revision: u64) -> Result<(), &'static str> {
+    let key = process3d_publication_key(operation, generation);
     let mut leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
-    let lease = leases.get_mut(process3d_publication_key(operation, generation)).ok_or("process3d-publication.stale-authority")?;
+    if let Some(lease) = leases.get_mut(key) {
+        lease.live_revision = live_revision;
+        return Ok(());
+    }
+    drop(leases);
+    let mut app = process3d_app_publication_lease().try_lock().map_err(|_| "process3d-publication.contended")?;
+    let Some((_, lease)) = app.as_mut().filter(|(held, _)| *held == key) else { return Err("process3d-publication.stale-authority") };
     lease.live_revision = live_revision;
     Ok(())
 }
 
 pub fn process3d_validate_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<(u64, u64), &'static str> {
-    let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
-    let lease = leases.get(process3d_publication_key(operation, generation)).ok_or("process3d-publication.stale-authority")?;
+    let lease = process3d_publication_lease_by_key(process3d_publication_key(operation, generation))?.ok_or("process3d-publication.stale-authority")?;
     if lease.generation != generation.0 || lease.live_revision != generation.0 || lease.base_revision != lease.live_revision || lease.parent_revision != lease.base_revision {
         return Err("process3d-publication.stale-aba-parent");
     }
@@ -450,8 +471,7 @@ fn process3d_validate_atomic_lease(lease: Process3dPublicationLease, operation: 
 
 /// 🔐️ Fail-closed Process3d authority used by the shared atomic replacement branch.
 pub fn process3d_validate_atomic_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
-    let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
-    let lease = leases.get_operation(operation).map(|(_, lease)| *lease).ok_or("process3d-publication.authority-missing")?;
+    let lease = process3d_publication_lease_by_operation(operation)?.ok_or("process3d-publication.authority-missing")?;
     #[cfg(test)]
     let lease = {
         let mut lease = lease;
@@ -478,8 +498,7 @@ pub fn process3d_validate_atomic_publication_authority(operation: semio_framewor
 }
 
 pub fn process3d_publication_item_credit(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Result<usize, &'static str> {
-    let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
-    let lease = leases.get(process3d_publication_key(operation, generation)).ok_or("process3d-publication.stale-authority")?;
+    let lease = process3d_publication_lease_by_key(process3d_publication_key(operation, generation))?.ok_or("process3d-publication.stale-authority")?;
     if lease.maximum_output_pages != PROCESS3D_MOUNTED_OUTPUT_CHANNELS || lease.maximum_controls != PROCESS3D_MOUNTED_CONTROL_CREDITS {
         return Err("process3d-publication.domain-credits-lost");
     }

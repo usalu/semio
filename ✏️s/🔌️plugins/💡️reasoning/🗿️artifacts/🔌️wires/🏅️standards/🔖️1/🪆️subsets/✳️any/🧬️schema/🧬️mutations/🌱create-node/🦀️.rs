@@ -17,9 +17,12 @@ pub struct CreateNode {
     pub node: DslValue,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
+/// 🏗️ Builder — wraps the payload in its dispatch variant, in the DSL's canonical key order
+/// (`crate::canonical_board_value`): the op-text printer sorts object keys while `DslValue`'s
+/// `PartialEq` compares entries positionally, so an unsorted payload cannot survive
+/// `parse_op(print_op(op)) == op`.
 pub fn create_node(node: DslValue) -> WiresMutation {
-    WiresMutation::CreateNode(CreateNode { node })
+    WiresMutation::CreateNode(CreateNode { node: crate::canonical_board_value(&node) })
 }
 
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for CreateNode {

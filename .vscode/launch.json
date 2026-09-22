@@ -4740,17 +4740,6 @@
       }
     },
     {
-      "name": "⚖️gate🎠️kernel🦀️lib",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun x nx run @semio-tech/framework-os-kernel:test --skip-nx-cache",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 408.4
-      }
-    },
-    {
       "name": "🧹clean🧩️taxonomy🧪️artifact-support",
       "type": "node-terminal",
       "request": "launch",

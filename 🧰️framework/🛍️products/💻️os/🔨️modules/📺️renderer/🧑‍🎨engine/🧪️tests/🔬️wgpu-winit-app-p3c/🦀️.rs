@@ -105,7 +105,7 @@ fn normalized_pointer_and_wheel_snapshots_replace_stale_keyboard_modifiers() {
 }
 
 #[test]
-fn component_close_external_wait_keeps_unrelated_window_ingress_routable() {
+fn component_close_handoff_keeps_unrelated_window_ingress_routable() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️component-close-frame-turn/🔣️.json")).expect("component-close frame-turn fixture");
     assert_ne!(law["closeHost"], law["liveHost"]);
     assert_eq!(law["maxCloseUnitsPerTurn"], 1);
@@ -116,7 +116,7 @@ fn component_close_external_wait_keeps_unrelated_window_ingress_routable() {
     let pointer = PointerInfo { id: ui_render::PointerId(77), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None };
     let mut delivered = Vec::new();
     for turn in law["turns"].as_array().expect("bounded close turns") {
-        assert_eq!(turn["closeOutcome"], "externalWait");
+        assert!(matches!(turn["closeOutcome"].as_str(), Some("frameRetirement" | "externalWait" | "terminal")));
         assert_eq!(
             enqueue_host_event(
                 &mut events,

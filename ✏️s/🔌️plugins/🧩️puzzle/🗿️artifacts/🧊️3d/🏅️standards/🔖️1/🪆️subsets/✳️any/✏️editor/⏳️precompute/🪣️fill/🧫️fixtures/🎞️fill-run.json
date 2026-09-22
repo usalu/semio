@@ -1,6 +1,30 @@
 {
-  "$comment": "🎞️ Language-neutral fill tool run law of s.puzzle3d's ⏳️precompute/🪣️fill run job (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W1-A). A case seeds a shipped example document (scaled box fallback for every mesh identity, as the app registers before real GLBs arrive) and a requested count; `expected` is the verdict prefix as `verdict:reasonId` (a marked vortex — every compatible candidate at a drawn vortex refused — is one `danger:vortex-exhausted` record), the run counters including marked vortices, provisional op and entity counts, checkpoints and the stall reason id.",
+  "$comment": "🎞️ Language-neutral fill tool run law of s.puzzle3d's ⏳️precompute/🪣️fill run job (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W1-A). A case seeds a shipped example document with explicitly registered synthetic cube geometry for each fixture mesh identity and a requested count; `expected` is the verdict prefix as `verdict:reasonId` (a marked vortex — every compatible candidate at a drawn vortex refused — is one `danger:vortex-exhausted` record), the run counters including marked vortices, provisional op and entity counts, checkpoints and the stall reason id.",
   "laws": {
+    "allObjects": {
+      "$comment": "Every accepted candidate must be checked against the docking host, every unrelated document object, and all earlier fill placements. Unavailable geometry refuses placement. Cubes have half extent 4; the host is at x=12 and its mesh is shifted by kindMeshOffset. Each target offset creates a separate host vortex along x. Final revalidation repeats these checks with current meshes and earlier surviving placements.",
+      "preparedGeometry": [
+        { "url": "/test/all-objects-unregistered.glb", "registered": false, "expectedAvailable": false },
+        { "url": "box", "registered": false, "expectedAvailable": true },
+        { "url": "/test/all-objects-registered.glb", "registered": true, "expectedAvailable": true }
+      ],
+      "cases": [
+        { "name": "separated", "kindMeshOffset": 100, "targets": [0, 12], "blocker": false, "missing": [], "expectedLocked": 2 },
+        { "name": "docking-host", "kindMeshOffset": 0, "targets": [0], "blocker": false, "missing": [], "expectedLocked": 0 },
+        { "name": "unrelated-blocker", "kindMeshOffset": 100, "targets": [0], "blocker": true, "missing": [], "expectedLocked": 0 },
+        { "name": "earlier-placement", "kindMeshOffset": 100, "targets": [0, 0, 0, 0], "blocker": false, "missing": [], "expectedLocked": 1 },
+        { "name": "late-blocker", "kindMeshOffset": 100, "targets": [0], "blocker": true, "farObjects": 48, "missing": [], "expectedLocked": 0 },
+        { "name": "unavailable-blocker", "kindMeshOffset": 100, "targets": [0], "blocker": true, "missing": ["/test/blocker.glb"], "expectedLocked": 0 },
+        { "name": "unavailable-host", "kindMeshOffset": 100, "targets": [0], "blocker": false, "missing": ["/test/host-kind.glb"], "expectedLocked": 0 },
+        { "name": "unavailable-candidate", "kindMeshOffset": 100, "targets": [0], "blocker": false, "missing": ["/test/near.glb", "/test/late.glb"], "expectedLocked": 0 }
+      ],
+      "revalidation": [
+        { "name": "separated", "candidateScale": 1, "missing": [], "expectedConflicts": [false, false] },
+        { "name": "earlier-survivor-after-mesh-growth", "candidateScale": 2, "missing": [], "expectedConflicts": [false, true] },
+        { "name": "unavailable-head", "candidateScale": 1, "missing": ["/test/host-kind.glb"], "expectedConflicts": [true, true] },
+        { "name": "unavailable-candidate", "candidateScale": 1, "missing": ["/test/near.glb", "/test/late.glb"], "expectedConflicts": [true, true] }
+      ]
+    },
     "documentCapacities": { "bookkeepingSlots": 32, "bookkeepingPageBytes": 16384, "documentPageBytes": 1048576, "objectSlots": 2048, "attractionSlots": 2048, "vortexSlots": 4096, "volumeSlots": 256, "kindSlots": 256, "candidateSlots": 1024, "cellSlots": 8192, "cellMemberSlots": 2048, "nakagin": { "objects": 180, "vortices": 358, "objectKinds": 12, "vortexKinds": 18, "compatibilityRows": 14, "attractions": 358 } },
     "opsPerPlacement": 2,
     "parryOracle": {

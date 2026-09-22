@@ -534,22 +534,22 @@ fn accessibility_activation_updates_settings_switch_and_active_tab_projection() 
     let mut shell = shell_with_nested_app_settings();
     let mut input = InputState::default();
     input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 1.0, 1.0), event: None, control_id: Some(FRAMEWORK_SETTINGS_PANEL_ID.into()), kind: HitKind::Toggle, drag_axis: None, drag_data: None });
-    input.publish_hits();
+    shell.publish_retained_hit_registry(&mut input);
     let initial = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("settings projection");
     assert_eq!(initial.checked, Some(false));
     let target =
-        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION, node_id: initial.node_id, node_key: initial.key };
+        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_input_epoch, node_id: initial.node_id, node_key: initial.key };
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("settings activation"));
     assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].checked, Some(true), "the Settings branch switch reflects its now-visible anchor");
 
     assert_eq!(shell.reveal_dock_tab(FRAMEWORK_SETTINGS_THEME_TAB_ID), Some(PanelAnchor::BottomRight));
     let mut input = InputState::default();
     input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 1.0, 1.0), event: None, control_id: Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into()), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
-    input.publish_hits();
+    shell.publish_retained_hit_registry(&mut input);
     let general = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("general projection");
     assert_eq!(general.selected, Some(false));
     let target =
-        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION, node_id: general.node_id, node_key: general.key };
+        ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_input_epoch, node_id: general.node_id, node_key: general.key };
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("general activation"));
     assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].selected, Some(true), "the activated General leaf publishes aria-selected=true");
     let expected: Vec<&str> = selection["expectedPath"].as_array().expect("expected path").iter().map(|id| id.as_str().expect("path id")).collect();
@@ -588,11 +588,11 @@ fn chrome_accessibility_dispatch_validates_current_identity_and_activates_once()
     let mut shell = ShellState::new(Vec::new(), String::new());
     let mut input = InputState::default();
     input.register_hit(HitTarget { rect: Rect::new(1.0, 2.0, 3.0, 4.0), event: None, control_id: Some("ui.search.toggle".to_string()), kind: HitKind::Button, drag_axis: None, drag_data: None });
-    input.publish_hits();
+    shell.publish_retained_hit_registry(&mut input);
     let node = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("search projection");
     let target = ui_render::AccessibilityTarget {
         window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION,
+        window_generation: shell.presented_input_epoch,
         node_id: node.node_id,
         node_key: node.key.clone(),
     };

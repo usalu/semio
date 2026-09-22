@@ -103,7 +103,7 @@ macro_rules! scalar {
         fn compare_one(&self, right: &Self, _: &mut [usize], _: &mut ValueComparison, _: usize) -> Result<UiComponentCompareProgress, &'static str> { Ok(result(self == right)) }
     })*};
 }
-scalar!(bool, u16, u32, u64, f64, UiNodeId, UiRevision, Activity, TransitionHint, StyleSpec, Trigger, ContainerRole, InputKind, ToggleAppearance, TreePresentation, RowActionPlacement, SurfaceKind, Liveness, GridTrack, SpaceToken, Align, Justify, EdgeSpace, Axis, Anchor, ScrollAxes, Sizing);
+scalar!(bool, u16, u32, u64, f64, UiNodeId, UiRevision, Activity, TransitionHint, StyleSpec, Trigger, ContainerRole, InputKind, ToggleAppearance, TreePresentation, TreeWindowRowExtent, RowActionPlacement, SurfaceKind, Liveness, GridTrack, SpaceToken, Align, Justify, EdgeSpace, Axis, Anchor, ScrollAxes, Sizing);
 
 macro_rules! byte_field {
     ($type:ty, $slice:ident) => {

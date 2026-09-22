@@ -100,8 +100,12 @@ crate::component_persistent_local! {
     /// actor is opt-in first-party-only future work, out of this wave).
     static REGISTRY: requests::RequestRegistry = requests::RequestRegistry::new();
     static REACTOR_EXECUTOR: executor::ReactorExecutor = executor::ReactorExecutor::new();
-    #[cfg(test)]
-    static TEST_FUTURE_EXECUTOR: executor::ColdFutureExecutor = executor::ColdFutureExecutor::new();
+    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): the actor-local executor
+    /// every `AsyncTask` `spawn_task` admits runs on — the COLD half of this actor's two
+    /// executors, for futures that park on a `RequestFuture` across host turns rather than
+    /// burning a bounded work budget like `REACTOR_EXECUTOR`'s reducer/job tasks do. Driven once
+    /// per turn by `turn::poll`, woken by `Event::Timer` and by `RequestRegistry::resolve`.
+    static TASK_EXECUTOR: executor::ColdFutureExecutor = executor::ColdFutureExecutor::new();
     /// 🪪️ Every instance this actor currently has open — `(id, app_id)`, in `InstanceOpen` order.
     /// Used by `📸️checkpoint`.
     static INSTANCE_METADATA: RefCell<InstanceMetadataRegistry> = RefCell::new(InstanceMetadataRegistry::new());
@@ -131,18 +135,14 @@ crate::component_persistent_local! {
 /// 🧵️ A task retains its instance and optional checkpoint restart command.
 struct TaskRecord {
     instance: u32,
-    #[cfg(test)]
     key: Option<String>,
     restart: Option<Vec<u8>>,
 }
 
 const REACTOR_TASK_SLOTS: usize = 1_024;
 const REACTOR_FIXED_WORDS: usize = REACTOR_TASK_SLOTS / u64::BITS as usize;
-#[cfg(test)]
 const REACTOR_TASK_KEY_BYTES: usize = 256;
-#[cfg(test)]
 const REACTOR_TASK_LABEL_BYTES: usize = 256;
-#[cfg(test)]
 const REACTOR_TASK_RESTART_BYTES: usize = 64 * 1_024;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -309,23 +309,19 @@ impl TaskRecordRegistry {
         Self { slots: ReactorFixedSlots::new() }
     }
 
-    #[cfg(test)]
     fn index(id: executor::TaskId) -> usize {
         id as usize % REACTOR_TASK_SLOTS
     }
 
-    #[cfg(test)]
     fn can_insert(&self, id: executor::TaskId) -> bool {
         self.slots.allocation_admitted && self.slots.get(Self::index(id)).is_none()
     }
 
-    #[cfg(test)]
     fn insert_admitted(&mut self, id: executor::TaskId, record: TaskRecord) {
         debug_assert!(self.can_insert(id));
         self.slots.insert_admitted(Self::index(id), (id, record));
     }
 
-    #[cfg(test)]
     fn remove(&mut self, id: executor::TaskId) -> Option<TaskRecord> {
         let index = Self::index(id);
         if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) {
@@ -335,12 +331,10 @@ impl TaskRecordRegistry {
         }
     }
 
-    #[cfg(test)]
     fn find_key(&self, instance: u32, key: &str) -> Option<executor::TaskId> {
         self.slots.iter().find_map(|(id, record)| (record.instance == instance && record.key.as_deref() == Some(key)).then_some(*id))
     }
 
-    #[cfg(test)]
     fn count_instance(&self, instance: u32) -> usize {
         self.slots.iter().filter(|(_, record)| record.instance == instance).count()
     }
@@ -349,7 +343,6 @@ impl TaskRecordRegistry {
         self.slots.iter().map(|(id, record)| (*id, record))
     }
 
-    #[cfg(test)]
     fn entry_at(&self, index: usize) -> Option<(executor::TaskId, &TaskRecord)> {
         self.slots.get(index).map(|(id, record)| (*id, record))
     }
@@ -572,13 +565,11 @@ impl InstanceMetadataRegistry {
 /// `Err(fault)` gets its own variant (never silently dropped).
 enum TaskResumeOutcome {
     Command(Vec<u8>),
-    #[cfg(test)]
     Emit {
         artifact_ops: Vec<u8>,
         config_ops: Vec<u8>,
         draft_ops: Vec<u8>,
     },
-    #[cfg(test)]
     Fault(semio_framework::Fault),
 }
 
@@ -605,11 +596,9 @@ impl PendingResume {
         }
         match &self.outcome {
             TaskResumeOutcome::Command(command) => bytes = bytes.checked_add(command.len())?,
-            #[cfg(test)]
             TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => {
                 bytes = bytes.checked_add(artifact_ops.len())?.checked_add(config_ops.len())?.checked_add(draft_ops.len())?;
             }
-            #[cfg(test)]
             TaskResumeOutcome::Fault(fault) => {
                 if fault.causes.len() > 16 {
                     return None;
@@ -693,7 +682,6 @@ impl Drop for FixedResumeQueue {
 /// `instance` — `QuotaSchema.outstanding_requests`, defaulting to 16 when the instance never
 /// declared one (or hasn't opened yet, which should not happen in practice: `spawn_task` is only
 /// ever reachable from `dispatch_emit`, itself only reachable after `Event::InstanceOpen`).
-#[cfg(test)]
 async fn instance_task_quota(instance: u32) -> u64 {
     INSTANCE_METADATA.with(|metadata| metadata.borrow().get(instance).and_then(|entry| entry.quota.outstanding_requests)).unwrap_or(16)
 }
@@ -817,9 +805,10 @@ pub async fn host() -> crate::host::Host {
 }
 
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): spawns `task` onto this actor's
-/// shared `LocalExecutor`, quota-gated then key-deduped (in that order — a same-key respawn at
+/// shared `TASK_EXECUTOR`, quota-gated then key-deduped (in that order — a same-key respawn at
 /// exactly the quota limit legitimately fails; the caller may retry once the cancelled slot is
-/// actually freed on a later turn). Called from `🔌️plugin/🦀️.rs`'s `dispatch_emit`, right
+/// actually freed on a later turn). Called from `🔌️plugin/🦀️.rs`'s
+/// `publish_mounted_typed_operation_unit`, the migrated publication ladder's own task lane, right
 /// after a gesture's mutation lanes land — `M`/`C`/`D` are that call's concrete `A::Mutation`/
 /// `A::ConfigMutation`/`A::DraftMutation`, monomorphized per app. The moment the task's future
 /// resolves, its `TaskResolution` is erased to bytes (`TaskResumeOutcome`, the SAME
@@ -827,7 +816,6 @@ pub async fn host() -> crate::host::Host {
 /// on `TASK_RESUMES` — no `M`/`C`/`D` generic ever crosses into the executor or the resume queue,
 /// which is what lets ALL of this actor's apps (each with its own concrete `A`) share ONE
 /// `LocalExecutor`/`TASK_RESUMES` pair.
-#[cfg(test)]
 pub(crate) async fn spawn_task<M, C, D>(instance: u32, meta: &crate::app::ActionMeta, task: crate::app::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
 where
     M: ::protocol::OpBinary + 'static,
@@ -857,7 +845,7 @@ where
     // `RequestFuture`) is dropped without ever completing, so no resume is ever queued for it.
     if let Some(key) = &key {
         if let Some(previous) = TASK_RECORDS.with(|records| records.borrow().find_key(instance, key)) {
-            let detached = TEST_FUTURE_EXECUTOR.with(|executor| executor.detach(previous));
+            let detached = TASK_EXECUTOR.with(|executor| executor.detach(previous));
             let record = TASK_RECORDS.with(|records| records.borrow_mut().remove(previous));
             if detached.is_none() && record.is_none() {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.supersession-pending"), "keyed task supersession found no exact previous owner to dispose"));
@@ -867,7 +855,7 @@ where
         }
     }
 
-    let reservation = TEST_FUTURE_EXECUTOR.with(|executor| executor.reserve()).map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.executor-capacity"), message))?;
+    let reservation = TASK_EXECUTOR.with(|executor| executor.reserve()).map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.executor-capacity"), message))?;
     let task_id = reservation.id();
     if !TASK_RECORDS.with(|records| records.borrow().can_insert(task_id)) {
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.record-capacity"), "fixed task record authority rejected an executor-reserved direct slot"));
@@ -899,7 +887,6 @@ where
 /// 🔀️ The exact wire shape `dispatch_emit`'s own `last_emit_wire` uses for one mutation lane —
 /// factored out so `spawn_task`'s `TaskResolution::Emit` erasure and `dispatch_emit` stay
 /// byte-identical without one calling the other across the crate's plugin/reactor split.
-#[cfg(test)]
 async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
     let mut encoded = Vec::with_capacity(ops.len());
     for op in ops.iter() {
@@ -918,33 +905,37 @@ async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
 /// (there should be none, by construction — every `RequestFuture` is created inside `TaskCtx.host`,
 /// itself only ever handed to a task by `spawn_task`).
 ///
-/// 🪞️ Both arms DROP. The production arm hands the sweep to `ReactorExecutor::close_instance_step`;
-/// the native arm `detach`es the same future out of `TEST_FUTURE_EXECUTOR`. Neither ever polls a
+/// 🪞️ Both halves DROP, and one call runs exactly one unit of one of them. The cursor walks the
+/// `TASK_RECORDS`/`TASK_EXECUTOR` half first — an `AsyncTask` spawned by `spawn_task` lives there
+/// on every build since the task lane became a product lane — and then continues, offset by
+/// [`REACTOR_TASK_SLOTS`], into `ReactorExecutor::close_instance_step`, which owns the job/reducer
+/// tasks. An instance that spawned no `AsyncTask` skips the whole first half in one unit, so the
+/// close ladder of the common case costs exactly what it cost before. Neither half ever polls a
 /// cancelled task: a cancelled body must never observe its await resolving, which is also what
 /// `RequestRegistry::begin_cancel_instance`'s doc relies on when it retires slots with no wake.
 // 🚫️async: E1 pure in-memory sweep over `TASK_RECORDS`/`EXECUTOR`/`TASK_KEYS` (all sync now,
 // R9) consumed by `poll`'s sync `world actor` boundary — zero suspension.
 pub(crate) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> bool {
-    #[cfg(not(test))]
-    {
-        let budget = executor::ReactorTaskBudget { operation: 0, generation: 0, cancellation_generation: 0, maximum_units: 1, maximum_bytes: 4_096, deadline: std::time::Instant::now() + std::time::Duration::from_millis(8) };
-        matches!(REACTOR_EXECUTOR.with(|executor| executor.close_instance_step(instance, cursor, budget)), executor::ReactorTaskStep::Complete)
-    }
-    #[cfg(test)]
-    {
-        if *cursor >= REACTOR_TASK_SLOTS {
-            return true;
+    if *cursor < REACTOR_TASK_SLOTS {
+        if TASK_RECORDS.with(|records| records.borrow().count_instance(instance)) == 0 {
+            *cursor = REACTOR_TASK_SLOTS;
+        } else {
+            let entry = TASK_RECORDS.with(|records| records.borrow().entry_at(*cursor).and_then(|(id, record)| (record.instance == instance).then_some(id)));
+            if let Some(id) = entry {
+                let detached = TASK_EXECUTOR.with(|executor| executor.detach(id));
+                let record = TASK_RECORDS.with(|records| records.borrow_mut().remove(id));
+                drop(record);
+                drop(detached);
+            }
+            *cursor += 1;
+            return false;
         }
-        let entry = TASK_RECORDS.with(|records| records.borrow().entry_at(*cursor).and_then(|(id, record)| (record.instance == instance).then_some(id)));
-        if let Some(id) = entry {
-            let detached = TEST_FUTURE_EXECUTOR.with(|executor| executor.detach(id));
-            let record = TASK_RECORDS.with(|records| records.borrow_mut().remove(id));
-            drop(record);
-            drop(detached);
-        }
-        *cursor += 1;
-        *cursor >= REACTOR_TASK_SLOTS
     }
+    let mut reactor_cursor = *cursor - REACTOR_TASK_SLOTS;
+    let budget = executor::ReactorTaskBudget { operation: 0, generation: 0, cancellation_generation: 0, maximum_units: 1, maximum_bytes: 4_096, deadline: std::time::Instant::now() + std::time::Duration::from_millis(8) };
+    let step = REACTOR_EXECUTOR.with(|executor| executor.close_instance_step(instance, &mut reactor_cursor, budget));
+    *cursor = REACTOR_TASK_SLOTS + reactor_cursor;
+    matches!(step, executor::ReactorTaskStep::Complete)
 }
 
 fn preflight_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {

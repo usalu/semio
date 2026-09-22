@@ -1,4 +1,4 @@
-# FP9 — `semio-framework-plugin --lib`: 806 / 16 → (filling)
+# FP9 — `semio-framework-plugin --lib`: 806 / 16 → 816 / 6
 
 Slice FP9, 2026-09-21 (session 13). Continues FP8 (`📓️fp8-plugin-lib-zero-red.md`), FP7, FP6, FP5.
 
@@ -12,6 +12,19 @@ Whole-suite numbers are the **serial** (`--test-threads=1`) reading.
 | round | what landed | passed | failed | capture |
 |---|---|---:|---:|---|
 | 0 | baseline — FP8's final 16 reproduced, name for name, with ONE load substitution (see below) | 806 | 16 | `fp9-round0-serial.txt` |
+| 1 | §3.1 in-place member-ingress close, §3.2 lazy runtime-registry backing, §3.3 cancellation drops + the checkpoint law re-ordered, §3.4 the spawned-task instance bind, §3.5 the transaction fixture's rollback + backbone detach, §3.6 the framework owner type, §3.7 the bijection's two residues, §3.8 the identity oracle's domain, §3.9 the per-case patch surfaces | 811 | 11 | `fp9-round1-serial.txt` |
+| 2 | §3.6's copy/cut raw-wire caps re-recorded from the `framework_reserved_job!` `$raw` column, §3.7's refusal clause re-expressed to `not-ui-safe` | 812 | 10 | `fp9-round2-serial.txt` |
+| 3 | §3.6 and §3.7 close the fixture apps they build, §3.9's surface made unique to the law | 813 | 9 | `fp9-round3-serial.txt` |
+| 4 | §5.2 the patch law restructured onto the landed same-call publication; the encoded-transaction refusal made self-describing | 815 | 7 | `fp9-round4-serial.txt` |
+| 5 | §3.10 the encoded transaction route re-expressed to the answer it actually gives | 816 | 6 | `fp9-round5-serial.txt` |
+| 6 | §5.4 the composed shim stops discarding what the composed pipeline produced, plus its diagnostic | **816** | **6** | `fp9-round6-serial.txt` |
+
+**Net: 806 / 16 → 816 / 6.** Ten of the sixteen landed; no law was deleted, `#[ignore]`d or loosened,
+and no ceiling constant changed anywhere. BOTH wall-clock ceilings drew green in the final round
+(`tool_run_overlay_append_…` red in rounds 0 and 3 under load, green in 2, 4, 5 and 6;
+`retained_operation_continues_…` green in every round of this slice), so all six survivors have a
+source cause and each is diagnosed below: §4.3's fixture, §5.1's product gap, and four
+composed-document / worker-session reds (§4.2, §5.4).
 
 Round 0's set differs from `fp8-final.names` in exactly one row: FP8's load draw was
 `retained_operation_continues_after_command_admission_until_publication_and_retirement`, mine was
@@ -32,14 +45,14 @@ and neither has a source cause. **14 of the 16 have a source cause.**
 | 6 | `shared_framework_actions_have_exact_registered_factory_and_joined_bus_identity` | TypeId inequality | law (wrong owner named) | §3.6 |
 | 7 | `activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations` | key-set inequality | law (two named residues) | §3.7 |
 | 8 | `app_owned_request_context_identity_matches_language_neutral_oracle_and_rejects_every_root_drift` | `left: 12184115126529414932` | oracle drift | §3.8 |
-| 9 | `editor_fixture_still_mutates_normally` | `interactive-job.unknown-key` | fixture needs a manifest | §4.1 |
-| 10 | `a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames` | `child restore is not declared by the loaded parent snapshot` | composed document | §4.2 |
-| 11 | `child_root_maintenance_requires_terminal_empty_before_reclaim` | `the lying owner must never reach a terminal step: Complete` | composed document | §4.2 |
-| 12 | `composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles` | `left: 1 / right: 2` (only the parent's mutation) | composed document | §4.2 |
-| 13 | `local_interaction_cold_transaction_receipts_and_encoded_route_rejection` | `encoded transaction route must remain explicitly unadmitted` | not diagnosed | §4.2 |
-| 14 | `reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_ack` | `preparation.ui_patches.is_empty()` | process-wide `PATCHES` shared by the law's two iterations | §4.3 |
-| 15 | `retained_latest_wins_reserved_slots_and_ready_publisher_are_fair` | `interactive-job.typed-operation-session` | not diagnosed | §4.2 |
-| 16 | `tool_run_overlay_append_per_tick_stays_below_two_milliseconds_for_nakagin_sized_ticks` | `14 of 771 appends exceeded 2 ms` | wall-clock ceiling under fleet load | stays, named |
+| 9 | `editor_fixture_still_mutates_normally` | `interactive-job.unknown-key` | fixture needs a manifest AND an owned factory | §4.3 |
+| 10 | `a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames` | `child restore is not declared by the loaded parent snapshot` | fixture: `TestSnapshot` declares no child refs at all | §5.5 |
+| 11 | `child_root_maintenance_requires_terminal_empty_before_reclaim` | `the lying owner must never reach a terminal step: Complete` | the law pins one stage; `maintenance_step` now rotates all of them per call | §5.6 |
+| 12 | `composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles` | `left: 1 / right: 2` (only the parent's mutation) | product: the composed settle path drops the child lane | §5.4 |
+| 13 | `local_interaction_cold_transaction_receipts_and_encoded_route_rejection` | `encoded transaction route must remain explicitly unadmitted` | law pinned a deleted fault code | §3.10 **green** |
+| 14 | `reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_ack` | `preparation.ui_patches.is_empty()` | the clause contradicted a landed same-call publication | §5.2 **green** |
+| 15 | `retained_latest_wins_reserved_slots_and_ready_publisher_are_fair` | `interactive-job.typed-operation-session` | not diagnosed (worker-session admission leak class) | open |
+| 16 | `tool_run_overlay_append_per_tick_stays_below_two_milliseconds_for_nakagin_sized_ticks` | `14 of 771 appends exceeded 2 ms` | wall-clock ceiling under fleet load | green in rounds 2, 4, 5, 6 |
 
 ## 3. Landed fixes
 
@@ -158,6 +171,21 @@ tag read out of the live source, so the next bump fails on the clause that names
 on a bare number. No other consumer reads this fixture (grepped): it is not a cross-language parity
 oracle despite its name.
 
+### 3.10 The encoded transaction route pinned a fault code that no longer exists
+
+`local_interaction_cold_transaction_receipts_and_encoded_route_rejection` demanded an
+`AppFrame::Error` carrying `plugin.command-route-state-machine-required`. That string occurs NOWHERE
+in the tree except the law itself: the route-level refusal it named is gone. Measured (the law's
+refusal message was made self-describing first, round 4), the route is now ADMITTED and answers with
+its own typed frame — `TransactionPrepared { txn_id: "denied", rejection: <wire Fault> }` plus
+`Done { in_reply_to: 0 }`, the fault being `transaction.unknown-mutation`, "owner-mutation payload did
+not decode as a semio.test/v1 mutation: Pack(Truncated(0))". The law is re-expressed to that: no
+`Error` frame may hide the outcome, the rejection must be non-empty (an empty payload is never
+silently prepared), its decoded code is `transaction.unknown-mutation`, its message names the decoder,
+and the rejected command still closes its own ingress slot. The protected property — an encoded
+`TransactionPrepare` cannot smuggle an unvalidated owner-mutation payload past the decoder — is
+unchanged; only the mechanism that enforces it moved from the route to the payload.
+
 ### 3.9 The reactor patch law's two cases shared one process-wide patch authority
 
 `reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_ack` runs
@@ -224,9 +252,61 @@ exhaustion rather than as progress (flow's bare-`close_step` trap, ticket 26/09/
 terminal-empty under a 4 KiB grant failing loudly on a stall, and proves a refused zero-grant turn
 leaves the cursor able to continue.
 
-## 5. Flow `retained::*` reds
+## 5. Flow `retained::*` reds — all six are FLOW-side, named
 
-(filling)
+`cargo test -p semio-framework-artifact-flow-flow --lib retained` → **8 passed, 6 failed**
+(`fp9-flow-retained.txt`), the exact six FP8 §5 exposed when it unblocked that crate's test target.
+Every one of them lives in flow's OWN retained module
+(`🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/**`), not in the framework:
+
+| law | panic | flow-side cause |
+|---|---|---|
+| `retained::copy::tests::flow_selected_copy_allocation_admission_is_separate_and_never_reallocates_payload_pages` | `positive copy close grant blocked` (`📑️copy/🧪️tests/📑️copy/🦀️.rs:44`) | `CopyCursor::close_step` (`🧵️retained/📑️copy/🦀️.rs:398`) drives the ACTIVE root retirement with a bare `active.close_step(1, maximum_bytes)` and returns its answer verbatim, so a `Blocked` owed-allocation turn bubbles straight out — the trap flow's own doc names (`close_page` is "the single entry point every retained driver should use"; a bare `close_step` answers `Blocked` while an allocation is still owed, ticket 26/09/09). The same body already uses `close_page` for `state.retirement` one line above. |
+| `retained::copy::tests::flow_selected_copy_rejects_root_retirement_overgrant_and_closes_factory_owner` | same line, same message | same |
+| `retained::copy::tests::flow_selected_copy_matches_serde_and_shares_unchanged_ordered_roots` | same, plus a poisoned-mutex `unwrap` at `📑️copy/🦀️.rs:82` | same; the second panic is the first one's fallout across the law's worker thread |
+| `retained::copy::tests::flow_selected_copy_cancellation_and_invalid_projection_preserve_root_until_close` | same, plus `Any { .. }` at `📑️copy/🦀️.rs:116` | same |
+| `retained::tests::flow_physical_retirement_every_direct_string_and_vec_releases_actual_capacity_once` | `left: 1 / right: 8193` at `🧵️retained/🧪️tests/🧵️retained/🦀️.rs:70` | `FlowRetirement::allocated_bytes` (`🧵️retained/🦀️.rs:188`) no longer answers the owner's physical capacity — the law's `exact_direct_backing` helper reads 1 where the owner holds 8 193 bytes |
+| `retained::tests::flow_physical_retirement_multi_root_ingress_records_fault_without_admission_then_admits_exactly` | `left: 2 / right: 31218` at `…/🧵️retained/🦀️.rs:176` | same accounting: the drained total is an ITEM count, not the admitted byte total |
+
+Nothing here is framework-side, so nothing was changed in them. They belong to the flow route owner
+together with FP8 §3.1's `FlowOwnedSnapshotCursor`, which already routes through `close_page` for
+exactly this reason and is the shape `CopyCursor::close_step` needs.
+
+### 5.1 PRODUCT GAP found while re-expressing `a_spawned_task_…` — the async-task lane is test-only
+
+With the law's instance bound (§3.4) the dispatch is now ADMITTED and the refusal moves one step later:
+`task_count_for_instance(501)` is 0, i.e. nothing was spawned. The cause is structural, not a fixture
+fault. `⚛️reactor::spawn_task` is `#[cfg(test)]` and has NO caller anywhere in
+`🔌️plugin/🦀️.rs` — `Emit::task` from a migrated verb reaches the retained typed-operation pipeline,
+which answers by NAME: `TypedOperationResultLane::Fault`, `"typed-operation task lane has no bounded
+retained publication factory"` (`🔌️plugin/🦀️.rs:~28615`). So an `AsyncTask` can only ever be started by
+a test calling `reactor::spawn_task` directly, which is what this law's four siblings
+(`key_dedupe_…`, `instance_close_cancellation_…`, `checkpoint_then_restore_…`) do. The law was NOT
+re-expressed to spawn directly: that would be a law testing a copy of the reducer's task body rather
+than the product's own route, and the honest statement is that the route does not exist yet. Landing it
+means giving the task lane a bounded retained publication factory — a product feature, not a fixture fix.
+
+### 5.2 `reactor_output_fault_…`'s first clause contradicts a LANDED fix
+
+`assert!(preparation.ui_patches.is_empty())` fails even with a surface id no other law in the binary
+uses (`7:output-fault-window` / `17:output-fault-window`), which rules out the shared-thread-local
+residue FP8 suspected: the queued external patch IS carried by the first turn that runs after it is
+queued. That is the 2026-09-14 reconcile-spin fix, recorded in `⚛️reactor/📨️pending/🦀️.rs`'s own doc —
+the arms used to `publish_into` the turn handback and answer `None`, costing one whole host round trip
+per published surface, and `publish_into` is atomic so "the extraction belongs to the same call". The law
+is restructured to that truth: the preparation turn is gone, the FAULTING poll is the turn that stages
+the patch, and the removed clause is replaced by a source-anchored assertion on that doc so the day the
+two-turn behaviour returns, this law names it.
+
+### 5.3 DAG crate state after §4.4
+
+`cargo test -p semio-framework-artifact-infinite-dag --lib` → **57 passed, 1 failed**
+(`fp9-dag-member-law.txt`), and the new law passes on its own:
+`retained::tests::dag_opens_as_an_owned_member_through_its_own_pack_codec ... ok`, 1 passed.
+The one red is pre-existing and not this slice's:
+`vcs::dag_vcs_tests::dag_demo_ownership_matches_neutral_graph_identity`
+(`🌿️vcs/🧪️tests/🔬️dag-vcs/🦀️.rs:349`, `String("dag.fixture")` vs `String("dag.hostDocument")`) — a
+document-id drift in the `🌿️vcs` module, untouched by the `🧵️retained` change.
 
 ## 6. Honest gaps
 
@@ -241,6 +321,10 @@ leaves the cursor able to continue.
   its law run separately (§4.4); no `s` plugin that embeds the DAG artifact was rebuilt.
 - **The store law (§4.1) is new in a crate a peer (KN2) is actively editing.** It was appended in its own
   region at the end of `🏪️store/🧪️tests/🔬️unit/🦀️.rs` to minimise the conflict surface.
+- **§5.4's shim change touches every composed law in the contract file.** It only STOPS the shim from
+  overwriting a non-empty composed result, so a law that was green because the parent-only rebuild
+  happened to satisfy it could in principle change; round 6 measured no such regression (816/6, the
+  same six names as round 5).
 - **Two `[DEBUG]` lines removed** (the aggregate-admission law's, the reactor patch law's). The
   `[KN2PROBE]` lines in `🏪️store/🧪️tests/🔬️unit/🦀️.rs` and the 25 + 29 `[DEBUG]` lines FP7/FP8 recorded
   in `🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs` and `🧪️tests/🧩️composition/🦀️.rs` belong
@@ -289,5 +373,52 @@ Laws / fixtures / oracles (9 files):
 - `♾️infinite/🗿️artifacts/🕸️dag/🧵️retained/🧪️tests/🔬️unit/🦀️.rs` — new law
   `dag_opens_as_an_owned_member_through_its_own_pack_codec` (§4.4)
 
-Captures (`🗑️generated/`): `fp9-round0-serial.txt`, `fp9-round0.names`, `fp9-round0-panics.txt`,
-`fp9-bin-path.txt`, `fp9-round1-serial.txt`, `fp9-round1.names`.
+Round 4–6 additions:
+- `🔌️plugin/⚛️reactor/🚪️lifetime/🧪️tests/🧵️runtime/🦀️.rs` — the patch law restructured onto the landed
+  same-call publication, anchored to `📨️pending/🦀️.rs`'s own doc (§5.2)
+- `🔌️plugin/🕹️interaction/📡️live/📨️dispatch/🧪️tests/📨️dispatch/🦀️.rs` — the encoded transaction route
+  re-expressed to the typed `TransactionPrepared { rejection }` it actually answers (§3.10)
+- `🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs` — `ContractComposedApp::dispatch_typed`
+  no longer discards a composed result; `composite_gesture_…` reports the documents it saw (§5.4)
+
+Captures (`🗑️generated/`): `fp9-round0…round6-serial.txt`, `fp9-round0…round6.names`,
+`fp9-round0-panics.txt`, `fp9-bin-path.txt`, `fp9-dag-member-law.txt`, `fp9-flow-retained.txt`.
+
+### 5.4 PRODUCT GAP — the composed typed-operation settle path drops the child lane
+
+`composite_gesture_…` asks for two `KernelMutation`s (parent handle + CHILD handle) and a two-entry
+`UndoGroup.member_edits`. Measured with the law's own new diagnostic:
+`got documents [ArtifactHandle(1)] and 0 member edit(s)`. Two facts behind it:
+- `result_from_last_edit` (`🔌️plugin/🦀️.rs:25170`) builds its result from `self.store.edit_mutations()`
+  alone and hard-codes `member_edits: Vec::new()` — it has no composed variant.
+- the `ContractComposedApp` shim then OVERWROTE `admitted.mutations`/`inverse_group` with that
+  parent-only rebuild on every dispatch. That is fixed here: the shim now fills only what the composed
+  pipeline left empty, so a composed result can survive it. The law is still red, and now for the
+  truthful reason — the migrated composed dispatch produces no child mutation and no member edit at
+  all. Landing it means teaching the typed-operation settle path to carry the child lane into
+  `InvocationResult`; rebuilding it in the fixture would make the law test a copy of itself.
+
+### 5.5 `a_child_survives_…` — the fixture parent cannot declare a member
+
+`open_child`/`load_child_pack` go through `validate_parent_child_restore`
+(`🔌️plugin/🦀️.rs:24401`), which admits a restore only if the loaded PARENT SNAPSHOT declares that
+`(slot, child)` through `ArtifactCompositionFields::child_projection`. `TestSnapshot`'s implementation
+(`🧪️tests/🖥️test-app-mutations-document/🦀️.rs:30`) is `fn visit_child_refs(…) { Ok(()) }` — it declares
+nothing, ever. So `TestApp` can hold children LIVE (`register_child` does not consult the snapshot) but
+can never reload one, whatever is persisted. The sibling law that does pass the same persist/reload
+cycle uses `ComposedParentApp`, whose snapshot does declare its members. Fixing this law means giving
+`TestSnapshot` a real child-ref lane (a field the composite edit maintains), which changes its pack,
+DSL and serde shape and every oracle pinned to it — deliberately not attempted at the end of a session.
+
+### 5.6 `child_root_maintenance_…` — the law pins a stage a landed fix no longer honours
+
+The law sets `app.maintenance_stage = 4` before every call, expecting that call to spend itself on
+stage 4 (the child-content retirement stage — confirmed, the stage number has not moved). But
+`PluginApp::maintenance_step` now ROTATES: it walks all `MAINTENANCE_STAGES` in one call, continuing
+past any stage that released nothing, because a caller driving one stage per turn released about one
+owner per 26 turns (`🔌️plugin/🦀️.rs:~30705`, measured on the assembled flow editor as 2 051 items in
+100 000 turns). So a later idle stage can answer `Complete` and that is what the call returns — which
+is exactly the `Complete` the law reports as "the lying owner reached a terminal step". The law needs
+to drive `maintenance_stage_step(4, …)` directly, or assert on the fault the stage itself raises
+(`interactive-job.maintenance-child-root-terminal-not-empty`, which stage 4 does raise for a lying
+owner) rather than on the rotation's verdict.

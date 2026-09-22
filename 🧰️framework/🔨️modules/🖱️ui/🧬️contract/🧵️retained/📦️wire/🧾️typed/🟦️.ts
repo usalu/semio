@@ -363,7 +363,7 @@ export class Builder {
   }
 
   /** 🪟️ A tree container's materialised slice (`TreeSectionProps.window`/`TreeItemProps.window`) — `null` for an unwindowed container. */
-  *treeWindow(value: unknown): Program<Contract.TreeWindow | null> { yield 32; if (value == null) return null; const v = yield* this.record(value, ["total", "offset"]); return this.fixed({ total: number(v.total), offset: number(v.offset) }); }
+  *treeWindow(value: unknown): Program<Contract.TreeWindow | null> { yield 32; if (value == null) return null; const v = yield* this.record(value, ["total", "offset", "rowExtent"]); return this.fixed({ total: number(v.total), offset: number(v.offset), rowExtent: choice(v.rowExtent, ["standard", "compactText", "compactSmallControl", "compactControl"]) }); }
   *selectItem(value: unknown): Program<Contract.SelectItem> { const v = yield* this.record(value, ["value", "label"]); return this.fixed({ value: text(v.value), label: text(v.label) }); }
   *entry(value: unknown): Program<Contract.KeyValueEntry> { const v = yield* this.record(value, ["label", "value"]); return this.fixed({ label: text(v.label), value: text(v.value) }); }
   *rowAction(value: unknown): Program<Contract.RowAction> { const v = yield* this.record(value, ["icon", "label", "action", "placement"]); const action = yield* this.binding(v.action); yield 128; return this.fixed({ icon: text(v.icon), label: optional(v.label, text), action, placement: defaulted(v.placement, "row", v => choice(v, ["row", "menu"])) }); }

@@ -700,6 +700,33 @@ impl FrameBuildHandle {
         self.session.is_some() || self.rejected.is_some()
     }
 
+    /// 🪢 Retires one frame owner unit so a component-close bridge created by that frame can run.
+    /// Unlike [`Self::close_step`], this keeps the handle reusable and preserves its installed wake.
+    pub(crate) fn retire_for_component_surface_close_step(&mut self) -> bool {
+        self.cancel.cancel_now();
+        if let Some(rejected) = self.rejected.as_mut() {
+            let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if rejected.terminal_is_empty() {
+                self.rejected = None;
+            }
+        } else if let Some(session) = self.session.as_ref() {
+            if !matches!(session.poll(), semio_framework_job::WorkerJobPoll::Closing | semio_framework_job::WorkerJobPoll::TerminalEmpty) {
+                let _ = session.begin_close();
+                return false;
+            }
+            let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            if session.terminal_is_empty() {
+                self.session = None;
+                self.ticket = None;
+            }
+        }
+        if self.has_live_session() {
+            return false;
+        }
+        self.last_submitted_generation = None;
+        true
+    }
+
     pub(crate) fn close_step(&mut self) -> bool {
         if !self.closing {
             self.closing = true;

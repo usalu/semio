@@ -126,6 +126,31 @@ pub struct RunResult {
     pub scope: Dictionary,
     pub effects: Vec<EffectLogEntry>,
 }
+
+/// 🧊️ An effect row owns the step's merged `input` dictionary and, for a step the registry served,
+/// its `output` — both non-empty for any real program, so the bare drop of a row aborts with
+/// `final Dictionary ownership must be explicitly retired or owned by a cold boundary`. Declared
+/// here (not at each caller) for the same reason [`Step`]'s `Drop` is: rows are cloned into run
+/// results, parked in editor transients and thrown away wherever a result dies, and in the wasm
+/// guest a missed retirement is an abort, not a test failure. NOT a `Drop`: `🎬️sequence`'s
+/// `retire_run_result_cold` destructures a row field-by-field, which a `Drop` type forbids
+/// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, bucket XCUT-DICT).
+impl ColdRetire for EffectLogEntry {
+    fn retire_cold(self) {
+        self.input.retire_cold();
+        self.output.retire_cold();
+    }
+}
+
+/// 🧊️ [`EffectLogEntry`]'s boundary for a whole run: the accumulated `scope` plus every effect row.
+/// Every producer of a `RunResult` — `ImperativeHost::run`, `SequenceHost::run`, the `run` command,
+/// `export_media("result:out")` — hands its result here instead of dropping it.
+impl ColdRetire for RunResult {
+    fn retire_cold(self) {
+        self.scope.retire_cold();
+        self.effects.retire_cold();
+    }
+}
 // #endregion 🔖️EffectLog
 
 // #region 🔖️Executor
@@ -271,8 +296,10 @@ fn merge_output_into_scope(scope: &Dictionary, output: &Dictionary) -> Dictionar
                     continue;
                 }
             }
-            let next = merged.insert(key.clone(), value.clone());
-            merged = replaced_cold(merged, next);
+            // 🧊️ `Dictionary::insert` CONSUMES its receiver (it builds through `ColdDictionaryBuilder`,
+            // which takes exact ownership of the displaced root), so unlike the borrowing `merge`
+            // above there is no previous owner left to retire.
+            merged = merged.insert(key.clone(), value.clone());
         }
     }
     merged

@@ -310,6 +310,7 @@ fn input(id: &str, value: &str, placeholder: &str, action: &str, submit: Option<
         input_kind: if id == HUB_PASSWORD_INPUT_ID { "password".into() } else { "text".into() },
         value: value.to_string(),
         placeholder: Some(Label::data(placeholder)),
+        accessibility_label: None,
         commit: None,
         min: None,
         max: None,

@@ -55,3 +55,10 @@ A private `CARGO_TARGET_DIR="$T/🗑️generated/<topic>/target"` IS allowed (th
 `.cargo/config.toml`; only the small uplifted deliverables divert, ≈1.6 GB per topic): it cut a 19-crate batch from
 33 min of lock waiting to 7 min. Use it. The test-binary watchdog is 30 min (load ~60–70 makes 4-thread binaries slow;
 a kill at 10 min was not a hang).
+
+## Native cargo serialization (03:30, 2026-09-22)
+The shared build dir cannot serve many parked cargos (unit-lock cycles; peers cut parked sets). From now on EVERY
+native cargo test/check of this fleet runs through the play native mutex — one cargo at a time across all topics:
+`zsh "$T/📜️native-test-mutex.sh" <topic> -- env CARGO_TARGET_DIR="$T/🗑️generated/<topic>/target" CARGO_INCREMENTAL=0 CARGO_BUILD_JOBS=4 RUST_MIN_STACK=33554432 DEVELOPER_DIR=/Library/Developer/CommandLineTools cargo test -p … -- --test-threads=4`
+(FIFO queue in /tmp/semio-play-native-test.queue). Batch all your crates into ONE invocation, cut any cargo of yours
+that is currently parked outside the mutex, and do source work while you wait for your turn.

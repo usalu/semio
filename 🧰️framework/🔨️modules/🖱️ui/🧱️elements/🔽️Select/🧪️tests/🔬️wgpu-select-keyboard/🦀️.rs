@@ -84,6 +84,26 @@ async fn row_metrics_are_the_css_line_box_plus_py_single_not_a_control_height() 
 }
 
 #[semio_framework_async_macros::async_test]
+async fn the_popup_outer_box_keeps_reacts_minimum_border_and_two_permanent_scroll_bands() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔽️select-popup-geometry/🔣️.json")).expect("Select popup geometry fixture");
+    let theme = Theme::light();
+    let trigger = Rect::new(40.0, 100.0, fixture["triggerWidth"].as_f64().expect("trigger width") as f32, theme.control_height);
+    let popup = select_popup_geometry(trigger, fixture["optionCount"].as_u64().expect("option count") as usize, &theme, fixture["cases"][0]["viewportHeight"].as_f64().expect("viewport height") as f32, 0.0, 0.0);
+    let border = fixture["borderWidth"].as_f64().expect("border width") as f32;
+    let viewport = select_menu_height(fixture["optionCount"].as_u64().expect("option count") as usize, &theme);
+    let band = select_scroll_button_height(&theme);
+    let expected_height = border * 2.0 + band * 2.0 + viewport;
+
+    assert_eq!(popup.menu.w, fixture["minimumContentWidth"].as_f64().expect("minimum content width") as f32, "a trigger narrower than min-w-32 still owns a 128px popup");
+    assert!((popup.menu.h - expected_height).abs() < 0.001, "the outer popup contains its border, both bands, and the padded viewport");
+    assert!((popup.menu.h - fixture["cases"][0]["popupHeight"].as_f64().expect("browser popup height") as f32).abs() < 0.5, "theme-derived WGPU metrics remain within browser subpixel rounding");
+    let up = popup.up.expect("React always mounts the up band");
+    let down = popup.down.expect("React always mounts the down band");
+    assert!((up.h - band).abs() < f32::EPSILON && (down.h - band).abs() < f32::EPSILON);
+    assert!((down.y - (up.y + up.h) - viewport).abs() < 0.001, "the row viewport is distinct from both scroll bands");
+}
+
+#[semio_framework_async_macros::async_test]
 async fn the_popup_sits_below_the_trigger_until_the_viewport_runs_out_then_flips_above() {
     let theme = Theme::light();
     let menu_h = select_menu_height(4, &theme);
@@ -205,7 +225,7 @@ async fn a_chevron_press_scrolls_the_popup_one_react_step_and_leaves_no_slot_beh
 #[semio_framework_async_macros::async_test]
 async fn a_scroll_button_is_one_tiny_chevron_between_two_single_paddings() {
     let theme = Theme::light();
-    assert!((select_scroll_button_height(&theme) - (crate::wgpu::chrome::SIZE_TINY + theme.padding_standard * 2.0)).abs() < f32::EPSILON);
+    assert!((select_scroll_button_height(&theme) - (crate::wgpu::chrome::ICON_TINY + theme.padding_standard * 2.0)).abs() < f32::EPSILON);
 }
 
 #[semio_framework_async_macros::async_test]

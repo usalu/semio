@@ -348,6 +348,17 @@ fn glass_foreground_inherits_active_silhouette_clip() {
 }
 
 #[test]
+fn fractional_adjacent_silhouette_pieces_keep_one_physical_owner_per_pixel() {
+    let mut draw = DrawList::default();
+    draw.begin_retained_output(16, 4_096).expect("bounded retained output grant");
+    draw.begin_silhouette_clip(&[Rect::new(10.0, 48.8, 600.0, 371.2), Rect::new(10.0, 20.0, 170.4, 28.8)]);
+    assert!(draw.finish_retained_output().is_ok(), "logical adjacency must survive conservative physical scissor rounding");
+    let pieces = &draw.layers.last().expect("clipped layer").clip.as_ref().expect("silhouette clip").scissors;
+    assert_eq!(pieces.len(), 2);
+    assert!(pieces[0].intersect(&pieces[1]).w == 0 || pieces[0].intersect(&pieces[1]).h == 0, "one physical pixel cannot belong to both alpha pieces");
+}
+
+#[test]
 fn silhouette_stencil_states_write_masks_then_require_equality() {
     let mask = mask_stencil_state();
     assert_eq!(mask.front.compare, wgpu::CompareFunction::Always);

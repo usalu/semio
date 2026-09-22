@@ -397,9 +397,12 @@ async fn document_open_plan_v1_matches_language_neutral_fixture() {
     let mut unicode_control = fixture.valid_plan.clone();
     unicode_control.surface.app_id = "app.\u{85}hidden".into();
     assert_eq!(unicode_control.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+    // 🪢 A parent dialect naming another app's artifact kind is ADMITTED here: `artifact.kind` and
+    // `parent_dialect.artifact_kind` are separate id spaces, bounded separately and never against
+    // each other, and their binding is pinned by the trusted catalog's `validate_descriptor_open_target`.
     let mut parent_kind = fixture.valid_plan.clone();
     parent_kind.parent_dialect.artifact_kind = "s.foreign.document".into();
-    assert_eq!(parent_kind.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+    assert_eq!(parent_kind.validate(fixture.now_ms), Ok(()));
     let mut parent_control = fixture.valid_plan.clone();
     parent_control.parent_dialect.standard.push('\u{85}');
     assert_eq!(parent_control.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));

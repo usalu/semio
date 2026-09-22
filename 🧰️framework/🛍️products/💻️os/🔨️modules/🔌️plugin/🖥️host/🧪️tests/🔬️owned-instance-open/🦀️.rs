@@ -313,3 +313,75 @@ async fn wasmtime_codec_genesis_answers_the_same_pair_as_the_interpreter() {
     let owned_pair = owned.codec_genesis(&owned_compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("owned codec.genesis");
     assert_eq!(jit_pair, owned_pair, "a pure codec export must answer identically under both runtimes");
 }
+
+
+/// 🧾️ The three packages the trusted-catalog bootstrap stages, as
+/// `(package id, component file, artifact kind, document schema)`. Kinds and schemas are the
+/// literals their own artifact crates declare — `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs`,
+/// `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs` (`GIS_MAP_SCHEMA`) and
+/// `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs` (`STDIO_TXT_DOCUMENT_SCHEMA`) — pinned here
+/// because this crate cannot depend on an `s` plugin.
+const STAGED_CODEC_COMPONENTS: [(&str, &str, &str, &str); 3] =
+    [("semio:note", "semio_s_plugin_note.wasm", NOTE_ARTIFACT_KIND, NOTE_DOCUMENT_SCHEMA), ("semio:gis", "semio_s_plugin_gis.wasm", "s.gis.gismap", "gis.map"), ("semio:stdio", "semio_s_plugin_stdio.wasm", "s.stdio.txt", "stdio.txt")];
+
+/// 🧹️ Drives ALL FOUR `codec` exports over one staged component, both resolver keys included.
+/// Returns the failure text rather than panicking so the sweep above it can report every component
+/// in one run instead of dying on the first.
+async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, schema: &str) -> Result<(), String> {
+    let Some(path) = plugin_wasm(file_name) else { return Err(format!("{file_name} is not built in any target root")) };
+    let bytes = std::fs::read(&path).map_err(|error| format!("read {}: {error}", path.display()))?;
+    let runtime = OwnedRuntime::new();
+    let compiled = runtime.compile(&package_ref(package, &bytes), &bytes).await.map_err(|error| format!("compile {}: {error:?}", path.display()))?;
+    let hash = runtime.codec_pack_schema_hash(&compiled, schema, codec_budget()).await.map_err(|error| format!("codec.pack-schema-hash({schema}): {error:?}"))?;
+    if hash == [0; 32] {
+        return Err(format!("codec.pack-schema-hash({schema}) answered the zero fingerprint"));
+    }
+    let pair = runtime.codec_genesis(&compiled, schema, MINTED_DOCUMENT_ID, codec_budget()).await.map_err(|error| format!("codec.genesis({schema}): {error:?}"))?;
+    if pair.pack.is_empty() || pair.spr.is_empty() {
+        return Err(format!("codec.genesis({schema}) produced an empty pair"));
+    }
+    let by_kind = runtime.codec_genesis(&compiled, kind, MINTED_DOCUMENT_ID, codec_budget()).await.map_err(|error| format!("codec.genesis({kind}): {error:?}"))?;
+    if by_kind != pair {
+        return Err(format!("codec.genesis({kind}) and codec.genesis({schema}) selected different apps"));
+    }
+    let mirror = runtime.codec_print_mirror(&compiled, schema, &pair.pack, &pair.spr, codec_budget()).await.map_err(|error| format!("codec.print-mirror({schema}): {error:?}"))?;
+    if !mirror.dsl.contains(MINTED_DOCUMENT_ID) {
+        return Err(format!("codec.print-mirror({schema}) lost the minted identity"));
+    }
+    let applied = runtime.codec_apply_ops(&compiled, schema, &pair.pack, &pair.spr, &[], codec_budget()).await.map_err(|error| format!("codec.apply-ops({schema}): {error:?}"))?;
+    if applied.pack.is_empty() || applied.spr.is_empty() {
+        return Err(format!("codec.apply-ops({schema}) returned an empty baseline"));
+    }
+    Ok(())
+}
+
+/// 🧹️ The per-component sweep ticket 26/09/18 slice TC3d §6(b) asked for. The `codec` resolver is
+/// shared by every package, so a defect in it is invisible when only one component is ever driven —
+/// and note is the only one the hub routes through the guest interface, because stdio and gis carry
+/// a linked Rust codec (`🌎️hub/📦️packages/🦀️rust/📜️script.ts`, `spec.linkedCodecRegistry`).
+///
+/// 🪦️ `plugin_artifact_codec_app` constructs EVERY app of a bundle to read its schema and closes
+/// each one it rejects, so this sweep is also the standing proof that every app of a staged bundle
+/// can reach its terminal-empty shell. That is exactly what note's viewer could not do until TC3e:
+/// `interactive-job.close-owned-disposer-missing … document-store`, which killed the three-package
+/// bootstrap at 04:12:44 on 2026-09-22.
+///
+/// 🚧️ A component that is not built in any target root is SKIPPED, not failed — a slice rebuilds
+/// only the plugins it needs, and a law that demanded all three would be red on every machine that
+/// has not run the bootstrap. The sweep fails if it found nothing at all.
+#[semio_framework_async_macros::async_test]
+async fn owned_codec_answers_every_call_on_every_staged_component() {
+    let mut swept = 0usize;
+    let mut failures = Vec::new();
+    for (package, file_name, kind, schema) in STAGED_CODEC_COMPONENTS {
+        if plugin_wasm(file_name).is_none() {
+            continue;
+        }
+        swept += 1;
+        if let Err(detail) = codec_sweep_one_component(package, file_name, kind, schema).await {
+            failures.push(format!("{package}: {detail}"));
+        }
+    }
+    assert!(swept > 0, "no staged plugin component is built in any target root, so this law proved nothing");
+    assert!(failures.is_empty(), "{swept} staged components swept, {} failed:\n{}", failures.len(), failures.join("\n"));
+}

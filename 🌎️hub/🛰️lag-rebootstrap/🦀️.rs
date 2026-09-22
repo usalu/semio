@@ -118,7 +118,7 @@ impl AuthorityOperationControl for AuthorityControl<'_> {
 fn map_authority(error: AuthorityError) -> RebootstrapError {
     match error {
         AuthorityError::Cancelled => RebootstrapError::Cancelled,
-        AuthorityError::DeadlineExceeded => RebootstrapError::DeadlineExceeded,
+        AuthorityError::DeadlineExceeded | AuthorityError::Stalled => RebootstrapError::DeadlineExceeded,
         AuthorityError::ResourceLimit(_) | AuthorityError::PairResourceLimit(_) => RebootstrapError::ResourceLimit,
         _ => RebootstrapError::Integrity,
     }

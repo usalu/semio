@@ -303,6 +303,14 @@ pub fn tree_row_control_rect_with_height(row_width: f32, control_height: f32, me
     Rect::new(x, (metrics.row_height - control_height) * 0.5, metrics.control_width.min((row_width - metrics.gap).max(0.0)), control_height)
 }
 
+/// ☑️ React's compact tree checkbox wrapper is one `size-tiny` column at the inline edge of the
+/// value column, while retaining the whole row height as its vertical pointer band.
+pub fn tree_checkbox_hit_rect(bounds: Rect, inline: ui_contract::FlowInline) -> Rect {
+    let width = crate::wgpu::chrome::SIZE_TINY.min(bounds.w.max(0.0));
+    let x = if inline.is_rtl() { bounds.x + bounds.w - width } else { bounds.x };
+    Rect::new(x, bounds.y, width, bounds.h)
+}
+
 pub fn tree_inline_control_height(control: &UiControlNode, theme: &Theme) -> f32 {
     match control {
         UiControlNode::Input(_) | UiControlNode::Select(_) => theme.control_height_small,

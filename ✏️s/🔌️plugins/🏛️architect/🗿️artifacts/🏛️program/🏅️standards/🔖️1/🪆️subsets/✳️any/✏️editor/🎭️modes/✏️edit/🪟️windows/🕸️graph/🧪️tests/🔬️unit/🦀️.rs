@@ -19,6 +19,46 @@ async fn the_graph_body_emits_a_node_graph_scene() {
     crate::editor::architect::unit_tests::context::project_render(Ok(node));
 }
 
+/// 📏️ The narrowest Graph pane this window is given in the play grid (measured 469 × 907 CSS px on
+/// the `semio-tech play` :6033 grid, `getBoundingClientRect` of `window:architect-graph`).
+const SMALLEST_GRAPH_PANE_PX: f64 = 469.0;
+
+/// 🖼️ An untouched Graph window carries `ArchitectGraphWindowConfig::default().viewport` — `{x: 0,
+/// y: 0, zoom: 1}` — so scene coordinates ARE window coordinates. Every node of a program this
+/// window can reasonably show must therefore land inside the narrowest pane the grid gives it, in
+/// the positive quadrant. The fixed-radius layout put a two-element program's second node at
+/// x = 540 in a 469-px window: the pane rendered one cropped label and read as empty.
+#[semio_framework_async_macros::async_test]
+async fn the_default_viewport_frames_every_node_without_panning() {
+    let program = sample_plugin();
+    assert!(program.elements.len() >= 2, "the sample program must exercise the multi-node ring");
+    let (nodes, _) = graph_media_json(&program);
+    let left = nodes.iter().map(|node| node.x).fold(f64::INFINITY, f64::min);
+    let top = nodes.iter().map(|node| node.y).fold(f64::INFINITY, f64::min);
+    let right = nodes.iter().map(|node| node.x + node.width).fold(f64::NEG_INFINITY, f64::max);
+    let bottom = nodes.iter().map(|node| node.y + node.height).fold(f64::NEG_INFINITY, f64::max);
+    assert!((left - ARCHITECT_GRAPH_MARGIN).abs() < 1e-9, "the node bounding box starts one margin from the scene origin, not at {left}");
+    assert!((top - ARCHITECT_GRAPH_MARGIN).abs() < 1e-9, "the node bounding box starts one margin from the scene origin, not at {top}");
+    assert!(right <= SMALLEST_GRAPH_PANE_PX, "node bounding box runs to x={right}, past the {SMALLEST_GRAPH_PANE_PX}px pane");
+    assert!(bottom <= SMALLEST_GRAPH_PANE_PX, "node bounding box runs to y={bottom}, past the {SMALLEST_GRAPH_PANE_PX}px pane");
+}
+
+/// ↔️ Neighbours on the ring never overlap: the chord between two adjacent node centres clears a
+/// whole node box (measured on its diagonal) plus the declared gap, for every element count the ring
+/// is used for.
+#[semio_framework_async_macros::async_test]
+async fn the_ring_radius_keeps_neighbouring_node_boxes_clear() {
+    assert_eq!(graph_ring_radius(0), 0.0);
+    assert_eq!(graph_ring_radius(1), 0.0);
+    let clearance = ARCHITECT_GRAPH_NODE_WIDTH.hypot(ARCHITECT_GRAPH_NODE_HEIGHT) + ARCHITECT_GRAPH_NODE_GAP;
+    for count in 2..=32usize {
+        let radius = graph_ring_radius(count);
+        let chord = 2.0 * radius * (std::f64::consts::PI / count as f64).sin();
+        assert!(chord + 1e-9 >= clearance, "{count} nodes land {chord} apart, inside the {clearance} clearance");
+        assert!(radius < graph_ring_radius(count + 1), "the ring must grow with the element count");
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn every_element_becomes_a_node_and_every_adjacency_an_edge() {
     let program = sample_plugin();

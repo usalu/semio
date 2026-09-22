@@ -60,3 +60,28 @@ fn a_pinned_cell_draws_its_tile_media_while_a_masked_cell_draws_nothing() {
     assert!(layers.iter().any(|layer| layer["id"].as_str().is_some_and(|id| id.starts_with("pin-0-0"))), "the pinned cell draws its tile");
     assert!(!layers.iter().any(|layer| layer["id"] == "cell-5-5"), "the masked cell draws nothing");
 }
+
+/// ⚖️ LAW: `TOOL_IDS`, the per-tool publication-lane contracts and the `bounded_first_step_tool_proofs!`
+/// rows are ONE roster. The framework joins all three at app registration and refuses the whole app with
+/// `interactive-job.publication-contract` the moment they drift — and that refusal is a guest-side
+/// `panic!`, so one missing lane row aborts the entire wfc component and EVERY wfc pane reaches
+/// `data-shell-error` instead of `data-shell-ready`. That is exactly how `wfc2d`, `wfc3d` and `grid3d`
+/// went red on 2026-09-22 when a new tool reached `TOOL_IDS` and the proofs but not the lane contracts.
+#[test]
+fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_roster() {
+    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    let tools: std::collections::BTreeSet<&str> = GRID2D_VIEW_TOOL_IDS.iter().copied().collect();
+    assert_eq!(<Grid2dViewCommandJobFactory as ArtifactOwnedToolJobFactory>::TOOL_IDS, GRID2D_VIEW_TOOL_IDS);
+    let publication: std::collections::BTreeSet<&str> = <Grid2dViewCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
+    assert_eq!(publication, tools, "every owned tool declares exactly one publication-lane contract");
+    for contract in <Grid2dViewCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
+        assert!(!contract.lanes.is_empty(), "tool {} declares no publication lane", contract.tool_id);
+        assert!(
+            !contract.lanes.contains(&semio_framework_plugin::ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1,
+            "tool {} mixes the HostOnly lane with a publishing lane",
+            contract.tool_id
+        );
+    }
+    let proofs: std::collections::BTreeSet<&str> = <Grid2dViewer as ArtifactViewer>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
+    assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
+}

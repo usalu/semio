@@ -5113,7 +5113,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(stack?.className).toContain("z-window");
       expect(stack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
       expect(panel?.className).toContain("z-panel");
+      expect(panel?.className).toContain("absolute");
       expect(panel?.style.zIndex).toBe("");
+      const column = container.querySelector('[data-slot="layout-canvas-column"]') as HTMLElement | null;
+      expect(column?.style.paddingLeft ?? "").toBe("");
+      expect(column?.style.paddingRight ?? "").toBe("");
     });
 
     it("Mode clears multi-tab active chrome on inactive stacks", async () => {
@@ -10650,6 +10654,10 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(css).not.toMatch(/\[data-window-silhouette\]:hover \[data-window-silhouette-border\]\[data-kind="normal"\]:not\(\[data-pending\]\) path/);
         expect(css).toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
         expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
+        expect(css).toContain("@utility bg-hover-interactive-fill");
+        expect(css).toContain("--hover-ink: var(--color-emphasized)");
+        expect(css).toContain("--muted-foreground: var(--color-emphasized)");
+        expect(css).toContain("color: var(--hover-ink, var(--border-element-color))");
         expect(css).toContain('[data-hover-scope]:hover [data-slot="drag-handle"]');
         expect(css).toContain('[data-hover-scope]:hover :is([data-slot="mode-dock-tab-focus"], [data-slot="mode-dock-tab-close"])');
         expect(css).toMatch(/\[data-hover-scope\]:hover\s*\[data-slot="drag-handle"\]\s*,\s*\n\[data-hover-scope\]:hover\s*:is\(\[data-slot="mode-dock-tab-focus"\]/);

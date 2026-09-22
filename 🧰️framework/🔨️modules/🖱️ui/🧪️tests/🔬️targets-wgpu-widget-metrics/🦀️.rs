@@ -9,6 +9,8 @@ use crate::wgpu::component::ui::{UiPresence, UiProgressNode};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::theme::Theme;
 use crate::wgpu::Label;
+use super::{HitKind, HitTarget, InputState, WidgetInteractionMaps};
+use std::collections::HashMap;
 
 /// 📶️ One progress node; `total: None` is the indeterminate case (`ui_contract::progress_fraction`).
 fn progress(completed: f64, total: Option<f64>) -> UiProgressNode {
@@ -114,4 +116,41 @@ async fn orbit_gizmo_heads_keep_diameter_when_the_viewport_moves() {
             }
         }
     }
+}
+#[test]
+fn select_wheel_scope_tracks_its_presented_registry_and_rejects_later_occlusion() {
+    let mut input = InputState::<()>::default();
+    let mut accepted = WidgetInteractionMaps::<()>::default();
+    let mut candidate = WidgetInteractionMaps::<()>::default();
+    let mut offsets = HashMap::new();
+    let menu = Rect::new(8.0, 8.0, 120.0, 50.0);
+    let hit = |id: &str, rect| HitTarget { rect, event: None, control_id: Some(id.into()), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None };
+    input.register_hit(hit("underlying", Rect::new(0.0, 0.0, 160.0, 100.0)));
+    input.register_hit(hit("owner.item.with.item.value", Rect::new(12.0, 20.0, 110.0, 20.0)));
+    candidate.register_select_popup_wheel("owner.item.with", menu, 468.4, input.staged_hits().len());
+    assert!(!accepted.scroll_select_popup_at(&input, &mut offsets, 20.0, 33.0, 34.0));
+    input.publish_hits();
+    std::mem::swap(&mut accepted, &mut candidate);
+    for point in [(20.0, 33.0), (9.0, 9.0)] {
+        assert!(accepted.scroll_select_popup_at(&input, &mut offsets, point.0, point.1, 34.0));
+    }
+    let key = crate::wgpu::select::select_scroll_key("owner.item.with");
+    assert_eq!(offsets.get(&key), Some(&68.0));
+    assert!(!accepted.scroll_select_popup_at(&input, &mut offsets, 140.0, 33.0, 34.0));
+    for delta in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
+        assert!(accepted.scroll_select_popup_at(&input, &mut offsets, 20.0, 33.0, delta));
+        assert_eq!(offsets.get(&key), Some(&68.0));
+    }
+    accepted.scroll_select_popup_at(&input, &mut offsets, 20.0, 33.0, 10_000.0);
+    assert_eq!(offsets.get(&key), Some(&468.4));
+    accepted.scroll_select_popup_at(&input, &mut offsets, 20.0, 33.0, -10_000.0);
+    assert_eq!(offsets.get(&key), Some(&0.0));
+    input.register_hit(hit("underlying", menu));
+    candidate.register_select_popup_wheel("owner.item.with", menu, 468.4, input.staged_hits().len());
+    input.register_hit(hit("later-popup", menu));
+    input.publish_hits();
+    std::mem::swap(&mut accepted, &mut candidate);
+    assert!(!accepted.scroll_select_popup_at(&input, &mut offsets, 20.0, 33.0, 34.0));
+    accepted.clear_frame();
+    assert!(!accepted.scroll_select_popup_at(&input, &mut offsets, 20.0, 33.0, 34.0));
 }

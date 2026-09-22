@@ -1614,7 +1614,7 @@ export type UiDropOverlaySpec = { title: Label, hint: Label, accept?: string, };
         SchemaMetadata {
             name: "UiInputNode",
             version: 1,
-            typescript: r####"export type UiInputNode = { id: string, inputKind: string, value: string, placeholder?: Label, commit?: string, min?: number, max?: number, step?: number, accept?: string, onChange: ActionDescriptor, presence?: UiPresence, menu?: UiMenuRef, };"####,
+            typescript: r####"export type UiInputNode = { id: string, inputKind: string, value: string, placeholder?: Label, accessibilityLabel?: Label, commit?: string, min?: number, max?: number, step?: number, accept?: string, onChange: ActionDescriptor, presence?: UiPresence, menu?: UiMenuRef, };"####,
         },
         SchemaMetadata { name: "UiKeyValueEntry", version: 1, typescript: r####"export type UiKeyValueEntry = { label: Label, value: string, };"#### },
         SchemaMetadata { name: "UiKeyValueNode", version: 1, typescript: r####"export type UiKeyValueNode = { entries: Array<UiKeyValueEntry>, presence?: UiPresence, menu?: UiMenuRef, };"#### },
@@ -1768,7 +1768,13 @@ window?: UiTreeWindow, };"####,
  * unmaterialised rows as empty spacer bands so the scrollbar spans the whole document. The
  * legacy-node mirror of the UI contract's `TreeWindow`.
  */
-export type UiTreeWindow = { total: number, offset: number, };"####,
+export type UiTreeWindow = { total: number, offset: number, rowExtent: UiTreeWindowRowExtent, };"####,
+        },
+        SchemaMetadata {
+            name: "UiTreeWindowRowExtent",
+            version: 1,
+            typescript: r####"/** 🪟️ Closed geometry token for one unmaterialised row in a virtual Tree window. */
+export type UiTreeWindowRowExtent = "standard" | "compactText" | "compactSmallControl" | "compactControl";"####,
         },
         SchemaMetadata {
             name: "UndoMode",

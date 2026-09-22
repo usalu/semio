@@ -1663,6 +1663,7 @@ fn golden_input() {
             input_kind: "text".into(),
             value: "abc".into(),
             placeholder: None,
+            accessibility_label: None,
             commit: None,
             min: None,
             max: None,
@@ -1825,6 +1826,7 @@ fn golden_field_known_gap() {
             input_kind: "text".into(),
             value: "abc".into(),
             placeholder: None,
+            accessibility_label: None,
             commit: None,
             min: None,
             max: None,
@@ -2499,4 +2501,80 @@ fn surface_content_height_measures_the_document_not_the_viewport_it_was_given() 
     drive_layout(&mut ui, "panel", 300.0, 1_400.0, &mut atlas);
     let tall = ui.surface_content_height("panel").expect("content height");
     assert!((tall - short).abs() <= 1.0, "the document's extent is viewport-independent, got {short} then {tall}");
+}
+
+/// 🌲️ Compact content keeps its intrinsic extent when presentation swaps its accepted tree.
+#[test]
+fn compact_tree_content_height_survives_presentation_and_viewport_changes() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌳️compact-tree-intrinsic/🔣️.json")).expect("compact tree height fixture");
+    let surface = law["surface"].as_str().unwrap();
+    let nodes = law["nodes"].as_array().unwrap();
+    let mut document = UiDocumentTree::new(UiDocumentLeaseHeader {
+        generation: 1, surface: SurfaceId::try_from(surface).unwrap(), revision: UiRevision(1), root: UiNodeId(1), layout_epoch: 0, node_count: nodes.len(),
+    }).unwrap();
+    for node in nodes {
+        document.try_upsert_record(serde_json::from_value(node.clone()).expect("compact row record")).unwrap();
+    }
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    assert!(ui.publish_document(surface, document));
+    drive_scene_lifetime_reconcile(&mut ui, surface, 1);
+    let expected = law["expectedHeight"].as_f64().unwrap() as f32;
+    for (index, height) in law["viewports"].as_array().unwrap().iter().enumerate() {
+        drive_scene_lifetime_reconcile(&mut ui, surface, 1);
+        drive_layout(&mut ui, surface, law["width"].as_f64().unwrap() as f32, height.as_f64().unwrap() as f32, &mut atlas);
+        let before = ui.surface_content_height(surface).expect("candidate content extent");
+        assert!((before - expected).abs() < 0.02, "candidate content height {before} != {expected}");
+        acknowledge_scene_lifetime_candidate(&mut ui, surface, index as u64 + 31);
+        let after = ui.surface_content_height(surface).expect("presentation preserves content extent");
+        assert!((after - expected).abs() < 0.02, "presented content height {after} != {expected}");
+    }
+    let mut oracle = taffy::TaffyTree::<()>::new();
+    oracle.disable_rounding();
+    let children = law["visibleRowHeights"].as_array().unwrap().iter().map(|height| {
+        oracle.new_leaf(taffy::Style { size: taffy::geometry::Size { width: taffy::style::Dimension::length(300.0), height: taffy::style::Dimension::length(height.as_f64().unwrap() as f32) }, flex_shrink: 0.0, ..Default::default() }).unwrap()
+    }).collect::<Vec<_>>();
+    let root = oracle.new_with_children(taffy::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() }, &children).unwrap();
+    oracle.compute_layout(root, taffy::geometry::Size { width: taffy::style::AvailableSpace::MaxContent, height: taffy::style::AvailableSpace::MaxContent }).unwrap();
+    assert!((oracle.layout(root).unwrap().size.height - expected).abs() < 0.02, "independent flex oracle agrees with the measured React row sum");
+}
+
+/// 🧾️ A discarded layout cannot lend its height witness to the still-presented document.
+#[test]
+fn intrinsic_content_height_cannot_leak_from_a_discarded_candidate() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌳️compact-tree-intrinsic/🔣️.json")).unwrap();
+    let surface = law["surface"].as_str().unwrap();
+    let sequence = law["publicationSequence"].as_array().unwrap();
+    let document = |generation: u64, presentation: &str| {
+        let nodes = law["nodes"].as_array().unwrap();
+        let mut document = UiDocumentTree::new(UiDocumentLeaseHeader {
+            generation, surface: SurfaceId::try_from(surface).unwrap(), revision: UiRevision(generation), root: UiNodeId(1), layout_epoch: 0, node_count: nodes.len(),
+        }).unwrap();
+        for node in nodes {
+            let mut node = node.clone();
+            if node["id"] == 1 { node["component"]["presentation"] = presentation.into(); }
+            document.try_upsert_record(serde_json::from_value(node).unwrap()).unwrap();
+        }
+        document
+    };
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    assert!(ui.publish_document(surface, document(sequence[0]["generation"].as_u64().unwrap(), sequence[0]["presentation"].as_str().unwrap())));
+    drive_scene_lifetime_reconcile(&mut ui, surface, 1);
+    drive_layout(&mut ui, surface, 300.0, 720.0, &mut atlas);
+    acknowledge_scene_lifetime_candidate(&mut ui, surface, 61);
+    let presented = ui.surface_content_height(surface).expect("A is presented");
+    drive_scene_lifetime_reconcile(&mut ui, surface, 1);
+    assert!(ui.publish_document(surface, document(sequence[1]["generation"].as_u64().unwrap(), sequence[1]["presentation"].as_str().unwrap())));
+    drive_scene_lifetime_reconcile(&mut ui, surface, 2);
+    drive_layout(&mut ui, surface, 300.0, 720.0, &mut atlas);
+    let discarded = ui.surface_content_height(surface).expect("B owns a distinct candidate extent");
+    assert!((presented - sequence[0]["height"].as_f64().unwrap() as f32).abs() < 0.02);
+    assert!((discarded - sequence[1]["height"].as_f64().unwrap() as f32).abs() < 0.02);
+    assert!(ui.seal_presented_input_candidate(62, &[surface.to_string()]));
+    assert!(ui.discard_presented_input_candidate(62));
+    assert!(ui.publish_document(surface, document(sequence[2]["generation"].as_u64().unwrap(), sequence[2]["presentation"].as_str().unwrap())));
+    let before_layout = ui.surface_content_height(surface);
+    let expected = sequence[2]["heightBeforeLayout"].as_f64().unwrap() as f32;
+    assert!(before_layout.is_none_or(|height| (height - expected).abs() < 0.02), "C has no layout; A's {presented} may be reused, never discarded B's {discarded}: {before_layout:?}");
 }

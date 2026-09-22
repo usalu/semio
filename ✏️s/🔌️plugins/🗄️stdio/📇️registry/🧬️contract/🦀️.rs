@@ -321,6 +321,70 @@ fn source(schema: &'static str) -> Result<Source, PluginAssemblyError> {
     pack::from_json_str(schema).map_err(|error| failure(format!("cannot parse artifact definition: {error}")))
 }
 
+/// 📏️ How many artifact definition JSON documents this process has actually parsed and validated.
+///
+/// The number a law reads to bound describe work: a schema is a compiled-in `&'static str`, so
+/// parsing and validating it is a pure function of its address and belongs in
+/// [`validated_source`]'s memo, not in every caller. Before that memo, assembling stdio's component
+/// re-parsed and re-validated each of the 36 definitions about EIGHT times (two full
+/// `artifact_assemblies()` passes, each of which validates the catalog and then builds every
+/// definition, plus the receipt pass and `native_codec_executables`) — ~290 parse+validate rounds
+/// over 231 KiB of JSON, every `format!`/`BTreeSet`/`ArtifactIdentity::parse` inside `validate`
+/// included. Cheap natively; the guest's `describe()` runs in the owned INTERPRETER, where that
+/// multiplier is the difference between minutes and the 1 800 s describe epoch.
+pub fn artifact_definition_parse_count() -> usize {
+    DEFINITION_PARSES.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// 🔁️ How many times an artifact definition has been ASKED for — cache hits included.
+///
+/// The denominator of the same law: `lookups / parses` is the multiplier the memo removes, measured
+/// rather than argued. It is what makes "assembling the component walks the catalog several times
+/// over" a number in a test instead of a claim in a report.
+pub fn artifact_definition_lookup_count() -> usize {
+    DEFINITION_LOOKUPS.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+static DEFINITION_PARSES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+static DEFINITION_LOOKUPS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// 📖️ The parsed and validated `Source` behind one compiled-in schema, parsed AT MOST ONCE.
+///
+/// Keyed by the `&'static str`'s own address: every caller passes one of the 36 artifact crates'
+/// `ARTIFACT_DEFINITION_SCHEMA` consts, so the address IS the identity of the definition. The
+/// parsed value is leaked deliberately — it is static catalog data with the same lifetime as the
+/// `&'static str` it came from, and a guest that describes itself once never frees it anyway.
+/// Failures are not memoized: an invalid schema is an assembly error, and re-deriving it keeps the
+/// reported message identical on every call.
+fn validated_source(schema: &'static str) -> Result<&'static Source, PluginAssemblyError> {
+    static CACHE: std::sync::Mutex<Vec<(usize, &'static Source)>> = std::sync::Mutex::new(Vec::new());
+    let key = schema.as_ptr() as usize;
+    fn lookup(entries: &[(usize, &'static Source)], key: usize) -> Option<&'static Source> {
+        entries.iter().find(|(address, _)| *address == key).map(|(_, parsed)| *parsed)
+    }
+    {
+        let entries = CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(parsed) = lookup(&entries, key) {
+            return Ok(parsed);
+        }
+    }
+    let parsed = source(schema)?;
+    validate(&parsed)?;
+    DEFINITION_PARSES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let parsed: &'static Source = Box::leak(Box::new(parsed));
+    let mut entries = CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    // 🤝 A peer thread may have won the race while this one parsed; keep the first entry so every
+    // caller observes one identical `&'static Source` for one schema.
+    let winner = lookup(&entries, key);
+    match winner {
+        Some(winner) => Ok(winner),
+        None => {
+            entries.push((key, parsed));
+            Ok(parsed)
+        }
+    }
+}
+
 fn descriptor<T: kernel::ToValue>(value: &T) -> Vec<u8> {
     pack::to_json_string(value).into_bytes()
 }
@@ -643,8 +707,7 @@ pub fn definition_from_schema(schema: &'static str) -> Result<ArtifactDefinition
 
 /// 🧷 Parses one schema and binds its complete declared executable set.
 pub fn definition_from_schema_with_executables(schema: &'static str, executables: impl IntoIterator<Item = ArtifactExecutable>) -> Result<ArtifactDefinition, PluginAssemblyError> {
-    let source = source(schema)?;
-    validate(&source)?;
+    let source = validated_source(schema)?;
     let mappings = executable_mappings(executables)?;
     let expected = expected_executable_ids(&source);
     if mappings.keys().cloned().collect::<BTreeSet<_>>() != expected {
@@ -669,6 +732,24 @@ pub fn definition_only_assembly(artifact: &'static str, definition: ArtifactDefi
     Ok(ArtifactAssembly::Definition(definition))
 }
 
+/// 🏷 The SHORT format id the catalog is resolved by — the representation's own FIRST extension
+/// without its dot (`step`, `obj`, `stl`, `glb`, `png`, …). `format_descriptor` keys a row by
+/// `kind_id`, `short_id` and every alias, and the short spelling is the vocabulary every codec and
+/// exporter speaks: `SolidExporter::format_kind` answers `"step"`/`"obj"`/`"stl"`/`"glb"`
+/// (`🧿️semio/…/🧊️brep/🧬️schema/⚙️engine/🦀️.rs`), `export_process3d_model` looks the answer straight
+/// up in the catalog, and `OsHostCodecFormat.short_id` hands the same spelling to the host. Publishing
+/// the fully qualified representation id in BOTH slots left those lookups unresolvable — the
+/// `unknown process export format kind 'step'` class — while `kind_id` keeps the qualified identity.
+fn representation_short_id(representation: &Representation) -> Result<String, PluginAssemblyError> {
+    representation
+        .extensions
+        .first()
+        .and_then(|extension| extension.strip_prefix('.'))
+        .filter(|short| !short.is_empty())
+        .map(str::to_string)
+        .ok_or_else(|| failure(format!("representation {} carries no extension to name its short format id", representation.id)))
+}
+
 fn source_format_descriptors(source: &Source) -> Result<Vec<FormatDescriptor>, PluginAssemblyError> {
     source
         .runtime_capabilities
@@ -679,7 +760,7 @@ fn source_format_descriptors(source: &Source) -> Result<Vec<FormatDescriptor>, P
             let english = source.localized_descriptors.iter().find(|item| item.locale == "en").ok_or_else(|| failure(format!("{} has no English descriptor", source.id)))?;
             Ok(FormatDescriptor {
                 kind_id: representation.id.clone(),
-                short_id: representation.id.clone(),
+                short_id: representation_short_id(representation)?,
                 aliases: representation.aliases.clone(),
                 mimes: representation.mimes.clone(),
                 extensions: representation.extensions.clone(),
@@ -695,17 +776,13 @@ fn source_format_descriptors(source: &Source) -> Result<Vec<FormatDescriptor>, P
 
 /// 🗂 Derives one artifact's formats strictly from its local schema.
 pub fn format_descriptors(schema: &'static str) -> Result<Vec<FormatDescriptor>, ArtifactDefinitionError> {
-    let values = source(schema).and_then(|source| {
-        validate(&source)?;
-        source_format_descriptors(&source)
-    });
+    let values = validated_source(schema).and_then(source_format_descriptors);
     values.map_err(|error| ArtifactDefinitionError::new("stdio.format", error.to_string()))
 }
 
 /// 📋 Returns catalog validation data derived from one local schema.
 pub fn schema_summary(schema: &'static str) -> Result<ArtifactSchemaSummary, PluginAssemblyError> {
-    let source = source(schema)?;
-    validate(&source)?;
+    let source = validated_source(schema)?;
     Ok(ArtifactSchemaSummary {
         identity: source.id.clone(),
         artifact: source.artifact.clone(),
@@ -724,8 +801,7 @@ fn capability_counts<T>(items: &[T], status: impl Fn(&T) -> &str, registered: im
 
 /// 📊 Derives an honest capability ledger from one local schema.
 pub fn capability_ledger(schema: &'static str) -> Result<CapabilityLedger, PluginAssemblyError> {
-    let source = source(schema)?;
-    validate(&source)?;
+    let source = validated_source(schema)?;
     let mut ledger = CapabilityLedger::default();
     let (declared, registered, implemented, verified) = capability_counts(&source.codecs, |item| &item.status, |item| item.executable_registration);
     ledger.declared.codecs = declared;
@@ -791,8 +867,7 @@ fn native_codec_binding<'a>(source: &'a Source, factory: &NativeCodecFactory) ->
 
 /// 🧷 Derives actual executable identities for an artifact's schema-authorized codecs.
 pub fn native_codec_executables(schema: &'static str, factories: &[NativeCodecFactory]) -> Result<Vec<ArtifactExecutable>, PluginAssemblyError> {
-    let source = source(schema)?;
-    validate(&source)?;
+    let source = validated_source(schema)?;
     let expected = source.codecs.iter().filter(|codec| codec.executable_registration).count();
     if factories.len() != expected {
         return Err(failure(format!("{} exposes {} native factories, expected {expected}", source.id, factories.len())));
@@ -808,8 +883,7 @@ pub fn native_codec_executables(schema: &'static str, factories: &[NativeCodecFa
 
 /// 🪢 Validates and emits native codec receipts for one artifact contribution.
 pub fn native_codec_factory_receipts(contribution: &ArtifactContribution, plugin_id: &'static str, package_id: impl Into<String>, package_version: &'static str) -> Result<Vec<NativeCodecFactoryReceipt>, PluginAssemblyError> {
-    let source = source(contribution.schema)?;
-    validate(&source)?;
+    let source = validated_source(contribution.schema)?;
     if contribution.identity != source.artifact {
         return Err(failure(format!("contribution {} differs from schema artifact {}", contribution.identity, source.artifact)));
     }

@@ -20,7 +20,7 @@ use ui_wgpu::wgpu::input::{DragAxis, KeyAction};
 use ui_wgpu::wgpu::Rect;
 use ui_wgpu::wgpu::Rgba;
 use ui_wgpu::wgpu::UiPresence;
-use ui_wgpu::wgpu::{draw_text, draw_text_wrapped, push_icon, render_widget, HitKind, HitTarget, Theme, UiDriverDrag, WidgetNode};
+use ui_wgpu::wgpu::{draw_text, draw_text_wrapped, foreground_on_fill, push_icon, render_widget, HitKind, HitTarget, Theme, UiDriverDrag, WidgetNode};
 use ui_wgpu::wgpu::{ActionDescriptor, PreparedRasterProducer, PreparedRasterRejected, PreparedRasterReservation, SurfaceKind, UiComponentSceneNode};
 
 //#region SceneRuntime
@@ -1384,6 +1384,9 @@ pub(crate) fn retire_scene_identity(owner: &crate::interpreter::ScenePointerTarg
         #[cfg(test)]
         eprintln!("[DEBUG] scene retirement map host={} before={before:?} exact-interaction={_interaction}", owner.host_id);
     }
+    if owner.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d {
+        request_canvas_pointer_gesture_cancel_for_host(&owner.host_id);
+    }
     let retired = SCENE_STATE.with(|cell| {
         let mut states = cell.borrow_mut();
         let state = states.get(&owner.host_id)?;
@@ -1846,7 +1849,7 @@ fn cancel_canvas_pointer_gesture_into(pointer_id: Option<ui_render::PointerId>, 
     }) else {
         return Ok(false);
     };
-    if crate::interpreter::ui_document_close_pending_for(&active.window_id) || scene_host_retiring(&active.host_id) {
+    if crate::interpreter::ui_document_close_pending_for(&active.window_id) {
         CANVAS_GESTURE.with(|cell| cell.borrow_mut().take(active.pointer_id));
         return Ok(true);
     }
@@ -1945,6 +1948,19 @@ pub(crate) fn request_canvas_pointer_gesture_cancel_for_window(window_id: &str) 
     });
     CANVAS_CATALOGUE_HOVER.with(|cell| {
         if let Some(active) = cell.borrow_mut().as_mut().filter(|active| active.window_id == window_id) {
+            active.cancellation_requested = true;
+        }
+    });
+}
+
+pub(crate) fn request_canvas_pointer_gesture_cancel_for_host(host_id: &str) {
+    CANVAS_GESTURE.with(|cell| {
+        for active in cell.borrow_mut().slots.iter_mut().flatten().filter(|active| active.host_id == host_id) {
+            active.cancellation_requested = true;
+        }
+    });
+    CANVAS_CATALOGUE_HOVER.with(|cell| {
+        if let Some(active) = cell.borrow_mut().as_mut().filter(|active| active.host_id == host_id) {
             active.cancellation_requested = true;
         }
     });
@@ -3788,7 +3804,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
             let handle = table_transfer_handle_rect(row_rect, theme);
             if let Some(icons) = ctx.icons {
                 let icon_size = theme.control_height_small.min(handle.w).min(handle.h);
-                push_icon(ctx.draw, icons, "move", handle.x + (handle.w - icon_size) * 0.5, handle.y + (handle.h - icon_size) * 0.5, icon_size, theme.text_muted);
+                push_icon(ctx.draw, icons, "move", handle.x + (handle.w - icon_size) * 0.5, handle.y + (handle.h - icon_size) * 0.5, icon_size, foreground_on_fill(theme, theme.text_muted, selected, hovered && !selected));
             }
         }
         let drag_data = table.row_drag_mime.as_ref().and_then(|mime| row.get("_drag").map(|payload| HashMap::from([(mime.clone(), payload.to_string())])));
@@ -4569,7 +4585,7 @@ fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
         if !entry.icon_id.is_empty() {
             if let Some(icons) = ctx.icons {
                 if let Some(uv) = icons.icon_uv(&entry.icon_id) {
-                    ctx.draw.push_textured([title_x, y + (row_h - 14.0) * 0.5, 14.0, 14.0], uv, theme.text_element);
+                    ctx.draw.push_textured([title_x, y + (row_h - 14.0) * 0.5, 14.0, 14.0], uv, foreground_on_fill(theme, theme.text_element, false, hovered));
                     title_x += 14.0 + pad * 0.5;
                 }
             }
@@ -4577,12 +4593,12 @@ fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
 
         if entry.timestamp_ms != 0 {
             let time_label = event_feed_time_of_day_utc(entry.timestamp_ms);
-            draw_text(ctx, &time_label, title_x, y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+            draw_text(ctx, &time_label, title_x, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
             title_x += 56.0;
         }
         draw_text(ctx, &entry.title, title_x, y + row_h * 0.65, theme.font_size_small, title_tone_color);
         if let Some(detail) = &entry.detail {
-            draw_text(ctx, detail, inner.x + pad, y + row_h + theme.font_size_small * 0.9, theme.font_size_small, theme.text_muted);
+            draw_text(ctx, detail, inner.x + pad, y + row_h + theme.font_size_small * 0.9, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
         }
         if let Some(action) = &feed.activate_action {
             ctx.input.register_hit(HitTarget {
@@ -4743,7 +4759,7 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
 
         let mut label_x = inner.x + pad;
         if column.labels.is_empty() {
-            draw_text(ctx, "checkpoint", label_x, y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+            draw_text(ctx, "checkpoint", label_x, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
         } else {
             for label in &column.labels {
                 let chip_w = (label.len() as f32 * 6.0 + pad * 2.0).min((inner.x + labels_col_w - label_x).max(0.0));
@@ -4793,7 +4809,7 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
         draw_text(ctx, &initial, avatar_x + avatar_size * initial_x_frac, avatar_y + avatar_size * 0.7, theme.font_size_small, theme.text);
 
         if let Some(description) = &column.description {
-            draw_text(ctx, description, desc_x + pad, y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+            draw_text(ctx, description, desc_x + pad, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
         }
 
         ctx.input.register_hit(HitTarget {
@@ -9325,7 +9341,7 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
             let chevron = if entry.expanded { "chevron-down" } else { "chevron-right" };
             if let Some(icons) = ctx.icons {
                 if let Some(uv) = icons.icon_uv(chevron) {
-                    ctx.draw.push_textured([name_x, y + (row_h - 14.0) * 0.5, 14.0, 14.0], uv, theme.text_element);
+                    ctx.draw.push_textured([name_x, y + (row_h - 14.0) * 0.5, 14.0, 14.0], uv, foreground_on_fill(theme, theme.text_element, selected_row, hovered));
                 }
             }
             ctx.input.register_hit(HitTarget { rect: Rect::new(name_x, y, 14.0, row_h), event: None, control_id: Some(format!("{}.vfs.chevron.{}", scene.host_id, row_id)), kind: HitKind::Generic, drag_axis: None, drag_data: None });
@@ -9334,7 +9350,7 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
         let icon_id = vfs_glyph_icon(&schema, row);
         if let Some(icons) = ctx.icons {
             if let Some(uv) = icons.icon_uv(icon_id) {
-                ctx.draw.push_textured([name_x, y + (row_h - 14.0) * 0.5, 14.0, 14.0], uv, theme.text_element);
+                ctx.draw.push_textured([name_x, y + (row_h - 14.0) * 0.5, 14.0, 14.0], uv, foreground_on_fill(theme, theme.text_element, selected_row, hovered));
             }
         }
         name_x += 18.0;
@@ -9343,7 +9359,7 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
         for (col_index, column_id) in descriptor_ids.iter().enumerate() {
             let x = body.x + name_col_w + col_index as f32 * descriptor_col_w;
             let value = vfs_descriptor_value(&schema, row, column_id);
-            draw_text(ctx, &value, x + pad, y + row_h * 0.65, theme.font_size_small, if selected_row { theme.active_foreground } else { theme.text_muted });
+            draw_text(ctx, &value, x + pad, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, selected_row, hovered));
         }
         let drag_data = vfs.drag_drop_enabled.unwrap_or(false).then(|| HashMap::from([("application/x-semio-vfs-node".to_string(), serde_json::to_string(row).unwrap_or_default())]));
         ctx.input.register_hit(HitTarget { rect: row_rect, event: None, control_id: Some(control_id), kind: HitKind::Generic, drag_axis: None, drag_data });

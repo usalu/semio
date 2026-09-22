@@ -133,6 +133,7 @@ typed_scalar!(
     InputKind,
     ToggleAppearance,
     TreePresentation,
+    TreeWindowRowExtent,
     RowActionPlacement,
     SurfaceKind,
     Liveness,

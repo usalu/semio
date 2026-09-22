@@ -11,6 +11,17 @@ pub mod config;
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_GRAPH: &str = "architect-graph";
 pub const ARCHITECT_BODY_GRAPH: &str = "architect.graph";
+
+/// 📐️ One node box, in scene units.
+pub const ARCHITECT_GRAPH_NODE_WIDTH: f64 = 108.0;
+pub const ARCHITECT_GRAPH_NODE_HEIGHT: f64 = 44.0;
+/// ↔️ The smallest gap this layout keeps between two neighbouring node boxes.
+pub const ARCHITECT_GRAPH_NODE_GAP: f64 = 24.0;
+/// 🖼️ The gutter between the scene origin and the node bounding box. The window's own
+/// `ArchitectGraphWindowConfig::default().viewport` is `{x: 0, y: 0, zoom: 1}`, so the scene origin IS
+/// the window's top-left corner until the caller pans — every node must therefore live in the
+/// positive quadrant, close enough to the origin that an untouched window frames the whole program.
+pub const ARCHITECT_GRAPH_MARGIN: f64 = 24.0;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -38,11 +49,26 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
+/// 📏️ The ring radius `count` node boxes need. One element sits ON the ring centre (radius 0); from
+/// two elements up the radius is the smallest one whose neighbour-to-neighbour CHORD still clears a
+/// whole node box plus [`ARCHITECT_GRAPH_NODE_GAP`], measured on the box diagonal so the guarantee
+/// holds at every angle. A fixed radius (this window used 220 for every program) pushed a two-element
+/// program's nodes 440 scene units apart, far outside an untouched window — see
+/// [`ARCHITECT_GRAPH_MARGIN`].
+pub fn graph_ring_radius(count: usize) -> f64 {
+    if count < 2 {
+        return 0.0;
+    }
+    let clearance = ARCHITECT_GRAPH_NODE_WIDTH.hypot(ARCHITECT_GRAPH_NODE_HEIGHT) + ARCHITECT_GRAPH_NODE_GAP;
+    clearance / (2.0 * (std::f64::consts::PI / count as f64).sin())
+}
+
 pub fn graph_media_json(program: &ProgramSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let count = program.elements.len().max(1);
-    let radius = 220.0;
-    let center_x = 320.0;
-    let center_y = 240.0;
+    let radius = graph_ring_radius(count);
+    // 📍 Anchors the node BOUNDING BOX at (margin, margin) so an untouched viewport frames it.
+    let center_x = ARCHITECT_GRAPH_MARGIN + radius + ARCHITECT_GRAPH_NODE_WIDTH / 2.0;
+    let center_y = ARCHITECT_GRAPH_MARGIN + radius + ARCHITECT_GRAPH_NODE_HEIGHT / 2.0;
     let nodes: Vec<NodeGraphNodeRecord> = program
         .elements
         .iter()
@@ -52,10 +78,10 @@ pub fn graph_media_json(program: &ProgramSnapshot) -> (Vec<NodeGraphNodeRecord>,
             NodeGraphNodeRecord {
                 id: element.header.id.to_string(),
                 label: Some(element.header.name.clone()),
-                x: center_x + radius * angle.cos(),
-                y: center_y + radius * angle.sin(),
-                width: 108.0,
-                height: 44.0,
+                x: center_x + radius * angle.cos() - ARCHITECT_GRAPH_NODE_WIDTH / 2.0,
+                y: center_y + radius * angle.sin() - ARCHITECT_GRAPH_NODE_HEIGHT / 2.0,
+                width: ARCHITECT_GRAPH_NODE_WIDTH,
+                height: ARCHITECT_GRAPH_NODE_HEIGHT,
                 inputs: vec![NodeGraphPortRecord { id: "in".into(), label: None, ..Default::default() }],
                 outputs: vec![NodeGraphPortRecord { id: "out".into(), label: None, ..Default::default() }],
                 ..Default::default()

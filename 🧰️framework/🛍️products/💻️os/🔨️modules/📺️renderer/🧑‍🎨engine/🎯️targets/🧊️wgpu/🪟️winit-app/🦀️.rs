@@ -257,22 +257,25 @@ impl OsHost {
         }
         // 🧵️ `poll_runtime_and_resubmit` never waits: it accepts a fresh completed frame or leaves the
         // last presentation in place, then schedules at most one worker-owned frame transaction.
-        let build_inputs = self.runtime.frame_inputs(crate::app_now_ms());
-        let build_operation = render_frame_operation_id();
-        let build_generation = semio_framework_trace::Generation(self.frame_generation);
-        crate::frame_latency::observe_frame_generation(build_generation.0);
-        self.runtime.observe_presentation_input_generation(build_generation.0);
-        let runtime = self.runtime.clone();
-        // 🩺️ The presentation gate decides whether a frame build runs at all, and a frame build is the
-        // ONLY thing that pumps the runtime mailbox — so a gate stuck shut is indistinguishable from
-        // "input never dispatched" unless it says who is holding it.
-        crate::log_debug_diagnostic_once_per_transition(
-            "frame-gate",
-            self.presenter.has_pending_presentation(),
-            &format!("[DEBUG] os_host frame gate blocked={} {} generation={build_generation:?}", self.presenter.has_pending_presentation(), self.presenter.presentation_gate_shape()),
-        );
-        let frame_build = &mut self.frame_build;
-        let _ = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation));
+        let component_close_pending = crate::os_host::component_surface_close_pending();
+        if !component_close_pending {
+            let build_inputs = self.runtime.frame_inputs(crate::app_now_ms());
+            let build_operation = render_frame_operation_id();
+            let build_generation = semio_framework_trace::Generation(self.frame_generation);
+            crate::frame_latency::observe_frame_generation(build_generation.0);
+            self.runtime.observe_presentation_input_generation(build_generation.0);
+            let runtime = self.runtime.clone();
+            // 🩺️ The presentation gate decides whether a frame build runs at all, and a frame build is the
+            // ONLY thing that pumps the runtime mailbox — so a gate stuck shut is indistinguishable from
+            // "input never dispatched" unless it says who is holding it.
+            crate::log_debug_diagnostic_once_per_transition(
+                "frame-gate",
+                self.presenter.has_pending_presentation(),
+                &format!("[DEBUG] os_host frame gate blocked={} {} generation={build_generation:?}", self.presenter.has_pending_presentation(), self.presenter.presentation_gate_shape()),
+            );
+            let frame_build = &mut self.frame_build;
+            let _ = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation));
+        }
         // 🖼️ Drive the present cursor for the rest of this tick's interactive share instead of one
         // phase per redraw. `AppPresentCursor` walks begin-GPU → engine surfaces → uploads → command
         // pages → submit one phase at a time; at one phase per browser frame a single presentation

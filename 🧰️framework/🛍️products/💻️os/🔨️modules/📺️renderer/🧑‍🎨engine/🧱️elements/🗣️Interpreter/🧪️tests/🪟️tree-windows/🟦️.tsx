@@ -85,7 +85,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const nodes: AnyRecord[] = [node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, containers.map((_, index) => 2 + index * 2))];
     containers.forEach((container, index) => {
       const sectionId = 2 + index * 2;
-      nodes.push(node(sectionId, container.key, { type: "treeSection", label: container.key, defaultOpen: true, window: { total: container.total, offset: 0 } }, [sectionId + 1]));
+      nodes.push(node(sectionId, container.key, { type: "treeSection", label: container.key, defaultOpen: true, window: { rowExtent: "standard", total: container.total, offset: 0 } }, [sectionId + 1]));
       nodes.push(treeItem(sectionId + 1, `${container.key}.0`, `${container.key} row`));
     });
     return renderWindowedTree(nodes, reportWindows, (tree) => createElement(Scrollable, null, tree));
@@ -106,12 +106,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const childRows = Array.from({ length: childLength }, (_, index) => treeItem(100 + index, `objects.1.${index}`, `Child ${index}`));
     const sectionRows: AnyRecord[] = [
       treeItem(10, "objects.0", "Row 0"),
-      treeItem(11, "objects.1", "Row 1", { defaultOpen: true, window: { total: childTotal, offset: 0 } }, childRows.map((_, index) => 100 + index)),
+      treeItem(11, "objects.1", "Row 1", { defaultOpen: true, window: { rowExtent: "standard", total: childTotal, offset: 0 } }, childRows.map((_, index) => 100 + index)),
       ...Array.from({ length: Math.max(0, sectionLength - 2) }, (_, index) => treeItem(12 + index, `objects.${2 + index}`, `Row ${2 + index}`)),
     ];
     return [
       node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2]),
-      node(2, "objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: { total: sectionTotal, offset: 0 } }, sectionRows.map((row) => row.id)),
+      node(2, "objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: { rowExtent: "standard", total: sectionTotal, offset: 0 } }, sectionRows.map((row) => row.id)),
       ...sectionRows,
       ...childRows,
     ];
@@ -129,7 +129,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         surface: SURFACE,
         revision: 1,
         root: 1,
-        nodes: [treeItem(1, "objects", "Objects", { window: { total: 4096, offset: 128 } }, [2]), treeItem(2, "objects.7", "Object 7")],
+        nodes: [treeItem(1, "objects", "Objects", { window: { rowExtent: "standard", total: 4096, offset: 128 } }, [2]), treeItem(2, "objects.7", "Object 7")],
       });
       const state = store.getState();
       const record = state.nodes.get(1);
@@ -205,7 +205,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("falls back to a plain overflow ancestor, and to the page itself, for a tree outside any Scrollable", () => {
       const nodes = [
         node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2]),
-        node(2, "objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: { total: 200, offset: 0 } }, [3]),
+        node(2, "objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: { rowExtent: "standard", total: 200, offset: 0 } }, [3]),
         treeItem(3, "objects.0", "Row 0"),
       ];
       const overflowing = renderWindowedTree(nodes, () => {}, (tree) => createElement("div", { "data-testid": "plain", style: { overflowY: "auto" } }, tree));
@@ -383,13 +383,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("gives the same node key under two different parents two independent windows", async () => {
       const reports: { requests: readonly AnyRecord[]; viewportRows: number }[] = [];
       const shared = (parent: string, id: number) => [
-        treeItem(id, "shared", "Shared", { defaultOpen: true, window: { total: 40, offset: 0 } }, [id + 1]),
+        treeItem(id, "shared", "Shared", { defaultOpen: true, window: { rowExtent: "standard", total: 40, offset: 0 } }, [id + 1]),
         treeItem(id + 1, `${parent}.shared.0`, "Child 0"),
       ];
       const nodes: AnyRecord[] = [
         node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2, 3]),
-        node(2, "left", { type: "treeSection", label: "Left", defaultOpen: true, window: { total: 4, offset: 0 } }, [10]),
-        node(3, "right", { type: "treeSection", label: "Right", defaultOpen: true, window: { total: 4, offset: 0 } }, [20]),
+        node(2, "left", { type: "treeSection", label: "Left", defaultOpen: true, window: { rowExtent: "standard", total: 4, offset: 0 } }, [10]),
+        node(3, "right", { type: "treeSection", label: "Right", defaultOpen: true, window: { rowExtent: "standard", total: 4, offset: 0 } }, [20]),
         ...shared("left", 10),
         ...shared("right", 20),
       ];

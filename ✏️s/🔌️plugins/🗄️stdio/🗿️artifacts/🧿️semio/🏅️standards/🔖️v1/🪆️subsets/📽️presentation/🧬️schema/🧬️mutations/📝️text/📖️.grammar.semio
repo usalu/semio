@@ -11,7 +11,7 @@ start op
 # phase — actually 15 counting `NoMutation`) — only the BINARY frame needed upgrading this wave.
 # Every keyword/field-name token below is copied verbatim from the real `format!(...)` call sites in
 # that file's `print_presentation_mutation`, not invented.
-op = set-snapshot | insert-slide | remove-slide | set-slide-layout | set-slide-notes | insert-shape | remove-shape | set-shape-frame | set-textbox-blocks | insert-master | remove-master | insert-layout | remove-layout | set-layout-master
+op = set-snapshot | insert-slide | remove-slide | set-slide-layout | set-slide-notes | insert-shape | remove-shape | set-shape-frame | set-text-box-blocks | insert-master | remove-master | insert-layout | remove-layout | set-layout-master
 
 set-snapshot = "set-snapshot" "snapshot" "=" snapshot-lit
 insert-slide = "insert-slide" "index" "=" INT "slide" "=" slide
@@ -21,7 +21,7 @@ set-slide-notes = "set-slide-notes" "index" "=" INT "notes" "=" "[" block-items?
 insert-shape = "insert-shape" "slide-index" "=" INT "shape-index" "=" INT "shape" "=" shape
 remove-shape = "remove-shape" "slide-index" "=" INT "shape-index" "=" INT
 set-shape-frame = "set-shape-frame" "slide-index" "=" INT "shape-index" "=" INT "frame" "=" frame
-set-textbox-blocks = "set-textbox-blocks" "slide-index" "=" INT "shape-index" "=" INT "blocks" "=" "[" block-items? "]"
+set-text-box-blocks = "set-text-box-blocks" "slide-index" "=" INT "shape-index" "=" INT "blocks" "=" "[" block-items? "]"
 insert-master = "insert-master" "master" "=" master
 remove-master = "remove-master" "id" "=" hex
 insert-layout = "insert-layout" "layout" "=" layout

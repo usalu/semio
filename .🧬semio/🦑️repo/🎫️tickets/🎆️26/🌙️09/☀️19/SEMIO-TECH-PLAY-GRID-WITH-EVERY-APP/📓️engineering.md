@@ -182,3 +182,235 @@ match result {
     }
 }
 ```
+
+---
+
+## 2026-09-21 22:15 — session 2 (after a usage-limit kill): measured results
+
+The tree was uncompilable twice today from peers' in-flight framework rewrites (17:30–20:20:
+`🔌️plugin/🦀️.rs` calling `ArtifactStore::{send_member_mutations, take_member_inbound}` that no longer exist;
+from 22:13: `semio-framework-os-kernel` with 43 unresolved imports). Every number below is from a run that
+actually completed between those windows.
+
+| crate | first run | now | log |
+| --- | --- | --- | --- |
+| `semio-s-artifact-sourcing-curation` | fail 151 / 1 | **ok 152 / 0** | `retry2-noassembly.txt` |
+| `semio-s-plugin-energy` | fail 3 / 1 | **ok 4 / 0** | `retry2-noassembly.txt` |
+| `semio-s-artifact-fem-2d` | fail 1258 / 3 | fail **1259 / 2** | `retry2-assembly.txt` |
+| `semio-s-artifact-gis-gisterrain` | fail 88 / 4 | fail **91 / 1** | `retry2-assembly.txt` |
+| `semio-s-artifact-process-process3d` | fail 315 / 44 | fail **351 / 8** | `retry3-process3d.txt` |
+
+Unchanged since their first run (no edits, no re-run): `semio-s-plugin-fem` ok 5/0,
+`semio-s-artifact-energy-model` ok 6292/0, `semio-s-plugin-process{,-wood,-concrete,-metal,-robotic}` ok,
+`semio-s-plugin-sourcing{,-beams,-slabs,-windows}` ok, `semio-s-artifact-fem-3d` 1130/1,
+`semio-s-plugin-gis` 5/1, `semio-s-artifact-gis-gismap` 262/1.
+
+### Root causes found and fixed in this session
+
+10. **The config lane declared half its fold footprint** (process3d, 32 failures — the whole cascade the
+    unsettled harness had been hiding). `admit_process3d_config_mutation` returned `work_items: 1` while
+    `prepare_process3d_config` ALWAYS emits one inverse row beside the forward one. `work_items` counts staged
+    edit ROWS, so every config gesture folds 2 and each was refused
+    `batched item candidate failed its exact fixed fold contract`. Now
+    `ArtifactStoreOneItemFootprint::for_one_invertible_item(retained_bytes)`. This is the one PRODUCTION
+    (non-test) change of the session; it is target-independent, and the wasm mutex was held by a multi-hour
+    peer build, so `--target wasm32-wasip2` was not run (coordinator's instruction).
+11. **The gisterrain neutral vectors contradicted their own schema** (2 failures). Repaired from evidence, not
+    taste: `🎚️config/🧬️schema/🔣️.json` types `cameraJson` as a plain string; the independent Ajv oracle
+    `🧫️fixtures/🔬️window-config-ownership/🔣️.json` lists `{"cameraJson":"{}"}` under `accepted`; and the
+    direct-leaves file itself already lists that row under `payloads.camera.valid`. So its two
+    `config.invalid` rows were the wrong-type case `{"cameraJson": {}}` mistyped into a string — repaired,
+    with the same repair on the `mutations.invalid` twin — and `{"steps":[{}]}`, which appeared in BOTH
+    `diff.valid` and `diff.invalid` and is driven by the file's own `missing-null-identity` law, was removed
+    from `invalid`. There is no generator for this fixture anywhere in the repo; it is hand-authored.
+12. **A stale contributions law** (process3d). `host_contributions_resolve_to_the_event_sourced_config_lane`
+    asserted the host's pack verbatim, but the lane DISTILLS (`installable_contributions` keeps only
+    `process.machines` entries addressed to this app — the same discipline `🪵️sourcing` applies). Rewritten
+    over a real addressed roster plus a foreign entry that must be dropped, which proves more than before.
+13. **A refusal masked by a moved owner** (process3d). `Process3dArtifactPreparation::advance` moves the
+    mutation into `prepare_process3d_document` before it can refuse, so the next turn reported
+    `lost its mutation owner` instead of the real reason. The refusal is now captured and re-reported.
+14. The publication lane (fix 4) also had to be taken by the two envelope laws in the editor suite.
+
+### Files changed in this session (absolute; in addition to session 1's list)
+
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧫️fixtures/🧬️direct-leaves/🔣️.json`
+
+### Still open, with the exact reason and next step
+
+- **fem-2d, 2 reds** — `assembly_job_one_fuel_steps_stay_below_eight_milliseconds` and
+  `mesh_job_large_boundary_never_runs_to_completion_in_one_step` measured 191 605 µs and 152 ms at load 70
+  (they read 42 ms / 9.7 ms at load 112 this morning, and the ceiling is 8 ms). That spread IS the answer:
+  the laws measure host scheduling, not the guest step. `chain6.sh` is queued to re-measure them alone with
+  `--test-threads=1` once `uptime` reports load < 40; read `fem-timing-solo.txt`.
+- **gisterrain, 1 red** — `parse_op(&format!("{line} unknown-field 1"))` returns `Ok`. The shared DSL text
+  parser does not deny unknown trailing fields on the INLINE variant spec (`#[value(deny_unknown_fields)]`
+  governs `FromValue`, not `dsl::parse`); the snapshot law one line above passes only because `cameraJson` is
+  required. This assertion is the only one of its kind in the whole plugin tree. Next step: decide in the
+  `🗣️dsl` module whether an inline record spec must reject unknown keys, then run that module's tests and two
+  dependents — too wide to land here.
+- **process3d, 8 reds** — 3 × `process3d-publication.saturated` (the process-global FOUR-slot direct-mapped
+  lease table is churned by every test that triggers a document replacement, so a lane taken only by the
+  fixture laws is not enough; next step: key the registry per app instance, or take the lane in every test
+  that loads a document); `export_brep_out…` (cross-plugin, below); `host_contributions…`,
+  `repeated_world_pointer_down…` (both fixed, awaiting the re-run in `chain7`/`chain8`);
+  `vcs_artifact_app_production_maintenance_swap…` "real maintenance replay must publish the complete deep
+  semantic state"; `selected_stock_id_renders_its_dimensions` (the inspector now renders a REAL selection —
+  `ID: beam` — but not the expected `Width: 1`, so the seeded document differs from what the law assumes).
+- **`export_brep_out_returns_step_text_structured_payload` is NOT test interference.** Every stdio artifact
+  definition derives its format rows from `source_format_descriptors`, which sets
+  `short_id = representation.id` and leaves `aliases` empty — I checked `📐️step` and `🔺️stl`, and
+  `grep` finds no alias anywhere. The catalog therefore has no `step` / `obj` / `stl` / `glb` key at all,
+  while `MeshExporter::format_kind` (documented as "the short stdio format kind id") returns exactly those.
+  Next step (owner: the stdio topic): give each representation a short id derived from its primary extension
+  in `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🦀️.rs`, or move the short ids into `aliases`.
+- **fem-3d `presence local read registry is busy or exhausted`** — the 1 024-slot `SnapshotReadLeaseRegistry`
+  runs out at ~frame 1 024 of a 1 200-frame animation. The lease is taken per dispatched typed command
+  (`🔌️plugin/🦀️.rs:28887`) and only released when the job payload's close ladder reaches its
+  `presence_local` stage — ~12 close items per payload against the ONE fair maintenance item per frame the
+  test grants, which is the reactor's real budget. That is a retirement-debt leak with no back-pressure
+  (`maintenance_under_pressure` stays false). Both the lease site and the ladder are in
+  `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`, which is on the peer no-touch list — hand to the
+  peer with these numbers.
+- **gismap `candidate parent child projection is invalid`** — `ChildRestoreProjection::from_snapshot` refuses
+  the candidate during the live envelope swap. The slot kinds are canonical (`s.stdio.semio` ×3) and the
+  handles are `child_id == target.artifact_id` and unique (`gismap-drawing`, `gismap-value`, `image: None`),
+  so the refusal comes from `visit_child_refs`, not the slot check. Next step: instrument
+  `ChildRestoreProjectionError` at that call site to learn which row is refused — I could not get a build
+  through to do it.
+- **Verification still owed**: `chain7.sh`/`chain8.sh` are running detached and retry the process3d and
+  gisterrain+fem-2d batches every 10 minutes until the tree compiles; their results land in
+  `🗑️generated/engineering/retry4-process3d.txt` and `final<N>-{noassembly,assembly}.txt`.
+
+---
+
+## 2026-09-22 (session 6, successor after a coordinator restart)
+
+The predecessor's detached retry chains (`chain6/7/8.sh`) were already DEAD on intake — nothing of theirs
+had written since 2026-09-21 22:17 (`fem-timing-solo.txt` stops at `Blocking waiting for file lock`) and no
+cargo of theirs was alive. So `retry4-process3d.txt` and `final<N>-*.txt` never existed; the last measured
+numbers remain the ones in the section above.
+
+### Root causes found and fixed in this session
+
+15. **A returned snapshot read whose root is still LIVE was charged a full retirement** (fem-3d's
+    `result_animation_frame_cost_stays_flat_across_a_long_run`, `presence local read registry is busy or
+    exhausted`). `SnapshotReadLeaseRegistry` keeps a fixed 1 024-slot table; a returned lease is reclaimed
+    by the maintenance pump at ONE lease per turn, and each reclaim costs three turns (take → the domain
+    retirement's `Arc::into_inner` → drop the completed retirement). But the roots that dominate that
+    traffic are not displaced at all: `🔌️plugin/🦀️.rs` takes `presence_store.local_read()` in the
+    `ephemeral` hook of EVERY dispatched command and again for every bounded tool job, and returns them
+    while `PresenceStore::local` still aliases the same `Arc`. The pump then spends its fair turn
+    rediscovering that `Arc::into_inner` fails and simply drops the handle — which is precisely what
+    `ReturnedSnapshotReadRetirement::close_step` and the presence local ladder already do for an aliased
+    root. A mounted app that dispatches once per frame therefore issues leases faster than one fair
+    maintenance step per frame can reclaim them and runs the table out mid-run.
+    Fix (general, in `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs`, which is not frozen):
+    `SnapshotReadLeaseRegistry::try_release_aliased` — on the returning thread, under the registry's own
+    state lock, a returned lease whose slot is not the LAST `Arc` (`Arc::strong_count > 1`) frees its slot
+    immediately and never enters the returned queue. Semantically identical to what the pump discovers two
+    turns later, O(1), and it leaves exactly the displaced roots (the ones `PresenceStore::apply` hands
+    over, where the slot IS the last owner) to the bounded domain retirement. `SnapshotReadLease::return_now`
+    records the one-shot `returned` flag on that path too, so a second return is still refused.
+16. **The shared DSL had no exact op-line parser, and 20 hand-rolled copies of the same `OpText` body**
+    (gisterrain's `parse_op(&format!("{line} unknown-field 1"))` returning `Ok`). `dsl::parse` stops at the
+    end of the record it recognises and drops the rest — the DOCUMENT-mode contract. An operation line is
+    ONE terminal record, which is what `dsl::parse_exact` is for (`📕️norm`'s config text codec already uses
+    it, and its `📜️script.ts` even asserts "config text must use the shared exact record boundary"). Added
+    `dsl::variants_text::{parse_op, print_op}` next to `variants_binary` — the text twin, on `parse_exact` —
+    with a new law `derived_op_text_refuses_every_token_outside_its_own_record` in the dsl unit suite
+    (the text twin of the trailing-byte refusal the binary law already proved), and replaced all 20
+    hand-rolled bodies in 🏗️fem / 🔋️energy / 🌍️gis / 🏭️process / 🪵️sourcing with a delegation.
+17. **process3d's app self-grant shared the host's four-slot DIRECT-MAPPED publication table**
+    (`process3d-publication.saturated`, 3 reds). `FixedOperationRegistry::can_admit` requires the slot
+    `index(key)` maps to to be free — a committed law (`🧪️fixed-operation-registry-cases`, `collision`)
+    pins that direct-mapped refusal, so the registry is not the place to fix this. But a lease the app
+    grants ITSELF for a host-begun `Effect::LoadDocument` is not a host publication: it is admitted by
+    `Process3dStoreInitializationAuthority::new`, at most one exists at a time (the old code already drained
+    every previously recorded app key), and in a test binary hosting several app instances beside the
+    fixture laws it is exactly what occupies the slot an unrelated fixture key hashes to while three slots
+    stay free. It now lives in its own single-slot authority (`process3d_app_publication_lease`), with
+    `process3d_publication_lease_by_key`/`_by_operation` consulting the host table first and the self-grant
+    second; the now-meaningless `app_admitted` discriminator is gone.
+18. **gismap's live-load refusal is unattributable from the test** — the framework reports only
+    `plugin.internal: candidate parent child projection is invalid`, swallowing the
+    `ChildRestoreProjectionError` with `map_err(|_| …)`. Added
+    `every_gis_map_parent_snapshot_projects_its_canonical_child_handles` to the gismap editor suite: it runs
+    `ChildRestoreProjection::from_snapshot` over `empty_gis_map_snapshot()` and `default_document()` and over
+    each one's pack and DSL round trip, and names the exact error variant plus the offending handles.
+
+### Files changed in this session (absolute)
+
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️.rs`
+- `/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧪️tests/🔬️unit/🦀️.rs`
+- the 20 `OpText` codecs listed by `🗑️generated/engineering/adopt-variants-text.py` (fem 2d/3d ×7,
+  energy ×5, gis gismap/gisterrain ×4, process3d ×2, sourcing ×2)
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🧪️tests/🔬️retained-laws/🦀️.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+
+19. **`vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_closed` located its
+    machine POSITIONALLY** (process3d), and it is the head of the publication cascade. Every workshop
+    mutation addresses a machine by ID; the expectation edited `expected.workshop.machines.first_mut()`,
+    but the initial workshop already carries the three generic machines (saw, drill, attacher) before the
+    one `production_initial_snapshot` appends — so the expectation renamed `saw` while the real id-keyed
+    replay renamed `machine`. The expectation now finds the machine the mutations name and reads label,
+    icon, stock label, stock solid and cursor off the mutations themselves. This law panics BEFORE
+    `owned_store_measured` releases its host publication leases, and those leaks are what the three
+    `process3d-publication.saturated` reds then collide with: the lane-holding laws are downstream, not
+    independent defects.
+20. **`next_step_id()` hashed a compile-time constant** (process3d — the real defect behind
+    `repeated_world_pointer_down_each_dispatch_a_mutation`, which the predecessor's refusal-reporting fix
+    finally made legible: `A step with id "step-545333ff4364" already exists`).
+    `format!("step-{}", &hash_bytes(concat!(file!(), line!(), "step-{}").as_bytes())[..12])` — the hashed
+    bytes are a `&'static str` fixed at compile time, so every call in the life of the binary returned the
+    SAME id and the second step inserted into any document was refused by the vocabulary, while the doc
+    comment claimed "pseudo-random, collision odds astronomically low". It now derives the id from the
+    timeline it is inserted into (`next_step_id(&Process3dSnapshot)`): a pure function of the document, so
+    a replay mints the same id, salted over `0..=len` so that by pigeonhole one of `n + 1` distinct
+    candidates is free of the `n` ids already present. Threaded through all three mint sites
+    (`🪜️step::add_step`, `🌍️world::world_pointer_down`, `process3d_step_from_face_drag`). This is a
+    PRODUCTION change; it is target-independent, and `cargo check -p semio-s-artifact-process-process3d
+    --all-targets` is clean (exit 0, 125 warning lines), but `--target wasm32-wasip2` was not run — the
+    fleet's wasm mutex is held by other topics and the brief forbids waiting on it.
+21. **The inspector stock law asserted a literal 1 × 1 × 1 box** (process3d). The curated default example
+    is a timber beam (3 × 0.2 × 0.3); `selected_stock_id_renders_its_dimensions` now reads the expected
+    extents off the same `stock_payload.solid` the panel renders, so it proves the same property and
+    cannot drift with the example.
+
+### Measured this session (every number from a run made here)
+
+| crate | before (2026-09-21) | this session | log |
+| --- | --- | --- | --- |
+| `semio-framework-os-kernel` (store + dsl host) | not run | first **1116 / 2** (both from the store change), then **ok 1118 / 0** | `s6-kernel.txt`, `s6d-kernel.txt` |
+| `semio-s-artifact-energy-model` | ok 6292 / 0 | **ok 6292 / 0** | `s6-noassembly.txt` |
+| `semio-s-artifact-sourcing-curation` | ok 152 / 0 | **ok 152 / 0** | `s6-noassembly.txt` |
+| `semio-s-plugin-energy` | ok 4 / 0 | **ok 4 / 0** | `s6-noassembly.txt` |
+| `semio-s-plugin-gis` | fail 5 / 1 | fail **5 / 1** (`descriptor_is_fresh`, still owed the coordinator's `describe`) | `s6-noassembly.txt` |
+| `semio-s-artifact-process-process3d` | fail 351 / 8 | fail **352 / 7** (`host_contributions…` confirmed green) | `s6-noassembly.txt` |
+| gis native-codecs target | ok 3 / 0 | **ok 3 / 0** | `s6-noassembly.txt` |
+
+`cargo check --all-targets` clean (exit 0, real warnings) for `semio-framework-os-kernel` (`s6-check-kernel.txt`),
+fem-2d/fem-3d/gismap/gisterrain under `--features component-app-assembly` (`s6-check-artifacts.txt`),
+process3d/sourcing-curation/energy-model (`s6-check-plain.txt`) and process3d again after fixes 19–21
+(`s6c-check-process3d.txt`).
+
+**Queued behind the play fleet's native cargo mutex** (`📜️native-test-mutex.sh`, adopted by the fleet at
+03:28; `engineering` is 7th in line): `s6c-kernel` (the store crate's own tests), `s6c-assembly`
+(fem-3d, gisterrain, gismap, fem-2d — four store dependents, full suites) and `s6c-process3d`.
+Detached as `chain11.sh` / `chain12.sh`; both retry until a real `test result:` lands.
+
+### Proposed diffs for peer-owned files (NOT applied)
+
+`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:23348` swallows the projection error:
+
+```rust
+let projection = store::ChildRestoreProjection::from_snapshot(candidate.snapshot_ref()).map_err(|_| plugin_sdk_fault("candidate parent child projection is invalid"))?;
+```
+
+Two changes worth making together: report the `ChildRestoreProjectionError` in the message, and route
+through `A::child_restore_projection`, which apps already implement precisely so their own diagnostic
+wins (gismap's says `gis map child projection failed: {error}`). As it stands the gismap live-load red is
+unattributable from outside the framework — hence the crate-side law added in fix 18.

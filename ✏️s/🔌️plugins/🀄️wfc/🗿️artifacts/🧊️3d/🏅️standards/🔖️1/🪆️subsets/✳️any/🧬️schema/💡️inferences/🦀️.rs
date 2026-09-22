@@ -480,6 +480,54 @@ impl Wfc3dInferenceJob {
     }
 }
 
+
+impl Wfc3dInferenceJob {
+    /// 🎞️ Decided slot assignments from the child job's in-process domains (not the truncated grid).
+    pub fn fill_decided_assignments(&self) -> std::collections::BTreeMap<String, Option<String>> {
+        let mut assignments = std::collections::BTreeMap::new();
+        for slot in &self.snapshot.slots {
+            assignments.insert(slot.id.clone(), None);
+        }
+        if let Some(child) = self.child.as_ref() {
+            let domains = child.domain_masks();
+            for (index, domain) in domains.iter().enumerate() {
+                if domain.count_ones() != 1 {
+                    continue;
+                }
+                let Some(pattern) = domain.first_set() else { continue };
+                let Some(slot) = self.snapshot.slots.get(index) else { continue };
+                let Some(tile) = self.tile_ids.get(pattern.index()) else { continue };
+                assignments.insert(slot.id.clone(), Some(tile.clone()));
+            }
+        }
+        assignments
+    }
+
+    /// 📊 Fill progress counters from the child job, or zeros before it exists.
+    pub fn fill_metrics(&self) -> (u64, u64) {
+        let Some(child) = self.child.as_ref() else { return (0, 0) };
+        let (observations, _edges, backtracks) = child.metrics();
+        (observations, backtracks)
+    }
+
+    /// 🏷️ Engine stage id while the child runs; initialize-domains during preparation.
+    pub fn fill_stage_id(&self) -> &'static str {
+        let Some(child) = self.child.as_ref() else { return "wfc.initialize-domains" };
+        match child.preview(0).stage {
+            engine::job::WfcStage::InitializeDomains => "wfc.initialize-domains",
+            engine::job::WfcStage::FindMinimumEntropySlot => "wfc.find-minimum-entropy-slot",
+            engine::job::WfcStage::ChooseCandidate => "wfc.choose-candidate",
+            engine::job::WfcStage::PropagateCompatibilityEdge => "wfc.propagate-compatibility-edge",
+            engine::job::WfcStage::DetectContradiction => "wfc.detect-contradiction",
+            engine::job::WfcStage::BacktrackTrailEntry => "wfc.backtrack-trail-entry",
+            engine::job::WfcStage::CommitSlot => "wfc.commit-slot",
+            engine::job::WfcStage::MaterializeCheckpoint => "wfc.materialize-checkpoint",
+            engine::job::WfcStage::MaterializeCommit => "wfc.materialize-commit",
+            engine::job::WfcStage::Complete => "wfc.complete",
+        }
+    }
+}
+
 impl semio_framework_job::InteractiveJob for Wfc3dInferenceJob {
     fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         use semio_framework_job::StepOutcome;
@@ -737,7 +785,7 @@ pub fn register_wfc3d_inference_factory(bus: &semio_framework::ActionBus) -> Res
 }
 
 /// 🏁 Explicit headless adapter over the same complete parent job used by the public factory.
-fn solve_with_job(snapshot: &Wfc3dSnapshot) -> Result<Wfc3dInferenceCommit, String> {
+pub(crate) fn solve_with_job(snapshot: &Wfc3dSnapshot) -> Result<Wfc3dInferenceCommit, String> {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
     let job = Wfc3dInferenceJob::new(operation, Wfc3dInferenceRequest { snapshot: snapshot.clone(), checkpoint: None })?;
     let params = semio_framework_job::BatchJobParams {

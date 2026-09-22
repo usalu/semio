@@ -29,7 +29,7 @@
  *   bun 🐍️s6-all-kinds-sweep.mjs <baseUrl> --tag <tag> <pluginId...>
  */
 import { chromium } from "playwright";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const argv = process.argv.slice(2);
@@ -71,8 +71,8 @@ const DEFAULT_VERBS = {
   mathematical: "nodeGraphEdit", norm: "setSnapshot", note: "addBlock", playbook: "addStep",
   "playbook-module-procedural": "importSolidGeometry", procedural: "addWidget", process: "addStep",
   puzzle: "addNode", raster: "addLayer", reasoning: "addNode", remodel: "addStream", sequence: "addStep",
-  shooting: "addShot", sourcing: "curationSetCount", stdio: "paste", trinity: "setParameter",
-  vcs: "incrementCounter", wfc: "change-seed", writer: "paste",
+  shooting: "addShot", sourcing: "curationSetCount", space: "createArtifact", stdio: "paste",
+  trinity: "setParameter", vcs: "incrementCounter", wfc: "change-seed", writer: "paste",
 };
 const KNOWN_VERBS = process.env.S6_VERBS ? JSON.parse(process.env.S6_VERBS) : DEFAULT_VERBS;
 /** 🩻️ **The third shape: a staged value is DOCUMENT-SPECIFIC and must be read off the LIVE document.**
@@ -120,19 +120,51 @@ const liveDocumentIds = (page) =>
 /** 🧾️ Staged arguments a verb refuses to run without, taken verbatim from the refusals S5 captured
  * (`missing field question_ids`, `missing field example_id`, …) and from the batch probes' own configs.
  * Keys are `<pluginId>.<verbId>` first, bare `<verbId>` second. */
+/** 📕️ 📕️norm's `setSnapshot` REPLACES the whole compliance document, so its one staged argument is
+ * that document's camelCase JSON — 63 required fields, which no generic filler can invent and which a
+ * literal in this file would silently rot the day the schema moves. The artifact ships exactly such a
+ * document already: the committed `changeAnnex` mutation fixture's `⬅️before` snapshot, which is the
+ * codec's OWN canonical output (`pack::json::from_json_str` is what
+ * `decode_din16798_snapshot_json` calls). It also differs from the seeded editor document in three
+ * fields (`airSpeedMS`, `dwellingVentilationM3H`, `heatRecoveryEtaMin`), so replacing with it really
+ * moves the document rather than re-writing what is already there (ticket 26/09/18 S11). */
+const din16798FixtureSnapshot = () => {
+  const path = fileURLToPath(
+    new URL(
+      "../../../../../../../✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-the-check-to-the-en-annex/📸️snapshot/⬅️before/🔣️.json",
+      import.meta.url,
+    ),
+  );
+  // 🔢️ Folded to one line by deleting the LINE BREAKS only. `JSON.parse` → `JSON.stringify` would
+  // have been shorter and is wrong: JavaScript has one number type, so it rewrites the fixture's
+  // `22.0` as `22`, and the `pack` codec on the other side reads an f64 carrier's exact JSON form
+  // (memory `project-pack-integer-carriers-need-exact-json-projection`). The fixture's own bytes are
+  // the canonical form; nothing here may reformat them.
+  return readFileSync(path, "utf8").replace(/\s*\n\s*/gu, "");
+};
+
 const DEFAULT_ARGS = {
   "energy.rename-zone": { zone: LIVE_ID, newName: "ProbeZone" },
   "fem.addNode": { x: "3.5", y: "4.5" },
   "wfc.change-seed": { seed: "7" },
   "trinity.setParameter": { parameterId: LIVE_ID, value: "3" },
   "sourcing.curationSetCount": { delta: "1" },
+  "norm.setSnapshot": { snapshot: din16798FixtureSnapshot() },
+  "space.createArtifact": { name: "S11 Probe Artifact", kindChoice: LIVE_ID },
 };
 const KNOWN_ARGS = process.env.S6_ARGS ? JSON.parse(process.env.S6_ARGS) : DEFAULT_ARGS;
 
 /** 🎯️ The exact app a kind must be spawned AS, when the bare `spawn.<pluginId>` entry would resolve
  * to a different one. 📕️norm contributes thirty programs (fifteen standards × editor/viewer) and the
- * acceptance names `din16798`; without this the probe spawned whatever came first, or nothing. */
-const DEFAULT_APPS = { norm: "s.norm.din16798@1/*#editor" };
+ * acceptance names `din16798`; without this the probe spawned whatever came first, or nothing.
+ *
+ * 🪐️ `space` needs the pin for the opposite reason: its FIRST program is `s.space.home@1/*#editor`,
+ * and the Home surface the shell already mounts offers NO action-rail rows at all when it is spawned
+ * a second time as a program (`railRows: 0`, measured 2026-09-22). The space INDEX editor is the one
+ * that owns this plugin's document mutations (`createArtifact`, `renameArtifact`, `touchArtifact`)
+ * and is the surface the hub-catalog clause of outcome 1 opens documents from, so it is what the
+ * sweep drives for this kind. */
+const DEFAULT_APPS = { norm: "s.norm.din16798@1/*#editor", space: "s.space.space@1/*#editor" };
 const KNOWN_APPS = process.env.S6_APPS ? JSON.parse(process.env.S6_APPS) : DEFAULT_APPS;
 
 const FAULT = /unreachable|trapped|\btrap\b|panicked|fault|refused|dropped action|not-ui-safe|missing-owned|invalid-args|unsupported|pageerror|Uncaught|dispatch-failed/i;

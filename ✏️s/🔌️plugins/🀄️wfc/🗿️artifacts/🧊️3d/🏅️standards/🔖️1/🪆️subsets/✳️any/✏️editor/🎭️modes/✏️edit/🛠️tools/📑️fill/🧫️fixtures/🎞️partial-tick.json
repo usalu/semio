@@ -1,0 +1,9 @@
+{
+  "assignments": {
+    "room-a": "room",
+    "corridor": null,
+    "room-b": "room"
+  },
+  "contradiction": false,
+  "done": false
+}

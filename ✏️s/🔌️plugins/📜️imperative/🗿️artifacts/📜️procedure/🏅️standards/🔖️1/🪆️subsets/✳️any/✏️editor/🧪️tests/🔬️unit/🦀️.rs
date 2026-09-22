@@ -440,14 +440,20 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 
 //#region 🪟️WindowActionScope
 /// 🪟️ Every action this app declares must be reachable from a window kind: the React shell's Actions
-/// pane is per-window, so an app-level action no window kind carries is invisible AND every dispatch
+/// pane is per-window, so an action no window kind can dispatch is invisible AND every dispatch
 /// of it is answered `undeclared-action`. Ticket 26/09/18 slice B2b measured this editor booting with
 /// `actionCount: 0` — two rendered windows and not one clickable verb.
+///
+/// 🔁️ Since ticket 26/09/18 slice DS1 the builder no longer CLONES the app roster into every
+/// `WindowKindDefinition.actions` (that copy was 31.9 % of a shipped descriptor's bytes); a window's
+/// dispatchable set is `semio_framework::window_kind_actions` — its own roster plus every
+/// `AppDefinition.actions` row no window claims. This law reads through that resolver, which is the
+/// same predicate the plugin host uses to answer a dispatch.
 #[test]
 fn every_declared_action_is_carried_by_a_window_kind() {
     let definition = create_imperative_app();
-    let declared: Vec<String> = definition.window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone())).collect();
-    assert!(!declared.is_empty(), "no window kind declares any action: {:?}", definition.window_kinds.iter().map(|window| window.id.clone()).collect::<Vec<_>>());
+    let declared: Vec<String> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window).into_iter().map(|action| action.id.clone())).collect();
+    assert!(!declared.is_empty(), "no window kind dispatches any action: {:?}", definition.window_kinds.iter().map(|window| window.id.clone()).collect::<Vec<_>>());
     for id in ["addStep", "removeStep", "moveStep", "setStepParams", "run"] {
         assert!(declared.iter().any(|declared_id| declared_id == id), "{id} is declared by the app but carried by no window kind");
     }

@@ -65,12 +65,13 @@ fn the_accessibility_dump_announces_visible_windows_and_keeps_named_diagnostics(
         note_accessibility_visible_document(window_id.as_str().expect("visible window id"));
     }
     publish_accessibility_visible_documents();
-    note_chrome_accessibility(vec![serde_json::from_value(serde_json::json!({ "nodeId": 1, "key": "shell", "role": "button", "depth": 0, "live": "off" })).expect("chrome accessibility row")]);
+    note_chrome_accessibility(7, vec![serde_json::from_value(serde_json::json!({ "nodeId": 1, "key": "shell", "role": "button", "depth": 0, "live": "off" })).expect("chrome accessibility row")]);
 
     let all = build_accessibility_dump(&engine, None);
     let announced: Vec<_> = all.windows.iter().map(|window| window.window_id.as_str()).collect();
     assert_eq!(announced, law["unnamedPublished"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>(), "an unnamed dump follows the last complete visible-document publication");
     assert_eq!(all.window_id, None, "no window was named, so none is echoed");
+    assert_eq!(all.windows.iter().find(|window| window.window_id == SHELL_CHROME_ACCESSIBILITY_WINDOW_ID).map(|window| window.window_generation), Some(7), "the mirror publishes the exact accepted chrome epoch");
 
     let requested = law["requestedDiagnostic"]["requested"].as_str().unwrap();
     let named = build_accessibility_dump(&engine, Some(requested));
@@ -87,7 +88,7 @@ fn the_accessibility_dump_announces_visible_windows_and_keeps_named_diagnostics(
     assert!(absent.windows.is_empty(), "a window that is not live announces nothing, so a reader can tell it from an empty one");
     begin_accessibility_visible_documents();
     publish_accessibility_visible_documents();
-    note_chrome_accessibility(Vec::new());
+    note_chrome_accessibility(0, Vec::new());
 }
 
 #[test]

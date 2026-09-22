@@ -870,7 +870,13 @@ window: TreeWindow | null, };"####,
  * children means expandable-but-not-yet-loaded, never "empty"; a renderer pitches the unmaterialised
  * rows as spacers so the scrollbar spans the whole document instead of the loaded window.
  */
-export type TreeWindow = { total: number, offset: number, };"####,
+export type TreeWindow = { total: number, offset: number, rowExtent: TreeWindowRowExtent, };"####,
+    },
+    SchemaMetadata {
+        name: "TreeWindowRowExtent",
+        version: 1,
+        typescript: r####"/** 🪟️ Closed geometry token for one unmaterialised row in a virtual Tree window. */
+export type TreeWindowRowExtent = "standard" | "compactText" | "compactSmallControl" | "compactControl";"####,
     },
     SchemaMetadata {
         name: "Trigger",

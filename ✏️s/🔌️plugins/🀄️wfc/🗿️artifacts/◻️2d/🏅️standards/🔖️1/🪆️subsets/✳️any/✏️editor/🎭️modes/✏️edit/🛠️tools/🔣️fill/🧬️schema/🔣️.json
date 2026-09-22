@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.wfc.wfc2d.fill.tick.v1",
+  "title": "Wfc2d fill tick payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["assignments", "contradiction", "done"],
+  "properties": {
+    "assignments": {
+      "type": "object",
+      "description": "Slot id to tile id when decided, or null when still open.",
+      "additionalProperties": {
+        "type": ["string", "null"]
+      }
+    },
+    "contradiction": { "type": "boolean" },
+    "done": { "type": "boolean" }
+  }
+}

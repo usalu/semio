@@ -1,0 +1,17 @@
+{
+  "contractVersion": 1,
+  "cases": [
+    {
+      "id": "defaults",
+      "tree": { "interactionDomain": null },
+      "toggle": { "on": true, "icon": "check", "text": "Enabled" },
+      "expected": { "treePresentation": "standard", "toggleAppearance": "button" }
+    },
+    {
+      "id": "compact-checkbox",
+      "tree": { "presentation": "compact", "interactionDomain": null },
+      "toggle": { "appearance": "checkbox", "on": true, "icon": "check", "text": "Enabled" },
+      "expected": { "treePresentation": "compact", "toggleAppearance": "checkbox" }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.wfc.bitmap.fill.tick.payload.v1",
+  "title": "WFC Bitmap Fill Tick Payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pixels", "decided", "width", "height", "contradiction", "done"],
+  "properties": {
+    "pixels": {
+      "type": "string",
+      "description": "Base64 row-major palette indices. Undecided cells may hold any index; the decided mask is authoritative."
+    },
+    "decided": {
+      "type": "string",
+      "description": "Base64 row-major mask: one byte per cell, 1 when the cell has an assignment, 0 otherwise. Palette index 0 stays a real colour."
+    },
+    "width": { "type": "integer", "minimum": 0 },
+    "height": { "type": "integer", "minimum": 0 },
+    "contradiction": { "type": "boolean" },
+    "done": { "type": "boolean" }
+  }
+}

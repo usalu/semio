@@ -164,6 +164,41 @@ async fn interaction_topology_covers_every_step_and_block() {
 //#endregion 🔖️Interaction
 
 //#region 🔖️CrossCutting
+/// 👥️ `setContributions` is the FIRST command `#playbook` dispatches at boot, and it died with
+/// `playbook presence local read requires a live exact local retirement owner` in the play grid's
+/// strict acceptance (ticket 26/09/19). A presence DISPOSER is not a presence retirement OWNER:
+/// `PresenceStore::local_read` fails closed while `local_retirement_factory` is `None`, so every
+/// command whose ephemeral leg reads local presence is refused however correct the command is.
+/// This drives the real verb through the real registered app, so the law fails if the owners are
+/// ever dropped again — a declaration-only assertion would not catch a regression in `local_read`.
+#[semio_framework_async_macros::async_test]
+async fn set_contributions_boots_because_presence_declares_its_retirement_owners() {
+    use semio_framework_plugin::{ArtifactApp, PluginApp};
+
+    assert!(
+        <EditorApp<PlaybookPlayApp> as ArtifactApp>::build_presence_local_root_retirement_factory().is_some(),
+        "playbook must declare a local presence retirement owner or every presence-reading command fails closed"
+    );
+    assert!(
+        <EditorApp<PlaybookPlayApp> as ArtifactApp>::build_presence_peer_retirement_factory().is_some(),
+        "playbook must declare a peer presence retirement owner"
+    );
+
+    // 🔌️ `meta("local")` names instance 1, and a typed command is refused
+    // (`interactive-job.live-instance`) until that instance is the mounted one — so the instance is
+    // bound exactly as the live host binds it before its first dispatch.
+    let mut app = playbook_app().await;
+    app.bind_instance_id(semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+    let outcome = app
+        .dispatch_typed(
+            PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "{}".to_string() }),
+            &semio_framework_plugin::artifact_app_laws::meta("local"),
+        )
+        .await;
+    assert!(outcome.is_ok(), "setContributions must not be refused at boot: {:?}", outcome.err());
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = playbook_app().await;
@@ -317,8 +352,15 @@ fn set_active_example_is_host_only_and_both_composed_children_mint_genesis_packs
     let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared on the app roster");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     let demo = <PlaybookSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a playbook snapshot");
-    for (slot, child) in [("document", &demo.document), ("flow", &demo.flow)] {
-        assert_eq!(child.target.artifact_id, child.child_id, "slot {slot}'s target must name its own child_id or ChildRestoreProjection refuses the whole load with InvalidReference");
+    // 🧩️ The two slots hold DIFFERENT child types (`ArtifactChild<SemioDocumentSnapshot>` and
+    // `ArtifactChild<SemioFlowSnapshot>`), so a single array of references to them does not typecheck
+    // and this law could not build at all. The assertion is unchanged — only the two common fields it
+    // reads are projected out before the loop, exactly as the `child_id` loop below already does.
+    for (slot, target_artifact_id, child_id) in [
+        ("document", demo.document.target.artifact_id.as_str(), demo.document.child_id.as_str()),
+        ("flow", demo.flow.target.artifact_id.as_str(), demo.flow.child_id.as_str()),
+    ] {
+        assert_eq!(target_artifact_id, child_id, "slot {slot}'s target must name its own child_id or ChildRestoreProjection refuses the whole load with InvalidReference");
     }
     for (slot, child_id) in [("document", demo.document.child_id.as_str()), ("flow", demo.flow.child_id.as_str())] {
         let pack = PlaybookPlayApp::genesis_child_pack(&demo, slot, child_id).unwrap_or_else(|| panic!("slot {slot} mints no genesis pack, so the archive closure leg refuses the load"));

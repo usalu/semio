@@ -995,8 +995,13 @@ pub(crate) mod context {
         json::from_dsl_value(&result.output)
     }
 
-    /// 🎬️ Starts a fill tool run the way the ToolRun panel's Start button does.
+    /// 🎬️ Registers the lifecycle fixture's cube meshes, then starts a fill run through the panel action.
     pub async fn start_fill_run(app: &mut Puzzle3dApp) -> Value {
+        let fixture = puzzle3d_fixture_from_snapshot(app.snapshot().expect("live fill fixture").typed());
+        let (positions, indices) = puzzle3d_fallback_mesh_buffers();
+        for url in collect_mesh_urls(&fixture) {
+            assert!(crate::editor::puzzle3d::precompute::derive_brush_mesh(&url, &positions, &indices).is_some(), "fixture mesh {url}");
+        }
         tool_run_action(app, semio_framework_tool_run::TOOL_RUN_START_ACTION_ID, object([(semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID.to_string(), Value::from(fill_tool::TOOL_ID))])).await
     }
 
@@ -6493,10 +6498,8 @@ async fn import_fixture_reproduces_the_exported_document() {
 #[test]
 fn file_menu_import_row_opens_the_file_picker() {
     let definition = create_puzzle3d_app();
-    let file: Vec<(&str, bool)> = definition
-        .window_kinds
-        .iter()
-        .flat_map(|window| window.actions.iter())
+    let file: Vec<(&str, bool)> = dispatchable_actions(&definition)
+        .into_iter()
         .filter(|action| action.category.as_deref() == Some("file"))
         .map(|action| (action.id.as_str(), action.in_palette))
         .collect();

@@ -20,7 +20,9 @@
 //! and `width`/`height`/`depth` its extent, so an instance is `position = slot origin`,
 //! `scale = slot extent`. That is what lets `tower-stack`'s differently-sized storeys share one mesh.
 
+use crate::editor::wfc3d::modes::edit::tools::fill::{self, Wfc3dFillTickPayload};
 use crate::editor::wfc3d::transient::{assigned_tile, Wfc3dTransient};
+use semio_framework_plugin::ToolRunView;
 use crate::schema::snapshot::{Slot3d, Tile, TileMedia3d, Wfc3dSnapshot};
 use semio_framework_plugin::{
     scene_surface, BuiltNode, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions, World3dScene, world3d_camera_projection_json, world3d_selection_json, WorldProjectionConfig,
@@ -260,6 +262,13 @@ pub fn camera_json(document: &Wfc3dSnapshot, zoom: f64) -> String {
 //#region 🔖️Render
 /// 🧊️ Renders the solved assembly. Read-only: `selection_json` carries no ids, because picking a
 /// solved instance would address a derived value, not a document row.
+/// 🏃️ The live fill tick while the run is non-terminal and carries a decodable payload.
+pub fn live_fill_payload(tool_run: Option<&ToolRunView>) -> Option<Wfc3dFillTickPayload> {
+    let run = tool_run.filter(|run| run.tool_id == fill::TOOL_ID && !run.state.is_terminal())?;
+    let bytes = run.payload.as_ref()?;
+    fill::decode_fill_payload(bytes)
+}
+
 pub fn render(document: &Wfc3dSnapshot, transient: &Wfc3dTransient, zoom: f64) -> UiAssemblyResult<BuiltNode> {
     let scene = World3dScene {
         instances_delta_json: Some(instances_delta_json(document, transient)),

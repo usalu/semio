@@ -18,6 +18,7 @@ import { WindowMeasureNumber, WindowMeasureSelect, WindowMeasureToggle } from ".
 import { renderWindowMeasuresTree } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { UiNodeView } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { FlowProvider } from "@semio-tech/ui-react";
 
 it("interprets the neutral compact Tree and preserves checkbox identity, authority, and disability", () => {
   const law = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/📏️window-measures/🔣️.json"), "utf8"));
@@ -36,9 +37,10 @@ it("interprets the neutral compact Tree and preserves checkbox identity, authori
     const store = new UiDocumentStore("compact-tree-law");
     store.loadSnapshot({ surface: "compact-tree-law", revision: 1, root: rootId, nodes, layoutEpoch: 0n } as any);
     const intents: any[] = [];
-    const view = render(createElement(UiNodeView, { store, id: rootId, context: { store, onAction: () => {}, onIntent: (intent: unknown) => intents.push(intent) } }));
+    const view = render(createElement(FlowProvider, { inline: "rtl", children: createElement(UiNodeView, { store, id: rootId, context: { store, onAction: () => {}, onIntent: (intent: unknown) => intents.push(intent) } }) }));
     const tree = view.container.querySelector("[role='tree']")!;
     expect(tree.getAttribute("data-tree-presentation")).toBe("compact");
+    expect(tree.getAttribute("dir")).toBe("rtl");
     const input = view.container.querySelector<HTMLInputElement>("input[type='checkbox'][aria-label='Grid']")!;
     expect(input).toBeTruthy();
     expect(input.checked).toBe(true);
@@ -68,6 +70,8 @@ it("renders the neutral Window Options tree with compact rows and closed child r
   const toggle = view.container.querySelector<HTMLInputElement>("input[type='checkbox'][aria-label='Visible']")!;
   expect(toggle).toBeTruthy();
   expect(toggle.checked).toBe(true);
+  expect(toggle.classList.contains("size-tiny")).toBe(true);
+  expect(toggle.parentElement?.classList.contains("min-w-tiny")).toBe(true);
   expect(view.container.querySelector("[role='combobox']")).toBeTruthy();
   expect(rows.every(row => row.classList.contains("min-h-tiny"))).toBe(true);
   const lastGroup = rows.at(-1)!;

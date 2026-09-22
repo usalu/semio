@@ -518,7 +518,7 @@ fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
     let tail = cancelled_draw.layers.last().expect("cancelled popup route close layer");
     assert!(tail.scissor.is_none() && tail.foreground_of.is_none(), "cancellation closes both retained route stacks");
 
-    let before = popup.first_row;
+    let before = popup.scroll;
     let down = popup.down.expect("a long popup has a down chevron");
     assert_eq!(crate::wgpu::select::select_scroll_direction_at(popup, down.x + down.w * 0.5, down.y + down.h * 0.5), Some(select_fixture["downPress"]["direction"].as_f64().expect("down direction") as f32));
     assert!(arm_retained_select_scroll_at(&mut tree, root, down.x + down.w * 0.5, down.y + down.h * 0.5));
@@ -532,9 +532,9 @@ fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
     let down_expected = &select_fixture["downPress"];
     assert_eq!(scrolled.first_row, down_expected["expectedFirstRow"].as_u64().expect("scrolled first row") as usize);
     assert_eq!(scrolled.last_row, down_expected["expectedLastRowExclusive"].as_u64().expect("scrolled last row") as usize);
-    assert!(scrolled.first_row > before, "one down-chevron press advances the retained row window");
+    assert!(scrolled.scroll > before, "one down-chevron press advances the retained viewport");
     assert!((scrolled.scroll - down_expected["expectedScroll"].as_f64().expect("expected scroll") as f32).abs() < 0.001);
-    assert!((scrolled.scroll - select_scroll_step(select_scroll_viewport_height(&theme, scrolled.menu.h))).abs() < 0.001, "the press uses React's shared 80%-of-viewport step");
+    assert!((scrolled.scroll - select_scroll_step(crate::wgpu::select::select_popup_viewport_rect(scrolled).h)).abs() < 0.001, "the press uses React's shared 80%-of-viewport step");
 }
 
 /// 🔽️ A CLOSED `Select` materializes no option rows (`reconcile::children_of` gates on
@@ -710,6 +710,7 @@ fn input(id: &str, value: &str) -> UiNode {
         input_kind: "text".into(),
         value: value.into(),
         placeholder: None,
+        accessibility_label: None,
         commit: None,
         min: None,
         max: None,

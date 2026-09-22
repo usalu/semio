@@ -6,7 +6,7 @@ grammar Semio_semio_presentation_mutations;
 op: keywordOp EOF;
 keywordOp: KEYWORD arg*;
 KEYWORD: 'set-snapshot' | 'insert-slide' | 'remove-slide' | 'set-slide-layout' | 'set-slide-notes'
-       | 'insert-shape' | 'remove-shape' | 'set-shape-frame' | 'set-textbox-blocks' | 'insert-master'
+       | 'insert-shape' | 'remove-shape' | 'set-shape-frame' | 'set-text-box-blocks' | 'insert-master'
        | 'remove-master' | 'insert-layout' | 'remove-layout' | 'set-layout-master';
 arg: IDENT '=' value;
 value: '[' .*? ']' | HEX | INT;

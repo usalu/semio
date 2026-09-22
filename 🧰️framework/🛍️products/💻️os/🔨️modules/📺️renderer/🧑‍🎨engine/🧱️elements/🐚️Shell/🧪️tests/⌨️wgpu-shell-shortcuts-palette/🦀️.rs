@@ -498,7 +498,7 @@ fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
     assert!(input_node.focused, "shortcut focus and accessibility focus are the same input");
     let target = ui_render::AccessibilityTarget {
         window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION,
+        window_generation: shell.presented_input_epoch,
         node_id: input_node.node_id,
         node_key: input_node.key,
     };
@@ -551,7 +551,7 @@ fn find_publishes_filters_and_activates_with_a_physical_row_click() {
     assert_eq!(input_node.role, "combobox");
     let target = ui_render::AccessibilityTarget {
         window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION,
+        window_generation: shell.presented_input_epoch,
         node_id: input_node.node_id,
         node_key: input_node.key,
     };
@@ -636,7 +636,7 @@ fn palette_accessibility_is_a_dialog_tree_with_close_list_groups_status_and_stab
     let close = empty_nodes.iter().find(|node| node.key == "ui.search.close").expect("accessible close after filtering");
     let target = ui_render::AccessibilityTarget {
         window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
-        window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION,
+        window_generation: shell.presented_input_epoch,
         node_id: close.node_id,
         node_key: close.key.clone(),
     };

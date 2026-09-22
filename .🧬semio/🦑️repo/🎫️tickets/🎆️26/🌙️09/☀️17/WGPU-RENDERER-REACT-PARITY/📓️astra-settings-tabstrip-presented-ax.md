@@ -55,3 +55,13 @@ For panel rows, declared semantics and pointer geometry are distinct:
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/♿️wgpu-accessibility-interaction/🟦️.tsx`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🎨️wgpu-theme-editor-and-accessibility/🦀️.rs`
 
+
+## Native144 RED and production repair — 2026-09-21
+
+Native144 established both intended failures: chrome activation still accepted a stale mirror generation and a constrained Settings strip omitted semantic tail tabs outside its pointer clip. Receipt: `🗑️generated/astra-runtime/renderer-native144-compact-ax-locale-red/run.log`.
+
+The production repair publishes one bounded chrome accessibility catalogue under the same accepted epoch as the hit/owner/widget/geometry registries. Interpreter diagnostics carry that exact epoch instead of a constant generation. Dispatch validates `(epoch,node_id,key)` only against the accepted catalogue and never re-enumerates a candidate tree to validate a delayed address.
+
+Panel tab rows now retain every declaration, paint through a row scissor, register only positive-area clipped pointer rectangles, and keep a per-anchor/per-row horizontal offset. Each open row contributes all declared tabs to the accepted semantic catalogue, including offscreen tail tabs. Accessibility Focus/Activate reveals the target row before selecting the tab; the next accepted frame clamps the sentinel to the authored maximum and publishes its physical hit. Pointer wheel deltas address the row's bounded offset, while ordinary vertical scroll regions retain their existing axis.
+
+Rustfmt parse validation succeeded for the Shell, Interpreter, UI component/reconcile, native laws, and UI wire test files. Native145 is the first integration build containing this production packet.

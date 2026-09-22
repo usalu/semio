@@ -33,3 +33,17 @@ fn presentation_dsl_round_trips_bundled_default_example() {
 fn the_committed_demo_asset_is_the_printers_own_demo_snapshot() {
     assert_eq!(PRESENTATION_EXAMPLE_TEXT, print_dsl(&crate::demo_presentation_snapshot()), "🖼️assets/🎬️demo: the committed asset must be this crate's own printed output");
 }
+
+/// ✍️ Regenerates the committed `demo` asset from THIS crate's own printer — the only sanctioned way
+/// to move it (the composed child handle is a content hash, so no hand edit can be correct). Runs
+/// last by name; `the_committed_demo_asset_is_the_printers_own_demo_snapshot` above is the law it
+/// serves, and that law still reads the `include_str!` constant baked into THIS binary, so the
+/// regenerated text is proven by the NEXT run.
+#[test]
+fn zzz_write_demo_example_asset() {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let printed = print_dsl(&crate::demo_presentation_snapshot());
+    if printed != PRESENTATION_EXAMPLE_TEXT {
+        std::fs::write(&path, &printed).expect("🖼️assets/🎬️demo is writable");
+    }
+}

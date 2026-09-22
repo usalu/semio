@@ -2004,7 +2004,11 @@ fn glass_snapshots_the_accumulated_composite_at_its_authored_command() {
     let commands = ladder.split("PreparedGpuPresentPhase::Commands =>").nth(1).expect("the command phase");
     let commands = &commands[..commands.find("PreparedGpuPresentPhase::SnapshotBackdrop =>").expect("the snapshot phase")];
     assert!(commands.contains("DrawMeasureCursor::Glass(_)"));
-    assert!(commands.contains("self.encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay())?"));
+    assert!(commands.contains("prepared_command_clip_piece(draw, draw_cursor, cursor.clip_piece"), "every authored color command resolves one silhouette piece at a time");
+    assert!(commands.contains("self.encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay(), None)?"), "an unclipped scalar is encoded once");
+    assert!(commands.contains("self.encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay(), Some(scissor))?"), "a clipped scalar is encoded once per nonempty piece");
+    assert!(commands.contains("PreparedCommandClipPiece::Scissor(_scissor) if matches!(draw_cursor, DrawMeasureCursor::Glass(_))"), "glass snapshots before drawing its first nonempty piece");
+    assert!(commands.contains("cursor.phase = PreparedGpuPresentPhase::SnapshotBackdrop"));
     let backdrop = ladder.split("PreparedGpuPresentPhase::SnapshotBackdrop =>").nth(1).unwrap();
     let backdrop = &backdrop[..backdrop.find("PreparedGpuPresentPhase::BlurScene =>").unwrap()];
     assert!(backdrop.contains("prepared_glass_command(packet, cursor.command)?"), "the snapshot validates its exact command owner");
@@ -2061,26 +2065,34 @@ fn presented_ink_intent_barrier_progresses_before_gpu_submit_and_holds_runtime_i
 }
 
 #[test]
-fn component_close_external_wait_does_not_stop_unrelated_frame_publication() {
+fn component_close_retires_its_creating_frame_before_external_progress_and_readmits_after_terminal() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️component-close-frame-turn/🔣️.json")).expect("component-close frame-turn fixture");
     assert_ne!(law["closeHost"], law["liveHost"]);
     assert_eq!(law["maxCloseUnitsPerTurn"], 1);
-    assert_eq!(law["expected"]["closeTerminal"], false);
+    assert_eq!(law["expected"]["closeTerminal"], true);
+    assert_eq!(law["expected"]["sameGenerationReadmitted"], true);
     assert_eq!(law["expected"]["closingHostPublications"].as_array().map(Vec::len), Some(0));
 
     let host_build = WINT_APP_SOURCE.split("fn build_and_publish_snapshot(&mut self) {").nth(1).expect("the host build pump");
     let host_build = &host_build[..host_build.find("fn present_snapshot").expect("the host presentation half")];
     let close_step = host_build.find("self.advance_component_surface_close()").expect("one bounded component-close step");
     let event_drain = host_build.find("if !self.events.is_empty()").expect("the unrelated input drain");
+    let close_gate = host_build.find("if !component_close_pending").expect("the component-close frame-admission gate");
     let frame_admission = host_build.find("self.presenter.admit_next_frame").expect("the unrelated frame admission");
     let snapshot_publication = host_build.find("self.snapshot_sink.publish").expect("the immutable snapshot publication");
-    assert!(close_step < event_drain && event_drain < frame_admission && frame_admission < snapshot_publication, "close progress precedes, but does not replace, the live sibling frame turn");
-    assert!(!host_build[close_step..event_drain].contains("return;"), "a component-local external close wait must not return before unrelated input and frame work");
+    assert!(close_step < event_drain && event_drain < close_gate && close_gate < frame_admission && frame_admission < snapshot_publication, "input remains queued while the bridge gates frame admission until terminal");
     assert!(host_build[close_step..event_drain].contains("InvalidationReason::RESOURCE_READY"), "the nonterminal close retains its bounded progress wake while the sibling advances");
 
     let close_owner = OS_HOST_SOURCE.split("pub(crate) fn advance_component_surface_close(&mut self) -> bool {").nth(1).expect("the component-close owner");
     let admission = &close_owner[..close_owner.find("let Some(owner)").expect("the active exact close owner")];
-    assert!(admission.contains("self.presenter.has_pending_presentation()") && admission.contains("self.frame_build.has_live_session()"), "the one-time admission fence drains both pre-close presentation and frame-build packet owners before detaching the closing surface");
+    assert!(admission.contains("self.presenter.has_pending_presentation()"), "an already prepared packet remains a hard close-admission fence");
+    assert!(admission.contains("component_surface_close_pending() && self.frame_build.has_live_session()") && admission.contains("retire_for_component_surface_close_step"), "the frame that created the bridge is retired one bounded unit before external ownership detaches the surface");
+
+    let frame_job = include_str!("../../🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
+    let transient = frame_job.split("pub(crate) fn retire_for_component_surface_close_step(&mut self) -> bool {").nth(1).expect("the reusable frame handoff");
+    let transient = &transient[..transient.find("pub(crate) fn close_step").expect("the permanent close path")];
+    assert!(transient.contains("self.last_submitted_generation = None"), "native may readmit the same generation after handoff");
+    assert!(!transient.contains("self.closing = true") && !transient.contains("completion_waker.take()"), "transient retirement preserves reusable-host state");
 }
 
 /// 🐕️ LAW: the presentation watchdog sees WITHIN-item upload progress, so a healthy mesh upload can

@@ -31,16 +31,23 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["variant", "label", "tagline", "description", "icon"],
+      "dependencies": { "example": ["exampleLabel"], "exampleLabel": ["example"] },
       "properties": {
         "variant": { "$ref": "#/$defs/PlayVariant" },
         "label": { "type": "string", "minLength": 1 },
         "tagline": { "type": "string", "minLength": 1 },
         "description": { "type": "string", "minLength": 1 },
         "icon": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "example": { "$ref": "#/$defs/PlayExampleId" }
+        "example": { "$ref": "#/$defs/PlayExampleId" },
+        "exampleLabel": { "$ref": "#/$defs/PlayExampleLabel" }
       }
     },
     "PlayVariant": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "PlayExampleLabel": {
+      "description": "The exact text the pane's navbar example picker renders for its curated example: the example's `label.native.en`, because every play shell is locked to terminology `native` and locale `en`. Authored prose, never the id spelled out (`tower-stack` renders \"Tower With A Cantilever\"), so an acceptance check can compare label to label instead of guessing one from the other.",
+      "type": "string",
+      "minLength": 1
+    },
     "PlayExampleId": {
       "description": "The curated example this pane boots on, as the owning app's plugin manifest declares it; absent when the app declares no example for its dialect.",
       "type": "string",

@@ -4,12 +4,15 @@ pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
 
 // 🧪️ Proves the viewer helpers against a minimal editor/viewer pair sharing one dialect.
 use crate::app::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, close_registered_fixture_app, meta, new_app, new_viewer};
+use crate::app::artifact_app_laws::new_registered_app;
 use crate::app::{
-    built_text_to_component_tree, ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, EditorApp, Emit, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence,
-    NoPresenceMutation, PluginApp, PluginCloseStep, UiAssemblyResult, ViewEmit, ViewModel, REVERT_TO_COMMAND_ACTION_ID,
+    built_text_to_component_tree, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
+    ArtifactViewer, ConfigView, DraftView, EditorApp, Emit, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, PluginCloseStep,
+    UiAssemblyResult, ViewEmit, ViewModel, REVERT_TO_COMMAND_ACTION_ID,
 };
 use protocol::MutationDiff;
-use semio_framework::{Dialect, Fault, FaultOrigin, StandardId, SubsetId};
+use semio_framework::{action_bus, ActionKind, Dialect, Fault, FaultOrigin, IconName, StandardId, SubsetId, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
+use ui_wgpu::wgpu::LocalizedLabel;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
@@ -102,6 +105,8 @@ impl ::protocol::OpText for SurfaceEditorCommand {
 }
 
 impl ::protocol::OpBinary for SurfaceEditorCommand {
+    const TOOL_JOB_IDS: &'static [&'static str] = &[SURFACE_TOOL_ID];
+
     fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
         ::dsl::variants_binary::encode_op(self)
     }
@@ -125,6 +130,151 @@ impl ::protocol::OpBinary for SurfaceViewerCommand {
     }
 }
 
+//#region 🧪️SurfaceRegisteredFactory
+/// 🪟️ The canonical surface id `EditorApp<SurfaceEditorFixture>` derives at runtime
+/// (`surface_app_id(SURFACE_TESTKIT_DIALECT, Editor)`), never `EditorApp::APP_ID`'s `"surface"`
+/// placeholder. It is the controller every tool key, manifest and proof row is stated against, and
+/// `surface_editor_controller_is_the_derived_id` joins this literal to the derived value.
+const SURFACE_CONTROLLER_ID: &str = "testkit.surface@1/*#editor";
+const SURFACE_TOOL_ID: &str = "increment";
+const SURFACE_PAYLOAD_SCHEMA: &str = "semio.testkit-surface.command.v1";
+const SURFACE_TOOL_CONTRACT: ToolExecutionContract = ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1);
+
+/// 🛠️ The fixture's real owned reducer body. It is a genuine [`semio_framework_job::InteractiveJob`]:
+/// it owns its typed command, its retained wire pages and its completion, yields once per admitted
+/// page, answers cancellation before anything else, and hands its one exact completion to the
+/// publication ladder — the same shape a product editor's job has. A generic bounded proof is not a
+/// substitute: it resolves to `interactive-job.missing-owned-reducer` at dispatch, so an editor
+/// surface with no owned factory can only ever prove what the runtime FORBIDS.
+struct SurfaceFixtureJob {
+    command: Option<Box<SurfaceEditorCommand>>,
+    completion: Option<ArtifactToolCompletion<EditorApp<SurfaceEditorFixture>>>,
+    count: i32,
+    raw: Option<action_bus::RetainedToolWireInput>,
+    page: usize,
+    closing: bool,
+}
+
+impl semio_framework_job::InteractiveJob for SurfaceFixtureJob {
+    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        if cx.is_cancelled() {
+            return semio_framework_job::StepOutcome::Cancelled;
+        }
+        if cx.should_yield() {
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
+            self.page += 1;
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        let Some(SurfaceEditorCommand::Increment) = self.command.as_deref() else {
+            return semio_framework_job::StepOutcome::Cancelled;
+        };
+        self.completion
+            .as_ref()
+            .expect("surface fixture completion")
+            .complete(Ok(Emit { artifact_mutations: vec![SetSurfaceCount { value: self.count + 1 }.into()], description: Some("increment".into()), ..Default::default() }), crate::app::EphemeralEmit::default())
+            .expect("one exact surface completion");
+        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+        })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing || maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if let Some(raw) = self.raw.as_mut() {
+            if raw.terminal_is_empty() {
+                self.raw = None;
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            return raw.close_step(1, maximum_bytes);
+        }
+        if self.command.take().is_some() || self.completion.take().is_some() {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.raw.is_none() && self.command.is_none() && self.completion.is_none()
+    }
+}
+
+struct SurfaceFixtureFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl ToolJobFactory for SurfaceFixtureFactory {
+    type Payload = SurfaceFixtureJob;
+    type Job = SurfaceFixtureJob;
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        SURFACE_PAYLOAD_SCHEMA
+    }
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        SURFACE_TOOL_CONTRACT
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(payload)
+    }
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        mut payload: Self::Payload,
+        input: action_bus::RetainedToolWireInput,
+        checkpoint: Option<action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
+        if checkpoint.is_some() {
+            return Err((semio_framework::ToolJobFactoryError::new("surface fixture resume starts a fresh command owner"), input, checkpoint));
+        }
+        payload.raw = Some(input);
+        Ok(payload)
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for SurfaceFixtureFactory {
+    type Owner = EditorApp<SurfaceEditorFixture>;
+    const TOOL_IDS: &'static [&'static str] = &[SURFACE_TOOL_ID];
+    const DOCUMENT_SCHEMA: &'static str = <SurfaceEditorFixture as ArtifactEditor>::DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: SURFACE_TOOL_ID, lanes: &[ArtifactToolPublicationLane::Artifact] }];
+    fn latest_wins_target(_command: &SurfaceEditorCommand) -> Option<&str> {
+        None
+    }
+    fn build_latest_wins_command_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<SurfaceEditorCommand>>> {
+        None
+    }
+}
+
+async fn surface_manifest() -> crate::app::App {
+    crate::app::App::from_builder(
+        crate::app::App::builder(SURFACE_CONTROLLER_ID, LocalizedLabel::data("Surface Fixture"))
+            .await
+            .document(["state"])
+            .mode("edit", LocalizedLabel::data("Edit"), "pencil")
+            .await
+            .window_kind("main", LocalizedLabel::data("Main"), "surface.main", semio_framework_ui_contract::SurfaceKind::Canvas2d, IconName::AppWindow)
+            .await
+            .app_command(SURFACE_TOOL_ID, LocalizedLabel::data("Increment"), "fixture", ActionKind::Mutation)
+            .await
+            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+            .await,
+    )
+    .await
+}
+//#endregion 🧪️SurfaceRegisteredFactory
+
 #[derive(Default)]
 struct SurfaceEditorFixture;
 
@@ -142,6 +292,31 @@ impl ArtifactEditor for SurfaceEditorFixture {
     type Transient = crate::app::NoTransient;
     type TransientMutation = crate::app::NoTransientMutation;
     type Command = SurfaceEditorCommand;
+
+    crate::bounded_first_step_tool_proofs! {
+        owner: EditorApp<SurfaceEditorFixture>, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs", controller: "testkit.surface@1/*#editor", artifact_schema: "semio.testkit-surface/v1",
+        factory: "SurfaceFixtureFactory", factory_type: SurfaceFixtureFactory,
+        contract: SURFACE_TOOL_CONTRACT, tools: ["increment"]
+    }
+
+    fn command_id(command: &Self::Command) -> &'static str {
+        match command {
+            SurfaceEditorCommand::Increment => SURFACE_TOOL_ID,
+        }
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        registry.register(SurfaceFixtureFactory { keys: vec![ToolFactoryKey::new(registry.controller_id(), SURFACE_TOOL_ID)] })
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
+        let job = SurfaceFixtureJob { command: Some(request.command), completion: Some(request.completion), count: request.snapshot.count, raw: None, page: 0, closing: false };
+        Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
+    }
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::app::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-surface-artifact-retained", 4_096))
+    }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
@@ -315,11 +490,47 @@ async fn new_viewer_constructs_a_registry_less_wrapper() {
     close_registered_fixture_app(&mut app);
 }
 
+/// ✅️ The editor surface mutates through the SAME route a product editor uses: a declared
+/// `Migrated` `app_command`, an exact app-owned `SurfaceFixtureFactory` keyed on the derived
+/// controller id, and a real `InteractiveJob` that hands back one exact completion. Before the
+/// factory existed this law dispatched the generic `"typed-command"` verb into a registry-less
+/// wrapper and died on `interactive-job.unknown-key` — it proved what the runtime forbids, not that
+/// an editor mutates.
 #[semio_framework_async_macros::async_test]
 async fn editor_fixture_still_mutates_normally() {
-    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
+    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest()).await;
     app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local")).await.expect("increment");
+    // 🔁️ A migrated verb's dispatch only ADMITS: the document advances when the worker's emit walks
+    // the bounded publication ladder, which is the product's own route and what the host drives every
+    // turn. Asserting the count before settling would assert that a migrated editor does NOT mutate.
+    let receipt = crate::app::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id).await.expect("the admitted operation settles");
+    assert!(receipt.lanes.contains(&crate::app::TypedOperationResultLane::Artifact), "the increment settles on the Artifact publication lane it declares, got {:?}", receipt.lanes);
     assert_eq!(app.snapshot().unwrap().count, 1);
+    close_registered_fixture_app(&mut app);
+}
+
+/// 🪟️ The controller literal every proof row, tool key and manifest id in this fixture is stated
+/// against IS the id `EditorApp` derives at runtime. A drift here would make the proof catalog
+/// authoritative for a controller nothing dispatches to, which `validate_tool_job_rows` reports as
+/// `interactive-job.catalog-controller` from inside a dispatch instead of here.
+#[semio_framework_async_macros::async_test]
+async fn surface_editor_controller_is_the_derived_id() {
+    assert_eq!(SURFACE_CONTROLLER_ID, semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor));
+    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest()).await;
+    assert_eq!(app.app_id().await, SURFACE_CONTROLLER_ID);
+    close_registered_fixture_app(&mut app);
+}
+
+/// 🔒️ The registry-less wrapper still fails CLOSED on the same editor: an owned factory never
+/// substitutes for a manifest declaration, so a surface whose verb is undeclared is refused by name
+/// before any factory is reached, and the document is untouched.
+#[semio_framework_async_macros::async_test]
+async fn editor_fixture_without_a_manifest_declaration_fails_closed() {
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
+    let error = app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local")).await.expect_err("registry-less editor must fail closed");
+    assert_eq!(error.code.0, "interactive-job.unknown-key");
+    assert!(error.message.contains(SURFACE_TOOL_ID), "the refusal names the editor's own verb, not the generic placeholder: {}", error.message);
+    assert_eq!(app.snapshot().unwrap().count, 0, "a fail-closed dispatch never reaches the reducer");
     close_registered_fixture_app(&mut app);
 }
 

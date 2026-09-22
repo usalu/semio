@@ -199,9 +199,28 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     if app_config_before.pack != app_config_after.pack || app_config_before.spr != app_config_after.spr {
                         return Err("CAD window commands changed app configuration bytes".into());
                     }
+                    // 🪟️ Every CAD command handler addresses its config through
+                    // `window_config::addressed_from_context(ctx, …)` (🎮️commands/🎥️camera, 🌞️sun, 🧰️utility), so a
+                    // dispatch writes ONLY the invoking window — the `pane` a payload carries is deliberately
+                    // ignored there (`let _surface = …`). Command isolation is therefore proven above by
+                    // `assert_exact_state`, which requires the same-kind sibling `right` to still hold its
+                    // defaults for camera, projection, sun AND utility. What `window_config_packs()` returns
+                    // is one pack per declared WORLD window, materialised from the view's `window_instances`:
+                    // three here, because `cad-panel` is a `cad-document-panel` and owns no world config.
+                    // The old assertion demanded `packs.len() == 1`, confusing "only one window was written"
+                    // with "only one window exists"; it is restated here as the exact owner SET, which also
+                    // pins that the document panel receives no pack.
                     let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                    if packs.len() != 1 || packs[0].window_id != left_id || packs[0].window_kind_id != shape::WINDOW_KIND_ID {
-                        return Err(format!("CAD exact-window pack ownership changed, expected exactly {left_id}/{}: {:?}", shape::WINDOW_KIND_ID, packs.iter().map(|pack| (pack.window_id.clone(), pack.window_kind_id.clone())).collect::<Vec<_>>()));
+                    let mut owners: Vec<(String, String)> = packs.iter().map(|pack| (pack.window_id.clone(), pack.window_kind_id.clone())).collect();
+                    owners.sort();
+                    let mut expected_owners: Vec<(String, String)> = vec![
+                        (left_id.to_string(), shape::WINDOW_KIND_ID.to_string()),
+                        (right_id.to_string(), shape::WINDOW_KIND_ID.to_string()),
+                        (wrong_id.to_string(), building::WINDOW_KIND_ID.to_string()),
+                    ];
+                    expected_owners.sort();
+                    if owners != expected_owners {
+                        return Err(format!("CAD exact-window pack ownership changed, expected one pack per declared world window {expected_owners:?}: {owners:?}"));
                     }
                     app.load_document_pack(&document_before).await.map_err(|error| format!("{error:?}"))?;
                     assert_exact_state(&mut app, &left, &right, expected).await?;

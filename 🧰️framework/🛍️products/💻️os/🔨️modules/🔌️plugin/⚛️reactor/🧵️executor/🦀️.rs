@@ -458,14 +458,12 @@ pub struct ColdFutureExecutor {
     inner: Rc<RefCell<Inner>>,
 }
 
-#[cfg(test)]
 pub struct TaskReservation {
     inner: Rc<RefCell<Inner>>,
     id: TaskId,
     installed: bool,
 }
 
-#[cfg(test)]
 impl TaskReservation {
     pub fn id(&self) -> TaskId {
         self.id
@@ -488,7 +486,6 @@ impl TaskReservation {
     }
 }
 
-#[cfg(test)]
 impl Drop for TaskReservation {
     fn drop(&mut self) {
         if self.installed {
@@ -576,7 +573,6 @@ impl ColdFutureExecutor {
         Ok(id)
     }
 
-    #[cfg(test)]
     pub fn reserve(&self) -> Result<TaskReservation, &'static str> {
         let mut inner = self.inner.borrow_mut();
         if !inner.allocation_admitted {
@@ -595,7 +591,6 @@ impl ColdFutureExecutor {
     /// Used for key-dedupe (spawning onto a live `(instance, key)` cancels the stale task first)
     /// and `Event::InstanceClose` (every task that instance owns). Idempotent: cancelling an
     /// already-finished or unknown id is a no-op.
-    #[cfg(test)]
     pub fn detach(&self, id: TaskId) -> Option<BoxedTask> {
         let mut inner = self.inner.borrow_mut();
         let index = inner.matches(id)?;

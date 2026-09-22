@@ -448,7 +448,13 @@ pub mod univariate {
                     let num = table[i].sub(&table[i - 1]);
                     table[i] = num.div(&denom)?;
                 }
-                coeffs_divdiff.push(table[n - 1].clone());
+                // 🎯️ After level L the in-place table holds `table[i] = f[x_(i-L) … x_i]`, so the
+                // Newton coefficient of `(x-x0)…(x-x_(L-1))` is `f[x_0 … x_L]` = `table[L]` — NOT
+                // `table[n-1]`, which is the LAST divided difference of that level
+                // (`f[x_(n-1-L) … x_(n-1)]`) and only coincides with it on the final level. Reading
+                // the tail made every intermediate coefficient a backward difference: the quadratic
+                // through (0,1),(1,6),(2,15) reconstructed as `2x²+7x+1` instead of `2x²+3x+1`.
+                coeffs_divdiff.push(table[level].clone());
             }
             // Newton form: f(x) = c0 + c1(x-x0) + c2(x-x0)(x-x1) + ...
             let mut result = Self::constant(coeffs_divdiff[0].clone());

@@ -332,3 +332,167 @@ All 18 artifact crates green. The only reds left anywhere in my scope are `semio
 `descriptor_is_fresh` (owned by stdio-examples, queued on the mutex) and `stdio-semio`'s wall-clock
 `fillet_of_all_twelve_box_edges_stays_inside_the_interactive_budget`, which flakes with fleet load and is green
 when the machine is not saturated. `temp/artifacts.svg` is now referenced by nothing in this crate.
+
+---
+
+## 2026-09-21 21:20 — feature-gated `XmlDeclaration` literals (urgent follow-up)
+
+The play activation's wasm-dev build hit `error[E0063]: missing field 'quote'` in `semio-s-artifact-stdio-semio`.
+Cause: my earlier sweep fixed every site the fleet's standard command compiles (`--features
+component-app-assembly`), but `🧿️semio`'s value⇄xml conversion lane is behind `conversion-*` features that neither
+the baseline script nor any fleet command passes, so those literals were never type-checked natively.
+
+### The recurrence guard
+`XmlDeclaration::new(version, encoding, standalone)` now exists in `📰️xml`'s snapshot module and sets
+`quote: XmlQuote::Double`. Every call site that MINTS a declaration goes through it; only a reader that recovered a
+real delimiter builds the struct directly. Adding a further modeled facet of the declaration can no longer silently
+miss a literal.
+
+### Sites fixed (5; the coordinator's list was partly stale — `🎒️zip/📦️opc/🦀️.rs:229,362` and svg
+`🧬️schema/🦀️.rs:681` were already covered in the earlier pass)
+- `…/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰️xml/🔖️1.0/✳️any/🦀️.rs:150` ← **the wasm-dev break**
+- `…/🔢️value/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📰️xml/🔖️1.0/✳️any/🧪️tests/🔬️unit/🦀️.rs:29`
+- `…/🔢️value/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📰️xml/🔖️1.0/✳️any/🧪️tests/🔬️unit/🦀️.rs:9`
+- `…/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧪️tests/🎨️mutate-svg-1-1/🦀️.rs:194`
+- `…/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧪️tests/📰️mutate-xml-1-0/🦀️.rs:261`
+
+A repo-wide re-grep of `XmlDeclaration {` over `✏️s` + `🧰️framework` now reports **zero** initializers without
+`quote` or `..Default::default()`.
+
+### Numbers
+| command | result |
+|---|---|
+| `cargo test -p semio-s-artifact-stdio-semio --lib --tests --no-fail-fast --all-features` (`run12-semio.txt`) | lib **3032 passed / 2 failed / 1 ignored** (415 s); `brep_analytic_blend` 6/1; `extrude-orientation` 12/0, `procedural-example-booleans` 2/0, `shell-orientation` 2/0, `tessellation-jobs` 10/0, flow binary 3/0 |
+| `cargo test -p …-zip -p …-svg -p …-xml --lib --tests --no-fail-fast --features component-app-assembly` (`run12-family.txt`) | **zip 83/0, svg 113/0 (+1 ignored), xml 97/0 (+1 ignored) — all green** |
+| `cargo check -p semio-s-artifact-stdio-semio --all-features` (`check-semio-all.txt`) | **clean, 0 errors** |
+| `cargo check -p semio-s-plugin-stdio --lib --all-features` (`check-plugin-all.txt`) | **clean, 0 errors** |
+
+`--all-features` raises stdio-semio's lib suite from 2 755 to **3 032** tests: 277 tests in the `conversion-*`
+lanes had never been compiled, let alone run, by any fleet command.
+
+### The 2 lib failures are NOT from the quote lane
+Both are pre-existing debt in `conversion-*` lanes that `--all-features` surfaced for the first time. Neither
+touches `XmlDeclaration`, and neither is in a file I changed:
+- `standards::v1::subsets::brep::io::…::fixture_honesty_law` — `parse shipped .dsl.semio fixture: "vertex:
+  expected 3 fields, got 2"`. A brep VERTEX codec/fixture arity drift; the brep lane has no XML in it.
+- `standards::v1::subsets::presentation::io::…::ops_grammar_conformance_law` — the presentation mutations grammar
+  does not recognize its own real `print_op` output for `SetTextBoxBlocks` (`blocks=[P[[0],[…]],H[1,[1,73],[]]]`).
+  These are semio's own `Paragraph`/`DocRun`/`RunStyle` types, not pptx.
+Evidence that they are newly surfaced rather than newly broken: `🧪️baseline-plugin-tests.py` passes only
+`--features component-app-assembly`, so no baseline or fleet run has ever compiled these two lanes. They want the
+same treatment as this session's other two classes — regenerate the brep fixture with the crate's own printer once
+the vertex arity is settled, and bring the presentation mutations grammar up to the codec it describes. I did not
+touch them: they are outside the follow-up's scope and outside the quote lane.
+
+### Peer interference during this step
+`cargo check -p semio-s-artifact-stdio-semio --all-features` first failed on a peer's in-flight edit —
+`semio-framework-ui` missing `TreePresentation` in `ui_contract` (3 errors in
+`🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧩️component/🦀️.rs`), nothing of mine. Re-ran on a loop per brief v4;
+it cleared and the check is now clean. The numbers above are from the clean run.
+
+---
+
+## 2026-09-22 04:10 — the two `--all-features` reds closed (successor session)
+
+Successor after a coordinator restart. Both reds the previous section left open are GREEN; the run is
+`🗑️generated/stdio-b/run13.txt` (`cargo test -p semio-s-artifact-stdio-semio --lib --tests
+--no-fail-fast --all-features -- --test-threads=4`, one hold of the fleet's new
+`📜️native-test-mutex.sh`, private `CARGO_TARGET_DIR` under `🗑️generated/stdio-b/target`).
+
+### Numbers
+
+| target | before (`run12-semio.txt`, 09-21 21:20) | now (`run13.txt`) |
+|---|---|---|
+| `--lib` | 3032 passed / **2 failed** / 1 ignored | **3033 passed / 1 failed / 2 ignored** |
+| `brep_analytic_blend` | 6/1 (wall-clock flake) | **7 / 0** |
+| `brep_extrude_orientation` | 12/0 | 12 / 0 |
+| `brep_procedural_example_booleans` | 2/0 | 2 / 0 |
+| `brep_shell_orientation` | 2/0 | 2 / 0 |
+| `brep_tessellation_jobs` | 10/0 | 10 / 0 |
+| `flow_retained_decode` | 3/0 | 3 / 0 |
+
+`…brep::io::…::fixture_honesty_law` **ok**, `…presentation::io::…::ops_grammar_conformance_law` **ok**
+(both named explicitly in the log). The +1 ignored is the new brep fixture writer.
+
+### Half-applied predecessor edits (checked first, as instructed)
+The worktree was clean; the auto-committer had STAGED five files nobody had run yet — the presentation
+keyword rename in 4 facet files and the brep `zzz_write_demo_fixtures`. Both were correct in substance
+and are what this session verified; the rename was also INCOMPLETE (below).
+
+### 1. brep `fixture_honesty_law` — the fixture was the stale side
+`parse shipped .dsl.semio fixture: "vertex: expected 3 fields, got 2"`. The shipped `🧊️solid`
+`.dsl.semio`/`.pack.semio` are dated 2026-08-12 and predate two waves of real schema:
+`BrepVertex.tol`/`BrepEdge.tol`/`BrepFace.tol` and the `coedges=`/`nextLabel=` lines that
+`BrepCoedge`/`next_label` added (ticket 26/09/03 BREP-KERNEL wave W3-A).
+
+The CODE is right, decided from this subset's own printer/parser convention rather than from the
+error: the hand-written `📸️snapshot/📝️text/📖️.grammar.semio` — the authoritative spec, and the file
+the independent Python oracle was written from — already declares
+`vertex = "[" hex "," point3 "," number "]"`, `coedge`, `coedges-line` and `next-label-line`, and its
+own `grammar_conformance_law` (the grammar recognising real `print_dsl` output) was already GREEN.
+Only the committed bytes lagged. So the fixtures were REGENERATED with the crate's own printer —
+never hand-edited — through the `#[ignore]`d `zzz_write_demo_fixtures`
+(`cargo test … --lib --all-features -- --ignored zzz_write`, log `regen5.txt`, 1 passed).
+
+Both mounts were written: the artifact ships twice, as `✉️base/📚️examples/🧊️solid/🖼️assets` (what the
+law reads, and what `🧊️mutate-semio-brep`'s `asset://🧊️solid/` resolves against) and as this subset's
+own `🧊️brep/🖼️assets/🧊️solid` (what `🧊️brep/📚️examples/🧊️solid` includes). They were byte-identical
+and both stale; leaving one behind would leave a copy the current parser rejects. The writer now
+emits both from one printer run, and says why in its doc comment.
+
+New bytes (443 → 640 text, 537 → 736 pack), e.g.
+`vertices=[[7631,[0,0,0],0.0000001],…]` and the two new lines
+`coedges=[[636f31,6531,1,~L[[0,0],[1,0]],[0,4],6c31,636f32,636f33],…]`, `nextLabel=100`.
+
+### 2. presentation `ops_grammar_conformance_law` — the grammar was the stale side
+`print_presentation_mutation` emits **`set-text-box-blocks`** (the spelling the mutation leaf
+`✍️set-text-box-blocks` and its `SemanticDescriptor.kind` carry, which the `dsl::Mutations` derive
+pins to `to_kebab("SetTextBoxBlocks")`); four text-facet files still said `set-textbox-blocks`, so
+the recognizer rejected that one demo case at its first token. The printer is right — the law and the
+printer were left alone and the grammar was corrected.
+
+The predecessor's staged rename covered `📝️text/{🅰️.g4,📖️.grammar.semio,🔤️.ebnf,🟦️.ts}`. A re-grep of
+the wrapper-independent primitive (the literal keyword, not the files it had already touched) found
+**three more** stale facets, now finished in the same spelling:
+`🧬️mutations/🔗️.graphql` and `🧬️mutations/📝️text/🔗️.graphql` (`SET_TEXTBOX_BLOCKS` →
+`SET_TEXT_BOX_BLOCKS`) and `🧬️mutations/🛰️.proto` (oneof field `set_textbox_blocks` →
+`set_text_box_blocks`; every sibling field is the snake_case of its own message name). Repo-wide, no
+production file carries the old spelling any more. `🔣️.json`'s `"const": "setTextBoxBlocks"` is the
+camelCase VALUE tag and is correct as it stands.
+
+### The one remaining `--lib` red is a peer's in-flight framework edit, not this crate
+`tests::returned_read_leases_retire_before_the_displaced_owners_that_alias_them`
+(`🧿️semio/🧪️tests/🔬️unit/🦀️.rs:128`) now fails its SETUP assertion:
+`returned_snapshot_read_count()` is 0 where the test expects 2. Cause, located and not touched:
+`SnapshotReadLeaseRegistry::try_release_aliased`
+(`🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:236`) does **not exist in HEAD** (`git show
+HEAD:…` finds zero occurrences) — it is an uncommitted peer edit, and the file is `MM` (staged *and*
+worktree-modified) right now. It adds a fast path that releases a returned lease immediately whenever
+`Arc::strong_count(&slot.owner) != 1`, i.e. whenever the store still holds the snapshot the lease
+aliases, so nothing is ever parked in the `returned` queue in the test's ordering (leases dropped
+BEFORE the displacing commits). The law itself — returned reads retire before displaced owners — is
+unaffected; only its way of manufacturing a parked lease is. It passed for the predecessor at 15:25
+and 21:20, so this is new since 21:41.
+
+Per brief v4 ("never revert or fix a peer's in-flight edit") this was left alone. **Next step for
+whoever owns that store change**: either the peer keeps the fast path, in which case this test must
+take its two leases, run the two `SetSnapshot` commits and the undo FIRST and drop the leases after —
+so the slot really is the last alias — or the fast path is wrong and the accounting stays. It cannot
+be decided while the file is mid-edit.
+
+### Files changed
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/🧪️tests/🔬️derived-composition-unit/🦀️.rs` (writer now covers both example mounts)
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/🔗️.graphql`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/📝️text/🔗️.graphql`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/🛰️.proto`
+- Fixtures written by the crate's own printer (4 files):
+  `…/🪆️subsets/✉️base/📚️examples/🧊️solid/🖼️assets/{🗣️.dsl.semio,🎒️.pack.semio}` and
+  `…/🪆️subsets/🧊️brep/🖼️assets/🧊️solid/{🗣️.dsl.semio,🎒️.pack.semio}`
+
+### Knock-on to flag
+`🧪️tests/🧊️mutate-semio-brep`'s Python oracle re-encodes the committed `🧊️solid` pack byte for byte.
+It was written from the committed grammar/protocol, which already carry `tol`/`coedges`/`nextLabel`,
+but the fixture it reproduces only carries them from now on — that cross-language scenario (a repo
+test-host feature, not a cargo `[[test]]`, so it is outside every run above) needs re-running by
+whoever owns it. Likewise `semio-s-plugin-stdio`'s `descriptor_is_fresh` stays red and stays owned by
+the descriptor lane.

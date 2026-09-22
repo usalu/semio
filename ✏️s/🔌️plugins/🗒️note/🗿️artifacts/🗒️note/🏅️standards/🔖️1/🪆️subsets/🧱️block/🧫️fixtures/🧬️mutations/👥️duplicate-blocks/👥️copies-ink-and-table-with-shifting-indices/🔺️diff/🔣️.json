@@ -1,61 +1,53 @@
 {
   "artifact": null,
-  "schema": null,
-  "id": null,
-  "title": null,
+  "assets": null,
   "blocks": {
     "added": [
       {
-        "parentId": null,
-        "index": 2,
         "block": {
-          "kind": "stroke",
+          "color": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "height": 40.0,
           "id": "blk-ink-copy",
-          "name": "Sketch copy",
-          "x": 20,
-          "y": 160,
-          "width": 80,
-          "height": 40,
-          "rotation": 0,
-          "visible": true,
+          "kind": "stroke",
           "locked": false,
+          "name": "Sketch copy",
           "points": [
             [
-              0,
-              0
+              0.0,
+              0.0
             ],
             [
-              10,
-              10
+              10.0,
+              10.0
             ]
           ],
-          "strokeWidth": 2,
-          "color": [
-            0,
-            0,
-            0,
-            1
-          ]
-        }
+          "rotation": 0.0,
+          "strokeWidth": 2.0,
+          "visible": true,
+          "width": 80.0,
+          "x": 20.0,
+          "y": 160.0
+        },
+        "index": 2,
+        "parentId": null
       },
       {
-        "parentId": null,
-        "index": 3,
         "block": {
-          "kind": "table",
-          "id": "blk-table-copy",
-          "name": "Samples copy",
-          "x": 0,
-          "y": 220,
-          "width": 320,
-          "height": 160,
-          "rotation": 0,
-          "visible": true,
-          "locked": false,
           "columns": [
             "A",
             "B"
           ],
+          "height": 160.0,
+          "id": "blk-table-copy",
+          "kind": "table",
+          "locked": false,
+          "name": "Samples copy",
+          "rotation": 0.0,
           "rows": [
             [
               {
@@ -73,22 +65,30 @@
                 "content": ""
               }
             ]
-          ]
-        }
+          ],
+          "visible": true,
+          "width": 320.0,
+          "x": 0.0,
+          "y": 220.0
+        },
+        "index": 3,
+        "parentId": null
       }
     ],
-    "removed": [],
     "patched": [],
+    "removed": [],
     "reordered": null
   },
-  "gridVisible": null,
+  "eraserRadius": null,
+  "gridOpacity": null,
   "gridSpacing": null,
   "gridSubdivisions": null,
-  "gridOpacity": null,
+  "gridVisible": null,
+  "id": null,
+  "linkedArtifact": null,
+  "pencilWidth": null,
+  "schema": null,
   "snapEnabled": null,
   "snapGridSpacing": null,
-  "pencilWidth": null,
-  "eraserRadius": null,
-  "assets": null,
-  "linkedArtifact": null
+  "title": null
 }

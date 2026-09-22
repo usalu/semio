@@ -1,19 +1,19 @@
 {
   "mutation": "createNode",
   "node": {
-    "id": "node-a",
-    "name": "Alpha",
     "abbreviation": "A",
+    "height": 90.0,
     "icon": "",
-    "x": 0,
-    "y": 0,
-    "width": 180,
-    "height": 90,
-    "properties": {},
-    "kind": "computation",
+    "id": "node-a",
     "inputs": [],
+    "kind": "computation",
+    "name": "Alpha",
     "outputs": [],
-    "variadicInputs": false,
-    "variadicOutputs": false
+    "properties": {},
+    "variadic_inputs": false,
+    "variadic_outputs": false,
+    "width": 180.0,
+    "x": 0.0,
+    "y": 0.0
   }
 }

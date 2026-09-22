@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::wires::unit_tests::context::{dispatch, metabolism_app, new_app, settle};
+use crate::editor::wires::unit_tests::context::{dispatch_receipt, metabolism_app, new_app};
 use crate::editor::wires::WiresCommand;
 use crate::schema::fixture_nodes;
 
@@ -8,13 +8,17 @@ use crate::schema::fixture_nodes;
 /// example document's pack bytes rather than an `artifact_mutations` entry — `dispatch`'s
 /// in-process harness never applies `effects` to its own store, so this asserts on the emitted
 /// effect directly (mirrors `🎮️commands/📚️example`-style facets elsewhere in this ticket).
+///
+/// 🔁️ Read through `dispatch_receipt`: the publication receipt belongs to the ONE settle that drains
+/// the dispatched operation. `dispatch(..)` + a second `settle(..)` answered an empty receipt (nothing
+/// pending any more) and this law reported "setActiveExample must emit a LoadDocument effect" against
+/// a command that emitted one all along.
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_metabolism_loads_seven_nodes() {
     use semio_framework_plugin::Effect;
     let mut app = new_app().await;
-    let result = dispatch(&mut app, WiresCommand::SetActiveExample(SetActiveExample { example_id: WIRES_PLAY_EXAMPLE_METABOLISM_ID.into() })).await;
+    let (result, receipt) = dispatch_receipt(&mut app, WiresCommand::SetActiveExample(SetActiveExample { example_id: WIRES_PLAY_EXAMPLE_METABOLISM_ID.into() })).await;
     assert!(result.mutations.is_empty(), "setActiveExample replaces the whole document via an effect, not in-history mutations");
-    let receipt = settle(&mut app).await;
     let Effect::LoadDocument { pack, .. } = receipt.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
@@ -26,8 +30,7 @@ async fn set_active_example_metabolism_loads_seven_nodes() {
 async fn set_active_example_unknown_id_loads_empty_document() {
     use semio_framework_plugin::Effect;
     let mut app = metabolism_app().await;
-    dispatch(&mut app, WiresCommand::SetActiveExample(SetActiveExample { example_id: "nope".into() })).await;
-    let receipt = settle(&mut app).await;
+    let (_, receipt) = dispatch_receipt(&mut app, WiresCommand::SetActiveExample(SetActiveExample { example_id: "nope".into() })).await;
     let Effect::LoadDocument { pack, .. } = receipt.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };

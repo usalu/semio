@@ -1501,6 +1501,7 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         // and the reason every document verb then refused: `equation_command_extent` needs a scene
         // owner, and nothing but the example load ever produced one.
         .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+        .action_destructive("setActiveExample")
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
         .action_args("setActiveExample", vec![
             ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label())])

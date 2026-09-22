@@ -33,6 +33,14 @@ fn closed(node_key: &str) -> TreeWindowRequest {
     TreeWindowRequest { body_key: RASTER_PLAY_BODY_LAYERS.into(), node_key: node_key.into(), open: Some(false), offset: 0, rows: 0 }
 }
 
+/// 🔑️ A windowed container nested inside the section is addressed by its **window path** — the
+/// enclosing windowed containers' keys, outermost first, then its own key, joined by
+/// `TREE_WINDOW_PATH_SEPARATOR` (`TreeWindows::path_of`). A bare node key only ever matches a
+/// top-level container, so the nested laws below file the path the host really sends.
+fn nested_key(node_key: &str) -> String {
+    format!("{RASTER_TREE_PREFIX}{}{node_key}", ui::TREE_WINDOW_PATH_SEPARATOR)
+}
+
 /// 🪟️ Law (a): the section AND the nested group stamp their FULL extent, materialise at most one
 /// viewport between them, and never grow a `+N` continuation row.
 #[test]
@@ -53,7 +61,7 @@ fn closed_containers_stamp_totals_and_materialise_no_children() {
     assert!(json.contains("\"total\":302"), "a closed section still stamps its extent: {json}");
     assert!(!json.contains("raster-play-layers.add.pixel"), "a closed section materialises no rows: {json}");
 
-    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 0, 4), closed("raster-play-layers.group.group-0")]);
+    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 0, 4), closed(&nested_key("raster-play-layers.group.group-0"))]);
     assert!(nested.contains("\"total\":40"), "a closed group still stamps its extent: {nested}");
     assert!(!nested.contains("raster-play-layers.layer.nested-0"), "a closed group materialises no children: {nested}");
 }
@@ -71,7 +79,7 @@ fn host_windows_materialise_exactly_their_slice() {
     assert!(!json.contains("raster-play-layers.layer.pixel-99\""), "the row before the window stays out: {json}");
     assert!(!json.contains("raster-play-layers.layer.pixel-110\""), "the row after the window stays out: {json}");
 
-    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 2, 1), open("raster-play-layers.group.group-0", 12, 4)]);
+    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 2, 1), open(&nested_key("raster-play-layers.group.group-0"), 12, 4)]);
     assert!(nested.contains("\"offset\":12"), "the nested group reports its offset: {nested}");
     for index in 12..16 {
         assert!(nested.contains(&format!("raster-play-layers.layer.nested-{index}\"")), "nested child {index} is inside the window: {nested}");

@@ -760,6 +760,26 @@ impl ArtifactApp for ModuleApp {
         Some(bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("playbook-module-procedural-artifact-retained", MODULE_RETAINED_OUTPUT_BYTES))
     }
 
+    /// 🧍 A presence DISPOSER is not a presence retirement OWNER. `PresenceStore::local_read` fails
+    /// closed with `presence local read requires a live exact local retirement owner` while
+    /// `local_retirement_factory` is `None`, so the first command whose ephemeral leg reads local
+    /// presence is refused however correct the command is — measured inside `s` on 2026-09-22 as
+    /// `importSolidGeometry refused: dispatch-failed … presence local read requires a live exact
+    /// local retirement owner`, the refusal that replaced the `interactive-job` one this module's
+    /// tool factory cured. `Presence = NoPresence` here, so the framework's own `NoPresence`-typed
+    /// owners fit exactly, as 📖️playbook's own editor already declares them.
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(ModuleRetainedCommandJobFactory::new(&controller))

@@ -200,9 +200,35 @@ pub struct WiresWorkingScene {
     pub edges: Vec<DslValue>,
 }
 
+/// 🔤 Rewrites one free-form board value into the DSL's CANONICAL form: object keys ascending, every
+/// nesting level. The document-text printer sorts object keys (`🗣️dsl/🧬️schema`'s `print_dsl_value`,
+/// since 21fbcd3538), while `DslValue`'s own `PartialEq` compares entries positionally — so an object
+/// minted in declaration order (`{id, nodeKind, shape, x, y, radius, text, handles}`) is NOT the value
+/// the store reads back from its own printed line, and the framework's `assert_op_line_round_trip`
+/// identity fails. Worse, the composed `content` child's id is a hash over these very values, so the
+/// same board minted twice in two different key orders addressed two different children and an
+/// inverse could not restore its base snapshot. Every board node/edge therefore enters the document
+/// through this normalizer.
+pub fn canonical_board_value(value: &DslValue) -> DslValue {
+    match value {
+        DslValue::Array(items) => DslValue::Array(items.iter().map(canonical_board_value).collect()),
+        DslValue::Object(entries) => {
+            let mut sorted: Vec<(String, DslValue)> = entries.iter().map(|(key, value)| (key.clone(), canonical_board_value(value))).collect();
+            sorted.sort_by(|left, right| left.0.cmp(&right.0));
+            DslValue::Object(sorted)
+        }
+        other => other.clone(),
+    }
+}
+
+/// 🔤 [`canonical_board_value`] over a whole node/edge roster.
+pub fn canonical_board_values(values: Vec<DslValue>) -> Vec<DslValue> {
+    values.iter().map(canonical_board_value).collect()
+}
+
 /// 📝 Transfers a decoded or test-provided scene into one exact child owner.
 pub fn materialize_wires_content(handle: &mut WiresContentChild, nodes: Vec<DslValue>, edges: Vec<DslValue>) {
-    handle.set_local_owner(std::sync::Arc::new(WiresWorkingScene { nodes, edges }));
+    handle.set_local_owner(std::sync::Arc::new(WiresWorkingScene { nodes: canonical_board_values(nodes), edges: canonical_board_values(edges) }));
 }
 
 /// 🔎 Retains this exact child's typed working owner. A wire-only handle fails soft until the host
@@ -219,6 +245,7 @@ pub fn wires_working_scene(snapshot: &WiresSnapshot) -> WiresWorkingScene {
 /// 🏗️ Mints one content-addressed child and transfers its immutable working scene into that exact
 /// local owner. No matching identity in another snapshot can observe the payload.
 pub fn wires_content_child_with_owner(nodes: Vec<DslValue>, edges: Vec<DslValue>) -> WiresContentChild {
+    let (nodes, edges) = (canonical_board_values(nodes), canonical_board_values(edges));
     let handle = wires_content_child_handle(&nodes, &edges);
     handle.with_local_owner(std::sync::Arc::new(WiresWorkingScene { nodes, edges }))
 }

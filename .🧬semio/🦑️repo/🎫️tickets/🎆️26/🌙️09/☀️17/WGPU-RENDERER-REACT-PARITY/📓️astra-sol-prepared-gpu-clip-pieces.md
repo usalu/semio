@@ -28,3 +28,12 @@ All edited Rust sources parse through `rustfmt --emit stdout`. JSON fixtures par
 ## UI22 focused receipt
 
 UI22 executed both clip laws. The behavioral prepared-GPU progression and TinySkia oracle law passed. The overlap refusal law still failed because `claim_retained_output(usize::MAX, usize::MAX)` overflowed the aggregate prepared counter before it reached the active grant, returning `false` without setting `grant.faulted`. The overflow path now faults the active retained grant before returning, matching the existing bounded refusal contract used by every draw emitter. Receipt: `🗑️generated/astra-runtime/ui-engine22-clip-filtered/run.log`; 1/2 passed, 665 outside the filter.
+
+## UI23 full receipt
+
+UI23 ran the full UI target: 667 tests executed, 666 passed, zero skipped, 4.937 s. Both clip laws passed. The sole failure was the exact `UiSurfaceRegistry` byte census: the measured slot grew from 164128 to 164224 bytes after the accepted compact Tree metrics/cursor fields. The committed fixed-slot fixture now records the measured 164224-byte element while preserving capacity 64, owner size 520 bytes, and the existing bounded stack ceiling. Receipt: `🗑️generated/astra-runtime/ui-engine23-compact-clip-full/run.log`.
+## Native145 source-law repair
+
+Native145 (`renderer-native145-compact-ownership-ax/run.log`) failed only the older three-argument source assertion in `glass_snapshots_the_accumulated_composite_at_its_authored_command`. The live command phase now resolves `prepared_command_clip_piece` and calls `encode_prepared_draw_scalar` with an explicit `None` or `Some(scissor)` fourth argument. The law now pins both paths, the per-piece resolver, and the Glass-to-`SnapshotBackdrop` transition. This retains the authored snapshot invariant while covering the clip-piece protocol that UI22 and UI25 exercised behaviorally.
+
+No GPU production code changed in this repair. Native rerun remains root-owned.

@@ -64,12 +64,18 @@ async fn empty_selection_still_renders_the_empty_state() {
 #[semio_framework_async_macros::async_test]
 async fn selected_stock_id_renders_its_dimensions() {
     let mut app = context::app_with_registry();
-    let stock_id = app.snapshot().expect("snapshot").stock_id.clone();
+    let snapshot = app.snapshot().expect("snapshot");
+    let stock_id = snapshot.stock_id.clone();
+    let stock = snapshot.stock_payload.clone();
+    // 📏️ The dimensions come from the seeded document, never from a literal: the curated default
+    // example is a timber beam (3 × 0.2 × 0.3), not the 1 × 1 × 1 box this law used to assume, and
+    // `push_working_solid_fields` prints exactly this `WorkingSolid`'s own extents.
+    let crate::WorkingSolid::Box { width, height, .. } = &stock.solid else { panic!("the seeded example's stock is a box: {:?}", stock.solid) };
     select(&mut app, &stock_id);
     let rendered = context::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);
     assert!(rendered.contains("process3d-play-inspector.stock"), "expected the stock section: {rendered}");
-    assert!(rendered.contains("Width: 1"), "expected the default box stock's width: {rendered}");
-    assert!(rendered.contains("Height: 1"), "expected the default box stock's height: {rendered}");
+    assert!(rendered.contains(&format!("Width: {width}")), "expected the seeded stock's width {width}: {rendered}");
+    assert!(rendered.contains(&format!("Height: {height}")), "expected the seeded stock's height {height}: {rendered}");
 }
 
 #[semio_framework_async_macros::async_test]

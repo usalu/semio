@@ -85,7 +85,7 @@ fn a_malformed_cache_is_ignored_rather_than_failing_the_render() {
     let document = crate::examples::grid2d::pipes::document();
     let config = Grid2dWindowConfig { solve_json: "not json".into(), ..Default::default() };
     assert!(cached_commit(&document, &config).is_none());
-    render(&document, &config).expect("the pane still renders");
+    render(&document, &config, None).expect("the pane still renders");
     assert!(layers(&document, &config).len() > 1, "a malformed cache falls back to the bare grid, not to nothing");
 }
 
@@ -108,7 +108,21 @@ fn a_cache_from_another_document_is_dropped_rather_than_painted() {
 fn the_rendered_surface_is_non_empty_for_every_example() {
     for source in crate::examples::grid2d::sources() {
         let document = <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(&source.document()).expect("example parses");
-        render(&document, &Grid2dWindowConfig::default()).unwrap_or_else(|error| panic!("{}: the preview pane must render: {error:?}", source.id()));
-        assert!(scene(&document, &Grid2dWindowConfig::default()).layers_json.len() > 64, "{}: the canvas carries no layers", source.id());
+        render(&document, &Grid2dWindowConfig::default(), None).unwrap_or_else(|error| panic!("{}: the preview pane must render: {error:?}", source.id()));
+        assert!(scene(&document, &Grid2dWindowConfig::default(), None).layers_json.len() > 64, "{}: the canvas carries no layers", source.id());
     }
+}
+
+#[test]
+fn a_partial_fill_preview_differs_from_empty_and_finished() {
+    let document = crate::examples::grid2d::pipes::document();
+    let oracle = solve_with_job(&document).expect("pipes solves");
+    let empty = layers_json(&document, None);
+    let finished = layers_json(&document, Some(&oracle));
+    let mut partial = oracle.clone();
+    partial.assignments.truncate((oracle.assignments.len() / 2).max(1));
+    assert!(partial.assignments.len() < oracle.assignments.len());
+    let mid = layers_json(&document, Some(&partial));
+    assert_ne!(mid, empty, "a partial board must not look empty");
+    assert_ne!(mid, finished, "a partial board must not look finished");
 }

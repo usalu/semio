@@ -87,6 +87,7 @@ struct UiWindow {
     lane: SurfaceLane,
     queued: bool,
     intrinsic_content_height: f32,
+    presented_intrinsic_content_height: f32,
     revision: u64,
     theme_revision: u64,
     viewport_revision: u64,
@@ -142,6 +143,7 @@ impl UiWindow {
             lane: SurfaceLane::UserVisible,
             queued: false,
             intrinsic_content_height: f32::NAN,
+            presented_intrinsic_content_height: f32::NAN,
             revision: 1,
             theme_revision: 1,
             viewport_revision: 1,
@@ -605,6 +607,21 @@ fn push_retained_hit(out: &mut Vec<RetainedHitRegistration>, overlay_hits: &mut 
     }
 }
 
+fn push_clipped_retained_hit(
+    out: &mut Vec<RetainedHitRegistration>,
+    overlay_hits: &mut usize,
+    overlay: bool,
+    clip: Option<crate::wgpu::geometry::Rect>,
+    mut registration: RetainedHitRegistration,
+) {
+    let Some(rect) = intersect_rect(clip, registration.rect) else { return };
+    if rect.w <= 0.0 || rect.h <= 0.0 {
+        return;
+    }
+    registration.rect = rect;
+    push_retained_hit(out, overlay_hits, overlay, registration);
+}
+
 fn register_retained_hit(
     tree: &UiTree,
     theme: &Theme,
@@ -624,23 +641,23 @@ fn register_retained_hit(
     }
     let Some(layout) = tree.accepted_layout(node) else { return };
     let authored_rect = crate::wgpu::geometry::Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height);
-    let Some(rect) = intersect_rect(clip, authored_rect) else { return };
-    if rect.w <= 0.0 || rect.h <= 0.0 {
+    let Some(visible_rect) = intersect_rect(clip, authored_rect) else { return };
+    if visible_rect.w <= 0.0 || visible_rect.h <= 0.0 {
         return;
     }
     let metrics = crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, node, &TreeRowMetrics::from_theme(theme).with_inline(inline));
     let overlay = overlay || tree.is_open_select_popup_row(node);
-    if let Some(registration) = retained_hit_registration(tree, node, rect, &metrics, driver_drag, reversed) {
-        push_retained_hit(out, overlay_hits, overlay, registration);
+    if let Some(registration) = retained_hit_registration(tree, node, authored_rect, &metrics, driver_drag, reversed) {
+        push_clipped_retained_hit(out, overlay_hits, overlay, clip, registration);
     }
     if out.len() < RETAINED_HIT_REGISTRY_CAPACITY {
-        if let Some(registration) = retained_tree_drag_handle_registration(tree, node, rect, &metrics, driver_drag) {
-            push_retained_hit(out, overlay_hits, overlay, registration);
+        if let Some(registration) = retained_tree_drag_handle_registration(tree, node, authored_rect, &metrics, driver_drag) {
+            push_clipped_retained_hit(out, overlay_hits, overlay, clip, registration);
         }
     }
     if out.len() < RETAINED_HIT_REGISTRY_CAPACITY {
-        if let Some(registration) = retained_tree_chevron_registration(tree, node, rect, &metrics, reversed) {
-            push_retained_hit(out, overlay_hits, overlay, registration);
+        if let Some(registration) = retained_tree_chevron_registration(tree, node, authored_rect, &metrics, reversed) {
+            push_clipped_retained_hit(out, overlay_hits, overlay, clip, registration);
         }
     }
     let Some((select_id, popup)) = tree.node(node).and_then(|node| match &node.spec.0 {
@@ -650,7 +667,7 @@ fn register_retained_hit(
         return;
     };
     let Some(local) = tree.absolute_rect(node) else { return };
-    let popup = popup.translated(rect.x - local.x, rect.y - local.y);
+    let popup = popup.translated(authored_rect.x - local.x, authored_rect.y - local.y);
     for (rect, up) in [(popup.up, true), (popup.down, false)] {
         let Some(rect) = rect else { continue };
         if out.len() >= RETAINED_HIT_REGISTRY_CAPACITY {
@@ -1192,6 +1209,7 @@ impl Ui {
         }
         for window in self.windows.values_mut().filter(|window| window.sealed_input_candidate.is_some_and(|(candidate, _)| candidate == witness)) {
             std::mem::swap(&mut window.tree, &mut window.presented_tree);
+            std::mem::swap(&mut window.intrinsic_content_height, &mut window.presented_intrinsic_content_height);
             std::mem::swap(&mut window.router, &mut window.presented_router);
             window.presented_revision = window.revision;
             window.presented_accessibility_generation = window.accessibility_generation;
@@ -1610,6 +1628,7 @@ impl Ui {
         }
         window.candidate_preserves_prior_mounts = window.presented_ready && window.revision > window.presented_revision;
         window.retiring_document = window.tree.publish_document(ingress.document);
+        window.intrinsic_content_height = f32::NAN;
         window.candidate_ready = false;
         window.candidate_reconciled = false;
         window.rearm_candidate_scene_retirements();
@@ -1651,6 +1670,7 @@ impl Ui {
         }
         window.candidate_preserves_prior_mounts = window.presented_ready && window.revision > window.presented_revision;
         window.retiring_document = window.tree.publish_document(document);
+        window.intrinsic_content_height = f32::NAN;
         window.candidate_ready = false;
         window.candidate_reconciled = false;
         window.rearm_candidate_scene_retirements();
@@ -1686,6 +1706,7 @@ impl Ui {
                     window.candidate_baseline = None;
                     window.candidate_preserves_prior_mounts = false;
                     window.retiring_document = window.tree.publish_document(document);
+                    window.intrinsic_content_height = f32::NAN;
                     window.candidate_ready = false;
                     window.candidate_reconciled = false;
                     window.candidate_retirements_resolved = false;
@@ -2741,10 +2762,15 @@ impl Ui {
     /// the surface has no window, no root or no accepted layout yet.
     pub fn surface_content_height(&self, window_id: &str) -> Option<f32> {
         let window = self.windows.get(window_id)?;
-        let root = window.tree.root?;
-        let root_layout = window.tree.accepted_layout(root)?;
-        if window.intrinsic_content_height.is_finite() && window.intrinsic_content_height > 0.0 {
-            Some(window.intrinsic_content_height)
+        let (tree, intrinsic) = if window.candidate_ready || !window.presented_ready {
+            (&window.tree, window.intrinsic_content_height)
+        } else {
+            (&window.presented_tree, window.presented_intrinsic_content_height)
+        };
+        let root = tree.root?;
+        let root_layout = tree.accepted_layout(root)?;
+        if intrinsic.is_finite() && intrinsic > 0.0 {
+            Some(intrinsic)
         } else {
             Some(root_layout.height)
         }

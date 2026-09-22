@@ -8488,8 +8488,8 @@ export { Footer, type FooterProps };
 // #endregion 🎮️Footer
 
 // #region 🪨️Layout
-import { Layout, type LayoutMobilePanelProps, type LayoutProps, layoutPanelReserveStyle } from "../../🧱️elements/📐️Layout/🟦️.tsx";
-export { Layout, type LayoutMobilePanelProps, type LayoutProps, layoutPanelReserveStyle };
+import { Layout, type LayoutMobilePanelProps, type LayoutProps } from "../../🧱️elements/📐️Layout/🟦️.tsx";
+export { Layout, type LayoutMobilePanelProps, type LayoutProps };
 // #endregion 🪨️Layout
 
 // #region 🌐️Popover

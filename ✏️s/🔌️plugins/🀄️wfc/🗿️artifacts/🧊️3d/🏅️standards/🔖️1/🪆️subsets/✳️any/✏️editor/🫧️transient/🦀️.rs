@@ -1,38 +1,101 @@
 //! 🫧️ WFC 3D editor — app-local transient state, shared across every window of one app instance and
 //! never part of the document. It carries the LAST SOLVE the preview window paints: the solve is an
-//! inference, so its result must never reach the mutation/undo machinery. `MutationDiff` is trivial
-//! (`apply` replaces wholesale) because this is a cache, not an edit history.
-
-use semio_framework_value_derive::{FromValue, ToValue};
+//! inference, so its result must never reach the mutation/undo machinery. Fill writes this lane when
+//! a run completes; abort leaves it untouched.
 
 //#region 🔖️Transient
-/// 🫧️ `Wfc3dEditor::Transient` — the inferred assignment, as `slot id -> tile id` pairs, plus the
-/// contradiction verdict the preview banner reads.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+/// 🏁 One solved slot — the transient's own row type, deliberately not the document's.
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase", default)]
+pub struct Wfc3dAssignment {
+    pub slot_id: String,
+    pub tile_id: String,
+}
+
+/// 🫧️ `Wfc3dEditor::Transient` — the inferred assignment in the document's own slot order, plus the
+/// contradiction verdict the preview banner reads.
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
+#[dsl(extension = "wfc3dtransient")]
+#[dsl(id = "wfc.wfc3d.transient")]
+#[dsl(layout = "lines")]
 pub struct Wfc3dTransient {
-    pub assignments: Vec<(String, String)>,
+    #[dsl(table)]
+    pub assignments: Vec<Wfc3dAssignment>,
     pub contradiction: bool,
 }
 
-impl protocol::MutationDiff<Wfc3dTransient> for Wfc3dTransient {
-    fn apply(&self, _base: &Wfc3dTransient) -> protocol::MutationApplyResult<Wfc3dTransient> {
-        Ok(self.clone())
+impl store::ArtifactDsl for Wfc3dTransient {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
     }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let body = match store::semio_format::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        if body.trim().is_empty() {
+            return Ok(Self::default());
+        }
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid wfc3d transient envelope");
+        store::semio_format::wrap_text(&envelope, &body)
+    }
+}
+
+impl store::ArtifactPack for Wfc3dTransient {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        Ok(store::semio_format::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        if bytes.is_empty() {
+            return Ok(Self::default());
+        }
+        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::Schema(error.to_string()))?;
+        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
+        }
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
     }
 }
 
 /// 🔎️ The tile the last solve put in `slot_id`, if any — the preview window's only lookup.
 pub fn assigned_tile<'a>(transient: &'a Wfc3dTransient, slot_id: &str) -> Option<&'a str> {
-    transient.assignments.iter().find(|(slot, _)| slot == slot_id).map(|(_, tile)| tile.as_str())
+    transient.assignments.iter().find(|row| row.slot_id == slot_id).map(|row| row.tile_id.as_str())
 }
 
-/// 🧮️ Runs the solve inference and folds it into a fresh transient — the editor's only bridge from
-/// the derived world into what the preview paints.
+/// 🧮️ Runs the solve inference and folds it into a fresh transient — kept for the viewer and as the
+/// fill oracle's finished shape. The editor preview must not call this while a fill run is live.
 pub fn solved_transient(document: &crate::Wfc3dSnapshot) -> Wfc3dTransient {
-    let assignments = crate::inferences::solve_assignments(document);
-    Wfc3dTransient { contradiction: assignments.is_empty() && !document.slots.is_empty(), assignments: assignments.into_iter().collect() }
+    match crate::inferences::solve_with_job(document) {
+        Ok(commit) => Wfc3dTransient {
+            contradiction: false,
+            assignments: commit
+                .assignments
+                .into_iter()
+                .map(|(slot_id, tile_id)| Wfc3dAssignment { slot_id, tile_id })
+                .collect(),
+        },
+        Err(_) => Wfc3dTransient { contradiction: !document.slots.is_empty(), assignments: Vec::new() },
+    }
 }
 //#endregion 🔖️Transient
+
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+pub mod mutations;
+pub use mutations::*;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

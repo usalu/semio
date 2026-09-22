@@ -1238,6 +1238,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("moveFeature", LocalizedLabel::native("Move Feature", "Objekt verschieben"))
             .mutation("renameFeature", LocalizedLabel::native("Rename Feature", "Objekt umbenennen"))
             .mutation("deleteFeature", LocalizedLabel::native("Delete Feature", "Objekt löschen"))
+            .action_destructive("deleteFeature")
             // 👁️ View actions — mutate ephemeral config state (camera, render config, layer
             // visibility, stroke weights), never the document.
             .view_action("toggleLayerVisibility", LocalizedLabel::native("Toggle Layer Visibility", "Ebenensichtbarkeit umschalten"))

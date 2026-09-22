@@ -1,6 +1,9 @@
 //! 🧪️ The editor surface — identity, the two-window manifest, and one dispatch per command.
 
 use crate::editor::wfc2d::{create_wfc2d_editor, Wfc2dEditor, Wfc2dEditorCommand};
+// 🔒️ The retained factory is private to the editor module, so the glob `pub use component::*`
+// re-export does not carry it — the roster law below reaches it through its defining module.
+use crate::editor::wfc2d::component::Wfc2dRetainedCommandJobFactory;
 use crate::editor::wfc2d::config::Wfc2dConfig;
 use crate::editor::wfc2d::modes::edit::windows::{graph, preview};
 use semio_framework_plugin::ArtifactEditor;
@@ -80,7 +83,7 @@ fn both_windows_render_for_every_example() {
     let transient = crate::editor::wfc2d::transient::Wfc2dTransient::default();
     for document in crate::examples::documents() {
         for body in [graph::WFC_GRAPH_BODY, preview::WFC_2D_PREVIEW_BODY] {
-            crate::editor::wfc2d::render_body(body, &document, &config, &transient).expect("window renders");
+            crate::editor::wfc2d::render_body(body, &document, &config, &transient, None).expect("window renders");
         }
     }
 }
@@ -127,8 +130,8 @@ fn the_host_render_path_paints_the_solved_assignment() {
     let unsolved = crate::editor::wfc2d::render_with_transient(preview::WFC_2D_PREVIEW_BODY, &doc, &cfg, &semio_framework_plugin::TransientView { snapshot: &empty, window: None }).expect("the host render path renders unsolved too");
     assert_ne!(format!("{painted:?}"), format!("{unsolved:?}"), "the transient lane never reached the preview window: a solved board rendered identically to an unsolved one");
 
-    let solved_layers = preview::preview_layers_json(&document, &solved);
-    let unsolved_layers = preview::preview_layers_json(&document, &empty);
+    let solved_layers = preview::preview_layers_json(&document, &solved, None);
+    let unsolved_layers = preview::preview_layers_json(&document, &empty, None);
     for slot in &document.slots {
         assert!(solved_layers.contains(&format!("tile-{}-", slot.id)), "slot {} lost its solved tile media", slot.id);
     }
@@ -142,7 +145,7 @@ fn the_host_render_path_paints_bitmap_tiles_as_pixels() {
     let document = crate::examples::terrain_ring::document();
     let tile = document.tiles[0].id.clone();
     let transient = Wfc2dTransient { assignments: document.slots.iter().map(|slot| Wfc2dAssignment { slot_id: slot.id.clone(), tile_id: tile.clone() }).collect(), contradiction: false };
-    let layers = preview::preview_layers_json(&document, &transient);
+    let layers = preview::preview_layers_json(&document, &transient, None);
     assert!(layers.contains("\"kind\":\"image\""), "a bitmap tile must paint an image layer, not a labelled rect");
     assert!(layers.contains("data:image/png;base64,"), "a bitmap tile must carry a real png data url");
     assert!(!layers.contains("bitmap\",\"kind\":\"rect\""), "no bitmap tile may fall back to the outline placeholder here");
@@ -262,3 +265,23 @@ fn the_example_picker_loads_a_document_instead_of_editing_one() {
     assert_eq!(fault.code.0, "wfc2d.example.unknown");
 }
 //#endregion 🕹️GraphGestures
+
+/// ⚖️ LAW: this app's one app-owned factory carries ONE roster — `TOOL_IDS`, its
+/// `PUBLICATION_CONTRACTS` and its `bounded_first_step_tool_proofs!` rows name exactly the same
+/// tools. The framework refuses app registration outright when they drift
+/// (`interactive-job.publication-contract` when a lane contract names an unowned tool,
+/// `interactive-job.catalog-incomplete` when a migrated command has no owner-local proof), and that
+/// refusal is a guest-side `panic!` — so one missing row aborted the whole wfc component at boot and
+/// every one of its panes reached `data-shell-error` instead of `data-shell-ready`.
+#[test]
+fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_roster() {
+    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    let tools: std::collections::BTreeSet<&str> = crate::editor::wfc2d::WFC_2D_RETAINED_TOOL_IDS.iter().copied().collect();
+    let publication: std::collections::BTreeSet<&str> = <Wfc2dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
+    assert_eq!(publication, tools, "every owned tool declares exactly one publication-lane contract");
+    for contract in <Wfc2dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
+        assert!(!contract.lanes.is_empty(), "tool {} declares no publication lane", contract.tool_id);
+    }
+    let proofs: std::collections::BTreeSet<&str> = <Wfc2dEditor as semio_framework_plugin::ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
+    assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
+}

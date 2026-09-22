@@ -71,6 +71,20 @@ fn published_dock_tab_rows(shell: &ShellState) -> Vec<String> {
     input.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).filter(|id| id.starts_with("dock.tab.")).collect()
 }
 
+fn accepted_dock_input(shell: &mut ShellState) -> InputState<ActionDescriptor> {
+    let theme = Theme::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut draw = DrawList::default();
+    let labels = HashMap::from([(TOP.to_string(), "Top".to_string()), (PERSPECTIVE.to_string(), "Perspective".to_string())]);
+    let icon_ids = HashMap::new();
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+    shell.dock.paint_chrome(&mut ctx, CANVAS, false);
+    shell.publish_retained_hit_registry(&mut input);
+    input
+}
+
 fn plan(shell: &mut ShellState) {
     let theme = Theme::default();
     let mut atlas = FontAtlas::builtin();
@@ -99,6 +113,42 @@ fn the_close_cap_closes_exactly_the_clicked_window_and_refocuses_the_survivor() 
     let args = note.args.as_ref().expect("the close note carries its command and window");
     assert_eq!(args.get("commandId").and_then(DslValue::as_str), Some("shell.windowClose"));
     assert_eq!(args.get("detail").and_then(|detail| detail.get("windowId")).and_then(DslValue::as_str), Some(TOP));
+}
+
+/// ⚖️ LAW: retiring a Window Options popup never consumes the next, independent close-cap
+/// gesture. The popup dismissal and the cap press are two complete pointer sequences over the same
+/// accepted frame, matching the rapid physical sequence from checkpoint 20. One cap press closes
+/// exactly Top, focuses Perspective and journals exactly one close command.
+#[test]
+fn a_window_options_popup_dismissal_preserves_the_immediate_close_cap_gesture() {
+    let fixture: serde_json::Value = serde_json::from_str(JOURNAL_SEQUENCES).expect("the rapid popup-close fixture parses");
+    let law = &fixture["rapidPopupClose"];
+    let mut shell = journey_shell(Vec::new());
+    let mut input = accepted_dock_input(&mut shell);
+    shell.open_selects.insert(law["popupOwner"].as_str().expect("popup owner").to_string(), true);
+
+    let dismiss = law["dismissPoint"].as_array().expect("dismiss point");
+    let (dismiss_x, dismiss_y) = (dismiss[0].as_f64().expect("dismiss x") as f32, dismiss[1].as_f64().expect("dismiss y") as f32);
+    semio_framework_async::block_on(shell.handle_pointer_button(dismiss_x, dismiss_y, true, 0, &mut input, &Theme::default())).expect("the outside press dismisses the Window Options popup");
+    semio_framework_async::block_on(shell.handle_pointer_button(dismiss_x, dismiss_y, false, 0, &mut input, &Theme::default())).expect("the popup dismissal completes");
+    assert!(shell.open_selects.values().all(|open| !open), "🔽️ the popup is retired before the cap gesture starts");
+
+    let close_id = law["closeControl"].as_str().expect("close control");
+    let close = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(close_id)).expect("the accepted frame publishes Top's close cap").rect;
+    let (x, y) = (close.x + close.w * 0.5, close.y + close.h * 0.5);
+    semio_framework_async::block_on(shell.handle_pointer_button(x, y, true, 0, &mut input, &Theme::default())).expect("the immediate close press routes");
+    semio_framework_async::block_on(shell.handle_pointer_button(x, y, false, 0, &mut input, &Theme::default())).expect("the immediate close release routes");
+
+    let expected_windows = law["remainingWindows"].as_array().expect("remaining windows").iter().map(|window| window.as_str().expect("window id").to_string()).collect::<Vec<_>>();
+    assert_eq!(shell.dock.collect_window_ids(), expected_windows, "🪟️ one immediate cap gesture removes Top");
+    assert_eq!(shell.active_window_id.as_deref(), law["focusedWindow"].as_str(), "🪟️ the survivor receives focus");
+    assert!(shell.presented_input_candidate.is_none(), "🎯️ no stale input candidate remains after the accepted gestures");
+    let close_notes = shell
+        .deferred_actions
+        .iter()
+        .filter(|action| action.action == "noteShellCommand" && action.args.as_ref().and_then(|args| args.get("commandId")).and_then(DslValue::as_str) == law["closeCommand"].as_str())
+        .count();
+    assert_eq!(close_notes, law["closeCommandCount"].as_u64().expect("close command count") as usize, "🕒️ the one cap gesture journals one close command");
 }
 
 /// ⚖️ LAW: after that close, the FIRST `dock.tab.…` row the dock publishes is the survivor's SELECT

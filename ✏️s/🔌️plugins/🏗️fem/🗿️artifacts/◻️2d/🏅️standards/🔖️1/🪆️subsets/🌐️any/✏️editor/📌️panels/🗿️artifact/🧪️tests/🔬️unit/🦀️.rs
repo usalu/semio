@@ -376,10 +376,10 @@ async fn a_window_request_materialises_exactly_its_own_range() {
     let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), None, 20, 8), request(&load_case_path("wind"), None, 5, 4)]);
     let tree = render(&document, &Fem2dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a windowed document assembles");
     let nodes = section_node(&tree, "nodes");
-    assert_eq!(window_of(nodes), TreeWindow { total: 60, offset: 20 });
+    assert_eq!(window_of(nodes), TreeWindow { row_extent: Default::default(), total: 60, offset: 20 });
     assert_eq!(row_keys(nodes), (20..28).map(|index| format!("g{index}")).collect::<Vec<_>>(), "exactly entries [20, 28) keyed by the raw node id");
     let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "wind").expect("wind case row");
-    assert_eq!(window_of(wind), TreeWindow { total: 40, offset: 5 });
+    assert_eq!(window_of(wind), TreeWindow { row_extent: Default::default(), total: 40, offset: 5 });
     assert_eq!(row_keys(wind), (5..9).map(|index| format!("wl{index}")).collect::<Vec<_>>(), "a nested window is the same law one level down");
 }
 

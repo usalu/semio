@@ -51,6 +51,46 @@ impl ArtifactViewer for NoteViewer {
     const DIALECT: Dialect = NOTE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
 
+    /// 🔐️ The document-store owner catalogue, identical to the sibling editor's: a viewer owns the
+    /// very same `NoteSnapshot` envelope and must allocate and retire it the same way. Read-only
+    /// says nothing about ownership.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_owners())
+    }
+
+    /// 🧹️ The four bounded disposers `VcsArtifactApp`'s close ladder drives, one per owned lane
+    /// (`document-store`, `config-store`, `presence-store`, `transient-store`); `ViewerApp` supplies
+    /// the draft lane itself.
+    ///
+    /// 🐛️ Left at the trait default (`None`) this surface can never close. Every close of a
+    /// `ViewerApp<NoteViewer>` faults `interactive-job.close-owned-disposer-missing` ("app owner did
+    /// not provide the required bounded disposer for document-store") and the store then reaches
+    /// `Drop` without its terminal-empty witness — which on a `panic = "abort"` wasm32 guest is an
+    /// `unreachable` that kills the whole instance. That is what took down every `codec.genesis`,
+    /// `codec.pack-schema-hash`, `codec.print-mirror` and `codec.apply-ops` call against the note
+    /// component (ticket 26/09/18 slices TC3c §5f, TC3d §1, TC3e): the codec resolver constructs
+    /// every app of the bundle to read its schema and closes the ones it does not return, so the
+    /// viewer's missing disposer faulted a call that never touched the viewer at all.
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::no_config_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
     fn initial_snapshot() -> NoteSnapshot {
         empty_note_snapshot()
     }

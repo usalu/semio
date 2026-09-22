@@ -15,7 +15,7 @@ import { mcpCredentialSourceOrderConforms, nativeCredentialSourceOrderConforms, 
 import { assertHubFixtureExpectation } from "../🧬️schema/🛂expectation/🟦️.ts";
 import { authenticatedFrame, hmacProof, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
-import { allocateLocalHubRunRoot, finishLocalHub, localHubReadinessAdmitted, type LocalHubRun } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { allocateLocalHubRunRoot, finishLocalHub, localHubReadinessAdmitted, type LocalHubRun, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../..");
@@ -244,6 +244,68 @@ test("allocation, readiness and finish stay injectable and idempotent", async ()
   await finishLocalHub(run);
   expect(removals).toBe(1);
   expect(run.channelKey.equals(Buffer.alloc(32))).toBe(true);
+});
+
+test("readiness waits on the hub's own progress, never on a total wall-clock budget", async () => {
+  // 🧗 `waitForReadiness` used to hold a 30 s TOTAL deadline, so a launcher on a busy machine
+  // abandoned a hub that was still coming up (CE2 measured two of three 7621 starts on 2026-09-21).
+  // The bound is now the span the hub goes without showing ANY sign of advancing. Three facts, each
+  // of which the total budget got wrong: a hub that keeps changing what it reports survives far past
+  // the span; a hub that reports the identical thing forever is refused AS A STALL, naming what it
+  // last said; and a hub that exits is still refused immediately rather than waited out.
+  const runId = "0".repeat(32);
+  const readiness = (status: string, gate: string) => ({
+    schema: "semio.hub.readiness/v1",
+    runId,
+    status,
+    mode: "development",
+    bindScope: "loopback",
+    authentication: { kind: "local-bootstrap-pipe-v1", bootstrapReady: true, publicSessionIssuance: false },
+    directory: { ready: true },
+    storage: { ready: true },
+    adminAssets: { ready: true },
+    artifactAuthority: { ready: status === "ready" },
+    blockedBy: status === "ready" ? [] : [{ gate: "artifactAuthority", reason: gate }],
+  });
+  const fakeRun = (port: number, output: () => string): LocalHubRun =>
+    ({
+      child: Object.assign(new EventEmitter(), { exitCode: null, kill: () => true }) as unknown as ChildProcess,
+      pipe: new PassThrough(),
+      reader: new LocalFrameReader(new PassThrough()),
+      channelKey: Buffer.alloc(32, 7),
+      runId,
+      port,
+      runRoot: "/private/ticket/semio-hub-run-fixed",
+      publicSessionIssuance: false,
+      output,
+      removeRunRoot: () => undefined,
+    }) as unknown as LocalHubRun;
+
+  let polls = 0;
+  const advancing = Bun.serve({ port: 0, hostname: "127.0.0.1", fetch: () => {
+    polls += 1;
+    const body = polls >= 24 ? readiness("ready", "") : readiness("not-ready", `loading-package-${polls}`);
+    return new Response(JSON.stringify(body), { status: polls >= 24 ? 200 : 503, headers: { "content-type": "application/json" } });
+  } });
+  try {
+    const startedAt = Date.now();
+    const body = await waitForReadiness(fakeRun(advancing.port, () => ""), false, 200);
+    expect(body.status).toBe("ready");
+    expect(Date.now() - startedAt).toBeGreaterThan(200);
+  } finally {
+    advancing.stop(true);
+  }
+
+  const frozen = Bun.serve({ port: 0, hostname: "127.0.0.1", fetch: () => new Response(JSON.stringify(readiness("not-ready", "trusted-catalog-load-stalled-before-it-finished")), { status: 503, headers: { "content-type": "application/json" } }) });
+  try {
+    await expect(waitForReadiness(fakeRun(frozen.port, () => ""), false, 200)).rejects.toThrow(/stalled.*trusted-catalog-load-stalled-before-it-finished/su);
+  } finally {
+    frozen.stop(true);
+  }
+
+  const exited = fakeRun(frozen.port, () => "");
+  (exited.child as unknown as { exitCode: number | null }).exitCode = 3;
+  await expect(waitForReadiness(exited, false, 200)).rejects.toThrow(/exited before readiness/u);
 });
 
 test("credential delivery seals authority and uses one injected fd3 endpoint", async () => {

@@ -1581,6 +1581,93 @@ fn own_mesh_lane() -> Vec<String> {
     ["/test/blocker.glb", "/test/host-kind.glb", "/test/late.glb", "/test/near.glb"].map(str::to_string).to_vec()
 }
 
+fn all_objects_roots(case: &serde_json::Value) -> FillPreparationRoots {
+    let roots = own_mesh_roots(case["blocker"].as_bool().unwrap_or(false), case["kindMeshOffset"].as_f64().unwrap_or(100.0) as f32);
+    let mut scene = (*roots.scene).clone();
+    let template = scene.fixture.objects[0].vortices[0].clone();
+    scene.fixture.objects[0].vortices = case["targets"].as_array().expect("targets").iter().enumerate().map(|(index, offset)| VortexProps {
+        id: format!("v{index}"), position: [offset.as_f64().expect("offset"), 0.0, 0.0], ..template.clone()
+    }).collect();
+    for index in 0..case["farObjects"].as_u64().unwrap_or(0) {
+        let host = scene.fixture.objects[0].clone();
+        scene.fixture.objects.insert(1, FixtureObject { id: format!("far-{index}"), origin: [1000.0 + index as f64 * 20.0, 0.0, 0.0], vortices: Vec::new(), ..host });
+    }
+    let mut meshes = (*roots.meshes).clone();
+    for missing in case["missing"].as_array().expect("missing meshes") {
+        meshes.remove(missing.as_str().expect("mesh url"));
+    }
+    FillPreparationRoots::new(Arc::new(scene), Arc::new(meshes))
+}
+
+fn all_objects_run(roots: FillPreparationRoots, requested: usize) -> FillRunJob {
+    let mut job = fill_run_job(roots, own_mesh_lane(), 1, requested);
+    FillRunMirror::new().drive(&mut job, u64::MAX, 1_000_000);
+    job
+}
+
+#[test]
+fn fill_checks_all_objects_before_each_placement() {
+    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill law");
+    for case in fixture["laws"]["allObjects"]["cases"].as_array().expect("cases") {
+        let roots = all_objects_roots(case);
+        let scene = roots.scene.clone();
+        let job = all_objects_run(roots, case["targets"].as_array().expect("targets").len());
+        let placements = job.provisional_placements();
+        eprintln!("[DEBUG] all-objects {}: accepted={}, collisions={}, rejected={}", case["name"], placements.len(), job.counters()[2], job.counters()[3]);
+        assert_eq!(placements.len() as u64, case["expectedLocked"].as_u64().expect("locked"), "{}", case["name"]);
+        let mut peers = scene.fixture.objects.clone();
+        for placement in placements {
+            let hull = |object: &FixtureObject| {
+                let offset = if object.mesh_url.as_deref().unwrap_or("/test/host-kind.glb") == "/test/host-kind.glb" { case["kindMeshOffset"].as_f64().unwrap() as f32 } else { 0.0 };
+                parry_hull(&pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale), &own_mesh_cube(offset).0)
+            };
+            let identity = parry3d::math::Isometry::identity();
+            for peer in &peers {
+                assert!(!parry3d::query::intersection_test(&identity, &hull(&placement.object), &identity, &hull(peer)).expect("oracle intersection"), "{}: {} overlaps {}", case["name"], placement.object.id, peer.id);
+            }
+            peers.push(placement.object);
+        }
+    }
+}
+
+#[test]
+fn fill_revalidation_checks_all_objects_with_current_meshes() {
+    let fixture: serde_json::Value = serde_json::from_str(FILL_RUN_FIXTURE).expect("fill law");
+    let law = &fixture["laws"]["allObjects"];
+    let roots = all_objects_roots(&law["cases"][0]);
+    let placements = all_objects_run(FillPreparationRoots::new(roots.scene.clone(), roots.meshes.clone()), 2).provisional_placements();
+    assert_eq!(placements.len(), 2);
+    for case in law["revalidation"].as_array().expect("cases") {
+        let (mut positions, indices) = own_mesh_cube(0.0);
+        positions.iter_mut().for_each(|value| *value *= case["candidateScale"].as_f64().expect("scale") as f32);
+        let mut meshes = (*roots.meshes).clone();
+        for url in ["/test/near.glb", "/test/late.glb"] {
+            meshes.insert(url.into(), collision_body_from_buffers(&positions, &indices).expect("current mesh"));
+        }
+        for missing in case["missing"].as_array().expect("missing meshes") {
+            meshes.remove(missing.as_str().expect("mesh url"));
+        }
+        let mut oracle = Vec::new();
+        let mut survivors = vec![parry_hull(&pose_isometry([12.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], &None), &own_mesh_cube(100.0).0)];
+        let identity = parry3d::math::Isometry::identity();
+        for placement in &placements {
+            let candidate = parry_hull(&pose_isometry(placement.object.origin, placement.object.orientation.unwrap(), &placement.object.scale), &positions);
+            let conflict = !meshes.contains_key("/test/host-kind.glb") || !meshes.contains_key(placement.object.mesh_url.as_ref().unwrap())
+                || survivors.iter().any(|peer| parry3d::query::intersection_test(&identity, &candidate, &identity, peer).expect("oracle intersection"));
+            oracle.push(conflict);
+            if !conflict {
+                survivors.push(candidate);
+            }
+        }
+        assert_eq!(serde_json::json!(oracle), case["expectedConflicts"], "oracle {}", case["name"]);
+        let operation = Operation::new(OperationId(111), RevisionId(2), Generation(1), 1);
+        let mut job = FillRevalidateJob::new(operation, fill_run_identity(), FillPreparationRoots::new(roots.scene.clone(), Arc::new(meshes)), placements.clone(), 1_000);
+        drive_revalidation(&mut job, operation);
+        eprintln!("[DEBUG] all-objects revalidation {}: conflicts={:?}, oracle={oracle:?}", case["name"], job.conflicts());
+        assert_eq!(job.conflicts(), oracle, "{}", case["name"]);
+    }
+}
+
 /// 🐛️ Red→green (`📓️wave-W2-C.md` §7.2, language-neutral law `ownMesh` of `🎞️fill-run.json`): a placed body carrying
 /// its own mesh collides with that mesh, not its kind's. The fill planner resolved document bodies by kind, so a body
 /// whose kind renders a different (here shifted) mesh never blocked the candidates docking into it and they read `fits`;

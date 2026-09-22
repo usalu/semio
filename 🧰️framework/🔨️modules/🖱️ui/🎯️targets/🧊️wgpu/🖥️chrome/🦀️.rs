@@ -99,6 +99,18 @@ pub fn chrome_item_text(theme: &Theme, active: bool, hovered: bool) -> Rgba {
     }
 }
 
+/// 🎨️ Secondary ink on a hover or active fill. Element gray and muted gray are the hover fill,
+/// so a label, icon, or description that keeps its resting color disappears.
+pub fn foreground_on_fill(theme: &Theme, resting: Rgba, active: bool, hovered: bool) -> Rgba {
+    if active {
+        theme.active_foreground
+    } else if hovered {
+        theme.border_emphasized
+    } else {
+        resting
+    }
+}
+
 pub fn item_bg(theme: &Theme, pressed: bool, hovered: bool) -> Rgba {
     chrome_item_bg(theme, pressed, hovered)
 }
@@ -284,5 +296,21 @@ impl UiDriverChrome {
     }
 }
 //#endregion 🎙️DriverTooltips
+
+#[cfg(test)]
+mod foreground_on_fill_tests {
+    use super::foreground_on_fill;
+    use crate::wgpu::theme::Theme;
+
+    #[test]
+    fn hover_fill_lifts_resting_gray_to_emphasized_ink() {
+        let theme = Theme::light();
+        assert_eq!(foreground_on_fill(&theme, theme.text_muted, false, false), theme.text_muted);
+        assert_eq!(foreground_on_fill(&theme, theme.text_element, false, true), theme.border_emphasized);
+        assert_eq!(foreground_on_fill(&theme, theme.text_muted, true, true), theme.active_foreground);
+        assert_ne!(theme.text_muted, theme.border_emphasized);
+        assert_ne!(theme.text_element, theme.border_emphasized);
+    }
+}
 
 // #endregion chrome

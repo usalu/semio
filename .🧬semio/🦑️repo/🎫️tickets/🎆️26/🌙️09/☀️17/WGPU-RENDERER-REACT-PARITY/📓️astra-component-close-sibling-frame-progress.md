@@ -68,3 +68,13 @@ Advance at most one close unit and retain `RESOURCE_READY`, then continue the or
 Close admission now waits for both pre-close owner classes: `AppPresenter::has_pending_presentation` and `FrameBuildHandle::has_live_session`. Once both are empty, the exact A close owner begins; later A-local external waits no longer become a global frame barrier. The source law also asserts this two-owner admission fence before the exact close owner is taken.
 
 The affected Winit, OsHost and renderer-law Rust sources parse under `rustfmt --edition 2021 --emit stdout`. Native post-repair execution remains owned by root.
+
+## Superseding close-created-frame finding and repair
+
+The earlier sibling-progress model was incomplete once a Chrome frame itself created the component-close request. That frame remained live while `OsHost::advance_component_surface_close` refused to take the bridge behind the blanket live-frame fence. The frame waited for bridge terminal and the bridge waited for that same frame to disappear.
+
+The neutral contract is now `semio.component-close-frame-turn.v2`: input for an unrelated window remains queued through one transient frame-retirement turn and one external-owner turn, no frame publishes before terminal, and the same input generation may publish after terminal. Its Ajv/Chromium oracle passed in the canonical browser-worker target: 11 files / 156 tests, Vitest 6.91 s, Nx 13.5 s.
+
+Production now has a reusable `FrameBuildHandle::retire_for_component_surface_close_step`. It cancels and retires one exact worker-session owner unit without setting permanent `closing` or removing the installed completion waker. When that owner reaches terminal it clears the native `last_submitted_generation` fence, permitting a same-generation successor. `OsHost` preserves the presenter packet fence, transiently retires a live creating frame before taking the bridge, and the Winit/browser shared build path suppresses fresh frame admission while `component_surface_close_pending()` remains true. Terminal changes that predicate to false, allowing the normal successor frame to consume the bridge acknowledgement.
+
+The native behavioral law is `component_close_transiently_retires_the_creating_frame_and_readmits_the_same_generation`; the source/admission and ingress laws are `component_close_retires_its_creating_frame_before_external_progress_and_readmits_after_terminal` and `component_close_handoff_keeps_unrelated_window_ingress_routable`. Their Rust sources parse under rustfmt; root owns native execution.

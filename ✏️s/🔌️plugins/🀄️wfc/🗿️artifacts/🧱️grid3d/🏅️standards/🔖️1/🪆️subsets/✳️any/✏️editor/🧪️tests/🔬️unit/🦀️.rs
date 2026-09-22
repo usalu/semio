@@ -187,3 +187,23 @@ fn the_example_picker_replaces_the_document_and_re_selecting_the_open_one_is_ine
     assert!(matches!(effect, semio_framework::kernel::Effect::LoadDocument { .. }), "an example switch is a LoadDocument effect");
     assert_ne!(crate::examples::pipes_3d::snapshot(), document, "the two examples must actually differ");
 }
+
+/// ⚖️ LAW: this app's one app-owned factory carries ONE roster — `TOOL_IDS`, its
+/// `PUBLICATION_CONTRACTS` and its `bounded_first_step_tool_proofs!` rows name exactly the same
+/// tools. The framework refuses app registration outright when they drift
+/// (`interactive-job.publication-contract` when a lane contract names an unowned tool,
+/// `interactive-job.catalog-incomplete` when a migrated command has no owner-local proof), and that
+/// refusal is a guest-side `panic!` — so one missing row aborted the whole wfc component at boot and
+/// every one of its panes reached `data-shell-error` instead of `data-shell-ready`.
+#[test]
+fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_roster() {
+    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    let tools: std::collections::BTreeSet<&str> = GRID3D_RETAINED_TOOL_IDS.iter().copied().collect();
+    let publication: std::collections::BTreeSet<&str> = <Grid3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
+    assert_eq!(publication, tools, "every owned tool declares exactly one publication-lane contract");
+    for contract in <Grid3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
+        assert!(!contract.lanes.is_empty(), "tool {} declares no publication lane", contract.tool_id);
+    }
+    let proofs: std::collections::BTreeSet<&str> = <Grid3dEditor as semio_framework_plugin::ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
+    assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
+}

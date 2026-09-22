@@ -10,10 +10,22 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 
 pub struct BitmapIntoJson;
 
+/// 🖨️ Typed encode of `BitmapSnapshot` into its canonical JSON text.
+pub fn serialize(from: &BitmapSnapshot) -> String {
+    dsl::json::to_json_string(from)
+}
+
 impl Serializer<BitmapSnapshot> for BitmapIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(from: &BitmapSnapshot) -> IoResult<IoPayload> {
-        Ok(IoOutcome::clean(IoPayload::Text(dsl::json::to_json_string(from))))
+        Ok(IoOutcome::clean(IoPayload::Text(serialize(from))))
     }
 }
+
+
+//#region 🧪Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪Tests

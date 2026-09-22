@@ -73,4 +73,7 @@ async fn op_text_round_trips_edit_step_params() {
     let printed = <ProcedureMutation as protocol::OpText>::print_op(&operation);
     let parsed = <ProcedureMutation as protocol::OpText>::parse_op(&printed).expect("round trips");
     assert_eq!(parsed, operation);
+    // 🧊️ Both ends own a live `newParams` dictionary — retire each, never drop.
+    protocol::Mutation::retire_cold(parsed);
+    protocol::Mutation::retire_cold(operation);
 }

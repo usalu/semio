@@ -356,7 +356,7 @@ async fn command_ids_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 18, "every PresentationCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), PRESENTATION_COMMAND_ROW_COUNT, "every PresentationCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -372,7 +372,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 /// keyword at all and no longer parses).
 #[semio_framework_async_macros::async_test]
 async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
-    let expected_keywords: [(&str, &str); 17] = [
+    let expected_keywords: [(&str, &str); PRESENTATION_COMMAND_ROW_COUNT] = [
         ("seedGrid", "seed-grid"),
         ("addTile", "add-tile"),
         ("deleteTile", "delete-tile"),
@@ -415,6 +415,11 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
     store::os_store::test_support::assert_op_text_binary_equivalence(&with_layer);
     store::os_store::test_support::assert_op_text_binary_equivalence(&without_layer);
 }
+
+/// 🔢️ The declared `PresentationCommand` row count. It was 18 while a `setLocale` row existed; the
+/// locale moved to the window config and the row was dropped, so the count belongs in ONE place that
+/// both the uniqueness law and the wire-keyword table read.
+pub(super) const PRESENTATION_COMMAND_ROW_COUNT: usize = 17;
 
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
 pub(super) fn every_command() -> Vec<PresentationCommand> {

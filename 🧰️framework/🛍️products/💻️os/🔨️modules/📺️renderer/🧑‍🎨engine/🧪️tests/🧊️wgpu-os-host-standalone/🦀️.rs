@@ -84,6 +84,11 @@ fn runtime_with_component_world_asset_urls(world_a_url: &str, world_b_url: &str)
         infinite_world::world::reserve_world3d_asset_request(&mut state, infinite_world::world::WorldAssetRequestKind::Glb, url).expect("the exact World admits its asset request");
         assert!(shell.world3d_states.try_insert(host_id.to_string(), state).is_ok(), "the component World host is admitted");
     }
+    runtime_with_shell(shell)
+}
+
+#[cfg(test)]
+fn runtime_with_shell(shell: crate::shell::ShellState) -> RuntimeMailbox {
     RuntimeMailbox::new(crate::AppRuntime {
         atlas: crate::FontAtlas::builtin(),
         icons: crate::IconAtlas::default(),
@@ -619,4 +624,22 @@ fn a_cancelled_local_component_page_is_retained_for_bounded_handback_without_res
     assert!(close_terminal, "World A closes after its page and request owners return");
     assert_eq!(frame_faults, local["frameFaults"].as_u64().expect("frame faults") as usize);
     assert_eq!(terminal_native_owners, local["terminalNativeOwners"].as_u64().expect("terminal native owners") as usize);
+}
+
+/// 🌐️ Drives the actual asset and World retirement bridge for a retained Shell fixture.
+#[cfg(test)]
+pub(crate) fn finish_world_fixture_component_close(shell: crate::shell::ShellState) -> crate::shell::ShellState {
+    let Some(request) = take_component_surface_close_request() else { return shell };
+    assert_eq!(request.owner.kind, ui_wgpu::wgpu::SurfaceKind::World3d);
+    assert!(request.engine_token.is_none(), "this World fixture has no paired GPU engine token");
+    let runtime = runtime_with_shell(shell);
+    let mut close = ComponentSurfaceCloseOwner::new(request);
+    for _ in 0..262_144 {
+        if close.terminal_is_empty() { break; }
+        close.close_asset_world_step(&runtime);
+    }
+    assert!(close.terminal_is_empty(), "the production World close lane returns its exact owner");
+    assert!(publish_component_surface_close_terminal(close.request.token));
+    let mut owner = runtime.try_lock().expect("the fixture returns its Shell owner");
+    std::mem::replace(&mut owner.interaction.as_mut().expect("the interaction is returned").shell, crate::shell::ShellState::new(Vec::new(), "closed-fixture".to_string()))
 }

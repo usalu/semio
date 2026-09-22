@@ -3001,7 +3001,8 @@ impl DirectoryService {
                             return Err(error);
                         }
                         let renewal_now_ms = context.now_ms();
-                        let renewal_expires_at_ms = renewal_now_ms.saturating_add(ARTIFACT_CAS_DELETE_LEASE_TTL_MS).min(context.deadline_ms());
+                        let renewal_horizon_ms = renewal_now_ms.saturating_add(ARTIFACT_CAS_DELETE_LEASE_TTL_MS);
+                        let renewal_expires_at_ms = context.deadline_ms().map_or(renewal_horizon_ms, |deadline_ms| renewal_horizon_ms.min(deadline_ms));
                         let renewed = renewal_expires_at_ms > renewal_now_ms && self.dir.renew_artifact_cas_delete_fence(&fence, renewal_now_ms, renewal_expires_at_ms).await.is_ok();
                         let still_unreferenced = if renewed {
                             match self.dir.validate_artifact_cas_delete_fence(&fence, context.now_ms()).await {
@@ -3100,7 +3101,8 @@ impl<S: ArtifactChunkCasStorage> crate::artifact_authority::VerifiedCheckpointPu
     async fn reserve(&self, plan: &ArtifactCasOwnershipPlanV1, context: &crate::artifact_authority::OperationContext<'_>) -> Result<ArtifactCasReservation, crate::artifact_authority::AuthorityError> {
         context.checkpoint()?;
         let now_ms = context.now_ms();
-        let expires_at_ms = context.deadline_ms().saturating_add(crate::artifact_authority::chunk_cas::ARTIFACT_CAS_RESERVATION_GRACE_MS).min(now_ms.saturating_add(ARTIFACT_CAS_RESERVATION_MAX_TTL_MS));
+        let reservation_ceiling_ms = now_ms.saturating_add(ARTIFACT_CAS_RESERVATION_MAX_TTL_MS);
+        let expires_at_ms = context.deadline_ms().map_or(reservation_ceiling_ms, |deadline_ms| deadline_ms.saturating_add(crate::artifact_authority::chunk_cas::ARTIFACT_CAS_RESERVATION_GRACE_MS).min(reservation_ceiling_ms));
         let reservation = self
             .service
             .reserve_artifact_cas(DirectoryActor { kind: DirectoryActorKind::System, id: self.actor_id.clone() }, plan.clone(), expires_at_ms, now_ms)

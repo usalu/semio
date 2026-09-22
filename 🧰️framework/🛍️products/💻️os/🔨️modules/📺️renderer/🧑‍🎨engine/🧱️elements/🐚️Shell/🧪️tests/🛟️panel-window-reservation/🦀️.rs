@@ -65,7 +65,7 @@ fn panel_reservation_matches_react_for_every_window_and_drop_registry() {
             assert!(rect.x >= expected.x && rect.x + rect.w <= expected.x + expected.w + 0.001);
         }
         for (anchor, before) in PanelAnchor::ALL.into_iter().zip(anchors_before) {
-            assert_eq!(shell.anchor_rect(anchor, body, &theme), before, "canvas reserve never relocates its panel");
+            assert_eq!(shell.anchor_rect(anchor, body, &theme), before, "an overlay panel stays on the body edge");
         }
         for anchor in PanelAnchor::ALL {
             shell.anchor_state_mut(anchor).visible = false;

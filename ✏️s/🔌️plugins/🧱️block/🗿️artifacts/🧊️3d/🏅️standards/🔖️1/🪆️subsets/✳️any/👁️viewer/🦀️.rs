@@ -65,6 +65,40 @@ impl ArtifactViewer for Block3dViewer {
         Some(crate::standards::v1::subsets::any::schema::retirement::document_store_owners())
     }
 
+    /// 🔐️ The bounded store DISPOSERS this surface's close ladder drives. Owners alone are not enough:
+    /// `drive_artifact_owned_disposer` faults `interactive-job.close-owned-disposer-missing` ("app owner
+    /// did not provide the required bounded disposer for document-store") on the FIRST close turn when a
+    /// lane's disposer is `None`, so a mounted `ViewerApp<Block3dViewer>` still could not close with the
+    /// owners installed. Same catalogue the sibling editor installs, narrowed to this surface's
+    /// `NoConfig`/`NoPresence`/`NoTransient` lanes (the shape `🌊️flow`'s viewer declares).
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<NoConfig, NoConfigMutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<NoConfig, NoConfigMutation>())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(semio_framework_plugin::NoPresenceRetirementFactory))
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(semio_framework_plugin::NoPresenceRetirementFactory))
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(NoPresence::default()), |_| true).expect("NoPresence is statically empty")))
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
     /// 🚀️ Boots on the `hexagonal-cut-concrete-forest-left` fixture rather than the empty document —
     /// a viewer has no `setActiveExample` action at all (its sole command is `Noop`), so an empty boot
     /// document made this surface permanently blank. See `dsl::block3d_boot_snapshot`.

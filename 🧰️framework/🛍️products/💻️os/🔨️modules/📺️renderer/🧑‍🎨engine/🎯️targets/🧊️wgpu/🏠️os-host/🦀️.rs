@@ -693,8 +693,12 @@ impl OsHost {
 
     pub(crate) fn advance_component_surface_close(&mut self) -> bool {
         if self.component_surface_close.is_none() {
-            if self.presenter.has_pending_presentation() || self.frame_build.has_live_session() {
+            if self.presenter.has_pending_presentation() {
                 return false;
+            }
+            if component_surface_close_pending() && self.frame_build.has_live_session() {
+                let _ = self.frame_build.retire_for_component_surface_close_step();
+                return true;
             }
             self.component_surface_close = take_component_surface_close_request().map(ComponentSurfaceCloseOwner::new);
         }

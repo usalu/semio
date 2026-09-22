@@ -1,51 +1,48 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "semio.component-close-frame-turn.v1",
+  "$id": "semio.component-close-frame-turn.v2",
   "type": "object",
   "additionalProperties": false,
   "required": ["$schema", "schema", "closeHost", "liveHost", "maxCloseUnitsPerTurn", "turns", "expected"],
   "properties": {
     "$schema": { "const": "./📐️schema.json" },
-    "schema": { "const": "semio.component-close-frame-turn.v1" },
+    "schema": { "const": "semio.component-close-frame-turn.v2" },
     "closeHost": { "type": "string", "minLength": 1 },
     "liveHost": { "type": "string", "minLength": 1 },
     "maxCloseUnitsPerTurn": { "const": 1 },
     "turns": {
       "type": "array",
-      "minItems": 2,
-      "maxItems": 2,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["closeOutcome", "inputSequence", "snapshotRevision"],
-        "properties": {
-          "closeOutcome": { "const": "externalWait" },
-          "inputSequence": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
-          "snapshotRevision": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
-        }
-      }
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        { "type": "object", "additionalProperties": false, "required": ["closeOutcome", "inputSequence", "snapshotRevision"], "properties": { "closeOutcome": { "const": "frameRetirement" }, "inputSequence": { "const": 41 }, "snapshotRevision": { "type": "null" } } },
+        { "type": "object", "additionalProperties": false, "required": ["closeOutcome", "inputSequence", "snapshotRevision"], "properties": { "closeOutcome": { "const": "externalWait" }, "inputSequence": { "const": 42 }, "snapshotRevision": { "type": "null" } } },
+        { "type": "object", "additionalProperties": false, "required": ["closeOutcome", "inputSequence", "snapshotRevision"], "properties": { "closeOutcome": { "const": "terminal" }, "inputSequence": { "const": 43 }, "snapshotRevision": { "const": 8 } } }
+      ],
+      "items": false
     },
     "expected": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["closeTerminal", "liveInputSequences", "publishedSnapshotRevisions", "closingHostPublications"],
+      "required": ["closeTerminal", "liveInputSequences", "publishedSnapshotRevisions", "closingHostPublications", "sameGenerationReadmitted"],
       "properties": {
-        "closeTerminal": { "const": false },
+        "closeTerminal": { "const": true },
         "liveInputSequences": {
           "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "prefixItems": [{ "const": 41 }, { "const": 42 }],
+          "minItems": 3,
+          "maxItems": 3,
+          "prefixItems": [{ "const": 41 }, { "const": 42 }, { "const": 43 }],
           "items": false
         },
         "publishedSnapshotRevisions": {
           "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
-          "prefixItems": [{ "const": 8 }, { "const": 9 }],
+          "minItems": 1,
+          "maxItems": 1,
+          "prefixItems": [{ "const": 8 }],
           "items": false
         },
-        "closingHostPublications": { "type": "array", "maxItems": 0 }
+        "closingHostPublications": { "type": "array", "maxItems": 0 },
+        "sameGenerationReadmitted": { "const": true }
       }
     }
   }

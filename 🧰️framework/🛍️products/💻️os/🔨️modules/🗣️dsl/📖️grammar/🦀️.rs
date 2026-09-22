@@ -279,6 +279,8 @@ enum GKind {
     RParen,
     LBrace,
     RBrace,
+    LBracket,
+    RBracket,
     Comma,
     Equals,
     Newline,
@@ -298,6 +300,12 @@ struct GToken {
 // 🚫️async: E1 pure — `core_lex`/`core_lex_with` (`🗣️dsl/🔍️lexer/🦀️.rs`) were reverted to
 // sync per R9 (0 await, 0 io, measured directly); this wrapper's only suspension source is gone —
 // see R9.
+fn span_at(text: &str, offset: usize, length: u32) -> TextSpan {
+    let line = text[..offset].matches('\n').count() as u32 + 1;
+    let column = (offset - text[..offset].rfind('\n').map_or(0, |p| p + 1)) as u32 + 1;
+    TextSpan::with_length(line, column, length)
+}
+
 fn lex(text: &str) -> Result<Vec<GToken>, TextError> {
     let bytes = text.as_bytes();
     let mut tokens = Vec::new();
@@ -313,7 +321,16 @@ fn lex(text: &str) -> Result<Vec<GToken>, TextError> {
             return Ok(());
         }
         let segment = &text[seg_start..seg_end];
-        let raw = core_lex(segment, &Limits::default(), false)?;
+        // 🧭 Every segment is lexed on its own, so the core lexer's spans count from the SEGMENT's
+        // first byte. Rebasing them onto the file is what makes a diagnostic past the first
+        // alternation operator point at the offending character instead of at an unrelated line.
+        let origin = span_at(text, seg_start, 0);
+        let rebase = |span: TextSpan| {
+            let line = origin.line + span.line - 1;
+            let column = if span.line == 1 { origin.column + span.column - 1 } else { span.column };
+            TextSpan::with_length(line, column, span.length)
+        };
+        let raw = core_lex(segment, &Limits::default(), false).map_err(|error| TextError { message: error.message, span: rebase(error.span), expected: error.expected })?;
         for token in raw {
             if matches!(token.kind, CoreKind::Whitespace | CoreKind::Comment | CoreKind::Eof) {
                 continue;
@@ -328,12 +345,14 @@ fn lex(text: &str) -> Result<Vec<GToken>, TextError> {
                 CoreKind::RParen => GKind::RParen,
                 CoreKind::LBrace => GKind::LBrace,
                 CoreKind::RBrace => GKind::RBrace,
+                CoreKind::LBracket => GKind::LBracket,
+                CoreKind::RBracket => GKind::RBracket,
                 CoreKind::Comma => GKind::Comma,
                 CoreKind::Equals => GKind::Equals,
                 CoreKind::Newline => GKind::Newline,
-                other => return Err(TextError::new(format!("`.grammar` files cannot contain a {other:?} token here"), token.span)),
+                other => return Err(TextError::new(format!("`.grammar` files cannot contain a {other:?} token here"), rebase(token.span))),
             };
-            tokens.push(GToken { kind, text: token.text.as_str().to_string(), span: token.span });
+            tokens.push(GToken { kind, text: token.text.as_str().to_string(), span: rebase(token.span) });
         }
         Ok(())
     }
@@ -352,10 +371,29 @@ fn lex(text: &str) -> Result<Vec<GToken>, TextError> {
         // every segment boundary from that point on (confirmed root cause of the P2-P1 pilot
         // conformance-test parse failures — every one of them traces back to a comment-embedded `"`,
         // `?`, or `|`, not to any actual defect in the pilots' own grammar syntax).
+        // 🪧 `;` opens a line comment exactly as `#` does. Half the shipped corpus is authored in
+        // the ABNF spelling of this same language, whose comment marker is `;`, and its comment
+        // PROSE carries emoji, backticks, apostrophes, `%`, dots and URLs — every one of which the
+        // core lexer refuses as a bare character, so an unrecognised comment marker made the file's
+        // commentary, not its syntax, the thing that failed to parse.
         if c == b'#' {
             while i < bytes.len() && bytes[i] != b'\n' {
                 i += 1;
             }
+            continue;
+        }
+        // 🪧 `;` opens a line comment exactly as `#` does — the ABNF spelling of the same marker,
+        // used by half the shipped corpus. The core lexer only knows `#`, so the comment is cut out
+        // of the segment here instead of merely skipped: its PROSE routinely carries emoji,
+        // backticks, apostrophes, `%`, dots and URLs, every one of which the core lexer refuses as
+        // a bare character, so an unrecognised marker made a file's commentary, not its syntax, the
+        // thing that failed to parse. The newline itself is left in place to keep its token.
+        if c == b';' {
+            push_segment(text, seg_start, i, &mut tokens)?;
+            while i < bytes.len() && bytes[i] != b'\n' {
+                i += 1;
+            }
+            seg_start = i;
             continue;
         }
         // A quoted `TEXT` literal is skipped whole here (matching dsl_core's own `"..."` escape
@@ -377,15 +415,32 @@ fn lex(text: &str) -> Result<Vec<GToken>, TextError> {
             }
             continue;
         }
-        if c == b'?' || c == b'|' {
+        // 🔀 `/` separates alternatives exactly as `|` does — the ABNF spelling of the same
+        // operator. It can only reach here outside a quoted literal and outside a comment, both of
+        // which are skipped whole above, so there is no spelling of a literal slash it can steal.
+        if c == b'?' || c == b'|' || c == b'/' {
             push_segment(text, seg_start, i, &mut tokens)?;
-            let line = text[..i].matches('\n').count() as u32 + 1;
-            let col = (i - text[..i].rfind('\n').map_or(0, |p| p + 1)) as u32 + 1;
-            let span = TextSpan::with_length(line, col, 1);
+            let span = span_at(text, i, 1);
             tokens.push(GToken { kind: if c == b'?' { GKind::Question } else { GKind::Pipe }, text: (c as char).to_string(), span });
             i += 1;
             seg_start = i;
             continue;
+        }
+        // 🔢 `%x20-21`, `%d65` and `%b1010` name a terminal by code point. The core lexer has no
+        // `%`, so the whole run is lifted out here as one terminal name.
+        if c == b'%' {
+            let mut end = i + 1;
+            while end < bytes.len() && (bytes[end].is_ascii_alphanumeric() || bytes[end] == b'-' || bytes[end] == b'.') {
+                end += 1;
+            }
+            if end > i + 1 {
+                push_segment(text, seg_start, i, &mut tokens)?;
+                let span = span_at(text, i, (end - i) as u32);
+                tokens.push(GToken { kind: GKind::Ident, text: text[i..end].to_string(), span });
+                i = end;
+                seg_start = i;
+                continue;
+            }
         }
         i += 1;
     }
@@ -450,6 +505,10 @@ impl Cursor {
     }
 }
 
+/// @emoji 🔢 The largest exact repetition `n(…)` a grammar may state. Exact repetition expands to
+/// the copies it names, so the bound is what keeps a typo from building an enormous production.
+const EXACT_REPETITION_MAXIMUM: usize = 1_024;
+
 fn is_all_upper(text: &str) -> bool {
     text.chars().any(|c| c.is_alphabetic()) && text.chars().all(|c| c.is_uppercase() || c == '_' || c == '-' || c.is_ascii_digit())
 }
@@ -479,11 +538,10 @@ fn parse_macro_args(cursor: &mut Cursor) -> Result<Vec<MacroArg>, TextError> {
 fn parse_atom(cursor: &mut Cursor) -> Result<Symbol, TextError> {
     let base = match cursor.peek().kind {
         GKind::Text => Symbol::Literal(cursor.advance().text),
-        // Grouping uses `{ }`, never `( )`: whitespace is discarded before parsing (trivia is
-        // dropped at lex time), so a token stream alone can't distinguish `name (group)` — a
-        // bareword reference followed by a separate grouped alternative — from `name(args)`, a
-        // macro call. Reserving `( )` exclusively for macro-call argument lists keeps that
-        // distinction unambiguous without needing whitespace-sensitive parsing.
+        // 🧺 `name (group)` and `name(args)` are told apart by ADJACENCY: a macro call's `(`
+        // touches its name, a grouped alternative's does not. Spans carry each token's line,
+        // column and length, so the distinction survives trivia being dropped at lex time — which
+        // is what lets `( )` mean a group everywhere else without stealing the macro-call form.
         GKind::LBrace => {
             cursor.advance();
             // 🔁 `parse_atom` -> `parse_alternatives` -> `parse_sequence` -> `parse_atom` is a
@@ -493,9 +551,56 @@ fn parse_atom(cursor: &mut Cursor) -> Result<Symbol, TextError> {
             cursor.expect(GKind::RBrace)?;
             Symbol::Group(alts)
         }
+        // 🧺 `( … )` is a grouped alternation, the ABNF spelling of `{ … }`. It is unambiguous
+        // against a macro-call argument list because a macro call is only ever read when the
+        // `(` FOLLOWS an ident in the same atom, which the `GKind::Ident` arm below handles.
+        GKind::LParen => {
+            cursor.advance();
+            let alts = parse_alternatives(cursor)?;
+            cursor.expect(GKind::RParen)?;
+            Symbol::Group(alts)
+        }
+        // 🧺 `[ … ]` is an optional group — `{ … }?` in this language's own spelling.
+        GKind::LBracket => {
+            cursor.advance();
+            let alts = parse_alternatives(cursor)?;
+            cursor.expect(GKind::RBracket)?;
+            Symbol::Optional(Box::new(Symbol::Group(alts)))
+        }
+        // 🔁 `*x`, `1*x` and `0*x` are PREFIX repetition — the ABNF spelling of this language's
+        // own postfix `x*` and `x+`. A valid postfix quantifier is consumed by the quantifier
+        // match below, so a repetition operator can only reach an atom's head as a prefix one.
+        GKind::Star => {
+            cursor.advance();
+            Symbol::Star(Box::new(parse_atom(cursor)?))
+        }
+        GKind::Int if cursor.tokens.get(cursor.pos + 1).is_some_and(|token| token.kind == GKind::Star) => {
+            let count = cursor.advance();
+            cursor.advance();
+            let inner = Box::new(parse_atom(cursor)?);
+            match count.text.as_str() {
+                "0" => Symbol::Star(inner),
+                "1" => Symbol::Plus(inner),
+                other => return Err(TextError::new(format!("a repetition count of `{other}` has no symbol in this grammar dialect; write the repeated symbol out"), count.span)),
+            }
+        }
+        // 🔢 `n(…)` is EXACT repetition — `9(COMMA field)` is nine of that group, the shape a
+        // fixed-column record format states directly. It expands to the n copies it means, so the
+        // recogniser needs no counted-repetition node of its own.
+        GKind::Int => {
+            let count = cursor.advance();
+            let times = count.text.parse::<usize>().ok().filter(|times| (1..=EXACT_REPETITION_MAXIMUM).contains(times));
+            let Some(times) = times else {
+                return Err(TextError::new(format!("a repetition count of `{}` is not between 1 and {EXACT_REPETITION_MAXIMUM}", count.text), count.span));
+            };
+            let inner = parse_atom(cursor)?;
+            Symbol::Group(vec![Alternative { symbols: std::iter::repeat_n(inner, times).collect() }])
+        }
         GKind::Ident => {
-            let name = cursor.advance().text;
-            if cursor.peek().kind == GKind::LParen {
+            let token = cursor.advance();
+            let adjacent = cursor.peek().kind == GKind::LParen && cursor.peek().span.line == token.span.line && cursor.peek().span.column == token.span.column.saturating_add(token.span.length);
+            let name = token.text;
+            if adjacent {
                 Symbol::Macro(name, parse_macro_args(cursor)?)
             } else if is_all_upper(&name) {
                 Symbol::Terminal(name)
@@ -527,7 +632,22 @@ fn parse_sequence(cursor: &mut Cursor) -> Result<Alternative, TextError> {
     let mut symbols = Vec::new();
     loop {
         match cursor.peek().kind {
-            GKind::Pipe | GKind::Newline | GKind::Eof | GKind::RBrace => break,
+            // ↩️ An INDENTED line continues the sequence above it: a long rule is routinely wrapped
+            // that way. The run of newlines is only consumed when what follows is indented AND is
+            // not a production head (`IDENT "="`), so a rule that simply ended still ends here.
+            GKind::Newline => {
+                let mut lookahead = cursor.pos;
+                while cursor.tokens[lookahead].kind == GKind::Newline {
+                    lookahead += 1;
+                }
+                let next = &cursor.tokens[lookahead];
+                let heads_production = next.kind == GKind::Ident && cursor.tokens.get(lookahead + 1).is_some_and(|token| token.kind == GKind::Equals);
+                if next.kind == GKind::Eof || next.span.column <= 1 || heads_production || symbols.is_empty() {
+                    break;
+                }
+                cursor.pos = lookahead;
+            }
+            GKind::Pipe | GKind::Eof | GKind::RBrace | GKind::RParen | GKind::RBracket => break,
             _ => symbols.push(parse_atom(cursor)?),
         }
     }
@@ -539,7 +659,23 @@ fn parse_sequence(cursor: &mut Cursor) -> Result<Alternative, TextError> {
 
 fn parse_alternatives(cursor: &mut Cursor) -> Result<Vec<Alternative>, TextError> {
     let mut alts = vec![parse_sequence(cursor)?];
-    while cursor.peek().kind == GKind::Pipe {
+    loop {
+        // ↩️ A long alternation is routinely wrapped across lines with the operator leading the
+        // continuation line. A newline run is only consumed when an alternation operator is what
+        // follows it, so a production that simply ended still ends at its own newline.
+        if cursor.peek().kind == GKind::Newline {
+            let mut lookahead = cursor.pos;
+            while cursor.tokens[lookahead].kind == GKind::Newline {
+                lookahead += 1;
+            }
+            if cursor.tokens[lookahead].kind != GKind::Pipe {
+                break;
+            }
+            cursor.pos = lookahead;
+        }
+        if cursor.peek().kind != GKind::Pipe {
+            break;
+        }
         cursor.advance();
         alts.push(parse_sequence(cursor)?);
     }
@@ -573,22 +709,35 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
     let mut cursor = Cursor { tokens, pos: 0 };
     cursor.skip_newlines();
 
+    // 🪪 `dialect grammar <id>` names the dialect and the grammar on ONE line — the compact
+    // spelling the whole stdio family uses. A third ident on the dialect line IS the grammar id,
+    // and no separate `grammar` line follows it.
+    let mut inline_id = None;
     let dialect = if cursor.peek_ident("dialect") {
-        cursor.expect_ident("dialect")?;
-        let name = cursor.expect(GKind::Ident)?.text;
+        let keyword = cursor.expect(GKind::Ident)?;
+        let name = cursor.expect(GKind::Ident)?;
+        if cursor.peek().kind == GKind::Ident && cursor.peek().span.line == keyword.span.line {
+            inline_id = Some(cursor.advance().text);
+        }
         cursor.skip_newlines();
-        match name.as_str() {
+        match name.text.as_str() {
             "grammar" => SemioDialect::Grammar,
             "protocol" => return Ok(project_protocol(parse_protocol(text)?)),
-            other => return Err(TextError::new(format!("unknown semio dialect `{other}`"), cursor.peek().span)),
+            other => return Err(TextError::new(format!("unknown semio dialect `{other}`"), name.span)),
         }
     } else {
         SemioDialect::Grammar
     };
 
-    cursor.expect_ident("grammar")?;
-    let id = parse_grammar_id(&mut cursor)?;
-    cursor.skip_newlines();
+    let id = match inline_id {
+        Some(id) => id,
+        None => {
+            cursor.expect_ident("grammar")?;
+            let id = parse_grammar_id(&mut cursor)?;
+            cursor.skip_newlines();
+            id
+        }
+    };
 
     let mut extension = None;
     let mut uses = Vec::new();
@@ -607,7 +756,12 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
             break;
         }
         let head = cursor.expect(GKind::Ident)?;
-        match head.text.as_str() {
+        // 🏷️ A header keyword immediately followed by `=` is a PRODUCTION NAME. `comment`, `start`
+        // and `string` are ordinary words a grammar is entitled to define a rule for — the html
+        // source defines `comment` for HTML's own `<!-- -->` — and a directive never carries an
+        // `=`, so the two can never be confused.
+        let directive = if cursor.peek().kind == GKind::Equals { "" } else { head.text.as_str() };
+        match directive {
             "extension" => {
                 extension = Some(parse_grammar_id(&mut cursor)?);
                 cursor.skip_newlines();
@@ -674,9 +828,11 @@ pub fn parse_grammar(text: &str) -> Result<GrammarFile, TextError> {
     }
 
     let _ = dialect;
-    let start = match start {
+    // 🎬 A file with no `start` directive starts at the production named `root` — the spelling the
+    // whole stdio family uses. Nothing else is inferred: a file with neither is still refused.
+    let start = match start.or_else(|| productions.iter().any(|production| production.name == "root").then(|| "root".to_string())) {
         Some(s) => s,
-        None => return Err(TextError::new("`.grammar` file is missing a `start` directive", cursor.peek().span)),
+        None => return Err(TextError::new("`.grammar` file is missing a `start` directive and defines no `root` production", cursor.peek().span)),
     };
     let lex = LexOptions { strings, comment: CommentDialect { line: comment_line, block: comment_block } };
     Ok(GrammarFile { dialect: SemioDialect::Grammar, id, extension, uses, start, productions, lex })

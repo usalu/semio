@@ -17,109 +17,136 @@
   "routes": [
     {
       "id": "seedGrid",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "Grid dimensions drive whole tile-vector generation and artifact inverse/root preparation without a checkpointed tile cursor."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "addTile",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "Working-scene extraction and artifact inverse/root preparation clone tile content without a retained cursor."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "deleteTile",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "Tile lookup and artifact inverse/root preparation scan or clone whole tile vectors."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "deleteSelection",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "Selection validation and per-tile deletion scan the whole scene and assemble an unbounded mutation batch."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "renameTiles",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "Selection validation and rename output scan tile vectors and assemble an unbounded mutation batch."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "patchTileCrops",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "Patch parsing, tile validation, and batch construction lack per-tile retained cursors."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "setSource",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "The route may generate a replacement tile grid and requires unbounded artifact inverse/root preparation."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "setFrame",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "The reducer is scalar but artifact publication clones the complete presentation root; no bounded root-scalar preparation exists."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "setActiveExample",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ],
       "blocker": ""
     },
     {
       "id": "clearTiles",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "Replacing the tile list requires a whole-list inverse and root clone without a retained preparation cursor."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "engagementSubmit",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "Mixed keyword branches scan, generate, rename, delete, or serialize the complete tile scene in one dispatch."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact",
+        "Config"
+      ],
+      "blocker": ""
     },
     {
       "id": "resetGrid",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "Builds a complete default tile grid and requires whole-list inverse/root preparation."
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "engagementInput",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "config"
+        "Config"
       ],
       "blocker": ""
     },
     {
       "id": "canvasPointerDown",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "Hit testing extracts and scans the whole tile scene before publishing selection effects."
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
     },
     {
       "id": "noMutation",
-      "disposition": "migrated",
+      "disposition": "Migrated",
       "lanes": [
-        "host-only"
+        "HostOnly"
       ],
       "blocker": ""
     },
     {
       "id": "copyPrompt",
-      "disposition": "batch-only-pending-rewrite",
-      "lanes": [],
-      "blocker": "Builds a complete tile-morph prompt by extracting and serializing all tile content in one dispatch."
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "blocker": ""
     },
     {
       "id": "exportVideoFromDeck",
-      "disposition": "batch-only-pending-rewrite",
+      "disposition": "BatchOnlyPendingRewrite",
       "lanes": [],
       "blocker": "Headless video rendering and whole-output export do not expose a resumable frame/encoder owner to the command job."
     }

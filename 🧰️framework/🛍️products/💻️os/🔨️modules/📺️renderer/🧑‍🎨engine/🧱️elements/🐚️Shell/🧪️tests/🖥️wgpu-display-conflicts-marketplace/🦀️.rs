@@ -290,3 +290,33 @@ fn the_marketplace_leaf_offers_reacts_install_reload_and_uninstall_verbs() {
     assert!(!shell.uninstall_plugin("space"), "🛍️ uninstalling the running program is refused");
     assert_eq!(shell.plugins.len(), 1, "🛍️ and the roster is untouched");
 }
+
+#[test]
+fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
+    let mut shell = display_shell();
+    shell.locale_id = "en".into();
+    let source = &fixture["conflict"];
+    shell.open_conflicts = vec![ShellConflictRow {
+        id: source["id"].as_str().unwrap().into(),
+        quarantined: source["quarantined"].as_bool().unwrap(),
+        code: source["code"].as_str().unwrap().into(),
+        message: source["message"].as_str().unwrap().into(),
+    }];
+    shell.selected_conflict_id = None;
+    let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.build_settings_conflicts_ui()).unwrap();
+    let row_id = fixture["rowId"].as_str().unwrap();
+    assert_eq!(records.iter().filter(|record| matches!(record.component, ui_contract::Component::TreeItem(_))).count(), fixture["expected"]["rowCount"].as_u64().unwrap() as usize);
+    let row = records.iter().find(|record| record.key.as_str().ends_with(row_id)).unwrap();
+    let toolbar = row.children.iter().filter_map(|id| records.iter().find(|record| record.id == *id)).find(|record| matches!(&record.component, ui_contract::Component::Container(props) if props.role == ui_contract::ContainerRole::Toolbar)).expect("the conflict row owns its inline toolbar before selection");
+    assert!(matches!(&toolbar.layout, ui_contract::LayoutSpec::Stack(layout) if layout.axis == ui_contract::Axis::Horizontal));
+    for expected in fixture["controls"].as_array().unwrap() {
+        let key = format!("{row_id}.{}", expected["suffix"].as_str().unwrap());
+        let button = records.iter().find(|record| record.key.as_str().ends_with(&key)).unwrap();
+        let ui_contract::Component::Button(props) = &button.component else { panic!("the resolution affordance is an actual Button") };
+        assert_eq!(props.label.0.as_str(), expected["label"].as_str().unwrap());
+        assert!(!button.disabled);
+        assert!(toolbar.children.iter().any(|id| *id == button.id));
+        assert!(button.bindings.iter().any(|binding| binding.trigger == ui_contract::Trigger::Activate && binding.action.name.as_str() == "resolveConflict"));
+    }
+}

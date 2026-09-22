@@ -68,8 +68,8 @@ pub(crate) mod context {
     /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does, draining
     /// EVERY result page — on a mounted app `dispatch_typed` only QUEUES the operation, so a test
     /// reading `app.snapshot()` straight afterwards observes the pre-dispatch document.
-    pub async fn settle(app: &mut FormsApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation");
+    pub async fn settle(app: &mut FormsApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation")
     }
 
     /// 🧹️ Closes every store the wrapper opened. A live `ArtifactStore` asserts in `Drop` unless it
@@ -136,9 +136,8 @@ pub(crate) mod context {
 }
 
 use super::*;
-use crate::editor::forms::unit_tests::context::{building_component_contributions, building_component_question, forms_app, forms_app_with_registry};
+use crate::editor::forms::unit_tests::context::{building_component_contributions, building_component_question, dispatch, forms_app, forms_app_with_registry};
 use crate::forms_steps;
-use semio_framework_plugin::artifact_app_laws::meta;
 
 //#region 🔖️ActionBridge
 /// 🌉️ Every command row the shells reach by action id must decode through `command_from_action`
@@ -226,7 +225,7 @@ async fn command_ids_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 28, "every FormsCommand row must be covered by every_command()");
+    assert_eq!(ids, FORMS_RETAINED_TOOL_IDS, "every FormsCommand row must be covered by every_command(), in declaration order");
 }
 
 /// ⚖️ Every generated Forms command has one concrete retained-factory key, proof row, and exact
@@ -275,6 +274,10 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
             "setTryValues" => "try-values".to_string(),
             "setSpecJson" => "spec-json".to_string(),
             "setActiveExample" => "active-example".to_string(),
+            // 📍️ Post-migration row (`📍️set-try-value-step`), keyed into the same `try-value`
+            // family as its `setTryValue`/`setTryValues` siblings rather than the default
+            // `set-`-prefixed kebab — the key the `app_commands!` declaration carries.
+            "setTryValueStep" => "try-value-step".to_string(),
             _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
         };
         let printed = protocol::OpText::print_op(&command);
@@ -393,7 +396,7 @@ async fn add_question_materializes_kind_default() {
     let mut app = forms_app_with_registry().await;
     let steps_before = forms_steps(&app.snapshot().expect("projection")).len();
     assert!(steps_before > 0, "seeded fixture has at least one step to receive the question");
-    app.dispatch_typed(FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }), &meta("local")).await.expect("add question");
+    dispatch(&mut app, FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None })).await;
     let spec = app.snapshot().expect("projection");
     assert!(crate::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "text"), "kind default materialized from the registry");
 }

@@ -1,4 +1,4 @@
-/** 🌐️ Neutral cursor and mounted React oracle for locale-owned shell panel refresh. */
+/** 🌐️ Neutral full-refresh and mounted React oracle for locale-bearing view-model axes. */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,10 +12,6 @@ import { shellLabel } from "../../🧱️elements/🛠️ShellHelpers/🟦️.ts
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️fixtures", "🌐️settings-locale-panel-refresh", "🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🌐️settings-locale-panel-refresh", "🔣️.json"), "utf8"));
-
-type RefreshCursor = Readonly<{ generation: number; locale: string; pending: readonly string[] }>;
-
-const advance = (cursor: RefreshCursor): RefreshCursor => ({ ...cursor, pending: cursor.pending.slice(fixture.maxPanelsPerStep) });
 
 function LocalizedPanels() {
   return h(
@@ -36,18 +32,11 @@ afterEach(async () => {
 });
 
 describe("mounted shell locale refresh", () => {
-  it("validates the shared schema and advances one exact mounted owner per step", () => {
+  it("validates one settled full guest refresh for every locale-bearing mutation", () => {
     expect(new Ajv({ allErrors: true, strict: false }).validate(schema, fixture)).toBe(true);
     expect(fixture.requiresGuestRefresh).toBe(true);
-    let cursor: RefreshCursor = { generation: 1, locale: fixture.nextLocale, pending: fixture.mountedSurfaceIds };
-    for (let index = 0; index < fixture.mountedSurfaceIds.length; index += 1) {
-      const before = cursor.pending;
-      cursor = advance(cursor);
-      expect(before.length - cursor.pending.length).toBe(1);
-      expect(cursor.pending).toEqual(fixture.mountedSurfaceIds.slice(index + 1));
-    }
-    expect(cursor.pending).toEqual([]);
-    expect(fixture.unmountedSurfaceIds.some((id: string) => fixture.mountedSurfaceIds.includes(id))).toBe(false);
+    expect(fixture.refreshScope).toBe("full");
+    expect(fixture.settleRequired).toBe(true);
   });
 
   it("re-renders the mounted shared Tree labels from the real React i18n authority", async () => {

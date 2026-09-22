@@ -15,7 +15,7 @@ fn window_identity_is_the_declared_preview() {
 #[test]
 fn every_slot_paints_even_unsolved() {
     let document = crate::examples::hex_ring::document();
-    let layers = preview_layers_json(&document, &Wfc2dTransient::default());
+    let layers = preview_layers_json(&document, &Wfc2dTransient::default(), None);
     for slot in &document.slots {
         assert!(layers.contains(&format!("\"slot-{}\"", slot.id)), "slot {} is missing from the preview", slot.id);
     }
@@ -27,7 +27,7 @@ fn every_slot_paints_even_unsolved() {
 fn a_solved_slot_paints_its_tile_media() {
     let document = crate::examples::two_room_corridor::document();
     let transient = Wfc2dTransient { assignments: vec![Wfc2dAssignment { slot_id: "room-a".into(), tile_id: "room".into() }], contradiction: false };
-    let layers = preview_layers_json(&document, &transient);
+    let layers = preview_layers_json(&document, &transient, None);
     assert!(layers.contains("tile-room-a-room-0"), "the solved tile's path layer is missing");
     let fit = preview_fit(&document);
     let slot = document.slots.iter().find(|slot| slot.id == "room-a").expect("the boot example declares room-a");
@@ -53,13 +53,42 @@ fn the_fit_centres_every_example_on_the_origin() {
 /// 📌️ A pinned slot paints even before a solve — the pin is authored, not inferred.
 #[test]
 fn a_pinned_slot_paints_without_a_solve() {
-    let layers = preview_layers_json(&crate::examples::wall_roof_facade_strip::document(), &Wfc2dTransient::default());
+    let layers = preview_layers_json(&crate::examples::wall_roof_facade_strip::document(), &Wfc2dTransient::default(), None);
     assert!(layers.contains("tile-bay-1-top-roof-0"));
 }
 
 #[test]
 fn render_produces_a_surface_for_every_example() {
     for document in crate::examples::documents() {
-        render(&document, &Wfc2dTransient::default(), 0.0, 0.0, 1.0).expect("the preview window renders");
+        render(&document, &Wfc2dTransient::default(), None, 0.0, 0.0, 1.0).expect("the preview window renders");
     }
+}
+
+#[test]
+fn a_partial_fill_preview_differs_from_empty_and_finished() {
+    use crate::editor::wfc2d::modes::edit::tools::fill::Wfc2dFillTickPayload;
+    use crate::inferences::solve_with_job;
+    use std::collections::BTreeMap;
+
+    let document = crate::examples::hex_ring::document();
+    let oracle = solve_with_job(&document).expect("hex-ring solves");
+    let empty = preview_layers_json(&document, &Wfc2dTransient::default(), None);
+    let finished_transient = Wfc2dTransient {
+        assignments: oracle.assignments.iter().map(|(slot_id, tile_id)| Wfc2dAssignment { slot_id: slot_id.clone(), tile_id: tile_id.clone() }).collect(),
+        contradiction: oracle.contradiction,
+    };
+    let finished = preview_layers_json(&document, &finished_transient, None);
+    let mut assignments: BTreeMap<String, Option<String>> = document.slots.iter().map(|slot| (slot.id.clone(), None)).collect();
+    let half = (oracle.assignments.len() / 2).max(1);
+    for (index, (slot_id, tile_id)) in oracle.assignments.iter().enumerate() {
+        if index >= half {
+            break;
+        }
+        assignments.insert(slot_id.clone(), Some(tile_id.clone()));
+    }
+    let partial = Wfc2dFillTickPayload { assignments, contradiction: false, done: false };
+    assert!(partial.decided_count() > 0 && partial.decided_count() < oracle.assignments.len());
+    let mid = preview_layers_json(&document, &Wfc2dTransient::default(), Some(&partial));
+    assert_ne!(mid, empty, "a partial board must not look empty");
+    assert_ne!(mid, finished, "a partial board must not look finished");
 }

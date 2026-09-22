@@ -33,6 +33,10 @@ Resume a cut worker with `SendMessage` to its id from THIS session (ids do not r
 | KN1 | opus | a3b961a69c6588545 | 📓️kn1-kernel-lib-gate.md |
 | FP9 | opus | ae9b7df07959ba13c | 📓️fp9-plugin-lib-zero-red.md |
 | KN2 | opus | a3c7eb02ceb56d115 | 📓️kn2-kernel-lib-zero-red.md |
+| HT15 | opus | a92b916a5cea75c6a | 📓️ht15-hub-inference-four-reds.md |
+| CE2 | opus | a831c8feac2902584 | 📓️ce2-mcp-gates-green.md |
+| FP10 | opus | a11570bfca21d9280 | 📓️fp10-plugin-lib-and-lanes.md |
+| KN3 | opus | a975664b05d2641a7 | 📓️kn3-kernel-lib-last-two.md |
 | G14 | sonnet | aecbba2d7d4a548d8 | 📋️g14-acceptance-ledger.md |
 | G15 | sonnet | a449aa9e65495824d | 📓️g15-production-readiness-reaudit.md |
 | G16 | sonnet | aed4d623e8b6b9f7f | 📓️g16-hub-backend-reaudit.md |

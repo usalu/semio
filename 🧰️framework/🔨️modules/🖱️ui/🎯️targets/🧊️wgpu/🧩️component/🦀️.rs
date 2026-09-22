@@ -2017,6 +2017,9 @@ pub mod ui {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         pub placeholder: Option<Label>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub accessibility_label: Option<Label>,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         pub commit: Option<String>,
@@ -2387,9 +2390,21 @@ pub mod ui {
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
+    pub enum UiTreeWindowRowExtent {
+        #[default]
+        Standard,
+        CompactText,
+        CompactSmallControl,
+        CompactControl,
+    }
+
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct UiTreeWindow {
         pub total: u32,
         pub offset: u32,
+        pub row_extent: UiTreeWindowRowExtent,
     }
 
     impl UiTreeWindow {
@@ -2639,6 +2654,7 @@ pub mod ui {
                 input_kind: "text".into(),
                 value: value.into(),
                 placeholder: None,
+                accessibility_label: None,
                 commit: None,
                 on_change: ActionDescriptor { controller_id: String::new(), action: String::new(), args: None },
                 min: None,

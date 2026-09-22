@@ -74,3 +74,22 @@ The bounded state key is `(anchor, active_branch_path, row_index)`. The offset i
 3. Register the six-tab constrained-row laws; capture the missing-tail RED; implement semantic catalog plus bounded scroll/reveal.
 4. Run the focused UI/React Nx gates, the UI engine gate, the renderer native filters through the root-owned lane, then a fresh paired browser Settings/Chat receipt.
 
+## Test-first implementation status — 2026-09-21
+
+The language-neutral Chat fixture and schema now cover the closed `en/de × open/closed` product matrix. The mounted production `AgentChatPanel` law resolves the textarea by its localized accessible name, proves the placeholder is distinct, proves closed bridge disablement, and submits one trimmed bare-Enter turn only for an open bridge. The scoped React target is green: 7/7 tests in `🗑️generated/astra-runtime/chat-driver-locale/react-chat.log`.
+
+The driver fixture now owns three display-label rows: the `default` and `compact` IDs are localized built-ins, while `custom.focus-flow` is authored data. An actual React resolver oracle changes `uiI18n` through English and German and is green with the rest of the driver contract: 4/4 tests in `🗑️generated/astra-runtime/chat-driver-locale/driver-ts.log`. The native law `driver_rows_localize_only_closed_builtins_and_preserve_authored_custom_labels` is registered for the root-owned Cargo lane.
+
+The native Chat law `the_chat_composer_projects_its_explicit_localized_accessible_name_without_using_the_placeholder` projects the real shell-authored Chat body to retained records and requires an explicit label independent of placeholder and bridge state. It is registered fail-first; production still has no typed input label field at this checkpoint.
+
+The corrected locale fixture now says a locale mutation requires guest refresh. The scoped mounted React test is green 2/2 in `🗑️generated/astra-runtime/chat-driver-locale/react-locale.log`. Native law `locale_and_terminology_changes_require_one_full_guest_refresh_and_settle` requires the existing `UiDirtyScope::Full` plus settle lane for both axes and refuses the duplicate shell-only cursor. Production is held pending its actual native RED.
+
+The shared semantic UI additions have an independent strict JSON boundary and generated-TypeScript consumer law at `🧪️tests/🌳️ui-contract-presentation/🟦️.ts`: omitted fields resolve to `standard`/`button`, explicit values remain `compact`/`checkbox`, and unknown or non-closed values are refused. The scoped Bun/Nx receipt is green 2/2 in `🗑️generated/astra-runtime/chat-driver-locale/ui-contract-presentation.log`.
+
+## Native144 RED and production repair — 2026-09-21
+
+Native144 executed the five new laws against production and recorded the intended causes: the retained Chat Input projected no semantic label, German driver rows still showed the English closed builtin label, and locale/terminology mutations did not owe a settled Full guest refresh. The exact root-owned receipt is `🗑️generated/astra-runtime/renderer-native144-compact-ax-locale-red/run.log`.
+
+Production now carries an optional typed `UiInputNode.accessibilityLabel`, projects only that explicit label into `PanelRecord`, and gives the Chat draft locale-owned names independent of its placeholder. The UI wire golden explicitly serializes `accessibilityLabel: "Message"`; every Rust initializer declares the optional field. Driver display resolution localizes only the closed `default` and `compact` IDs, preserving authored custom labels. `setLocale` and `setTerminology` now both sync dock labels, owe `UiDirtyScope::Full`, and owe settle; the obsolete shell-only localized-panel cursor and its duplicate publication lane were removed.
+
+The corrected language-neutral locale fixtures now describe `refreshScope=full` and `settleRequired=true`. A scoped React run recorded both mounted locale laws green (2/2) and the General publication-lane law green. The combined log is `🗑️generated/astra-runtime/chat-driver-locale/locale-final.log`; its sole unrelated failure is the concurrently changed Compact Tree grid-template assertion, whose old expanded fallback no longer matches the new scoped CSS variable.

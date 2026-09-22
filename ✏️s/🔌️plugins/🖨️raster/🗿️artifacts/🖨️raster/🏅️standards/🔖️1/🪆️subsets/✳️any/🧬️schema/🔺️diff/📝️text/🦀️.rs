@@ -212,9 +212,6 @@ pub fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str, patc
 impl RasterDiff {
     /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &RasterArtifact) -> protocol::MutationApplyResult<RasterArtifact> {
-        if self.assets.as_ref().is_some_and(|assets| assets.entries.values().any(Option::is_none)) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "asset removal requires the retained Raster initialization authority"));
-        }
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -250,8 +247,23 @@ impl RasterDiff {
                         Some(asset) => {
                             next.assets.insert(key.clone(), crate::mint_raster_asset_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
                         }
-                        None => unreachable!("Raster asset removal was rejected before snapshot ownership was cloned"),
+                        // 🗑️ A removal used to be refused outright ("asset removal requires the retained
+                        // Raster initialization authority"), which made `remove-layer-asset` unusable on
+                        // every route the framework's own history arithmetic takes — undo, redo, a fold to
+                        // base, a `.spr` reload, a remote ingest. It needs no retained authority: the map
+                        // hands back the exact `(key, child)` pair, neither of which carries a drop guard,
+                        // and the page backing the removal empties is released explicitly, the same
+                        // `take_empty_page_backing` loop every drain in this artifact runs.
+                        None => {
+                            let mut removed = next.assets.remove_entry(key).expect("asset removal was validated against this projection before ownership was cloned");
+                            let (removed_key, removed_child) = removed.take();
+                            drop(removed_key);
+                            drop(removed_child);
+                        }
                     }
+                }
+                while let Some(page) = next.assets.take_empty_page_backing() {
+                    page.release();
                 }
             }
             next
@@ -350,12 +362,10 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
     /// authority" refusal that used to head this function only ever stopped the framework's own
     /// history folds: `redo` re-applies the reinstated edit's forwards through here, and so do a fold
     /// to base, a `.spr` reload and a remote ingest — every one of them was refused on a demo-shaped
-    /// document (🖨️raster's redo clause, measured 2026-09-20). Asset REMOVAL is a genuinely retained
-    /// operation and is still rejected below, before any ownership is cloned.
+    /// document (🖨️raster's redo clause, measured 2026-09-20). Asset REMOVAL is not retained either:
+    /// the map hands back its exact `(key, child)` pair and the emptied page backing is released
+    /// explicitly, so the history arithmetic can undo and redo `remove-layer-asset` like any verb.
     fn apply(&self, snapshot: &RasterSnapshot) -> protocol::MutationApplyResult<RasterSnapshot> {
-        if self.assets.as_ref().is_some_and(|assets| assets.entries.values().any(Option::is_none)) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "asset removal requires the retained Raster initialization authority"));
-        }
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -391,8 +401,23 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
                         Some(asset) => {
                             next.assets.insert(key.clone(), crate::mint_raster_asset_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
                         }
-                        None => unreachable!("Raster asset removal was rejected before snapshot ownership was cloned"),
+                        // 🗑️ A removal used to be refused outright ("asset removal requires the retained
+                        // Raster initialization authority"), which made `remove-layer-asset` unusable on
+                        // every route the framework's own history arithmetic takes — undo, redo, a fold to
+                        // base, a `.spr` reload, a remote ingest. It needs no retained authority: the map
+                        // hands back the exact `(key, child)` pair, neither of which carries a drop guard,
+                        // and the page backing the removal empties is released explicitly, the same
+                        // `take_empty_page_backing` loop every drain in this artifact runs.
+                        None => {
+                            let mut removed = next.assets.remove_entry(key).expect("asset removal was validated against this projection before ownership was cloned");
+                            let (removed_key, removed_child) = removed.take();
+                            drop(removed_key);
+                            drop(removed_child);
+                        }
                     }
+                }
+                while let Some(page) = next.assets.take_empty_page_backing() {
+                    page.release();
                 }
             }
             next

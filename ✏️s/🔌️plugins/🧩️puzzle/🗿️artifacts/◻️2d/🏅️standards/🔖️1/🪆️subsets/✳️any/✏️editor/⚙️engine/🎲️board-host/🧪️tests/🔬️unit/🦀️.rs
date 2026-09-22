@@ -14,6 +14,39 @@ pub(crate) mod context {
         }
     }
     
+    /// ♻️ Closes a board host through its own retirement ladder before release, exactly as the
+    /// production owner does (`EngineCanvas`'s wgpu target wraps the host in `BoardHostRetirement`
+    /// and pumps `close_step` until it reports terminal-empty). A host that ADMITTED resources — an
+    /// icon paint, a world scene, a preview — must reach terminal-empty through `close_step`, and
+    /// releasing one raw trips the framework's own witness ("IconPaintCache with admitted resources
+    /// must reach terminal-empty through close_step before release"). A host that never admitted
+    /// anything is allowed to be dropped, which is why only the laws that paint really need this.
+    pub fn close_board_host(host: BoardHost) {
+        let mut retirement = crate::editor::puzzle2d::engine::BoardHostRetirement::new(host);
+        let mut sequence = 0_u64;
+        for turn in 0..1_u32 << 20 {
+            // 🕒️ `default_now_us`, never a clock that answers `None`: `StepContext::deadline_exceeded`
+            // is `now_us().is_none_or(|now| now >= deadline)`, so a `None`-returning clock makes
+            // `should_yield()` permanently TRUE — and `close_nonopaque_step` returns `false` on its
+            // first line without doing one unit of work. The ladder then never advances and this loop
+            // spun 2²⁰ times before panicking, which aborted the whole test binary from the
+            // `BoardHostRetirement` Drop assert.
+            let mut context = semio_framework_job::StepContext::new(
+                semio_framework_job::OperationId(1),
+                semio_framework_job::Generation(1),
+                semio_framework_job::StepBudget::new(u64::MAX, u64::MAX),
+                semio_framework_job::root_cancel_token(),
+                semio_framework_job::default_now_us,
+                &mut sequence,
+            );
+            if retirement.close_step(&mut context) {
+                assert!(turn > 0, "a board host that admitted resources takes more than one close turn");
+                return;
+            }
+        }
+        panic!("board host never reached terminal-empty through its retirement ladder");
+    }
+
     pub fn set_detail_lod(h: &mut BoardHost) {
         h.set_camera(0.0, 0.0, 2.0);
     }

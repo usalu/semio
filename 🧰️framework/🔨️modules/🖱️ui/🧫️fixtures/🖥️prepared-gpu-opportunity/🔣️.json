@@ -114,5 +114,58 @@
         "stale": true
       }
     ]
+  },
+  "successfulTransitions": [
+    {
+      "id": "commands-exhausted",
+      "elapsedUs": 1,
+      "initialRun": 3,
+      "expectedRun": 0,
+      "complete": false
+    },
+    {
+      "id": "metadata-command",
+      "elapsedUs": 1,
+      "initialRun": 3,
+      "expectedRun": 0,
+      "complete": false
+    },
+    {
+      "id": "blur-mips-exhausted",
+      "elapsedUs": 1,
+      "initialRun": 3,
+      "expectedRun": 0,
+      "complete": false
+    },
+    {
+      "id": "empty-glass-clip",
+      "elapsedUs": 1,
+      "initialRun": 3,
+      "expectedRun": 0,
+      "complete": false
+    },
+    {
+      "id": "glass-clips-exhausted",
+      "elapsedUs": 1,
+      "initialRun": 3,
+      "expectedRun": 0,
+      "complete": false
+    },
+    {
+      "id": "present-completes",
+      "elapsedUs": 1,
+      "initialRun": 3,
+      "expectedRun": 0,
+      "complete": true
+    }
+  ],
+  "advancingOverruns": {
+    "elapsedUs": [
+      2100,
+      2200,
+      2300,
+      3100
+    ],
+    "terminalAt": 4
   }
 }

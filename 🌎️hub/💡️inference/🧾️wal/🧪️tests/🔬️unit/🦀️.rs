@@ -8,6 +8,54 @@ use db::storage::WalStorage;
 #[path = "../⛓️chain/🦀️.rs"]
 mod chain;
 
+/// ⏰️ An OS-thread wedge guard for one WAL law. A law's verdict is an ordering fact — a reached
+/// progress threshold, a closed replay, a returned verification — and a wall clock laid over one
+/// of those turns a busy machine into a red law: at fleet load on 2026-09-21 the retained
+/// verifications here ran 11× their idle duration and tripped every second-scale bound they carried.
+/// None of them carry one any more. What is left is a true wedge, and this thread is what names it:
+/// it watches the wall clock from OUTSIDE the runtime, so it fires even when the current-thread
+/// runtime itself is stuck, prints the last phase the law entered, and aborts. Its budget decides
+/// nothing about the law — it is two orders of magnitude past any measured run — it only decides
+/// how long a wedged suite waits before it says which law wedged.
+struct WalLawWedgeGuardV1 {
+    phase: Arc<std::sync::Mutex<String>>,
+    finished: Arc<std::sync::atomic::AtomicBool>,
+}
+
+impl WalLawWedgeGuardV1 {
+    fn arm(law: &'static str) -> Self {
+        let phase = Arc::new(std::sync::Mutex::new(String::from("armed, before the first trace")));
+        let finished = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let watched_phase = phase.clone();
+        let watched_finished = finished.clone();
+        std::thread::spawn(move || {
+            let deadline = std::time::Instant::now() + Duration::from_secs(600);
+            while std::time::Instant::now() < deadline {
+                if watched_finished.load(Ordering::Acquire) {
+                    return;
+                }
+                std::thread::sleep(Duration::from_millis(50));
+            }
+            if watched_finished.load(Ordering::Acquire) {
+                return;
+            }
+            eprintln!("WAL law wedge guard: {law} never finished; last phase entered: {}", watched_phase.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
+            std::process::abort();
+        });
+        Self { phase, finished }
+    }
+
+    fn at(&self, phase: impl Into<String>) {
+        *self.phase.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = phase.into();
+    }
+}
+
+impl Drop for WalLawWedgeGuardV1 {
+    fn drop(&mut self) {
+        self.finished.store(true, Ordering::Release);
+    }
+}
+
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../🧫️fixtures/🧾️inference-wal-proof-v1/🔣️.json")).unwrap()
 }
@@ -290,28 +338,31 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
             assert_eq!(accepted, row["accepted"].as_bool().unwrap(), "WAL {}/{}", row["name"], field);
         }
     }
+    let guard = WalLawWedgeGuardV1::arm("inference_wal_proof_executes_literal_committed_transaction_scope_and_cancellation_traces");
     for trace in fixture["traces"].as_array().unwrap() {
-        let storage = tokio::time::timeout(Duration::from_secs(2), storage(&fixture, trace, &durable)).await.unwrap_or_else(|_| panic!("WAL trace {} timed out during storage admission", trace["name"]));
+        guard.at(format!("trace {} storage admission", trace["name"]));
+        let storage = storage(&fixture, trace, &durable).await;
         let verifier = InferenceWalVerifierV1::new(storage);
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), fixture["generation"].as_u64().unwrap()).unwrap());
-        let control = Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap());
+        let control = Arc::new(InferenceOperationControlV1::work_bounded(64).unwrap());
         if trace["cancelAfterRecords"] == 0 {
             control.cancel();
         }
         let cancellation = trace["cancelAfterRecords"].as_u64().filter(|value| *value > 0);
         let invalidate = trace["observedGeneration"].as_u64().is_some();
+        let returned = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let watcher = if cancellation.is_some() || invalidate {
             let control = control.clone();
             let fence = fence.clone();
+            let returned = returned.clone();
             Some(tokio::spawn(async move {
                 let threshold = cancellation.unwrap_or(3);
-                tokio::time::timeout(Duration::from_secs(2), async {
-                    while control.progress().0 < threshold {
-                        tokio::task::yield_now().await;
-                    }
-                })
-                .await
-                .unwrap();
+                while control.progress().0 < threshold && !returned.load(Ordering::Acquire) {
+                    tokio::task::yield_now().await;
+                }
+                if control.progress().0 < threshold {
+                    return;
+                }
                 if invalidate {
                     fence.invalidate();
                 } else {
@@ -321,9 +372,12 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
         } else {
             None
         };
-        let result = tokio::time::timeout(Duration::from_secs(4), verifier.verify(target(&fixture, trace, &durable), fence.clone(), control)).await.unwrap_or_else(|_| panic!("WAL trace {} timed out during retained verification", trace["name"]));
+        guard.at(format!("trace {} retained verification", trace["name"]));
+        let result = verifier.verify(target(&fixture, trace, &durable), fence.clone(), control.clone()).await;
+        returned.store(true, Ordering::Release);
         if let Some(watcher) = watcher {
             watcher.await.unwrap();
+            assert!(control.progress().0 >= cancellation.unwrap_or(3), "WAL trace {} returned before its interruption threshold", trace["name"]);
         }
         let outcome = match &result {
             Ok(Some(witness)) => {
@@ -379,13 +433,10 @@ async fn inference_wal_proof_executes_literal_committed_transaction_scope_and_ca
                 reusable
             );
         }
-        tokio::time::timeout(Duration::from_secs(2), async {
-            while verifier.active() != 0 {
-                tokio::task::yield_now().await;
-            }
-        })
-        .await
-        .unwrap();
+        guard.at(format!("trace {} retained replay close", trace["name"]));
+        while verifier.active() != 0 {
+            tokio::task::yield_now().await;
+        }
         assert_eq!(verifier.active(), 0, "retained replay closes before its slot is released");
         if trace["spaceId"].is_null() && trace["cancelAfterRecords"] != 0 {
             assert!(verifier.close_steps() > 0, "{}", trace["name"]);
@@ -399,7 +450,7 @@ pub(in crate::inference) async fn committed_fixture_witness() -> (CommittedInfer
     let trace = &fixture["traces"][0];
     let verifier = InferenceWalVerifierV1::new(storage(&fixture, trace, &durable).await);
     let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), fixture["generation"].as_u64().unwrap()).unwrap());
-    let witness = verifier.verify(target(&fixture, trace, &durable), fence.clone(), Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap())).await.unwrap().unwrap();
+    let witness = verifier.verify(target(&fixture, trace, &durable), fence.clone(), Arc::new(InferenceOperationControlV1::work_bounded(64).unwrap())).await.unwrap().unwrap();
     assert_eq!(verifier.active(), 0);
     (witness, fence)
 }
@@ -410,6 +461,7 @@ async fn inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_co
     let durable = durable_fixture_record(&fixture);
     let commands: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/✉️inference-command-v1/🔣️.json")).unwrap();
     let trace = &fixture["traces"][0];
+    let guard = WalLawWedgeGuardV1::arm("inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_commands");
     let mut selected = 0;
     for vector in commands["vectors"].as_array().unwrap() {
         let change = vector["change"].as_str().unwrap();
@@ -435,10 +487,11 @@ async fn inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_co
         }
         let mut target = target(&fixture, trace, &durable);
         target.command_hash = crate::inference::sha256(&bytes);
-        let backend = tokio::time::timeout(Duration::from_secs(2), storage_with_event(&fixture, trace, &durable, Some(&bytes))).await.expect("bounded committed hostile storage");
+        guard.at(format!("hostile vector {}", vector["name"]));
+        let backend = storage_with_event(&fixture, trace, &durable, Some(&bytes)).await;
         let verifier = InferenceWalVerifierV1::new(backend);
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
-        let result = tokio::time::timeout(Duration::from_secs(4), verifier.verify(target, fence, Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap()))).await.expect("bounded committed hostile verification");
+        let result = verifier.verify(target, fence, Arc::new(InferenceOperationControlV1::work_bounded(64).unwrap())).await;
         assert!(matches!(result, Err(InferenceErrorV1::Invalid)), "a matching durable hash cannot bypass {}", vector["name"]);
         assert_eq!(verifier.active(), 0, "rejected bytes retire before admission returns");
         selected += 1;

@@ -244,3 +244,26 @@ fn local_similarity_holds_under_a_different_seed_and_a_non_periodic_output() {
     assert_ne!(first.pixels, second.pixels, "two seeds that agree byte for byte would make the law vacuous");
 }
 //#endregion 🧩️LocalSimilarity
+
+
+#[test]
+fn an_oversized_checkpoint_request_is_refused_at_admission() {
+    let snapshot = stripes();
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
+    let checkpoint = vec![0u8; semio_s_plugin_wfc_engine::job::MAX_CHECKPOINT_BYTES.saturating_add(1)];
+    let rejected = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot, checkpoint: Some(checkpoint) });
+    assert!(rejected.is_err(), "a checkpoint past the engine ceiling is an admission refusal");
+}
+
+#[test]
+fn a_within_budget_checkpoint_request_is_admitted_on_the_inference_job() {
+    let snapshot = stripes();
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
+    let admitted = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot, checkpoint: Some(vec![0u8; 16]) });
+    assert!(admitted.is_ok(), "a within-budget checkpoint request is a real inference input");
+    let mut job = admitted.expect("admitted");
+    semio_framework_job::InteractiveJob::begin_close(&mut job);
+    while !semio_framework_job::InteractiveJob::terminal_is_empty(&job) {
+        let _ = semio_framework_job::InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    }
+}

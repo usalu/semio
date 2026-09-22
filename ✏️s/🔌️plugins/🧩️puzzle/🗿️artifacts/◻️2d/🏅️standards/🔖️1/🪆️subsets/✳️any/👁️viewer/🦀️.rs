@@ -53,6 +53,47 @@ impl ArtifactViewer for Puzzle2dViewer {
     const DIALECT: Dialect = PUZZLE2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE_2D_SCHEMA;
 
+    /// 🔐️ The bounded store owners and DISPOSERS this read-only surface's close ladder drives — the same
+    /// catalogue the sibling editor installs, narrowed to this surface's `NoConfig`/`NoPresence`/
+    /// `NoTransient` lanes (the shape `🌊️flow`'s viewer declares).
+    ///
+    /// 🐛️ Left at the trait defaults (`None`) a mounted `ViewerApp` could never close: `close_step`
+    /// faults `interactive-job.close-owned-disposer-missing` ("app owner did not provide the required
+    /// bounded disposer for document-store") on its FIRST turn, and the `ArtifactStore` then reaches
+    /// `Drop` without its terminal-empty witness. Read-only says nothing about ownership: a viewer
+    /// allocates the same envelope and must retire it the same way.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<NoConfig, NoConfigMutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<NoConfig, NoConfigMutation>())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(semio_framework_plugin::NoPresenceRetirementFactory))
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(std::sync::Arc::new(semio_framework_plugin::NoPresenceRetirementFactory))
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(NoPresence::default()), |_| true).expect("NoPresence is statically empty")))
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
     fn initial_snapshot() -> Puzzle2dSnapshot {
         Puzzle2dSnapshot::default()
     }

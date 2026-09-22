@@ -1357,11 +1357,35 @@ async fn forest_transformation_uses_live_shape_pane() {
     let wall_derived = run_derive_from_geometry(&mut kernel, &[live_wall], "energy");
     assert!(!wall_derived.is_empty(), "a live wall panel must derive at least a hull");
 
-    let wall_typologies: Vec<&str> = wall_derived.iter().map(|object| object.typology.as_str()).collect();
-    let box_typologies: Vec<&str> = box_derived.iter().map(|object| object.typology.as_str()).collect();
-    assert_ne!(
+    // 🧭️ `FROM_GEOMETRY_CLASSIFY_RULES` keys ONLY on a face normal and its z-band — there is no
+    // extent, aspect-ratio or area term — so every box-shaped solid, a 1×1×1 cube and a 4×0.2×3 wall
+    // panel alike, necessarily yields the SAME typology multiset (hull, 4× external wall, roof,
+    // baseplate, windows). `run_derive_from_geometry` then groups its faces through a `HashMap`, whose
+    // iteration order is randomised per process, so the typology SEQUENCE is not a property of the
+    // derive at all (this assertion used to read that sequence and passed or failed by luck).
+    // The live-input property lives in WHERE the classified faces land: `solid_for_object` falls back
+    // to `box_prim(extent)`, so extent — and only extent — reaches the output honestly.
+    fn derived_typologies(objects: &[crate::standards::v1::subsets::any::io::geometry_import::CadObject]) -> Vec<String> {
+        let mut rows: Vec<String> = objects.iter().map(|object| object.typology.clone()).collect();
+        rows.sort();
+        rows
+    }
+    fn derived_faces(objects: &[crate::standards::v1::subsets::any::io::geometry_import::CadObject]) -> Vec<String> {
+        let mut rows: Vec<String> = objects.iter().map(|object| format!("{} @ [{:.3}, {:.3}, {:.3}]", object.typology, object.origin[0], object.origin[1], object.origin[2])).collect();
+        rows.sort();
+        rows
+    }
+    let box_typologies = derived_typologies(&box_derived);
+    let wall_typologies = derived_typologies(&wall_derived);
+    assert_eq!(
         wall_typologies, box_typologies,
-        "a thin wall panel and a cube must classify their dominant faces differently, proving the derive tracks the LIVE input's real shape, not a memoized result:\n  box:  {box_typologies:?}\n  wall: {wall_typologies:?}"
+        "classification reads face normals only, so a wall panel and a cube must carry the same typology multiset:\n  box:  {box_typologies:?}\n  wall: {wall_typologies:?}"
+    );
+    let box_faces = derived_faces(&box_derived);
+    let wall_faces = derived_faces(&wall_derived);
+    assert_ne!(
+        wall_faces, box_faces,
+        "a thin wall panel and a cube must place their classified faces differently, proving the derive tracks the LIVE input's real shape, not a memoized result:\n  box:  {box_faces:?}\n  wall: {wall_faces:?}"
     );
 }
 
@@ -1865,6 +1889,13 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     let node_b = base.nodes[1].id.clone();
     let base_envelope = store::create_document_envelope::<CadSnapshot, CadMutation>(CAD_DOCUMENT_SCHEMA, "cad-play", base, None);
     let base_files = store::print_document_pack(&base_envelope).await.expect("print document pack");
+    // 🧹️ `base_envelope` is a CANDIDATE that no store ever adopts — it only exists to print the pack
+    // both instances load. `ArtifactEnvelope`'s terminal shell asserts in `Drop` that its owners were
+    // detached first, so letting the candidate fall out of scope aborts the test process with
+    // "terminal shell reached Drop before its app-owned bounded retirement authority detached every
+    // nested owner". `retire_unadopted` is the exact protocol for this case: it pops the fixed vcs
+    // ledgers tail-first, each of which carries its own terminal-empty witness.
+    base_envelope.retire_unadopted();
 
     let mut instance_a = new_app().await;
     let mut instance_b = new_app().await;

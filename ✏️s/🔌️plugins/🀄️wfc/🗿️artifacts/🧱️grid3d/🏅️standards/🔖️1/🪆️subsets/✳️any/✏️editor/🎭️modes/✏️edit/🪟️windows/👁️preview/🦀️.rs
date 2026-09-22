@@ -9,11 +9,12 @@
 //! publication and the delta rides alongside it only when it actually names less than half the set
 //! (puzzle 3d's own `delta_is_worth_publishing` rule).
 
+use crate::editor::grid3d::modes::edit::tools::fill::{self, Grid3dFillPayload};
 use crate::editor::grid3d::window::Grid3dWindowConfig;
 use crate::schema::inferences::{solve, Grid3dAssignment};
 use crate::schema::scene_internals;
 use crate::Grid3dSnapshot;
-use semio_framework_plugin::{world3d_camera_json, world3d_scene, world3d_selection_json, BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition, WindowOptions, WorldSunConfig};
+use semio_framework_plugin::{world3d_camera_json, world3d_scene, world3d_selection_json, BuiltNode, LocalizedLabel, ToolRunView, UiAssemblyResult, WindowKindDefinition, WindowOptions, WorldSunConfig};
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind;
 use std::collections::BTreeMap;
 use std::sync::Mutex;
@@ -83,6 +84,50 @@ impl Grid3dPreviewResidency {
 
 static RESIDENCY: Mutex<BTreeMap<String, Grid3dPreviewResidency>> = Mutex::new(BTreeMap::new());
 
+static LAST_FILL: Mutex<Option<Vec<Grid3dAssignment>>> = Mutex::new(None);
+
+/// 🏁 Stores the finished fill assignment in residency so the preview keeps it after the run dismisses.
+pub fn commit_fill_result(window_id: &str, document: &Grid3dSnapshot, assignments: Vec<Grid3dAssignment>) {
+    let _ = publish(window_id, document, assignments.clone());
+    match LAST_FILL.lock() {
+        Ok(mut slot) => *slot = Some(assignments),
+        Err(poisoned) => *poisoned.into_inner() = Some(assignments),
+    }
+}
+
+/// 🧪 The last fill commit stored in this process, or `None` when none has been stored (or after abort).
+pub fn last_fill_commit() -> Option<Vec<Grid3dAssignment>> {
+    match LAST_FILL.lock() {
+        Ok(slot) => slot.clone(),
+        Err(poisoned) => poisoned.into_inner().clone(),
+    }
+}
+
+/// 🧪 Clears the process-local fill commit so tests start from a clean slate.
+pub fn clear_fill_commit_for_test() {
+    match LAST_FILL.lock() {
+        Ok(mut slot) => *slot = None,
+        Err(poisoned) => *poisoned.into_inner() = None,
+    }
+}
+
+/// 🪣 Live fill payload while the run is non-terminal.
+pub fn live_fill_payload(tool_run: Option<&ToolRunView>) -> Option<Grid3dFillPayload> {
+    let run = fill::live_fill_run(tool_run)?;
+    let bytes = run.payload.as_ref()?;
+    Grid3dFillPayload::decode(bytes)
+}
+
+/// 👁️ Assignments the pane paints: live fill payload first, else a fresh solve.
+pub fn paint_assignments(document: &Grid3dSnapshot, tool_run: Option<&ToolRunView>) -> (Vec<Grid3dAssignment>, bool) {
+    if let Some(payload) = live_fill_payload(tool_run) {
+        return (payload.decided_assignments(), !payload.contradiction);
+    }
+    let solved = solve(document).unwrap_or_default();
+    (solved.assignments, solved.satisfiable)
+}
+
+
 /// 🚚️ Folds one solve into the residency of one window instance and answers the payload pair the
 /// scene publishes. A poisoned lock answers a cold residency rather than failing the whole surface.
 pub fn publish(window_id: &str, document: &Grid3dSnapshot, assignments: Vec<Grid3dAssignment>) -> (String, Option<String>) {
@@ -101,11 +146,16 @@ pub fn publish(window_id: &str, document: &Grid3dSnapshot, assignments: Vec<Grid
 //#region 🔖️Render
 /// 👁️ The solved scene. A contradiction paints the empty instance set and says so in the status line,
 /// rather than failing the surface.
-pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, window_id: &str) -> UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, window_id: &str, tool_run: Option<&ToolRunView>) -> UiAssemblyResult<BuiltNode> {
     let (position, target) = super::grid::framed_camera(document, config);
-    let solved = solve(document).unwrap_or_default();
-    let (instances, delta) = publish(window_id, document, solved.assignments);
-    let status = status_json(document, solved.satisfiable, &instances);
+    let (assignments, satisfiable) = paint_assignments(document, tool_run);
+    let live = live_fill_payload(tool_run).is_some();
+    let (instances, delta) = if live {
+        (scene_internals::preview_instances_json(document, &assignments), None)
+    } else {
+        publish(window_id, document, assignments)
+    };
+    let status = status_json(document, satisfiable, &instances);
     let scene = semio_framework_ui::wgpu::World3dScene {
         instances_delta_json: delta,
         status_json: Some(status),

@@ -1,17 +1,17 @@
 {
   "artifact": null,
-  "schema": null,
-  "id": null,
-  "title": null,
+  "assets": null,
   "blocks": null,
-  "gridVisible": null,
+  "eraserRadius": null,
+  "gridOpacity": null,
   "gridSpacing": null,
   "gridSubdivisions": null,
-  "gridOpacity": null,
-  "snapEnabled": null,
-  "snapGridSpacing": 4,
+  "gridVisible": null,
+  "id": null,
+  "linkedArtifact": null,
   "pencilWidth": null,
-  "eraserRadius": null,
-  "assets": null,
-  "linkedArtifact": null
+  "schema": null,
+  "snapEnabled": null,
+  "snapGridSpacing": 4.0,
+  "title": null
 }

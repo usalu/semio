@@ -553,22 +553,45 @@ where
 /// `ArtifactStore::replay_mutations`'s own `back.reverse()`) after `mutation` restores `base`. The
 /// per-`MutationKind` version of `.claude/plans/the-mutations-are-extremely-compiled-pumpkin.md`'s
 /// core requirement: every handcrafted mutation implements a real inverse, not a sentinel.
+///
+/// 🧊️ This law is itself a generic seam that MANUFACTURES operations and diffs and throws them
+/// away: `mutation.inverse(base)` mints a whole `Vec<Op>` and every step raises a
+/// `MutationOutcome<Op::Diff>`. Both are routed through [`crate::os_spr::Mutation::retire_cold`] /
+/// [`crate::os_spr::MutationDiff::retire_cold`] instead of being dropped — exactly what those two
+/// methods' contracts require of "every generic replay/fold seam that builds a delta and throws it
+/// away". Their defaults ARE a plain drop, so nothing changes for a technology built out of plain
+/// values; for one whose operation owns a fail-closed root (an `OrderedMap`, a neural
+/// `Dictionary`), the bare drop used to abort the process INSIDE the law
+/// (`final Dictionary ownership must be explicitly retired or owned by a cold boundary`,
+/// ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, bucket XCUT-DICT). The PROJECTION `P` is
+/// still plain-dropped here — a technology whose projection also rejects a bare drop uses
+/// [`assert_mutation_inverse_law_cold`].
 pub async fn assert_mutation_inverse_law<P, Op>(base: &P, mutation: &Op)
 where
     P: Clone + PartialEq + std::fmt::Debug,
     Op: crate::os_spr::Mutation<P>,
 {
     use crate::os_spr::MutationDiff;
-    let forward = mutation.diff(base);
-    let rejected = forward.messages().iter().any(|message| matches!(message.level, crate::os_dsl::Severity::Error | crate::os_dsl::Severity::Fatal));
-    assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {:?}", forward.messages());
-    let mut state = forward.diff().apply(base).expect("valid forward diff must apply");
+    let (forward, messages) = mutation.diff(base).into_parts();
+    let rejected = messages.iter().any(|message| matches!(message.level, crate::os_dsl::Severity::Error | crate::os_dsl::Severity::Fatal));
+    let applied = (!rejected).then(|| forward.apply(base));
+    forward.retire_cold();
+    assert!(!rejected, "a mutation expected to invert cleanly must not have been rejected — forward outcome carries an Error/Fatal message: {messages:?}");
+    let mut state = applied.expect("an unrejected forward outcome is applied").expect("valid forward diff must apply");
     let mut backward = mutation.inverse(base);
     backward.reverse();
     for undo in &backward {
-        state = undo.diff(&state).diff().apply(&state).expect("valid inverse diff must apply");
+        let (delta, _) = undo.diff(&state).into_parts();
+        let next = delta.apply(&state).expect("valid inverse diff must apply");
+        delta.retire_cold();
+        state = next;
     }
-    assert_eq!(&state, base, "applying mutation.inverse(base) (reversed) after mutation must restore base");
+    let restored = state == *base;
+    let report = restored.then(String::new).unwrap_or_else(|| format!("restored={state:?} base={base:?}"));
+    for undo in backward {
+        Op::retire_cold(undo);
+    }
+    assert!(restored, "applying mutation.inverse(base) (reversed) after mutation must restore base; {report}");
 }
 
 /// 🧊️ Cold twin of [`assert_mutation_inverse_law`] for a projection whose owned form rejects a bare
@@ -599,6 +622,10 @@ where
     let matches = state == *base;
     let report = matches.then(String::new).unwrap_or_else(|| format!("{state:?}"));
     retire(state);
+    // 🧊️ The minted inverse operations are owners too — see `assert_mutation_inverse_law`'s note.
+    for undo in backward {
+        Op::retire_cold(undo);
+    }
     assert!(matches, "applying mutation.inverse(base) (reversed) after mutation must restore base; restored:\n{report}");
 }
 

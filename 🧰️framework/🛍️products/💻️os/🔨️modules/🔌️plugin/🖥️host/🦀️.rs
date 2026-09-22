@@ -1333,7 +1333,7 @@ impl OwnedRuntime {
         let mut instance = self.instantiate_actor(compiled, RuntimeActorId(0)).map_err(TurnFault::Host)?;
         let state = owned_state_mut(&mut instance)?;
         begin_owned_operation(state, OwnedOperation::Describe, None)?;
-        resume_owned_operation_observed(state, OwnedOperation::Describe, budget.fuel, budget.deadline_ms, progress).map(|invocation| invocation.output)
+        resume_owned_operation_observed(state, OwnedOperation::Describe, budget.fuel, budget.deadline_ms, OwnedDeadline::NoFuelProgress, progress).map(|invocation| invocation.output)
     }
 }
 
@@ -1467,18 +1467,49 @@ fn begin_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperati
     Ok(())
 }
 
-fn resume_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32) -> Result<OwnedInvocation, TurnFault> {
-    resume_owned_operation_observed(state, operation, fuel, deadline_ms, |_, _| {})
+/// ⏱️ What `deadline_ms` bounds, chosen per call site because the two callers want opposite things.
+///
+/// A live turn owes the shell a frame, so its bound is TOTAL wall time: a turn that overruns is late
+/// whether or not the guest is healthy, and `Poll`/`codec` therefore keep [`Self::TotalWall`].
+///
+/// A build-time `describe()` owes nobody a frame, and its runaway bound is the deterministic fuel
+/// cap (`DESCRIBE_FUEL_BUDGET`). Measured on 2026-09-21 (slice CE2): the SAME `🗒️note` guest ran its
+/// describe at 1 320 k fuel/s at 20:36 and at 520 k fuel/s at 22:10 — a 2.5× swing from fleet load
+/// alone, with nothing about the guest changed. Under a saturated fleet the owned interpreter
+/// sustains ≈ 210 k fuel/s, so a 1 800 000 ms TOTAL cap buys only ≈ 380 M of the 8 G fuel budget and
+/// the WALL clock, not the guest, decides whether a build succeeds — which is how `🀄️wfc` (373 M
+/// fuel, 4.6 % of its budget, a flat rate and no degradation) and `🧩️puzzle` both died
+/// `DeadlineExceeded` while still progressing normally.
+///
+/// [`Self::NoFuelProgress`] bounds the gap BETWEEN fuel observations instead, so a describe that
+/// keeps making progress runs to its fuel cap on any machine while a guest that stops making
+/// progress still dies on a finite wall clock. Nothing is lost by this: the loop already traps a
+/// zero-fuel yield outright, and a host call that never returns blocks inside `reply_owned_host`
+/// where no deadline check can run — so a total-wall cap here never caught a runaway the fuel cap
+/// would have missed.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum OwnedDeadline {
+    TotalWall,
+    NoFuelProgress,
 }
 
-fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32, mut progress: impl FnMut(u64, std::time::Duration)) -> Result<OwnedInvocation, TurnFault> {
+fn resume_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32) -> Result<OwnedInvocation, TurnFault> {
+    resume_owned_operation_observed(state, operation, fuel, deadline_ms, OwnedDeadline::TotalWall, |_, _| {})
+}
+
+fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32, deadline: OwnedDeadline, mut progress: impl FnMut(u64, std::time::Duration)) -> Result<OwnedInvocation, TurnFault> {
     let started = std::time::Instant::now();
+    let mut fuel_moved_at = started;
     let mut remaining = fuel;
     let mut next_progress_fuel = 25_000_000;
     let mut next_progress_elapsed = std::time::Duration::from_secs(5);
     loop {
         let elapsed = started.elapsed();
-        if elapsed >= std::time::Duration::from_millis(u64::from(deadline_ms)) {
+        let against_deadline = match deadline {
+            OwnedDeadline::TotalWall => elapsed,
+            OwnedDeadline::NoFuelProgress => fuel_moved_at.elapsed(),
+        };
+        if against_deadline >= std::time::Duration::from_millis(u64::from(deadline_ms)) {
             progress(fuel.saturating_sub(remaining), elapsed);
             return Err(TurnFault::DeadlineExceeded);
         }
@@ -1492,6 +1523,7 @@ fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: Ow
             return Err(TurnFault::Trapped("owned operation resume type mismatch".to_string()));
         }
         let grant = remaining.min(OWNED_STEP_FUEL);
+        let remaining_before = remaining;
         let completed_fuel;
         match state.actor.step(grant, StepControl::default()) {
             CoreStepOutcome::Yield { fuel_used } => {
@@ -1547,6 +1579,9 @@ fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: Ow
                 state.poisoned = true;
                 return Err(TurnFault::Trapped(owned_fault_text(state, &error.to_string())));
             }
+        }
+        if remaining < remaining_before {
+            fuel_moved_at = std::time::Instant::now();
         }
         let elapsed = started.elapsed();
         if completed_fuel >= next_progress_fuel || elapsed >= next_progress_elapsed {

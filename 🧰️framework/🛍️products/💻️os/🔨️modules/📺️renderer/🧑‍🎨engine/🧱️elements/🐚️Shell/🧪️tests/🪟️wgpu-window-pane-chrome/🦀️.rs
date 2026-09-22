@@ -235,8 +235,7 @@ fn the_window_options_chip_registers_both_sides_of_its_fold() {
 }
 
 /// 🎯️ **The dispatch pin.** Each chip's control id flips ONLY its own window's state — the fold
-/// lane React's two panes share (`Actions`/`Search` both drive `actionsFolded`), the measures fold and
-/// the utility-bar fold.
+/// lane React gives each pane, the measures fold and the utility-bar fold.
 #[test]
 fn each_pane_chip_dispatches_its_own_window_state() {
     let mut shell = split_pane_shell();
@@ -244,11 +243,11 @@ fn each_pane_chip_dispatches_its_own_window_state() {
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id), kind: HitKind::Toggle, drag_axis: None, drag_data: None };
         assert!(semio_framework_async::block_on(shell.handle_shell_hit(&hit)).expect("a pane chip press never errors"), "🎯️ the shell claims its own pane chip");
     };
-    assert!(shell.window_actions_folded("pane-top") && shell.utility_bar_folded("pane-top") && shell.measures_rail_folded("pane-top"), "🪟️ every pane rail starts folded, as React's `useState(true)` does");
+    assert!(shell.window_actions_folded("pane-top") && shell.window_search_folded("pane-top") && shell.utility_bar_folded("pane-top") && shell.measures_rail_folded("pane-top"), "🪟️ every pane rail starts folded, as React's `useState(true)` does");
     press(&mut shell, WindowPaneChip::Actions.control_id("pane-top", true));
     assert!(!shell.window_actions_folded("pane-top") && shell.window_actions_folded("pane-perspective"), "🎯️ Actions unfolds only its own pane");
     press(&mut shell, WindowPaneChip::Search.control_id("pane-perspective", true));
-    assert!(!shell.window_actions_folded("pane-perspective"), "🎯️ Search drives the same `actionsFolded` its pane's Actions chip does");
+    assert!(!shell.window_search_folded("pane-perspective") && shell.window_actions_folded("pane-perspective"), "🎯️ Search unfolds only its own pane");
     assert_eq!(shell.active_window_id.as_deref(), Some("pane-perspective"), "🎯️ pressing any chip activates its own window, as React's `onPointerDownCapture` → `onActivate` does");
     assert!(!shell.search_open && matches!(shell.overlay_state, OverlayState::None), "🎯️ and it opens the WINDOW's search pane, never the shell's centred `⌘K` palette");
     press(&mut shell, WindowPaneChip::Utilities.control_id("pane-top", true));
@@ -485,12 +484,13 @@ fn one_pane_chip_press_flips_one_fold_and_moves_no_surface() {
     let shared: Vec<WindowPaneChip> = fixture["paneFolds"]["sharedFold"].as_array().expect("fixture shared fold").iter().map(|name| chip_of(name.as_str().expect("chip name"))).collect();
     let independent: Vec<WindowPaneChip> = fixture["paneFolds"]["independentFolds"].as_array().expect("fixture independent folds").iter().map(|name| chip_of(name.as_str().expect("chip name"))).collect();
     assert!(fixture["paneFolds"]["surfacesMovedByAnyChip"].as_array().expect("fixture surface moves").is_empty(), "🎛️ the fixture states that no chip moves a surface");
-    let folds = |shell: &ShellState, window_id: &str| (shell.window_actions_folded(window_id), shell.measures_rail_folded(window_id), shell.utility_bar_folded(window_id), shell.projection_pane_folded(window_id));
+    let folds = |shell: &ShellState, window_id: &str| (shell.window_actions_folded(window_id), shell.window_search_folded(window_id), shell.measures_rail_folded(window_id), shell.utility_bar_folded(window_id), shell.projection_pane_folded(window_id));
     let press = |shell: &mut ShellState, chip: WindowPaneChip, window_id: &str| {
         let control_id = chip.control_id(
             window_id,
             match chip {
-                WindowPaneChip::Actions | WindowPaneChip::Search => shell.window_actions_folded(window_id),
+                WindowPaneChip::Actions => shell.window_actions_folded(window_id),
+                WindowPaneChip::Search => shell.window_search_folded(window_id),
                 WindowPaneChip::WindowOptions => shell.measures_rail_folded(window_id),
                 WindowPaneChip::Utilities => shell.utility_bar_folded(window_id),
                 WindowPaneChip::Projection => shell.projection_pane_folded(window_id),
@@ -505,18 +505,14 @@ fn one_pane_chip_press_flips_one_fold_and_moves_no_surface() {
         let before = folds(&shell, "pane-top");
         press(&mut shell, chip, "pane-top");
         let after = folds(&shell, "pane-top");
-        let moved = [after.0 != before.0, after.1 != before.1, after.2 != before.2, after.3 != before.3];
-        let expected = [shared.contains(&chip), chip == WindowPaneChip::WindowOptions, chip == WindowPaneChip::Utilities, chip == WindowPaneChip::Projection];
+        let moved = [after.0 != before.0, after.1 != before.1, after.2 != before.2, after.3 != before.3, after.4 != before.4];
+        let expected = [chip == WindowPaneChip::Actions, chip == WindowPaneChip::Search, chip == WindowPaneChip::WindowOptions, chip == WindowPaneChip::Utilities, chip == WindowPaneChip::Projection];
         assert_eq!(moved, expected, "🎛️ {chip:?} flips its OWN fold and no other: {before:?} -> {after:?}");
-        assert_eq!(folds(&shell, "pane-perspective"), (true, true, true, true), "🎛️ and never the sibling pane's");
+        assert_eq!(folds(&shell, "pane-perspective"), (true, true, true, true, true), "🎛️ and never the sibling pane's");
         assert_eq!(shell.chrome_surface_census(), surfaces_before, "🎛️ {chip:?} opens and closes no surface");
         assert!(!shell.search_open && matches!(shell.overlay_state, OverlayState::None), "🎛️ and raises no shell overlay");
     }
-    let mut shell = split_pane_shell();
-    for chip in &shared {
-        press(&mut shell, *chip, "pane-top");
-    }
-    assert!(shell.window_actions_folded("pane-top"), "🎛️ the two chips that SHARE a fold toggle the same flag: two presses return it");
+    assert!(shared.is_empty(), "🎛️ the mounted React panes share no fold");
     for chip in &independent {
         assert!(!shared.contains(chip), "🎛️ a fold is shared or independent, never both");
     }

@@ -523,6 +523,12 @@ pub mod editor {
                 pub use component::*;
 
                 #[path = "."]
+                pub mod tools {
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🌡fill/🦀️.rs"]
+                    pub mod fill;
+                }
+
+                #[path = "."]
                 pub mod windows {
                     #[path = "."]
                     pub mod input {

@@ -156,3 +156,37 @@ fn vertex_normals_follow_the_triangle_winding_and_never_answer_zero() {
     assert_eq!(normals, vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0]);
     assert_eq!(vertex_normals(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0], &[0, 1, 2]), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], "a degenerate triangle falls back to +Z, never to a zero normal");
 }
+
+
+#[test]
+fn a_partial_fill_preview_differs_from_empty_and_finished() {
+    use crate::editor::wfc3d::modes::edit::tools::fill::Wfc3dFillTickPayload;
+    use crate::inferences::solve_with_job;
+    use std::collections::BTreeMap;
+
+    let document = crate::examples::tower_stack::snapshot();
+    let oracle = solve_with_job(&document).expect("tower-stack solves");
+    let empty = instances_json(&document, &Wfc3dTransient::default());
+    let finished_transient = Wfc3dTransient {
+        assignments: oracle
+            .assignments
+            .iter()
+            .map(|(slot_id, tile_id)| crate::editor::wfc3d::transient::Wfc3dAssignment { slot_id: slot_id.clone(), tile_id: tile_id.clone() })
+            .collect(),
+        contradiction: false,
+    };
+    let finished = instances_json(&document, &finished_transient);
+    let mut assignments: BTreeMap<String, Option<String>> = document.slots.iter().map(|slot| (slot.id.clone(), None)).collect();
+    let half = (oracle.assignments.len() / 2).max(1);
+    for (index, (slot_id, tile_id)) in oracle.assignments.iter().enumerate() {
+        if index >= half {
+            break;
+        }
+        assignments.insert(slot_id.clone(), Some(tile_id.clone()));
+    }
+    let partial = Wfc3dFillTickPayload { assignments, contradiction: false, done: false };
+    assert!(partial.decided_count() > 0 && partial.decided_count() < oracle.assignments.len());
+    let mid = instances_json(&document, &partial.into_transient());
+    assert_ne!(mid, empty, "a partial board must not look empty");
+    assert_ne!(mid, finished, "a partial board must not look finished");
+}

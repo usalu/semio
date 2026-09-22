@@ -2,6 +2,7 @@
 //! masked-cell omission and the entropy map's own shape.
 
 use super::*;
+use semio_framework_job::InteractiveJob;
 use crate::schema::snapshot::{WfcAdjacencyRule2d, WfcCell2d, WfcDirection2d, WfcPinnedCell2d, WfcTile2d, WfcTileMedia2d};
 
 fn tile(id: &str, weight: f64) -> WfcTile2d {
@@ -124,4 +125,41 @@ fn the_inference_descriptor_carries_five_real_leaves() {
     for leaf in [descriptor.inference.rust, descriptor.inference.typescript, descriptor.inference.graphql, descriptor.inference.json_schema, descriptor.inference.proto] {
         assert!(!leaf.trim().is_empty());
     }
+}
+
+#[test]
+fn the_inference_job_publishes_a_twenty_five_byte_preview() {
+    let document = permissive(3, 2);
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), document.seed);
+    let mut job = Grid2dInferenceJob::new(operation, Grid2dInferenceRequest { snapshot: document, checkpoint: None }).expect("admit");
+    let (operation_id, generation, cancel) = (job.operation().operation, job.operation().generation, semio_framework_job::root_cancel_token());
+    let mut sequence = 0;
+    let mut verdict = None;
+    for _ in 0..100_000 {
+        let now = semio_framework_job::default_now_us().expect("clock");
+        let budget = semio_framework_job::StepBudget::new(1, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4);
+        let outcome = semio_framework_job::drive_step(&mut job, "wfc.grid2d.inference.preview.test", operation_id, generation, semio_framework_job::InteractiveStage::InteractiveStep, budget, cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut verdict);
+        match outcome {
+            semio_framework_job::StepOutcome::PreviewReady(mut payload) => {
+                let bytes: Vec<u8> = (0..payload.page_count()).flat_map(|index| payload.page(index).expect("page").to_vec()).collect();
+                while !matches!(payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+                assert_eq!(bytes.len(), 25, "the parent inference preview is a fixed 25-byte progress record");
+                job.begin_close();
+                for _ in 0..1_000_000 {
+                    if matches!(job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
+                        assert!(job.terminal_is_empty());
+                        return;
+                    }
+                }
+                panic!("inference close stalled");
+            }
+            semio_framework_job::StepOutcome::Complete(_) | semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => {
+                let mut outcome = outcome;
+                while !matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+                panic!("expected a preview before the terminal outcome");
+            }
+            _ => {}
+        }
+    }
+    panic!("no preview published");
 }

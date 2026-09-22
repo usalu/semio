@@ -783,7 +783,7 @@ const SelectScrollUpButton = React.forwardRef<HTMLDivElement, SelectScrollButton
       ref={forwardedRef}
       aria-hidden
       data-slot="select-scroll-up-button"
-      className={cn("flex cursor-default items-center justify-center py-single hover:bg-hover-interactive-fill", className)}
+      className={cn("flex cursor-default items-center justify-center py-single text-element hover:bg-hover-interactive-fill hover:text-emphasized", className)}
       onPointerDown={(event) => {
         onPointerDown?.(event);
         if (!event.defaultPrevented) {
@@ -806,7 +806,7 @@ const SelectScrollDownButton = React.forwardRef<HTMLDivElement, SelectScrollButt
       ref={forwardedRef}
       aria-hidden
       data-slot="select-scroll-down-button"
-      className={cn("flex cursor-default items-center justify-center py-single hover:bg-hover-interactive-fill", className)}
+      className={cn("flex cursor-default items-center justify-center py-single text-element hover:bg-hover-interactive-fill hover:text-emphasized", className)}
       onPointerDown={(event) => {
         onPointerDown?.(event);
         if (!event.defaultPrevented) {

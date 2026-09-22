@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "contract": {
+    "extentNamesClosed": true,
+    "windowExtentRequired": true,
+    "directRowHeaderUsesDeclaredExtent": true,
+    "spacersUseDeclaredExtent": true,
+    "expandedDescendantsMeasuredSeparately": true,
+    "finiteUnwindowedCompactMayRemainVariable": true
+  },
+  "extents": [
+    { "name": "Standard", "pixels": 24, "compatibleClosedRows": ["standard"] },
+    { "name": "CompactText", "pixels": 14.4, "compatibleClosedRows": ["text"] },
+    { "name": "CompactSmallControl", "pixels": 16, "compatibleClosedRows": ["input", "select"] },
+    { "name": "CompactControl", "pixels": 22.4, "compatibleClosedRows": ["checkbox", "slider", "toggle"] }
+  ],
+  "windowedCases": [
+    {
+      "id": "standard-text",
+      "extent": "Standard",
+      "total": 10,
+      "offset": 4,
+      "materialized": [{ "kind": "standard", "headerPixels": 24, "descendantPixels": 0 }],
+      "expected": { "accepted": true, "leadingPixels": 96, "materializedPixels": 24, "trailingPixels": 120, "totalPixels": 240 }
+    },
+    {
+      "id": "compact-small-select",
+      "extent": "CompactSmallControl",
+      "total": 10,
+      "offset": 4,
+      "materialized": [{ "kind": "select", "headerPixels": 16, "descendantPixels": 0 }],
+      "expected": { "accepted": true, "leadingPixels": 64, "materializedPixels": 16, "trailingPixels": 80, "totalPixels": 160 }
+    },
+    {
+      "id": "compact-control-checkbox",
+      "extent": "CompactControl",
+      "total": 10,
+      "offset": 4,
+      "materialized": [{ "kind": "checkbox", "headerPixels": 22.4, "descendantPixels": 0 }],
+      "expected": { "accepted": true, "leadingPixels": 89.6, "materializedPixels": 22.4, "trailingPixels": 112, "totalPixels": 224 }
+    },
+    {
+      "id": "compact-text-rejects-checkbox",
+      "extent": "CompactText",
+      "total": 10,
+      "offset": 4,
+      "materialized": [{ "kind": "checkbox", "headerPixels": 22.4, "descendantPixels": 0 }],
+      "expected": { "accepted": false, "reason": "rowExtentMismatch" }
+    },
+    {
+      "id": "compact-text-expanded-descendants",
+      "extent": "CompactText",
+      "total": 8,
+      "offset": 2,
+      "materialized": [{ "kind": "text", "headerPixels": 14.4, "descendantPixels": 43.2 }],
+      "expected": { "accepted": true, "leadingPixels": 28.8, "materializedPixels": 57.6, "trailingPixels": 72, "totalPixels": 158.4 }
+    }
+  ],
+  "unwindowedCase": {
+    "id": "finite-compact-variable",
+    "rows": [
+      { "kind": "text", "pixels": 14.4 },
+      { "kind": "select", "pixels": 16 },
+      { "kind": "checkbox", "pixels": 22.4 }
+    ],
+    "expected": { "accepted": true, "totalPixels": 52.8 }
+  }
+}

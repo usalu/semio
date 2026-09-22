@@ -189,6 +189,7 @@ import type {
   ProgressProps as GeneratedProgressProps,
   TreeProps as GeneratedTreeProps,
   TreePresentation as GeneratedTreePresentation,
+  TreeWindowRowExtent as GeneratedTreeWindowRowExtent,
   TreeWindow as GeneratedTreeWindow,
   TreeSectionProps as GeneratedTreeSectionProps,
   TreeItemProps as GeneratedTreeItemProps,
@@ -274,6 +275,7 @@ export type IconSelectProps = GeneratedIconSelectProps;
 export type ProgressProps = GeneratedProgressProps;
 export type TreeProps = GeneratedTreeProps;
 export type TreePresentation = GeneratedTreePresentation;
+export type TreeWindowRowExtent = GeneratedTreeWindowRowExtent;
 export type TreeWindow = GeneratedTreeWindow;
 export type TreeSectionProps = GeneratedTreeSectionProps;
 export type TreeItemProps = GeneratedTreeItemProps;

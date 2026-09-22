@@ -79,6 +79,7 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
 }
 
 use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 
 pub(crate) fn enc_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
@@ -354,18 +355,40 @@ fn read_opt_u32(reader: &mut store::ByteReader<'_>) -> Result<Option<u32>, Strin
 fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
+/// 🔁️ `[child_id, target-uri, content]` — the handle PLUS the composed child's own canonical
+/// content, because `store::ArtifactChild`'s `local_owner` is serialization-skipped by design and a
+/// raster document that was packed and reopened came back with pixel-less handles: `raster_asset`
+/// answered `None`, `assets_json` rendered `{}` and every composite surface was blank (measured
+/// through `print_document_pack` → `load_document_pack`, ticket
+/// 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). The PACK is this artifact's document archive, so
+/// it is the codec that has to carry the child — `📓️knowledge-children.md` §1's own second
+/// option. The DSL carrier deliberately stays handle-only: it names committed example media by id
+/// and `🎮️commands/🎬️set-active-example`'s `example_media_operations` plants the bytes on load.
+/// `content` is the child's own `ArtifactPack` bytes, empty when the handle carries no
+/// materialization (a wire-decoded child the host has not resolved).
 fn read_child(reader: &mut store::ByteReader<'_>) -> Result<RasterAssetChild, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
+    let content = read_bytes_lp(reader)?;
+    let child = store::ArtifactChild::new(child_id, target);
+    if content.is_empty() {
+        return Ok(child);
+    }
+    let image = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&content).map_err(|error| error.to_string())?;
+    Ok(child.with_local_owner(std::sync::Arc::new(image)))
 }
 
 fn write_ref(out: &mut Vec<u8>, value: &store::os_io::ArtifactRef) {
     write_str_lp(out, &value.to_uri());
 }
+/// 🔁️ The exact inverse of [`read_child`].
 fn write_child(out: &mut Vec<u8>, child: &RasterAssetChild) {
     write_str_lp(out, &child.child_id);
     write_ref(out, &child.target);
+    match child.local_owner::<SemioImageSnapshot>() {
+        Some(image) => write_bytes_lp(out, &<SemioImageSnapshot as store::ArtifactPack>::encode_pack(image.as_ref())),
+        None => write_bytes_lp(out, &[]),
+    }
 }
 
 fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>) {
@@ -517,7 +540,8 @@ fn read_layer_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<RasterLayer
 }
 
 fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 1;
+    // 🔁️ 2: every asset entry carries its composed child's own content (see `read_child`).
+    const PACK_BINARY_FORMAT: u8 = 2;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
     write_str_lp(&mut out, &s.id);
@@ -527,7 +551,8 @@ fn encode_raster_snapshot_binary(s: &RasterSnapshot) -> Vec<u8> {
     out
 }
 fn decode_raster_snapshot_binary(bytes: &[u8]) -> Result<RasterSnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 1;
+    // 🔁️ 2: every asset entry carries its composed child's own content (see `read_child`).
+    const PACK_BINARY_FORMAT: u8 = 2;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {

@@ -167,6 +167,30 @@ mod tests {
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_brep_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_brep_snapshot()) drifted from the shipped .pack.semio fixture");
         }
+
+        /// 🖊️ The ONLY way the shipped `🧊️solid` fixtures are ever refreshed: `print_dsl`/
+        /// `encode_pack` of the demo itself, never a hand edit (`fixture_honesty_law` above is what
+        /// that honesty means). Run it deliberately after a codec change —
+        /// `cargo test -p semio-s-artifact-stdio-semio --lib --all-features -- --ignored zzz_write`
+        /// — then re-run the law. Same shape as the stdio OOXML siblings' own writers.
+        ///
+        /// 🪞️ The artifact ships under TWO example mounts — `✉️base/📚️examples/🧊️solid` (the one
+        /// `fixture_honesty_law` above reads, and the one `🧊️mutate-semio-brep`'s `asset://🧊️solid/`
+        /// resolves against) and this subset's own `🧊️brep/📚️examples/🧊️solid` — so both are
+        /// written here from the same printer run; a copy the current codec cannot parse is a fake
+        /// wherever it sits.
+        #[semio_framework_async_macros::async_test]
+        #[ignore]
+        async fn zzz_write_demo_fixtures() {
+            let demo = snapshot::demo_brep_snapshot();
+            let text = store::ArtifactDsl::print_dsl(&demo);
+            let pack: Vec<u8> = store::ArtifactPack::encode_pack(&demo);
+            let subsets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️v1/🪆️subsets");
+            for assets in [subsets.join("✉️base/📚️examples/🧊️solid/🖼️assets"), subsets.join("🧊️brep/🖼️assets/🧊️solid")] {
+                std::fs::write(assets.join("🗣️.dsl.semio"), &text).unwrap_or_else(|e| panic!("write {}: {e}", assets.display()));
+                std::fs::write(assets.join("🎒️.pack.semio"), &pack).unwrap_or_else(|e| panic!("write {}: {e}", assets.display()));
+            }
+        }
     }
     //#endregion 🔖️ConformanceLaws
 }

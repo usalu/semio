@@ -152,6 +152,30 @@ async fn note_genesis_produces_a_complete_zero_history_pair_at_a_server_minted_i
 }
 //#endregion 🔖️GenesisLaw
 
+//#region 🔖️ApplyOpsLaw
+/// 🧩️ The NONEMPTY `codec.apply-ops` batch. Ticket 26/09/18 slice TC3d §2(b) rebuilt
+/// `artifact_app_apply_ops` around a bounded close cursor because it used to build an
+/// `ArtifactStore`, print from it and let it fall out of scope — and that store's `Drop` asserts an
+/// exact terminal-empty shallow-shell witness, which on a `panic = "abort"` wasm32 guest is an
+/// `unreachable` that kills the instance. TC3d's own law drove only the EMPTY batch, which returns
+/// before a store is ever built (TC3d §6c), so the cursor it added was type-checked and never run.
+/// This law is the one that runs it: a real `rename-note` op, encoded exactly the way the guest
+/// receives it (`os_spr::encode_ops_vec` over `OpBinary::encode_op` blobs).
+#[semio_framework_async_macros::async_test]
+async fn note_apply_ops_reduces_a_nonempty_batch_and_closes_its_store() {
+    let document_id = "artifact-11223344556677889900aabbccddeeff";
+    let baseline = semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<crate::editor::note::NotePlayApp>>(document_id).await.expect("note genesis pair");
+    let op = <crate::schema::mutations::NoteMutation as protocol::OpBinary>::encode_op(&crate::schema::mutations::rename_note(Some("TC3e".into()))).expect("encode rename-note");
+    let ops = store::os_spr::encode_ops_vec(&[op]);
+    let applied = semio_framework_plugin::artifact_app_apply_ops::<semio_framework_plugin::EditorApp<crate::editor::note::NotePlayApp>>(&baseline.pack, &baseline.spr, &ops).await.expect("note apply-ops with a nonempty batch");
+    assert!(!applied.pack.is_empty() && !applied.spr.is_empty(), "apply-ops produced an empty pair");
+    let history = store::os_spr::decode_history(&applied.spr, &store::os_spr::DecodeOptions::default()).await.expect("applied history");
+    assert_eq!(history.doc_id, document_id);
+    assert_eq!(history.schema, NOTE_DOCUMENT_SCHEMA);
+    assert_eq!(history.edits.len(), 1, "one op in the batch must land exactly one edit, got {:?}", history.edits.len());
+}
+//#endregion 🔖️ApplyOpsLaw
+
 #[test]
 fn temporary_regenerate_mutation_fixtures() {
     fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {

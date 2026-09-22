@@ -1,5 +1,9 @@
-//! 🧭 `topology` — one named inference: the form's step/block dependency structure. Nodes are step
-//! ids and block ids (flattened across all steps); edges are (a) sequential document order — each
+//! 🧭 `topology` — one named inference: the form's step/block dependency structure. Nodes are
+//! `step:`-prefixed step ids (`crate::schema::forms_play_step_tree_id`, the SAME row id space the
+//! app's `interaction_topology` uses) and bare block ids (flattened across all steps) — steps and
+//! blocks are two independent id namespaces in a form document, so a block may legitimately carry
+//! its owning step's id and only the prefix keeps the two from collapsing into one graph node (a
+//! collapse reads back as a false cycle); edges are (a) sequential document order — each
 //! step follows the previous step, and each block follows the previous node within its step — plus
 //! (b) `condition` data-dependency edges, added whenever a block's visibility condition references
 //! another block's id via `FormExpr::Var`. Topologically sorted with Kahn's algorithm so `cycleFree`
@@ -47,11 +51,12 @@ pub fn compute_forms_topology(steps: &[FormStep]) -> FormsTopology {
     let mut previous: Option<String> = None;
 
     for step in steps {
-        nodes.push(step.id.clone());
+        let step_node = crate::schema::forms_play_step_tree_id(&step.id);
+        nodes.push(step_node.clone());
         if let Some(prev) = previous.take() {
-            edges.push((prev, step.id.clone()));
+            edges.push((prev, step_node.clone()));
         }
-        previous = Some(step.id.clone());
+        previous = Some(step_node);
         for block in &step.blocks {
             nodes.push(block.id.clone());
             block_ids.insert(block.id.clone());

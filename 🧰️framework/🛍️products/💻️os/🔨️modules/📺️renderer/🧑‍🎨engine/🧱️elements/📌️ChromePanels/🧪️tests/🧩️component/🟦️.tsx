@@ -1,6 +1,11 @@
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { themeAlphaInput, themeNumberInputRow, themeTextInputRow } from "../../🟦️.tsx";
+import { createFrameworkSettingsPanelTab, themeAlphaInput, themeNumberInputRow, themeTextInputRow, type ConflictsHostApi } from "../../🟦️.tsx";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import Ajv from "ajv";
+import type { ReactElement } from "react";
 
 afterEach(() => {
   cleanup();
@@ -44,5 +49,44 @@ describe("ChromePanels theme inputs", () => {
     fireEvent.blur(input);
     expect(commit).toHaveBeenCalledWith(1);
     expect(consoleError).not.toHaveBeenCalled();
+  });
+});
+
+describe("Inline Tree resolution controls", () => {
+  it("keeps both labeled resolution buttons available before selecting the conflict", () => {
+    const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
+    const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🎛️inline-tree-controls", "🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(engineRoot, "🧬️schema", "🎛️inline-tree-controls", "🔣️.json"), "utf8"));
+    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
+    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+    const resolve = vi.fn();
+    const host: ConflictsHostApi = {
+      conflicts: [{ id: fixture.conflict.id, kind: { kind: "quarantined", envelopes: [] }, status: "open", messages: [], actors: [], timestamp: { actor: 1, physical_ms: 0, logical: 0 } }],
+      locale: "en",
+      selectedConflictId: null,
+      kindLabel: () => "Quarantined",
+      messageText: () => fixture.conflict.message,
+      onSelect: vi.fn(),
+      onResolve: resolve,
+      currentDocumentText: "",
+    };
+    const panel = createFrameworkSettingsPanelTab(() => null, undefined, () => host);
+    const leaf = panel.children!.find((child) => child.id === "framework.settings.conflicts")!;
+    const tree = leaf.trees![0]!.tree.resolveTree!() as { sections: { items: { id: string; control: ReactElement; items?: unknown[] }[] }[] };
+    const rows = tree.sections[0]!.items;
+    expect(rows).toHaveLength(fixture.expected.rowCount);
+    expect(rows[0]!.id).toBe(fixture.rowId);
+    expect(rows[0]!.items).toBeUndefined();
+    const { container } = render(<>{rows[0]!.control}</>);
+    const buttons = Array.from(container.querySelectorAll("button"));
+    expect(buttons).toHaveLength(fixture.controls.length);
+    for (const [index, expected] of fixture.controls.entries()) {
+      const button = buttons[index]!;
+      expect(button.id).toBe(`${fixture.rowId}.${expected.suffix}`);
+      expect(button.textContent).toContain(expected.label);
+      fireEvent.click(button);
+      expect(resolve).toHaveBeenLastCalledWith(fixture.conflict.id, expected.suffix);
+    }
+    expect(container.querySelector(".flex.items-center")?.children).toHaveLength(2);
   });
 });

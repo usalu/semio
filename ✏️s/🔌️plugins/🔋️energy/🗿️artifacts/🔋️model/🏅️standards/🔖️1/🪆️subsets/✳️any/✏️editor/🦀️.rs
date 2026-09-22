@@ -115,6 +115,12 @@ pub const ENERGY_MODEL_RETAINED_TOOL_IDS: &[&str] = &[
     SET_CONSTRUCTION_PROPERTY_ACTION_ID,
 ];
 
+/// ⚠️ The verbs that discard user content no later verb reconstructs — the two inspector deletes and
+/// the whole-document example swap. `AppBuilder::action_destructive` reads this roster in
+/// [`create_energy_model_editor`], which is what raises `ApprovalMode::WhenDestructive` so the MCP
+/// gateway asks a human before an agent commits one.
+pub const ENERGY_MODEL_DESTRUCTIVE_ACTION_IDS: &[&str] = &[DELETE_ZONE_ACTION_ID, DELETE_SURFACE_ACTION_ID, SET_ACTIVE_EXAMPLE_ACTION_ID];
+
 /// 📬️ The twelve verbs that publish a semantic mutation into the document store. `setActiveExample`
 /// is deliberately NOT one of them — it swaps the whole document through `kernel::Effect::LoadDocument`
 /// (outside history), so it publishes to no store lane and declares `HostOnly`.
@@ -381,21 +387,10 @@ mod args_bridge {
 /// `TrinityJackCommand`.
 impl protocol::OpText for EnergyModelEditorCommand {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        dsl::variants_text::parse_op(line)
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::variants_text::print_op(self)
     }
 }
 
@@ -2586,6 +2581,11 @@ pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
     }
     for tool_id in ENERGY_MODEL_RETAINED_TOOL_IDS {
         builder = builder.action_interactive_job(*tool_id, InteractiveJobClassification::Migrated);
+    }
+    // ⚠️ Declared after every action is on the builder: `action_destructive` rewrites an
+    // already-declared id, and the two inspector deletes only arrive with the loop above.
+    for destructive_id in ENERGY_MODEL_DESTRUCTIVE_ACTION_IDS {
+        builder = builder.action_destructive(*destructive_id);
     }
     builder.build_definition()
 }

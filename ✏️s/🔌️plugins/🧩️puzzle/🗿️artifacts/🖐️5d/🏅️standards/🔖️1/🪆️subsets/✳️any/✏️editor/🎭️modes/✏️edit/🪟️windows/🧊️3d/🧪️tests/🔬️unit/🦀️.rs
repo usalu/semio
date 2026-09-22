@@ -166,3 +166,41 @@ fn every_world_instance_names_a_mesh_this_scene_publishes() {
     );
 }
 //#endregion 🧊️MeshLane
+
+//#region 🎯️Fit
+/// 🎯️ ticket 26/09/19 (play grid, visual audit): the `puzzle5d` pane booted ready with its curated
+/// example named in the picker, the board pane drew the assembled ring of capsules and the 3D
+/// viewport drew nothing but the camera gizmo and the grid. A world window that publishes no `fit`
+/// lane can be framed by nothing but the camera the document authored, so a document whose parts sit
+/// anywhere else is outside that frustum. Law: this window always stages the one-shot fit, and it
+/// stages it WITHOUT bounds — this crate knows mesh urls, never delivered mesh extents.
+#[test]
+fn the_world_scene_stages_a_one_shot_fit_for_its_document() {
+    let scene = scene_with(part_selection(), Puzzle5dRuntime::default(), "select");
+    let node = render(&scene, None, &[]).expect("the world surface assembles");
+    let built: World3dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(&node).expect("the world surface decodes as a 3d scene");
+    let fit = built.fit_json.as_deref().expect("the world window must publish a fit lane");
+    assert!(fit.contains("\"enabled\":true"), "the fit lane must be enabled, else the authored camera is the only framing: {fit}");
+    assert!(fit.contains(&format!("\"revision\":{}", world_fit_revision(&scene.document))), "the lane must carry this document's own identity revision: {fit}");
+    assert!(!fit.contains("boundsMin"), "puzzle5d knows mesh urls, never mesh extents — the host measures what it loaded: {fit}");
+}
+
+/// 🎯️ The fit revision is a document IDENTITY, not a geometry digest: loading another example refits,
+/// dragging a part must not yank the camera out from under the hand that is dragging it.
+#[test]
+fn the_fit_revision_tracks_document_identity_not_part_edits() {
+    let base = document_with_one_gripped_part();
+    let mut moved = base.clone();
+    moved.parts[0].part_3d.origin = [120.0, -40.0, 7.5];
+    assert_eq!(world_fit_revision(&base), world_fit_revision(&moved), "moving a part is not a document swap");
+
+    let mut relabelled = base.clone();
+    relabelled.label = Some("Capsule Dream".into());
+    assert_ne!(world_fit_revision(&base), world_fit_revision(&relabelled), "another example is another document and gets its own framing");
+
+    let mut recatalogued = base.clone();
+    recatalogued.kind_catalogs = Some(serde_json::json!({ "parts": [{ "id": "other-kind" }] }));
+    assert_ne!(world_fit_revision(&base), world_fit_revision(&recatalogued), "a different kind catalog resolves different meshes, so it is framed anew");
+}
+//#endregion 🎯️Fit
+

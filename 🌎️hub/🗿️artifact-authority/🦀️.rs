@@ -137,9 +137,29 @@ pub trait AuthorityOperationControl: Send + Sync {
     fn report(&self, progress: AuthorityProgress);
 }
 
+/// ⏱️ What ends one authority operation that was not cancelled.
+///
+/// `Deadline` is a CALENDAR fact: some caller promised a client an answer by an absolute instant,
+/// so the operation is charged for every millisecond the machine spends elsewhere. That is the
+/// right bound for a request a client is holding a socket open for, and the wrong one for work no
+/// client is waiting on — a startup catalog load charged against the calendar refuses a data root
+/// that is perfectly good the moment the machine is busy (measured twice by CE2 on 2026-09-21
+/// while 17 rustc ran: `ArtifactAuthority(DeadlineExceeded)` on two consecutive hub starts of a
+/// catalog the third start loaded without complaint).
+///
+/// `NoProgress` is a WEDGE bound instead: the span since this operation last reached a checkpoint.
+/// A machine that is merely slow keeps reaching checkpoints and finishes; an operation that is
+/// genuinely stuck — a blocked read, a guest that never returns — reaches none and is named at the
+/// first checkpoint after the span. The work itself stays bounded by [`AuthorityLimits`] and by the
+/// catalog's own byte/count ceilings, which is why dropping the calendar loosens nothing.
+enum OperationBoundV1 {
+    Deadline(u64),
+    NoProgress { span_ms: u64, last_checkpoint_ms: std::sync::atomic::AtomicU64 },
+}
+
 /// ⏱️ Bounded operation context shared with trusted codecs so long work stays cancellable.
 pub struct OperationContext<'a> {
-    deadline_ms: u64,
+    bound: OperationBoundV1,
     limits: AuthorityLimits,
     control: &'a dyn AuthorityOperationControl,
 }
@@ -147,7 +167,19 @@ pub struct OperationContext<'a> {
 impl<'a> OperationContext<'a> {
     /// 🏛️ Creates one authority context with an absolute exclusive deadline.
     pub const fn new(deadline_ms: u64, limits: AuthorityLimits, control: &'a dyn AuthorityOperationControl) -> Self {
-        Self { deadline_ms, limits, control }
+        Self { bound: OperationBoundV1::Deadline(deadline_ms), limits, control }
+    }
+
+    /// 🧗️ Creates one authority context bounded by progress instead of the calendar: it refuses only
+    /// when `span_ms` passed without the operation reaching a single checkpoint. Cancellation and
+    /// every [`AuthorityLimits`] ceiling are untouched, and `span_ms == 0` is refused rather than
+    /// silently meaning "never" — a bound that can never fire is not a bound.
+    pub fn stall_bounded(span_ms: u64, limits: AuthorityLimits, control: &'a dyn AuthorityOperationControl) -> Result<Self, AuthorityError> {
+        if span_ms == 0 {
+            return Err(AuthorityError::InvalidLimits);
+        }
+        let last_checkpoint_ms = std::sync::atomic::AtomicU64::new(control.now_ms());
+        Ok(Self { bound: OperationBoundV1::NoProgress { span_ms, last_checkpoint_ms }, limits, control })
     }
 
     /// 🧯️ Returns the immutable request budgets.
@@ -155,13 +187,29 @@ impl<'a> OperationContext<'a> {
         self.limits
     }
 
-    /// 🛑️ Enforces cancellation and the exclusive deadline at a safe boundary.
+    /// 🛑️ Enforces cancellation and this operation's own bound at a safe boundary. Reaching here is
+    /// itself the progress a [`OperationBoundV1::NoProgress`] operation is measured by, so a passing
+    /// checkpoint restamps the span.
     pub fn checkpoint(&self) -> Result<(), AuthorityError> {
         if self.control.is_cancelled() {
             return Err(AuthorityError::Cancelled);
         }
-        if self.control.now_ms() >= self.deadline_ms {
-            return Err(AuthorityError::DeadlineExceeded);
+        match &self.bound {
+            OperationBoundV1::Deadline(deadline_ms) => {
+                if self.control.now_ms() >= *deadline_ms {
+                    return Err(AuthorityError::DeadlineExceeded);
+                }
+            }
+            OperationBoundV1::NoProgress { span_ms, last_checkpoint_ms } => {
+                let now_ms = self.control.now_ms();
+                let last_ms = last_checkpoint_ms.load(std::sync::atomic::Ordering::Relaxed);
+                if now_ms.saturating_sub(last_ms) >= *span_ms {
+                    return Err(AuthorityError::Stalled);
+                }
+                if now_ms > last_ms {
+                    last_checkpoint_ms.store(now_ms, std::sync::atomic::Ordering::Relaxed);
+                }
+            }
         }
         Ok(())
     }
@@ -181,9 +229,13 @@ impl<'a> OperationContext<'a> {
         self.control.now_ms()
     }
 
-    /// ⏱️ Returns the immutable absolute publication deadline.
-    pub(crate) const fn deadline_ms(&self) -> u64 {
-        self.deadline_ms
+    /// ⏱️ Returns the immutable absolute publication deadline, or `None` for a stall-bounded
+    /// operation, which has no calendar instant a lease could be clipped to.
+    pub(crate) const fn deadline_ms(&self) -> Option<u64> {
+        match &self.bound {
+            OperationBoundV1::Deadline(deadline_ms) => Some(*deadline_ms),
+            OperationBoundV1::NoProgress { .. } => None,
+        }
     }
 }
 
@@ -199,6 +251,10 @@ pub enum ArtifactValidationStage {
 pub enum AuthorityError {
     Cancelled,
     DeadlineExceeded,
+    /// 🧗️ A stall-bounded operation reached no checkpoint for its whole no-progress span. It is
+    /// NOT [`Self::DeadlineExceeded`]: nothing promised an answer by an instant, and the operation
+    /// is refused for having stopped advancing, never for having taken long.
+    Stalled,
     InvalidDescriptor(String),
     InvalidScope,
     InvalidFrontier,
@@ -220,6 +276,7 @@ impl std::fmt::Display for AuthorityError {
         match self {
             Self::Cancelled => formatter.write_str("artifact authority operation cancelled"),
             Self::DeadlineExceeded => formatter.write_str("artifact authority deadline exceeded"),
+            Self::Stalled => formatter.write_str("artifact authority operation reached no checkpoint within its no-progress span"),
             Self::InvalidDescriptor(message) => write!(formatter, "invalid document descriptor: {message}"),
             Self::InvalidScope => formatter.write_str("artifact authority scope does not match the descriptor"),
             Self::InvalidFrontier => formatter.write_str("artifact authority frontier is invalid"),

@@ -5,35 +5,35 @@
   "routes": [
     {
       "id": "setActiveExample",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "whole child replacement lacks an item-bounded child publication seam"
+      "disposition": "Migrated",
+      "lanes": [
+        "HostOnly"
+      ],
+      "reason": "The whole-document example load is handed to the host as one LoadDocument effect; nothing is published into a document lane."
     },
     {
       "id": "addNode",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "fresh-id derivation clones and scans the complete graph child"
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "reason": "The fresh node id is derived under the exact artifact one-item preparation factory and published on the Artifact lane."
     },
     {
       "id": "addRelationship",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "fresh-id derivation clones and scans the complete graph child"
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "reason": "The fresh edge id is derived under the exact artifact one-item preparation factory and published on the Artifact lane."
     },
     {
       "id": "deleteSelection",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "selection resolution requires item-addressable graph child reads"
-    },
-    {
-      "id": "canvasPointerMove",
       "disposition": "Migrated",
       "lanes": [
-        "WindowTransient"
+        "Artifact"
       ],
-      "reason": "The captured canvas advances only its exact transient preview while the gesture is active."
+      "reason": "Selection resolution walks the graph child one item per work step and publishes the removals on the Artifact lane."
     },
     {
       "id": "canvasPointerDown",
@@ -42,6 +42,14 @@
         "WindowTransient"
       ],
       "reason": "Concrete canvas drag lifecycle uses the exact retained window transient owner; hit lookup advances one field per work step."
+    },
+    {
+      "id": "canvasPointerMove",
+      "disposition": "Migrated",
+      "lanes": [
+        "WindowTransient"
+      ],
+      "reason": "The captured canvas advances only its exact transient preview while the gesture is active."
     },
     {
       "id": "canvasPointerUp",
@@ -54,9 +62,11 @@
     },
     {
       "id": "nodeGraphViewport",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "The viewport routes synchronously to the exact canvas WindowConfig owner pending a retained scalar command cursor."
+      "disposition": "Migrated",
+      "lanes": [
+        "WindowConfig"
+      ],
+      "reason": "The viewport publishes one scalar camera through the exact canvas WindowConfig owner."
     }
   ]
 }

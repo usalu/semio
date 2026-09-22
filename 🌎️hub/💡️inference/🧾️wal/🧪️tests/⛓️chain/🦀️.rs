@@ -217,7 +217,9 @@ async fn inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment
     let chain: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⛓️inference-wal-chain-v1/🔣️.json")).unwrap();
     let fixture = fixture();
     let durable = durable_fixture_record(&fixture);
+    let guard = WalLawWedgeGuardV1::arm("inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment_tip_mismatch");
     for case in chain["cases"].as_array().unwrap() {
+        guard.at(format!("case {}", case["name"]));
         let segments = chain_segments(&fixture, case, &durable).await;
         for bytes in &segments {
             for frame in frames(bytes) {
@@ -228,7 +230,7 @@ async fn inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment
         assert_eq!(independent_chain(&segments, fixture["documentKey"].as_str().unwrap()), expected, "independent blake3 {}", case["name"]);
         let verifier = InferenceWalVerifierV1::new(retained_storage(&fixture, &segments, 0).await);
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
-        let result = verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap())).await;
+        let result = verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, Arc::new(InferenceOperationControlV1::work_bounded(64).unwrap())).await;
         assert_eq!(matches!(result, Ok(Some(_))), expected, "actual retained WAL {}", case["name"]);
         assert_eq!(verifier.active(), 0);
         assert!(verifier.close_steps() > 0);
@@ -314,7 +316,7 @@ mod quick {
             drop(storage);
             let verifier = InferenceWalVerifierV1::new(backend);
             let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
-            let result = verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap())).await;
+            let result = verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, Arc::new(InferenceOperationControlV1::work_bounded(64).unwrap())).await;
             assert_eq!(matches!(result, Ok(Some(_))), boundary["genesisProofAccepted"].as_bool().unwrap());
             assert!(matches!(result, Err(InferenceErrorV1::Storage)));
             assert_eq!(verifier.active(), 0);

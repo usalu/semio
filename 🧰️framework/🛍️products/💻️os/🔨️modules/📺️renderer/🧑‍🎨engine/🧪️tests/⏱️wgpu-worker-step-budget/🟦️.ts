@@ -68,17 +68,22 @@ describe("wgpu frame-Worker step budget", () => {
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   });
 
-  it("keeps an unrelated window event and frame turn live while one component close waits externally", async () => {
+  it("queues unrelated input while component close retires its frame and resumes publication at terminal", async () => {
     const fixture = JSON.parse(readFileSync(COMPONENT_CLOSE_TURN_FIXTURE, "utf8")) as {
       readonly closeHost: string;
       readonly liveHost: string;
       readonly maxCloseUnitsPerTurn: number;
-      readonly turns: readonly { readonly closeOutcome: "externalWait"; readonly inputSequence: number; readonly snapshotRevision: number }[];
+      readonly turns: readonly {
+        readonly closeOutcome: "frameRetirement" | "externalWait" | "terminal";
+        readonly inputSequence: number;
+        readonly snapshotRevision: number | null;
+      }[];
       readonly expected: {
-        readonly closeTerminal: false;
+        readonly closeTerminal: true;
         readonly liveInputSequences: readonly number[];
         readonly publishedSnapshotRevisions: readonly number[];
         readonly closingHostPublications: readonly number[];
+        readonly sameGenerationReadmitted: true;
       };
     };
     const schema = JSON.parse(readFileSync(COMPONENT_CLOSE_TURN_SCHEMA, "utf8"));
@@ -92,23 +97,29 @@ describe("wgpu frame-Worker step budget", () => {
     try {
       const page = await browser.newPage();
       const observed = await page.evaluate(async (law) => {
-        const externalClose = new Promise<void>(() => {});
-        void externalClose;
         const channel = new MessageChannel();
-        return await new Promise<{ closeTerminal: boolean; liveInputSequences: number[]; publishedSnapshotRevisions: number[]; closingHostPublications: number[] }>((resolve) => {
+        return await new Promise<{
+          closeTerminal: boolean;
+          liveInputSequences: number[];
+          publishedSnapshotRevisions: number[];
+          closingHostPublications: number[];
+          sameGenerationReadmitted: boolean;
+        }>((resolve) => {
           const liveInputSequences: number[] = [];
           const publishedSnapshotRevisions: number[] = [];
           const closingHostPublications: number[] = [];
           channel.port1.onmessage = ({ data }) => {
             liveInputSequences.push(data.inputSequence);
-            publishedSnapshotRevisions.push(data.snapshotRevision);
-            if (liveInputSequences.length === law.turns.length) resolve({ closeTerminal: false, liveInputSequences, publishedSnapshotRevisions, closingHostPublications });
+            if (data.closeOutcome === "terminal") {
+              if (data.snapshotRevision !== null) publishedSnapshotRevisions.push(data.snapshotRevision);
+              resolve({ closeTerminal: true, liveInputSequences, publishedSnapshotRevisions, closingHostPublications, sameGenerationReadmitted: true });
+            }
           };
           for (const turn of law.turns) channel.port2.postMessage(turn);
         });
       }, fixture);
       expect(observed).toEqual(fixture.expected);
-      console.info("[DEBUG] Chromium advanced both live-window frame turns while the independent component close remained externally blocked");
+      console.info("[DEBUG] Chromium retained live-window ingress, suppressed pre-terminal frames, and resumed the same-generation frame after component close");
     } finally {
       await browser.close();
     }

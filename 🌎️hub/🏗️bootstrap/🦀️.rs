@@ -235,18 +235,25 @@ fn now_ms() -> i64 {
 /// would have had nowhere to send that progress, which is the only reason this holds a value.
 struct StartupCatalogControl {
     tracer: Tracer,
+    /// @emoji 🕰️ When the last IN-FLIGHT progress record was emitted, so a long load reports that it
+    /// is advancing without turning a 16 k-unit catalog into 16 k trace lines.
+    last_in_flight_ms: std::sync::atomic::AtomicU64,
 }
+
+/// @emoji ⏲️ The smallest gap between two in-flight startup-catalog progress records. The first and
+/// last unit of a load are always emitted; everything between is rate-limited to this.
+const STARTUP_CATALOG_IN_FLIGHT_TRACE_MIN_GAP_MS: u64 = 1_000;
 
 impl StartupCatalogControl {
     /// @emoji 📚️ Reporting onto `tracer`.
     fn new(tracer: Tracer) -> Self {
-        Self { tracer }
+        Self { tracer, last_in_flight_ms: std::sync::atomic::AtomicU64::new(0) }
     }
 
     /// @emoji 🤫️ Reporting nowhere — for a caller that runs before this process has configured
     /// observability, and for every law that is not about the catalog's progress.
     fn silent() -> Self {
-        Self { tracer: Tracer::disabled() }
+        Self { tracer: Tracer::disabled(), last_in_flight_ms: std::sync::atomic::AtomicU64::new(0) }
     }
 }
 
@@ -259,13 +266,26 @@ impl AuthorityOperationControl for StartupCatalogControl {
         false
     }
 
+    /// @emoji 📡️ The boot's only outward sign that the catalog load is ALIVE. It used to emit the
+    /// first and last unit alone, so a load that took 30 s printed nothing for 30 s and an operator
+    /// could not tell a slow machine from a wedged one — the very distinction the load's own
+    /// no-progress bound now makes internally. In-flight units are rate-limited to
+    /// [`STARTUP_CATALOG_IN_FLIGHT_TRACE_MIN_GAP_MS`] so the record count never scales with the
+    /// catalog's.
     fn report(&self, progress: AuthorityProgress) {
-        if progress.completed_units == 0 || progress.completed_units == progress.total_units {
-            let outcome = if progress.completed_units == progress.total_units { TraceOutcome::Ok } else { TraceOutcome::Started };
-            let mut record = TraceRecord::new("server.catalog.publication", outcome);
-            record.detail = Some(format!("stage={:?} {}/{}", progress.stage, progress.completed_units, progress.total_units));
-            self.tracer.emit(record);
+        let terminal = progress.completed_units == 0 || progress.completed_units == progress.total_units;
+        if !terminal {
+            let now_ms = self.now_ms();
+            let last_ms = self.last_in_flight_ms.load(std::sync::atomic::Ordering::Relaxed);
+            if now_ms.saturating_sub(last_ms) < STARTUP_CATALOG_IN_FLIGHT_TRACE_MIN_GAP_MS {
+                return;
+            }
+            self.last_in_flight_ms.store(now_ms, std::sync::atomic::Ordering::Relaxed);
         }
+        let outcome = if progress.completed_units == progress.total_units { TraceOutcome::Ok } else { TraceOutcome::Started };
+        let mut record = TraceRecord::new("server.catalog.publication", outcome);
+        record.detail = Some(format!("stage={:?} {}/{}", progress.stage, progress.completed_units, progress.total_units));
+        self.tracer.emit(record);
     }
 }
 
@@ -578,12 +598,15 @@ impl DocumentOpenCatalogAuthorityV1 for VerifiedTrustedCatalog {
     }
 }
 
-/// ⏳️ The fixed budget the startup trusted-catalog load gets. It is a real bound — a catalog that
-/// cannot be verified promptly must not hold the port hostage — but exceeding it is a TRANSIENT
-/// fact about this machine (measured 2026-09-21 by M8: a 612 MB catalog whose page cache was warm,
-/// under fleet CPU contention, twice), not a statement about the catalog, so see
-/// [`StartupArtifactAuthority::BudgetExceeded`] for what it is allowed to do.
-const TRUSTED_CATALOG_STARTUP_BUDGET_MS: u64 = 30_000;
+/// ⏳️ The span of NO PROGRESS AT ALL that ends the startup trusted-catalog load. It is not a total
+/// budget and never was a good one: a total wall budget charges the load for every millisecond the
+/// machine spends on other work, so a hub on a busy machine refused a catalog that a hub on an idle
+/// machine loaded fine (measured 2026-09-21 by M8 with a warm 612 MB catalog, and again by CE2 on
+/// two consecutive 7621 starts while 17 rustc ran). The load reports progress per package phase and
+/// checkpoints per 64 KiB hashed chunk, so this span passing means the load has genuinely stopped —
+/// which is the only thing that must not hold the port hostage. The number is unchanged from the
+/// total budget it replaces: nothing here is a lengthened timeout.
+const TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS: u64 = 30_000;
 
 /// 📚️ What the startup trusted-catalog load produced. Three outcomes, not two, because "the load
 /// ran out of budget" and "this data root has no catalog" are different facts and the hub owes an
@@ -593,11 +616,11 @@ const TRUSTED_CATALOG_STARTUP_BUDGET_MS: u64 = 30_000;
 enum StartupArtifactAuthority {
     Configured(ConfiguredArtifactAuthority),
     Absent,
-    /// ⏳️ The load did not finish inside [`TRUSTED_CATALOG_STARTUP_BUDGET_MS`]. Before this variant
-    /// the hub EXITED on it — the opposite of every other gate's behaviour, which is to name a
-    /// reason in `blocked_by` and still bind — so a machine that was merely busy looked exactly
-    /// like a corrupt data root to whoever read the exit.
-    BudgetExceeded,
+    /// ⏳️ The load reached no checkpoint for [`TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS`]. Before this
+    /// variant the hub EXITED on it — the opposite of every other gate's behaviour, which is to name
+    /// a reason in `blocked_by` and still bind — so a wedged load looked exactly like a corrupt data
+    /// root to whoever read the exit.
+    Stalled,
 }
 
 impl StartupArtifactAuthority {
@@ -606,23 +629,23 @@ impl StartupArtifactAuthority {
     fn configured(self) -> Option<ConfiguredArtifactAuthority> {
         match self {
             Self::Configured(configured) => Some(configured),
-            Self::Absent | Self::BudgetExceeded => None,
+            Self::Absent | Self::Stalled => None,
         }
     }
 
     fn is_none(&self) -> bool {
-        matches!(self, Self::Absent | Self::BudgetExceeded)
+        matches!(self, Self::Absent | Self::Stalled)
     }
 }
 
-/// 🧾️ The reason `artifactAuthority` is closed, from the three facts that decide it. A load that ran
-/// out of budget is NOT "pointer present but not loadable": nothing was found wrong with the
-/// catalog, so the reason must not read as if something had been.
-pub fn artifact_authority_closed_reason(native_artifact_execution: bool, trusted_catalog_budget_exceeded: bool, catalog_pointer_present: bool) -> &'static str {
+/// 🧾️ The reason `artifactAuthority` is closed, from the three facts that decide it. A load that
+/// stalled is NOT "pointer present but not loadable": nothing was found wrong with the catalog, so
+/// the reason must not read as if something had been.
+pub fn artifact_authority_closed_reason(native_artifact_execution: bool, trusted_catalog_stalled: bool, catalog_pointer_present: bool) -> &'static str {
     if !native_artifact_execution {
         "native-artifact-execution-feature-not-compiled"
-    } else if trusted_catalog_budget_exceeded {
-        "trusted-catalog-load-exceeded-its-startup-budget"
+    } else if trusted_catalog_stalled {
+        "trusted-catalog-load-stalled-before-it-finished"
     } else if catalog_pointer_present {
         "trusted-catalog-pointer-present-but-not-loadable"
     } else {
@@ -638,11 +661,10 @@ async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Op
         return Ok(StartupArtifactAuthority::Absent);
     };
     let control = StartupCatalogControl::new(tracer.clone());
-    let started = control.now_ms();
-    let context = OperationContext::new(started.saturating_add(TRUSTED_CATALOG_STARTUP_BUDGET_MS), AuthorityLimits::maximum(), &control);
+    let context = OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &control)?;
     let loaded = match TrustedCatalogLoader::load_current(data_dir, providers, &context).await {
         Ok(loaded) => loaded,
-        Err(AuthorityError::DeadlineExceeded | AuthorityError::Cancelled) => return Ok(StartupArtifactAuthority::BudgetExceeded),
+        Err(AuthorityError::Stalled | AuthorityError::Cancelled) => return Ok(StartupArtifactAuthority::Stalled),
         Err(error) => return Err(error),
     };
     let Some(catalog) = loaded else {
@@ -3960,7 +3982,7 @@ async fn checkpoint_publication_blob(state: &HubState, reference: &os_directory:
 fn checkpoint_publication_error_status(error: &AuthorityError) -> StatusCode {
     match error {
         AuthorityError::Cancelled => StatusCode::SERVICE_UNAVAILABLE,
-        AuthorityError::DeadlineExceeded => StatusCode::GATEWAY_TIMEOUT,
+        AuthorityError::DeadlineExceeded | AuthorityError::Stalled => StatusCode::GATEWAY_TIMEOUT,
         AuthorityError::ResourceLimit(_) | AuthorityError::PairResourceLimit(_) => StatusCode::PAYLOAD_TOO_LARGE,
         AuthorityError::InvalidDescriptor(_)
         | AuthorityError::InvalidScope
@@ -4619,12 +4641,79 @@ async fn document_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Pat
         .into_response()
 }
 
-async fn encode(frame: &ServerFrame) -> Message {
+/// @emoji 🧭️ Stamps the DOCUMENT's own id onto one outbound wire frontier.
+///
+/// The hub keys documents internally by [`db_artifact_id`] — `v1:<len>:<len>:<space><document>` —
+/// because the db and fanout catalogs are flat and a bare document id is not unique across spaces.
+/// The db engine stamps that key into every `Frontier` it returns and the replication wire carries
+/// it through unchanged, so until this projection existed every `Welcome`, `Ack`, `Commands` and
+/// rebootstrap control named the hub's private key where the client's own `documentId` belongs. A
+/// client that checks the identity it asked for against the identity it was handed — the store
+/// worker's `validateArtifactBootstrapIdentity` does exactly that — refuses a pair the hub itself
+/// produced. This is the single boundary where the internal key becomes the client's identity
+/// again, and [`wire_frontier_to_db`] is its exact inverse on the way in.
+fn project_wire_frontier(frontier: &mut protocol::RuntimeFrontierSummary, document_id: &str) {
+    frontier.document_id = ProtocolArtifactId(document_id.to_string());
+}
+
+/// @emoji 🧭️ Every frontier one outbound frame carries, projected onto the document's own id. A
+/// frame with no frontier is returned untouched and uncloned by the caller.
+fn project_server_frame(frame: &mut ServerFrame, document_id: &str) {
+    match frame {
+        ServerFrame::Welcome { server_frontier, bootstrap, .. } => {
+            project_wire_frontier(server_frontier, document_id);
+            if let protocol::Bootstrap::ArtifactBootstrap(artifact) = bootstrap {
+                project_wire_frontier(&mut artifact.baseline_frontier, document_id);
+                project_wire_frontier(&mut artifact.required_tail_frontier, document_id);
+            }
+        }
+        ServerFrame::Commands { frontier, .. } | ServerFrame::Ack { frontier, .. } => project_wire_frontier(frontier, document_id),
+        ServerFrame::RebootstrapRequired { control } => project_wire_frontier(&mut control.baseline_frontier, document_id),
+        ServerFrame::SnapshotChunk { .. }
+        | ServerFrame::SnapshotDone { .. }
+        | ServerFrame::Preview { .. }
+        | ServerFrame::Presence { .. }
+        | ServerFrame::CreditGrant { .. }
+        | ServerFrame::Error { .. }
+        | ServerFrame::Session { .. }
+        | ServerFrame::ArtifactBootstrapChunk { .. }
+        | ServerFrame::ArtifactBootstrapDone { .. } => {}
+    }
+}
+
+/// @emoji 🧭️ Whether one frame carries a frontier at all, so the projection clones only when it has
+/// something to rewrite.
+const fn frame_carries_frontier(frame: &ServerFrame) -> bool {
+    matches!(frame, ServerFrame::Welcome { .. } | ServerFrame::Commands { .. } | ServerFrame::Ack { .. } | ServerFrame::RebootstrapRequired { .. })
+}
+
+/// @emoji 🧭️ The inverse of [`project_wire_frontier`]: one frontier a CLIENT sent, named by the
+/// document id it opened, re-keyed onto this hub's internal db id before any db layer compares it
+/// (`db_sync` refuses a hello whose advertised frontier does not name its own document). A frontier
+/// naming anything other than the socket's own document is refused rather than re-keyed — the hub
+/// must never accept an identity claim it then overwrites.
+fn wire_frontier_to_db(frontier: &mut protocol::RuntimeFrontierSummary, document_id: &str, db_id: &ProtocolArtifactId) -> bool {
+    if frontier.document_id.0 != document_id {
+        return false;
+    }
+    frontier.document_id = db_id.clone();
+    true
+}
+
+/// @emoji 📬️ Encodes one outbound frame for the socket of `document_id`. This is the hub's ONLY
+/// frame-encoding door on purpose: every frontier leaving it is named by the document the client
+/// opened, never by [`db_artifact_id`]'s internal key.
+async fn encode(frame: &ServerFrame, document_id: &str) -> Message {
+    if frame_carries_frontier(frame) {
+        let mut projected = frame.clone();
+        project_server_frame(&mut projected, document_id);
+        return Message::Binary(encode_server_frame(&projected, Lane::Command).await.into());
+    }
     Message::Binary(encode_server_frame(frame, Lane::Command).await.into())
 }
 
 async fn error_frame(code: &str, message: impl Into<String>) -> Message {
-    encode(&ServerFrame::Error { code: code.to_string(), message: message.into() }).await
+    encode(&ServerFrame::Error { code: code.to_string(), message: message.into() }, "").await
 }
 
 struct SocketRebootstrapControl;
@@ -4677,7 +4766,7 @@ async fn send_socket_document_rebootstrap(sender: &mut SplitSink<WebSocket, Mess
         Err(_) => return SocketBindingValidityV1::Unavailable,
     };
     if let Some(control) = control {
-        let frame = encode(&ServerFrame::RebootstrapRequired { control: wire_rebootstrap(&control) }).await;
+        let frame = encode(&ServerFrame::RebootstrapRequired { control: wire_rebootstrap(&control) }, &scope.document_id).await;
         if !matches!(tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(frame)).await, Ok(Ok(()))) {
             return SocketBindingValidityV1::Unavailable;
         }
@@ -4835,24 +4924,27 @@ async fn handle_client_frame(
             if envelopes.iter().any(|envelope| &envelope.actor != actor) {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "socket subject actor mismatch".into(), messages: Vec::new() }) }], frontier };
-                return sender.send(encode(&ack).await).await.is_ok();
+                return sender.send(encode(&ack, document_id).await).await.is_ok();
             }
             if let Some(reason) = admit_writes(gate, principal, tenant, db_id, &envelopes, now_ms().max(0) as u64).await {
                 let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason, messages: Vec::new() }) }], frontier };
-                return sender.send(encode(&ack).await).await.is_ok();
+                return sender.send(encode(&ack, document_id).await).await.is_ok();
             }
             let _document_write = state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(DocumentScope::new(space_id, document_id))).lock_owned().await;
             let (ack, relay) = submit_commands(handle, actor, batch_id, envelopes, state.merge_policy).await;
             if let Some(commands_frame) = relay {
                 let _ = fanout.send(commands_frame);
             }
-            sender.send(encode(&ack).await).await.is_ok()
+            sender.send(encode(&ack, document_id).await).await.is_ok()
         }
-        ClientFrame::FrontierAdvertise { frontier } => {
+        ClientFrame::FrontierAdvertise { mut frontier } => {
+            if !wire_frontier_to_db(&mut frontier, document_id, db_id) {
+                return sender.send(error_frame("frontier-document-mismatch", "advertised frontier names a different document than this socket").await).await.is_ok();
+            }
             let core_document = db_core_document_id(db_id);
             match db::sync::handle_frontier_advertise(&state.db.storage().await.wal().await, core_document, &frontier, actor.clone()).await {
-                Ok(Some(catch_up)) => sender.send(encode(&catch_up).await).await.is_ok(),
+                Ok(Some(catch_up)) => sender.send(encode(&catch_up, document_id).await).await.is_ok(),
                 Ok(None) => true,
                 Err(_) => true,
             }
@@ -4987,6 +5079,18 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         }
     };
 
+    // 🧭️ The client advertises its frontier by the document id it opened; the db layer compares it
+    // against this hub's internal key, so it is re-keyed here — and a frontier that names any other
+    // document is refused outright rather than silently overwritten with the one we wanted.
+    let mut frontier = frontier;
+    if let Some(advertised) = frontier.as_mut() {
+        if !wire_frontier_to_db(advertised, &document_id, &db_id) {
+            let _ = sender.send(error_frame("frontier-document-mismatch", "hello frontier names a different document than this socket").await).await;
+            state.release_color(&space_id, &actor.0);
+            return;
+        }
+    }
+
     let session_id = directory::os_identity::time_ordered_id();
     let mut hello_session = match state.db.hello(db_id.clone(), frontier, session_id, actor.clone(), 64 * 1024).await {
         Ok(session) => session,
@@ -5005,7 +5109,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         }
     };
     let welcome_bytes = match welcome.frame() {
-        Ok(frame) => encode(frame).await,
+        Ok(frame) => encode(frame, &document_id).await,
         Err(error) => {
             let _ = sender.send(error_frame("storage", error.to_string()).await).await;
             state.release_color(&space_id, &actor.0);
@@ -5068,7 +5172,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         match hello_session.next_frame().await {
             Ok(Some(frame)) => {
                 let frame_bytes = match frame.frame() {
-                    Ok(owner) => encode(owner).await,
+                    Ok(owner) => encode(owner, &document_id).await,
                     Err(error) => {
                         let _ = sender.send(error_frame("storage", error.to_string()).await).await;
                         hello_session.cancel();
@@ -5109,7 +5213,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     }
     // 🎨️ Contract §C7.3: sent exactly once per connection, after `Welcome` (and its follow-up
     // bootstrap frames) and before any `Presence` frame.
-    let session_frame = encode(&ServerFrame::Session { actor: actor.0.clone(), color }).await;
+    let session_frame = encode(&ServerFrame::Session { actor: actor.0.clone(), color }, &document_id).await;
     let _session_authority = match socket_live_authority(&state, &socket_grant, &socket_live.id).await {
         Ok(admission) => admission,
         Err(SocketBindingValidityV1::Unauthorized) => {
@@ -5162,7 +5266,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         return;
     };
     if !replay.peers.is_empty() {
-        let replay_frame = encode(&ServerFrame::Presence { peers: replay.peers }).await;
+        let replay_frame = encode(&ServerFrame::Presence { peers: replay.peers }, &document_id).await;
         if !matches!(tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(replay_frame)).await, Ok(Ok(()))) {
             let _ = state.close_presence_for_live(&key, &space_id, &document_id, &actor.0, &socket_live.id).await;
             state.release_color(&space_id, &actor.0);
@@ -5279,7 +5383,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                                 live_gate.socket_broadcast_release.acquire().await.expect("socket broadcast test release").forget();
                             }
                         }
-                        let frame = encode(&frame).await;
+                        let frame = encode(&frame, &document_id).await;
                         let _authority = match socket_live_authority(&state, &socket_grant, &socket_live.id).await {
                             Ok(admission) => admission,
                             Err(SocketBindingValidityV1::Unauthorized) => {
@@ -10227,7 +10331,7 @@ async fn main() -> Result<(), HubError> {
     // routes later use — a tracer built after them would have silently lost every boot record.
     let tracer = Tracer::from_environment();
     let startup_artifact_authority = configured_artifact_authority(&data_dir, native_codec_provider, &tracer).await?;
-    let trusted_catalog_budget_exceeded = matches!(startup_artifact_authority, StartupArtifactAuthority::BudgetExceeded);
+    let trusted_catalog_stalled = matches!(startup_artifact_authority, StartupArtifactAuthority::Stalled);
     let artifact_authority = startup_artifact_authority.configured();
     let db = Arc::new(connect_db(&data_dir).await?);
     let directory = connect_directory(&data_dir).await?;
@@ -10237,8 +10341,9 @@ async fn main() -> Result<(), HubError> {
     let directory_service = Arc::new(DirectoryService::new(directory.clone(), 1024));
     let artifact_cas = connect_artifact_cas(&data_dir).await?;
     let startup_control = StartupCatalogControl::new(tracer.clone());
-    let startup_now_ms = startup_control.now_ms();
-    let startup_context = OperationContext::new(startup_now_ms.saturating_add(30_000), AuthorityLimits::maximum(), &startup_control);
+    // ⏳️ The artifact-CAS coordinator handshake is startup work no client is waiting on, so it takes
+    // the same no-progress bound as the catalog load above rather than a second wall-clock budget.
+    let startup_context = OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &startup_control)?;
     let artifact_cas_coordinator_id = directory.artifact_cas_coordinator_id().await?;
     artifact_cas.configure_coordinator(artifact_cas_coordinator_id, &startup_context).await?;
     let artifact_publication = Arc::new(CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(artifact_cas.clone()), HubVerifiedCheckpointPublisher::new(directory_service.clone(), artifact_cas.clone(), "system:artifact-authority")));
@@ -10316,7 +10421,7 @@ async fn main() -> Result<(), HubError> {
     #[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
     let inference_ready = false;
     let artifact_authority_reason =
-        artifact_authority_closed_reason(cfg!(feature = "native-artifact-execution"), trusted_catalog_budget_exceeded, data_dir.join("trusted-catalog/current.json").try_exists().unwrap_or(false));
+        artifact_authority_closed_reason(cfg!(feature = "native-artifact-execution"), trusted_catalog_stalled, data_dir.join("trusted-catalog/current.json").try_exists().unwrap_or(false));
     let readiness = Arc::new(declare_public_session_issuance(
         hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, agent_delegation_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute, inference_ready, artifact_authority_reason),
         credential_sign_in.is_enabled(),

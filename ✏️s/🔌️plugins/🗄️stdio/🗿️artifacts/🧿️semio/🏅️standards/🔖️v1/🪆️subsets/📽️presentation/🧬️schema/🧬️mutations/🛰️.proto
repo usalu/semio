@@ -27,7 +27,7 @@ message SemioPresentationMutation {
     InsertShape insert_shape = 7;
     RemoveShape remove_shape = 8;
     SetShapeFrame set_shape_frame = 9;
-    SetTextBoxBlocks set_textbox_blocks = 10;
+    SetTextBoxBlocks set_text_box_blocks = 10;
     InsertMaster insert_master = 11;
     RemoveMaster remove_master = 12;
     InsertLayout insert_layout = 13;

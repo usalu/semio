@@ -13,7 +13,7 @@ async fn writer_snapshot_and_mutation_owners_retire_one_exact_field_per_grant() 
             steps += 1;
         }
     }
-    assert_eq!(steps, 9, "four snapshot strings plus five child-reference strings retire independently");
+    assert_eq!(steps, 10, "five snapshot strings (schema, id, languageId, uri, text) plus five child-reference strings retire independently");
     drop(retirement);
 
     let hostile = WriterMutation::EditText(schema::mutations::EditText { text: "x".repeat(WRITER_ENVELOPE_FIELD_BYTES) });

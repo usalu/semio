@@ -13,6 +13,7 @@
 
 use crate::editor::wfc2d::config::{wfc2d_active_tile_id, Wfc2dConfig, Wfc2dConfigMutation};
 use crate::editor::wfc2d::modes::edit;
+use crate::editor::wfc2d::modes::edit::tools::fill;
 use crate::editor::wfc2d::modes::edit::windows::{graph, preview};
 use crate::editor::wfc2d::transient::{Wfc2dTransient, Wfc2dTransientMutation};
 use crate::mutations::{change_seed, change_tile_media, change_tile_weight, connect_slots, create_rule, create_slot, create_tile, delete_rule, delete_slot, delete_tile, disconnect_slots, move_slot, pin_slot, resize_slot, unpin_slot};
@@ -21,7 +22,7 @@ use crate::{Wfc2dMutation, Wfc2dSnapshot, WFC_2D_DIALECT, WFC_2D_DOCUMENT_SCHEMA
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
+    ActionArgDef, Effect, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest,
     ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, MergeMode, NoDraft,
     NoDraftMutation, NoPresence, NoPresenceMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
@@ -69,6 +70,8 @@ pub enum Wfc2dEditorCommand {
     ChangeActiveTile { tile_id: String },
     #[dsl(key = "solve")]
     Solve,
+    #[dsl(key = "commit-fill")]
+    CommitFill { payload_json: String },
     #[dsl(key = "set-active-example")]
     SetActiveExample { example_id: String },
     /// 🕹️ The NodeGraph canvas' OWN gesture channel: dragging a node and completing a wire both arrive
@@ -115,6 +118,7 @@ pub fn wfc2d_command_id(command: &Wfc2dEditorCommand) -> &'static str {
         Wfc2dEditorCommand::ChangeCamera { .. } => "change-camera",
         Wfc2dEditorCommand::ChangeActiveTile { .. } => "change-active-tile",
         Wfc2dEditorCommand::Solve => "solve",
+        Wfc2dEditorCommand::CommitFill { .. } => fill::COMMIT_FILL_ACTION_ID,
         Wfc2dEditorCommand::SetActiveExample { .. } => WFC_2D_SET_ACTIVE_EXAMPLE,
         Wfc2dEditorCommand::NodeGraphEdit { .. } => WFC_2D_NODE_GRAPH_EDIT,
     }
@@ -154,6 +158,7 @@ pub const WFC_2D_RETAINED_TOOL_IDS: &[&str] = &[
     "change-camera",
     "change-active-tile",
     "solve",
+    fill::COMMIT_FILL_ACTION_ID,
     WFC_2D_SET_ACTIVE_EXAMPLE,
     WFC_2D_NODE_GRAPH_EDIT,
 ];
@@ -194,7 +199,8 @@ const WFC_2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     artifact_route("delete-rule"),
     config_route("change-camera"),
     config_route("change-active-tile"),
-    ArtifactToolPublicationContract { tool_id: "solve", lanes: &[ArtifactToolPublicationLane::Transient] },
+    ArtifactToolPublicationContract { tool_id: "solve", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: fill::COMMIT_FILL_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Transient] },
     ArtifactToolPublicationContract { tool_id: WFC_2D_SET_ACTIVE_EXAMPLE, lanes: &[ArtifactToolPublicationLane::HostOnly] },
     artifact_route(WFC_2D_NODE_GRAPH_EDIT),
 ];
@@ -260,7 +266,10 @@ impl ArtifactCommandWork<EditorApp<Wfc2dEditor>> for Wfc2dCommandWork {
         }
         let emit = dispatch(input.command, input.snapshot, input.config)?;
         let transient = match input.command {
-            Wfc2dEditorCommand::Solve => solve_transient(input.snapshot)?,
+            Wfc2dEditorCommand::CommitFill { payload_json } => {
+                let payload = fill::decode_fill_payload(payload_json.as_bytes()).ok_or_else(|| Fault::from("wfc2d-commit-fill-payload"))?;
+                payload.set_solve_mutations()
+            }
             _ => Vec::new(),
         };
         self.completed = true;
@@ -619,7 +628,10 @@ pub fn dispatch(command: &Wfc2dEditorCommand, document: &Wfc2dSnapshot, config: 
             return Ok(Emit { config_mutations: mutations, description: Some("Arm tile".into()), ..Default::default() });
         }
         Wfc2dEditorCommand::Solve => {
-            return Ok(Emit { description: Some("Solve".into()), ..Default::default() });
+            return Ok(Emit { effects: fill::start_fill_effects(), description: Some("Solve".into()), ..Default::default() });
+        }
+        Wfc2dEditorCommand::CommitFill { .. } => {
+            return Ok(Emit { description: Some("Commit fill".into()), ..Default::default() });
         }
         Wfc2dEditorCommand::NodeGraphEdit { operations_json } => {
             let Some((mutation, description)) = wfc2d_node_graph_edit(document, operations_json) else {
@@ -715,13 +727,19 @@ pub fn dispatch(command: &Wfc2dEditorCommand, document: &Wfc2dSnapshot, config: 
 }
 
 /// 🖼️ The whole render rule set, likewise free of the framework's view bundle so a test can call it.
-pub fn render_body(body_key: &str, document: &Wfc2dSnapshot, config: &Wfc2dConfig, transient: &Wfc2dTransient) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+pub fn render_body(
+    body_key: &str,
+    document: &Wfc2dSnapshot,
+    config: &Wfc2dConfig,
+    transient: &Wfc2dTransient,
+    tool_run: Option<&semio_framework_plugin::ToolRunView>,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     match body_key {
         graph::WFC_GRAPH_BODY => {
             let camera = graph::GraphCamera { x: config.camera_x, y: config.camera_y, zoom: config.camera_zoom };
             graph::render(&Wfc2dGraphView(document), camera, &[]).map(semio_framework_plugin::built_to_component_tree)
         }
-        preview::WFC_2D_PREVIEW_BODY => preview::render(document, transient, config.camera_x, config.camera_y, config.camera_zoom).map(semio_framework_plugin::built_to_component_tree),
+        preview::WFC_2D_PREVIEW_BODY => preview::render(document, transient, tool_run, config.camera_x, config.camera_y, config.camera_zoom).map(semio_framework_plugin::built_to_component_tree),
         _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
     }
 }
@@ -827,6 +845,10 @@ impl ArtifactEditor for Wfc2dEditor {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, WFC_2D_DOCUMENT_SCHEMA, operation, generation))
     }
 
+    fn build_tool_run_job(request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
+        fill::build_tool_run_job(request)
+    }
+
     fn initial_snapshot() -> Wfc2dSnapshot {
         crate::examples::two_room_corridor::document()
     }
@@ -883,6 +905,25 @@ impl ArtifactEditor for Wfc2dEditor {
             "change-camera" => Wfc2dEditorCommand::ChangeCamera { x: arg_f64(args, "x", 0.0), y: arg_f64(args, "y", 0.0), zoom: arg_f64(args, "zoom", 1.0) },
             "change-active-tile" => Wfc2dEditorCommand::ChangeActiveTile { tile_id: arg_string(args, "tileId") },
             "solve" => Wfc2dEditorCommand::Solve,
+            fill::COMMIT_FILL_ACTION_ID => {
+                let payload_json = {
+                    let camel = arg_string(args, "payloadJson");
+                    if !camel.is_empty() {
+                        camel
+                    } else {
+                        let snake = arg_string(args, "payload_json");
+                        if !snake.is_empty() {
+                            snake
+                        } else {
+                            arg_string(args, "value")
+                        }
+                    }
+                };
+                if payload_json.is_empty() {
+                    return Err(Fault::from("wfc2d-commit-fill-args"));
+                }
+                Wfc2dEditorCommand::CommitFill { payload_json }
+            },
             WFC_2D_NODE_GRAPH_EDIT => Wfc2dEditorCommand::NodeGraphEdit { operations_json: arg_string(args, "operations") },
             WFC_2D_SET_ACTIVE_EXAMPLE => {
                 let requested = arg_string(args, "exampleId");
@@ -948,7 +989,7 @@ impl ArtifactEditor for Wfc2dEditor {
         tools: [
             "change-seed", "create-slot", "delete-slot", "move-slot", "resize-slot", "connect-slots", "disconnect-slots", "pin-slot", "unpin-slot",
             "create-tile", "delete-tile", "change-tile-weight", "change-tile-media", "create-rule", "delete-rule",
-            "change-camera", "change-active-tile", "solve", "setActiveExample", "nodeGraphEdit"
+            "change-camera", "change-active-tile", "solve", "commit-fill", "setActiveExample", "nodeGraphEdit"
         ]
     }
 
@@ -969,7 +1010,7 @@ impl ArtifactEditor for Wfc2dEditor {
     /// Every host request goes through `render_with_request_context` below, which does carry the
     /// lane; this exists for callers that have no request context to offer.
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        render_body(body_key, doc.snapshot, cfg.snapshot, &Wfc2dTransient::default())
+        render_body(body_key, doc.snapshot, cfg.snapshot, &Wfc2dTransient::default(), None)
     }
 
     /// 🫧️ The HOST-FACING render: the framework hands the app-local transient store in here, so this
@@ -999,7 +1040,7 @@ pub fn render_with_transient(
     cfg: &ConfigView<'_, Wfc2dConfig>,
     transient: &semio_framework_plugin::TransientView<'_, Wfc2dTransient>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-    render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot)
+    render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot, doc.tool_run())
 }
 //#endregion 🔖️Editor
 
@@ -1040,6 +1081,7 @@ pub fn create_wfc2d_editor() -> semio_framework_plugin::AppDefinition {
         .icon_id("network")
         .mode_def(edit::definition())
         .default_mode_id(edit::WFC_2D_EDIT_MODE_ID)
+        .tool(fill::definition())
         .window_kind_def(graph::definition())
         .window_kind_def(preview::definition())
         .default_layout(edit::layout())
@@ -1055,6 +1097,8 @@ pub fn create_wfc2d_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_interactions(graph::WFC_GRAPH_WINDOW, vec![InteractionRef::new("slot")])
         .action_with(ActionDefinition::new(WFC_2D_SET_ACTIVE_EXAMPLE, LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
         .action_args(WFC_2D_SET_ACTIVE_EXAMPLE, wfc2d_example_arg())
+        .action_destructive("delete-slot")
+        .action_destructive(WFC_2D_SET_ACTIVE_EXAMPLE)
         .action_with(wfc2d_action("create-tile", "Create Tile", "Kachel erstellen", ActionKind::Mutation))
         .action_with(wfc2d_action("delete-tile", "Delete Tile", "Kachel löschen", ActionKind::Mutation))
         .action_destructive("delete-tile")

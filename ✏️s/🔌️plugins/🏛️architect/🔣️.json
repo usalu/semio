@@ -7447,33 +7447,32 @@
                 "de": "Element hinzufügen"
               }
             },
-            "kind": "view",
-            "iconId": "eye",
+            "kind": "mutation",
+            "iconId": "sparkles",
             "args": [],
             "inPalette": true,
             "semantics": {
               "effects": {
-                "reads": [
-                  "config:{self}"
+                "writes": [
+                  "artifact:{self}"
                 ],
                 "external": false,
                 "destructive": false,
-                "reversible": false
+                "reversible": true
               },
               "policy": {
                 "scopes": [
-                  "artifacts.read",
-                  "shell.observe"
+                  "artifacts.write"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
-                "preview": "none",
+                "preview": "diff",
                 "undo": {
-                  "kind": "none"
+                  "kind": "inverse"
                 },
                 "idempotency": "none",
-                "expectedRevision": false,
+                "expectedRevision": true,
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
@@ -7492,33 +7491,32 @@
                 "de": "Element entfernen"
               }
             },
-            "kind": "view",
-            "iconId": "eye",
+            "kind": "mutation",
+            "iconId": "sparkles",
             "args": [],
             "inPalette": true,
             "semantics": {
               "effects": {
-                "reads": [
-                  "config:{self}"
+                "writes": [
+                  "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
-                "reversible": false
+                "destructive": true,
+                "reversible": true
               },
               "policy": {
                 "scopes": [
-                  "artifacts.read",
-                  "shell.observe"
+                  "artifacts.write"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
-                "preview": "none",
+                "preview": "diff",
                 "undo": {
-                  "kind": "none"
+                  "kind": "inverse"
                 },
                 "idempotency": "none",
-                "expectedRevision": false,
+                "expectedRevision": true,
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
@@ -7537,33 +7535,32 @@
                 "de": "Adjazenzfeld setzen"
               }
             },
-            "kind": "view",
-            "iconId": "eye",
+            "kind": "mutation",
+            "iconId": "sparkles",
             "args": [],
             "inPalette": true,
             "semantics": {
               "effects": {
-                "reads": [
-                  "config:{self}"
+                "writes": [
+                  "artifact:{self}"
                 ],
                 "external": false,
                 "destructive": false,
-                "reversible": false
+                "reversible": true
               },
               "policy": {
                 "scopes": [
-                  "artifacts.read",
-                  "shell.observe"
+                  "artifacts.write"
                 ],
-                "approval": "never"
+                "approval": "whenDestructive"
               },
               "execution": {
-                "preview": "none",
+                "preview": "diff",
                 "undo": {
-                  "kind": "none"
+                  "kind": "inverse"
                 },
                 "idempotency": "none",
-                "expectedRevision": false,
+                "expectedRevision": true,
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
@@ -11131,8 +11128,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "991f857fadde547c9f3bd421c6aff0236547e9091b2db189be0ad958f02efe06",
-    "coreWasmSha256": "9375c38bf396d1b300e7ad472a09415303b2671543bdaa574620ea356dfdb92b",
-    "descriptorSha256": "a37f22d5f121efdb74f5f92f7903767d2912ba90b9491d02034b29f4344d2b3d"
+    "wasmSha256": "663fcd4140ede4138c2967bda66d3725ca37ef4836d2ec52f7b88276c0eb94b0",
+    "coreWasmSha256": "12191b99dac17f16e2e8b1f3e547c6a4907f87ef2d01ce49eab985ff65c1ad79",
+    "descriptorSha256": "74dc7ace2152850e7e91c53f159ace5df48391ddc94ef5bac01cf0eb549a13d4"
   }
 }

@@ -162,13 +162,13 @@ async fn a_window_request_materialises_exactly_its_own_range() {
     let spec = oversized();
     let tree = build(&spec, &viewing(MEASURED_VIEWPORT_ROWS, vec![request(FORMS_PLAY_DOCUMENT_STEPS, None, 10, 4), request(&step_path("step:s10"), None, 0, 0)]));
     let steps = steps_section(&tree);
-    assert_eq!(window_or_empty(steps), Some(TreeWindow { total: 120, offset: 10 }));
+    assert_eq!(window_or_empty(steps), Some(TreeWindow { row_extent: Default::default(), total: 120, offset: 10 }));
     let expected_steps: Vec<String> = (10..14).map(|index| format!("step:s{index:02}")).collect();
     assert_eq!(row_keys(steps), expected_steps.iter().map(String::as_str).collect::<Vec<_>>(), "exactly steps [10, 14) keyed by their canonical tree ids");
 
     let nested = build(&spec, &viewing(MEASURED_VIEWPORT_ROWS, vec![request(&step_path("step:s00"), None, 50, 6)]));
     let first = steps_section(&nested).children.iter().next().expect("a step row");
-    assert_eq!(window_or_empty(first), Some(TreeWindow { total: 120, offset: 50 }));
+    assert_eq!(window_or_empty(first), Some(TreeWindow { row_extent: Default::default(), total: 120, offset: 50 }));
     let expected_questions: Vec<String> = (50..56).map(|index| format!("q00-{index:03}")).collect();
     assert_eq!(row_keys(first), expected_questions.iter().map(String::as_str).collect::<Vec<_>>(), "a nested window is the same law one level down, keyed by the raw question id");
 }

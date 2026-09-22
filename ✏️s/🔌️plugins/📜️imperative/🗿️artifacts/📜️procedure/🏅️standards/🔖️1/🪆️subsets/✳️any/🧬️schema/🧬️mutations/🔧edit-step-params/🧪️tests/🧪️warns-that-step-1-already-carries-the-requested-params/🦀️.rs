@@ -46,8 +46,14 @@ fn expected_after() -> ProcedureSnapshot {
 fn mutation() -> ProcedureMutation {
     dsl::os_pack::from_json_str(MUTATION).expect("edit-step-params mutation decodes")
 }
+/// 🧊️ `editStepParams` owns a live neural `Dictionary` (`newParams`), whose `Drop` is fail-closed
+/// (`final Dictionary ownership must be explicitly retired or owned by a cold boundary`), so every
+/// fixture value minted here is handed to `Mutation::retire_cold` instead of falling out of scope.
 fn built_outcome() -> protocol::MutationOutcome<ProcedureDiff> {
-    <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::diff(&mutation(), &before())
+    let mutation = mutation();
+    let outcome = <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::diff(&mutation, &before());
+    protocol::Mutation::retire_cold(mutation);
+    outcome
 }
 
 /// ▶️ The idempotent param edit is accepted and changes nothing: applying its diff reproduces the
@@ -65,7 +71,9 @@ async fn the_idempotent_edit_carries_before_to_an_identical_after() {
 #[semio_framework_async_macros::async_test]
 async fn the_inverse_resends_the_identical_dictionary() {
     let base = before();
-    let inverse = <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::inverse(&mutation(), &base);
+    let forward = mutation();
+    let inverse = <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::inverse(&forward, &base);
+    protocol::Mutation::retire_cold(forward);
     assert_eq!(inverse.len(), 1, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: the inverse of one param edit is exactly one param edit back");
     let ProcedureMutation::EditStepParams(undo) = &inverse[0] else {
         panic!("edit-step-params/warns-that-step-1-already-carries-the-requested-params: edit-step-params' inverse must be an edit-step-params");
@@ -76,7 +84,12 @@ async fn the_inverse_resends_the_identical_dictionary() {
         let redo = <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::diff(step, &snapshot);
         snapshot = protocol::MutationDiff::apply(redo.diff(), &snapshot).expect("the edit-step-params inverse step applies");
     }
-    assert_eq!(snapshot, base, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: undoing a no-op must still land back on the before-document");
+    let landed = snapshot == base;
+    // 🧊️ Every minted inverse owns its own `newParams` root — retire before asserting.
+    for step in inverse {
+        protocol::Mutation::retire_cold(step);
+    }
+    assert!(landed, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: undoing a no-op must still land back on the before-document");
 }
 
 /// 🔣️ Both committed documents and the `editStepParams` payload are canonical — `newParams` is a
@@ -89,7 +102,9 @@ async fn committed_json_is_canonical() {
         let original: serde_json::Value = serde_json::from_str(text).expect("imperative document reparses");
         assert_eq!(reencoded, original, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: committed {label} document JSON is not canonical");
     }
-    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("editStepParams payload encodes");
+    let payload = mutation();
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&payload)).expect("editStepParams payload encodes");
+    protocol::Mutation::retire_cold(payload);
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("editStepParams payload reparses");
     assert_eq!(reencoded, original, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: committed editStepParams JSON is not canonical");
 }

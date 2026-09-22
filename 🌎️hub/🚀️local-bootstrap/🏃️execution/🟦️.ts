@@ -11,7 +11,12 @@ import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️i
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalProfile, verifyAuthenticatedFrame } from "../🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LocalFrameReader, writeLocalFrame } from "../📡️framing/🟦️.ts";
 
-export const LOCAL_READINESS_DEADLINE_MS = 30_000;
+/** ⏳ The span of NO OBSERVABLE PROGRESS that ends a readiness wait. It is not a total budget and
+ * never was a good one: a total wall budget charges a booting hub for every millisecond the machine
+ * spends on other work, so a launcher on a busy machine abandoned a hub that was still coming up
+ * (measured 2026-09-21 by CE2 — two of three 7621 starts, while 17 rustc ran). The number is
+ * unchanged from the total deadline it replaces: nothing here is a lengthened timeout. */
+export const LOCAL_READINESS_STALL_BOUND_MS = 30_000;
 
 export type LocalHubRunAllocationOperations = Readonly<{
   platform: NodeJS.Platform;
@@ -239,24 +244,44 @@ export function localHubReadinessAdmitted(body: Record<string, any>, status: num
   return fullyReady || (bootstrapSecuritySmoke && bootstrapReadyOnly);
 }
 
-/** ⏱️ Polls the bounded readiness endpoint until the exact local run is admitted. */
-export async function waitForReadiness(run: LocalHubRun, bootstrapSecuritySmoke = false): Promise<Record<string, any>> {
-  const deadline = Date.now() + LOCAL_READINESS_DEADLINE_MS;
+/** 🔭 Everything one poll can observe about a booting hub, flattened into the exact string whose
+ * CHANGE means the hub advanced: whether `/readyz` answered at all, its HTTP status, the readiness
+ * status it declared, its closed gates, and how many bytes the hub has written (captured runs only —
+ * the hub rate-limits an in-flight `server.catalog.publication` record so a pre-bind catalog load is
+ * visible here too). Anything new in this string restarts {@link LOCAL_READINESS_STALL_BOUND_MS}. */
+function localHubReadinessObservation(run: LocalHubRun, answer: string): string {
+  return `${answer} bytes=${run.output().length}`;
+}
+
+/** ⏱️ Polls the bounded readiness endpoint until the exact local run is admitted, bounded by how long
+ * the hub goes without showing any sign of advancing rather than by how long the boot takes. */
+export async function waitForReadiness(run: LocalHubRun, bootstrapSecuritySmoke = false, stallBoundMs = LOCAL_READINESS_STALL_BOUND_MS): Promise<Record<string, any>> {
   let closedGates = "no /readyz answer was ever received";
-  while (Date.now() < deadline) {
+  let observation = "";
+  let observedAt = Date.now();
+  for (;;) {
     if (run.child.exitCode !== null) throw new Error("hub exited before readiness");
+    let answer = "no-answer";
     try {
       const response = await fetch(`http://127.0.0.1:${run.port}/readyz`, { signal: AbortSignal.timeout(1000) });
       const body = (await response.json()) as Record<string, any>;
       if (localHubReadinessAdmitted(body, response.status, run.runId, bootstrapSecuritySmoke, run.publicSessionIssuance)) return body;
       const blocked = Array.isArray(body.blockedBy) ? (body.blockedBy as { gate: string; reason: string }[]) : [];
       closedGates = blocked.length ? blocked.map((closed) => `${closed.gate}=${closed.reason}`).join(" ") : `status=${body.status} with no closed gate declared`;
+      answer = `http=${response.status} ${closedGates}`;
     } catch (error) {
       if (error instanceof Error && error.message === "hub readiness binding mismatch") throw error;
     }
+    const next = localHubReadinessObservation(run, answer);
+    const now = Date.now();
+    if (next !== observation) {
+      observation = next;
+      observedAt = now;
+    } else if (now - observedAt >= stallBoundMs) {
+      throw new Error(`hub readiness stalled — nothing about the hub changed for ${now - observedAt} ms; last observation: ${next}; closed gates: ${closedGates}`);
+    }
     await new Promise<void>((resolveDelay) => setTimeout(resolveDelay, 50));
   }
-  throw new Error(`hub readiness deadline exceeded — closed gates: ${closedGates}`);
 }
 
 /** ⏳ Waits for one already-owned child without taking over its termination policy. */

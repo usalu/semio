@@ -97,6 +97,7 @@
     "maximumRowHeight": 22.4,
     "rowHeights": { "grid": 14.4, "grid-visible": 22.4, "grid-mode": 16, "grid-spacing": 22.4, "sun": 14.4 },
     "minimumUnusedHeight": 450,
-    "controlColumnWidth": 104
+    "controlColumnWidth": 104,
+    "checkboxWidth": 9.6
   }
 }

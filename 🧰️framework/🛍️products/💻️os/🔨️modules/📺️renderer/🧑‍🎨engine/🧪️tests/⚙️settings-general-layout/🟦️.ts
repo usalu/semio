@@ -117,6 +117,7 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
       const control = row!.querySelector<HTMLElement>("[data-slot='tree-item-control']");
       expect(control, vector.controlId).not.toBeNull();
       expect(control!.parentElement?.style.gridTemplateColumns, vector.controlId).toBe(contract.react.gridTemplateColumns);
+      expect(control!.closest<HTMLElement>("[data-slot='tree']")?.style.getPropertyValue("--tree-value-column"), vector.controlId).toBe(contract.react.valueColumn);
       const widthOwner = control!.querySelector<HTMLElement>("[data-detail-panel-control]");
       expect(widthOwner?.dataset.detailPanelControl, vector.controlId).toBe(vector.widthMode === "fill" ? contract.react.fillAttribute : contract.react.fitAttribute);
       const heightOwner =
@@ -184,10 +185,10 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
     view.unmount();
   });
 
-  test("mounted React preferences publish appearance and locale values without a guest refresh", () => {
+  test("mounted React preferences expose each host-only or full-refresh publication lane", () => {
     const publication = fixture.retainedPreferencePublication;
-    expect(publication.requiresGuestRefresh).toBe(false);
     for (const vector of publication.cases) {
+      expect(vector.publicationLane).toBe(vector.requiresGuestRefresh ? "settle" : "dispatch");
       const values: string[] = [];
       const view = render(
         h(

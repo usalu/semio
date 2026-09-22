@@ -462,6 +462,18 @@ impl TreePresentation {
     }
 }
 
+/// 🪟️ Closed geometry token for one unmaterialised row in a virtual Tree window.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub enum TreeWindowRowExtent {
+    #[default]
+    Standard,
+    CompactText,
+    CompactSmallControl,
+    CompactControl,
+}
+
 /// 🪟️ The materialised slice of a logically `total`-long child list: the record's `children` are the
 /// entries `[offset, offset + children.len())` of that list. `total > 0` with no materialised
 /// children means expandable-but-not-yet-loaded, never "empty"; a renderer pitches the unmaterialised
@@ -472,6 +484,7 @@ impl TreePresentation {
 pub struct TreeWindow {
     pub total: u32,
     pub offset: u32,
+    pub row_extent: TreeWindowRowExtent,
 }
 
 /// 🧾️ Node records a presented panel body may spend OUTSIDE its windowed containers: the fixed rows a

@@ -46,7 +46,12 @@ async fn reorder_steps_missing_target_is_error() {
 async fn edit_step_params_inverse_law() {
     let base = default_snapshot();
     let params = Dictionary::new().insert("message", Value::Atom(Atom::String("hi".into())));
-    assert_mutation_inverse_law(&base, &edit_step_params(PathRef::default(), "step-2".into(), params)).await;
+    // 🧊️ `new_params` is a live neural `Dictionary`: the operation is RETIRED, never dropped
+    // (`ProcedureMutation`'s `retire_cold = retire_procedure_mutation`). The law itself retires every
+    // inverse it mints — see `protocol_laws::assert_mutation_inverse_law`.
+    let operation = edit_step_params(PathRef::default(), "step-2".into(), params);
+    assert_mutation_inverse_law(&base, &operation).await;
+    protocol::Mutation::retire_cold(operation);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -250,7 +250,7 @@ struct FakePublisher {
 impl VerifiedCheckpointPublisher for FakePublisher {
     async fn reserve(&self, plan: &chunk_cas::ArtifactCasOwnershipPlanV1, context: &OperationContext<'_>) -> Result<chunk_cas::ArtifactCasReservation, AuthorityError> {
         context.checkpoint()?;
-        Ok(chunk_cas::ArtifactCasReservation::unfenced(plan.clone(), 1, 1, context.deadline_ms()))
+        Ok(chunk_cas::ArtifactCasReservation::unfenced(plan.clone(), 1, 1, context.deadline_ms().unwrap_or_else(|| context.now_ms())))
     }
 
     async fn publish_reserved(&self, checkpoint: &ArtifactCheckpoint, reservation: &chunk_cas::ArtifactCasReservation, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
@@ -483,4 +483,48 @@ fn authority_diagnostics_are_utf8_safe_and_fixed_bounded_before_retention() {
     let message = bounded_message("é".repeat(AUTHORITY_MAX_DIAGNOSTIC_BYTES));
     assert!(message.len() <= AUTHORITY_MAX_DIAGNOSTIC_BYTES);
     assert!(message.is_char_boundary(message.len()));
+}
+
+/// 🧗️ A stall-bounded operation is bounded by its own progress, never by the calendar. Four facts,
+/// because dropping any one of them turns the bound back into the wall clock it replaced or into no
+/// bound at all: (1) a slow operation that keeps reaching checkpoints survives arbitrarily far past
+/// the span — the case that refused two real hub starts on a busy machine; (2) one uninterrupted
+/// span with NO checkpoint refuses, and refuses as `Stalled`, never as `DeadlineExceeded`, because
+/// nothing promised an answer by an instant; (3) cancellation still wins, and wins before the stall
+/// verdict; (4) a zero span is refused at construction instead of silently meaning "never".
+#[test]
+fn a_stall_bounded_context_refuses_only_when_it_reached_no_checkpoint_for_a_whole_span() {
+    let patient = control();
+    let context = OperationContext::stall_bounded(100, limits(), &patient).expect("stall bound");
+    for step in 1..=50u64 {
+        patient.now_ms.store(100 + step * 99, Ordering::SeqCst);
+        assert_eq!(context.checkpoint(), Ok(()), "a checkpoint every 99 ms of a 100 ms span must never refuse, however long the whole operation runs");
+    }
+    assert_eq!(patient.now_ms.load(Ordering::SeqCst), 5_050, "the surviving operation ran 49× its own span");
+
+    let stalled = control();
+    let context = OperationContext::stall_bounded(100, limits(), &stalled).expect("stall bound");
+    stalled.now_ms.store(199, Ordering::SeqCst);
+    assert_eq!(context.checkpoint(), Ok(()));
+    stalled.now_ms.store(299, Ordering::SeqCst);
+    assert_eq!(context.checkpoint(), Err(AuthorityError::Stalled));
+    assert_ne!(AuthorityError::Stalled, AuthorityError::DeadlineExceeded);
+
+    let cancelled = control();
+    let context = OperationContext::stall_bounded(100, limits(), &cancelled).expect("stall bound");
+    cancelled.cancelled.store(true, Ordering::SeqCst);
+    cancelled.now_ms.store(100_000, Ordering::SeqCst);
+    assert_eq!(context.checkpoint(), Err(AuthorityError::Cancelled), "cancellation is decided before the stall verdict");
+
+    assert_eq!(OperationContext::stall_bounded(0, limits(), &control()).err(), Some(AuthorityError::InvalidLimits));
+}
+
+/// ⏱️ The two bounds answer `deadline_ms()` differently on purpose: a calendar operation hands its
+/// instant to the CAS lease horizons, and a stall-bounded one has no instant to hand over, so those
+/// leases fall back to their own maximum TTL rather than to an invented deadline.
+#[test]
+fn only_a_calendar_bounded_context_publishes_an_absolute_deadline() {
+    let clock = control();
+    assert_eq!(OperationContext::new(200, limits(), &clock).deadline_ms(), Some(200));
+    assert_eq!(OperationContext::stall_bounded(100, limits(), &clock).expect("stall bound").deadline_ms(), None);
 }

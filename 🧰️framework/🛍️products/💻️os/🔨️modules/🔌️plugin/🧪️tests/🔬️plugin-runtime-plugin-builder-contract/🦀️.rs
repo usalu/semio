@@ -2330,12 +2330,20 @@ mod plugin_builder_contract_tests {
             // worker's emit has walked the publication ladder above. Rebuilt here through the SAME
             // `result_from_last_edit` the unmigrated route calls, with the SAME `amended_same_edit` tail
             // rule, so a coalesced gesture still reports only the operation THIS dispatch added.
+            // 🧩️ `test_result_from_last_edit` rebuilds from the PARENT store's tail edit only and
+            // leaves `member_edits` empty by construction, so it must never overwrite a composed
+            // result the pipeline itself already filled — a composite gesture's child lane would
+            // vanish into the rebuild.
             let after_edit_id = self.0.test_last_edit_id();
             if after_edit_id.is_some() {
                 let tail_offset = if after_edit_id == before_edit_id { before_tail } else { (0, 0) };
                 let settled = self.0.test_result_from_last_edit(verb, meta, tail_offset).await;
-                admitted.mutations = settled.mutations;
-                admitted.inverse_group = settled.inverse_group;
+                if admitted.mutations.is_empty() {
+                    admitted.mutations = settled.mutations;
+                }
+                if admitted.inverse_group.member_edits.is_empty() && admitted.inverse_group.mutations.is_empty() {
+                    admitted.inverse_group = settled.inverse_group;
+                }
             }
             Ok(admitted)
         }
@@ -2408,9 +2416,18 @@ mod plugin_builder_contract_tests {
         let platform_visible = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();
         assert_eq!(platform_visible, registered, "every activated factory key is joined on the platform bus under this controller, and nothing else is");
         let before = platform.action_bus.dispatch_count();
+        let verb = <TestApp<false, TEST_APP_TOOLS_NONE> as ArtifactApp>::command_id(&TestCommand::IncrementViaCommand).await;
+        assert!(!registered.contains(verb), "the unproved verb has no activated factory of its own");
+        assert!(!declared.contains(verb), "and this registry does not declare it migrated either");
         let error = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect_err("an unproved typed command must remain fail closed");
-        assert_eq!(error.code.0, "interactive-job.missing-factory");
+        // 🚦️ `not-ui-safe`, not `missing-factory`: `contract_registry` declares every verb
+        // `BatchOnlyPendingRewrite`, and the UI-safety backstop is read from the manifest declaration
+        // at the HEAD of `admit_command_wire`, before any proof is resolved. A non-migrated verb has
+        // no factory precisely BECAUSE it is not migrated, so `missing-factory` was the consequence,
+        // not the cause — the clause above still proves there is no factory to find.
+        assert_eq!(error.code.0, "interactive-job.not-ui-safe");
         assert_eq!(platform.action_bus.dispatch_count(), before);
+        artifact_app_laws::close_registered_fixture_app(&mut app);
     }
 
     //#region 🧪️SharedFrameworkActionRouteTests
@@ -2424,9 +2441,13 @@ mod plugin_builder_contract_tests {
         // identity this law joins must name the exact owner the wrapper above was built on — a bare
         // `TestApp` is `TestApp<false, TEST_APP_TOOLS_FULL>`, a DIFFERENT owner and a different TypeId.
         type UnprovedFrameworkOwner = TestApp<false, TEST_APP_TOOLS_NONE>;
+        // 📏️ The last column is `ToolExecutionContract::max_raw_wire_bytes`, i.e. the `$raw` column of
+        // this verb's own `framework_reserved_job!(..)` line — NOT its output cap. `copy`/`cut` carry
+        // an 8 KiB raw wire and a 1 MiB OUTPUT; recording the output cap here made the law demand a
+        // 1 MiB wire admission that the bus has never granted them.
         let expected: [(&str, &str, std::any::TypeId, &'static str, usize); 12] = [
-            ("copy", "framework.reserved.copy.v1", std::any::TypeId::of::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), 1_048_576),
-            ("cut", "framework.reserved.cut.v1", std::any::TypeId::of::<FrameworkCutJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkCutJobFactory<UnprovedFrameworkOwner>>(), 1_048_576),
+            ("copy", "framework.reserved.copy.v1", std::any::TypeId::of::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), 8_192),
+            ("cut", "framework.reserved.cut.v1", std::any::TypeId::of::<FrameworkCutJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkCutJobFactory<UnprovedFrameworkOwner>>(), 8_192),
             ("paste", "framework.reserved.paste.v1", std::any::TypeId::of::<FrameworkPasteJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkPasteJobFactory<UnprovedFrameworkOwner>>(), 1_048_576),
             ("noteShellCommand", "framework.reserved.noteShellCommand.v1", std::any::TypeId::of::<FrameworkNoteShellCommandJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkNoteShellCommandJobFactory<UnprovedFrameworkOwner>>(), 65_536),
             (
@@ -2466,6 +2487,8 @@ mod plugin_builder_contract_tests {
             assert_eq!(admission.factory_type_name, factory_type_name);
             assert!(platform.action_bus.admit_exact_wire(&controller_id, tool_id, schema_id, &vec![0_u8; maximum + 1]).is_err());
         }
+        let mut app = app;
+        artifact_app_laws::close_registered_fixture_app(&mut app);
     }
 
     #[test]
@@ -4352,7 +4375,13 @@ mod plugin_builder_contract_tests {
         // 🧾️ One `KernelMutation` for the parent's own op, one for the child's — each carrying
         // its OWN document handle, never the parent's, for the child entry (Task 3's "REAL
         // target" requirement).
-        assert_eq!(result.mutations.len(), 2);
+        assert_eq!(
+            result.mutations.len(),
+            2,
+            "a composite gesture carries the parent's op and the child's; got documents {:?} and {} member edit(s)",
+            result.mutations.iter().map(|mutation| mutation.document).collect::<Vec<_>>(),
+            result.inverse_group.member_edits.len()
+        );
         let parent_handle = ArtifactHandle(meta().instance_id as u128);
         let child_handle = artifact_handle_of("child-1").await;
         assert_ne!(parent_handle, child_handle);
@@ -4480,6 +4509,13 @@ mod plugin_builder_contract_tests {
         drain_and_close_composed_fixture(&mut app);
     }
 
+    /// 🎡️ The property is RECLAMATION, not the step word. `maintenance_step` rotates: one call
+    /// walks every stage that still has something to give, so a later idle stage legitimately answers
+    /// `Complete` and that is what the call returns — the previous form of this law read that as the
+    /// LYING owner reaching a terminal step and failed on a stage it never visited. What must never
+    /// happen is the lying owner's authority leaving the registry: every turn until the fault arrives
+    /// is asserted to leave `child_content_retirements` populated, which is strictly what the old
+    /// clause was a proxy for, and the fault must still arrive by name before any reclaim.
     #[semio_framework_async_macros::async_test]
     async fn child_root_maintenance_requires_terminal_empty_before_reclaim() {
         let mut app = contract_composed_app_raw().await;
@@ -4490,10 +4526,14 @@ mod plugin_builder_contract_tests {
         app.maintenance_stage = 4;
         assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("transfer retirement authority"), PluginCloseStep::Pending { .. }));
         let mut faulted = None;
-        for _ in 0..64 {
+        for turn in 0..64 * usize::from(MAINTENANCE_STAGES) {
             app.maintenance_stage = 4;
             match PluginApp::maintenance_step(&mut app, 1, 4096) {
-                Ok(step) => assert!(matches!(step, PluginCloseStep::Pending { .. }), "the lying owner must never reach a terminal step: {step:?}"),
+                Ok(step) => assert!(
+                    !app.child_content_retirements.is_empty(),
+                    "the lying owner's authority must never be reclaimed without its terminal witness: turn {turn} answered {step:?} from stage {} and left the registry empty",
+                    (app.maintenance_stage + MAINTENANCE_STAGES - 1) % MAINTENANCE_STAGES
+                ),
                 Err(fault) => {
                     faulted = Some(fault);
                     break;
@@ -5525,7 +5565,7 @@ mod plugin_builder_contract_tests {
         let cold = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("a log of any length must assemble");
         assert_eq!(cold.children[1].children.len(), default_rows.min(UI_BUILT_CHILDREN_MAX), "a cold paint materialises one viewport, clamped by the built-children ceiling");
         assert!(cold.children[1].children.iter().all(|row| row.key.as_str().starts_with(prefix)), "rows are the entries themselves, never page columns");
-        assert_eq!(history_commands_window(&cold), Some(TreeWindow { total: rows as u32, offset: 0 }), "the host sees the whole extent");
+        assert_eq!(history_commands_window(&cold), Some(TreeWindow { row_extent: Default::default(), total: rows as u32, offset: 0 }), "the host sees the whole extent");
 
         let offset = fixture["requestOffset"].as_u64().unwrap() as u32;
         let requested = fixture["requestRows"].as_u64().unwrap() as u32;
@@ -5543,7 +5583,7 @@ mod plugin_builder_contract_tests {
         let scrolled = ui_history_panel(&history, "ctrl", false, false, &view).await.expect("a scrolled window must assemble");
         assert_eq!(scrolled.children[1].children.len(), requested as usize);
         assert_eq!(scrolled.children[1].children[0].key.as_str(), format!("{prefix}{}", offset + 1), "the slice starts where the host scrolled to");
-        assert_eq!(history_commands_window(&scrolled), Some(TreeWindow { total: rows as u32, offset }));
+        assert_eq!(history_commands_window(&scrolled), Some(TreeWindow { row_extent: Default::default(), total: rows as u32, offset }));
 
         for panel in [&cold, &scrolled] {
             let json = history_body_json(panel).to_string();
@@ -5577,7 +5617,7 @@ mod plugin_builder_contract_tests {
         assert!(rows > 0 && rows <= entries, "the window never exceeds the live count: {rows}");
         assert_eq!(actions, rows, "every materialised row keeps its inline revert");
         assert!(actions <= UI_VALUE_PAGE_ROWS, "a window can never out-spend the arena page: {actions} > {UI_VALUE_PAGE_ROWS}");
-        assert_eq!(history_commands_window(&panel), Some(TreeWindow { total: entries as u32, offset: 0 }));
+        assert_eq!(history_commands_window(&panel), Some(TreeWindow { row_extent: Default::default(), total: entries as u32, offset: 0 }));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -7307,9 +7347,15 @@ mod plugin_builder_contract_tests {
 
         let result = app.dispatch_typed(TestCommand::SpawnCountTask, &spawn_meta).await.expect("dispatching SpawnCountTask must succeed");
         assert!(result.mutations.is_empty(), "SpawnCountTask itself must emit no document mutation — only the LATER resume does");
-        // 🪪️ `spawn_task` is keyed off `meta.instance_id` (`dispatch_emit`'s own `meta`, i.e.
-        // `spawn_meta` above, which shares `instance`'s value by construction).
-        assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 1, "dispatch_typed(SpawnCountTask) must have spawned exactly one task");
+        // 🪜️ A migrated verb's `dispatch_typed` only ADMITS: the emit is owned by the mounted
+        // operation, and every lane of it — the task lane included — is spent by the bounded
+        // publication ladder, one lane per unit. Asserting the spawn before settling would assert
+        // that a migrated command never spawns.
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, instance).await.expect("the spawning operation's publication settles");
+        assert_eq!(receipt.lanes, vec![TypedOperationResultLane::Terminal], "the task lane spends its own publication unit and mints no host page: the operation's only page is its terminal one");
+        // 🪪️ `spawn_task` is keyed off `meta.instance_id` (the publication ladder's own captured
+        // `mounted.meta`, i.e. `spawn_meta` above, which shares `instance`'s value by construction).
+        assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 1, "the publication ladder's task lane must have spawned exactly one task");
 
         // ▶️ First poll: the task runs up to its `.await` on `host.storage_read(..)` and parks —
         // genuinely pending, not synchronously resolved.

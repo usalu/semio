@@ -78,6 +78,7 @@ fn every_authored_action_id_maps_back_to_a_typed_command() {
         "set-grid-snap-enabled",
         "set-grid-factor",
         "solve",
+        "commit-fill",
         "setActiveExample",
         "canvasPointerDown",
         "canvasPointerMove",
@@ -128,6 +129,7 @@ fn the_command_channel_round_trips_through_its_binary_op_form() {
         Grid2dEditorCommand::PickCell { x: 2, y: 1 },
         Grid2dEditorCommand::SetCamera { x: 1.0, y: 2.0, zoom: 3.0 },
         Grid2dEditorCommand::Solve,
+        Grid2dEditorCommand::CommitFill { solve_json: String::new() },
     ] {
         let bytes = <Grid2dEditorCommand as protocol::OpBinary>::encode_op(&command).expect("encode");
         assert_eq!(<Grid2dEditorCommand as protocol::OpBinary>::decode_op(&bytes).expect("decode"), command);
@@ -229,4 +231,68 @@ fn the_armed_utility_falls_back_through_window_then_focus_then_flat_then_select(
     view.window_id = Some("rendered".into());
     view.active_utility_by_window_id.insert("rendered".into(), grid::UTILITY_SELECT.into());
     assert_eq!(grid2d_active_utility(&view), grid::UTILITY_SELECT);
+}
+
+#[test]
+fn the_solve_command_starts_the_fill_run() {
+    let document = crate::examples::grid2d::pipes::document();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let doc = ArtifactView::new(&document, &history);
+    let no_config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &no_config, window: None };
+    let emit = Grid2dEditor::dispatch(&Grid2dEditorCommand::Solve, &doc, &cfg, None).expect("solve starts");
+    assert!(emit.window_config_mutations.is_empty(), "solve must not write solve_json itself");
+    assert!(
+        emit.effects.iter().any(|effect| match effect {
+            semio_framework::kernel::Effect::DispatchAction { action, args: Some(args), .. } => {
+                action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID
+                    && matches!(args, dsl::DslValue::Object(entries) if entries.iter().any(|(key, value)| key == semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID && matches!(value, dsl::DslValue::String(text) if text == fill_tool::TOOL_ID)))
+            }
+            _ => false,
+        }),
+        "solve must start the fill tool run: {:?}",
+        emit.effects
+    );
+}
+
+#[test]
+fn the_commit_fill_command_writes_solve_json() {
+    let document = crate::examples::grid2d::pipes::document();
+    let commit = crate::schema::inferences::solve_with_job(&document).expect("pipes solves");
+    let history = semio_framework_plugin::HistoryView::empty();
+    let doc = ArtifactView::new(&document, &history);
+    let no_config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &no_config, window: None };
+    let mut view = ViewModel::default();
+    view.window_id = Some("preview-1".into());
+    view.window_instances = vec![semio_framework::ViewWindowInstance { id: "preview-1".into(), window_kind_id: preview::WINDOW_KIND_ID.into() }];
+    let solve_json = protocol::json::to_json_string(&commit);
+    let emit = Grid2dEditor::dispatch(&Grid2dEditorCommand::CommitFill { solve_json: solve_json.clone() }, &doc, &cfg, Some(&view)).expect("commit-fill writes");
+    assert_eq!(emit.window_config_mutations.len(), 1);
+    assert_eq!(emit.description.as_deref(), Some("Commit fill"));
+}
+
+/// ⚖️ LAW: `TOOL_IDS`, the per-tool publication-lane contracts and the `bounded_first_step_tool_proofs!`
+/// rows are ONE roster. The framework joins all three at app registration and refuses the whole app with
+/// `interactive-job.publication-contract` the moment they drift — and that refusal is a guest-side
+/// `panic!`, so one missing lane row aborts the entire wfc component and EVERY wfc pane reaches
+/// `data-shell-error` instead of `data-shell-ready`. That is exactly how `wfc2d`, `wfc3d` and `grid3d`
+/// went red on 2026-09-22 when a new tool reached `TOOL_IDS` and the proofs but not the lane contracts.
+#[test]
+fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_roster() {
+    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    let tools: std::collections::BTreeSet<&str> = GRID2D_TOOL_IDS.iter().copied().collect();
+    assert_eq!(<Grid2dCommandJobFactory as ArtifactOwnedToolJobFactory>::TOOL_IDS, GRID2D_TOOL_IDS);
+    let publication: std::collections::BTreeSet<&str> = <Grid2dCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
+    assert_eq!(publication, tools, "every owned tool declares exactly one publication-lane contract");
+    for contract in <Grid2dCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
+        assert!(!contract.lanes.is_empty(), "tool {} declares no publication lane", contract.tool_id);
+        assert!(
+            !contract.lanes.contains(&semio_framework_plugin::ArtifactToolPublicationLane::HostOnly) || contract.lanes.len() == 1,
+            "tool {} mixes the HostOnly lane with a publishing lane",
+            contract.tool_id
+        );
+    }
+    let proofs: std::collections::BTreeSet<&str> = <Grid2dEditor as ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
+    assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
 }

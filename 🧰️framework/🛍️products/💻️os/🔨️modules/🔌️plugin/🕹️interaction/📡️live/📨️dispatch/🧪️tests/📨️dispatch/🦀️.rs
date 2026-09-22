@@ -398,10 +398,25 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
     let cell = std::sync::Arc::new(super::super::RuntimeAppCell::new(AppInstance { id: 7, app: TestRuntimeApps::from(query_app().await), surface_contexts: Default::default() }));
     runtime.instances.borrow_mut().insert_admitted(7, cell.clone());
     let denied = wire_command(&runtime, 0, protocol::AppCommand::TransactionPrepare { seq: 0, txn_id: "denied".into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: Vec::new(), label: String::new(), origin: Vec::new() }).await;
-    let fault = denied.iter().find_map(|frame| match frame { protocol::AppFrame::Error { in_reply_to: Some(0), fault, .. } => Some(fault), _ => None }).expect("encoded transaction route must remain explicitly unadmitted");
-    let fault: Fault = super::super::decode_wire_serialized(fault).await.unwrap();
-    assert_eq!(fault.code.0, "plugin.command-route-state-machine-required");
-    assert!(!denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { .. })));
+    // 🔒️ The encoded transaction route is no longer refused wholesale: it is admitted and answers
+    // with its OWN typed frame, failing CLOSED on the payload itself. The refusal this law used to
+    // name, `plugin.command-route-state-machine-required`, exists NOWHERE in the tree any more — it
+    // was the route-level rejection that has been replaced by the per-payload one below. What the
+    // law protects is unchanged: an encoded `TransactionPrepare` can never smuggle an unvalidated
+    // owner-mutation payload past the decoder, and no `Error` frame hides the outcome.
+    assert!(!denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Error { .. })), "the route answers through its own transaction frame, not an error frame: {denied:?}");
+    let rejection = denied
+        .iter()
+        .find_map(|frame| match frame {
+            protocol::AppFrame::TransactionPrepared { txn_id, rejection, .. } if txn_id == "denied" => Some(rejection),
+            _ => None,
+        })
+        .unwrap_or_else(|| panic!("the encoded transaction route answers its own TransactionPrepared frame; got {denied:?}"));
+    assert!(!rejection.is_empty(), "an empty owner-mutation payload must be REJECTED, never silently prepared: {denied:?}");
+    let fault: Fault = super::super::decode_wire_serialized(rejection).await.unwrap();
+    assert_eq!(fault.code.0, "transaction.unknown-mutation");
+    assert!(fault.message.contains("did not decode as a"), "the refusal names the decoder that rejected it: {fault:?}");
+    assert!(denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == 0)), "the rejected command still closes its own ingress slot: {denied:?}");
     for (prepare_seq, finish_seq, txn_id, commit) in [(1, 2, "receipt-commit", true), (3, 4, "receipt-rollback", false)] {
         let operation = <TestMutation as protocol::OpBinary>::encode_op(&TestMutation::SetCount(SetCount { value: prepare_seq as i32 })).unwrap();
         let prepared = cold_decoded_command(&runtime, prepare_seq, protocol::AppCommand::TransactionPrepare { seq: prepare_seq, txn_id: txn_id.into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![operation], label: "receipt fixture".into(), origin: Vec::new() }).await;

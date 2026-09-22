@@ -3674,6 +3674,7 @@ pub fn create_sequence_app() -> AppDefinition {
             // Undeclared, it was dropped before dispatch — this app's console ERROR at boot, and the
             // reason its committed example never reached the document store at all.
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
             // 📝️ Staged argument forms for the panel-visible create + layout actions.
             .action_args("addStep", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![

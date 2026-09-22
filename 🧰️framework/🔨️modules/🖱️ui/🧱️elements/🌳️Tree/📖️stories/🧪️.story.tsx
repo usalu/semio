@@ -193,7 +193,7 @@ const windowedSections = [
     icon: <Folder size={14} />,
     defaultOpen: true,
     windowKey: "entries",
-    window: { total: 400, offset: 40 },
+    window: { rowExtent: "standard", total: 400, offset: 40 },
     items: Array.from({ length: 12 }, (_, index) => ({
       id: `tree.story.window.entries.${40 + index}`,
       label: `Entry ${40 + index}`,
@@ -206,7 +206,7 @@ const windowedSections = [
     icon: <Folder size={14} />,
     defaultOpen: true,
     windowKey: "pending",
-    window: { total: 24, offset: 0 },
+    window: { rowExtent: "standard", total: 24, offset: 0 },
     items: [],
   },
 ];

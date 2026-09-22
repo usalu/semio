@@ -48,7 +48,7 @@ pub mod add_step {
         // (`validate_capability`/`validation_context_for_stock`) is a documented gap here: every
         // capability is treated as dimensionally valid rather than guessing at unknown extents.
         let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
-        let step = ProcessStep { id: next_step_id(), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: measure_for_capability(&capability, payload.position) };
+        let step = ProcessStep { id: next_step_id(fixture), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: measure_for_capability(&capability, payload.position) };
         Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), ..Default::default() })
     }
 }

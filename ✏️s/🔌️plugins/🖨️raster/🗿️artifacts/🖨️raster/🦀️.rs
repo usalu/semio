@@ -46,9 +46,18 @@ pub(crate) struct RasterOwnedMapPageBacking<V> {
 }
 
 impl<V> RasterOwnedMapPageBacking<V> {
-    /// 🧮 Returns the conservative admitted credit for one owned page, independent of allocator layout.
+    /// 🧮 The credit one owned page costs — the EXACT size of the boxed page, not the declared
+    /// ceiling [`RASTER_OWNED_MAP_PAGE_BACKING_BYTES`] the admission guards compare against.
+    /// `Box<RasterOwnedMapPage<V>>` allocates exactly `size_of::<RasterOwnedMapPage<V>>()`, so this is
+    /// an exact figure and not an allocator-layout observation. Reporting the 16 KiB ceiling instead
+    /// starved every close ladder whose per-turn byte grant is the framework's 4 KiB
+    /// `ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES` — `artifact_app_laws::close_registered_fixture_app` and
+    /// the runtime's own `ArtifactDocumentStoreDisposer` both grant exactly that, so a POPULATED
+    /// raster document could never reach terminal-empty: the page release answered `Pending { 0, 0 }`
+    /// forever (measured 2026-09-21, `renders_layers_tree` /
+    /// `document_tree_binds_the_layers_interaction_domain`).
     pub(crate) fn conservative_credit_bytes(&self) -> usize {
-        RASTER_OWNED_MAP_PAGE_BACKING_BYTES
+        size_of::<RasterOwnedMapPage<V>>()
     }
 
     pub(crate) fn release(mut self) {
@@ -125,9 +134,10 @@ impl<V> RasterOwnedMap<V> {
         self.pages.iter().filter(|page| page.is_some()).count()
     }
 
-    /// 🧮 Returns the conservative admitted credit for one page, not an allocator-size observation.
+    /// 🧮 The credit one page costs — see [`RasterOwnedMapPageBacking::conservative_credit_bytes`],
+    /// whose figure this must equal for preflight and release to agree.
     pub(crate) fn conservative_page_credit_bytes() -> usize {
-        RASTER_OWNED_MAP_PAGE_BACKING_BYTES
+        size_of::<RasterOwnedMapPage<V>>()
     }
 
     fn entry(&self, slot: usize) -> Option<&(String, V)> {

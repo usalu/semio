@@ -242,14 +242,14 @@ async fn command_from_action_bridges_declared_actions() {
 async fn set_active_example_is_declared_bridged_and_loads_the_document() {
     assert!(ARCHITECT_RETAINED_TOOL_IDS.contains(&"setActiveExample"), "setActiveExample must carry a retained catalogue row");
     assert!(ARCHITECT_DOCUMENT_TOOL_IDS.contains(&"setActiveExample"), "setActiveExample takes the document reduce lane");
+    // 📚️ `try_build_definition` keeps app-level actions in the APP ROSTER (`definition.actions`) and
+    // copies only the framework's own synthesized interaction/tool-run rows onto every window kind, so
+    // the roster — not each window — is what stops the shell dropping the navbar's boot dispatch.
     let definition = create_architect_app();
-    for window_kind in definition.window_kinds.iter() {
-        assert!(
-            window_kind.actions.iter().any(|action| action.id == "setActiveExample"),
-            "every window kind must inherit the app-level setActiveExample, else the shell drops the navbar's boot dispatch — missing on {}",
-            window_kind.id
-        );
-    }
+    assert!(
+        definition.actions.iter().any(|action| action.id == "setActiveExample"),
+        "setActiveExample must sit in the app-level action roster, else the shell drops the navbar's boot dispatch"
+    );
     let command = ArchitectPlayApp::command_from_action("setActiveExample", Some(&dsl::json::to_dsl_value(&dsl::json!({ "exampleId": "demo" })))).expect("setActiveExample bridges");
     assert!(matches!(&command, ArchitectCommand::SetActiveExample(payload) if payload.example_id == "demo"));
     assert_eq!(ArchitectPlayApp::command_id(&command), "setActiveExample");

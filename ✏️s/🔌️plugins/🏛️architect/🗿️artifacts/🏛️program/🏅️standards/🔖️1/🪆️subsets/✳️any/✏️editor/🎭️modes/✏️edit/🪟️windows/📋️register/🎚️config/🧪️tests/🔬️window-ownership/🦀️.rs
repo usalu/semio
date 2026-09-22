@@ -79,8 +79,11 @@ fn architect_window_ownership_interactive_classification_matches_retained_owners
     use crate::editor::architect::{create_architect_app, ArchitectPlayApp, ArchitectWindowCommandJobFactory, ARCHITECT_RETAINED_TOOL_IDS};
     use semio_framework_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, InteractiveJobClassification};
 
+    // 🧵️ Every declared action lives in the APP ROSTER (`definition.actions`); a window kind only
+    // carries the rows it explicitly references plus the framework's own synthesized interaction/tool-run
+    // rows (`try_build_definition`). The union is this app's whole declared action surface.
     let definition = create_architect_app();
-    let actions = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).collect::<Vec<_>>();
+    let actions = definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter())).collect::<Vec<_>>();
     // 🧵️ What is left on the batch path after the nine document verbs were promoted to retained
     // tools: the four exchange verbs (host effects, no bounded reducer), the three analysis verbs
     // (they publish three lanes at once) and `search`.

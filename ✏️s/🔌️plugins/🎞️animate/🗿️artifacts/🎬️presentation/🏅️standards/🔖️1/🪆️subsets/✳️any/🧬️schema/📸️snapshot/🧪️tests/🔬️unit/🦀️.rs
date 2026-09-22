@@ -29,3 +29,19 @@ fn populated_snapshot_pack_and_dsl_round_trip() {
     let back_text = <PresentationSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back_text);
 }
+
+/// 🖼️ The demo figure must be a file this repository actually ships under the shared asset root that
+/// `semioAssetsVitePlugin` serves (and a release build copies) at `/🖼️assets/*`. The predecessor of
+/// this law was a bare `/🖼️bauteilbörse.png` that existed nowhere: every host answered the figure
+/// request with its SPA fallback (`200 text/html`), so the booted `demo` deck showed fifteen blank
+/// tiles with no console error to explain it.
+#[test]
+fn the_demo_figure_source_names_a_shipped_asset() {
+    const SEMIO_ASSET_ROUTE: &str = "/🖼️assets/";
+    let source = crate::default_figure_tile_source();
+    let relative = source.src.strip_prefix(SEMIO_ASSET_ROUTE).unwrap_or_else(|| panic!("the demo figure must live under the shared asset route {SEMIO_ASSET_ROUTE}, not at {}", source.src));
+    let repo_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../..");
+    let path = repo_root.join("🧰️framework/🔨️modules/🖼️assets").join(relative);
+    assert!(path.is_file(), "the demo figure {} resolves to {}, which this repository does not ship", source.src, path.display());
+    assert_eq!(source.source_aspect, Some(crate::DEMO_FIGURE_PIXEL_WIDTH / crate::DEMO_FIGURE_PIXEL_HEIGHT), "the declared physical aspect must be the shipped figure's own pixel aspect");
+}

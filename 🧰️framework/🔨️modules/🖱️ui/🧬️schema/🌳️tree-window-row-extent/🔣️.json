@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/tree-window-row-extent-v1.json",
+  "title": "Tree Window Row Extent Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contract", "extents", "windowedCases", "unwindowedCase"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["extentNamesClosed", "windowExtentRequired", "directRowHeaderUsesDeclaredExtent", "spacersUseDeclaredExtent", "expandedDescendantsMeasuredSeparately", "finiteUnwindowedCompactMayRemainVariable"],
+      "properties": {
+        "extentNamesClosed": { "const": true },
+        "windowExtentRequired": { "const": true },
+        "directRowHeaderUsesDeclaredExtent": { "const": true },
+        "spacersUseDeclaredExtent": { "const": true },
+        "expandedDescendantsMeasuredSeparately": { "const": true },
+        "finiteUnwindowedCompactMayRemainVariable": { "const": true }
+      }
+    },
+    "extents": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/extent" }
+    },
+    "windowedCases": {
+      "type": "array",
+      "minItems": 5,
+      "items": { "$ref": "#/$defs/windowedCase" }
+    },
+    "unwindowedCase": { "$ref": "#/$defs/unwindowedCase" }
+  },
+  "$defs": {
+    "extentName": { "enum": ["Standard", "CompactText", "CompactSmallControl", "CompactControl"] },
+    "rowKind": { "enum": ["standard", "text", "input", "select", "checkbox", "slider", "toggle"] },
+    "extent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "pixels", "compatibleClosedRows"],
+      "properties": {
+        "name": { "$ref": "#/$defs/extentName" },
+        "pixels": { "type": "number", "exclusiveMinimum": 0 },
+        "compatibleClosedRows": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/rowKind" } }
+      }
+    },
+    "materializedRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "headerPixels", "descendantPixels"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/rowKind" },
+        "headerPixels": { "type": "number", "exclusiveMinimum": 0 },
+        "descendantPixels": { "type": "number", "minimum": 0 }
+      }
+    },
+    "acceptedExpected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accepted", "leadingPixels", "materializedPixels", "trailingPixels", "totalPixels"],
+      "properties": {
+        "accepted": { "const": true },
+        "leadingPixels": { "type": "number", "minimum": 0 },
+        "materializedPixels": { "type": "number", "minimum": 0 },
+        "trailingPixels": { "type": "number", "minimum": 0 },
+        "totalPixels": { "type": "number", "minimum": 0 }
+      }
+    },
+    "refusedExpected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accepted", "reason"],
+      "properties": {
+        "accepted": { "const": false },
+        "reason": { "const": "rowExtentMismatch" }
+      }
+    },
+    "windowedCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "extent", "total", "offset", "materialized", "expected"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "extent": { "$ref": "#/$defs/extentName" },
+        "total": { "type": "integer", "minimum": 1 },
+        "offset": { "type": "integer", "minimum": 0 },
+        "materialized": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/materializedRow" } },
+        "expected": { "oneOf": [{ "$ref": "#/$defs/acceptedExpected" }, { "$ref": "#/$defs/refusedExpected" }] }
+      }
+    },
+    "unwindowedCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "rows", "expected"],
+      "properties": {
+        "id": { "const": "finite-compact-variable" },
+        "rows": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "pixels"],
+            "properties": {
+              "kind": { "$ref": "#/$defs/rowKind" },
+              "pixels": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["accepted", "totalPixels"],
+          "properties": {
+            "accepted": { "const": true },
+            "totalPixels": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      }
+    }
+  }
+}

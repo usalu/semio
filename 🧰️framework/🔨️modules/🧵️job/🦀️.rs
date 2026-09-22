@@ -395,6 +395,40 @@ pub const MAINTENANCE_LANE_FUEL: u64 = 80_000_000;
 
 //#region 📄️RetainedPayload
 pub const JOB_PAYLOAD_PAGE_BYTES: usize = 16 * 1024;
+
+/// 💰️ Pays one bounded close turn's byte grant into the fixed physical page granule and reports
+/// whether the page is now fully paid for.
+///
+/// A payload page is one `Box<[MaybeUninit<u8>; JOB_PAYLOAD_PAGE_BYTES]>`: the backing is released
+/// whole or not at all, however few logical bytes it carries. The grant a closing caller offers is
+/// its own per-turn budget, and it is NOT always a whole page — the store's retirement ladders run
+/// on a 4 KiB granule, a reactor drains its cursors on whatever the host turn has left. Refusing
+/// every sub-page grant outright (the shape this replaces) turned those callers into an unbounded
+/// spin: each turn answered `Pending { 0, 0 }` — "progress, call again" — while nothing could ever
+/// move, so a mounted session's own pre-admitted terminal-fault page pinned its close cursor before
+/// the job ever saw `begin_close` (ticket 26/09/18, the mounted presence capture law).
+///
+/// So the grant is ACCRUED instead: each turn spends at most what it was offered, the backing stays
+/// put until the accrued charge covers the whole physical page, and the turn that completes the
+/// charge is the turn that frees it. A caller offering a full page is unchanged — it pays the page
+/// in one turn and sees `released_bytes == JOB_PAYLOAD_PAGE_BYTES` — and a caller offering less now
+/// finishes in a bounded number of turns instead of never.
+///
+/// `Ok(paid)` means the page is paid for and must now be released; `Err(paid)` means the turn spent
+/// `paid` bytes of its grant and the backing is retained.
+fn charge_payload_page(charged: &mut usize, maximum_items: usize, maximum_bytes: usize) -> Result<usize, usize> {
+    if maximum_items == 0 || maximum_bytes == 0 {
+        return Err(0);
+    }
+    let paid = maximum_bytes.min(JOB_PAYLOAD_PAGE_BYTES - *charged);
+    *charged += paid;
+    if *charged < JOB_PAYLOAD_PAGE_BYTES {
+        return Err(paid);
+    }
+    *charged = 0;
+    Ok(paid)
+}
+
 pub const JOB_PAYLOAD_OPERATION_PAGES: usize = 256;
 pub const JOB_PAYLOAD_OPERATION_BYTES: usize = JOB_PAYLOAD_PAGE_BYTES * JOB_PAYLOAD_OPERATION_PAGES;
 pub const JOB_PAYLOAD_PROCESS_BYTES: usize = 64 * 1024 * 1024;
@@ -558,11 +592,12 @@ pub struct RetainedJobPayload {
     page_count: usize,
     length: usize,
     ledger: Option<Arc<JobPayloadOperationLedger>>,
+    charged: usize,
 }
 
 impl RetainedJobPayload {
     pub fn empty(stream: JobPayloadStream) -> Self {
-        Self { stream, pages: ManuallyDrop::new(std::array::from_fn(|_| None)), page_count: 0, length: 0, ledger: None }
+        Self { stream, pages: ManuallyDrop::new(std::array::from_fn(|_| None)), page_count: 0, length: 0, ledger: None, charged: 0 }
     }
 
     pub fn len(&self) -> usize {
@@ -595,16 +630,16 @@ impl RetainedJobPayload {
             return JobPayloadCloseStep::Complete;
         }
         let index = self.pages.iter().position(Option::is_some).expect("retained payload page count matches occupied pages");
-        if maximum_items == 0 || maximum_bytes < JOB_PAYLOAD_PAGE_BYTES {
-            return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 };
-        }
+        let released_bytes = match charge_payload_page(&mut self.charged, maximum_items, maximum_bytes) {
+            Ok(paid) => paid,
+            Err(paid) => return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: paid },
+        };
         let page = self.pages[index].take().expect("retained payload close owns exact page");
         self.page_count -= 1;
         self.length -= page.length;
         if let Some(ledger) = self.ledger.as_ref() {
             ledger.release(self.stream);
         }
-        let released_bytes = JOB_PAYLOAD_PAGE_BYTES;
         drop(page);
         if self.page_count == 0 {
             self.ledger = None;
@@ -674,6 +709,7 @@ pub struct RetainedJobPayloadWriter {
     rejected: ManuallyDrop<Option<JobPayloadPageSource>>,
     staged: ManuallyDrop<Option<(Arc<JobPayloadOperationLedger>, JobPayloadPageSource, usize)>>,
     sealed: bool,
+    charged: usize,
 }
 
 impl std::fmt::Debug for RetainedJobPayloadWriter {
@@ -684,7 +720,7 @@ impl std::fmt::Debug for RetainedJobPayloadWriter {
 
 impl RetainedJobPayloadWriter {
     pub fn new(stream: JobPayloadStream) -> Self {
-        Self { payload: ManuallyDrop::new(Some(RetainedJobPayload::empty(stream))), rejected: ManuallyDrop::new(None), staged: ManuallyDrop::new(None), sealed: false }
+        Self { payload: ManuallyDrop::new(Some(RetainedJobPayload::empty(stream))), rejected: ManuallyDrop::new(None), staged: ManuallyDrop::new(None), sealed: false, charged: 0 }
     }
 
     pub fn take_rejected_source(&mut self) -> Option<JobPayloadPageSource> {
@@ -726,21 +762,23 @@ impl RetainedJobPayloadWriter {
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> JobPayloadCloseStep {
         self.sealed = true;
         if let Some((ledger, _, _)) = self.staged.as_ref() {
-            if maximum_items == 0 || maximum_bytes < JOB_PAYLOAD_PAGE_BYTES {
-                return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
+            let released_bytes = match charge_payload_page(&mut self.charged, maximum_items, maximum_bytes) {
+                Ok(paid) => paid,
+                Err(paid) => return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: paid },
+            };
             let stream = self.payload.as_ref().expect("retained payload writer owns payload while staged page exists").stream;
             ledger.release(stream);
             let (_, source, _) = self.staged.take().expect("staged page remains owned until exact close");
             drop(source);
-            return JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES };
+            return JobPayloadCloseStep::Pending { released_items: 1, released_bytes };
         }
         if self.rejected.is_some() {
-            if maximum_items == 0 || maximum_bytes < JOB_PAYLOAD_PAGE_BYTES {
-                return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: 0 };
-            }
+            let released_bytes = match charge_payload_page(&mut self.charged, maximum_items, maximum_bytes) {
+                Ok(paid) => paid,
+                Err(paid) => return JobPayloadCloseStep::Pending { released_items: 0, released_bytes: paid },
+            };
             *self.rejected = None;
-            return JobPayloadCloseStep::Pending { released_items: 1, released_bytes: JOB_PAYLOAD_PAGE_BYTES };
+            return JobPayloadCloseStep::Pending { released_items: 1, released_bytes };
         }
         let Some(payload) = self.payload.as_mut() else { return JobPayloadCloseStep::Complete };
         if !payload.terminal_is_empty() {
@@ -1954,7 +1992,7 @@ fn preadmitted_static_payload(ledger: &Arc<JobPayloadOperationLedger>, stream: J
     }
     let mut pages = std::array::from_fn(|_| None);
     pages[0] = Some(JobPayloadPage { source, length: bytes.len() });
-    Ok(RetainedJobPayload { stream, pages: ManuallyDrop::new(pages), page_count: 1, length: bytes.len(), ledger: Some(Arc::clone(ledger)) })
+    Ok(RetainedJobPayload { stream, pages: ManuallyDrop::new(pages), page_count: 1, length: bytes.len(), ledger: Some(Arc::clone(ledger)), charged: 0 })
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2006,6 +2044,45 @@ pub enum WorkerJobCloseStep {
     Pending { released_items: usize, released_bytes: usize },
     Blocked,
     Complete,
+}
+
+/// 🔭️ Which named phase a worker session's bounded close cursor is parked in, read without
+/// spending a turn.
+///
+/// `close_step` reports HOW MUCH a turn released, never WHERE the cursor is, so a close that
+/// stops advancing is indistinguishable from one that is merely slow: both answer
+/// `Pending { 0, 0 }`. A host draining a session on a short grant, and every law that asserts a
+/// session reaches terminal, needs the phase name to tell "the job is still releasing its own
+/// owners" from "the cursor cannot leave the pre-admitted fault page" — the two that looked
+/// identical while the mounted presence capture law spun 4096 times (ticket 26/09/18).
+///
+/// The phases are the exact ladder [`WorkerJobSession::close_step`] walks, in order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WorkerJobClosePhase {
+    /// 🚦️ Not closing: the session is idle, submitted, or holding an outcome nobody closed.
+    Open,
+    /// 🤝️ The authority is checked out, so the cursor has not been handed the session yet.
+    CheckedOut,
+    /// ☣️ Releasing the quarantined outcome's retained payload pages.
+    QuarantinedOutcome,
+    /// 📦️ Releasing the checked-out step outcome's retained payload pages.
+    Outcome,
+    /// 🔔️ The turn that hands `begin_close` to the job itself.
+    BeginClose,
+    /// 🧨️ Releasing the session's pre-admitted terminal-fault page.
+    PreadmittedFault,
+    /// 🧩️ The job is releasing its own owners through `InteractiveJob::close_step`.
+    Job,
+    /// 🗑️ Dropping the released job.
+    JobRelease,
+    /// 🎛️ Dropping the batch parameters.
+    ParamsRelease,
+    /// 📒️ Waiting on the payload ledger's outstanding stream credits.
+    PayloadLedger,
+    /// 🎟️ Returning the pre-admitted retirement slot.
+    RetirementSlot,
+    /// 🕳️ Terminal-empty: every owner is released and the slot is returned.
+    Empty,
 }
 
 pub struct BatchJobSession<J: InteractiveJob + 'static> {
@@ -2179,6 +2256,13 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
 
     pub fn terminal_is_empty(&self) -> bool {
         self.checked_out.is_none() && self.session.terminal_is_empty()
+    }
+
+    /// 🔭️ The named phase this mounted session's close cursor is parked in — see
+    /// [`WorkerJobClosePhase`]. A retained checked-out outcome is the mounted half's own phase and
+    /// outranks whatever the inner session reports.
+    pub fn close_phase(&self) -> WorkerJobClosePhase {
+        if self.checked_out.is_some() { WorkerJobClosePhase::CheckedOut } else { self.session.close_phase() }
     }
 }
 
@@ -2953,6 +3037,38 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
 
     pub fn terminal_is_empty(&self) -> bool {
         self.inner.phase() == SESSION_EMPTY && unsafe { (&*self.inner.authority.get()).is_none() } && self.retirement_state.load(Ordering::Acquire) == 3
+    }
+
+    /// 🔭️ The named phase this session's close cursor is parked in — see [`WorkerJobClosePhase`].
+    /// Reads the same fields the next `close_step` would walk, in the same order, without taking
+    /// the authority or spending a turn.
+    pub fn close_phase(&self) -> WorkerJobClosePhase {
+        match self.inner.phase() {
+            SESSION_EMPTY => return if self.retirement_state.load(Ordering::Acquire) == 3 { WorkerJobClosePhase::Empty } else { WorkerJobClosePhase::RetirementSlot },
+            SESSION_CHECKED_OUT | SESSION_TRANSITION => return WorkerJobClosePhase::CheckedOut,
+            SESSION_CLOSE => {}
+            _ => return WorkerJobClosePhase::Open,
+        }
+        let Some(authority) = (unsafe { (&*self.inner.authority.get()).as_ref() }) else { return WorkerJobClosePhase::CheckedOut };
+        if authority.quarantined_outcome.is_some() {
+            return WorkerJobClosePhase::QuarantinedOutcome;
+        }
+        if authority.outcome.is_some() {
+            return WorkerJobClosePhase::Outcome;
+        }
+        if authority.close_stage == 0 {
+            return WorkerJobClosePhase::BeginClose;
+        }
+        if authority.preadmitted_fault.is_some() {
+            return WorkerJobClosePhase::PreadmittedFault;
+        }
+        match authority.close_stage {
+            1 => WorkerJobClosePhase::Job,
+            2 => WorkerJobClosePhase::JobRelease,
+            3 => WorkerJobClosePhase::ParamsRelease,
+            _ if !authority.payload_ledger.terminal_is_empty() => WorkerJobClosePhase::PayloadLedger,
+            _ => WorkerJobClosePhase::RetirementSlot,
+        }
     }
 
     fn contention(&self) -> WorkerJobContention {

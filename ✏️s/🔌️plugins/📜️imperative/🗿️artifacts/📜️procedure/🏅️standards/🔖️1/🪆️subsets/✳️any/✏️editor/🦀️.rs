@@ -392,6 +392,21 @@ impl ArtifactEditor for ImperativePlayApp {
         Some(semio_framework_plugin::no_presence_store_disposer())
     }
 
+    /// 👤️ `EditorApp<E>` forwards these two straight to the editor (only the VIEWER adapter falls
+    /// back to the `NoPresence` owners), so an editor that declares neither leaves
+    /// `PresenceStore::local_retirement_factory` empty — and every read fails closed with `presence
+    /// local read requires a live exact local retirement owner`, every close with `presence close
+    /// requires its installed local-root retirement factory`. The step dispatch path reads local
+    /// presence, so this editor needs the owners even though its presence is `NoPresence`
+    /// (`🕸️dag` and `🪐️space`'s Home declare the same pair).
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
@@ -517,6 +532,8 @@ impl ArtifactEditor for ImperativePlayApp {
                 let host = crate::editor::procedure::engine::ImperativeHost::from_snapshot(doc.snapshot.clone());
                 let result = host.run();
                 let json = dsl::os_pack::json::to_json_string(&result.scope);
+                // 🧊️ Same cold boundary as the `run` command: the result owns dictionaries.
+                neural_engine::ColdRetire::retire_cold(result);
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.procedure".into(), json } })
             }
             "artifact:out" => {

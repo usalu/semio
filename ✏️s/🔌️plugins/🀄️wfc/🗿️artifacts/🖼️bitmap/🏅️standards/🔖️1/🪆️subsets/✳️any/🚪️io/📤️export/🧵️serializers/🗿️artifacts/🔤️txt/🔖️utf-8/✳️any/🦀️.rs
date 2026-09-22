@@ -10,10 +10,22 @@ pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standar
 
 pub struct BitmapIntoTxt;
 
+/// 🖨️ Typed encode of `BitmapSnapshot` into its native `.wfcbitmap` DSL text.
+pub fn serialize(from: &BitmapSnapshot) -> String {
+    <BitmapSnapshot as store::ArtifactDsl>::print_dsl(from)
+}
+
 impl Serializer<BitmapSnapshot> for BitmapIntoTxt {
     const INTO: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(from: &BitmapSnapshot) -> IoResult<IoPayload> {
-        Ok(IoOutcome::clean(IoPayload::Text(<BitmapSnapshot as store::ArtifactDsl>::print_dsl(from))))
+        Ok(IoOutcome::clean(IoPayload::Text(serialize(from))))
     }
 }
+
+
+//#region 🧪Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪Tests

@@ -103,6 +103,17 @@ pub(crate) mod context {
         settle(app).await;
         result
     }
+
+    /// 🎛️ Dispatches one typed command and hands back BOTH the invocation result and the receipt of
+    /// the ONE settle that publishes it. A law reading `receipt.effects` must use this rather than
+    /// `dispatch(..)` followed by `settle(..)`: `dispatch` already drains the operation, so a second
+    /// settle finds `has_pending_typed_operations() == false` and answers an EMPTY receipt — no lanes,
+    /// no effects — which reads exactly like a command that emitted nothing.
+    pub async fn dispatch_receipt(app: &mut WiresApp, command: WiresCommand) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
+        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        let receipt = settle(app).await;
+        (result, receipt)
+    }
     
     pub async fn render(app: &mut WiresApp, body_key: &str) -> String {
         let tree = app.render(body_key, None, &ViewModel::default()).await.expect("render");
@@ -127,9 +138,15 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     assert_eq!(migrated, WIRES_RETAINED_TOOL_IDS);
     assert_eq!(routes.len(), 8);
     assert_eq!(<WiresRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, WIRES_RETAINED_PUBLICATION_CONTRACTS);
-    assert_eq!(WIRES_RETAINED_PUBLICATION_CONTRACTS[0].lanes, [ArtifactToolPublicationLane::WindowTransient]);
-    assert_eq!(WIRES_RETAINED_PUBLICATION_CONTRACTS[1].lanes, [ArtifactToolPublicationLane::WindowTransient]);
-    assert_eq!(WIRES_RETAINED_PUBLICATION_CONTRACTS[2].lanes, [ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient]);
+    // 🛣️ Keyed by tool id, not by ordinal: the roster grew from the three canvasPointer* rows to all
+    // eight, so an index-based assertion pinned whichever row happened to sit at 0..2.
+    for route in routes {
+        let id = route.get("id").and_then(Value::as_str).expect("route id");
+        let contract = WIRES_RETAINED_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == id).unwrap_or_else(|| panic!("route {id} has no publication contract"));
+        let declared: Vec<String> = contract.lanes.iter().map(|lane| format!("{lane:?}")).collect();
+        let recorded: Vec<String> = route.get("lanes").and_then(Value::as_array).expect("route lanes").iter().map(|lane| lane.as_str().expect("lane name").to_string()).collect();
+        assert_eq!(recorded, declared, "route {id} records lanes that differ from its publication contract");
+    }
     assert!(routes.iter().filter(|route| route.get("disposition").and_then(Value::as_str) == Some("BatchOnlyPendingRewrite")).all(|route| route.get("lanes").and_then(Value::as_array).is_some_and(Vec::is_empty)));
 }
 

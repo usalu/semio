@@ -1,5 +1,15 @@
 {
   "$comment": "📜️ One SHELL-chrome journey step per case, with the action journal each renderer publishes for it. `react` is MEASURED, never designed: it is the per-step `actions` of the 2026-09-18 side-by-side parity run (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `🗑️generated/w12c-parity-run-19/steps.json`), as action ids in order. `wgpu` is the contract this shell answers, and every row where the two differ carries `why`. The twin of `🌐️World3dHost/🧫️fixtures/📜️journal-sequences.json`, which owns the world surface's own rows; this file owns the dock/chord rows the shell itself journals. `control` is the id the probe's resolution ladder lands on, so a row is reproducible without the probe.",
+  "rapidPopupClose": {
+    "$comment": "🔽️ A popup dismissal is one complete gesture. The immediately following accepted close-cap gesture must remain independent: it closes its named window once, focuses the surviving window and leaves no staged input candidate. Checkpoint 20 observed the WGPU counterexample; Browser 21 must re-run this exact sequence on React and WGPU.",
+    "popupOwner": "puzzle3d-main-top/framework.section.measures/projection",
+    "dismissPoint": [800, 500],
+    "closeControl": "dock.tab.0.puzzle3d-main-top.close",
+    "remainingWindows": ["puzzle3d-main-perspective"],
+    "focusedWindow": "puzzle3d-main-perspective",
+    "closeCommand": "shell.windowClose",
+    "closeCommandCount": 1
+  },
   "steps": [
     {
       "id": "window-cap-focus",

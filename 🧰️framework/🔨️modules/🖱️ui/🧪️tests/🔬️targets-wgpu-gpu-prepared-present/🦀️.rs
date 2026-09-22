@@ -401,3 +401,40 @@ fn the_world_textured_pass_is_a_blended_underlay_on_a_centred_plane() {
     assert!(pipeline.contains("cull_mode: None"), "React's reference plane is double-sided");
     assert!(pipeline.contains("array_stride: 20"), "position(3) + uv(2) per vertex");
 }
+
+/// ⏳️ Successful early transitions share timing admission; advancing does not excuse an overrun.
+#[test]
+fn every_successful_gpu_transition_is_measured_before_returning() {
+    let _guard = guard();
+    drain();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖥️prepared-gpu-opportunity/🔣️.json")).unwrap();
+    let mut cursor = PreparedGpuPresentCursor::begin(7, 3).unwrap();
+    for transition in law["successfulTransitions"].as_array().unwrap() {
+        cursor.overrun_run = transition["initialRun"].as_u64().unwrap() as u32;
+        let mut ticks = [Some(10_000), Some(10_000 + transition["elapsedUs"].as_u64().unwrap())].into_iter();
+        let complete = transition["complete"].as_bool().unwrap();
+        let result = measure_prepared_gpu_opportunity(&mut cursor, None, || ticks.next().flatten(), |cursor| {
+            cursor.command += 1;
+            Ok(complete)
+        });
+        assert_eq!(result, Ok(complete), "{}", transition["id"]);
+        assert_eq!(cursor.overrun_run, transition["expectedRun"].as_u64().unwrap() as u32, "{} resets the streak despite returning before a color encode", transition["id"]);
+        assert!(ticks.next().is_none(), "every successful transition reads both clock edges");
+    }
+    cursor.overrun_run = 0;
+    for (index, elapsed) in law["advancingOverruns"]["elapsedUs"].as_array().unwrap().iter().enumerate() {
+        let mut ticks = [Some(10_000), Some(10_000 + elapsed.as_u64().unwrap())].into_iter();
+        let result = measure_prepared_gpu_opportunity(&mut cursor, Some((17, Some(DrawMeasureCursor::LayerUi { layer: 0, item: index, overlay: false }))), || ticks.next().flatten(), |cursor| {
+            cursor.command += 1;
+            Ok(false)
+        });
+        let terminal = index as u64 + 1 == law["advancingOverruns"]["terminalAt"].as_u64().unwrap();
+        assert_eq!(result.is_err(), terminal, "advancing color work still obeys the two millisecond ceiling");
+        if let Err(error) = result {
+            assert!(error.contains("4 consecutive opportunities"));
+            assert!(error.contains("command_kind=Some(17)") && error.contains("LayerUi") && error.contains("progress="), "the fault identifies its exact work: {error}");
+        }
+    }
+    cursor.begin_close();
+    while !cursor.close_step() {}
+}

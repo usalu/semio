@@ -8,6 +8,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   const { it, expect } = vitest;
       const { default: fixture } = await import("../../../🧫️fixtures/🏷️fields/🔣️.json");
+  const { default: rowExtentFixture } = await import("../../../../../../🧫️fixtures/🌳️tree-window-row-extent/🔣️.json");
 
   function prepared<P extends Profile>(kind: P, value: unknown): OwnedUiPayloadOf<RetainedUiTypedValues[P]> {
     const builder = new Builder();
@@ -27,6 +28,19 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     for (const owner of [source, replacement, state]) { const retirement = owner.beginClose(); while (!retirement.terminalIsEmpty()) retirement.advance({ maxItems: 1, maxBytes: 4096 }); }
     expect(outcomes).toHaveLength(20);
     expect(outcomes.every(row => row.rejected && row.preserved), JSON.stringify(outcomes)).toBe(true);
+  });
+
+  it("requires and owns every closed Tree window row extent", () => {
+    const wireExtent = { Standard: "standard", CompactText: "compactText", CompactSmallControl: "compactSmallControl", CompactControl: "compactControl" } as const;
+    for (const extent of rowExtentFixture.extents) {
+      const rowExtent = wireExtent[extent.name as keyof typeof wireExtent];
+      const owner = prepared("component", { type: "treeSection", label: null, defaultOpen: null, window: { total: 10, offset: 4, rowExtent } });
+      expect(owner.value).toMatchObject({ type: "treeSection", window: { total: 10, offset: 4, rowExtent } });
+      const retirement = owner.beginClose();
+      while (!retirement.terminalIsEmpty()) retirement.advance({ maxItems: 1, maxBytes: 4096 });
+    }
+    expect(() => prepared("component", { type: "treeSection", label: null, defaultOpen: null, window: { total: 10, offset: 4 } })).toThrow("Unknown UI schema discriminator");
+    expect(() => prepared("component", { type: "treeSection", label: null, defaultOpen: null, window: { total: 10, offset: 4, rowExtent: "compactCheckbox" } })).toThrow("Unknown UI schema discriminator");
   });
 
 }

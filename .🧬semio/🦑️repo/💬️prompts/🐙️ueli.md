@@ -67,7 +67,7 @@ There are other agents working on other logical, even if they work on the same f
 
 ---
 
-Use the main chat with Cursor Grok 4.6 Extra High for main plan coordination, use multiple Cursor Grok 4.6 High agents for task execution, use multiple Composer 2.5 Extra High agents for read-only exploration and audits.
+Use the main chat with Cursor Grok 4.7 Extra High for main plan coordination, use multiple Cursor Grok 4.7 High agents for task execution, use multiple Composer 2.5 agents for read-only exploration and audits.
 Always use a work fleet of maximum possible parallel agents.
 There are other agents working on other logical parts, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
@@ -581,6 +581,19 @@ TODO: Add roomie to discord for verification
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)t
 
 ##
+
+---
+
+wfc is still largely incomplete.
+
+e.g.
+artifact panel trees are emtpy.
+catalogue for tiles are missing
+2d shouldnt be a dag but an undirected graph (no ports)
+2d should be non-rectangular shapes and show as such in the preview
+etc
+
+---
 
 ---
 

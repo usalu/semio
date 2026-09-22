@@ -196,9 +196,8 @@ export function useNativeDragAndDrop<TElement extends HTMLElement = HTMLDivEleme
   );
 }
 
-/** @emoji 📏️ The inline extent an open anchored panel takes when its caller states no `size` — shared
- * with `📐️Layout`'s {@link layoutPanelReserveStyle}, which reserves exactly this band out of the
- * canvas column, so the two can never disagree about how wide a docked panel is. */
+/** @emoji 📏️ The inline extent an open anchored panel takes when its caller states no `size`.
+ * The panel floats over the window column at that width; the column itself does not shrink. */
 export const PANEL_DEFAULT_SIZE_PX = 300;
 
 /**

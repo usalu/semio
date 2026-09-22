@@ -1,13 +1,13 @@
-//! 🧩️ Bitmap editor — the OUTPUT window: the INFERRED bitmap, read-only. Its pixels come from the
-//! app transient's solve cache, never from the document: the collapse is an inference and the
-//! snapshot has no field to hold it. Before the first solve, and after a contradiction, the pane
-//! renders the pin overlay over an empty canvas rather than a stale image.
+//! 🧩 Bitmap editor — the OUTPUT window: the INFERRED bitmap, read-only. While a fill tool run is
+//! live its tick payload is painted (with an explicit decided mask). Otherwise the pane reads the
+//! SetSolve transient. A contradiction paints a labelled empty canvas rather than a silent black square.
 
+use crate::editor::bitmap::modes::edit::tools::fill::{self as fill_tool, BitmapFillPayload};
 use crate::editor::bitmap::modes::edit::windows::output::config::BitmapOutputWindowConfig;
 use crate::editor::bitmap::transient::BitmapTransient;
-use crate::schema::snapshot::decode_base64;
+use crate::schema::snapshot::{decode_base64, BitmapColor};
 use crate::BitmapSnapshot;
-use semio_framework_plugin::{scene_surface, ActionArgDef, ActionDefinition, ActionKind, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, ActionArgDef, ActionDefinition, ActionKind, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, ToolRunView, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 
 //#region 🔖️Constants
@@ -17,7 +17,7 @@ const SURFACE_ID: &str = "wfc.bitmap.output";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the editor manifest by `crate::editor::bitmap::create_bitmap_editor`.
+/// 🧩 Stitched into the editor manifest by `crate::editor::bitmap::create_bitmap_editor`.
 pub fn definition() -> WindowKindDefinition {
     let mut definition = WindowKindDefinition {
         id: WFC_BITMAP_WINDOW_OUTPUT.into(),
@@ -37,6 +37,7 @@ pub fn definition() -> WindowKindDefinition {
     };
     definition.actions.extend([
         ActionDefinition::bounded_catalog("solve", LocalizedLabel::native("Solve", "Berechnen"), ActionKind::Mutation),
+        ActionDefinition::bounded_catalog("commit-fill-solve", LocalizedLabel::native("Commit Fill Solve", "Füllen übernehmen"), ActionKind::Mutation),
         ActionDefinition {
             args: vec![
                 ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")).required().default_value(&24.0),
@@ -69,21 +70,71 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 🎬️ Encodes the inferred bitmap behind the semantic surface contract. A cached solve whose extent
-/// no longer matches the document's own output spec is DISCARDED rather than reshaped: a stale
-/// buffer stretched over a new extent would look like a real answer.
-pub fn render(document: &BitmapSnapshot, transient: &BitmapTransient, config: &BitmapOutputWindowConfig) -> UiAssemblyResult<BuiltNode> {
+/// 🎬️ Encodes the inferred bitmap behind the semantic surface contract. A live fill payload wins over
+/// the finished SetSolve cache. A cached solve whose extent no longer matches the document's own
+/// output spec is DISCARDED rather than reshaped.
+pub fn render(document: &BitmapSnapshot, transient: &BitmapTransient, config: &BitmapOutputWindowConfig, tool_run: Option<&ToolRunView>) -> UiAssemblyResult<BuiltNode> {
+    let scene = Canvas2dScene::base(0.0, 0.0, config.zoom, render_layers_fingerprint(document, transient, config, tool_run));
+    scene_surface(SURFACE_ID, ContractSurfaceKind::Canvas2d, &scene)
+}
+
+/// 🏃️ Non-terminal fill run whose tick payload still decodes.
+pub fn live_fill_payload(tool_run: Option<&ToolRunView>) -> Option<BitmapFillPayload> {
+    let run = tool_run.filter(|run| run.tool_id == fill_tool::TOOL_ID && !run.state.is_terminal())?;
+    let bytes = run.payload.as_ref()?;
+    let text = std::str::from_utf8(bytes).ok()?;
+    BitmapFillPayload::decode_json(text)
+}
+
+/// 🎨 Paint only decided cells; undecided stay as the bare extent so palette index 0 remains a real colour.
+pub fn layers_from_fill_payload(document: &BitmapSnapshot, payload: &BitmapFillPayload, pins: &[crate::schema::snapshot::BitmapPinnedPixel]) -> String {
+    let (indices, mask) = payload.render_indices();
+    let cells = (payload.width as usize).saturating_mul(payload.height as usize);
+    if indices.len() != cells || mask.len() != cells {
+        return crate::bitmap_layers_json("out", document.output.width, document.output.height, &document.input.palette, &[], pins);
+    }
+    let mut palette = document.input.palette.clone();
+    let empty = u8::try_from(palette.len()).unwrap_or(u8::MAX);
+    palette.push(BitmapColor { r: 0, g: 0, b: 0, a: 0 });
+    let mut painted = vec![empty; cells];
+    for (index, decided) in mask.iter().enumerate() {
+        if *decided {
+            painted[index] = indices[index];
+        }
+    }
+    crate::bitmap_layers_json("out", payload.width, payload.height, &palette, &painted, pins)
+}
+
+/// 🩺 Contradiction answer: extent plus a distinct overlay id the empty canvas does not carry.
+pub fn contradiction_layers(document: &BitmapSnapshot, pins: &[crate::schema::snapshot::BitmapPinnedPixel]) -> String {
+    let mut layers = crate::bitmap_layers_json("out", document.output.width, document.output.height, &document.input.palette, &[], pins);
+    if layers.ends_with(']') {
+        layers.pop();
+        if layers.len() > 1 && !layers.ends_with('[') {
+            layers.push(',');
+        }
+        layers.push_str(r#"{"id":"out-contradiction","kind":"path","segments":[],"fill":{"kind":"solid","color":[0.85,0.2,0.2,0.35]}}]"#);
+    }
+    layers
+}
+
+/// 🧪 Layer JSON fingerprint used by tests to tell empty, partial and finished paints apart.
+pub fn render_layers_fingerprint(document: &BitmapSnapshot, transient: &BitmapTransient, config: &BitmapOutputWindowConfig, tool_run: Option<&ToolRunView>) -> String {
+    let pins: &[crate::schema::snapshot::BitmapPinnedPixel] = if config.show_pins { &document.pinned } else { &[] };
+    if let Some(payload) = live_fill_payload(tool_run) {
+        return layers_from_fill_payload(document, &payload, pins);
+    }
+    if transient.contradiction && transient.output_width == document.output.width && transient.output_height == document.output.height && transient.output_pixels.is_none() {
+        return contradiction_layers(document, pins);
+    }
     let fresh = transient.output_width == document.output.width && transient.output_height == document.output.height;
     let indices = if fresh { transient.output_pixels.as_deref().and_then(decode_base64).unwrap_or_default() } else { Vec::new() };
-    let pins: &[crate::schema::snapshot::BitmapPinnedPixel] = if config.show_pins { &document.pinned } else { &[] };
-    let layers = crate::bitmap_layers_json("out", document.output.width, document.output.height, &document.input.palette, &indices, pins);
-    let scene = Canvas2dScene::base(0.0, 0.0, config.zoom, layers);
-    scene_surface(SURFACE_ID, ContractSurfaceKind::Canvas2d, &scene)
+    crate::bitmap_layers_json("out", document.output.width, document.output.height, &document.input.palette, &indices, pins)
 }
 //#endregion 🔖️Render
 
-//#region 🧪️Tests
+//#region 🧪Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests
+//#endregion 🧪Tests

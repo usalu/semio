@@ -20,7 +20,7 @@ use crate::editor::puzzle5d::{
     PUZZLE5D_TARGET_VOLUME_COLOR,
 };
 use semio_framework_plugin::{
-    world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement,
+    world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, World3dScene, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement,
     WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
 use semio_framework_ui_contract::BuiltNode;
@@ -30,6 +30,10 @@ use serde_json::{json, Value};
 pub const WINDOW_KIND_ID: &str = "puzzle5d-3d";
 pub const BODY_KEY: &str = "puzzle.5d.play.3d";
 pub const SURFACE_ID: &str = "puzzle.5d.play.3d";
+
+/// 🎯️ Padding `WorldAutoFit` frames a swapped document with — a quarter of the bounding sphere's
+/// radius of air, the same air `puzzle3d` (`PUZZLE3D_FIT_PADDING`) and `block3d` leave.
+pub const PUZZLE5D_FIT_PADDING: f64 = 1.25;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -122,6 +126,30 @@ pub fn world_instances_json(document: &Puzzle5dDocument, interaction: &Puzzle5dI
         })
         .collect();
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+}
+
+/// 🎯️ Document IDENTITY for the world's `fit` lane: what this document IS (its schema, its domain,
+/// its label and the kind catalogs its parts resolve their meshes through), never where its parts
+/// currently sit. `WorldAutoFit` refits once per revision, so this is the difference between "frame
+/// the example that was just loaded" and "yank the camera on every part drag".
+///
+/// 🐛️ ticket 26/09/19 (play grid, visual audit): the `puzzle5d` pane booted ready with its curated
+/// example, the board pane drew the assembled ring of capsules and the 3D viewport drew nothing but
+/// the camera gizmo and the grid. A world window that publishes NO fit lane can be framed by nothing
+/// but the camera the document authored, so a document whose parts sit anywhere else is outside the
+/// frustum and the viewport looks empty — the identical defect `block3d` carried, closed the
+/// identical way. The bounds stay unpublished (`world3d_fit_json(..., None)`, as puzzle3d and block3d
+/// do): a part is a mesh URL here, so this crate knows what it asked for but never how big the
+/// delivered geometry is — only the render host, which loaded it, can measure that.
+pub fn world_fit_revision(document: &Puzzle5dDocument) -> u32 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    document.schema.hash(&mut hasher);
+    document.domain.hash(&mut hasher);
+    document.label.hash(&mut hasher);
+    document.kind_catalogs.as_ref().map(ToString::to_string).hash(&mut hasher);
+    document.kind_compatibility.as_ref().map(ToString::to_string).hash(&mut hasher);
+    (hasher.finish() >> 32) as u32
 }
 
 /// 🧵️ `meshesJson` from the world mesh lane, in exactly the order the fill run's trace subjects index.
@@ -268,6 +296,7 @@ pub fn render(envelope: &Puzzle5dScene, tool_run: Option<&ToolRunView>, mesh_lan
     scene.vortices_json = Some(world_grips_json(&envelope.document, &envelope.runtime, &envelope.interaction, &envelope.active_utility));
     scene.attractions_json = Some(world_fasteners_json(&envelope.document));
     scene.interaction_json = Some(world_interaction_json(&envelope.runtime, &envelope.active_utility));
+    scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.document), PUZZLE5D_FIT_PADDING, None));
     scene.chunking_json = Some(world3d_chunking_json(256.0, 8000.0));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
     scene.target_volumes_json = Some(world_target_volumes_json(&envelope.document));

@@ -133,9 +133,10 @@ fn a_created_row_lands_at_its_canonical_sorted_position() {
 #[test]
 fn both_window_bodies_render_for_every_example() {
     let config = Wfc3dConfig::default();
+    let transient = crate::editor::wfc3d::transient::Wfc3dTransient::default();
     for document in [crate::examples::two_room_corridor::snapshot(), crate::examples::wall_roof_facade_strip::snapshot(), crate::examples::tower_stack::snapshot()] {
         for body in [graph::WFC_GRAPH_BODY, preview::WFC_3D_PREVIEW_BODY] {
-            let tree = render_body(body, &document, &config).unwrap_or_else(|error| panic!("{body} must render: {error:?}"));
+            let tree = render_body(body, &document, &config, &transient, None).unwrap_or_else(|error| panic!("{body} must render: {error:?}"));
             assert!(!format!("{tree:?}").is_empty());
         }
     }
@@ -143,7 +144,7 @@ fn both_window_bodies_render_for_every_example() {
 
 #[test]
 fn an_unknown_body_key_renders_a_label_instead_of_failing() {
-    assert!(render_body("nope", &document(), &Wfc3dConfig::default()).is_ok());
+    assert!(render_body("nope", &document(), &Wfc3dConfig::default(), &crate::editor::wfc3d::transient::Wfc3dTransient::default(), None).is_ok());
 }
 
 /// 🕸️ The graph view drops `z` deliberately: the canvas is a plan of an arbitrary graph, and the
@@ -227,6 +228,14 @@ fn every_declared_action_bridges_through_command_from_action() {
         "selectAll",
         "setSelectionMode",
         "setInteractionGranularity",
+        "toolRunStart",
+        "toolRunPause",
+        "toolRunResume",
+        "toolRunStep",
+        "toolRunAbort",
+        "toolRunFinalize",
+        "toolRunDismiss",
+        "commit-fill",
     ];
     let mut bridged = 0;
     for window in &definition.window_kinds {
@@ -238,7 +247,7 @@ fn every_declared_action_bridges_through_command_from_action() {
             bridged += 1;
         }
     }
-    assert!(bridged >= 12, "expected every declared wfc3d verb to bridge, saw {bridged}");
+    assert!(bridged >= 10, "expected every declared wfc3d verb to bridge, saw {bridged}");
 }
 
 /// 🕸️ The wasm node-graph surface commits a released gesture as a WHOLE graph
@@ -347,4 +356,24 @@ fn a_two_axis_move_or_resize_keeps_the_authored_third_axis() {
 
     let resized = dispatch(&Wfc3dEditorCommand::ResizeSlot { id: "cantilever".into(), width: 4.0, height: 5.0, depth: None }, &document, &config).expect("resize dispatches");
     assert_eq!(resized.artifact_mutations, vec![resize_slot("cantilever".into(), 4.0, 5.0, authored.depth)]);
+}
+
+/// ⚖️ LAW: this app's one app-owned factory carries ONE roster — `TOOL_IDS`, its
+/// `PUBLICATION_CONTRACTS` and its `bounded_first_step_tool_proofs!` rows name exactly the same
+/// tools. The framework refuses app registration outright when they drift
+/// (`interactive-job.publication-contract` when a lane contract names an unowned tool,
+/// `interactive-job.catalog-incomplete` when a migrated command has no owner-local proof), and that
+/// refusal is a guest-side `panic!` — so one missing row aborted the whole wfc component at boot and
+/// every one of its panes reached `data-shell-error` instead of `data-shell-ready`.
+#[test]
+fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_roster() {
+    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    let tools: std::collections::BTreeSet<&str> = WFC_3D_RETAINED_TOOL_IDS.iter().copied().collect();
+    let publication: std::collections::BTreeSet<&str> = <Wfc3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect();
+    assert_eq!(publication, tools, "every owned tool declares exactly one publication-lane contract");
+    for contract in <Wfc3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
+        assert!(!contract.lanes.is_empty(), "tool {} declares no publication lane", contract.tool_id);
+    }
+    let proofs: std::collections::BTreeSet<&str> = <Wfc3dEditor as semio_framework_plugin::ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
+    assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
 }

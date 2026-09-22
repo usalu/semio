@@ -731,6 +731,60 @@ pub fn register_bitmap_inference_factory(bus: &semio_framework::ActionBus) -> Re
     bus.register_once(BitmapInferenceJobFactory::default())
 }
 
+/// 🧱 Compiled overlapping collapse ready for an interactive `WfcJob` — shared by the headless
+/// oracle and the fill tool run so both drive the same model, topology, pins and decoder.
+pub struct BitmapCollapseParts {
+    pub model: engine::model::CompiledModel,
+    pub topology: engine::grid2d::Grid2dTopology,
+    pub fixed: Vec<(engine::ids::NodeId, engine::ids::PatternId)>,
+    pub decoder: engine::extract::PatternDecoder2d,
+}
+
+/// 🧱 Learn patterns, build the output grid and apply pins for one snapshot.
+pub fn compile_bitmap_collapse(snapshot: &BitmapSnapshot) -> Result<BitmapCollapseParts, String> {
+    let input_cells = (snapshot.input.width as usize).saturating_mul(snapshot.input.height as usize);
+    let output_cells = (snapshot.output.width as usize).saturating_mul(snapshot.output.height as usize);
+    if input_cells == 0 || output_cells == 0 || input_cells > MAX_BITMAP_INPUT_CELLS || output_cells > MAX_BITMAP_OUTPUT_CELLS || snapshot.pinned.len() > MAX_BITMAP_PINS || snapshot.input.palette.is_empty() {
+        return Err("bitmap-inference-admission-exceeded".into());
+    }
+    let indices = snapshot.input.indices().ok_or("bitmap-inference-malformed-input")?;
+    if indices.iter().any(|index| usize::from(*index) >= snapshot.input.palette.len()) {
+        return Err("bitmap-inference-unknown-palette-index".into());
+    }
+    let tiles = indices.iter().map(|index| engine::ids::TileId(u32::from(*index))).collect();
+    let sample = engine::extract::Sample2d::new(snapshot.input.width as usize, snapshot.input.height as usize, tiles);
+    let config = engine::extract::Extract2dConfig { window: snapshot.model.pattern_size.max(1) as usize, periodic_input: snapshot.model.periodic_input, symmetry: symmetry_group(snapshot.model.symmetry) };
+    let extracted = engine::extract::extract_2d(&[sample], &config).map_err(|error| format!("{error:?}"))?;
+    if extracted.model.pattern_count() > MAX_BITMAP_PATTERNS {
+        return Err("bitmap-inference-pattern-universe-exceeded".into());
+    }
+    let decoder = extracted.decoder.clone();
+    let boundary = if snapshot.output.periodic { engine::grid2d::Boundary::Wrap } else { engine::grid2d::Boundary::Open };
+    let topology = engine::grid2d::Grid2dTopology::new(snapshot.output.width as usize, snapshot.output.height as usize, &engine::grid2d::Stencil2d::VonNeumann, stencil_relations(), boundary, boundary, None).map_err(|error| format!("{error:?}"))?;
+    let mut fixed = Vec::new();
+    for pin in &snapshot.pinned {
+        if pin.x >= snapshot.output.width || pin.y >= snapshot.output.height {
+            return Err("bitmap-inference-pin-outside-output".into());
+        }
+        let pattern = (0..extracted.model.pattern_count()).map(engine::ids::PatternId::from_index).find(|pattern| decoder.anchor_tile(*pattern).get() == pin.color).ok_or("bitmap-inference-unreachable-pin")?;
+        let node = engine::ids::NodeId::from_index((pin.y as usize) * (snapshot.output.width as usize) + pin.x as usize);
+        fixed.push((node, pattern));
+    }
+    if let Some(ground) = snapshot.model.ground {
+        if let Some(pattern) = (0..extracted.model.pattern_count()).map(engine::ids::PatternId::from_index).find(|pattern| decoder.anchor_tile(*pattern).get() == ground) {
+            let width = snapshot.output.width as usize;
+            let row = (snapshot.output.height as usize).saturating_sub(1);
+            for x in 0..width {
+                let node = engine::ids::NodeId::from_index(row * width + x);
+                if !fixed.iter().any(|(fixed_node, _)| *fixed_node == node) {
+                    fixed.push((node, pattern));
+                }
+            }
+        }
+    }
+    Ok(BitmapCollapseParts { model: extracted.model, topology, fixed, decoder })
+}
+
 /// 🏁 Explicit headless adapter over the same complete parent job the public factory hands out.
 pub fn solve_with_job(snapshot: &BitmapSnapshot) -> Result<BitmapInferenceCommit, String> {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);

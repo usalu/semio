@@ -105,7 +105,7 @@ macro_rules! scalar {
         }
     )*};
 }
-scalar!(bool, u16, u32, u64, f64, UiNodeId, UiRevision, Activity, TransitionHint, StyleSpec, Trigger, ContainerRole, InputKind, ToggleAppearance, TreePresentation, RowActionPlacement, SurfaceKind, Liveness, GridTrack, SpaceToken, Align, Justify, EdgeSpace, Axis, Anchor, ScrollAxes, Sizing);
+scalar!(bool, u16, u32, u64, f64, UiNodeId, UiRevision, Activity, TransitionHint, StyleSpec, Trigger, ContainerRole, InputKind, ToggleAppearance, TreePresentation, TreeWindowRowExtent, RowActionPlacement, SurfaceKind, Liveness, GridTrack, SpaceToken, Align, Justify, EdgeSpace, Axis, Anchor, ScrollAxes, Sizing);
 
 impl TypedCopy for UiText {
     fn empty_like(&self) -> Self {

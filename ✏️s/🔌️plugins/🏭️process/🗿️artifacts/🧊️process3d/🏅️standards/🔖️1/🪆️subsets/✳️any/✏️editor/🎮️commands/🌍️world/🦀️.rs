@@ -17,7 +17,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// (Attach). A `Pose.position` is the tool's CENTRE (`inferences::solid_for_spec` centres every kernel
 /// primitive before posing it), so the box is centred half a drag along the normal from the picked
 /// point — it then spans exactly the dragged region, flush with the picked face, in both directions.
-fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f64, face_extent: Option<[f64; 2]>, labels: &Process3dLabels) -> Option<ProcessStep> {
+fn process3d_step_from_face_drag(fixture: &Process3dSnapshot, normal: [f64; 3], point: [f64; 3], distance: f64, face_extent: Option<[f64; 2]>, labels: &Process3dLabels) -> Option<ProcessStep> {
     if distance.abs() < 1e-6 {
         return None;
     }
@@ -33,7 +33,7 @@ fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f6
         (ProcessMeasure::Attach { component: WorkingSolid::Box { width, depth, height }, pose }, labels.pull_attach, "attacher", "attach")
     };
     let origin = StepOrigin { machine_id: machine_id.to_string(), capability_id: capability_id.to_string() };
-    Some(ProcessStep { id: next_step_id(), label: label.as_str().to_string(), enabled: true, origin: Some(origin), measure })
+    Some(ProcessStep { id: next_step_id(fixture), label: label.as_str().to_string(), enabled: true, origin: Some(origin), measure })
 }
 //#endregion 🔖️FaceDrag
 
@@ -66,7 +66,7 @@ pub mod world_pointer_down {
         };
         let (machine, capability) = capability_for_measure_kind(&fixture.workshop, measure_kind);
         let origin = StepOrigin { machine_id: machine.id, capability_id: capability.id.clone() };
-        let step = ProcessStep { id: next_step_id(), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: crate::schema::inferences::measure_for_capability(&capability, Some(payload.position)) };
+        let step = ProcessStep { id: next_step_id(fixture), label: capability.label.clone(), enabled: true, origin: Some(origin), measure: crate::schema::inferences::measure_for_capability(&capability, Some(payload.position)) };
         Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), effects: vec![set_active_utility_effect("select")], ..Default::default() })
     }
 }
@@ -97,7 +97,7 @@ pub mod world_face_drag_end {
         if ctx.active_utility()? != "select" {
             return Ok(Emit::default());
         }
-        match process3d_step_from_face_drag(payload.normal, payload.start_point, payload.distance, payload.face_extent, process3d_labels(ctx.view_state()?)) {
+        match process3d_step_from_face_drag(fixture, payload.normal, payload.start_point, payload.distance, payload.face_extent, process3d_labels(ctx.view_state()?)) {
             Some(step) => Ok(Emit { artifact_mutations: insert_step_mutations(fixture, step), ..Default::default() }),
             None => Ok(Emit::default()),
         }

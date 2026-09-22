@@ -951,6 +951,11 @@ struct Process3dArtifactPreparation {
     retained_bytes: usize,
     cancelled: bool,
     closing: bool,
+    /// 🩺️ The refusal `prepare_process3d_document` answered, kept so a later turn reports THAT and not
+    /// the empty owner it left behind — the mutation is moved into the preparation, so a refused
+    /// candidate cannot put it back and every subsequent `advance` would otherwise read
+    /// "lost its mutation owner", hiding the real reason.
+    failure: Option<String>,
 }
 
 /// 📏️ One text field's own retained cost — rejected rather than truncated past the fixed envelope.
@@ -1181,6 +1186,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Process3dSnapshot, Process3dM
             retained_bytes: 0,
             cancelled: false,
             closing: false,
+            failure: None,
         }))
     }
 }
@@ -1199,8 +1205,12 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
             if grant.maximum_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES {
                 return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
             }
-            let mutation = self.mutation.take().ok_or_else(|| "Process3d document preparation lost its mutation owner".to_string())?;
-            self.candidate = Some(prepare_process3d_document(base, mutation)?);
+            let mutation = self.mutation.take().ok_or_else(|| self.failure.clone().unwrap_or_else(|| "Process3d document preparation lost its mutation owner".to_string()))?;
+            let candidate = prepare_process3d_document(base, mutation);
+            if let Err(error) = &candidate {
+                self.failure = Some(error.clone());
+            }
+            self.candidate = Some(candidate?);
             self.retained_bytes = PROCESS3D_DOCUMENT_GRANT_BYTES;
             self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: PROCESS3D_DOCUMENT_GRANT_BYTES as u64, digest: [0; 32] };
             return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));

@@ -5,6 +5,7 @@
 //! retained payload page aborts the process rather than failing a test.
 
 use super::*;
+use semio_framework_job::InteractiveJob;
 use crate::schema::snapshot::{Grid3dCell, Grid3dDirection, Grid3dPinnedCell, Grid3dRule, Grid3dSnapshot, Grid3dTile};
 
 /// 🧸️ Two tiles on a 2×1×1 grid, each allowed beside the other in both x directions — the smallest
@@ -157,4 +158,41 @@ fn an_oversized_request_is_refused_at_admission_rather_than_attempted() {
     let snapshot = Grid3dSnapshot { width: 0, ..Grid3dSnapshot::default() };
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), 0);
     assert!(Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot, checkpoint: None }).is_err());
+}
+
+#[test]
+fn the_inference_job_publishes_a_twenty_five_byte_preview() {
+    let document = two_tile_pair();
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), document.seed);
+    let mut job = Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot: document, checkpoint: None }).expect("admit");
+    let (operation_id, generation, cancel) = (job.operation().operation, job.operation().generation, semio_framework_job::root_cancel_token());
+    let mut sequence = 0;
+    let mut verdict = None;
+    for _ in 0..100_000 {
+        let now = semio_framework_job::default_now_us().expect("clock");
+        let budget = semio_framework_job::StepBudget::new(1, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4);
+        let outcome = semio_framework_job::drive_step(&mut job, "wfc.grid3d.inference.preview.test", operation_id, generation, semio_framework_job::InteractiveStage::InteractiveStep, budget, cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut verdict);
+        match outcome {
+            semio_framework_job::StepOutcome::PreviewReady(mut payload) => {
+                let bytes: Vec<u8> = (0..payload.page_count()).flat_map(|index| payload.page(index).expect("page").to_vec()).collect();
+                while !matches!(payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+                assert_eq!(bytes.len(), 25, "the parent inference preview is a fixed 25-byte progress record");
+                job.begin_close();
+                for _ in 0..1_000_000 {
+                    if matches!(job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
+                        assert!(job.terminal_is_empty());
+                        return;
+                    }
+                }
+                panic!("inference close stalled");
+            }
+            semio_framework_job::StepOutcome::Complete(_) | semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => {
+                let mut outcome = outcome;
+                while !matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}
+                panic!("expected a preview before the terminal outcome");
+            }
+            _ => {}
+        }
+    }
+    panic!("no preview published");
 }

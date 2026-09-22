@@ -58,6 +58,9 @@ pub(crate) const SELECT_SIDE_OFFSET: f32 = 4.0;
 /// every edge, and the floor a flipped popup's top is clamped to (`🟦️.tsx:477`).
 pub(crate) const SELECT_COLLISION_PADDING: f32 = 8.0;
 
+/// 📏️ `min-w-32` at the canonical 16 px root used by the mounted React oracle.
+pub(crate) const SELECT_CONTENT_MIN_WIDTH: f32 = 128.0;
+
 /// 📏️ One popup row's height: a `text-sm` line box plus `py-single` on both sides — React's
 /// `SelectItem` is `py-single … text-sm` (`🟦️.tsx:729`), never a `--size-*` control height, which is
 /// why this does NOT reuse `Theme::control_height` the way the pre-parity literal did.
@@ -132,7 +135,7 @@ pub(crate) fn select_visible_rows(items: usize, theme: &Theme, painted_height: f
 /// `SelectScrollUpButton`/`SelectScrollDownButton` are `py-single` with a `size-tiny` icon
 /// (`🟦️.tsx:790-795`, `:813-818`).
 pub(crate) fn select_scroll_button_height(theme: &Theme) -> f32 {
-    crate::wgpu::chrome::SIZE_TINY + theme.padding_standard * 2.0
+    crate::wgpu::chrome::ICON_TINY + theme.padding_standard * 2.0
 }
 
 /// 🔼️ The pixels one scroll-button press moves the viewport — React's `scrollSelectViewport`
@@ -221,6 +224,7 @@ pub(crate) struct SelectPopupGeometry {
     pub up: Option<Rect>,
     pub down: Option<Rect>,
     pub scroll: f32,
+    pub max_scroll: f32,
     pub first_row: usize,
     pub last_row: usize,
 }
@@ -234,31 +238,57 @@ impl SelectPopupGeometry {
 }
 
 pub(crate) fn select_popup_geometry(trigger: Rect, items: usize, theme: &Theme, viewport_h: f32, offset: f32, direction: f32) -> SelectPopupGeometry {
-    let natural = select_menu_height(items, theme);
-    let menu_h = select_menu_painted_height(items, theme, trigger.y, trigger.h, viewport_h);
+    let border = theme.stroke_hairline;
+    let band = select_scroll_button_height(theme);
+    let natural_viewport = select_menu_height(items, theme);
+    let natural = natural_viewport + border * 2.0 + band * 2.0;
+    let menu_h = natural.min(select_available_height(trigger.y, trigger.h, natural, viewport_h));
     let menu_top = select_menu_top(trigger.y, trigger.h, natural, viewport_h);
-    let menu = Rect::new(trigger.x, trigger.y + menu_top, trigger.w, menu_h);
-    let scroll = select_scrolled_offset(items, theme, menu_h, offset, direction);
-    let (first_row, last_row) = select_scrolled_row_window(items, theme, menu_h, scroll);
-    let scrolls = select_visible_rows(items, theme, menu_h) < items;
-    let (up, down) = if scrolls {
-        let button_h = select_scroll_button_height(theme).min(menu.h);
-        (Some(Rect::new(menu.x, menu.y, menu.w, button_h)), Some(Rect::new(menu.x, menu.y + menu.h - button_h, menu.w, button_h)))
-    } else {
-        (None, None)
-    };
-    SelectPopupGeometry { menu, up, down, scroll, first_row, last_row }
+    let menu = Rect::new(trigger.x, trigger.y + menu_top, trigger.w.max(SELECT_CONTENT_MIN_WIDTH), menu_h);
+    let inner_height = (menu.h - border * 2.0).max(0.0);
+    let band = band.min(inner_height * 0.5);
+    let inner_width = (menu.w - border * 2.0).max(0.0);
+    let up = Some(Rect::new(menu.x + border, menu.y + border, inner_width, band));
+    let down = Some(Rect::new(menu.x + border, menu.y + menu.h - border - band, inner_width, band));
+    let viewport_height = (inner_height - band * 2.0).max(0.0);
+    let scroll = select_scrolled_offset(items, theme, viewport_height, offset, direction);
+    let (first_row, last_row) = select_scrolled_row_window(items, theme, viewport_height, scroll);
+    let max_scroll = select_clamped_scroll(items, theme, viewport_height, f32::MAX);
+    SelectPopupGeometry { menu, up, down, scroll, max_scroll, first_row, last_row }
 }
 
-pub(crate) fn select_popup_row_rect(trigger: Rect, index: usize, popup: SelectPopupGeometry, theme: &Theme) -> Rect {
-    let relative = select_row_rect(trigger.w, index, popup.menu.y - trigger.y, theme);
-    Rect::new(trigger.x + relative.x, trigger.y + relative.y - popup.scroll, relative.w, relative.h)
+pub(crate) fn select_popup_viewport_rect(popup: SelectPopupGeometry) -> Rect {
+    let top = popup.up.map_or(popup.menu.y, |button| button.y + button.h);
+    let bottom = popup.down.map_or(popup.menu.y + popup.menu.h, |button| button.y);
+    let left = popup.up.or(popup.down).map_or(popup.menu.x, |button| button.x);
+    let width = popup.up.or(popup.down).map_or(popup.menu.w, |button| button.w);
+    Rect::new(left, top, width, (bottom - top).max(0.0))
+}
+
+pub(crate) fn select_revealed_scroll(popup: SelectPopupGeometry, index: usize, theme: &Theme) -> f32 {
+    let viewport = select_popup_viewport_rect(popup);
+    let row_top = theme.padding_standard + index as f32 * select_row_height(theme);
+    let row_bottom = row_top + select_row_height(theme);
+    if row_top < popup.scroll {
+        row_top.clamp(0.0, popup.max_scroll)
+    } else if row_bottom > popup.scroll + viewport.h {
+        (row_bottom - viewport.h).clamp(0.0, popup.max_scroll)
+    } else {
+        popup.scroll
+    }
+}
+
+pub(crate) fn select_popup_row_rect(_trigger: Rect, index: usize, popup: SelectPopupGeometry, theme: &Theme) -> Rect {
+    let viewport = select_popup_viewport_rect(popup);
+    let inset = theme.padding_standard;
+    Rect::new(viewport.x + inset, viewport.y + inset + index as f32 * select_row_height(theme) - popup.scroll, (viewport.w - inset * 2.0).max(0.0), select_row_height(theme))
 }
 
 pub(crate) fn select_popup_row_hit_rect(trigger: Rect, index: usize, popup: SelectPopupGeometry, theme: &Theme) -> Rect {
     let row = select_popup_row_rect(trigger, index, popup, theme);
-    let top = popup.up.map_or(popup.menu.y, |button| button.y + button.h);
-    let bottom = popup.down.map_or(popup.menu.y + popup.menu.h, |button| button.y);
+    let viewport = select_popup_viewport_rect(popup);
+    let top = viewport.y;
+    let bottom = viewport.y + viewport.h;
     let y = row.y.max(top);
     let edge = (row.y + row.h).min(bottom);
     Rect::new(row.x.max(popup.menu.x), y, (row.x + row.w).min(popup.menu.x + popup.menu.w).max(row.x.max(popup.menu.x)) - row.x.max(popup.menu.x), (edge - y).max(0.0))
@@ -513,6 +543,7 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
     let mut render_rows = |draw: &mut crate::wgpu::draw::DrawList| {
         let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], ctx.theme.border_radius, ctx.theme.glass(Level::Menu));
         draw.begin_glass_content(glass);
+        crate::wgpu::chrome::push_chrome_border(draw, popup.menu, ctx.theme.stroke_hairline, ctx.theme.border_normal, true, true, true, true);
         draw.push_scissor(popup.menu);
         for (index, item) in items.iter().enumerate().take(popup.last_row).skip(popup.first_row) {
             let row = select_popup_row_rect(bounds, index, popup, ctx.theme);
@@ -521,7 +552,7 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
                 draw.push_rounded([row.x, row.y, row.w, row.h], ctx.theme.row_hover, ctx.theme.border_radius);
             }
             draw_text_on(draw, ctx.atlas, item.label(), row.x + inset, row.y + (row.h + font_size) * 0.5 - 2.0, font_size, ctx.theme.text);
-            ctx.input.register_hit(HitTarget { rect: row, event: None, control_id: Some(format!("{id}.item.{}", item.value())), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
+            ctx.input.register_hit(HitTarget { rect: select_popup_row_hit_rect(bounds, index, popup, ctx.theme), event: None, control_id: Some(format!("{id}.item.{}", item.value())), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
         }
         draw.pop_scissor();
         // 🔼️ The chevrons paint and register LAST so their bands win the hit resolve (`HitRegistry`
@@ -530,8 +561,8 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
             let chevron = crate::wgpu::chrome::SIZE_TINY;
             let center_x = popup.menu.x + (popup.menu.w - chevron) * 0.5;
             if let Some(icons) = ctx.icons {
-                crate::wgpu::chrome::push_icon(draw, icons, "chevron-up", center_x, up.y + inset, chevron, ctx.theme.text_muted);
-                crate::wgpu::chrome::push_icon(draw, icons, "chevron-down", center_x, down.y + inset, chevron, ctx.theme.text_muted);
+                crate::wgpu::chrome::push_icon(draw, icons, "chevron-up", center_x, up.y + (up.h - chevron) * 0.5, chevron, ctx.theme.text_muted);
+                crate::wgpu::chrome::push_icon(draw, icons, "chevron-down", center_x, down.y + (down.h - chevron) * 0.5, chevron, ctx.theme.text_muted);
             }
             ctx.input.register_hit(HitTarget { rect: up, event: None, control_id: Some(select_scroll_control_id(id, true)), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
             ctx.input.register_hit(HitTarget { rect: down, event: None, control_id: Some(select_scroll_control_id(id, false)), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
@@ -542,6 +573,9 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
         render_rows(overlay);
     } else {
         render_rows(ctx.draw);
+    }
+    if let Some(maps) = ctx.interaction_maps.as_deref_mut() {
+        maps.register_select_popup_wheel(id, popup.menu, popup.max_scroll, ctx.input.staged_hits().len());
     }
 }
 
@@ -560,6 +594,17 @@ pub(crate) fn arm_retained_select_scroll_at(tree: &mut crate::wgpu::tree::UiTree
     let Some(node) = tree.node_mut(id) else { return false };
     node.state.scroll_offset.0 = direction;
     tree.mark_dirty(id, crate::wgpu::tree::NodeFlags::DIRTY_PAINT);
+    true
+}
+
+pub(crate) fn scroll_retained_select_at(tree: &mut crate::wgpu::tree::UiTree, id: crate::wgpu::arena::NodeId, x: f32, y: f32, delta: f32) -> bool {
+    let Some(popup) = tree.node(id).filter(|node| node.state.open).and_then(|node| node.state.select_popup).filter(|popup| popup.menu.contains(x, y)) else { return false };
+    if delta.is_finite() && delta != 0.0 {
+        if let Some(node) = tree.node_mut(id) {
+            node.state.scroll_offset.1 = (node.state.scroll_offset.1 + delta).clamp(0.0, popup.max_scroll);
+        }
+        tree.mark_dirty(id, crate::wgpu::tree::NodeFlags::DIRTY_PAINT);
+    }
     true
 }
 

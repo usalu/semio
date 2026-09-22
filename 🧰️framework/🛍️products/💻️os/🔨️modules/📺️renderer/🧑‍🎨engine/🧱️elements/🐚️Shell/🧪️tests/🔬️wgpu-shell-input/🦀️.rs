@@ -2,6 +2,38 @@ use super::*;
 use crate::dock::DockNode;
 
 #[test]
+fn a_published_immediate_select_owns_wheel_without_parsing_its_option_id() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).unwrap();
+    let law = &fixture["select"]["wheel"];
+    let id = "owner.item.embedded";
+    let mut shell = super::panel_anchor_model_tests::host_test_shell();
+    let mut input = InputState::default();
+    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let theme = Theme::default();
+    shell.open_selects.insert(id.into(), true);
+    input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 160.0, 100.0), event: None, control_id: Some("outer".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
+    let widget = ui_wgpu::wgpu::WidgetNode::Select {
+        id: id.into(), value: "0".into(), items: (0..20).map(|index| ui_wgpu::wgpu::SelectItem { value: format!("option.item.{index}"), label: index.to_string() }).collect(), placeholder: None, on_change: None,
+    };
+    ui_wgpu::wgpu::render_widget(&widget, Rect::new(8.0, 62.0, 120.0, 22.4), &mut ui_wgpu::wgpu::WidgetContext {
+        draw: &mut draw, overlay: None, atlas: &mut atlas, icons: None, input: &mut input, theme: &theme,
+        scroll_offsets: &mut shell.scroll_offsets, collapsed_sections: &mut shell.collapsed_sections, open_selects: &mut shell.open_selects,
+        interaction_maps: Some(&mut shell.widget_maps), pick_clip: None, viewport_height: 100.0,
+    });
+    input.publish_hits();
+    let x = law["point"]["x"].as_f64().unwrap() as f32;
+    let y = law["point"]["y"].as_f64().unwrap() as f32;
+    assert!(shell.handle_pointer_wheel(x, y, 0.0, law["delta"].as_f64().unwrap() as f32, &mut input));
+    assert_eq!(shell.scroll_offsets.get(&format!("select.{id}.scroll")).copied(), Some(law["expectedScroll"].as_f64().unwrap() as f32));
+    assert!(!shell.scroll_offsets.contains_key("outer"));
+    shell.open_selects.clear();
+    assert!(shell.handle_pointer_wheel(x, y, 0.0, 1.0, &mut input), "accepted popup remains authoritative until its replacement is presented");
+    assert_eq!(shell.scroll_offsets.get(&format!("select.{id}.scroll")).copied(), Some(35.0));
+    println!("[DEBUG] immediate Select exact owner={id} accepted wheel=35");
+}
+
+#[test]
 fn the_topmost_retained_world_owns_the_press_and_release_outside_its_bounds() {
     retained_world_sequence_probe("captured");
 }
@@ -1592,6 +1624,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
             break;
         }
         assert!(crate::interpreter::close_ui_document_one());
+        shell = crate::os_host::finish_world_fixture_component_close(shell);
     }
     assert!(!crate::interpreter::ui_document_close_pending_for("main-2"), "the presenter maintenance lane returns the closed retained surface before its identity is reused");
 

@@ -119,7 +119,11 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
             Self::Clock(_) => fields[..3].copy_from_slice(&[("actor", true), ("physical_ms", true), ("logical", true)]),
             Self::Origin(origin) => match origin {
                 crate::os_spr::MutationOrigin::Owner => fields[0] = ("kind", true),
-                crate::os_spr::MutationOrigin::Contributed { .. } => fields[..4].copy_from_slice(&[("kind", true), ("plugin_id", true), ("mutation_id", true), ("payload_hash", true)]),
+                // 🔤 camelCase, because `MutationOrigin`'s own `ToValue` is the normative key
+                // spelling and this cursor must produce its bytes exactly. Its sibling
+                // `transaction` variant was already aligned; `contributed` alone was not, so a
+                // contributed edit's canonical form never matched its own value projection.
+                crate::os_spr::MutationOrigin::Contributed { .. } => fields[..4].copy_from_slice(&[("kind", true), ("pluginId", true), ("mutationId", true), ("payloadHash", true)]),
                 crate::os_spr::MutationOrigin::Transaction { .. } => fields[..2].copy_from_slice(&[("kind", true), ("initiator", true)]),
             },
             Self::Target(target) => fields[..3].copy_from_slice(&[("artifactId", true), ("artifactKind", true), ("dialect", target.dialect.is_some())]),

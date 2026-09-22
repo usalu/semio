@@ -6,12 +6,12 @@
 //! own `Grid2dWindowConfig` instead, never the document.
 
 use crate::editor::grid2d::modes::edit;
+use crate::editor::grid2d::modes::edit::tools::fill as fill_tool;
 use crate::editor::grid2d::modes::edit::windows::{grid, preview};
 use crate::editor::grid2d::window::{self, Grid2dWindowConfig};
 use crate::mutations::{
     change_cell_size, change_periodicity, change_seed, change_tile_media, change_tile_weight, create_rule, create_tile, delete_rule, delete_tile, mask_cell, pin_cell, resize_grid, unmask_cell, unpin_cell,
 };
-use crate::schema::inferences::solve_with_job;
 use crate::schema::snapshot::{WfcAdjacencyRule2d, WfcTile2d, WfcTileMedia2d};
 use crate::{Grid2dMutation, Grid2dSnapshot, WFC_GRID2D_DIALECT, WFC_GRID2D_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
@@ -19,7 +19,7 @@ use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCo
 use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect,
     DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient,
-    NoTransientMutation, ViewModel,
+    NoTransientMutation, ToolRef, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, ViewModel,
 };
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::EngineHandles;
@@ -88,10 +88,12 @@ pub enum Grid2dEditorCommand {
     SetGridSnapEnabled { enabled: bool },
     #[dsl(key = "set-grid-factor")]
     SetGridFactor { factor: f64 },
-    /// 🏁 Runs the `s.wfc.grid2d.solve` inference and caches its commit in THIS pane's window
-    /// config. The document is never touched: the solve is derived, never persisted.
+    /// 🏁 Starts the interactive fill tool run; the finished cache lands via `commit-fill`.
     #[dsl(key = "solve")]
     Solve,
+    /// 💾 Writes the finished fill commit into this pane's `solve_json`.
+    #[dsl(key = "commit-fill")]
+    CommitFill { solve_json: String },
     /// 🗃️ Loads one bundled example by its registered id — the navbar switcher's verb. A whole
     /// document replacement is not expressible as a `Grid2dMutation`, so this emits
     /// `Effect::LoadDocument` and journals NO history patch: re-picking the boot example leaves
@@ -154,6 +156,7 @@ pub const GRID2D_TOOL_IDS: &[&str] = &[
     "set-grid-snap-enabled",
     "set-grid-factor",
     "solve",
+    "commit-fill",
     "setActiveExample",
     "canvasPointerDown",
     "canvasPointerMove",
@@ -188,6 +191,7 @@ pub fn grid2d_command_id(command: &Grid2dEditorCommand) -> &'static str {
         Grid2dEditorCommand::SetGridSnapEnabled { .. } => "set-grid-snap-enabled",
         Grid2dEditorCommand::SetGridFactor { .. } => "set-grid-factor",
         Grid2dEditorCommand::Solve => "solve",
+        Grid2dEditorCommand::CommitFill { .. } => "commit-fill",
         Grid2dEditorCommand::SetActiveExample { .. } => "setActiveExample",
         Grid2dEditorCommand::CanvasPointerDown { .. } => "canvasPointerDown",
         Grid2dEditorCommand::CanvasGesture { action } => match action.as_str() {
@@ -247,7 +251,8 @@ const GRID2D_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     window_config_route("set-grid-visible"),
     window_config_route("set-grid-snap-enabled"),
     window_config_route("set-grid-factor"),
-    window_config_route("solve"),
+    host_only_route("solve"),
+    window_config_route("commit-fill"),
     host_only_route("setActiveExample"),
     host_only_route("canvasPointerMove"),
     host_only_route("canvasPointerUp"),
@@ -540,8 +545,10 @@ impl Grid2dEditor {
                 return Self::config_emit(view_state, Grid2dWindowConfig { grid_factor: if *factor > 0.0 { *factor } else { 1.0 }, ..window_config }, "Set grid factor");
             }
             Grid2dEditorCommand::Solve => {
-                let commit = solve_with_job(doc.snapshot).map_err(|error| Fault::from(format!("wfc-grid2d-solve:{error}")))?;
-                return Self::config_emit(view_state, Grid2dWindowConfig { solve_json: protocol::json::to_json_string(&commit), ..window_config }, "Solve");
+                return Ok(Emit { effects: vec![fill_tool::start_effect()], description: Some("Solve".to_string()), ..Default::default() });
+            }
+            Grid2dEditorCommand::CommitFill { solve_json } => {
+                return Self::config_emit(view_state, Grid2dWindowConfig { solve_json: solve_json.clone(), ..window_config }, "Commit fill");
             }
         };
         Ok(Emit { artifact_mutations: vec![mutation], description: Some(description), ..Default::default() })
@@ -625,6 +632,13 @@ impl ArtifactEditor for Grid2dEditor {
         Grid2dCommandJobFactory::register(registry)
     }
 
+    fn build_tool_run_job(request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
+        if request.tool_id != fill_tool::TOOL_ID || request.purpose != ToolRunJobPurpose::Run {
+            return Ok(None);
+        }
+        Ok(Some(Box::new(fill_tool::Grid2dFillRunJob::new(request.identity, request.snapshot, request.port))))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Grid2dEditor>,
         owner_file: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -655,6 +669,7 @@ impl ArtifactEditor for Grid2dEditor {
             "set-grid-snap-enabled",
             "set-grid-factor",
             "solve",
+            "commit-fill",
             "setActiveExample",
             "canvasPointerDown",
             "canvasPointerMove",
@@ -740,6 +755,7 @@ impl ArtifactEditor for Grid2dEditor {
             "set-grid-snap-enabled" => Grid2dEditorCommand::SetGridSnapEnabled { enabled: arg_bool(args, "enabled", true) },
             "set-grid-factor" => Grid2dEditorCommand::SetGridFactor { factor: arg_f64(args, "factor", 1.0) },
             "solve" => Grid2dEditorCommand::Solve,
+            "commit-fill" => Grid2dEditorCommand::CommitFill { solve_json: arg_string_any(args, &["solveJson", "solve_json", "value"]) },
             "setActiveExample" => Grid2dEditorCommand::SetActiveExample { example_id: arg_string_any(args, &["exampleId", "id", "value"]) },
             "setCamera" => {
                 let camera = arg(args, "camera");
@@ -773,7 +789,7 @@ impl ArtifactEditor for Grid2dEditor {
         let config = window::config_from_view(cfg);
         match body_key {
             grid::BODY_KEY => grid::render(doc.snapshot, &config, grid2d_active_utility(view_state)).map(semio_framework_plugin::built_to_component_tree),
-            preview::BODY_KEY => preview::render(doc.snapshot, &config).map(semio_framework_plugin::built_to_component_tree),
+            preview::BODY_KEY => preview::render(doc.snapshot, &config, doc.tool_run()).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -809,11 +825,18 @@ pub fn create_grid2d_editor() -> semio_framework_plugin::AppDefinition {
         .default_mode_id(edit::GRID2D_EDIT_MODE_ID)
         .window_kind_def(grid::definition())
         .window_kind_def(preview::definition())
+        .tool(fill_tool::definition())
+        .mode_tools(edit::GRID2D_EDIT_MODE_ID, vec![semio_framework::io::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
         .default_layout(edit::layout());
     for utility in edit::utilities() {
         builder = builder.utility(utility);
     }
-    builder.window_kind_utilities(grid::WINDOW_KIND_ID, vec![grid::UTILITY_SELECT.into(), grid::UTILITY_PIN.into(), grid::UTILITY_MASK.into()]).build_definition()
+    builder
+        .window_kind_utilities(grid::WINDOW_KIND_ID, vec![grid::UTILITY_SELECT.into(), grid::UTILITY_PIN.into(), grid::UTILITY_MASK.into()])
+        .action_destructive("delete-tile")
+        .action_destructive("delete-rule")
+        .action_destructive("setActiveExample")
+        .build_definition()
 }
 //#endregion 🔖️Manifest
 

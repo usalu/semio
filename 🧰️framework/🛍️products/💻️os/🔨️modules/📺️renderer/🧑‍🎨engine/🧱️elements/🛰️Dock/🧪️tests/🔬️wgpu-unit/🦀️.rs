@@ -292,7 +292,11 @@ fn dock_stack_content_fills_full_bounds_through_one_silhouette_clip() {
     let icon_ids = HashMap::new();
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
     dock.paint_chrome(&mut ctx, bounds, true);
-    let fill = draw.layers.iter().find(|layer| layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h])).expect("full silhouette content fill");
+    let fill = draw
+        .layers
+        .iter()
+        .find(|layer| layer.clip.is_some() && layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h]))
+        .expect("full silhouette content fill");
     assert_eq!(fill.clip.as_ref().map(|clip| clip.scissors.len()), Some(2));
     assert!(!fill.clip.as_ref().is_some_and(|clip| clip.scissors.iter().any(|rect| rect.x <= 300 && 300 < rect.x + rect.w && rect.y <= 30 && 30 < rect.y + rect.h)));
 }

@@ -59,7 +59,8 @@
         "maximumRowHeight",
         "rowHeights",
         "minimumUnusedHeight",
-        "controlColumnWidth"
+        "controlColumnWidth",
+        "checkboxWidth"
       ],
       "properties": {
         "labels": {
@@ -84,6 +85,10 @@
           "exclusiveMinimum": 0
         },
         "controlColumnWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "checkboxWidth": {
           "type": "number",
           "exclusiveMinimum": 0
         }

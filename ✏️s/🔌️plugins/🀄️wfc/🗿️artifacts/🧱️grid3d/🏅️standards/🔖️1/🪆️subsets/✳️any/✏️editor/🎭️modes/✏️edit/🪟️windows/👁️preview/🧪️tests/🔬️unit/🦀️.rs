@@ -22,7 +22,7 @@ fn the_window_kind_is_a_read_only_world3d_surface() {
 fn every_example_renders_one_instance_per_solved_cell() {
     for (index, document) in [crate::examples::blocks::snapshot(), crate::examples::pipes_3d::snapshot()].into_iter().enumerate() {
         let window = format!("preview-render-{index}");
-        let node = render(&document, &Grid3dWindowConfig::default(), &window).expect("preview renders");
+        let node = render(&document, &Grid3dWindowConfig::default(), &window, None).expect("preview renders");
         assert!(!format!("{node:?}").is_empty());
         let cells = (document.width * document.height * document.depth) as usize - document.masked.len();
         let (instances, _) = publish(&window, &document, solve(&document).expect("the example solves").assignments);
@@ -44,7 +44,7 @@ fn a_cold_residency_publishes_no_delta_and_a_small_change_publishes_one() {
 fn a_contradiction_paints_the_empty_scene_and_says_so() {
     let mut document = crate::examples::blocks::snapshot();
     document.rules.clear();
-    render(&document, &Grid3dWindowConfig::default(), "preview-contradiction").expect("preview renders");
+    render(&document, &Grid3dWindowConfig::default(), "preview-contradiction", None).expect("preview renders");
     let status = status_json(&document, false, "[]");
     assert!(status.contains("contradiction"));
 }
@@ -55,4 +55,18 @@ fn the_status_line_stays_inside_one_ui_text_admission_unit() {
     let status = status_json(&document, true, &preview_instances_json(&document, &solve(&document).expect("solves").assignments));
     assert!(status.len() <= 512, "an oversized status kills the whole surface refresh, not just this field");
     assert!(status.contains("\"state\""));
+}
+
+#[test]
+fn a_partial_fill_preview_differs_from_empty_and_finished() {
+    let document = crate::examples::blocks::snapshot();
+    let oracle = solve(&document).expect("blocks solves");
+    let empty = preview_instances_json(&document, &[]);
+    let finished = preview_instances_json(&document, &oracle.assignments);
+    let mut partial = oracle.assignments.clone();
+    partial.truncate((oracle.assignments.len() / 2).max(1));
+    assert!(partial.len() < oracle.assignments.len());
+    let mid = preview_instances_json(&document, &partial);
+    assert_ne!(mid, empty, "a partial board must not look empty");
+    assert_ne!(mid, finished, "a partial board must not look finished");
 }

@@ -69,7 +69,8 @@
       { "kind": "button", "controlId": "framework.settings.resetDock", "widthMode": "fit", "heightMode": "default", "expectedWidthPx": null, "expectedHeightPx": 22.4 }
     ],
     "react": {
-      "gridTemplateColumns": "minmax(0, 1fr) calc(50 * var(--ui-spacing))",
+      "gridTemplateColumns": "minmax(0, 1fr) var(--tree-value-column, calc(50 * var(--ui-spacing)))",
+      "valueColumn": "calc(50 * var(--ui-spacing))",
       "fillAttribute": "fill",
       "fitAttribute": "fit"
     }
@@ -85,18 +86,19 @@
   },
   "retainedPreferencePublication": {
     "surfaceId": "framework.settings.general",
-    "requiresGuestRefresh": false,
     "cases": [
       {
         "action": "setAppearance",
         "publicationLane": "dispatch",
+        "requiresGuestRefresh": false,
         "controlId": "framework.settings.appearance",
         "initialValue": "system",
         "nextValue": "dark"
       },
       {
         "action": "setLocale",
-        "publicationLane": "maintenance",
+        "publicationLane": "settle",
+        "requiresGuestRefresh": true,
         "controlId": "framework.settings.language",
         "initialValue": "en",
         "nextValue": "de"
@@ -104,13 +106,15 @@
       {
         "action": "setLayout",
         "publicationLane": "dispatch",
+        "requiresGuestRefresh": false,
         "controlId": "framework.settings.layout",
         "initialValue": "desktop",
         "nextValue": "tablet"
       },
       {
         "action": "setTerminology",
-        "publicationLane": "dispatch",
+        "publicationLane": "settle",
+        "requiresGuestRefresh": true,
         "controlId": "framework.settings.terminology",
         "initialValue": "native",
         "nextValue": "de"
@@ -118,6 +122,7 @@
       {
         "action": "setMergePolicy",
         "publicationLane": "dispatch",
+        "requiresGuestRefresh": false,
         "controlId": "framework.settings.mergePolicy",
         "initialValue": "Normal",
         "nextValue": "Vigilant"
@@ -125,6 +130,7 @@
       {
         "action": "setDriver",
         "publicationLane": "dispatch",
+        "requiresGuestRefresh": false,
         "controlId": "framework.settings.driver",
         "initialValue": "default",
         "nextValue": "compact"

@@ -145,7 +145,7 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
         // report it as "a freshly queued patch was emitted immediately". Each case therefore runs
         // on its own instance pair and its own surface id, and every clause names its case.
         let (instance_a, instance_b) = if late_clock { (17u32, 18u32) } else { (7u32, 8u32) };
-        let surface = format!("{instance_a}:window");
+        let surface = format!("{instance_a}:output-fault-window");
         let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
         crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let captured_a = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance_a, 8, "native-fixture".into())]).await.lifecycle_receipt.unwrap();
@@ -157,8 +157,17 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
             surface: semio_framework_ui_contract::SurfaceId::try_from(surface.as_str()).unwrap(),
             base_revision: semio_framework_ui_contract::UiRevision(0), revision: semio_framework_ui_contract::UiRevision(2), ops: Default::default(),
         });
-        let preparation = reactor_native_lifecycle_poll(&runtime, Vec::new()).await;
-        assert!(preparation.ui_patches.is_empty(), "late_clock={late_clock}: a freshly queued external patch is staged, never emitted by the same turn");
+        // 🩹️ A queued patch is carried by the FIRST turn that runs after it is queued. It used to
+        // need two (`publish_into` the turn handback on one call, extraction on the next — one whole
+        // host round trip per published surface, the `<n>:e---p` half of the two-state ping-pong in
+        // `📓️reactor-reconcile-spin-2026-09-14.md` §1), and this law used to spend a preparation poll
+        // on that dead turn. The extraction now belongs to the same call, so the faulting poll below
+        // IS the turn that stages this patch — which is exactly what makes it the turn under test.
+        assert!(
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../⚛️reactor/📨️pending/🦀️.rs")).contains("`publish_into` is atomic (it moves the whole
+    /// source or nothing), so the extraction belongs to the same call"),
+            "late_clock={late_clock}: this law depends on the atomic same-call publication"
+        );
         let event = Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: captured_b });
         let (failed, provisional) = crate::reactor::reactor_driver::poll_with_patch_output_fault(&runtime, vec![event.clone()], reactor_native_lifecycle_budget(), late_clock).await;
         let failure = failed.expect_err("injected real output failure");
@@ -171,9 +180,8 @@ async fn reactor_output_fault_returns_real_patch_and_preserves_other_lifecycle_a
         let issued = emitted.ui_patch_receipt.unwrap();
         assert_eq!(issued.lifetime, a);
         assert!(issued.patch_sequence > provisional.patch_sequence);
-        let patch = emitted.ui_patches.iter().next().unwrap();
-        assert_eq!(patch.surface.0.as_str(), surface, "late_clock={late_clock}");
-        assert_eq!(patch.revision.0, 2);
+        let patch = emitted.ui_patches.iter().find(|patch| patch.surface.0.as_str() == surface).unwrap_or_else(|| panic!("late_clock={late_clock}: the staged patch is emitted on the very next turn"));
+        assert_eq!(patch.revision.0, 2, "late_clock={late_clock}");
         assert!(runtime.guest_lifetimes.borrow().get(instance_b).unwrap().cell.is_live());
         let foreign = ActorUiPatchReceipt { lifetime: ActorInstanceLifetime { guest_lifetime: a.guest_lifetime + 1, ..a }, ..issued };
         for receipt in [provisional, foreign] {

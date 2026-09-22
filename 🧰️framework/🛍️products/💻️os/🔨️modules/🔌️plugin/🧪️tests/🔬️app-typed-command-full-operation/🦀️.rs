@@ -320,7 +320,7 @@ mod typed_command_full_operation_tests {
                     if pending.phase() == target {
                         break;
                     }
-                    app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+                    app.publish_mounted_typed_operation_unit(&mut mounted).await.unwrap();
                 }
                 let Some(PendingArtifactStorePublication::Presence(pending)) = mounted.pending_artifact_publication.as_ref() else {
                     panic!("exact pending presence owner");
@@ -335,7 +335,7 @@ mod typed_command_full_operation_tests {
                 assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), page.bytes());
                 assert!(mounted.acknowledge_result_page(page.token).unwrap());
             }
-            app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+            app.publish_mounted_typed_operation_unit(&mut mounted).await.unwrap();
             assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
             let cancelled = mounted.result_page.as_ref().unwrap();
             assert_eq!(cancelled.lane, TypedOperationResultLane::Fault);
@@ -521,7 +521,7 @@ mod typed_command_full_operation_tests {
                         if pending.phase() == target {
                             break;
                         }
-                        app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+                        app.publish_mounted_typed_operation_unit(&mut mounted).await.unwrap();
                     }
                     let Some(PendingArtifactStorePublication::Artifact(pending)) = mounted.pending_artifact_publication.as_ref() else {
                         panic!("exact document pending owner");
@@ -545,7 +545,7 @@ mod typed_command_full_operation_tests {
                         assert!(mounted.acknowledge_result_page(receipt.token).unwrap());
                     }
                 }
-                app.publish_mounted_typed_operation_unit(&mut mounted).unwrap();
+                app.publish_mounted_typed_operation_unit(&mut mounted).await.unwrap();
                 let final_page = if delayed_ack {
                     let presented = mounted.take_result_page().unwrap();
                     let mut deliveries = 1;
@@ -902,9 +902,24 @@ mod typed_command_full_operation_tests {
             app.advance_typed_operation_publication_one().await.unwrap();
         }
         assert_eq!(app.presence_store.generation_now(), 1);
-        assert_eq!(app.tool_operations.get(1).unwrap().stage, MountedTypedCommandFullOperationStage::Worker);
-        assert!(app.take_typed_operation_result_page(7).is_none());
-        assert!(app.take_typed_operation_result_page(7).is_some());
+        // 🛑️ Operation 1 is parked in `Worker` with no session — a state `drive_worker_step` refuses
+        // by name, and correctly so (`session` is cleared only as the stage moves to `Publishing`).
+        // The law is about what that refusal costs: it must terminate THAT operation and nothing
+        // else. Before `fault_typed_operation_worker` the `Err` was propagated out of
+        // `advance_typed_operation_publication_one`, so the actor's single publication unit died
+        // with it and the ready publisher above could never have reached generation 1.
+        let stuck = app.tool_operations.get(1).expect("the structurally faulted operation stays mounted until it retires");
+        assert_eq!(stuck.stage, MountedTypedCommandFullOperationStage::AwaitingAck, "a refused worker step leaves its own operation holding its own terminal fault page");
+        let mut pages: Vec<(u64, TypedOperationResultLane, String)> = Vec::new();
+        while let Some(page) = app.take_typed_operation_result_page(7) {
+            let code = if page.lane == TypedOperationResultLane::Fault { crate::app::decode_typed_operation_fault_page(page.bytes()).0 .0 } else { String::new() };
+            pages.push((page.token.operation, page.lane, code));
+        }
+        assert!(
+            pages.contains(&(1, TypedOperationResultLane::Fault, "interactive-job.typed-operation-session".to_string())),
+            "the stuck operation is terminated BY NAME, not silently: got {pages:?}"
+        );
+        assert!(pages.iter().any(|(operation, lane, _)| *operation == 2 && *lane == TypedOperationResultLane::Presence), "the ready publisher still published its own presence receipt: got {pages:?}");
         for id in 3..=ARTIFACT_LIVE_OUTPUT_SLOTS as u64 {
             let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(0), 17);
             let page = TypedOperationResultPage::try_new(TypedOperationResultToken { receiver: 7, operation: id, generation: 0, sequence: 0, attempt: 1 }, TypedOperationResultLane::Terminal, b"presented ACK waiter").unwrap();

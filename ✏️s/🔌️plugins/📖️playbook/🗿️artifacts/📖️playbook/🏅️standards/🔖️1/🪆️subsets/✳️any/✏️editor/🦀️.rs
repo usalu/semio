@@ -507,6 +507,23 @@ impl ArtifactEditor for PlaybookPlayApp {
         Some(semio_framework_plugin::no_presence_store_disposer())
     }
 
+    /// 👥️ A disposer is not a retirement owner. `PresenceStore::local_read` fails closed with
+    /// `presence local read requires a live exact local retirement owner` while
+    /// `local_retirement_factory` is `None`, so the FIRST command whose ephemeral leg reads local
+    /// presence dies — observed at `#playbook` boot as
+    /// `setContributions command failed: playbook presence local read requires a live exact local
+    /// retirement owner` (ticket 26/09/19 play-grid strict acceptance). `Presence = NoPresence` here,
+    /// so the framework's own `NoPresence`-typed owners are exactly right; an app with a REAL
+    /// presence type needs a bounded owner over that type instead, as 🪐️space's Home does
+    /// (`HomePresenceRetirementFactory`, ticket 26/09/18 S10 §2.9a — the same defect, same week).
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
@@ -670,9 +687,11 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .default_layout(builder::layout())
         .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
         .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+        .action_destructive("removeStep")
         .mutation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
         .mutation("addBlock", LocalizedLabel::native("Add Block", "Baustein hinzufügen"))
         .mutation("removeBlock", LocalizedLabel::native("Remove Block", "Baustein entfernen"))
+        .action_destructive("removeBlock")
         .mutation("moveBlock", LocalizedLabel::native("Move Block", "Baustein verschieben"))
         .mutation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
         .action_interactive_job("addStep", InteractiveJobClassification::Migrated)

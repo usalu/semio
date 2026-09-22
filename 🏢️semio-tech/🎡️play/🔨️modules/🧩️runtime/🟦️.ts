@@ -11,9 +11,11 @@ export const PLAY_GROUPS = catalog.groups;
 
 /** @emoji 🎡️ One authored pane of the play grid, tagged with the group it is listed under. Mirrors
  * `🧬️schema/🔣️.json`'s `PlayPane` — `example` is the curated `PlayExampleId` the pane boots on and is
- * absent exactly for the panes whose app publishes no example for its dialect. Stated rather than
- * inferred from the JSON module, because a catalog of heterogeneous rows infers as a union that hides
- * the optional key. */
+ * absent exactly for the panes whose app publishes no example for its dialect; `exampleLabel` rides with
+ * it and is the text that example RENDERS in the pane's navbar picker (its `label.native.en`), so an
+ * acceptance run can read the pane's chrome without resolving 31 plugin descriptors first. Stated rather
+ * than inferred from the JSON module, because a catalog of heterogeneous rows infers as a union that
+ * hides the optional key. */
 export type PlayRuntimePane = {
   readonly variant: string;
   readonly label: string;
@@ -21,6 +23,7 @@ export type PlayRuntimePane = {
   readonly description: string;
   readonly icon: string;
   readonly example?: string;
+  readonly exampleLabel?: string;
   readonly group: string;
 };
 

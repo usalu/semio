@@ -6334,7 +6334,7 @@ pub mod app {
 
         /// 🪟️ The contract stamp a slice publishes to the host.
         pub fn window(slice: &TreeSlice) -> TreeWindow {
-            TreeWindow { total: slice.total as u32, offset: slice.offset as u32 }
+            TreeWindow { total: slice.total as u32, offset: slice.offset as u32, row_extent: TreeWindowRowExtent::Standard }
         }
 
         fn stamp(&self, path: &str, slice: &TreeSlice) -> Option<TreeWindow> {
@@ -10941,7 +10941,6 @@ pub mod app {
         /// landed, so `TaskCtx.meta` always reflects state that was ACTUALLY committed, never just
         /// requested. This is the ONLY way a command handler can await anything: `handle` itself
         /// stays a pure synchronous reducer (see `AsyncTask`'s own doc for the full contract).
-        #[cfg(test)]
         pub tasks: Vec<AsyncTask<Mutation, ConfigMutation, DraftMutation>>,
     }
 
@@ -10960,7 +10959,6 @@ pub mod app {
                 ui_scope: UiDirtyScope::default(),
                 child_emits: Vec::new(),
                 interaction_writes: Vec::new(),
-                #[cfg(test)]
                 tasks: Vec::new(),
             }
         }
@@ -11011,7 +11009,6 @@ pub mod app {
     /// `run`'s closure is `Send` because a pure reducer may create it on a worker before handing the
     /// resulting emit back to its actor. The future it creates remains actor-local and need not be
     /// `Send`: `TaskCtx` is supplied only after the closure reaches the actor's `LocalExecutor`.
-    #[cfg(test)]
     pub struct AsyncTask<Mutation, ConfigMutation = NoConfigMutation, DraftMutation = NoDraftMutation> {
         /// 🪪️ Diagnostic name — never parsed, only ever displayed (a quota-exceeded `Fault`'s
         /// message names the task that was refused).
@@ -11031,7 +11028,6 @@ pub mod app {
         run: Box<dyn FnOnce(TaskCtx) -> Pin<Box<dyn Future<Output = Result<TaskResolution<Mutation, ConfigMutation, DraftMutation>, Fault>>>> + Send>,
     }
 
-    #[cfg(test)]
     impl<Mutation, ConfigMutation, DraftMutation> AsyncTask<Mutation, ConfigMutation, DraftMutation> {
         /// 🌱️ Builds a task from an async closure. `run` is called once, at the moment
         /// `dispatch_emit` actually spawns this task (never eagerly at `Emit` construction time),
@@ -11068,7 +11064,6 @@ pub mod app {
     /// `⚛️reactor::host`) plus the CLONED `ActionMeta` the task was spawned under, so its eventual
     /// follow-up dispatch stays attributed to the same actor/instance even if a different one is
     /// active by the time the task resolves.
-    #[cfg(test)]
     pub struct TaskCtx {
         pub host: crate::host::Host,
         pub meta: ActionMeta,
@@ -11089,7 +11084,6 @@ pub mod app {
     ///
     /// `Done` performs no follow-up dispatch at all — for a task whose only job was a
     /// `TaskCtx::host` side effect (e.g. `host.notify(...)`) it already queued during its own run.
-    #[cfg(test)]
     pub enum TaskResolution<Mutation, ConfigMutation = NoConfigMutation, DraftMutation = NoDraftMutation> {
         Command(Vec<u8>),
         Emit(Emit<Mutation, ConfigMutation, DraftMutation>),
@@ -11332,7 +11326,6 @@ pub mod app {
 
         /// @emoji 🧵️ A single spawned `AsyncTask` and no operations — the common case for "this
         /// command's only job is to kick off host work" (e.g. a search-as-you-type debounce).
-        #[cfg(test)]
         pub fn task(task: AsyncTask<Mutation, ConfigMutation, DraftMutation>) -> Self {
             Self { tasks: vec![task], ..Default::default() }
         }
@@ -18663,7 +18656,6 @@ pub mod app {
                             {
                                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                             }
-                            #[cfg(test)]
                             if emit.tasks.pop().is_some() {
                                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                             }
@@ -27528,11 +27520,19 @@ pub mod app {
             let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get)));
             let started_us = semio_framework_job::default_now_us();
             for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS {
-                let Some(operation) = self.tool_operations.get_mut(operation_id) else { return Ok(()) };
-                if operation.stage != MountedTypedCommandFullOperationStage::Worker {
-                    return Ok(());
-                }
-                let step = operation.drive_worker_step(&pool, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)?;
+                let stepped = {
+                    let Some(operation) = self.tool_operations.get_mut(operation_id) else { return Ok(()) };
+                    if operation.stage != MountedTypedCommandFullOperationStage::Worker {
+                        return Ok(());
+                    }
+                    operation.drive_worker_step(&pool, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)
+                };
+                let step = match stepped {
+                    Ok(step) => step,
+                    // 🛑️ ONE operation's structural fault is that operation's fault, never the turn's:
+                    // see [`Self::fault_typed_operation_worker`].
+                    Err(fault) => return self.fault_typed_operation_worker(operation_id, &fault),
+                };
                 #[cfg(target_arch = "wasm32")]
                 if let Some(now_ms) = semio_framework_job::default_now_ms() {
                     pool.pump(now_ms);
@@ -27668,6 +27668,44 @@ pub mod app {
             advanced
         }
 
+        /// 🛑️ Terminates the ONE `Worker`-stage operation whose own step answered a structural
+        /// `Err` — an operation that lost its persistent worker session, or whose mounted session
+        /// reported a state its own ladder cannot continue from — with that operation's terminal
+        /// fault page, and lets the turn carry on.
+        ///
+        /// 🎯️ Why it is not a `?`: `drive_typed_operation_worker` is called from
+        /// [`Self::advance_typed_operation_publication_unit`], the actor's ONE publication unit per
+        /// turn. Propagating the `Err` aborted that unit for the WHOLE actor, so a single
+        /// structurally faulted operation stopped every other mounted operation from ever advancing
+        /// again — with no fault page, no effect and no patch to say why. The `Publishing` lane has
+        /// answered this correctly since wave B16 (`advance_typed_operation_publication_unit`'s
+        /// retry ladder, and [`Self::fault_stalled_typed_operation_publication`]'s own doc: a
+        /// per-operation failure becomes that operation's fault, never the turn's); the `Worker`
+        /// lane was the one lane that did not honour it.
+        ///
+        /// 🔒️ The operation is terminal the moment its worker ladder refuses: the lease is
+        /// cancelled so no publication claim can be taken again, the fault page is minted against
+        /// the operation's own token, and the stage moves to `Publishing` so the ordinary
+        /// cancelled-publication close (`reject_cancelled_publication`) retires everything it still
+        /// owns. Nothing is dropped here — the retained owners leave through the close ladder they
+        /// always did.
+        fn fault_typed_operation_worker(&mut self, operation_id: u64, fault: &Fault) -> Result<(), Fault> {
+            let Some(mounted) = self.tool_operations.get_mut(operation_id) else { return Ok(()) };
+            if mounted.stage != MountedTypedCommandFullOperationStage::Worker || mounted.result_page.is_some() {
+                return Ok(());
+            }
+            let bounded = ArtifactBoundedToolFault::from_fault(fault);
+            if let Some(lease) = mounted.cancellation_lease.as_ref() {
+                lease.cancel();
+            }
+            let mut framed = [0; TYPED_OPERATION_FAULT_PAGE_BYTES];
+            let framed_len = bounded.framed_page_bytes(&mut framed);
+            mounted.stage = MountedTypedCommandFullOperationStage::Publishing;
+            let page = TypedOperationResultPage::try_new(mounted.next_token(), TypedOperationResultLane::Fault, &framed[..framed_len])?;
+            mounted.terminal_fault = Some(bounded);
+            mounted.queue_page(page)
+        }
+
         /// 🛑️ Terminates a `Publishing`-stage operation whose ladder has not moved for
         /// [`TYPED_OPERATION_STALL_FAULT_CEILING`] units with a real fault page instead of leaving it to
         /// spin. The publication ladder's non-advancing answers are all `Ok(())` by design — a completion
@@ -27789,7 +27827,7 @@ pub mod app {
                     record_typed_operation_unit(TypedOperationUnitKind::Store);
                     self.publish_mounted_typed_inline_interaction_unit(mounted).await?;
                 } else {
-                    self.publish_mounted_typed_operation_unit(mounted)?;
+                    self.publish_mounted_typed_operation_unit(mounted).await?;
                     if self.store.backbone_ref().is_some() {
                         if let Some(PendingArtifactStorePublication::Artifact(publication)) = mounted.pending_artifact_publication.as_mut() {
                             self.store.flush_published_apply_batch(publication).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
@@ -28218,7 +28256,7 @@ pub mod app {
             }
         }
 
-        fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
+        async fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>) -> Result<(), Fault> {
             if mounted.reject_cancelled_publication()? {
                 return Ok(());
             }
@@ -28611,8 +28649,22 @@ pub mod app {
                         TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Event, &("accepted", self.typed_event_outbox.len()))?
                     } else {
                         match () {
-                            #[cfg(test)]
-                            () if !emit.tasks.is_empty() => TypedOperationResultPage::try_new(token, TypedOperationResultLane::Fault, b"typed-operation task lane has no bounded retained publication factory")?,
+                            // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4) — the
+                            // task lane, ONE task per publication unit. The unit spends itself here
+                            // and hands the pump straight back to the ladder without a host page of
+                            // its own: a spawn is actor-local bookkeeping, and the task's eventual
+                            // `TaskResolution` re-enters as its own follow-up dispatch
+                            // (`drain_task_resumes`), never as this operation's result. `remove(0)`
+                            // because spawn order is observable — a same-key respawn cancels the
+                            // live task under that key, so the LAST declared task under a key must
+                            // be the one that survives. A refused spawn (quota, key supersession,
+                            // executor capacity) is this operation's own `Fault`: the ladder above
+                            // gives the slot a chance to free and then mints its terminal fault page.
+                            () if !emit.tasks.is_empty() => {
+                                let task = emit.tasks.remove(0);
+                                crate::reactor::spawn_task(mounted.meta.instance_id, &mounted.meta, task).await?;
+                                return Ok(());
+                            }
                             () if mounted.ui_pending => {
                                 if let Err(_scope) = self.typed_ui_outbox.push(emit.ui_scope.clone()) {
                                     return Err(plugin_sdk_fault("typed-operation UI receiver is saturated"));

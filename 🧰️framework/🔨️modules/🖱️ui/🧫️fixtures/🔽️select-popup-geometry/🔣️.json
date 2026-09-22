@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "optionCount": 7,
+  "triggerWidth": 104,
+  "minimumContentWidth": 128,
+  "borderWidth": 1,
+  "scrollBandHeight": 22.375,
+  "sideOffset": 4,
+  "cases": [
+    {
+      "id": "normal",
+      "viewportHeight": 1000,
+      "popupWidth": 128,
+      "popupHeight": 232.0625,
+      "scrollViewportHeight": 185.3125,
+      "initialScroll": 0
+    },
+    {
+      "id": "constrained",
+      "viewportHeight": 300,
+      "popupWidth": 128,
+      "popupHeight": 189.25,
+      "scrollViewportHeight": 142.5,
+      "initialScroll": 29,
+      "wheelDelta": 34,
+      "scrollAfterWheel": 42
+    }
+  ]
+}

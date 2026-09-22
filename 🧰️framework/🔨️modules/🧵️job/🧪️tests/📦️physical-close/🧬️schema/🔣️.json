@@ -51,14 +51,15 @@
         "releasedItems",
         "releasedBytes",
         "remainingLogicalBytes",
-        "remainingPages"
+        "remainingPages",
+        "chargedTotal"
       ],
       "properties": {
         "refusedItems": {
           "const": 0
         },
         "refusedBytes": {
-          "const": 0
+          "const": 16383
         },
         "retainedPointer": {
           "const": true
@@ -67,13 +68,16 @@
           "const": 1
         },
         "releasedBytes": {
-          "const": 16384
+          "const": 1
         },
         "remainingLogicalBytes": {
           "const": 0
         },
         "remainingPages": {
           "const": 0
+        },
+        "chargedTotal": {
+          "const": 16384
         }
       }
     }

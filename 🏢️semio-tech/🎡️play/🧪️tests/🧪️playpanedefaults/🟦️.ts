@@ -166,6 +166,29 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(unlabelled).toEqual([]);
     });
 
+    /** @emoji 🏷️ The acceptance suite asserts the pane's navbar trigger renders exactly the catalog's
+     * `exampleLabel` (`🧪️tests/🎭️acceptance/🟦️.ts`), which only means something while that text is the
+     * descriptor's own `label.native.en`. Pinned here rather than resolved in the browser test because a
+     * Playwright worker reading 31 plugin descriptors — puzzle's alone is 4.8 MB — to learn one string per
+     * pane would spend more time parsing JSON than booting shells. A pane whose descriptor is stale or
+     * missing (the nine `stdio` panes while their descriptor predates `📓️stdio-examples.md`) is checked by
+     * the presence law below and joins this one the moment its descriptor is regenerated. */
+    it(`pins each curated example's rendered ${CURATED_EXAMPLE_LABEL_SOURCE} into the catalog as exampleLabel`, () => {
+      const wrong: string[] = [];
+      PLAY_RUNTIME_PANES.forEach((pane: any, index: number) => {
+        if (pane.example === undefined) return;
+        const published = publishedExamples(index);
+        const label = published.labels[pane.example];
+        if (published.source !== "descriptor" || !label) return;
+        if (pane.exampleLabel !== label) wrong.push(`${pane.variant}: exampleLabel ${JSON.stringify(pane.exampleLabel)} ≠ ${JSON.stringify(label)}`);
+      });
+      expect(wrong).toEqual([]);
+    });
+
+    it("gives every curated example a rendered label the acceptance run can read, and gives no other pane one", () => {
+      expect(PLAY_RUNTIME_PANES.filter((pane: any) => (pane.example === undefined) !== (pane.exampleLabel === undefined)).map((pane: any) => pane.variant)).toEqual([]);
+    });
+
     it("curates an example for every pane whose app publishes one", () => {
       const empty: string[] = [];
       PLAY_RUNTIME_PANES.forEach((pane: any, index: number) => {

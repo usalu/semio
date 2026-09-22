@@ -15,11 +15,13 @@ use crate::{RasterLayerNode, RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
 use dsl::os_pack::json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry,
-    ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label,
-    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactReservedJob,
+    ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect,
+    DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
+    MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use std::collections::HashMap;
 use store::ArtifactPack;
@@ -793,6 +795,192 @@ impl store::ArtifactStoreOneItemPreparation<RasterConfig, RasterConfigMutation> 
 }
 //#endregion 📬️StorePreparation
 
+//#region 🎞️ReservedImport
+const RASTER_IMPORT_TOOL_ID: &str = "import-media";
+const RASTER_IMPORT_PORT: &str = "image:in";
+
+/// 🎞️ The ONE concrete resumable importer this app owns. The framework registers the reserved
+/// `import-media` factory for every app but never a concrete job, so `dispatch_import_media` →
+/// `build_artifact_reserved_media_job` fails closed with `interactive-job.missing-reserved-builder`
+/// until the app hands one back from `build_reserved_tool_job` — `ArtifactApp::import_media`'s
+/// unbounded one-shot seam is no longer on any live route. Two bounded steps: decode the incoming
+/// base64 PNG into this artifact's own `(asset_id, asset, layer)` triple, then publish the two real
+/// semantic mutations (`add-layer-asset` then `create-layer`, in dependency order) through the
+/// completion authority. The decode itself is `crate::io::raster_image_layer_and_asset` — the SAME
+/// function the pure seam used — so the import's meaning lives in one place.
+struct RasterImportJob {
+    port: String,
+    media_json: Option<String>,
+    snapshot: Option<std::sync::Arc<RasterSnapshot>>,
+    mutations: Vec<RasterMutation>,
+    decoded: bool,
+    completed: bool,
+    closing: bool,
+    completion: Option<ArtifactToolCompletion<EditorApp<RasterPlayApp>>>,
+    pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<RasterPlayApp>>>,
+}
+
+fn raster_job_payload(cx: &mut StepContext<'_>, stream: JobPayloadStream, bytes: &[u8]) -> RetainedJobPayload {
+    match cx.payload_from_bytes(stream, bytes) {
+        Ok(payload) => payload,
+        Err(rejected) => {
+            drop(rejected.into_source());
+            RetainedJobPayload::empty(stream)
+        }
+    }
+}
+
+fn raster_job_fault(cx: &mut StepContext<'_>, detail: &str) -> StepOutcome {
+    let bytes = detail.as_bytes();
+    let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
+    StepOutcome::Fault(JobFault { detail: raster_job_payload(cx, JobPayloadStream::Fault, bounded) })
+}
+
+impl RasterImportJob {
+    fn new(request: ArtifactReservedToolJobRequest<EditorApp<RasterPlayApp>>, port: String, media: Media) -> Self {
+        let media_json = match media.payload {
+            MediaPayload::Structured { json, .. } => Some(json),
+            MediaPayload::Binary { .. } => None,
+        };
+        Self { port, media_json, snapshot: Some(request.snapshot), mutations: Vec::new(), decoded: false, completed: false, closing: false, completion: Some(request.completion), pending_completion_rejection: None }
+    }
+
+    fn decode(&mut self, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
+        if self.port != RASTER_IMPORT_PORT {
+            return Some(raster_job_fault(cx, "raster import only implements image:in"));
+        }
+        let Some(media_json) = self.media_json.as_ref() else {
+            return Some(raster_job_fault(cx, "raster image:in only accepts a Structured (base64 PNG) payload"));
+        };
+        let Some(snapshot) = self.snapshot.as_ref() else {
+            return Some(raster_job_fault(cx, "raster import lost its snapshot authority"));
+        };
+        let index = snapshot.layers.len();
+        let (asset_id, asset, layer) = crate::io::raster_image_layer_and_asset(media_json);
+        self.mutations = vec![
+            RasterMutation::AddLayerAsset(crate::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
+            RasterMutation::CreateLayer(crate::mutations::create_layer::mutation::CreateLayer { parent_id: None, index, layer: Box::new(layer) }),
+        ];
+        self.decoded = true;
+        None
+    }
+}
+
+impl InteractiveJob for RasterImportJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if self.pending_completion_rejection.is_some() {
+            return raster_job_fault(cx, "raster import completion remains rejected");
+        }
+        if !self.decoded {
+            cx.set_stage("raster-import-decode");
+            if let Some(outcome) = self.decode(cx) {
+                return outcome;
+            }
+            cx.consume_fuel(1);
+            return StepOutcome::CheckpointReady(Checkpoint { state: raster_job_payload(cx, JobPayloadStream::CheckpointState, &[1]), applied_progress: 1 });
+        }
+        cx.set_stage("raster-import-publish");
+        if !self.completed {
+            let mutations = std::mem::take(&mut self.mutations);
+            let Some(completion) = self.completion.as_ref() else {
+                return raster_job_fault(cx, "raster import lost its completion authority");
+            };
+            if !completion.has_mounted_consumer() {
+                return raster_job_fault(cx, "raster import completion consumer is absent");
+            }
+            if let Err(rejected) = completion.complete(Ok(Emit { artifact_mutations: mutations, ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }), EphemeralEmit::default()) {
+                let message = rejected.fault.message.clone();
+                self.pending_completion_rejection = Some(rejected);
+                return raster_job_fault(cx, &message);
+            }
+            self.completed = true;
+        }
+        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
+            Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+            Ok(semio_framework_plugin::PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
+            Ok(semio_framework_plugin::PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        ArtifactReservedJob::terminal_is_empty(self)
+    }
+}
+
+impl ArtifactReservedJob for RasterImportJob {
+    /// 🧯️ `CreateLayer` owns a layer subtree (and through an `Adjustment` a fail-closed
+    /// `RasterOwnedMap`), so an abandoned mutation is retired through the artifact's own
+    /// `retire_raster_mutation` rather than dropped.
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        self.closing = true;
+        if maximum_items == 0 {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            if let Ok(emit) = rejected.emit.as_mut() {
+                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
+                    return Ok(step);
+                }
+            }
+            self.pending_completion_rejection = None;
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(mutation) = self.mutations.pop() {
+            crate::standards::v1::subsets::any::schema::mutations::retire_raster_mutation(mutation);
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.mutations.capacity() > 0 {
+            self.mutations = Vec::new();
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.media_json.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if !self.port.is_empty() || self.port.capacity() > 0 {
+            self.port = String::new();
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
+            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "raster import snapshot has no mounted retained authority" });
+        }
+        if self.snapshot.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
+            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "raster import completion has no mounted consumer authority" });
+        }
+        if self.completion.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(semio_framework_plugin::PluginCloseStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.port.is_empty()
+            && self.port.capacity() == 0
+            && self.media_json.is_none()
+            && self.snapshot.is_none()
+            && self.mutations.is_empty()
+            && self.mutations.capacity() == 0
+            && self.completion.is_none()
+            && self.pending_completion_rejection.is_none()
+    }
+}
+//#endregion 🎞️ReservedImport
+
 //#region 🔖️RasterPlayApp
 /// 🧪️ B1: unit struct — every former `RasterConfig` field now lives in
 /// `crate::editor::raster::config::RasterConfig`, written through `RasterConfigMutation`s.
@@ -994,6 +1182,23 @@ impl ArtifactEditor for RasterPlayApp {
             RasterMutation::AddLayerAsset(crate::mutations::add_layer_asset::mutation::AddLayerAsset { asset_id, asset }),
             RasterMutation::CreateLayer(crate::mutations::create_layer::mutation::CreateLayer { parent_id: None, index: doc.snapshot.layers.len(), layer: Box::new(layer) }),
         ]))
+    }
+
+    /// 🎞️ The ONE reserved route raster owns: `import-media`. Every inbound media delivery goes
+    /// through `dispatch_import_media` → `build_artifact_reserved_media_job`, which fails closed
+    /// unless this builder hands back a concrete resumable importer — see [`RasterImportJob`].
+    fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+        if request.tool_id.as_str() != RASTER_IMPORT_TOOL_ID {
+            return Ok(None);
+        }
+        if !request.raw_wire.is_empty() {
+            return Err(Fault::from("raster import-media admits a decoded media value, never a wire payload"));
+        }
+        let ArtifactReservedToolInput::Media { port, media } = &request.input else {
+            return Err(Fault::from("raster import-media requires media input"));
+        };
+        let (port, media) = (port.clone(), media.clone());
+        Ok(Some(ArtifactReservedToolJob::new(RasterImportJob::new(request, port, media))))
     }
 
     fn command_id(command: &RasterCommand) -> &'static str {

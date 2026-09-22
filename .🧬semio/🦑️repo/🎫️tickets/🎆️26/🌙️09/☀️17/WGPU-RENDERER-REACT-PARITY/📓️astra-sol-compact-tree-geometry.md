@@ -12,7 +12,7 @@ The existing schema-validated neutral contract is:
 - schema: `semio.window-measures-tree-parity/v1`
 - actual React oracle: `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎚️window-measure-controls/🟦️.tsx`
 
-The contract pins label/group rows at 14.4 px, Select/Input rows at 16 px, Slider/Checkbox rows at 22.4 px, and the compact value column at 104 px. Root recorded the real mounted DOM evidence in `🗑️generated/astra-runtime/checkpoint20-iab/react-window-options-metrics.json`; its earlier React oracle receipt was 8/8.
+The contract pins label/group rows at 14.4 px, Select/Input rows at 16 px, Slider/Checkbox rows at 22.4 px, the compact value column at 104 px, and the checkbox target width at 9.6 px. Root recorded the real mounted DOM evidence in `🗑️generated/astra-runtime/checkpoint20-iab/react-window-options-metrics.json`; its earlier React oracle receipt was 8/8.
 
 ## Production boundary
 
@@ -20,7 +20,7 @@ The contract pins label/group rows at 14.4 px, Select/Input rows at 16 px, Slide
 
 Mounted layout resolves the nearest owning Tree and authored item before it measures a row, calculates nested retained height, or feeds the flex solver. `MountedLayoutJob` carries the window's inline flow. Tree inline controls are vertically centered against the resolved row height and anchored to the matching physical edge.
 
-Paint and retained-hit registration receive the same router inline flow. Disclosure header bands, chevrons, drag handles, control columns, and flex insets derive from the same scoped metrics. RTL puts the value column on the physical left and mirrors the chevron and drag handle.
+Paint and retained-hit registration receive the same router inline flow. Disclosure header bands, chevrons, drag handles, control columns, and flex insets derive from the same scoped metrics. RTL puts the value column on the physical left and mirrors the chevron and drag handle. A checkbox registers the tiny-width wrapper band at the RTL edge of that value column rather than consuming all 104 px. Hit targets derive from authored geometry before their final intersection with the retained clip, so clipping cannot move a checkbox, handle, or chevron into view.
 
 ## Source validation
 
@@ -31,6 +31,7 @@ The following files parse with `rustfmt --edition 2021 --emit stdout`:
 - `flex/🦀️.rs`
 - `events/🦀️.rs`
 - `engine/🦀️.rs`
+- `input/🦀️.rs`
 - the updated Tree row and mounted-layout test modules
 
 Native142 initially stopped at compile because the offset retained-paint hit-registration call lacked the new inline argument. That exact second call now passes `window.router.flow().inline`; both registration paths match the new signature. No Cargo result is claimed by this packet. Root owns Native142/UI23 and later runtime validation.
@@ -42,6 +43,10 @@ Native142 initially stopped at compile because the offset retained-paint hit-reg
 - `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📐️flex/🦀️.rs`
 - `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🦀️.rs`
 - `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/🦀️.rs`
 - `🧰️framework/🔨️modules/🖱️ui/🧪️tests/🌳️tree-row-rects/🦀️.rs`
 - `🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🦀️.rs`
-
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🌳️window-measures-tree-parity/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧬️schema/🌳️window-measures-tree-parity/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎚️window-measure-controls/🟦️.tsx`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/📏️wgpu-window-measures/🦀️.rs`

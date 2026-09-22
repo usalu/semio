@@ -851,9 +851,22 @@ pub fn concrete_catalog() -> ConcreteCatalog {
 //#endregion 🔖️Catalog
 
 //#region 🔖️DocumentHelpers
-/// 🪪️ A pseudo-random step id — collision odds are astronomically low for a single-document timeline.
-pub fn next_step_id() -> String {
-    format!("step-{}", &framework_hash::hash_bytes(concat!(file!(), line!(), "step-{}").as_bytes())[..12])
+/// 🪪️ A step id derived from the timeline it is being inserted into: a pure function of the
+/// document, so a replay of the same history mints the same id, and distinct from every id the
+/// document already carries, so a repeated gesture can never collide.
+///
+/// It used to hash `concat!(file!(), line!(), "step-{}")` — a COMPILE-TIME constant — and its doc
+/// comment called that "pseudo-random". Every call in the life of the binary returned the same
+/// string, so the SECOND step inserted into any document was refused by the vocabulary with
+/// `A step with id "step-…" already exists` (`repeated_world_pointer_down_each_dispatch_a_mutation`).
+/// The salt walk is bounded by the roster length: `n + 1` distinct candidates cannot all collide
+/// with `n` existing ids.
+pub fn next_step_id(snapshot: &crate::Process3dSnapshot) -> String {
+    let roster = snapshot.step_payloads.iter().map(|step| step.id.as_str()).collect::<Vec<_>>().join("\u{1f}");
+    (0..=snapshot.step_payloads.len())
+        .map(|salt| format!("step-{}", &framework_hash::hash_bytes(format!("{roster}\u{1e}{salt}").as_bytes())[..12]))
+        .find(|candidate| !snapshot.step_payloads.iter().any(|step| &step.id == candidate))
+        .expect("one of n+1 distinct step-id candidates is free of n existing ids")
 }
 
 /// ✂️➕️ Read-only operation builders for the two structural collection edits every mutating command

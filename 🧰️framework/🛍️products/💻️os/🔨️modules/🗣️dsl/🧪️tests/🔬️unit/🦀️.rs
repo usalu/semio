@@ -192,21 +192,10 @@ enum DerivedMutation {
 /// 🎞️ Handcrafted OpText (P6).
 impl crate::os_spr::OpText for DerivedMutation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = parse(line, &spec_fn(), &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline })?;
-                return <Self as DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(__rt::field_error(format!("unknown operation line '{line}'")))
+        variants_text::parse_op(line)
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as DslVariants>::to_named_record(self);
-        let variants = <Self as DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        print(&record, &spec_fn(), JoinMode::Inline)
+        variants_text::print_op(self)
     }
 }
 
@@ -253,6 +242,24 @@ async fn derived_op_text_round_trips_every_variant_as_one_line() {
         let parsed = <DerivedMutation as crate::os_spr::OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
         assert_eq!(parsed, op, "OpText round trip diverged for {printed:?}");
     }
+}
+
+/// 🧾️ LAW: an operation line is ONE terminal record — the text twin of the trailing-byte refusal
+/// `derived_op_binary_round_trips_every_variant_and_matches_text` already proves for the binary
+/// form. `parse` alone stops at the end of the record it recognises and drops the rest, so a line
+/// carrying an unknown trailing field parsed as a well-formed operation and silently lost it.
+#[semio_framework_async_macros::async_test]
+async fn derived_op_text_refuses_every_token_outside_its_own_record() {
+    let ops = vec![DerivedMutation::SetCategory { category: "roof".to_string() }, DerivedMutation::SetAirtightness { n50: 0.9 }, DerivedMutation::Reset];
+    for op in ops {
+        let printed = <DerivedMutation as crate::os_spr::OpText>::print_op(&op);
+        for trailing in ["unknown-field 1", "reset", "\"", "setCategory category=\"wall\""] {
+            let line = format!("{printed} {trailing}");
+            assert!(<DerivedMutation as crate::os_spr::OpText>::parse_op(&line).is_err(), "an operation line must refuse everything outside its own record: {line:?}");
+        }
+    }
+    assert!(<DerivedMutation as crate::os_spr::OpText>::parse_op("").is_err());
+    assert!(<DerivedMutation as crate::os_spr::OpText>::parse_op("unknown-field 1").is_err());
 }
 
 #[semio_framework_async_macros::async_test]

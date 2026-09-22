@@ -3673,8 +3673,8 @@ fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>)
     // only when the caller named no single window (or named the chrome itself), the same rule the
     // per-window filter above follows.
     let chrome = CHROME_ACCESSIBILITY.borrow().clone();
-    if !chrome.is_empty() && requested.filter(|id| !id.is_empty()).is_none_or(|id| id == SHELL_CHROME_ACCESSIBILITY_WINDOW_ID) {
-        windows.push(DumpAccessibilityWindow { window_id: SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: SHELL_CHROME_ACCESSIBILITY_GENERATION, nodes: chrome });
+    if !chrome.nodes.is_empty() && requested.filter(|id| !id.is_empty()).is_none_or(|id| id == SHELL_CHROME_ACCESSIBILITY_WINDOW_ID) {
+        windows.push(DumpAccessibilityWindow { window_id: SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: chrome.generation, nodes: chrome.nodes });
     }
     DumpAccessibility { window_id: requested.filter(|id| !id.is_empty()).map(str::to_string), window_ids, windows }
 }
@@ -4035,15 +4035,20 @@ fn chrome_hit_row(hit: &ui_wgpu::wgpu::HitTarget<ActionDescriptor>, owners: &std
 /// chip, footer pill, panel tab and pane chip a real ARIA element — which is the gap a DOM renderer
 /// never has, because React writes `aria-label` onto the element it renders
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, packet W15d; audit W14 §C4/§B14).
-pub fn note_chrome_accessibility(nodes: Vec<ui_contract::AccessibilityProjectionNode>) {
-    *CHROME_ACCESSIBILITY.borrow_mut() = nodes;
+pub fn note_chrome_accessibility(generation: u64, nodes: Vec<ui_contract::AccessibilityProjectionNode>) {
+    *CHROME_ACCESSIBILITY.borrow_mut() = ChromeAccessibilityPublication { generation, nodes };
 }
 
 /// ♿️ The window id the chrome announces under — a shell-owned surface, never one of the app's.
 pub(crate) const SHELL_CHROME_ACCESSIBILITY_WINDOW_ID: &str = "shell.chrome";
-pub(crate) const SHELL_CHROME_ACCESSIBILITY_GENERATION: u64 = 1;
 
-static CHROME_ACCESSIBILITY: WorkerCell<Vec<ui_contract::AccessibilityProjectionNode>> = WorkerCell::new();
+#[derive(Clone, Default)]
+struct ChromeAccessibilityPublication {
+    generation: u64,
+    nodes: Vec<ui_contract::AccessibilityProjectionNode>,
+}
+
+static CHROME_ACCESSIBILITY: WorkerCell<ChromeAccessibilityPublication> = WorkerCell::new();
 
 const ACCESSIBILITY_VISIBLE_WINDOW_CAPACITY: usize = 256;
 
@@ -4236,10 +4241,11 @@ fn commit_presented_editor_rebase(rebase: PresentedEditorRebase) {
 }
 
 pub fn acknowledge_presented_input(witness: u64) -> bool {
-    UI_ENGINE.with(|cell| {
+    let visible = ACCESSIBILITY_VISIBLE_WINDOWS.borrow().staging.clone();
+    let (acknowledged, retired_canvas_hosts) = UI_ENGINE.with(|cell| {
         let mut engine = cell.borrow_mut();
         if SCENE_INTENTS.with(|cell| cell.borrow().blocks_presented_candidate(&engine, witness)) {
-            return false;
+            return (false, Vec::new());
         }
         let editor_rebase = prepare_presented_editor_rebase(&engine, witness);
         let acknowledged = SCENE_POINTER_OWNERS.with(|cell| {
@@ -4281,8 +4287,22 @@ pub fn acknowledge_presented_input(witness: u64) -> bool {
         if acknowledged {
             commit_presented_editor_rebase(editor_rebase);
         }
-        acknowledged
-    })
+        let retired_canvas_hosts = if acknowledged {
+            visible
+                .iter()
+                .filter_map(|window_id| engine.retired_component_scene(window_id))
+                .filter(|retired| retired.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d)
+                .map(|retired| retired.host_id)
+                .collect()
+        } else {
+            Vec::new()
+        };
+        (acknowledged, retired_canvas_hosts)
+    });
+    for host_id in retired_canvas_hosts {
+        crate::scenes::request_canvas_pointer_gesture_cancel_for_host(&host_id);
+    }
+    acknowledged
 }
 
 pub fn discard_presented_input_candidate(witness: u64) -> bool {

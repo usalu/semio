@@ -820,8 +820,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 ARMED_TIMERS.with(|timers| {
                     timers.borrow_mut().remove(id);
                 });
-                #[cfg(test)]
-                TEST_FUTURE_EXECUTOR.with(|executor| executor.wake(id));
+                TASK_EXECUTOR.with(|executor| executor.wake(id));
             }
             Event::Wake => {}
             // 📥️ The inbound half of the `request`/`respond` seam (`📜️.wit`'s `request-event`,
@@ -1341,8 +1340,14 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     // genuinely `async fn` (its own doc: "run_until_idle handles Pending without ever yielding
     // its own future" — matches `⚛️reactor/💼️jobs`'s identical use of this exact bridge).
     let executor_deadline_work = REACTOR_EXECUTOR.with(|executor| executor.run_until_deadline(64, 256 * 1_024, std::time::Instant::now() + std::time::Duration::from_millis(REACTOR_TURN_EXECUTOR_HOLD_MS)));
-    let process_pool_work = !executor_deadline_work && pump_process_worker_pool();
-    let more_work = executor_deadline_work || process_pool_work;
+    // 🧵️ The COLD executor's own slice of the same hold: every `AsyncTask` `spawn_task` admitted
+    // lives on `TASK_EXECUTOR`, and until the task lane became a product lane nothing but a native
+    // fixture ever polled it — a spawned task would have parked forever inside a real guest. Its
+    // answer is "some task is still alive", ready or parked, so it is folded into `more_work` the
+    // same way `REACTOR_EXECUTOR`'s is.
+    let task_executor_work = TASK_EXECUTOR.with(|executor| executor.run_until_deadline(64, std::time::Instant::now() + std::time::Duration::from_millis(REACTOR_TURN_EXECUTOR_HOLD_MS)));
+    let process_pool_work = !executor_deadline_work && !task_executor_work && pump_process_worker_pool();
+    let more_work = executor_deadline_work || task_executor_work || process_pool_work;
     for effect in REGISTRY.with(|registry| registry.drain()) {
         push_admitted_effect(&mut effects, 0, effect);
     }
@@ -1355,7 +1360,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
     let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
     effects.extend(crate::plugin_runtime::plugin_drain_document_backbones(runtime)?);
-    let executor_pending = REACTOR_EXECUTOR.with(|executor| executor.has_pending());
+    let executor_pending = REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || TASK_EXECUTOR.with(|executor| executor.has_pending());
     let command_ingress_pending = COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
     let lifecycle_work = runtime.guest_lifetimes.borrow().has_work();
     // 🔒️ `typed_operation_scan.contended` is deliberately NOT folded in. A busy instance lock is not
@@ -1906,13 +1911,11 @@ pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_run
             continue;
         }
         let input = match resume.outcome {
-            #[cfg(test)]
             TaskResumeOutcome::Fault(fault) => {
                 effects.push(shell_fault_effect(resume.instance, &fault));
                 continue;
             }
             TaskResumeOutcome::Command(bytes) => crate::plugin_runtime::TaskResumeInput::Command(bytes),
-            #[cfg(test)]
             TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => crate::plugin_runtime::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops },
         };
         // 🚫️async: E5 executor bridge — `plugin_resume_task` stays genuinely `async fn`; see

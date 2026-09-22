@@ -8,12 +8,13 @@
 //! `🗒️note` fallback chain) and turns one pick into `pin-cell`, `mask-cell`, or nothing at all.
 
 use crate::editor::grid3d::modes::edit;
+use crate::editor::grid3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::grid3d::modes::edit::windows::{grid, preview};
 use crate::editor::grid3d::window::{addressed_config, config_from_view, Grid3dWindowConfig};
 use crate::mutations::{change_cell_sizes, change_periodicity, change_seed, change_tile_media, change_tile_weight, create_rule, create_tile, delete_rule, delete_tile, mask_cell, pin_cell, resize_grid, unmask_cell, unpin_cell};
 use crate::schema::snapshot::{tile_index, Grid3dAxis, Grid3dCell, Grid3dColor, Grid3dDirection, Grid3dMesh, Grid3dPinnedCell, Grid3dRule, Grid3dTile, Grid3dTileMedia};
 use crate::{Grid3dMutation, Grid3dSnapshot, WFC_GRID3D_DIALECT, WFC_GRID3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ToolRef, ToolRunJob, ToolRunJobRequest};
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::EngineHandles;
 
@@ -59,6 +60,9 @@ pub enum Grid3dEditorCommand {
     SetCamera { x: f64, y: f64, z: f64, target_x: f64, target_y: f64, target_z: f64, zoom: f64 },
     #[dsl(key = "setActiveExample")]
     SetActiveExample { example_id: String },
+    /// 🏁 Starts the interactive fill tool run; the finished cache lands in `Grid3dPreviewResidency`.
+    #[dsl(key = "solve")]
+    Solve,
     /// 🖱️ The host's own instance-pick verb, dispatched when the scene declares no `domainId` — the
     /// lane a WRITING utility runs on. It is `pickCell`'s twin rather than an alias, because
     /// `dispatch_typed_command_inner` rejects a command whose `command_id` is not the action it was
@@ -219,6 +223,7 @@ fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Gri
         grid::ACTION_SET_ACTIVE_EXAMPLE => Ok(Grid3dEditorCommand::SetActiveExample {
             example_id: text("exampleId").or_else(|| text("id")).or_else(|| text("value")).unwrap_or_else(|| crate::examples::blocks::ID.to_string()),
         }),
+        "solve" => Ok(Grid3dEditorCommand::Solve),
         _ => Err(Fault::from(format!("wfc.grid3d.action.unsupported '{action}'"))),
     }
 }
@@ -300,6 +305,9 @@ pub fn grid3d_command_emit(
             return Ok(Emit { window_config_mutations: vec![addressed_config(view, next)?], description: Some("Set camera".into()), ..Default::default() });
         }
         Grid3dEditorCommand::SetHover { .. } | Grid3dEditorCommand::WorldPick { .. } => return Ok(Emit::default()),
+        Grid3dEditorCommand::Solve => {
+            return Ok(Emit { effects: vec![fill_tool::start_effect()], description: Some("Solve".to_string()), ..Default::default() });
+        }
         Grid3dEditorCommand::SetActiveExample { example_id } => {
             let Some(next_document) = example_snapshot(example_id) else {
                 return Err(Fault::from(format!("wfc.grid3d.example.unknown '{example_id}'")));
@@ -341,6 +349,7 @@ pub const GRID3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setActiveTile",
     "setCamera",
     grid::ACTION_SET_ACTIVE_EXAMPLE,
+    "solve",
 ];
 
 const GRID3D_RETAINED_PAYLOAD_SCHEMA: &str = "wfc.grid3d.tool-command.v1";
@@ -383,6 +392,7 @@ const GRID3D_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublic
     window_config_route("setActiveTile"),
     window_config_route("setCamera"),
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: grid::ACTION_SET_ACTIVE_EXAMPLE, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "solve", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
 ];
 
 /// 📏️ One bounded first step per route, admitted only while the whole addressable document plus this
@@ -602,6 +612,7 @@ impl ArtifactEditor for Grid3dEditor {
             Grid3dEditorCommand::SetActiveTile { .. } => "setActiveTile",
             Grid3dEditorCommand::SetCamera { .. } => "setCamera",
             Grid3dEditorCommand::SetActiveExample { .. } => grid::ACTION_SET_ACTIVE_EXAMPLE,
+            Grid3dEditorCommand::Solve => "solve",
         }
     }
 
@@ -615,6 +626,10 @@ impl ArtifactEditor for Grid3dEditor {
     /// unsupported artifact publication lane" on the first pick.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("grid3d-retained", store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+    }
+
+    fn build_tool_run_job(request: ToolRunJobRequest<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
+        fill_tool::build_run_job(request)
     }
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
@@ -674,7 +689,7 @@ impl ArtifactEditor for Grid3dEditor {
             "createTile", "deleteTile", "changeTileWeight", "changeTileColor",
             "createRule", "deleteRule",
             "pinCell", "unpinCell", "maskCell", "unmaskCell",
-            "pickCell", "worldSelect", "setHover", "worldPick", "setActiveTile", "setCamera", "setActiveExample"
+            "pickCell", "worldSelect", "setHover", "worldPick", "setActiveTile", "setCamera", "setActiveExample", "solve"
         ]
     }
 
@@ -708,7 +723,7 @@ impl ArtifactEditor for Grid3dEditor {
         let window_id = view_state.window_id.as_deref().or(view_state.focused_window_id.as_deref()).unwrap_or(body_key);
         match body_key {
             grid::BODY_KEY => grid::render(doc.snapshot, &window_config, &[], None, grid3d_active_utility(Some(view_state))).map(semio_framework_plugin::built_to_component_tree),
-            preview::BODY_KEY => preview::render(doc.snapshot, &window_config, window_id).map(semio_framework_plugin::built_to_component_tree),
+            preview::BODY_KEY => preview::render(doc.snapshot, &window_config, window_id, doc.tool_run()).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -727,6 +742,8 @@ pub fn create_grid3d_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(grid::definition())
         .window_kind_def(preview::definition())
         .window_kind_utilities(grid::WINDOW_KIND_ID, vec![grid::UTILITY_SELECT.into(), grid::UTILITY_PIN.into(), grid::UTILITY_MASK.into()])
+        .tool(fill_tool::definition())
+        .mode_tools(edit::GRID3D_EDIT_MODE_ID, vec![semio_framework::io::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
         .default_layout(edit::layout())
         .build_definition()
 }

@@ -12,10 +12,9 @@
 //! own window config, every write carrying one coalesce key so the whole drag folds into a single
 //! config edit — and `StrokeCommit` turns the settled box into exactly ONE `set-input-pixels`.
 //!
-//! **`Solve` writes the app TRANSIENT.** The collapse is an inference; the snapshot has no field to
-//! hold it, and an edit that produced one would be a lie about what this document persists. It is the
-//! one verb whose retained work answers `CompleteWithEphemeral`, so the framework publishes the
-//! collapse on the transient lane and the output window's `render_with_request_context` reads it.
+//! **`Solve` starts the fill tool run.** The collapse is an inference; the snapshot has no field to
+//! hold it. The fill tool publishes partial pixels on each tick; `commit-fill-solve` writes
+//! `SetSolve` only when the run commits. Abort leaves the transient untouched.
 //!
 //! **`SetActiveExample` replaces the document without a phantom edit.** It is the verb the shell's
 //! navbar picker AND its automatic boot announcement dispatch, so an app that does not declare it has
@@ -29,6 +28,7 @@
 
 use crate::editor::bitmap::commands::set_active_example;
 use crate::editor::bitmap::modes::edit;
+use crate::editor::bitmap::modes::edit::tools::fill as fill_tool;
 use crate::editor::bitmap::modes::edit::windows::{input, output};
 use crate::editor::bitmap::transient::{BitmapTransient, BitmapTransientMutation, SetSolve};
 use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel};
@@ -39,7 +39,7 @@ use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCo
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
     ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, InteractiveJobClassification, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PresenceView,
-    TransientView, WindowConfigMutation,
+    ToolRef, TransientView, WindowConfigMutation,
 };
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::EngineHandles;
@@ -87,6 +87,8 @@ pub enum BitmapEditorCommand {
     StrokeCommit,
     #[dsl(key = "solve")]
     Solve,
+    #[dsl(key = "commit-fill-solve")]
+    CommitFillSolve { pixels: String, contradiction: bool, width: u32, height: u32 },
     #[dsl(key = "set-active-example")]
     SetActiveExample { example_id: String },
 }
@@ -124,6 +126,7 @@ pub const BITMAP_TOOL_IDS: &[&str] = &[
     "stroke-extend",
     "stroke-commit",
     "solve",
+    "commit-fill-solve",
     "setActiveExample",
 ];
 
@@ -146,6 +149,7 @@ pub fn bitmap_command_id(command: &BitmapEditorCommand) -> &'static str {
         BitmapEditorCommand::StrokeExtend { .. } => "stroke-extend",
         BitmapEditorCommand::StrokeCommit => "stroke-commit",
         BitmapEditorCommand::Solve => "solve",
+        BitmapEditorCommand::CommitFillSolve { .. } => "commit-fill-solve",
         BitmapEditorCommand::SetActiveExample { .. } => "setActiveExample",
     }
 }
@@ -218,6 +222,12 @@ mod args_bridge {
             "stroke-commit" => BitmapEditorCommand::StrokeCommit,
             "solve" => BitmapEditorCommand::Solve,
             "setActiveExample" => BitmapEditorCommand::SetActiveExample { example_id: text(args, "exampleId").unwrap_or_else(|| super::set_active_example::BITMAP_EXAMPLE_BOOT_ID.to_string()) },
+            "commit-fill-solve" => BitmapEditorCommand::CommitFillSolve {
+                pixels: text(args, "pixels").unwrap_or_default(),
+                contradiction: bool_or("contradiction", false),
+                width: u32_or("width", 0),
+                height: u32_or("height", 0),
+            },
             _ => return Err(unknown(action)),
         })
     }
@@ -255,6 +265,7 @@ const BITMAP_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     window_config_route("stroke-extend"),
     ArtifactToolPublicationContract { tool_id: "stroke-commit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "solve", lanes: &[ArtifactToolPublicationLane::Transient] },
+    ArtifactToolPublicationContract { tool_id: "commit-fill-solve", lanes: &[ArtifactToolPublicationLane::Transient] },
     artifact_route("setActiveExample"),
 ];
 
@@ -306,7 +317,24 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
         let view_state = input.context.and_then(|context| context.view_state.as_ref());
         let emit = BitmapEditor::dispatch(input.command, &doc, &cfg, view_state)?;
         match input.command {
-            BitmapEditorCommand::Solve => Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { transient: vec![BitmapEditor::solve_transient(input.snapshot)?], ..Default::default() } }),
+            BitmapEditorCommand::Solve => Ok(ArtifactCommandWorkStep::Complete(Emit {
+                effects: vec![fill_tool::start_fill_effect()],
+                description: Some("Solve".to_string()),
+                ui_scope: semio_framework::kernel::UiDirtyScope::Full,
+                ..Default::default()
+            })),
+            BitmapEditorCommand::CommitFillSolve { pixels, contradiction, width, height } => Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
+                emit,
+                ephemeral: EphemeralEmit {
+                    transient: vec![BitmapTransientMutation::SetSolve(SetSolve {
+                        output_pixels: if *contradiction || pixels.is_empty() { None } else { Some(pixels.clone()) },
+                        contradiction: *contradiction,
+                        output_width: *width,
+                        output_height: *height,
+                    })],
+                    ..Default::default()
+                },
+            }),
             _ => Ok(ArtifactCommandWorkStep::Complete(emit)),
         }
     }
@@ -686,6 +714,7 @@ impl ArtifactEditor for BitmapEditor {
             "stroke-extend",
             "stroke-commit",
             "solve",
+            "commit-fill-solve",
             "setActiveExample"
         ]
     }
@@ -767,7 +796,7 @@ impl ArtifactEditor for BitmapEditor {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        Self::render_bodies(body_key, doc.snapshot, cfg, &BitmapTransient::default())
+        Self::render_bodies(body_key, doc.snapshot, cfg, &BitmapTransient::default(), None)
     }
 
     /// 🧮️ The output window's real render path: the same bodies, but reading the solve cache the
@@ -781,7 +810,14 @@ impl ArtifactEditor for BitmapEditor {
         transient: &TransientView<'_, Self::Transient>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        Self::render_bodies(body_key, doc.snapshot, cfg, transient.snapshot)
+        Self::render_bodies(body_key, doc.snapshot, cfg, transient.snapshot, doc.tool_run())
+    }
+
+    fn build_tool_run_job(request: semio_framework_plugin::ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ToolRunJob>, Fault> {
+        if request.tool_id != fill_tool::TOOL_ID || request.purpose != semio_framework_plugin::ToolRunJobPurpose::Run {
+            return Ok(None);
+        }
+        Ok(Some(Box::new(fill_tool::BitmapFillRunJob::from_request(request)?)))
     }
 
     /// 🫧️ Retained through the tool factory instead: `ArtifactApp::ephemeral` is never called by the
@@ -812,7 +848,8 @@ impl BitmapEditor {
                 BitmapEditorCommand::StrokeExtend { x, y } => Self::accumulate_stroke(cfg, view_state, Some(*x), Some(*y), false),
                 BitmapEditorCommand::StrokeCommit => Self::commit_stroke(doc, cfg, view_state),
                 BitmapEditorCommand::SetActiveExample { example_id } => set_active_example::handle(&set_active_example::SetActiveExample { example_id: example_id.clone() }, doc),
-                BitmapEditorCommand::Solve => Ok(Emit { description: Some("Solve".to_string()), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
+                BitmapEditorCommand::Solve => Ok(Emit { effects: vec![fill_tool::start_fill_effect()], description: Some("Solve".to_string()), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
+                BitmapEditorCommand::CommitFillSolve { .. } => Ok(Emit { description: Some("Commit fill solve".to_string()), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
                 _ => Err(Fault::from("wfc-bitmap-command-unmapped")),
             };
         };
@@ -855,14 +892,15 @@ impl BitmapEditor {
             | BitmapEditorCommand::StrokeExtend { .. }
             | BitmapEditorCommand::StrokeCommit
             | BitmapEditorCommand::Solve
+            | BitmapEditorCommand::CommitFillSolve { .. }
             | BitmapEditorCommand::SetActiveExample { .. } => return None,
         })
     }
 
-    fn render_bodies(body_key: &str, snapshot: &BitmapSnapshot, cfg: &ConfigView<'_, NoConfig>, transient: &BitmapTransient) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render_bodies(body_key: &str, snapshot: &BitmapSnapshot, cfg: &ConfigView<'_, NoConfig>, transient: &BitmapTransient, tool_run: Option<&semio_framework_plugin::ToolRunView>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             input::BODY_KEY => input::render(snapshot, &input::config::current(cfg)).map(semio_framework_plugin::built_to_component_tree),
-            output::BODY_KEY => output::render(snapshot, transient, &output::config::current(cfg)).map(semio_framework_plugin::built_to_component_tree),
+            output::BODY_KEY => output::render(snapshot, transient, &output::config::current(cfg), tool_run).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -939,8 +977,11 @@ pub fn create_bitmap_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(input::definition())
         .window_kind_def(output::definition())
         .default_layout(edit::layout())
+        .tool(fill_tool::definition())
+        .mode_tools(edit::WFC_BITMAP_MODE_EDIT, vec![semio_framework::io::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
         .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Load Example", "Beispiel laden"), ActionKind::Mutation, "panel-left"))
         .action_destructive("setActiveExample")
+        .action_destructive("remove-palette-color")
         .action_args(
             "setActiveExample",
             vec![ActionArgDef::select(

@@ -6,13 +6,13 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ephemeralBox, type TreePresentation } from "@semio-tech/framework";
+import { ephemeralBox, type TreePresentation, type TreeWindowRowExtent } from "@semio-tech/framework";
 import * as React from "react";
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
-import { STYLING_DOM, STYLING_COMPACT_ROOT_PX, domSizePx, sizeVar } from "@semio-tech/ui-styling";
+import { STYLING_DOM, STYLING_METRICS, STYLING_COMPACT_ROOT_PX, domSizePx, sizeVar, uiSpacingPx } from "@semio-tech/ui-styling";
 import { type IconName } from "@semio-tech/assets";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext/.useState at module top level, which requires a non-circular import (see
@@ -229,7 +229,7 @@ const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
 const treePropertyHeaderGridClassName = "grid min-w-0 w-full items-center gap-x-tiny min-h-[var(--tree-row-min-height,var(--size-workbench))]";
 const treePropertyHeaderGridStyle: React.CSSProperties = { gridTemplateColumns: `minmax(0, 1fr) var(--tree-value-column, ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)})` };
 const treeItemControlClassName =
-  "min-w-0 w-full flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
+  "min-w-0 w-full flex items-stretch justify-[var(--tree-value-justify,flex-end)] [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
 const indentationLineLen = (i: number, multiplier = 1): string => `calc(${detailPanelIndentLen(i, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeIndentLineExtraUiSpacing)})`;
 const indentationLinePx = (i: number, multiplier = 1): number => detailPanelIndentPx(i, multiplier) + domSizePx("treeIndentLineExtraUiSpacing");
 /** @emoji 🌳️ Ancestor guide indices for a branch at {@link level}: parent level always continues through expanded children; deeper ancestors stop after last siblings. */
@@ -243,7 +243,8 @@ const treeItemContentPaddingTopPx = 0;
 export const treeCompactSiblingGapPx = 0;
 const treeSubtreeGapPx = 0;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
-export const treeItemLabelStyle: React.CSSProperties = { fontSize: "var(--tree-label-size, var(--text-xs))", lineHeight: "var(--tree-label-line-height, 1)" };
+export const treeItemLabelStyle: React.CSSProperties = {};
+const treePresentationLabelStyle: React.CSSProperties = { fontSize: "var(--tree-label-size, var(--text-xs))", lineHeight: "var(--tree-label-line-height, 1)" };
 const treeGuideLineStrokeClassName = "bg-muted-foreground/40 group-hover/tree-row:bg-emphasized transition-[width,background-color] duration-150";
 const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none select-text";
 export const treeItemSecondaryTextClassName = "text-2xs leading-none text-muted-foreground";
@@ -764,6 +765,22 @@ export function treeDataActivation(options: { readonly sectionId?: string; reado
 export interface TreeDataWindow {
   readonly total: number;
   readonly offset: number;
+  readonly rowExtent: TreeWindowRowExtent;
+}
+
+/** @emoji 📏️ Resolves the declared closed-row geometry of a virtual Tree window. */
+export function treeWindowRowExtentPx(extent: TreeWindowRowExtent): number {
+  const exactMetric = (value: number) => Math.round(value * 1_000) / 1_000;
+  switch (extent) {
+    case "standard":
+      return treeRowHeightPx;
+    case "compactText":
+      return exactMetric(uiSpacingPx(STYLING_METRICS.chrome.sizeTinyUiSpacing) * 1.5);
+    case "compactSmallControl":
+      return exactMetric(uiSpacingPx(STYLING_METRICS.chrome.controlHeightSmallUiSpacing));
+    case "compactControl":
+      return exactMetric(uiSpacingPx(STYLING_METRICS.chrome.controlHeightUiSpacing));
+  }
 }
 
 /** @emoji 🪟️ Rows requested beyond each edge of the viewport, so a scroll of up to this many rows paints from what is already materialised. */
@@ -809,6 +826,7 @@ export interface TreeWindowContainerMeasure {
   readonly length: number;
   readonly top: number;
   readonly height: number;
+  readonly rowExtent: TreeWindowRowExtent;
   readonly rows?: readonly TreeWindowRowMeasure[];
 }
 
@@ -871,13 +889,13 @@ function treeWindowRowIndexAt(container: TreeWindowContainerMeasure, y: number, 
  * rows actually are.
  * @see 🎫️ 26/09/16 ARTIFACT-TREE-VIRTUALISED-STREAMING · 📓️design-virtualised-tree.md §6.1
  **/
-export function treeWindowVisibleRowsForViewport(containers: readonly TreeWindowContainerMeasure[], viewportTop: number, viewportHeight: number, rowHeightPx: number): ReadonlyMap<string, TreeWindowVisibleRows> {
+export function treeWindowVisibleRowsForViewport(containers: readonly TreeWindowContainerMeasure[], viewportTop: number, viewportHeight: number): ReadonlyMap<string, TreeWindowVisibleRows> {
   const visible = new Map<string, TreeWindowVisibleRows>();
-  if (!(rowHeightPx > 0)) return visible;
   const height = Math.max(0, viewportHeight);
   const viewportBottom = viewportTop + height;
   const viewportCentre = viewportTop + height / 2;
   for (const container of containers) {
+    const rowHeightPx = treeWindowRowExtentPx(container.rowExtent);
     const total = Math.max(0, Math.floor(container.total));
     if (total === 0) continue;
     const containerHeight = Math.max(0, container.height);
@@ -911,10 +929,9 @@ export function treeWindowRequestsForViewport(
   containers: readonly TreeWindowContainerMeasure[],
   viewportTop: number,
   viewportHeight: number,
-  rowHeightPx: number,
   overscanRows: number,
 ): readonly TreeWindowRequest[] {
-  const visible = treeWindowVisibleRowsForViewport(containers, viewportTop, viewportHeight, rowHeightPx);
+  const visible = treeWindowVisibleRowsForViewport(containers, viewportTop, viewportHeight);
   const overscan = Math.max(0, Math.floor(overscanRows));
   const requests: TreeWindowRequest[] = [];
   for (const container of containers) {
@@ -1035,6 +1052,7 @@ export interface TreeWindowDomAttributes {
   readonly "data-tree-window-total": number;
   readonly "data-tree-window-offset": number;
   readonly "data-tree-window-length": number;
+  readonly "data-tree-window-row-extent": TreeWindowRowExtent;
 }
 
 /** @emoji 📮️ Builds {@link TreeWindowDomAttributes} for a windowed container; `undefined` for an unwindowed one (no attributes, no spacers). `-key` stays the AUTHORED node key (and the pick target id); `-path` is the window's identity — what the host keys its state by and sends back on the wire. */
@@ -1049,6 +1067,7 @@ export function treeWindowDomAttributes(childWindow: TreeDataWindow | undefined,
     "data-tree-window-total": total,
     "data-tree-window-offset": offset,
     "data-tree-window-length": materialisedCount,
+    "data-tree-window-row-extent": childWindow.rowExtent,
   };
 }
 
@@ -1058,9 +1077,10 @@ export function treeWindowDomAttributes(childWindow: TreeDataWindow | undefined,
  * lines paint straight through it — sized at exactly the row pitch so the rows below keep their real index.
  * Zero rows render nothing at all.
  **/
-function renderTreeWindowSpacer(rows: number, edge: "leading" | "trailing"): React.ReactElement | null {
+function renderTreeWindowSpacer(rows: number, edge: "leading" | "trailing", rowExtent: TreeWindowRowExtent | undefined): React.ReactElement | null {
   if (rows <= 0) return null;
-  return <div key={`tree-window-spacer-${edge}`} data-slot="tree-window-spacer" data-tree-window-spacer={edge} data-tree-window-rows={rows} aria-hidden="true" className="w-full min-w-0 shrink-0" style={{ height: `${rows * treeRowHeightPx}px` }} />;
+  if (rowExtent === undefined) throw new Error("A virtual Tree spacer requires its window's closed row extent.");
+  return <div key={`tree-window-spacer-${edge}`} data-slot="tree-window-spacer" data-tree-window-spacer={edge} data-tree-window-rows={rows} aria-hidden="true" className="w-full min-w-0 shrink-0" style={{ height: `${rows * treeWindowRowExtentPx(rowExtent)}px` }} />;
 }
 // #endregion 🪟️TreeWindow
 
@@ -1567,6 +1587,8 @@ interface TreeItemProps {
    * host observer can read the real top of every materialised row instead of assuming a uniform row pitch
    * (a row that is itself an open windowed group is many rows tall). Build it with {@link treeWindowRowIndexOf}. */
   windowRowIndex?: number;
+  /** @emoji 📏️ Required closed-row geometry inherited from this row's parent virtual window. */
+  windowRowExtent?: TreeWindowRowExtent;
 }
 
 /**
@@ -2041,7 +2063,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "folder", isDropReady)}
-              <span data-slot="tree-label" title={controlHint} className={cn(treeSectionLabelSlotClassName, isDropReady && "text-emphasized")} style={treeItemLabelStyle}>
+              <span data-slot="tree-label" title={controlHint} className={cn(treeSectionLabelSlotClassName, isDropReady && "text-emphasized")} style={treePresentationLabelStyle}>
                 {displayLabel}
               </span>
             </div>
@@ -2093,7 +2115,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "folder", isDropReady)}
-              <span data-slot="tree-label" title={controlHint} className={cn(treeSectionLabelSlotClassName, isDropReady && "text-emphasized")} style={treeItemLabelStyle}>
+              <span data-slot="tree-label" title={controlHint} className={cn(treeSectionLabelSlotClassName, isDropReady && "text-emphasized")} style={treePresentationLabelStyle}>
                 {displayLabel}
               </span>
             </div>
@@ -2247,7 +2269,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                 <div className={treeHeaderMainClassName}>
                   {renderTreeRowIcon(icon, "folder", rowEmphasized)}
-                  <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, "cursor-selectable")} style={treeItemLabelStyle}>
+                  <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, "cursor-selectable")} style={treePresentationLabelStyle}>
                     {displayLabel as React.ReactNode}
                   </span>
                 </div>
@@ -2319,7 +2341,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
               <div className={treeHeaderMainClassName}>
                 {renderTreeRowIcon(icon, "folder", rowEmphasized)}
-                <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, "cursor-selectable")} style={treeItemLabelStyle}>
+                <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, "cursor-selectable")} style={treePresentationLabelStyle}>
                   {displayLabel as React.ReactNode}
                 </span>
               </div>
@@ -2374,7 +2396,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "file-text", rowEmphasized)}
-              <span data-slot="tree-label" className={treeItemLabelSlotClassName} style={treeItemLabelStyle}>
+              <span data-slot="tree-label" className={treeItemLabelSlotClassName} style={treePresentationLabelStyle}>
                 {displayLabel as React.ReactNode}
               </span>
             </div>
@@ -2416,7 +2438,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {renderTreeRowIcon(icon, "file-text", rowEmphasized)}
-            <span data-slot="tree-label" className={treeItemLabelSlotClassName} style={treeItemLabelStyle}>
+            <span data-slot="tree-label" className={treeItemLabelSlotClassName} style={treePresentationLabelStyle}>
               {displayLabel as React.ReactNode}
             </span>
           </div>
@@ -2518,6 +2540,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   isDropReady = false,
   windowAttributes,
   windowRowIndex,
+  windowRowExtent,
 }) => {
   const localizedLabel = useIdLabel(id);
   const resolvedLabel = label !== undefined ? label : localizedLabel;
@@ -2600,6 +2623,14 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     className,
   );
   const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted, loading, waiting), isDropReady && dropZoneReadyFillClass);
+  const windowRowStyle =
+    windowRowExtent === undefined
+      ? undefined
+      : ({
+          "--tree-row-height": `${treeWindowRowExtentPx(windowRowExtent)}px`,
+          "--tree-row-min-height": `${treeWindowRowExtentPx(windowRowExtent)}px`,
+          "--tree-row-max-height": `${treeWindowRowExtentPx(windowRowExtent)}px`,
+        } as React.CSSProperties);
   const treeLabelSelectClass = draggable && (driverSurfaceDrag || (resolvedDragRoles.length === 0 && effectiveDragInitiation === "surface")) ? "select-none" : "select-text";
   const rowEmphasized = isSelected || isHighlighted || isDropReady;
   const dragHandleProps = {
@@ -2620,6 +2651,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-slot="tree-property-item"
         data-hover-scope
         data-tree-window-row={windowRowIndex}
+        style={windowRowStyle}
         data-tree-row-kind={isExpandable ? "group" : "property"}
         data-activatable={activatable ? "true" : undefined}
         role="treeitem"
@@ -2679,7 +2711,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 data-slot="tree-label"
                 title={controlHint}
                 className={cn(treeItemLabelSlotClassName, "truncate font-medium transition-colors", isExpandable && !activatable ? "cursor-foldable" : "cursor-selectable", "select-text")}
-                style={treeItemLabelStyle}
+                style={treePresentationLabelStyle}
                 // 🖱️ A row that DECLARES an activation fires it; folding belongs to the chevron button
                 // beside it (which stops propagation), exactly as in the default layout below, where the
                 // row shell carries `onClick` and the label folds nothing. This branch used to swallow
@@ -2754,6 +2786,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               data-slot="tree-item-row"
               data-hover-scope
               data-tree-window-row={windowRowIndex}
+              style={windowRowStyle}
               data-tree-row-kind="group"
               data-tree-group
               data-activatable={activatable ? "true" : undefined}
@@ -2812,7 +2845,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
                   <div className={treeHeaderMainClassName}>
                     {renderTreeRowIcon(icon, "folder", rowEmphasized)}
-                    <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, "cursor-selectable")} style={treeItemLabelStyle}>
+                    <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, "cursor-selectable")} style={treePresentationLabelStyle}>
                       {resolvedLabel as React.ReactNode}
                     </span>
                   </div>
@@ -2887,6 +2920,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-slot="tree-item-row"
         data-hover-scope
         data-tree-window-row={windowRowIndex}
+        style={windowRowStyle}
         data-tree-row-kind="leaf"
         data-activatable={activatable ? "true" : undefined}
         data-draggable={draggable ? "true" : undefined}
@@ -2915,7 +2949,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "file-text", rowEmphasized)}
-              <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, draggable && effectiveDragInitiation === "surface" ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
+              <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, draggable && effectiveDragInitiation === "surface" ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treePresentationLabelStyle}>
                 {resolvedLabel as React.ReactNode}
               </span>
             </div>
@@ -3352,8 +3386,8 @@ const useTreeSelectionPathSync = (treeRootRef: React.RefObject<HTMLDivElement | 
 //#endregion 🎃️TreeHoverPath
 
 /** @emoji 🌿️ Hoisted data-tree item row (stable component type across Tree re-renders). */
-const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { readonly item: TreeDataItem; readonly section: TreeDataSection; readonly path: readonly string[]; readonly isLastItem: boolean; readonly windowRowIndex?: number }): React.ReactElement {
-  const { item, section, path, isLastItem, windowRowIndex } = props;
+const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { readonly item: TreeDataItem; readonly section: TreeDataSection; readonly path: readonly string[]; readonly isLastItem: boolean; readonly windowRowIndex?: number; readonly windowRowExtent?: TreeWindowRowExtent }): React.ReactElement {
+  const { item, section, path, isLastItem, windowRowIndex, windowRowExtent } = props;
   const { direction = "down" } = reactHostPort.useContext(TreeContext);
   const { itemItemsById, loadingById, dragAndDropController, loadItemItems, handleSelectItem, handleDoubleClickItem, handleDragStart, handleDragEnd, handleDragOverItem, handleDropOnItem, buildPalettePointerProps, draggedIds } =
     useTreeDataRendering();
@@ -3437,13 +3471,14 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       onBranchChange={setActiveBranchIndex}
       windowAttributes={treeWindowDomAttributes(childWindow, childItems.length, item.windowKey, item.windowPath)}
       windowRowIndex={windowRowIndex}
+      windowRowExtent={windowRowExtent}
     >
       {hasControl && !hasNestedTreeItems ? item.control : null}
-      {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading")}
+      {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading", childWindow?.rowExtent)}
       {childItems.map((childItem, index) => (
-        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, childItems.length, index, direction)} />
+        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, childItems.length, index, direction)} windowRowExtent={childWindow?.rowExtent} />
       ))}
-      {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing")}
+      {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing", childWindow?.rowExtent)}
       {!isLoading && childItems.length === 0 && item.emptyState && (
         <TreeItem>
           <TreeContent>{item.emptyState}</TreeContent>
@@ -3530,11 +3565,11 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
       isDropReady={sectionDropReady}
       windowAttributes={treeWindowDomAttributes(childWindow, items.length, section.windowKey, section.windowPath)}
     >
-      {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading")}
+      {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading", childWindow?.rowExtent)}
       {items.map((item, index) => (
-        <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, items.length, index, direction)} />
+        <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, items.length, index, direction)} windowRowExtent={childWindow?.rowExtent} />
       ))}
-      {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing")}
+      {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing", childWindow?.rowExtent)}
       {!isLoading && items.length === 0 && section.emptyState && <HelperRow>{section.emptyState}</HelperRow>}
     </TreeSection>
   );
@@ -3572,6 +3607,7 @@ export const Tree = (({
     throw new Error("Tree only accepts section data through the sections prop.");
   }
   const panelGhost = usePanelGhost();
+  const { inline: treeInline } = useFlow();
   const [sectionItemsById, setSectionItemsById] = reactHostPort.useState<Record<string, TreeDataItem[]>>(() =>
     (sections ?? EMPTY_TREE_SECTIONS).reduce<Record<string, TreeDataItem[]>>((result, section) => {
       if (section.items) {
@@ -4016,7 +4052,7 @@ export const Tree = (({
           data-tree-presentation={presentation}
           role="tree"
           aria-multiselectable={selectionMode === "multiple" ? true : undefined}
-          dir="auto"
+          dir={treeInline}
           className={`w-full min-w-0 overflow-hidden ${className}`}
           style={{
             "--tree-row-height": presentation === "compact" ? "auto" : "var(--size-workbench)",
@@ -4026,6 +4062,7 @@ export const Tree = (({
             "--tree-label-line-height": presentation === "compact" ? "1.5" : "1",
             "--tree-gutter-center": presentation === "compact" ? "50%" : "calc(var(--size-workbench) / 2)",
             "--tree-inline-control-height": presentation === "compact" ? "var(--size-small)" : "var(--size-medium)",
+            "--tree-value-justify": presentation === "compact" ? "flex-start" : "flex-end",
             "--tree-value-column": uiSpacingLen(presentation === "compact" ? STYLING_DOM.windowMeasureValueColumnUiSpacing : STYLING_DOM.controlValueColumnUiSpacing),
           } as React.CSSProperties}
           onPointerOver={handleTreePointerOver}
@@ -4366,7 +4403,7 @@ const ControlTreeFolderRow: React.FC<ControlTreeFolderRowProps> = ({ node, class
             }
             contentClassName="flex min-w-0 items-center gap-double"
           >
-            <span data-slot="control-tree-folder-label" className={cn("text-xs font-semibold uppercase tracking-wide truncate text-element group-hover:text-emphasized transition-colors", classNames?.folderTitle)} style={treeItemLabelStyle}>
+            <span data-slot="control-tree-folder-label" className={cn("text-xs font-semibold uppercase tracking-wide truncate text-element group-hover:text-emphasized transition-colors", classNames?.folderTitle)} style={treePresentationLabelStyle}>
               {node.key}
             </span>
           </TreeAlignedRow>
@@ -4394,7 +4431,7 @@ const ControlTreeLeafRow: React.FC<ControlTreeLeafRowProps> = ({ node, renderCon
       className={cn("hover:bg-hover-interactive-fill select-none overflow-hidden group", classNames?.controlRow)}
       left={
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-double">
-          <span data-slot="control-tree-control-label" className={cn("text-xs font-normal truncate text-element group-hover:text-emphasized", classNames?.controlLabel)} style={treeItemLabelStyle}>
+          <span data-slot="control-tree-control-label" className={cn("text-xs font-normal truncate text-element group-hover:text-emphasized", classNames?.controlLabel)} style={treePresentationLabelStyle}>
             {node.key}
           </span>
         </TreeAlignedRow>

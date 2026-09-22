@@ -5,7 +5,7 @@ slice="$1"; shift; [ "$1" = "--" ] && shift
 lock="/tmp/semio-wasm-build.lock"
 queue="/tmp/semio-wasm-build.queue"
 mkdir -p "$queue"
-ticket="$queue/20260921235900-$$-$slice"
+ticket="$queue/20260922095900-$$-$slice"
 echo $$ > "$ticket"
 trap 'rm -f "$ticket"' EXIT INT TERM
 while true; do

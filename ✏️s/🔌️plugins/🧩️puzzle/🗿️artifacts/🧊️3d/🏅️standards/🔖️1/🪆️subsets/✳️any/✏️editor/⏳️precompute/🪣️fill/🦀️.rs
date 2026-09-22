@@ -1778,6 +1778,10 @@ impl FillBuilder {
             self.reject_candidate("mesh-unavailable");
             return;
         };
+        if self.placed.len() != self.base.objects.len() + self.appended_objects.len() {
+            self.reject_candidate("placed-mesh-unavailable");
+            return;
+        }
         let preview_world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
         let (min, max) = world_bounds(body, &preview_world);
         if !world_volumes_contain_aabb(self.base.target_volumes.as_slice(), min, max) {
@@ -1819,6 +1823,10 @@ impl FillBuilder {
                 return;
             }
             CollisionQueryStep::Complete => {}
+        }
+        if query.truncated() {
+            self.reject_candidate("broad-phase-entry-missing");
+            return;
         }
         self.broad_phase_cursor = 0;
         self.collision = None;
@@ -3017,9 +3025,10 @@ enum FillRevalidatePhase {
 }
 
 /// 🔍️ The fill tool run revalidation job (`ToolRunDefinition.revalidateJob`): re-tests every provisional
-/// placement against the head document — its host vortex must still exist, its id must be free and its
-/// surface must not reach into any head object, its docking host included, deeper than the head's contact tolerance. Each placement is one unit of
-/// fuel and ends as a `success` (`fits`) or `danger` (`TOOL_RUN_REASON_CONFLICT`) trace record. The last
+/// placement against the head document and earlier surviving placements. Its host vortex must still exist,
+/// its id must be free, every body's geometry must be available, and penetration must stay within the head's
+/// contact tolerance. Preparation and pair checks consume cooperative fuel; each placement ends as a
+/// `success` (`fits`) or `danger` (`TOOL_RUN_REASON_CONFLICT`) trace record. The last
 /// tick retracts to the first conflict and re-appends every later survivor's ops and entity, with one
 /// `danger` conflict step carrying the conflict count; `Complete` follows on the next call.
 pub(crate) struct FillRevalidateJob {
@@ -3114,6 +3123,9 @@ impl FillRevalidateJob {
         let index = self.cursor;
         let placement = &self.placements[index];
         if self.pair_cursor == 0 && self.collision.is_none() {
+            if self.head.len() < self.scene.fixture.objects.len() {
+                return Some(true);
+            }
             if self.head_ids.contains(&placement.object.id) {
                 return Some(true);
             }
@@ -3123,19 +3135,19 @@ impl FillRevalidateJob {
         }
         let placement = &self.placements[index];
         let Some(body) = placement.object.mesh_url.as_ref().and_then(|url| self.meshes.get(url)) else {
-            return Some(false);
+            return Some(true);
         };
         let world = pose_isometry(placement.object.origin, placement.object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &placement.object.scale);
         let Some(entry) = self.head.get(self.pair_cursor) else {
             return Some(false);
         };
         let Some(other) = self.meshes.get(&entry.mesh_url) else {
-            self.pair_cursor += 1;
-            return None;
+            return Some(true);
         };
         if self.collision.is_none() {
             if !CollisionAabb::from_body(other, &entry.world).intersects(&CollisionAabb::from_body(body, &world)) {
                 self.pair_cursor += 1;
+                context.consume_fuel(1);
                 return None;
             }
         }
@@ -3236,7 +3248,10 @@ impl InteractiveJob for FillRevalidateJob {
                 _ if context.fuel_exhausted() || context.deadline_exceeded() => {
                     return if self.ops.is_empty() { StepOutcome::Yield } else { self.flush(context, None) };
                 }
-                FillRevalidatePhase::PrepareHead => self.prepare_head_one(),
+                FillRevalidatePhase::PrepareHead => {
+                    self.prepare_head_one();
+                    context.consume_fuel(1);
+                }
                 FillRevalidatePhase::Placement => {
                     let Some(placement) = self.placements.get(self.cursor) else {
                         self.phase = FillRevalidatePhase::Finish;
@@ -3250,6 +3265,15 @@ impl InteractiveJob for FillRevalidateJob {
                         self.ops.push(ToolRunTraceOp::Upsert { key, verdict: ToolRunVerdict::Testing, reason: FillRunReason::Fits.code(), subject });
                     }
                     if let Some(conflict) = self.test_placement_unit(context) {
+                        if !conflict {
+                            let object = &self.placements[self.cursor].object;
+                            self.head_ids.insert(object.id.clone());
+                            self.head.push(PlacedCollisionEntry {
+                                object_id: object.id.clone(),
+                                mesh_url: object.mesh_url.clone().expect("validated placement mesh"),
+                                world: pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale),
+                            });
+                        }
                         let (verdict, reason) = if conflict { (ToolRunVerdict::Danger, TOOL_RUN_REASON_CONFLICT) } else { (ToolRunVerdict::Success, FillRunReason::Fits.code()) };
                         self.ops.push(ToolRunTraceOp::Upsert { key, verdict, reason, subject });
                         self.shown = Some(key);

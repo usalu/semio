@@ -19,9 +19,11 @@ pub struct ConnectNodes {
     pub relationship: DslValue,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
+/// 🏗️ Builder — wraps the payload in its dispatch variant, in the DSL's canonical key order
+/// (`crate::canonical_board_value`, same reason as `create-node`'s builder: the op-text printer sorts
+/// object keys, `DslValue::PartialEq` compares them positionally).
 pub fn connect_nodes(edge: DslValue, relationship: DslValue) -> WiresMutation {
-    WiresMutation::ConnectNodes(ConnectNodes { edge, relationship })
+    WiresMutation::ConnectNodes(ConnectNodes { edge: crate::canonical_board_value(&edge), relationship: crate::canonical_board_value(&relationship) })
 }
 
 impl protocol::MutationKind<WiresSnapshot, WiresMutation> for ConnectNodes {

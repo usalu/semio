@@ -29,7 +29,7 @@ use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::ui_control_to_node;
 use crate::wgpu::component::ui::{
     SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiDropOverlaySpec, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiMenuRef, UiNode, UiNumberStepperNode, UiPresence,
-    UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow,
+    UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent,
 };
 use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
 use crate::wgpu::{IconName, UiIntentAddress, UiIntentBindings};
@@ -590,7 +590,16 @@ fn row_action(action: &ui_contract::RowAction, controller: &str) -> UiTreeItemAc
 /// mirror. The two structs are deliberately separate types: the legacy `UiNode` wire shape is rooted
 /// in `dsl`'s `ToValue`/`FromValue`, the contract's in `protocol::value`.
 fn tree_window(window: Option<&ui_contract::TreeWindow>) -> Option<UiTreeWindow> {
-    window.map(|window| UiTreeWindow { total: window.total, offset: window.offset })
+    window.map(|window| UiTreeWindow {
+        total: window.total,
+        offset: window.offset,
+        row_extent: match window.row_extent {
+            ui_contract::TreeWindowRowExtent::Standard => UiTreeWindowRowExtent::Standard,
+            ui_contract::TreeWindowRowExtent::CompactText => UiTreeWindowRowExtent::CompactText,
+            ui_contract::TreeWindowRowExtent::CompactSmallControl => UiTreeWindowRowExtent::CompactSmallControl,
+            ui_contract::TreeWindowRowExtent::CompactControl => UiTreeWindowRowExtent::CompactControl,
+        },
+    })
 }
 
 /// 🌳️ Assembles one `Component::TreeItem` record and its whole subtree into the inline
@@ -709,6 +718,7 @@ fn input_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         input_kind: input_kind(props.kind),
         value: props.value.as_str().to_string(),
         placeholder: optional_contract_label(props.placeholder.as_ref()),
+        accessibility_label: optional_contract_label(record.accessibility.label.as_ref()),
         commit: props.commit.as_ref().map(|value| value.as_str().to_string()),
         min: props.min,
         max: props.max,
@@ -1051,13 +1061,18 @@ impl UiTree {
                     (NodeKey::Explicit(record.key.as_str().to_string()), WidgetSpec(ui_node_from_record(document, record, surface, controller)), record.layout.clone(), record_intent_bindings(record, surface, document.revision().0))
                 };
                 let routing = layout_routing_flags(&layout_spec);
-                let presented_scene = match &spec.0 {
-                    UiNode::ComponentScene(next) => presented.and_then(|tree| {
-                        let node = tree.document_node(planned.id)?;
-                        let retained = tree.node(node)?;
-                        let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
-                        (retained.key == key && scene.component_kind == next.component_kind && scene.surface_id == next.surface_id).then(|| (scene.host_id.clone(), retained.component_generation()))
-                    }),
+                let presented_component = presented.and_then(|tree| {
+                    let node = tree.document_node(planned.id)?;
+                    let retained = tree.node(node)?;
+                    let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
+                    Some((node, scene.host_id.clone(), retained.component_generation(), retained.key.clone(), scene.component_kind, scene.surface_id.clone()))
+                });
+                let presented_scene = match (&spec.0, presented_component.as_ref()) {
+                    (UiNode::ComponentScene(next), Some((_, host_id, generation, presented_key, kind, surface_id)))
+                        if presented_key == &key && *kind == next.component_kind && surface_id == &next.surface_id =>
+                    {
+                        Some((host_id.clone(), *generation))
+                    }
                     _ => None,
                 };
                 let node = match self.document_node(planned.id).filter(|node| self.contains(*node)) {
@@ -1120,6 +1135,23 @@ impl UiTree {
                         node
                     }
                     None => {
+                        if presented_scene.is_none() {
+                            if let Some((node, host_id, generation, key, kind, surface_id)) = presented_component {
+                                if !retire_scene(UiRetiredComponentScene {
+                                    document_id: planned.id,
+                                    host_id,
+                                    window_id: surface.to_owned(),
+                                    window_generation,
+                                    component_generation: generation,
+                                    node,
+                                    key,
+                                    kind,
+                                    surface_id,
+                                }) {
+                                    return UiDocumentReconcileStep::Pending;
+                                }
+                            }
+                        }
                         let scene_identity = if matches!(&spec.0, UiNode::ComponentScene(_)) {
                             match presented_scene {
                                 Some(identity) => Some(identity),

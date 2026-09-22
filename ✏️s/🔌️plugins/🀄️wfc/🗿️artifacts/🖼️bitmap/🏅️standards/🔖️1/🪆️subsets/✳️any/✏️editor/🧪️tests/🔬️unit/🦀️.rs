@@ -42,7 +42,7 @@ fn every_command_round_trips_its_binary_op() {
         let bytes = protocol::OpBinary::encode_op(&command).expect("command encodes");
         assert_eq!(<BitmapEditorCommand as protocol::OpBinary>::decode_op(&bytes).expect("command decodes"), command);
     }
-    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::StrokeBegin { x: 1, y: 2 }, BitmapEditorCommand::StrokeExtend { x: 3, y: 4 }, BitmapEditorCommand::StrokeCommit, BitmapEditorCommand::SetActiveColor { index: 1 }] {
+    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::CommitFillSolve { pixels: String::new(), contradiction: false, width: 1, height: 1 }, BitmapEditorCommand::StrokeBegin { x: 1, y: 2 }, BitmapEditorCommand::StrokeExtend { x: 3, y: 4 }, BitmapEditorCommand::StrokeCommit, BitmapEditorCommand::SetActiveColor { index: 1 }] {
         let bytes = protocol::OpBinary::encode_op(&command).expect("command encodes");
         assert_eq!(<BitmapEditorCommand as protocol::OpBinary>::decode_op(&bytes).expect("command decodes"), command);
     }
@@ -66,7 +66,7 @@ fn every_typed_command_dispatches_to_the_mutation_it_names() {
         assert_eq!(protocol::SemanticMutation::semantics(&mutation).kind, kind);
         assert!(!description.is_empty(), "command '{kind}' describes its own edit");
     }
-    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::StrokeBegin { x: 0, y: 0 }, BitmapEditorCommand::StrokeExtend { x: 0, y: 0 }, BitmapEditorCommand::StrokeCommit, BitmapEditorCommand::SetActiveColor { index: 0 }] {
+    for command in [BitmapEditorCommand::Solve, BitmapEditorCommand::CommitFillSolve { pixels: String::new(), contradiction: false, width: 1, height: 1 }, BitmapEditorCommand::StrokeBegin { x: 0, y: 0 }, BitmapEditorCommand::StrokeExtend { x: 0, y: 0 }, BitmapEditorCommand::StrokeCommit, BitmapEditorCommand::SetActiveColor { index: 0 }] {
         assert!(BitmapEditor::command_mutation(&command).is_none(), "a non-document verb emits no artifact mutation");
     }
 }
@@ -225,7 +225,12 @@ fn the_retained_tool_roster_agrees_with_itself_and_with_the_manifest() {
     assert_eq!(proofs, BITMAP_TOOL_IDS.to_vec());
 
     let definition = create_bitmap_editor();
-    let declared: std::collections::BTreeSet<String> = definition.window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone())).collect();
+    let declared: std::collections::BTreeSet<String> = definition
+        .window_kinds
+        .iter()
+        .flat_map(|window| semio_framework::window_kind_actions(&definition, window))
+        .map(|action| action.id.clone())
+        .collect();
     for action in BITMAP_TOOL_IDS {
         assert!(declared.contains(*action), "retained tool '{action}' is not declared by any window kind");
     }
@@ -237,7 +242,10 @@ fn the_retained_tool_roster_agrees_with_itself_and_with_the_manifest() {
 fn the_example_picker_verb_is_declared_with_both_examples() {
     let definition = create_bitmap_editor();
     for window in &definition.window_kinds {
-        let action = window.actions.iter().find(|action| action.id == "setActiveExample").unwrap_or_else(|| panic!("window '{}' does not declare setActiveExample", window.id));
+        let action = semio_framework::window_kind_actions(&definition, window)
+            .into_iter()
+            .find(|action| action.id == "setActiveExample")
+            .unwrap_or_else(|| panic!("window '{}' does not declare setActiveExample", window.id));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
         let arg = action.args.first().unwrap_or_else(|| panic!("window '{}' offers setActiveExample no example argument", window.id));
         assert_eq!(arg.id, "exampleId");
@@ -246,3 +254,106 @@ fn the_example_picker_verb_is_declared_with_both_examples() {
     }
 }
 //#endregion 🚚️LiveDispatch
+
+
+//#region 🌡Fill
+#[test]
+fn the_manifest_declares_the_fill_tool_on_edit_mode() {
+    use crate::editor::bitmap::modes::edit;
+    use crate::editor::bitmap::modes::edit::tools::fill as fill_tool;
+    let definition = create_bitmap_editor();
+    assert!(definition.tools.iter().any(|tool| tool.id == fill_tool::TOOL_ID));
+    let mode = definition.modes.iter().find(|mode| mode.id == edit::WFC_BITMAP_MODE_EDIT).expect("edit mode");
+    assert!(mode.tools.iter().any(|tool| tool.as_str() == fill_tool::TOOL_ID));
+}
+
+#[test]
+fn solve_starts_the_fill_run_instead_of_writing_set_solve() {
+    use semio_framework_plugin::{AppOperationContext, Effect, HistoryView};
+    let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
+    let history = HistoryView::empty();
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "wfc-bitmap-fill".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32] };
+    let config = NoConfig {};
+    let emit = BitmapEditor::dispatch(&BitmapEditorCommand::Solve, &ArtifactView::with_operation(&snapshot, &history, operation), &ConfigView { snapshot: &config, window: None }, None).expect("solve dispatches");
+    assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID)));
+}
+
+#[test]
+fn a_partial_fill_render_differs_from_empty_and_finished() {
+    use crate::editor::bitmap::modes::edit::tools::fill::payload_from_assignment;
+    use crate::editor::bitmap::modes::edit::windows::output::{self, config::BitmapOutputWindowConfig};
+    use crate::editor::bitmap::transient::BitmapTransient;
+    use semio_framework_plugin::ToolRunView;
+    use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunState};
+
+    let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
+    let empty = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None);
+    let finished_pixels = crate::inferences::solve_with_job(&snapshot).expect("oracle");
+    let finished = BitmapTransient {
+        output_pixels: if finished_pixels.contradiction { None } else { Some(finished_pixels.pixels.clone()) },
+        contradiction: finished_pixels.contradiction,
+        output_width: snapshot.output.width,
+        output_height: snapshot.output.height,
+    };
+    let finished_layers = output::render_layers_fingerprint(&snapshot, &finished, &BitmapOutputWindowConfig::default(), None);
+    assert_ne!(empty, finished_layers);
+
+    let partial = payload_from_assignment(snapshot.output.width, snapshot.output.height, &[(0, 1)], false, false);
+    let mut run = ToolRunView::new(fill_tool::TOOL_ID, ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 3 }, [0; 32]), ToolRunState::Running);
+    run.payload = Some(partial.encode_json().into_bytes().into());
+    let partial_layers = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), Some(&run));
+    assert_ne!(partial_layers, empty);
+    assert_ne!(partial_layers, finished_layers);
+}
+
+#[test]
+fn a_contradiction_transient_paints_a_distinct_overlay() {
+    use crate::editor::bitmap::modes::edit::windows::output::{self, config::BitmapOutputWindowConfig};
+    use crate::editor::bitmap::transient::BitmapTransient;
+    let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
+    let empty = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None);
+    let contradiction = BitmapTransient { output_pixels: None, contradiction: true, output_width: snapshot.output.width, output_height: snapshot.output.height };
+    let layers = output::render_layers_fingerprint(&snapshot, &contradiction, &BitmapOutputWindowConfig::default(), None);
+    assert!(layers.contains("out-contradiction"));
+    assert_ne!(layers, empty);
+}
+
+#[test]
+fn the_python_oracle_vector_matches_the_rust_payload_shape() {
+    use crate::editor::bitmap::modes::edit::tools::fill::{payload_from_assignment, BitmapFillPayload};
+    let mut cursor = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let mut vector = None;
+    for _ in 0..16 {
+        let semio = cursor.join(".🧬semio");
+        if semio.is_dir() {
+            let mut stack = vec![semio];
+            while let Some(dir) = stack.pop() {
+                if let Ok(entries) = std::fs::read_dir(&dir) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_dir() {
+                            stack.push(path);
+                        } else if path.file_name().and_then(|name| name.to_str()) == Some("bitmap-fill-oracle-vector.json") {
+                            vector = Some(path);
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        if !cursor.pop() {
+            break;
+        }
+    }
+    let vector = vector.expect("oracle vector under the WFC ticket");
+    let text = std::fs::read_to_string(&vector).expect("vector readable");
+    let payload = BitmapFillPayload::decode_json(&text).expect("vector decodes");
+    assert_eq!(payload.width, 2);
+    assert_eq!(payload.height, 2);
+    assert_eq!(payload.decided_count(), 2);
+    assert!(!payload.done);
+    let expected = payload_from_assignment(2, 2, &[(0, 0), (3, 1)], false, false);
+    assert_eq!(payload.pixels, expected.pixels);
+    assert_eq!(payload.decided, expected.decided);
+}
+//#endregion 🌡Fill

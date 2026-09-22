@@ -151,7 +151,8 @@ function floatingSurfacePaint(appearance: "light" | "dark"): FloatingSurfacePain
   const elementStep = Number.parseFloat(declaration(theme, "--element-shade-step")) / 100;
   const alphaStep = Number.parseFloat(declaration(theme, "--glass-alpha-step"));
   expect(declaration(theme, "--color-popover-foreground")).toBe("var(--border-element-color)");
-  expect(declaration(theme, "--color-element")).toBe("var(--border-element-color)");
+  expect(ui).toContain("color: var(--hover-ink, var(--border-element-color))");
+  expect(ui).toContain("--hover-ink: var(--color-emphasized)");
   const shell = resolveColor(aliases["--base"]!, colors, aliases);
   const foregroundToken = resolveColor(aliases["--foreground"]!, colors, aliases);
   const surface = oklabMix(shell, foregroundToken, stepMultiplier(declaration(menu, "--surface-bg")) * levelStep);

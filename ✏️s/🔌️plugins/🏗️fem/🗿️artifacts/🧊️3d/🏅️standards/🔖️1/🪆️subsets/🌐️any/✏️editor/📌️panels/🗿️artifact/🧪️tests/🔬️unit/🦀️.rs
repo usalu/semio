@@ -399,10 +399,10 @@ async fn a_window_request_materialises_exactly_its_own_range() {
     let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), None, 20, 8), nested_request("load-cases", "wind", None, 5, 4)]);
     let tree = render(&document, &Fem3dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a windowed document assembles");
     let nodes = section_node(&tree, "nodes");
-    assert_eq!(window_of(nodes), TreeWindow { total: 60, offset: 20 });
+    assert_eq!(window_of(nodes), TreeWindow { row_extent: Default::default(), total: 60, offset: 20 });
     assert_eq!(row_keys(nodes), (20..28).map(|index| format!("g{index}")).collect::<Vec<_>>(), "exactly entries [20, 28) keyed by the raw node id");
     let wind = section_node(&tree, "load-cases").children.iter().find(|row| row.key.as_str() == "wind").expect("wind case row");
-    assert_eq!(window_of(wind), TreeWindow { total: 40, offset: 5 });
+    assert_eq!(window_of(wind), TreeWindow { row_extent: Default::default(), total: 40, offset: 5 });
     assert_eq!(row_keys(wind), (5..9).map(|index| format!("wl{index}")).collect::<Vec<_>>(), "a nested window is the same law one level down");
 }
 
@@ -451,7 +451,7 @@ async fn a_house_sized_body_honours_every_capped_host_window() {
         assert_eq!(case.children.len(), 8, "and every open case serves its own capped window");
         assert_eq!(window_of(case).total, 12, "while still announcing all twelve loads");
     }
-    assert_eq!(window_of(section_node(&tree, "nodes")), TreeWindow { total: 63, offset: 0 });
+    assert_eq!(window_of(section_node(&tree, "nodes")), TreeWindow { row_extent: Default::default(), total: 63, offset: 0 });
     let nodes = body_nodes(&tree);
     println!("[DEBUG] fem3d-house hosted body_nodes={nodes}");
     assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "the House body reconciles under a full host request set: {nodes} > {}", semio_framework_ui_contract::UI_DOCUMENT_NODES);

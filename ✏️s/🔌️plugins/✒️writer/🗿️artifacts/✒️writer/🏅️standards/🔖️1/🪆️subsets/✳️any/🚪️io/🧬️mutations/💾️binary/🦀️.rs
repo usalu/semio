@@ -887,43 +887,53 @@ impl store::ArtifactOwnedHistoryEntryAuthority<protocol::Edit<WriterMutation>> f
             return Err(self.diagnostic("writer-envelope.edit-cancelled", token.start));
         }
         if let Some(mut active) = self.active.take() {
-            return match &mut active {
+            // 🧹️ A REFUSAL leaves the nested owner alive, and every nested owner asserts terminal-empty
+            // in `Drop` (`WriterMutationArrayAuthority`, `OwnedSchemaStringAuthority`). Handing a
+            // diagnostic straight out of this block — what the plain `?`/`Err(..)` arms used to do —
+            // dropped `active` here, so a refused edit raised "Writer mutation array reached Drop
+            // before every exact mutation owner was published or cursor-retired" INSIDE the caller's
+            // unwind, and the second Drop assert on this authority turned it into a
+            // `panic in a destructor during cleanup` → SIGABRT that killed the whole test binary.
+            // Every arm therefore hands back `(outcome, retain)`: a refused owner is retained exactly
+            // like a pending one and leaves through this authority's bounded `close_step` ladder.
+            let (outcome, retain) = match &mut active {
                 WriterEditActive::String { field_id, authority } => match authority.step(source, cx) {
-                    store::OwnedSchemaStringStep::Pending => {
-                        self.active = Some(active);
-                        Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
-                    }
-                    store::OwnedSchemaStringStep::Complete => {
-                        let index = Self::string_index(*field_id).ok_or_else(|| self.diagnostic("writer-envelope.edit-string-field", token.start))?;
-                        *self.strings[index] = authority.take_string();
-                        Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                    }
-                    store::OwnedSchemaStringStep::Cancelled => Err(self.diagnostic("writer-envelope.edit-string-cancelled", token.start)),
-                    store::OwnedSchemaStringStep::Fault(diagnostic) => Err(diagnostic),
-                },
-                WriterEditActive::Mutations { field_id, authority } => match authority.accept(token, _terminal, source, cx)? {
-                    store::ArtifactEnvelopeFieldDecodeStep::FieldComplete => {
-                        let values = authority.take_values().ok_or_else(|| self.diagnostic("writer-envelope.edit-mutation-values", token.start))?;
-                        if *field_id == 3 {
-                            *self.forwards = Some(values);
-                        } else {
-                            *self.inverse = Some(values);
+                    store::OwnedSchemaStringStep::Pending => (Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending), true),
+                    store::OwnedSchemaStringStep::Complete => match Self::string_index(*field_id) {
+                        Some(index) => {
+                            *self.strings[index] = authority.take_string();
+                            (Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete), false)
                         }
-                        Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete)
-                    }
-                    step => {
-                        self.active = Some(active);
-                        Ok(step)
-                    }
+                        None => (Err(self.diagnostic("writer-envelope.edit-string-field", token.start)), true),
+                    },
+                    store::OwnedSchemaStringStep::Cancelled => (Err(self.diagnostic("writer-envelope.edit-string-cancelled", token.start)), true),
+                    store::OwnedSchemaStringStep::Fault(diagnostic) => (Err(diagnostic), true),
                 },
-                WriterEditActive::EmptyMetadata(authority) => match authority.accept(token, _terminal)? {
-                    store::ArtifactEnvelopeFieldDecodeStep::FieldComplete => Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete),
-                    step => {
-                        self.active = Some(active);
-                        Ok(step)
-                    }
+                WriterEditActive::Mutations { field_id, authority } => match authority.accept(token, _terminal, source, cx) {
+                    Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete) => match authority.take_values() {
+                        Some(values) => {
+                            if *field_id == 3 {
+                                *self.forwards = Some(values);
+                            } else {
+                                *self.inverse = Some(values);
+                            }
+                            (Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete), false)
+                        }
+                        None => (Err(self.diagnostic("writer-envelope.edit-mutation-values", token.start)), true),
+                    },
+                    Ok(step) => (Ok(step), true),
+                    Err(diagnostic) => (Err(diagnostic), true),
+                },
+                WriterEditActive::EmptyMetadata(authority) => match authority.accept(token, _terminal) {
+                    Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete) => (Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete), false),
+                    Ok(step) => (Ok(step), true),
+                    Err(diagnostic) => (Err(diagnostic), true),
                 },
             };
+            if retain {
+                self.active = Some(active);
+            }
+            return outcome;
         }
         match self.cursor.accept(token, source) {
             store::OwnedSchemaNestedRecordStep::Pending => Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete),

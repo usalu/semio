@@ -71,7 +71,15 @@ pub struct RingMeta<E> {
     pub radius: f32,
 }
 
+struct SelectPopupWheelScope {
+    owner: String,
+    menu: Rect,
+    max_scroll: f32,
+    end_hit: usize,
+}
+
 pub struct WidgetInteractionMaps<E> {
+    select_popup_wheel: Option<SelectPopupWheelScope>,
     pub input_metas: HashMap<String, InputMeta<E>>,
     pub select_metas: HashMap<String, E>,
     pub toggle_metas: HashMap<String, (bool, E)>,
@@ -88,6 +96,7 @@ pub struct WidgetInteractionMaps<E> {
 impl<E> Default for WidgetInteractionMaps<E> {
     fn default() -> Self {
         Self {
+            select_popup_wheel: None,
             input_metas: HashMap::new(),
             select_metas: HashMap::new(),
             toggle_metas: HashMap::new(),
@@ -104,7 +113,32 @@ impl<E> Default for WidgetInteractionMaps<E> {
 }
 
 impl<E> WidgetInteractionMaps<E> {
+    pub(crate) fn register_select_popup_wheel(&mut self, owner: &str, menu: Rect, max_scroll: f32, end_hit: usize) {
+        self.select_popup_wheel = Some(SelectPopupWheelScope { owner: owner.into(), menu, max_scroll, end_hit });
+    }
+
+    /// 🎯️ Uses the popup and hit order from the same presented frame, including empty menu gutters.
+    pub fn scroll_select_popup_at(&self, input: &InputState<E>, offsets: &mut HashMap<String, f32>, x: f32, y: f32, delta: f32) -> bool
+    where
+        E: Clone,
+    {
+        let Some(scope) = self.select_popup_wheel.as_ref().filter(|scope| scope.menu.contains(x, y)) else { return false };
+        if input.hit_index_at(x, y).is_some_and(|index| index >= scope.end_hit) {
+            return false;
+        }
+        if delta.is_finite() && delta != 0.0 {
+            let entry = offsets.entry(crate::wgpu::select::select_scroll_key(&scope.owner)).or_insert(0.0);
+            *entry = (*entry + delta).clamp(0.0, scope.max_scroll);
+        }
+        true
+    }
+
+    pub fn clear_select_popup_wheel(&mut self) {
+        self.select_popup_wheel = None;
+    }
+
     pub fn clear_frame(&mut self) {
+        self.clear_select_popup_wheel();
         self.input_metas.clear();
         self.select_metas.clear();
         self.toggle_metas.clear();

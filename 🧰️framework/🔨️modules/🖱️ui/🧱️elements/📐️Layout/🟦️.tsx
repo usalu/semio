@@ -13,7 +13,7 @@ import { reactHostPort } from "../🔌️Ports/🟦️.tsx";
 import { useFirstDraggableElementAlias } from "../🆔️ElementId/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { glassClass, surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
-import { type PanelProps, PANEL_DEFAULT_SIZE_PX, Panel, PanelTreeUnitsPane } from "../🖼️Panel/🟦️.tsx";
+import { type PanelProps, Panel, PanelTreeUnitsPane } from "../🖼️Panel/🟦️.tsx";
 import { type PanelTabNode, usePanelTabSelection, findPanelTabNode, PanelTabBar, progressPanelTabSelection, resolvePanelBranchBodyLeaf } from "../🧭️PanelTabBar/🟦️.tsx";
 import { Scrollable } from "../📜️Scrollable/🟦️.tsx";
 import { CanvasSkeleton } from "../🦴️Skeletons/🟦️.tsx";
@@ -103,41 +103,6 @@ export interface LayoutProps {
   className?: string;
 }
 
-/** @emoji 🛟️ Which side of the middle region each anchor grows from — a middle anchor reserves nothing, because it is centered and has no edge of its own to give. */
-const LAYOUT_LEFT_ANCHORS: readonly Anchor[] = ["top-left", "left-middle", "bottom-left"];
-const LAYOUT_RIGHT_ANCHORS: readonly Anchor[] = ["top-right", "right-middle", "bottom-right"];
-
-/**
- * @emoji 🛟️ The canvas column's own padding, one side at a time, so an open anchored {@link Panel}
- * never paints over the window area — and therefore never over an interactive rail inside a window.
- *
- * A panel is absolutely positioned in this same region at `z-panel`, above `z-window` and above a
- * window's engagement overlay, and the two are different stacking contexts, so a covered rail can
- * neither restack nor (being full height) step aside: {@link chromePanelSafeArea} answers "clear"
- * for it, because neither axis can clear the panel inside the window. Measured on 📐️generation3d at
- * 1600×1000 (ticket 26/09/18, slices PB1 §4 / PB3 §4): the right-docked History panel spans
- * x 1297–1597 and the window's Actions rail x 1094–1394, so the rail's last 97 px — including the
- * centre of `addWidget`'s `kind` combobox at x 1311 — were unclickable.
- *
- * Reserving the band is the only fix that holds for a rail of any height: the window column stops at
- * the panel's outer edge, and a shell with no open panel keeps its authored layout byte-for-byte
- * (both sides answer `undefined`). The reserve carries the panel's own flush inset twice, once for
- * the region edge it sits on and once as the gap between it and the canvas.
- */
-export function layoutPanelReserveStyle(panels: LayoutProps["panels"]): React.CSSProperties {
-  const widest = (anchors: readonly Anchor[]) =>
-    anchors.reduce((reserved, anchor) => {
-      const panel = panels?.[anchor];
-      return panel?.visible && panel.tabs.length > 0 ? Math.max(reserved, panel.size ?? PANEL_DEFAULT_SIZE_PX) : reserved;
-    }, 0);
-  const left = widest(LAYOUT_LEFT_ANCHORS);
-  const right = widest(LAYOUT_RIGHT_ANCHORS);
-  return {
-    paddingLeft: left > 0 ? `calc(${left}px + 2 * var(--spacing-single))` : undefined,
-    paddingRight: right > 0 ? `calc(${right}px + 2 * var(--spacing-single))` : undefined,
-  };
-}
-
 const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, panels, mobilePanel, canvas, canvasStatus, canvasSkeleton, mobile = false, className = "" }) => (
   <UiMobileProvider mobile={mobile}>
     <GhostProvider>
@@ -163,9 +128,9 @@ const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, panels, mobi
               {/* 🎓️ No z-index here (was z-0): trapping this column in its own stacking context would make
                   windows unreachable by [data-introduction-elevated] — a window can only rise above the
                   fullscreen introduction veil if it participates in the root stacking context. */}
-              {/* 🛟️ Reserved, not overlaid — see {@link layoutPanelReserveStyle}: a docked panel's band is
-                  taken out of the window column so no interactive rail can end up underneath it. */}
-              <div data-slot="layout-canvas-column" className="flex flex-col flex-1 min-w-0 relative" style={layoutPanelReserveStyle(panels)}>
+              {/* 🛟️ The column stays the full region. Anchored panels are absolute siblings at z-panel,
+                  so they paint over the windows instead of pushing the column aside. */}
+              <div data-slot="layout-canvas-column" className="flex flex-col flex-1 min-w-0 relative">
                 <div className="flex flex-1 min-h-0 relative">
                   <div className={cn("flex-1 min-w-0 min-h-0 relative", chromeStatusBorderClass(canvasStatus))}>
                     {canvasStatus === "loading" || canvasStatus === "waiting" ? (canvasSkeleton ?? <CanvasSkeleton />) : canvas}

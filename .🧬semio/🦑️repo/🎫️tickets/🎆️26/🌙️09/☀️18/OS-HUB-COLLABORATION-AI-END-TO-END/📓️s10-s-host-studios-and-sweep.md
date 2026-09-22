@@ -357,6 +357,56 @@ reach them — but it would not help them anyway: `sourcing`'s `stockFromCatalog
 `Activate Window` rather than empty, which retires the §2.5 group-7 hypothesis: the empty labels were
 the staging skew, the `edits 0` is a separate, still-undiagnosed shape.
 
+### 2.8b Staleness proof for the three kinds still open (measured by mtime, 2026-09-22 02:20)
+
+The 20:11 re-activation predates §2.9's three fixes, so `space`, `playbook-module-procedural` and
+`norm` cannot be measured against it. Proven, not assumed:
+
+| source fix | source mtime | its staged/compiled artifact | artifact mtime |
+|---|---|---|---|
+| Home presence retirement (§2.9a) | `…🏠️home/…/👥️presence/🦀️.rs` **09-21 20:46** | `semio_s_plugin_space.wasm` | 09-21 **18:43** |
+| `TOOL_JOB_IDS` (§2.9b) | `…🌀️procedural/🦀️.rs` **09-21 20:37** | staged `⚙️playbook-module-procedural` | 09-21 **20:11** |
+| norm `snapshot` arg (§2.9c) | `…🌬️din16798/…/✏️editor/🦀️.rs` **09-21 20:48** | `semio_s_plugin_norm.wasm` | 09-21 **18:49** |
+
+Every fix is newer than every artifact that would have to carry it. A rebuild of exactly these three
+is queued (`📜️s10-restage4.sh`, ticket `20260922012853-69145-s10`).
+
+### 2.8c `#playbook`'s boot failure — the same presence root, folded in from the play grid
+
+The play grid's strict acceptance had `#playbook` failing at boot with
+`setContributions command failed: playbook presence local read requires a live exact local
+retirement owner`. That is **§2.9a's defect in a second app**: a presence DISPOSER is not a presence
+retirement OWNER, and `PresenceStore::local_read` fails closed while `local_retirement_factory` is
+`None`, so the first command whose ephemeral leg reads local presence is refused however correct the
+command is. `setContributions` is the first command `#playbook` dispatches.
+
+`📖️playbook` declares `Presence = NoPresence`, so the framework's own `NoPresence`-typed owners fit
+exactly (unlike 🪐️space's Home, which has a real `HomePresence` and needed a bounded owner written
+for that type — the same defect, the same week, two different shapes of fix).
+
+| file | change |
+|---|---|
+| `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/…/✏️editor/🦀️.rs` | `build_presence_local_root_retirement_factory` + `build_presence_peer_retirement_factory` |
+| `…/✏️editor/🧪️tests/🔬️unit/🦀️.rs` | new law `set_contributions_boots_because_presence_declares_its_retirement_owners` — asserts both owners are declared **and drives the real `setContributions` through the registered app**, because a declaration-only assertion would not catch a regression in `local_read` |
+
+**The law is GREEN**, and the suite moved the right way (`🗑️generated/s10-playbook-suite.txt`):
+
+| | passed | failed |
+|---|---|---|
+| without this change | 140 | 18 |
+| **with it** | **142** | **16** |
+
+A/B'd by removing the two hooks, re-running, and restoring — so the change **fixes two and breaks
+none**, and the remaining 16 are pre-existing (schema/text round-trip and structural command tests,
+none presence-related).
+
+**One blocking peer red was fixed to get there**: the crate's lib-test target did not BUILD at all —
+`…/🧪️tests/🔬️unit/🦀️.rs:350` put `&ArtifactChild<SemioDocumentSnapshot>` and
+`&ArtifactChild<SemioFlowSnapshot>` in one array. It is committed (present in `HEAD`), so it was a
+standing red blocking the whole suite, not a peer's in-flight edit. The two common fields are now
+projected out before the loop, exactly as the `child_id` loop three lines below already did; the
+assertion is unchanged.
+
 ### 2.9 Three more roots found behind the ones this slice fixed
 
 Each appeared only once the fix in front of it stopped refusing first — the honest sign that the

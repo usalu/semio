@@ -90,7 +90,7 @@ async fn a_window_request_materialises_exactly_its_own_range() {
     let view = viewport(48, vec![request(None, 4, 3)]);
     let tree = build(&view);
     let section = layers_section(&tree);
-    assert_eq!(window_of(section), TreeWindow { total: GIS_MAP_LAYER_IDS.len() as u32, offset: 4 });
+    assert_eq!(window_of(section), TreeWindow { row_extent: Default::default(), total: GIS_MAP_LAYER_IDS.len() as u32, offset: 4 });
     let expected: Vec<&str> = GIS_MAP_LAYER_IDS[4..7].iter().map(|(id, _, _)| *id).collect();
     assert_eq!(row_keys(section), expected, "exactly entries [4, 7) keyed by the raw layer id");
 }

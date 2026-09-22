@@ -349,6 +349,11 @@ impl<E: Clone> InputState<E> {
         self.hits.resolve(x, y)
     }
 
+    /// 📍️ Identifies the winning hit in the last complete frame's ordered registry.
+    pub fn hit_index_at(&self, x: f32, y: f32) -> Option<usize> {
+        self.hits.resolved.iter().rposition(|target| target.rect.contains(x, y))
+    }
+
     pub fn update_hover(&mut self, x: f32, y: f32) {
         self.pointer_x = x;
         self.pointer_y = y;
@@ -779,7 +784,16 @@ pub fn retained_hit_registration(
         UiNode::Button(button) => entry(HitKind::Button, button.id.clone().unwrap_or_else(|| button.action.action.clone()), Some(button.action.clone()), rect),
         UiNode::Input(input) => entry(HitKind::Input, input.id.clone(), None, rect),
         UiNode::Select(select) => entry(HitKind::Select, select.id.clone(), None, rect),
-        UiNode::Toggle(toggle) => entry(HitKind::Toggle, toggle.id.clone(), None, rect),
+        UiNode::Toggle(toggle) => entry(
+            HitKind::Toggle,
+            toggle.id.clone(),
+            None,
+            if toggle.appearance == ui_contract::ToggleAppearance::Checkbox {
+                crate::wgpu::layout::tree_checkbox_hit_rect(rect, metrics.inline)
+            } else {
+                rect
+            },
+        ),
         UiNode::Slider(slider) => Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::Slider, control_id: slider.id.clone(), action: None, drag_axis: Some(DragAxis::Horizontal), drag_data: None }),
         // 🎛️ The three kinds a retained body used to register NOTHING for — so a press on a
         // generation's stepper, ring or icon field resolved the WINDOW beneath it and the retained

@@ -1608,8 +1608,13 @@ impl PagedDocumentArchiveDecode {
                 _ => None,
             };
             if let Some(field) = field {
-                if let Some(released) = Self::close_string(field, maximum_bytes) {
-                    return (false, released);
+                match Self::close_string(field, maximum_bytes) {
+                    Some(0) => return (false, 0),
+                    Some(released) => {
+                        self.close_field += 1;
+                        return (false, released);
+                    }
+                    None => {}
                 }
                 self.close_field += 1;
                 return (false, 0);
@@ -1803,7 +1808,11 @@ impl DecodedAppCommandOwner {
         let Some(command) = self.command.as_mut() else {
             return (true, 0, 0);
         };
-        if self.archive_close.is_none() {
+        // 🔒️ `close_stage == 0` is the latch. Without it a drained archive was rebuilt from the
+        // emptied `DocumentArchivePack` on the very next turn, reported terminal, was dropped, and
+        // was rebuilt again — so `LoadDocumentArchive` never reached the shell release below and no
+        // decoded archive owner ever became terminal.
+        if self.archive_close.is_none() && self.close_stage == 0 {
             if let AppCommand::LoadDocumentArchive { archive, .. } = command {
                 self.archive_close = Some(PagedDocumentArchiveDecode::closing(std::mem::take(archive)));
             }
@@ -1814,6 +1823,7 @@ impl DecodedAppCommandOwner {
                 return (false, usize::from(released != 0), released);
             }
             drop(self.archive_close.take());
+            self.close_stage = self.close_stage.saturating_add(1);
             return (false, 1, 0);
         }
         // 🧾️ A prepared-op roster is a LIST, not a fixed field slot, so it drains before the flat

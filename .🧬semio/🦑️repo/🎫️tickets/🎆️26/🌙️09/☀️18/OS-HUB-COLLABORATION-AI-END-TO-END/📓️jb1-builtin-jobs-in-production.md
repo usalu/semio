@@ -162,6 +162,7 @@ now takes the id.
 | `cargo check -p semio-s-plugin-wfc -p semio-s-plugin-note -p semio-s-artifact-wfc-{bitmap,2d,3d} --target wasm32-wasip2 --features …/component-app-assembly` (16:10) | **0 errors**, 98 warnings, `Finished in 2m 01s` | `🗑️generated/jb1-check-wasm-wfc-note.txt` |
 | `cargo check -p semio-s-artifact-fem-{2d,3d} --features …/component-app-assembly` (16:17) | **0 errors** — the two other `BoundedJobFactory` registrations take the new `restored` parameter | `🗑️generated/jb1-check-fem-factories.txt` |
 | `cargo check -p semio-framework-plugin --lib` (16:33, after a coordinator red report) | **0 errors**, 45 warnings | — |
+| `cargo check -p semio-framework-plugin --lib` (21:48, `CARGO_INCREMENTAL=0`, cold, 22m 00s) | **0 errors**, 48 warnings — the shared crate is green as this slice hands over | — |
 
 Three separate red windows were observed and none of them survived:
 

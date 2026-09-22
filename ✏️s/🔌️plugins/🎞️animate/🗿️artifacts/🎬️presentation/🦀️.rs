@@ -67,8 +67,23 @@ pub struct FigureTileDraft {
 }
 //#endregion 🔖️Domain
 
+/// 🖼️ The transport URL of the shared demo figure and the crop of it the deck covers.
+///
+/// It names a REAL shipped asset: `🧰️framework/🔨️modules/🖼️assets/🖼️images/🏙️architecture/🏘️habitat-67.png`
+/// (2560 × 1707), which `semioAssetsVitePlugin` serves — and a release build copies — at
+/// `/🖼️assets/*` for every host that mounts this app (the `semio-tech play` grid, this plugin's own
+/// playground, and the CDN bundle alike). The previous `/🖼️bauteilbörse.png` existed nowhere in the
+/// repo, so every host answered the figure request with its SPA fallback (`200 text/html`) and the
+/// booted deck rendered fifteen blank tiles — see the law
+/// `the_demo_figure_source_names_a_shipped_asset`.
+pub const DEMO_FIGURE_SRC: &str = "/🖼️assets/🖼️images/🏙️architecture/🏘️habitat-67.png";
+
+/// 📐️ `DEMO_FIGURE_SRC`'s own pixel dimensions — the crop maths needs the physical aspect.
+pub const DEMO_FIGURE_PIXEL_WIDTH: f64 = 2560.0;
+pub const DEMO_FIGURE_PIXEL_HEIGHT: f64 = 1707.0;
+
 pub fn default_figure_tile_source() -> FigureTileSource {
-    FigureTileSource { src: "/🖼️bauteilbörse.png".into(), kind: "figure".into(), frame: FigureTileFrame { x: 0.127, y: 0.1, width: 0.746, height: 0.75 }, source_aspect: Some(1222.0 / 896.0), pdf_page: None }
+    FigureTileSource { src: DEMO_FIGURE_SRC.into(), kind: "figure".into(), frame: FigureTileFrame { x: 0.127, y: 0.1, width: 0.746, height: 0.75 }, source_aspect: Some(DEMO_FIGURE_PIXEL_WIDTH / DEMO_FIGURE_PIXEL_HEIGHT), pdf_page: None }
 }
 
 pub fn default_presentation_snapshot() -> PresentationSnapshot {

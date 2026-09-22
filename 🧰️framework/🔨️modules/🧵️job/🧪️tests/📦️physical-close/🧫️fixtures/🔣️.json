@@ -24,11 +24,12 @@
   ],
   "expected": {
     "refusedItems": 0,
-    "refusedBytes": 0,
+    "refusedBytes": 16383,
     "retainedPointer": true,
     "releasedItems": 1,
-    "releasedBytes": 16384,
+    "releasedBytes": 1,
     "remainingLogicalBytes": 0,
-    "remainingPages": 0
+    "remainingPages": 0,
+    "chargedTotal": 16384
   }
 }

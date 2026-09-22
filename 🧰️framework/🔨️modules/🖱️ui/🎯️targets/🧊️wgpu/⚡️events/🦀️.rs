@@ -2254,6 +2254,9 @@ impl EventRouter {
             UiEvent::Paste { text } => commands.extend(self.route_text_insert(tree, text)),
             UiEvent::Ime(ime_event) => commands.extend(self.route_ime(tree, ime_event)),
             UiEvent::Scroll { x, y, delta_x, delta_y, .. } => {
+                if self.overlays.topmost().filter(|overlay| overlay.kind == OverlayKind::SelectPopup).is_some_and(|overlay| crate::wgpu::select::scroll_retained_select_at(tree, overlay.root, *x, *y, *delta_y)) {
+                    return commands;
+                }
                 if let Some(id) = self.hit_test(tree, root, *x, *y) {
                     if let Some(cmd) = self.scene_command(tree, id, event) {
                         commands.push(cmd);
@@ -2402,6 +2405,9 @@ impl EventRouter {
     fn set_select_highlight(&mut self, tree: &mut UiTree, id: NodeId, index: Option<usize>) {
         if let Some(node) = tree.node_mut(id) {
             node.state.highlighted = index;
+            if let (Some(index), Some(popup)) = (index, node.state.select_popup) {
+                node.state.scroll_offset.1 = select::select_revealed_scroll(popup, index, &crate::wgpu::theme::Theme::default());
+            }
         }
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
     }

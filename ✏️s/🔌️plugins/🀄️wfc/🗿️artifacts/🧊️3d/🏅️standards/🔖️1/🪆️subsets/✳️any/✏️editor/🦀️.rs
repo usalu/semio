@@ -15,14 +15,15 @@
 
 use crate::editor::wfc3d::config::{wfc3d_active_tile_id, Wfc3dConfig, Wfc3dConfigMutation};
 use crate::editor::wfc3d::modes::edit;
+use crate::editor::wfc3d::modes::edit::tools::fill;
 use crate::editor::wfc3d::modes::edit::windows::{graph, preview};
-use crate::editor::wfc3d::transient::solved_transient;
+use crate::editor::wfc3d::transient::{SetSolve, Wfc3dTransient, Wfc3dTransientMutation};
 use crate::mutations::{change_seed, change_tile_media, change_tile_weight, connect_slots, create_rule, create_slot, create_tile, delete_rule, delete_slot, delete_tile, disconnect_slots, move_slot, pin_slot, resize_slot, unpin_slot};
 use crate::schema::snapshot::{canonical_edge_index, canonical_insertion_index, canonical_rule_index, canonical_slot_index, canonical_tile_index, GraphRule, Slot3d, SlotEdge, Tile, TileMedia3d};
 use crate::{Wfc3dMutation, Wfc3dSnapshot, WFC3D_DIALECT, WFC3D_DOCUMENT_SCHEMA};
-use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
-    Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, SelectionMethod, SelectionMode, SelectionSpec,
+use semio_framework_plugin::{Effect, RequestId, ToolRef, ToolRunJob, ToolRunJobPurpose, ToolRunJobRequest, ToolRunView, 
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
+    Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, SelectionMethod, SelectionMode, SelectionSpec,
 };
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::EngineHandles;
@@ -70,6 +71,10 @@ pub enum Wfc3dEditorCommand {
     ChangeCamera { x: f64, y: f64, zoom: f64 },
     #[dsl(key = "change-active-tile")]
     ChangeActiveTile { tile_id: String },
+    #[dsl(key = "solve")]
+    Solve,
+    #[dsl(key = "commit-fill")]
+    CommitFill { payload_json: String },
     #[dsl(key = "set-active-example")]
     SetActiveExample { example_id: String },
     /// 🕹️ The NodeGraph canvas' OWN gesture channel: dragging a node and completing a wire both
@@ -119,6 +124,8 @@ pub fn wfc3d_command_id(command: &Wfc3dEditorCommand) -> &'static str {
         Wfc3dEditorCommand::DeleteRule { .. } => "delete-rule",
         Wfc3dEditorCommand::ChangeCamera { .. } => "change-camera",
         Wfc3dEditorCommand::ChangeActiveTile { .. } => "change-active-tile",
+        Wfc3dEditorCommand::Solve => "solve",
+        Wfc3dEditorCommand::CommitFill { .. } => fill::COMMIT_FILL_ACTION_ID,
         Wfc3dEditorCommand::SetActiveExample { .. } => WFC_3D_SET_ACTIVE_EXAMPLE,
         Wfc3dEditorCommand::NodeGraphEdit { .. } => WFC_3D_NODE_GRAPH_EDIT,
         Wfc3dEditorCommand::NodeGraphViewport { .. } => WFC_3D_NODE_GRAPH_VIEWPORT,
@@ -183,6 +190,8 @@ pub const WFC_3D_RETAINED_TOOL_IDS: &[&str] = &[
     "delete-rule",
     "change-camera",
     "change-active-tile",
+    "solve",
+    fill::COMMIT_FILL_ACTION_ID,
     WFC_3D_SET_ACTIVE_EXAMPLE,
     WFC_3D_NODE_GRAPH_EDIT,
     WFC_3D_NODE_GRAPH_VIEWPORT,
@@ -223,6 +232,8 @@ const WFC_3D_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublic
     artifact_route("delete-rule"),
     config_route("change-camera"),
     config_route("change-active-tile"),
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "solve", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: fill::COMMIT_FILL_ACTION_ID, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Transient] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: WFC_3D_SET_ACTIVE_EXAMPLE, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
     artifact_route(WFC_3D_NODE_GRAPH_EDIT),
     config_route(WFC_3D_NODE_GRAPH_VIEWPORT),
@@ -281,8 +292,18 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
             ));
         }
         let emit = command_emit(input.command, input.snapshot, input.config)?;
+        let transient = match input.command {
+            Wfc3dEditorCommand::CommitFill { payload_json } => {
+                let payload = fill::decode_fill_payload(payload_json.as_bytes()).ok_or_else(|| Fault::from("wfc3d-commit-fill-payload"))?;
+                payload.set_solve_mutations()
+            }
+            _ => Vec::new(),
+        };
         self.completed = true;
-        Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
+        Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral {
+            emit,
+            ephemeral: EphemeralEmit { presence: Vec::new(), transient, window_transient: Vec::new() },
+        })
     }
 }
 
@@ -386,8 +407,8 @@ impl ArtifactEditor for Wfc3dEditor {
     type DraftMutation = NoDraftMutation;
     type Presence = NoPresence;
     type PresenceMutation = NoPresenceMutation;
-    type Transient = NoTransient;
-    type TransientMutation = NoTransientMutation;
+    type Transient = Wfc3dTransient;
+    type TransientMutation = Wfc3dTransientMutation;
     type Command = Wfc3dEditorCommand;
 
     const DIALECT: Dialect = WFC3D_DIALECT;
@@ -405,7 +426,7 @@ impl ArtifactEditor for Wfc3dEditor {
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
     /// 🗃️ The bounded retirement catalog every store lane is released THROUGH: a store built without
@@ -443,7 +464,11 @@ impl ArtifactEditor for Wfc3dEditor {
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+        Some(semio_framework_plugin::bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
+    }
+
+    fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
     }
 
     /// 🏗️ Admits the whole-document replacement `setActiveExample`'s [`Effect::LoadDocument`] drives
@@ -541,7 +566,7 @@ impl ArtifactEditor for Wfc3dEditor {
         tools: [
             "change-seed", "create-slot", "delete-slot", "move-slot", "resize-slot", "connect-slots", "disconnect-slots", "pin-slot", "unpin-slot",
             "create-tile", "delete-tile", "change-tile-weight", "change-tile-media", "create-rule", "delete-rule",
-            "change-camera", "change-active-tile", "setActiveExample", "nodeGraphEdit", "nodeGraphViewport"
+            "change-camera", "change-active-tile", "solve", "commit-fill", "setActiveExample", "nodeGraphEdit", "nodeGraphViewport"
         ]
     }
 
@@ -599,6 +624,11 @@ impl ArtifactEditor for Wfc3dEditor {
             "delete-rule" => Ok(Wfc3dEditorCommand::DeleteRule { id: text("id").unwrap_or_default() }),
             "change-camera" => Ok(Wfc3dEditorCommand::ChangeCamera { x: number("x").unwrap_or_default(), y: number("y").unwrap_or_default(), zoom: number("zoom").filter(|zoom| *zoom > 0.0).unwrap_or(1.0) }),
             "change-active-tile" => Ok(Wfc3dEditorCommand::ChangeActiveTile { tile_id: text("tileId").unwrap_or_default() }),
+            "solve" => Ok(Wfc3dEditorCommand::Solve),
+            action if action == fill::COMMIT_FILL_ACTION_ID => {
+                let payload_json = text("payloadJson").or_else(|| text("payload_json")).or_else(|| text("value")).ok_or_else(|| Fault::from("wfc3d-commit-fill-args"))?;
+                Ok(Wfc3dEditorCommand::CommitFill { payload_json })
+            }
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc3d.action.unknown"), format!("wfc3d declares no action '{other}'"))),
         }
     }
@@ -618,7 +648,23 @@ impl ArtifactEditor for Wfc3dEditor {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        render_body(body_key, doc.snapshot, cfg.snapshot)
+        render_body(body_key, doc.snapshot, cfg.snapshot, &Wfc3dTransient::default(), None)
+    }
+
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        _view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        render_body(body_key, doc.snapshot, cfg.snapshot, transient.snapshot, doc.tool_run())
+    }
+
+    fn build_tool_run_job(request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
+        fill::build_tool_run_job(request)
     }
 }
 
@@ -640,6 +686,12 @@ pub fn command_emit(command: &Wfc3dEditorCommand, document: &Wfc3dSnapshot, conf
             Wfc3dEditorCommand::ChangeActiveTile { tile_id } => {
                 let emitted = vec![Wfc3dConfigMutation::ChangeActiveTile(crate::editor::wfc3d::config::ChangeActiveTile { tile_id: tile_id.clone() })];
                 return Ok(Emit { config_mutations: emitted, description: Some("Arm tile".into()), ..Default::default() });
+            }
+            Wfc3dEditorCommand::Solve => {
+                return Ok(Emit { effects: fill::start_fill_effects(), description: Some("Solve".into()), ..Default::default() });
+            }
+            Wfc3dEditorCommand::CommitFill { .. } => {
+                return Ok(Emit { description: Some("Commit fill".into()), ..Default::default() });
             }
             Wfc3dEditorCommand::SetActiveExample { example_id } => {
                 let next = example_snapshot(example_id)?;
@@ -707,13 +759,17 @@ pub fn command_emit(command: &Wfc3dEditorCommand, document: &Wfc3dSnapshot, conf
 /// feeding it here made a pan or a wheel on the graph canvas warp the 3d view (measured live:
 /// one graph pan put the preview inside a tile). `camera_json`'s own framing distance is the
 /// pose authority.
-pub fn render_body(body_key: &str, document: &Wfc3dSnapshot, config: &Wfc3dConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+pub fn render_body(body_key: &str, document: &Wfc3dSnapshot, config: &Wfc3dConfig, transient: &Wfc3dTransient, tool_run: Option<&ToolRunView>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     match body_key {
         graph::WFC_GRAPH_BODY => {
             let camera = graph::GraphCamera { x: config.camera_x, y: config.camera_y, zoom: config.camera_zoom };
             graph::render(&Wfc3dGraphView(document), camera, &[]).map(semio_framework_plugin::built_to_component_tree)
         }
-        preview::WFC_3D_PREVIEW_BODY => preview::render(document, &solved_transient(document), 1.0).map(semio_framework_plugin::built_to_component_tree),
+        preview::WFC_3D_PREVIEW_BODY => {
+            let fill = preview::live_fill_payload(tool_run);
+            let paint = fill.as_ref().map(|payload| payload.clone().into_transient()).unwrap_or_else(|| transient.clone());
+            preview::render(document, &paint, 1.0).map(semio_framework_plugin::built_to_component_tree)
+        }
         _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
     }
 }
@@ -970,8 +1026,12 @@ pub fn create_wfc3d_editor() -> semio_framework_plugin::AppDefinition {
         .icon_id("network")
         .mode_def(edit::definition())
         .default_mode_id(edit::WFC_3D_EDIT_MODE_ID)
+        .tool(fill::definition())
+        .mode_tools(edit::WFC_3D_EDIT_MODE_ID, vec![semio_framework_plugin::resolve_ready(ToolRef::new(fill::TOOL_ID))])
         .window_kind_def(graph::definition())
         .window_kind_def(preview::definition())
+        .default_layout(edit::layout())
+        .window_kind_actions(preview::WFC_3D_PREVIEW_WINDOW, vec![wfc3d_action("solve", "Solve", "Lösen", ActionKind::Mutation)])
         .interaction(InteractionDefinition {
             id: WFC_3D_INTERACTION_GRAPH.into(),
             label: LocalizedLabel::native("Slots", "Slots"),
@@ -983,6 +1043,7 @@ pub fn create_wfc3d_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_interactions(graph::WFC_GRAPH_WINDOW, vec![InteractionRef::new(WFC_3D_INTERACTION_GRAPH)])
         .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
         .action_destructive("setActiveExample")
+        .action_destructive("delete-slot")
         .action_args("setActiveExample", vec![
             ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                 ActionArgOption::new(crate::examples::two_room_corridor::ID, crate::examples::two_room_corridor::label()),
@@ -1015,6 +1076,9 @@ pub fn create_wfc3d_editor() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("delete-rule", semio_framework::InteractiveJobClassification::Migrated)
         .action_interactive_job("change-camera", semio_framework::InteractiveJobClassification::Migrated)
         .action_interactive_job("change-active-tile", semio_framework::InteractiveJobClassification::Migrated)
+        .action_interactive_job("solve", semio_framework::InteractiveJobClassification::Migrated)
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(fill::COMMIT_FILL_ACTION_ID, LocalizedLabel::native("Commit Fill", "Füllen übernehmen"), ActionKind::Mutation) })
+        .action_interactive_job(fill::COMMIT_FILL_ACTION_ID, semio_framework::InteractiveJobClassification::Migrated)
         .action_args("create-tile", vec![
             ActionArgDef::text("id", LocalizedLabel::native("Id", "Id")).required(),
             ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")),

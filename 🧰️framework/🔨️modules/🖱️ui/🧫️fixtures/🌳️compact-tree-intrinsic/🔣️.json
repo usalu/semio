@@ -1,0 +1,362 @@
+{
+  "schemaVersion": 1,
+  "surface": "compact-intrinsic",
+  "viewports": [
+    720,
+    1400
+  ],
+  "width": 300,
+  "visibleRowHeights": [
+    14.4,
+    22.4,
+    16,
+    22.4,
+    14.4
+  ],
+  "expectedHeight": 89.6,
+  "nodes": [
+    {
+      "id": 1,
+      "key": "root",
+      "component": {
+        "type": "tree",
+        "presentation": "compact"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        2
+      ]
+    },
+    {
+      "id": 2,
+      "key": "section",
+      "component": {
+        "type": "treeSection",
+        "defaultOpen": true
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        3,
+        10
+      ]
+    },
+    {
+      "id": 3,
+      "key": "grid",
+      "component": {
+        "type": "treeItem",
+        "label": "Grid",
+        "defaultOpen": true
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        4,
+        6,
+        8
+      ]
+    },
+    {
+      "id": 4,
+      "key": "visible",
+      "component": {
+        "type": "treeItem",
+        "label": "Visible"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        5
+      ]
+    },
+    {
+      "id": 5,
+      "key": "visible-control",
+      "component": {
+        "type": "toggle",
+        "on": true,
+        "icon": "check",
+        "appearance": "checkbox"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": []
+    },
+    {
+      "id": 6,
+      "key": "mode",
+      "component": {
+        "type": "treeItem",
+        "label": "Mode"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        7
+      ]
+    },
+    {
+      "id": 7,
+      "key": "mode-control",
+      "component": {
+        "type": "select",
+        "value": "solid",
+        "items": [
+          {
+            "value": "solid",
+            "label": "Solid"
+          }
+        ]
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": []
+    },
+    {
+      "id": 8,
+      "key": "spacing",
+      "component": {
+        "type": "treeItem",
+        "label": "Spacing"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        9
+      ]
+    },
+    {
+      "id": 9,
+      "key": "spacing-control",
+      "component": {
+        "type": "slider",
+        "value": 1,
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": []
+    },
+    {
+      "id": 10,
+      "key": "sun",
+      "component": {
+        "type": "treeItem",
+        "label": "Sun",
+        "defaultOpen": false
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        11
+      ]
+    },
+    {
+      "id": 11,
+      "key": "intensity",
+      "component": {
+        "type": "treeItem",
+        "label": "Intensity"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        12
+      ]
+    },
+    {
+      "id": 12,
+      "key": "intensity-control",
+      "component": {
+        "type": "slider",
+        "value": 0.85,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": []
+    }
+  ],
+  "publicationSequence": [
+    {
+      "generation": 1,
+      "presentation": "compact",
+      "height": 89.6,
+      "result": "presented"
+    },
+    {
+      "generation": 2,
+      "presentation": "standard",
+      "height": 120,
+      "result": "discarded"
+    },
+    {
+      "generation": 3,
+      "presentation": "compact",
+      "heightBeforeLayout": 89.6,
+      "result": "pending"
+    }
+  ]
+}

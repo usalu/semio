@@ -73,9 +73,11 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
         let (control, (bounds, target)) = shell
             .retained_scene_hits
             .iter()
-            .find(|(_, (_, target))| target.surface_id == surface)
+            .find(|(_, (_, target))| matches!(&target.key, ui_wgpu::wgpu::NodeKey::Explicit(key) if key == surface))
             .map(|(control, retained)| (control.clone(), retained.clone()))
             .unwrap_or_else(|| panic!("accepted ComponentScene hit for {surface}"));
+        let expected_window = documents.iter().find(|(authored, _, _, _, _)| authored == surface).map(|(_, window, _, _, _)| window).expect("authored surface owner");
+        assert_eq!((&target.window_id, &target.surface_id), (expected_window, expected_window), "the component host keeps its document owner while the authored pane identity remains the keyed node");
         assert!(shell.node_graph_states.contains_key(&target.host_id) || shell.tiled_map_states.contains_key(&target.host_id) || shell.board2d_states.contains_key(&target.host_id), "{surface} state is keyed by its accepted component host");
         assert_eq!(shell.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Surface, "{} live {surface}", case["name"]);
         assert!(shell.wheel_reaches_scene_surface(x, y, &input, &theme), "{} live wheel {surface}", case["name"]);

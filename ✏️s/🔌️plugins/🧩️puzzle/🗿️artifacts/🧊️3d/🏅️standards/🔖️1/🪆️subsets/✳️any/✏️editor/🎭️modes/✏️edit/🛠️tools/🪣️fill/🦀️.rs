@@ -10,7 +10,7 @@ use crate::editor::puzzle3d::precompute::fill::{fill_run_placements, FillPrepara
 use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, CollisionBody};
 use crate::editor::puzzle3d::precompute::{brush_mesh_digest, shared_brush_mesh};
 use crate::editor::puzzle3d::terminology::{puzzle3d_fill_run_counters, puzzle3d_fill_run_reasons, puzzle3d_fill_run_stages, puzzle3d_fill_run_unit, Puzzle3dLabels};
-use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_distribution_group, puzzle3d_fallback_mesh_buffers, puzzle3d_fixture_from_snapshot, scene_config, Puzzle3dPlayApp, Puzzle3dScene};
+use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_distribution_group, puzzle3d_fallback_mesh_buffers, puzzle3d_fixture_from_snapshot, scene_config, Puzzle3dPlayApp, Puzzle3dScene, PUZZLE3D_FALLBACK_MESH_KIND};
 use crate::standards::v1::subsets::any::schema::{FillRunCheckpoint, SceneConfig};
 use semio_framework_job::{allocate_operation_id, Generation, InteractiveJob, InteractiveJobCloseStep, Operation, RevisionId, StepContext, StepOutcome};
 use semio_framework_plugin::{ActionDescriptor, EditorApp, Fault, LocalizedLabel, ToolDefinition, ToolRunJobPurpose, ToolRunJobRequest, ToolRunRetargetableJob, ToolRunView, WindowMeasure};
@@ -143,7 +143,7 @@ enum FillToolRunTarget {
 }
 
 /// 🥽️ The bounded collision mesh preparation of a fill tool run job: one mesh identity per unit, real
-/// geometry from the process-wide derived mesh store or the scaled box fallback, digested together with the
+/// geometry from the process-wide derived mesh store or the built-in box's own geometry, digested together with the
 /// base revision, contact tolerance, seed and weights into the run's `inputs`.
 struct FillToolRunPreparation {
     identity: ToolRunIdentity,
@@ -191,13 +191,14 @@ impl Puzzle3dFillToolRunJob {
         if url != main::VORTEX_MARKER_MESH_KIND {
             let (body, source) = match shared_brush_mesh(&url).and_then(|(positions, indices)| Some((collision_body_from_buffers(&positions, &indices)?, brush_mesh_digest(&positions, &indices)))) {
                 Some(real) => real,
-                None => {
+                None if url == PUZZLE3D_FALLBACK_MESH_KIND => {
                     let fallback = preparation.fallback.get_or_insert_with(|| {
                         let (positions, indices) = puzzle3d_fallback_mesh_buffers();
                         collision_body_from_buffers(&positions, &indices).expect("the scaled box fallback is a valid collision body")
                     });
                     (fallback.clone(), String::new())
                 }
+                None => return false,
             };
             preparation.digest.extend_from_slice(url.as_bytes());
             preparation.digest.extend_from_slice(source.as_bytes());
@@ -310,3 +311,7 @@ impl InteractiveJob for Puzzle3dFillToolRunJob {
     }
 }
 //#endregion 🔖️Jobs
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

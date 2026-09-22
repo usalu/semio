@@ -11,10 +11,11 @@
 //! through its own cache keyed by `dataUrl`. Getting that shape wrong renders a silent label-only
 //! layer rather than an error — which is exactly what a `Bitmap` tile used to do here.
 
+use crate::editor::wfc2d::modes::edit::tools::fill::{self, Wfc2dFillTickPayload};
 use crate::editor::wfc2d::transient::{assigned_tile, Wfc2dTransient};
 use crate::schema::snapshot::{Wfc2dColor, Wfc2dPathSegment, Wfc2dTile, Wfc2dTileMedia};
 use crate::Wfc2dSnapshot;
-use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, LocalizedLabel, SurfaceKind, ToolRunView, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const WFC_2D_PREVIEW_WINDOW: &str = "wfc-2d-preview";
@@ -184,12 +185,21 @@ fn slot_layers(slot: &crate::schema::snapshot::Wfc2dSlot, tile: Option<&Wfc2dTil
     }
 }
 
+/// 🖼️ Live fill payload while the run is non-terminal; otherwise `None`.
+pub fn live_fill_payload(tool_run: Option<&ToolRunView>) -> Option<Wfc2dFillTickPayload> {
+    let run = tool_run.filter(|run| run.tool_id == fill::TOOL_ID && !run.state.is_terminal())?;
+    fill::decode_fill_payload(run.payload.as_deref()?)
+}
+
 /// 🖼️ The whole board's layer array — one entry per slot, in document order.
-pub fn preview_layers_json(document: &Wfc2dSnapshot, transient: &Wfc2dTransient) -> String {
+pub fn preview_layers_json(document: &Wfc2dSnapshot, transient: &Wfc2dTransient, fill: Option<&Wfc2dFillTickPayload>) -> String {
     let fit = preview_fit(document);
     let mut layers: Vec<String> = Vec::new();
     for slot in &document.slots {
-        let tile_id = assigned_tile(transient, &slot.id).map(str::to_string).or_else(|| slot.pinned_tile_id.clone());
+        let tile_id = fill
+            .and_then(|payload| payload.assignments.get(&slot.id).cloned().flatten())
+            .or_else(|| assigned_tile(transient, &slot.id).map(str::to_string))
+            .or_else(|| slot.pinned_tile_id.clone());
         let tile = tile_id.and_then(|id| document.tiles.iter().find(|tile| tile.id == id));
         slot_layers(&fitted_slot(slot, fit), tile, &mut layers);
     }
@@ -198,8 +208,9 @@ pub fn preview_layers_json(document: &Wfc2dSnapshot, transient: &Wfc2dTransient)
 //#endregion 🔖️Paint
 
 //#region 🔖️Render
-pub fn render(document: &Wfc2dSnapshot, transient: &Wfc2dTransient, camera_x: f64, camera_y: f64, zoom: f64) -> UiAssemblyResult<BuiltNode> {
-    let layers = preview_layers_json(document, transient);
+pub fn render(document: &Wfc2dSnapshot, transient: &Wfc2dTransient, tool_run: Option<&ToolRunView>, camera_x: f64, camera_y: f64, zoom: f64) -> UiAssemblyResult<BuiltNode> {
+    let fill = live_fill_payload(tool_run);
+    let layers = preview_layers_json(document, transient, fill.as_ref());
     scene_surface(WFC_2D_PREVIEW_SURFACE, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene::base(camera_x, camera_y, zoom, layers))
 }
 //#endregion 🔖️Render

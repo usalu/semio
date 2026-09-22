@@ -176,11 +176,19 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 // registration this test guarded is dropped along with `.example_source(...)` (see the doc comment
 // on `create_dag_app`'s `.build_definition()` call), not silently — reported in the migration report.
 
+/// 🪟️ Every verb this app declares must be DISPATCHABLE from a window kind. Since ticket
+/// 26/09/18 slice DS1 an app-level `.action_with(...)` is no longer cloned into every
+/// `WindowKindDefinition.actions` (the copy made a package descriptor grow as
+/// `apps × window kinds × actions`); the union a shell actually offers is
+/// `semio_framework::window_kind_actions` — the same predicate the plugin host itself uses
+/// (`🔌️plugin/🦀️.rs:7520`). Reading `window.actions` alone now sees only the rows a window
+/// claims for itself, so this law reads through the resolver instead.
 #[semio_framework_async_macros::async_test]
 async fn every_declared_action_is_registered() {
     let definition = create_dag_app();
+    let dispatchable: Vec<String> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window).into_iter().map(|action| action.id.clone())).collect();
     for command in ["addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "patchDagNodes", "nodeGraphViewport", "graphPointerDown"] {
-        assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
+        assert!(dispatchable.iter().any(|id| id == command), "registry declares {command}; dispatchable: {dispatchable:?}");
     }
 }
 

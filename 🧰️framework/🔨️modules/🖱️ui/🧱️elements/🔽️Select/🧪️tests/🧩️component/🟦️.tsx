@@ -5,6 +5,8 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectSeparator, SelectTrigger, SelectValue, resolveSelectPlacement } from "../../🟦️.tsx";
 import { Dialog, DialogContent, DialogPortal, DialogTitle } from "../../../💬️Dialog/🟦️.tsx";
+import selectPopupGeometryFixture from "../../../../🧫️fixtures/🔽️select-popup-geometry/🔣️.json";
+import selectPopupGeometrySchema from "../../../../🧬️schema/🔽️select-popup-geometry/🔣️.json";
 import retainedSelectOriginFixture from "../../../../🧫️fixtures/🔽️retained-select-origin/🔣️.json";
 import retainedSelectOriginSchema from "../../../../🧬️schema/🔽️retained-select-origin/🔣️.json";
 import retainedSelectAccessibilityFixture from "../../../../🧫️fixtures/♿️retained-select-accessibility/🔣️.json";
@@ -120,6 +122,42 @@ describe("Select", () => {
         view.unmount();
         root.remove();
       }
+    }
+  });
+
+  it("keeps the measured popup minimum, border, scroll bands, viewport, and selected-row reveal contract", async () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(selectPopupGeometrySchema);
+    expect(validate(selectPopupGeometryFixture), JSON.stringify(validate.errors)).toBe(true);
+    const [normal, constrained] = selectPopupGeometryFixture.cases;
+    expect(normal.popupWidth).toBe(Math.max(selectPopupGeometryFixture.triggerWidth, selectPopupGeometryFixture.minimumContentWidth));
+    expect(normal.popupHeight).toBe(selectPopupGeometryFixture.borderWidth * 2 + selectPopupGeometryFixture.scrollBandHeight * 2 + normal.scrollViewportHeight);
+    expect(constrained.popupHeight).toBe(selectPopupGeometryFixture.borderWidth * 2 + selectPopupGeometryFixture.scrollBandHeight * 2 + constrained.scrollViewportHeight);
+    expect(constrained.initialScroll + constrained.wheelDelta).toBeGreaterThan(constrained.scrollAfterWheel);
+
+    const scrollIntoView = vi.fn();
+    const descriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollIntoView");
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoView });
+    try {
+      render(
+        <Select id="select-popup-geometry" defaultOpen defaultValue="row-6">
+          <SelectTrigger aria-label="Projection"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {Array.from({ length: selectPopupGeometryFixture.optionCount }, (_, index) => <SelectItem key={index} value={`row-${index}`}>Row {index}</SelectItem>)}
+          </SelectContent>
+        </Select>,
+      );
+      const listbox = await screen.findByRole("listbox");
+      expect(listbox.className).toContain("min-w-32");
+      expect(listbox.className).toContain("border");
+      expect(listbox.querySelectorAll('[data-slot="select-scroll-up-button"]')).toHaveLength(1);
+      expect(listbox.querySelectorAll('[data-slot="select-scroll-down-button"]')).toHaveLength(1);
+      const viewport = listbox.querySelector<HTMLElement>('[data-slot="select-viewport"]')!;
+      expect(viewport.className).toContain("overflow-y-auto");
+      expect(viewport.className).toContain("p-single");
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: "nearest" });
+    } finally {
+      if (descriptor) Object.defineProperty(HTMLElement.prototype, "scrollIntoView", descriptor);
+      else delete (HTMLElement.prototype as { scrollIntoView?: unknown }).scrollIntoView;
     }
   });
 

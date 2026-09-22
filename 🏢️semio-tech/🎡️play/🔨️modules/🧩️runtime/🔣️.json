@@ -8,53 +8,53 @@
       "id": "design",
       "label": "Design",
       "panes": [
-        { "variant": "cad", "label": "CAD", "tagline": "Model shapes and buildings", "description": "Model solids, spaces and building elements side by side in coordinated CAD windows.", "icon": "cad-shape", "example": "demo" },
-        { "variant": "generation3d", "label": "Procedural 3D", "tagline": "Generate 3D geometry", "description": "Build parametric 3D geometry from flows of operations and preview every step live.", "icon": "shapes", "example": "hexagonal-mushroom-column" },
-        { "variant": "generation2d", "label": "Procedural 2D", "tagline": "Generate 2D geometry", "description": "Compose parametric 2D profiles from flows of operations and inspect the result.", "icon": "procedural2d", "example": "demo" },
+        { "variant": "cad", "label": "CAD", "tagline": "Model shapes and buildings", "description": "Model solids, spaces and building elements side by side in coordinated CAD windows.", "icon": "cad-shape", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "generation3d", "label": "Procedural 3D", "tagline": "Generate 3D geometry", "description": "Build parametric 3D geometry from flows of operations and preview every step live.", "icon": "shapes", "example": "hexagonal-mushroom-column", "exampleLabel": "Hexagonal Mushroom Column" },
+        { "variant": "generation2d", "label": "Procedural 2D", "tagline": "Generate 2D geometry", "description": "Compose parametric 2D profiles from flows of operations and inspect the result.", "icon": "procedural2d", "example": "demo", "exampleLabel": "Demo" },
         { "variant": "flow", "label": "Flow", "tagline": "Visual dataflow programming", "description": "Wire nodes into dataflow graphs that compute values, geometry and building data.", "icon": "flow" },
-        { "variant": "lowpoly", "label": "Low Poly", "tagline": "Model low-poly meshes", "description": "Shape faceted meshes vertex by vertex and review them in a live 3D view.", "icon": "lowpoly-model", "example": "hexagonal-cut-concrete-forest-left" },
-        { "variant": "remodel", "label": "Remodel", "tagline": "Reconstruct from captures", "description": "Reconstruct surfaces from camera captures and compare the model against the scan.", "icon": "remodel-app", "example": "synthetic-orbit" },
-        { "variant": "draw", "label": "Draw", "tagline": "Vector drawing", "description": "Sketch vector drawings with pens, shapes and layers and export them as documents.", "icon": "draw", "example": "demo" },
-        { "variant": "raster", "label": "Raster", "tagline": "Paint pixels", "description": "Paint and edit raster images with brushes, fills and layers.", "icon": "raster", "example": "demo" },
-        { "variant": "layout", "label": "Layout", "tagline": "Arrange pages", "description": "Arrange text, images and frames into page layouts.", "icon": "layout", "example": "demo" },
-        { "variant": "shooting", "label": "Shooting", "tagline": "Stage cameras and shots", "description": "Place cameras and lights in a scene and frame the shots you want to render.", "icon": "shooting-scene", "example": "hexagonal-cut-concrete-forest-left" }
+        { "variant": "lowpoly", "label": "Low Poly", "tagline": "Model low-poly meshes", "description": "Shape faceted meshes vertex by vertex and review them in a live 3D view.", "icon": "lowpoly-model", "example": "hexagonal-cut-concrete-forest-left", "exampleLabel": "Hexagonal Cut Concrete Forest Left" },
+        { "variant": "remodel", "label": "Remodel", "tagline": "Reconstruct from captures", "description": "Reconstruct surfaces from camera captures and compare the model against the scan.", "icon": "remodel-app", "example": "synthetic-orbit", "exampleLabel": "Synthetic Orbit" },
+        { "variant": "draw", "label": "Draw", "tagline": "Vector drawing", "description": "Sketch vector drawings with pens, shapes and layers and export them as documents.", "icon": "draw", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "raster", "label": "Raster", "tagline": "Paint pixels", "description": "Paint and edit raster images with brushes, fills and layers.", "icon": "raster", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "layout", "label": "Layout", "tagline": "Arrange pages", "description": "Arrange text, images and frames into page layouts.", "icon": "layout", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "shooting", "label": "Shooting", "tagline": "Stage cameras and shots", "description": "Place cameras and lights in a scene and frame the shots you want to render.", "icon": "shooting-scene", "example": "hexagonal-cut-concrete-forest-left", "exampleLabel": "Hexagonal Cut Concrete Forest Left" }
       ]
     },
     {
       "id": "assembly",
       "label": "Assembly",
       "panes": [
-        { "variant": "puzzle2d", "label": "Puzzle 2D", "tagline": "Assemble on a plan", "description": "Assemble designs from components connected by ports on a 2D board.", "icon": "puzzle", "example": "nakagin-capsule-tower" },
-        { "variant": "puzzle3d", "label": "Puzzle 3D", "tagline": "Assemble in space", "description": "Assemble designs from components in 3D, suggest matching parts and fill structures automatically.", "icon": "puzzle", "example": "concrete-forest" },
-        { "variant": "puzzle5d", "label": "Puzzle 5D", "tagline": "Assemble across time and variants", "description": "Explore assemblies across time and design alternatives in one spatial view.", "icon": "puzzle5d-3d", "example": "capsule-dream" },
-        { "variant": "block2d", "label": "Block 2D", "tagline": "Stack blocks on a plan", "description": "Lay out block-based designs on a 2D grid.", "icon": "square", "example": "hexagonal-cut-concrete-forest-left" },
-        { "variant": "block3d", "label": "Block 3D", "tagline": "Stack blocks in space", "description": "Stack blocks into volumetric designs and inspect them in 3D.", "icon": "box", "example": "hexagonal-cut-concrete-forest-left" },
-        { "variant": "block5d", "label": "Block 5D", "tagline": "Blocks across time and variants", "description": "Follow block designs through time and alternatives.", "icon": "layers", "example": "nakagin-capsule" }
+        { "variant": "puzzle2d", "label": "Puzzle 2D", "tagline": "Assemble on a plan", "description": "Assemble designs from components connected by ports on a 2D board.", "icon": "puzzle", "example": "nakagin-capsule-tower", "exampleLabel": "Nakagin Capsule Tower" },
+        { "variant": "puzzle3d", "label": "Puzzle 3D", "tagline": "Assemble in space", "description": "Assemble designs from components in 3D, suggest matching parts and fill structures automatically.", "icon": "puzzle", "example": "concrete-forest", "exampleLabel": "Concrete Forest" },
+        { "variant": "puzzle5d", "label": "Puzzle 5D", "tagline": "Assemble across time and variants", "description": "Explore assemblies across time and design alternatives in one spatial view.", "icon": "puzzle5d-3d", "example": "capsule-dream", "exampleLabel": "Capsule Dream" },
+        { "variant": "block2d", "label": "Block 2D", "tagline": "Stack blocks on a plan", "description": "Lay out block-based designs on a 2D grid.", "icon": "square", "example": "hexagonal-cut-concrete-forest-left", "exampleLabel": "Hexagonal Cut Concrete Forest Left" },
+        { "variant": "block3d", "label": "Block 3D", "tagline": "Stack blocks in space", "description": "Stack blocks into volumetric designs and inspect them in 3D.", "icon": "box", "example": "hexagonal-cut-concrete-forest-left", "exampleLabel": "Hexagonal Cut Concrete Forest Left" },
+        { "variant": "block5d", "label": "Block 5D", "tagline": "Blocks across time and variants", "description": "Follow block designs through time and alternatives.", "icon": "layers", "example": "nakagin-capsule", "exampleLabel": "Nakagin Capsule" }
       ]
     },
     {
       "id": "generative",
       "label": "Generative",
       "panes": [
-        { "variant": "wfc2d", "label": "WFC 2D", "tagline": "Wave function collapse in 2D", "description": "Generate 2D patterns from tile rules with wave function collapse.", "icon": "grid-3x3", "example": "terrain-ring" },
-        { "variant": "wfc3d", "label": "WFC 3D", "tagline": "Wave function collapse in 3D", "description": "Generate 3D structures from module rules with wave function collapse.", "icon": "scene-3d", "example": "tower-stack" },
-        { "variant": "grid2d", "label": "Grid 2D", "tagline": "Author 2D tile grids", "description": "Paint and constrain 2D tile grids that feed the generators.", "icon": "layout-grid", "example": "pipes" },
-        { "variant": "grid3d", "label": "Grid 3D", "tagline": "Author 3D module grids", "description": "Place and constrain modules in 3D grids that feed the generators.", "icon": "hexagon", "example": "pipes-3d" },
-        { "variant": "bitmap", "label": "Bitmap", "tagline": "Learn from sample images", "description": "Generate new images that follow the local patterns of a sample bitmap.", "icon": "image", "example": "flowers-24" }
+        { "variant": "wfc2d", "label": "WFC 2D", "tagline": "Wave function collapse in 2D", "description": "Generate 2D patterns from tile rules with wave function collapse.", "icon": "grid-3x3", "example": "terrain-ring", "exampleLabel": "Terrain Ring" },
+        { "variant": "wfc3d", "label": "WFC 3D", "tagline": "Wave function collapse in 3D", "description": "Generate 3D structures from module rules with wave function collapse.", "icon": "scene-3d", "example": "tower-stack", "exampleLabel": "Tower With A Cantilever" },
+        { "variant": "grid2d", "label": "Grid 2D", "tagline": "Author 2D tile grids", "description": "Paint and constrain 2D tile grids that feed the generators.", "icon": "layout-grid", "example": "pipes", "exampleLabel": "Pipes" },
+        { "variant": "grid3d", "label": "Grid 3D", "tagline": "Author 3D module grids", "description": "Place and constrain modules in 3D grids that feed the generators.", "icon": "hexagon", "example": "pipes-3d", "exampleLabel": "3D Pipes" },
+        { "variant": "bitmap", "label": "Bitmap", "tagline": "Learn from sample images", "description": "Generate new images that follow the local patterns of a sample bitmap.", "icon": "image", "example": "flowers-24", "exampleLabel": "Flowers 24" }
       ]
     },
     {
       "id": "engineering",
       "label": "Engineering",
       "panes": [
-        { "variant": "fem2d", "label": "FEM 2D", "tagline": "Analyse plane frames", "description": "Model plane frames with nodes, supports and loads and read the structural response.", "icon": "fem-app", "example": "demo" },
-        { "variant": "fem3d", "label": "FEM 3D", "tagline": "Analyse spatial frames", "description": "Model spatial frames, solve them and inspect deformations and internal forces.", "icon": "fem-model", "example": "concrete-forest" },
-        { "variant": "energy", "label": "Energy", "tagline": "Simulate building energy", "description": "Model zones, envelopes and boundary conditions and simulate the thermal behaviour of a building.", "icon": "sun", "example": "bestest-600" },
-        { "variant": "process3d", "label": "Process 3D", "tagline": "Plan fabrication steps", "description": "Plan the machining and fabrication steps for a workpiece and preview them in 3D.", "icon": "process-workpiece", "example": "concrete-forest" },
-        { "variant": "sourcing", "label": "Sourcing", "tagline": "Curate components", "description": "Browse a pool of available components, filter it and curate a selection for a project.", "icon": "library", "example": "demo" },
-        { "variant": "gis2d", "label": "Map", "tagline": "Explore places on a map", "description": "Explore locations and their relations on an interactive 2D map.", "icon": "gis2d", "example": "demo" },
-        { "variant": "gis3d", "label": "Terrain", "tagline": "Explore terrain in 3D", "description": "Fly over elevation data and inspect sites on a 3D terrain.", "icon": "gis3d", "example": "demo" },
-        { "variant": "architect", "label": "Architect", "tagline": "Program buildings", "description": "Define architectural programs with stakeholders, requirements and adjacencies.", "icon": "architect", "example": "demo" }
+        { "variant": "fem2d", "label": "FEM 2D", "tagline": "Analyse plane frames", "description": "Model plane frames with nodes, supports and loads and read the structural response.", "icon": "fem-app", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "fem3d", "label": "FEM 3D", "tagline": "Analyse spatial frames", "description": "Model spatial frames, solve them and inspect deformations and internal forces.", "icon": "fem-model", "example": "concrete-forest", "exampleLabel": "Concrete Forest" },
+        { "variant": "energy", "label": "Energy", "tagline": "Simulate building energy", "description": "Model zones, envelopes and boundary conditions and simulate the thermal behaviour of a building.", "icon": "sun", "example": "bestest-600", "exampleLabel": "BESTEST 600" },
+        { "variant": "process3d", "label": "Process 3D", "tagline": "Plan fabrication steps", "description": "Plan the machining and fabrication steps for a workpiece and preview them in 3D.", "icon": "process-workpiece", "example": "concrete-forest", "exampleLabel": "Concrete Forest" },
+        { "variant": "sourcing", "label": "Sourcing", "tagline": "Curate components", "description": "Browse a pool of available components, filter it and curate a selection for a project.", "icon": "library", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "gis2d", "label": "Map", "tagline": "Explore places on a map", "description": "Explore locations and their relations on an interactive 2D map.", "icon": "gis2d", "example": "demo", "exampleLabel": "Reuse Map" },
+        { "variant": "gis3d", "label": "Terrain", "tagline": "Explore terrain in 3D", "description": "Fly over elevation data and inspect sites on a 3D terrain.", "icon": "gis3d", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "architect", "label": "Architect", "tagline": "Program buildings", "description": "Define architectural programs with stakeholders, requirements and adjacencies.", "icon": "architect", "example": "demo", "exampleLabel": "Demo" }
       ]
     },
     {
@@ -82,40 +82,40 @@
       "id": "knowledge",
       "label": "Knowledge",
       "panes": [
-        { "variant": "note", "label": "Note", "tagline": "Take notes", "description": "Write notes with text, ink and math on an infinite page.", "icon": "note", "example": "demo" },
-        { "variant": "writer", "label": "Writer", "tagline": "Write documents", "description": "Write structured documents with headings, lists and references.", "icon": "writer", "example": "demo" },
-        { "variant": "forms", "label": "Forms", "tagline": "Build forms", "description": "Design forms with fields and validation and fill them in.", "icon": "forms", "example": "demo" },
-        { "variant": "mathematical", "label": "Math", "tagline": "Write equations", "description": "Write and evaluate mathematical equations.", "icon": "math-app", "example": "demo" },
-        { "variant": "reasoning-wires", "label": "Wires", "tagline": "Map ideas", "description": "Connect ideas into mind maps and follow the wires between them.", "icon": "reasoning-wires", "example": "demo" },
-        { "variant": "dag", "label": "DAG", "tagline": "Directed graphs", "description": "Build directed acyclic graphs with typed ports.", "icon": "dag", "example": "demo" },
-        { "variant": "imperative", "label": "Procedure", "tagline": "Write procedures", "description": "Write step-by-step procedures that run against documents.", "icon": "imperative", "example": "demo" },
-        { "variant": "playbook", "label": "Playbook", "tagline": "Guided plays", "description": "Author playbooks that guide through a sequence of plays.", "icon": "book-open", "example": "demo" },
-        { "variant": "trinity-jack", "label": "Jack", "tagline": "Compose trinity documents", "description": "Compose left-hand and right-hand sides of trinity documents.", "icon": "trinity", "example": "demo" },
-        { "variant": "trinity-rewriting", "label": "Rewriting", "tagline": "Rewrite with rules", "description": "Apply rewriting rules to trinity documents and inspect each step.", "icon": "trinity-rewriting", "example": "demo" }
+        { "variant": "note", "label": "Note", "tagline": "Take notes", "description": "Write notes with text, ink and math on an infinite page.", "icon": "note", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "writer", "label": "Writer", "tagline": "Write documents", "description": "Write structured documents with headings, lists and references.", "icon": "writer", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "forms", "label": "Forms", "tagline": "Build forms", "description": "Design forms with fields and validation and fill them in.", "icon": "forms", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "mathematical", "label": "Math", "tagline": "Write equations", "description": "Write and evaluate mathematical equations.", "icon": "math-app", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "reasoning-wires", "label": "Wires", "tagline": "Map ideas", "description": "Connect ideas into mind maps and follow the wires between them.", "icon": "reasoning-wires", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "dag", "label": "DAG", "tagline": "Directed graphs", "description": "Build directed acyclic graphs with typed ports.", "icon": "dag", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "imperative", "label": "Procedure", "tagline": "Write procedures", "description": "Write step-by-step procedures that run against documents.", "icon": "imperative", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "playbook", "label": "Playbook", "tagline": "Guided plays", "description": "Author playbooks that guide through a sequence of plays.", "icon": "book-open", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "trinity-jack", "label": "Jack", "tagline": "Compose trinity documents", "description": "Compose left-hand and right-hand sides of trinity documents.", "icon": "trinity", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "trinity-rewriting", "label": "Rewriting", "tagline": "Rewrite with rules", "description": "Apply rewriting rules to trinity documents and inspect each step.", "icon": "trinity-rewriting", "example": "demo", "exampleLabel": "Demo" }
       ]
     },
     {
       "id": "documents",
       "label": "Documents",
       "panes": [
-        { "variant": "stdio", "label": "Markdown", "tagline": "Write Markdown", "description": "Write CommonMark documents with headings, lists, links and code blocks.", "icon": "file-text", "example": "demo" },
-        { "variant": "stdio-txt", "label": "Plain Text", "tagline": "Edit plain text", "description": "Read and edit UTF-8 plain text line by line.", "icon": "align-left", "example": "demo" },
-        { "variant": "stdio-csv", "label": "CSV", "tagline": "Edit comma-separated tables", "description": "Open RFC 4180 comma-separated tables and edit them record by record.", "icon": "file-spreadsheet", "example": "demo" },
-        { "variant": "stdio-tsv", "label": "TSV", "tagline": "Edit tab-separated tables", "description": "Open tab-separated tables and edit them record by record.", "icon": "table-2", "example": "demo" },
-        { "variant": "stdio-json", "label": "JSON", "tagline": "Edit JSON documents", "description": "Browse and edit RFC 8259 JSON documents as a typed value tree.", "icon": "file-json", "example": "demo" },
-        { "variant": "stdio-json-i", "label": "I-JSON", "tagline": "Edit interoperable JSON", "description": "Edit JSON under the stricter I-JSON profile meant for safe interchange.", "icon": "list-checks", "example": "demo" },
-        { "variant": "stdio-xml", "label": "XML", "tagline": "Edit XML documents", "description": "Edit XML element by element together with its attributes.", "icon": "file-code", "example": "demo" },
-        { "variant": "stdio-xml-valid", "label": "Valid XML", "tagline": "Edit validated XML", "description": "Edit XML that has to stay valid against the document type it declares.", "icon": "check-circle-2", "example": "demo" },
-        { "variant": "stdio-html", "label": "HTML", "tagline": "Edit web pages", "description": "Edit HTML 5 documents and inspect the structure of their elements.", "icon": "globe", "example": "demo" }
+        { "variant": "stdio", "label": "Markdown", "tagline": "Write Markdown", "description": "Write CommonMark documents with headings, lists, links and code blocks.", "icon": "file-text", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-txt", "label": "Plain Text", "tagline": "Edit plain text", "description": "Read and edit UTF-8 plain text line by line.", "icon": "align-left", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-csv", "label": "CSV", "tagline": "Edit comma-separated tables", "description": "Open RFC 4180 comma-separated tables and edit them record by record.", "icon": "file-spreadsheet", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-tsv", "label": "TSV", "tagline": "Edit tab-separated tables", "description": "Open tab-separated tables and edit them record by record.", "icon": "table-2", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-json", "label": "JSON", "tagline": "Edit JSON documents", "description": "Browse and edit RFC 8259 JSON documents as a typed value tree.", "icon": "file-json", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-json-i", "label": "I-JSON", "tagline": "Edit interoperable JSON", "description": "Edit JSON under the stricter I-JSON profile meant for safe interchange.", "icon": "list-checks", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-xml", "label": "XML", "tagline": "Edit XML documents", "description": "Edit XML element by element together with its attributes.", "icon": "file-code", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-xml-valid", "label": "Valid XML", "tagline": "Edit validated XML", "description": "Edit XML that has to stay valid against the document type it declares.", "icon": "check-circle-2", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "stdio-html", "label": "HTML", "tagline": "Edit web pages", "description": "Edit HTML 5 documents and inspect the structure of their elements.", "icon": "globe", "example": "demo", "exampleLabel": "Demo" }
       ]
     },
     {
       "id": "media",
       "label": "Media",
       "panes": [
-        { "variant": "animate", "label": "Animate", "tagline": "Animate presentations", "description": "Compose animated scenes on a timeline and present them.", "icon": "animate", "example": "demo" },
-        { "variant": "sequence", "label": "Sequence", "tagline": "Sequence clips", "description": "Arrange clips and events into sequences.", "icon": "sequence", "example": "demo" },
-        { "variant": "vcs", "label": "Versions", "tagline": "Track changes", "description": "Browse the history of a document, its checkpoints and alternatives.", "icon": "git-branch", "example": "demo" },
+        { "variant": "animate", "label": "Animate", "tagline": "Animate presentations", "description": "Compose animated scenes on a timeline and present them.", "icon": "animate", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "sequence", "label": "Sequence", "tagline": "Sequence clips", "description": "Arrange clips and events into sequences.", "icon": "sequence", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "vcs", "label": "Versions", "tagline": "Track changes", "description": "Browse the history of a document, its checkpoints and alternatives.", "icon": "git-branch", "example": "demo", "exampleLabel": "Demo" },
         { "variant": "demonstrator", "label": "Demonstrator", "tagline": "Composed playground", "description": "Explore one document composed from several apps working together.", "icon": "play" }
       ]
     },
@@ -123,8 +123,8 @@
       "id": "workspace",
       "label": "Workspace",
       "panes": [
-        { "variant": "home", "label": "Home", "tagline": "Browse your spaces", "description": "Browse every space you can reach, local and shared, and open or create one.", "icon": "home", "example": "demo" },
-        { "variant": "space", "label": "Space", "tagline": "Arrange apps in a workspace", "description": "Lay out app instances on a shared canvas and wire the documents they pass to each other.", "icon": "workflow", "example": "demo" }
+        { "variant": "home", "label": "Home", "tagline": "Browse your spaces", "description": "Browse every space you can reach, local and shared, and open or create one.", "icon": "home", "example": "demo", "exampleLabel": "Demo" },
+        { "variant": "space", "label": "Space", "tagline": "Arrange apps in a workspace", "description": "Lay out app instances on a shared canvas and wire the documents they pass to each other.", "icon": "workflow", "example": "demo", "exampleLabel": "Demo" }
       ]
     }
   ]

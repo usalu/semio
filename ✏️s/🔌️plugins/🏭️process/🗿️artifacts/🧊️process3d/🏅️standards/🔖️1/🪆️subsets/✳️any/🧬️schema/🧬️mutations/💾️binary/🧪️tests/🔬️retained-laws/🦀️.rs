@@ -16,7 +16,6 @@ fn authority_fixture() -> Process3dPublicationLease {
         maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS,
         closing: false,
         terminal: false,
-        app_admitted: false,
     }
 }
 

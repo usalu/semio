@@ -289,23 +289,40 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     let mutations = crate::spr::process3d_all_retained_mutation_fixtures_for_test();
     assert_eq!(mutations.len(), 16, "production ingress carries every Process3d mutation variant");
     let mutation_hex: Vec<String> = mutations.iter().map(|mutation| crate::spr::encode_op(mutation).expect("deep Process3d mutation encoding").iter().map(|byte| format!("{byte:02x}")).collect()).collect();
+    // 🪪️ Every workshop mutation addresses a machine by ID, so the expectation must locate the same
+    // machine the replay does. It used to edit `machines.first_mut()` — the initial workshop already
+    // carries the three generic machines (saw, drill, attacher) BEFORE the one this law appends, so a
+    // positional expectation renamed `saw` while the real id-keyed replay renamed `machine`. The
+    // label, icon and capability are read off the mutations themselves for the same reason.
     let mut expected = production_initial_snapshot(label);
+    let (expected_machine_id, expected_machine_label) = match &mutations[9] {
+        Process3dMutation::RenameMachine(value) => (value.id.clone(), value.new_label.clone()),
+        _ => unreachable!("fixed all-variant fixture order"),
+    };
+    let expected_machine_icon = match &mutations[10] {
+        Process3dMutation::ChangeMachineIcon(value) => value.new_icon_id.clone(),
+        _ => unreachable!("fixed all-variant fixture order"),
+    };
     let expected_capability = match &mutations[11] {
         Process3dMutation::ReplaceMachineCapabilities(value) => value.new_capabilities[0].clone(),
         _ => unreachable!("fixed all-variant fixture order"),
     };
-    let machine = expected.workshop.machines.first_mut().expect("production law initial machine");
-    machine.label = "Renamed Machine".into();
-    machine.icon_id = "drill".into();
+    let machine = expected.workshop.machines.iter_mut().find(|machine| machine.id == expected_machine_id).expect("production law renames a machine the initial workshop declares");
+    machine.label = expected_machine_label;
+    machine.icon_id = expected_machine_icon;
     machine.capabilities = vec![expected_capability];
     if let Process3dMutation::MoveStock(value) = &mutations[12] {
         expected.stock_pose = value.new_pose.clone();
     }
-    expected.stock_label = "Beam".into();
+    if let Process3dMutation::ChangeStockLabel(value) = &mutations[13] {
+        expected.stock_label = value.new_label.clone();
+    }
     if let Process3dMutation::ReplaceStockSolid(value) = &mutations[14] {
         expected.stock_solid = value.new_solid.clone();
     }
-    expected.resolved_up_to = Some(7);
+    if let Process3dMutation::ChangeCursor(value) = &mutations[15] {
+        expected.resolved_up_to = value.new_resolved_up_to;
+    }
     let expected_digest = production_semantic_digest(&expected);
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": crate::PROCESS_3D_SCHEMA,
@@ -787,11 +804,32 @@ async fn command_from_action_covers_every_declared_action_and_rejects_unknown_on
     assert!(Process3dPlayApp::command_from_action("nonsense", None).is_err());
 }
 
+/// 🧾️ What the lane RETAINS is the distilled roster, never the host's whole contribution pack: an
+/// entry addressed to this app's `process.machines` topic survives, everything else is dropped
+/// (`installable_contributions`, the same discipline `🪵️sourcing` applies to its own config lane).
 #[test]
 fn host_contributions_resolve_to_the_event_sourced_config_lane() {
-    let mutation =
-        <Process3dPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&DslValue::from(&serde_json::json!({ "json": "[{\"id\":\"process\"}]" })))).expect("host configuration").expect("process contribution mutation");
-    assert_eq!(mutation, Process3dConfigMutation::SetContributions { json: "[{\"id\":\"process\"}]".into() });
+    use semio_framework::{ProgramContributionEntry, TopicContribution};
+    let addressed = ProgramContributionEntry {
+        plugin_id: "process-wood".into(),
+        topic_contribution: Some(TopicContribution::new(
+            "process.machines",
+            DslValue::object([
+                ("appId".to_string(), DslValue::String(PROCESS_3D_PLAY_APP_ID.to_string())),
+                ("moduleId".to_string(), DslValue::String("wood".to_string())),
+                ("label".to_string(), DslValue::String("Wood".to_string())),
+                ("iconId".to_string(), DslValue::String("beam".to_string())),
+                ("machinesJson".to_string(), DslValue::String("[]".to_string())),
+            ]),
+        )),
+    };
+    let foreign = ProgramContributionEntry { plugin_id: "somebody-else".into(), topic_contribution: Some(TopicContribution::new("other.topic", DslValue::object([]))) };
+    let pack = dsl::json::to_json_string(&vec![addressed, foreign]);
+    let distilled = installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
+    assert_ne!(distilled, "[]", "the addressed process.machines entry must survive the lane");
+    assert!(distilled.len() < pack.len(), "the foreign entry must be dropped, not retained");
+    let mutation = <Process3dPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&DslValue::from(&serde_json::json!({ "json": pack })))).expect("host configuration").expect("process contribution mutation");
+    assert_eq!(mutation, Process3dConfigMutation::SetContributions { json: distilled });
     assert_eq!(<Process3dPlayApp as ArtifactEditor>::host_configuration_mutation("setCursor", None).expect("non-host action"), None);
 }
 

@@ -146,3 +146,52 @@ No framework file was changed. No test was deleted, ignored, weakened or special
 6. **wasm32 check owed.** Two production edits (draw's presence factories, layout's `OwnedLayoutStore`) have not
    been checked for `wasm32-wasip2`. **Next step:** one batched command through the fleet mutex —
    `zsh ".../26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END/📜️wasm-build-mutex.sh" design -- cargo check -p semio-s-artifact-draw-drawing -p semio-s-artifact-layout-layout --target wasm32-wasip2`.
+
+---
+
+## Session 6 (successor, 2026-09-22 01:30–04:xx)
+
+### 5. wfc panes reached `data-shell-error` — three drifted tool rosters (found, fixed, wasm unverified)
+
+Probed the three failing panes headless against the coordinator's `:6033` (one page each, `--use-angle=metal`,
+`🗑️generated/design/🧪️probe-pane.mjs`; logs `probe-wfc2d.txt`, `probe-wfc3d.txt`, `probe-grid3d.txt`). All three
+reach `data-shell-error`, body reads "No plugins loaded", and the console carries a GUEST panic that aborts the
+whole `semio_s_plugin_wfc` component (`wasm trap: unreachable`, `std::process::abort`):
+
+| pane | guest panic | fault code |
+|---|---|---|
+| `#wfc2d` | `app-owned tool factories must preserve exact owner/controller/schema/tool authority` | `interactive-job.publication-contract` |
+| `#grid3d` | same | `interactive-job.publication-contract` |
+| `#wfc3d` | `tool proof catalog must exactly join migrated generated declarations to live concrete factories` | `interactive-job.catalog-incomplete` |
+
+**Root cause (one defect, three spellings).** Each wfc editor keeps its app-owned factory roster in THREE hand-written
+places that the framework then cross-checks at app registration
+(`ArtifactToolFactoryRegistry::register`, `🔌️plugin/🦀️.rs:13956-13966`, and `tool_job_registration`): the
+`TOOL_IDS`/`TOOL_JOB_IDS` constant, the `PUBLICATION_CONTRACTS` table and the `bounded_first_step_tool_proofs!`
+`tools:` list. They had drifted apart, and the framework's refusal is a guest `panic!`, so ONE missing row kills
+every pane of the component:
+- **wfc2d** — `commit-fill` (the `fill` tool's commit verb, a real `Wfc2dEditorCommand::CommitFill` with a
+  `Transient`-lane contract) was in `PUBLICATION_CONTRACTS` but missing from `WFC_2D_RETAINED_TOOL_IDS` and from
+  the proofs roster. Added to both (wfc3d already had it in `TOOL_IDS`, which is the reference shape).
+- **grid3d** — `"solve"` (a real `Grid3dEditorCommand::Solve`, `HostOnly` lane) was in `PUBLICATION_CONTRACTS` but
+  missing from `GRID3D_RETAINED_TOOL_IDS` and the proofs roster. Added to both.
+- **wfc3d** — `TOOL_IDS` and `PUBLICATION_CONTRACTS` already agreed (22 rows) but the proofs roster listed only 20:
+  `"solve"` and `"commit-fill"` were missing, so two migrated generated commands had no owner-local bounded reducer
+  proof. Added both.
+
+**Regression law.** Each of the three editors' `✏️editor/🧪️tests/🔬️unit/🦀️.rs` gains
+`the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_roster`: `TOOL_IDS`,
+`PUBLICATION_CONTRACTS` keys and `bounded_first_step_tool_proofs()` tool ids must be the same set, and no lane list
+may be empty. This is exactly the join the framework performs, asserted natively instead of only in a booted guest.
+
+**These are Rust production edits**, so the shipped wasm is stale until the component is rebuilt: the running
+`🔌️plugin-modules/🀄️wfc/semio_s_plugin_wfc_component.core.wasm` still carries the old rosters.
+`🗑️generated/activate.request/wfc2d` is touched. One wfc component rebuild covers all five wfc apps
+(bitmap/grid2d/wfc2d/grid3d/wfc3d), not just `wfc2d`. The `wasm32-wasip2` check is UNVERIFIED (wasm mutex; the
+coordinator's activation compiles it).
+
+Files changed:
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- the three `✏️editor/🧪️tests/🔬️unit/🦀️.rs` beside them (the new law)

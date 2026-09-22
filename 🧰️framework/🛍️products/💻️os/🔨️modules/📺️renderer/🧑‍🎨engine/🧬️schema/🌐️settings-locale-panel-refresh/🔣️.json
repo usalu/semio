@@ -8,28 +8,15 @@
     "contractVersion",
     "initialLocale",
     "nextLocale",
-    "mountedSurfaceIds",
-    "unmountedSurfaceIds",
     "labels",
-    "maxPanelsPerStep",
+    "refreshScope",
+    "settleRequired",
     "requiresGuestRefresh"
   ],
   "properties": {
-    "contractVersion": { "const": 1 },
+    "contractVersion": { "const": 2 },
     "initialLocale": { "const": "en" },
     "nextLocale": { "const": "de" },
-    "mountedSurfaceIds": {
-      "type": "array",
-      "minItems": 4,
-      "uniqueItems": true,
-      "items": { "type": "string", "minLength": 1 }
-    },
-    "unmountedSurfaceIds": {
-      "type": "array",
-      "minItems": 1,
-      "uniqueItems": true,
-      "items": { "type": "string", "minLength": 1 }
-    },
     "labels": {
       "type": "array",
       "minItems": 3,
@@ -44,7 +31,8 @@
         }
       }
     },
-    "maxPanelsPerStep": { "const": 1 },
+    "refreshScope": { "const": "full" },
+    "settleRequired": { "const": true },
     "requiresGuestRefresh": { "const": true }
   }
 }

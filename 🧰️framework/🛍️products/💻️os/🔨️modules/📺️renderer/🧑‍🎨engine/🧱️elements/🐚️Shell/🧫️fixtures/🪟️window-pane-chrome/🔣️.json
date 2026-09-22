@@ -10,9 +10,9 @@
     { "chip": "projection", "anchor": "bottom-right", "icon": "projection-three-point", "label": { "en": "Projection", "de": "Projektion" }, "controlId": "framework.worldOrbit.projection.{windowSegment}.pane.fold", "controlIdOpen": "framework.worldOrbit.projection.{windowSegment}.pane.fold", "mounted": "withWorldSurface", "disabledWithoutBody": false }
   ],
   "paneFolds": {
-    "$comment": "🎛️ What ONE chip press does to the pane, read off React's own state: every `Pane` holds its own `useState(true)` (🪟️Window/🟦️.tsx:169 measures, :176 utilityBar, :183 actions; `WorldOrbitProjectionSwitchPane`'s at 🌐️World3dHost/🟦️.tsx:5225), so the folds are INDEPENDENT — no chip closes another pane, and none of them opens or closes a SURFACE. The one coupling React authors is `setEngagementBarFolded` (:373/:388): the Actions pane and the Search pane share one `actionsFolded`, so either chip moves both. Measured on the React reference over ten runs: `pane-chip-utilitybar-unfold` removes no surface and `pane-chip-projection-toggle` moves nothing at all (🗑️generated/parity-run-{1..12}/steps.json, 📓️w12d-pane-chip-ids-and-projection-toggle.md §5).",
-    "sharedFold": ["actions", "search"],
-    "independentFolds": ["windowOptions", "utilities", "projection"],
+    "$comment": "🎛️ What ONE chip press does to the pane, read off React's mounted state: Actions and Search own distinct panes and every chip changes only its own fold. No chip closes another pane, and none opens or closes a surface. Measured on the React reference over ten runs: `pane-chip-utilitybar-unfold` removes no surface and `pane-chip-projection-toggle` moves nothing at all (🗑️generated/parity-run-{1..12}/steps.json, 📓️w12d-pane-chip-ids-and-projection-toggle.md §5).",
+    "sharedFold": [],
+    "independentFolds": ["actions", "search", "windowOptions", "utilities", "projection"],
     "surfacesMovedByAnyChip": [],
     "shellOverlayOpenedByAnyChip": null,
     "activatesOwnWindow": true

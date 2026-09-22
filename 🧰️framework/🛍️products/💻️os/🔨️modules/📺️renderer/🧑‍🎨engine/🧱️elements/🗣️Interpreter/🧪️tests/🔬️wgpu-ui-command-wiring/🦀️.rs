@@ -570,10 +570,7 @@ fn focus_rebase_node(tree: &ui_wgpu::wgpu::UiTree) -> Option<NodeId> {
     tree.children(tree.root?).find(|node| tree.node(*node).is_some_and(|node| node.key == ui_wgpu::wgpu::NodeKey::Explicit("focus-rebase/4".into())))
 }
 
-fn publish_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: ui_wgpu::wgpu::SurfaceKind, children: &[u64]) -> Option<NodeId> {
-    if generation > 1 {
-        drive_focus_rebase_reconcile(window_id, generation - 1);
-    }
+fn publish_new_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: ui_wgpu::wgpu::SurfaceKind, children: &[u64]) -> Option<NodeId> {
     assert!(UI_ENGINE.with(|cell| cell.borrow_mut().publish_document(window_id, focus_rebase_document(window_id, generation, kind, children))));
     drive_focus_rebase_reconcile(window_id, generation);
     begin_accessibility_visible_documents();
@@ -581,6 +578,13 @@ fn publish_focus_rebase_document(window_id: &str, generation: u64, witness: u64,
     assert!(seal_presented_input_candidate(witness));
     assert!(acknowledge_presented_input(witness));
     UI_ENGINE.with(|cell| cell.borrow().tree(window_id).and_then(focus_rebase_node))
+}
+
+fn publish_focus_rebase_document(window_id: &str, generation: u64, witness: u64, kind: ui_wgpu::wgpu::SurfaceKind, children: &[u64]) -> Option<NodeId> {
+    if generation > 1 {
+        drive_focus_rebase_reconcile(window_id, generation - 1);
+    }
+    publish_new_focus_rebase_document(window_id, generation, witness, kind, children)
 }
 
 fn reconcile_focus_rebase_document(window_id: &str, generation: u64, kind: ui_wgpu::wgpu::SurfaceKind, children: &[u64]) {
@@ -940,7 +944,7 @@ fn ink_canvas_text_and_table_editing_matches_the_react_host_lifecycle() {
     assert!(input.focused_id.is_none());
     assert!(crate::collect_fixture_actions(&mut input).is_empty());
     drain_presented_document_close(window_id);
-    assert!(publish_focus_rebase_document(window_id, 2, 453, ui_wgpu::wgpu::SurfaceKind::TextEditor, &[4]).is_some());
+    assert!(publish_new_focus_rebase_document(window_id, 2, 453, ui_wgpu::wgpu::SurfaceKind::TextEditor, &[4]).is_some());
     assert!(UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).is_some_and(|next| next > generation));
     assert!(!apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Char("stale".into()), &Default::default(), &mut input), "a prior window generation cannot mutate the reopened document");
     assert!(input.focused_id.is_none());

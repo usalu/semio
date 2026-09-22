@@ -240,13 +240,21 @@ impl actor_bindings::semio::framework::host_async::HostWithStore<DescribeHostSta
 /// must be sized against; `semio-s-plugin-gis` exhausted **4_000_000_000** fuel at ~1_024_604 ms
 /// (2026-09-17), so `8_000_000_000` is the next measured step. Re-measure, do not re-estimate, if a
 /// larger plugin trips it.
-const DESCRIBE_FUEL_BUDGET: u64 = 8_000_000_000;
+const DESCRIBE_FUEL_BUDGET: u64 = 32_000_000_000;
 
-/// ⏳️ Aggregate plugin bundles build several complete app catalogs in one pure descriptor call.
-/// The ten-surface demonstrator exceeded the former single-plugin 60-second wall cap, and the
-/// current full-catalog Space component exceeded the later five-minute cap while remaining within
-/// the measured fuel bound. Thirty minutes preserves a finite wall deadline on constrained
-/// development machines; the independent fuel cap remains the deterministic runaway bound.
+/// ⏳️ How long `describe()` may make NO fuel progress at all before the build gives up. It is a
+/// stall bound, not a total-runtime bound — `OwnedDeadline::NoFuelProgress`, which
+/// `OwnedRuntime::describe_observed` selects — and the independent fuel cap above remains the
+/// deterministic runaway bound.
+///
+/// 🐛️ It used to bound TOTAL wall time, and that made a build's success a function of how busy the
+/// machine was. Measured 2026-09-21 (slice CE2): the same `🗒️note` guest described at 1 320 k
+/// fuel/s at 20:36 and at 520 k fuel/s at 22:10 under a full agent fleet; at the ≈ 210 k fuel/s the
+/// owned interpreter sustains when saturated, thirty minutes buys only ≈ 380 M of the 8 G budget.
+/// `🀄️wfc` died `DeadlineExceeded` at 373 368 646 fuel — 4.6 % of its budget, at a flat rate with no
+/// degradation across the whole run — and `🧩️puzzle` at 5 186 253 150, both while progressing
+/// normally. A guest that is genuinely wedged still dies here, because a wedged guest consumes no
+/// fuel.
 const DESCRIBE_DEADLINE_MS: u32 = 1_800_000;
 
 /// 🛡️ Ceiling for the build artifacts the emitter reads — the raw `wasm32-wasip2` component and

@@ -22,8 +22,10 @@ use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use semio_framework::kernel::Effect;
 use semio_framework::{Dialect, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedToolJobRequest, ArtifactReservedToolJob, ArtifactToolFactoryRegistry};
+use semio_framework_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedToolJobRequest, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry};
+use semio_framework_plugin::ArtifactReservedJob;
 #[cfg(test)]
 use semio_framework_plugin::App;
 use semio_framework_plugin::{
@@ -778,6 +780,200 @@ impl LayoutExportProofs {
 //#endregion 🧾️ProofCatalogs
 //#endregion 🧵️RetainedCommands
 
+//#region 🎞️ReservedImport
+/// 🎞️ The framework registers the reserved `import-media` factory for every app but never a concrete
+/// job, so `VcsArtifactApp::import_media` fails closed with `interactive-job.missing-reserved-builder`
+/// until the app hands one back from [`ArtifactEditor::build_reserved_tool_job`]. Layout's one inbound
+/// port is `fields:in`.
+const LAYOUT_IMPORT_TOOL_ID: &str = "import-media";
+const LAYOUT_IMPORT_PORT: &str = "fields:in";
+
+/// 🎞️ Layout's ONE concrete resumable importer. Two bounded steps: decode the `fields:in`
+/// `form.dictionary` through [`LayoutPlayApp::import_media`] — the single decoding authority, shared
+/// with every non-interactive caller — then publish its mutations through the completion authority.
+struct LayoutImportJob {
+    port: String,
+    media: Option<Media>,
+    snapshot: Option<std::sync::Arc<LayoutSnapshot>>,
+    history: Option<std::sync::Arc<semio_framework_plugin::HistoryView>>,
+    mutations: Vec<LayoutMutation>,
+    decoded: bool,
+    completed: bool,
+    closing: bool,
+    completion: Option<ArtifactToolCompletion<EditorApp<LayoutPlayApp>>>,
+    pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<LayoutPlayApp>>>,
+}
+
+fn layout_job_payload(cx: &mut StepContext<'_>, stream: JobPayloadStream, bytes: &[u8]) -> RetainedJobPayload {
+    match cx.payload_from_bytes(stream, bytes) {
+        Ok(payload) => payload,
+        Err(rejected) => {
+            drop(rejected.into_source());
+            RetainedJobPayload::empty(stream)
+        }
+    }
+}
+
+fn layout_job_fault(cx: &mut StepContext<'_>, detail: &str) -> StepOutcome {
+    let bytes = detail.as_bytes();
+    let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
+    StepOutcome::Fault(JobFault { detail: layout_job_payload(cx, JobPayloadStream::Fault, bounded) })
+}
+
+impl LayoutImportJob {
+    fn new(request: ArtifactReservedToolJobRequest<EditorApp<LayoutPlayApp>>, port: String, media: Media) -> Self {
+        Self {
+            port,
+            media: Some(media),
+            snapshot: Some(request.snapshot),
+            history: Some(request.history),
+            mutations: Vec::new(),
+            decoded: false,
+            completed: false,
+            closing: false,
+            completion: Some(request.completion),
+            pending_completion_rejection: None,
+        }
+    }
+
+    fn decode(&mut self, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
+        if self.port != LAYOUT_IMPORT_PORT {
+            return Some(layout_job_fault(cx, "layout import only implements fields:in"));
+        }
+        let decoded = {
+            let (Some(media), Some(snapshot), Some(history)) = (self.media.as_ref(), self.snapshot.as_ref(), self.history.as_ref()) else {
+                return Some(layout_job_fault(cx, "layout import lost its media, snapshot or history authority"));
+            };
+            let doc = ArtifactView::new(snapshot.as_ref(), history.as_ref());
+            LayoutPlayApp::import_media(LAYOUT_IMPORT_PORT, media, &doc)
+        };
+        match decoded {
+            Ok(emit) => {
+                self.mutations = emit.artifact_mutations;
+                self.decoded = true;
+                None
+            }
+            Err(error) => Some(layout_job_fault(cx, &error.to_string())),
+        }
+    }
+}
+
+impl InteractiveJob for LayoutImportJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if self.pending_completion_rejection.is_some() {
+            return layout_job_fault(cx, "layout import completion remains rejected");
+        }
+        if !self.decoded {
+            cx.set_stage("layout-import-decode");
+            if let Some(outcome) = self.decode(cx) {
+                return outcome;
+            }
+            cx.consume_fuel(1);
+            return StepOutcome::CheckpointReady(Checkpoint { state: layout_job_payload(cx, JobPayloadStream::CheckpointState, &[1]), applied_progress: 1 });
+        }
+        cx.set_stage("layout-import-publish");
+        if !self.completed {
+            let mutations = std::mem::take(&mut self.mutations);
+            let Some(completion) = self.completion.as_ref() else {
+                return layout_job_fault(cx, "layout import lost its completion authority");
+            };
+            if !completion.has_mounted_consumer() {
+                return layout_job_fault(cx, "layout import completion consumer is absent");
+            }
+            if let Err(rejected) = completion.complete(Ok(Emit { artifact_mutations: mutations, ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }), semio_framework_plugin::EphemeralEmit::default()) {
+                let message = rejected.fault.message.clone();
+                self.pending_completion_rejection = Some(rejected);
+                return layout_job_fault(cx, &message);
+            }
+            self.completed = true;
+        }
+        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
+            Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+            Ok(semio_framework_plugin::PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
+            Ok(semio_framework_plugin::PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        ArtifactReservedJob::terminal_is_empty(self)
+    }
+}
+
+impl ArtifactReservedJob for LayoutImportJob {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        self.closing = true;
+        if maximum_items == 0 {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            if let Ok(emit) = rejected.emit.as_mut() {
+                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
+                    return Ok(step);
+                }
+            }
+            self.pending_completion_rejection = None;
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        // 🧊️ Every `LayoutMutation` variant wraps plain owned text/floats (no `Dictionary`/`Tree`
+        // payload rejects a bare drop), so a popped mutation closes on drop.
+        if self.mutations.pop().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.mutations.capacity() > 0 {
+            self.mutations = Vec::new();
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.media.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if !self.port.is_empty() || self.port.capacity() > 0 {
+            self.port = String::new();
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.history.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
+            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "layout import snapshot has no mounted retained authority" });
+        }
+        if self.snapshot.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
+            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "layout import completion has no mounted consumer authority" });
+        }
+        if self.completion.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(semio_framework_plugin::PluginCloseStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.port.is_empty()
+            && self.port.capacity() == 0
+            && self.media.is_none()
+            && self.snapshot.is_none()
+            && self.history.is_none()
+            && self.mutations.is_empty()
+            && self.mutations.capacity() == 0
+            && self.completion.is_none()
+            && self.pending_completion_rejection.is_none()
+    }
+}
+//#endregion 🎞️ReservedImport
 
 fn layout_build_export_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<LayoutPlayApp>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
     use crate::editor::layout::engine::export::{LayoutExportKind, LayoutExportRequest, LayoutExportToolPayload};
@@ -1009,6 +1205,23 @@ impl ArtifactEditor for LayoutPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
+    /// 🎞️ `import-media` is the only reserved route layout owns: every inbound `fields:in` delivery is
+    /// routed through this builder (`dispatch_import_media` → `build_artifact_reserved_media_job`);
+    /// `copy`/`cut`/`paste` stay on the framework's own reserved factories.
+    fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+        if request.tool_id.as_str() != LAYOUT_IMPORT_TOOL_ID {
+            return Ok(None);
+        }
+        if !request.raw_wire.is_empty() {
+            return Err(Fault::from("layout import-media admits a decoded media value, never a wire payload"));
+        }
+        let ArtifactReservedToolInput::Media { port, media } = &request.input else {
+            return Err(Fault::from("layout import-media requires media input"));
+        };
+        let (port, media) = (port.clone(), media.clone());
+        Ok(Some(ArtifactReservedToolJob::new(LayoutImportJob::new(request, port, media))))
+    }
+
     fn build_media_export_job(request: ArtifactMediaExportJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
         use crate::editor::layout::engine::export::{LayoutExportJob, LayoutExportKind, LayoutExportRequest, LayoutMediaExportJob, LAYOUT_MEDIA_EXPORT_TOOL_ID};
         if request.port != "layout:out" || request.tool_id != LAYOUT_MEDIA_EXPORT_TOOL_ID {
@@ -1191,6 +1404,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_with(layout_internal_action("patchPage", LocalizedLabel::native("Patch Page", "Seite aktualisieren"), ActionKind::Mutation))
             .action_with(layout_internal_action("patchFrame", LocalizedLabel::native("Patch Frame", "Rahmen aktualisieren"), ActionKind::Mutation))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection") })
+            .action_destructive("deleteSelection")
             .action_with(layout_internal_action("canvasDrop", LocalizedLabel::native("Canvas Drop", "Ablegen auf Leinwand"), ActionKind::Mutation))
             // 👁️ Ephemeral view state — active page, drop ghost, pointer, camera, engagement draft.
             // Selection/hover are framework-owned now (domain "elements") — no app-declared verbs;

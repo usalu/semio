@@ -712,7 +712,7 @@ pub fn register_grid3d_inference_factory(bus: &semio_framework::ActionBus) -> Re
 }
 
 /// 🏁️ Explicit headless adapter over the same complete parent job the public factory hands out.
-fn solve_with_job(snapshot: &Grid3dSnapshot) -> Result<Grid3dInferenceCommit, String> {
+pub fn solve_with_job(snapshot: &Grid3dSnapshot) -> Result<Grid3dInferenceCommit, String> {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
     let job = Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot: snapshot.clone(), checkpoint: None })?;
     let params = semio_framework_job::BatchJobParams {

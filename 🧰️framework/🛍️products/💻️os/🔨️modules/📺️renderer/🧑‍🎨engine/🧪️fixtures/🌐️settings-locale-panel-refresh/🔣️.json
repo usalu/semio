@@ -1,21 +1,13 @@
 {
-  "contractVersion": 1,
+  "contractVersion": 2,
   "initialLocale": "en",
   "nextLocale": "de",
-  "mountedSurfaceIds": [
-    "framework.settings.general",
-    "framework.settings.theme",
-    "framework.settings.keybindings",
-    "framework.settings.default-apps"
-  ],
-  "unmountedSurfaceIds": [
-    "framework.settings.conflicts"
-  ],
   "labels": [
     { "key": "ui.settings.tab.general", "en": "General", "de": "Allgemein" },
     { "key": "ui.settings.tab.theme", "en": "Theme", "de": "Thema" },
     { "key": "ui.settings.tab.keybindings", "en": "Hotkeys", "de": "Tastenkürzel" }
   ],
-  "maxPanelsPerStep": 1,
+  "refreshScope": "full",
+  "settleRequired": true,
   "requiresGuestRefresh": true
 }

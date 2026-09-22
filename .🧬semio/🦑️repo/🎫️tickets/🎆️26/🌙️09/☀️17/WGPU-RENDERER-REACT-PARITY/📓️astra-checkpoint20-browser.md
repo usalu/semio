@@ -13,3 +13,8 @@ The first Top-close click immediately following popup closure did not remove the
 Semantic locator clicks on WGPU mirror switches returned successfully but did not change state; physical pointer clicks worked. A source audit is distinguishing mirror pointer semantics from real accessibility activation behavior. No accessibility activation acceptance is claimed from these locator calls.
 
 The full57-step, eight docking cases, and representative surface-family acceptance remain incomplete. Goal and ticket remain open.
+# Late Failure: Prepared GPU Commands
+
+At 2026-09-21T19:40:07.118Z, browser20 reported a new renderer quarantine: `prepared frame submit step: prepared GPU opportunity exceeded the two millisecond ceiling for 4 consecutive opportunities: Commands took 3100 us`. A fresh DOM inspection confirmed `input accepted: no`. This differs from the older 17:42 InteractionCheckout fault. The final window had closed at 18:44:53.880Z, about 55 minutes earlier; the earlier successful interaction at +47.274 seconds remains only that bounded observation.
+
+Evidence was captured with the browser skill as `🗑️generated/astra-runtime/checkpoint20-iab/13-late-post-close-quarantine*`, including current DOM, screenshots, and console logs. Browser20 predates the source change that limits one GPU clip piece per opportunity. Sol and Terra are determining whether that repair covers this Commands failure or whether a separate timing/progress problem exists. No threshold increase or new browser acceptance is claimed.

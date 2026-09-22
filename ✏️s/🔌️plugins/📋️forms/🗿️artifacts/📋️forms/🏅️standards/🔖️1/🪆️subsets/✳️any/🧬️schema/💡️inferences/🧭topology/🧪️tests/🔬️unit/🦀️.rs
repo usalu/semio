@@ -43,7 +43,19 @@ async fn a_direct_cycle_between_two_blocks_is_reported() {
 async fn sequential_steps_without_conditions_stay_cycle_free_with_increasing_depth() {
     let topology = compute_forms_topology(&[step("s1", vec![block("q1", None)]), step("s2", vec![block("q2", None)])]);
     assert!(topology.cycle_free);
-    assert_eq!(topology.topo_order, vec!["s1", "q1", "s2", "q2"]);
-    assert!(topology.depth["s2"] > topology.depth["s1"]);
+    assert_eq!(topology.topo_order, vec!["step:s1", "q1", "step:s2", "q2"]);
+    assert!(topology.depth["step:s2"] > topology.depth["step:s1"]);
+}
+
+/// 🪪️ Steps and blocks are two independent id namespaces: the demo `building-component` form owns a
+/// step `geometry` AND a `buildingComponent` block `geometry` inside it. Without the `step:` prefix
+/// both collapse into one graph node with two incoming sequential edges, Kahn's queue drains early
+/// and the form reads back as cyclic.
+#[semio_framework_async_macros::async_test]
+async fn a_block_may_carry_its_own_steps_id_without_forming_a_cycle() {
+    let topology = compute_forms_topology(&[step("identity", vec![block("name", None)]), step("geometry", vec![block("count", None), block("geometry", None)])]);
+    assert!(topology.cycle_free, "a block id equal to a step id is not a cycle");
+    assert_eq!(topology.node_count, 5);
+    assert_eq!(topology.topo_order, vec!["step:identity", "name", "step:geometry", "count", "geometry"]);
 }
 //#endregion 🧪️TopologyLaws

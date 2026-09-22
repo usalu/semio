@@ -877,7 +877,9 @@
   --color-popover: var(--temporary);
   --color-popover-foreground: var(--border-element-color);
   --color-border: var(--border-normal-color);
-  --color-element: var(--border-element-color);
+  /* Element ink is a utility, not a theme color: `text-element` / `bg-element` read
+     `--hover-ink` when a hover fill is showing, and fall back to the level's element gray.
+     A `--color-element` token would also restyle `border-element`. */
   --color-emphasized: var(--foreground);
   --color-hover-interactive-fill: var(--hover-interactive-fill);
 }
@@ -958,6 +960,26 @@
 
 @utility border-element {
   border-color: var(--border-element-color);
+}
+
+/* 🎨️ Element gray is the hover fill. While that fill is painted, `--hover-ink` (set by
+   `bg-hover-interactive-fill`) lifts marks and labels to the emphasized foreground. */
+@utility text-element {
+  color: var(--hover-ink, var(--border-element-color));
+}
+
+@utility bg-element {
+  background-color: var(--hover-ink, var(--border-element-color));
+}
+
+/* 🎨️ Hover fill is `--muted-foreground` / element gray. Every descendant that still uses those
+   tokens would vanish, so the fill retints them to the emphasized foreground. Borders stay on
+   `--border-element-color`. */
+@utility bg-hover-interactive-fill {
+  background-color: var(--hover-interactive-fill);
+  --hover-ink: var(--color-emphasized);
+  --muted-foreground: var(--color-emphasized);
+  --color-muted-foreground: var(--color-emphasized);
 }
 
 @utility divide-element {
@@ -6518,6 +6540,9 @@
 [data-slot="footer"] [data-slot="panel-tab-button"]:hover:not([data-state="on"]):not(:disabled) {
   background-color: var(--hover-interactive-fill);
   color: var(--border-emphasized-color);
+  --hover-ink: var(--color-emphasized);
+  --muted-foreground: var(--color-emphasized);
+  --color-muted-foreground: var(--color-emphasized);
 }
 
 [data-slot="toggle-group"],

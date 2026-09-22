@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/select-popup-geometry.json",
+  "title": "Select Popup Geometry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "optionCount", "triggerWidth", "minimumContentWidth", "borderWidth", "scrollBandHeight", "sideOffset", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "optionCount": { "type": "integer", "minimum": 1 },
+    "triggerWidth": { "type": "number", "exclusiveMinimum": 0 },
+    "minimumContentWidth": { "type": "number", "exclusiveMinimum": 0 },
+    "borderWidth": { "type": "number", "minimum": 0 },
+    "scrollBandHeight": { "type": "number", "exclusiveMinimum": 0 },
+    "sideOffset": { "type": "number", "minimum": 0 },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        { "$ref": "#/$defs/normal" },
+        { "$ref": "#/$defs/constrained" }
+      ],
+      "items": false
+    }
+  },
+  "$defs": {
+    "normal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "viewportHeight", "popupWidth", "popupHeight", "scrollViewportHeight", "initialScroll"],
+      "properties": {
+        "id": { "const": "normal" },
+        "viewportHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "popupWidth": { "type": "number", "exclusiveMinimum": 0 },
+        "popupHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "scrollViewportHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "initialScroll": { "type": "number", "minimum": 0 }
+      }
+    },
+    "constrained": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "viewportHeight", "popupWidth", "popupHeight", "scrollViewportHeight", "initialScroll", "wheelDelta", "scrollAfterWheel"],
+      "properties": {
+        "id": { "const": "constrained" },
+        "viewportHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "popupWidth": { "type": "number", "exclusiveMinimum": 0 },
+        "popupHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "scrollViewportHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "initialScroll": { "type": "number", "minimum": 0 },
+        "wheelDelta": { "type": "number" },
+        "scrollAfterWheel": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

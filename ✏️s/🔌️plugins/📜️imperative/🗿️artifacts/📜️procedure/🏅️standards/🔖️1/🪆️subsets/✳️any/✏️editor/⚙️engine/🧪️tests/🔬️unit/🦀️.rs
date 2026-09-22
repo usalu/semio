@@ -20,6 +20,9 @@ async fn host_runs_default_snapshot() {
     let result = host.run();
     assert_eq!(result.effects.len(), 2);
     assert!(result.effects.iter().all(|entry| entry.error.is_none()));
+    // 🧊️ The default program's steps carry non-empty `params`, so the run result owns live
+    // dictionaries (`scope`, every row's `input`/`output`) and must be retired, never dropped.
+    neural_engine::ColdRetire::retire_cold(result);
 }
 
 #[semio_framework_async_macros::async_test]

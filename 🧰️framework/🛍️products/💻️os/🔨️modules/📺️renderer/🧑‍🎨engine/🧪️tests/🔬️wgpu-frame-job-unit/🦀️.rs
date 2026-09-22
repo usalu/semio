@@ -271,3 +271,48 @@ fn cancelled_after_chrome_frame_returns_its_exact_presented_input_candidate() {
     let runtime = close_active_frame(active);
     assert_candidate_returned(&runtime, witness);
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn component_close_transiently_retires_the_creating_frame_and_readmits_the_same_generation() {
+    let (runtime, witness) = runtime_with_presented_input_candidate();
+    let operation = OperationId(95);
+    let generation = Generation(95);
+    let presentation = crate::RuntimePresentationWitness { scene_revision: 1, input_generation: generation.0 };
+    let mut transaction = crate::FrameTransaction::new(FrameDirectives::default(), operation, generation);
+    let mut cursor = crate::FrameBuildCursor::new(presentation);
+    cursor.input_candidate = Some(witness);
+    transaction.build_cursor = Some(cursor);
+    let mut active = ActiveFrameBuild::new(runtime.clone(), FrameBuildInputs::default(), operation, generation, root_cancel_token());
+    active.phase = ActiveFramePhase::Build(transaction);
+
+    let wake_count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let wake_counter = Arc::clone(&wake_count);
+    let mut handle = FrameBuildHandle::new();
+    handle.set_completion_waker(Arc::new(move || {
+        wake_counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    }));
+    handle.admit_active(active);
+    handle.last_submitted_generation = Some(generation);
+
+    assert!(!handle.retire_for_component_surface_close_step(), "one bounded close unit cannot discard the whole retained frame");
+    for _ in 0..262_144 {
+        if handle.retire_for_component_surface_close_step() {
+            break;
+        }
+    }
+    assert!(!handle.has_live_session(), "the exact creating frame reaches terminal before the external owner starts");
+    assert!(!handle.closing, "component handoff does not permanently close the reusable frame handle");
+    assert!(handle.completion_waker.is_some(), "component handoff preserves the host completion wake authority");
+    assert_eq!(handle.last_submitted_generation, None, "native may readmit the same generation after terminal handoff");
+    assert_candidate_returned(&runtime, witness);
+
+    let _ = handle.poll_runtime_and_resubmit(runtime, FrameBuildInputs::default(), operation, generation);
+    assert!(handle.has_live_session(), "the reusable handle admits a same-generation successor without new host input");
+    for _ in 0..262_144 {
+        if handle.retire_for_component_surface_close_step() {
+            break;
+        }
+    }
+    assert!(!handle.has_live_session());
+}

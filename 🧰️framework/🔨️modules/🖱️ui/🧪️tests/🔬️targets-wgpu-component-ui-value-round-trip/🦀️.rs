@@ -33,6 +33,7 @@ mod value_round_trip_tests {
                 input_kind: "text".into(),
                 value: "abc".into(),
                 placeholder: None,
+                accessibility_label: None,
                 commit: None,
                 min: None,
                 max: None,

@@ -200,7 +200,7 @@
       "kind": "required",
       "connection": "direct",
       "separations": [],
-      "weight": 0,
+      "weight": 0.0,
       "rationale": null,
       "distanceMaxM": null,
       "distanceMinM": null,

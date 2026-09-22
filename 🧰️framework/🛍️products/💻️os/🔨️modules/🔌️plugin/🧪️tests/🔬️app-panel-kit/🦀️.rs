@@ -80,7 +80,7 @@ mod panel_kit_tests {
         let entries = window_entries(20);
         let section = tree_window_section(&TreeWindows::unhosted(), "ns.rows", window_label(), false, &entries, window_row).expect("bounded fixture");
         assert!(section.children.is_empty(), "a closed container materialises nothing");
-        assert_eq!(section_window(&section), Some(TreeWindow { total: 20, offset: 0 }), "its full extent is still published");
+        assert_eq!(section_window(&section), Some(TreeWindow { row_extent: Default::default(), total: 20, offset: 0 }), "its full extent is still published");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -94,7 +94,7 @@ mod panel_kit_tests {
         assert_eq!(section.children.len(), 3);
         assert_eq!(section.children[0].key.as_str(), "ns.row.5");
         assert_eq!(section.children[2].key.as_str(), "ns.row.7");
-        assert_eq!(section_window(&section), Some(TreeWindow { total: 20, offset: 5 }));
+        assert_eq!(section_window(&section), Some(TreeWindow { row_extent: Default::default(), total: 20, offset: 5 }));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -105,7 +105,7 @@ mod panel_kit_tests {
         for (id, expected) in [("ns.a", 30usize), ("ns.b", 18), ("ns.c", 0)] {
             let section = tree_window_section(&windows, id, window_label(), true, &entries, window_row).expect("bounded fixture");
             assert_eq!(section.children.len(), expected, "{id} materialises its share of the one shared first-paint budget");
-            assert_eq!(section_window(&section), Some(TreeWindow { total: 30, offset: 0 }), "{id} publishes its full extent regardless");
+            assert_eq!(section_window(&section), Some(TreeWindow { row_extent: Default::default(), total: 30, offset: 0 }), "{id} publishes its full extent regardless");
         }
     }
 
@@ -118,7 +118,7 @@ mod panel_kit_tests {
         assert!(section.children.len() <= UI_BUILT_CHILDREN_MAX, "one built node fans out at most one host child page");
         assert_eq!(section.children.len(), LEDGER - 1, "and the body-wide node ledger — root, headroom, this section node — is the tighter ceiling");
         assert_eq!(windows.nodes_remaining(), 0);
-        assert_eq!(section_window(&section), Some(TreeWindow { total: entries.len() as u32, offset: 0 }));
+        assert_eq!(section_window(&section), Some(TreeWindow { row_extent: Default::default(), total: entries.len() as u32, offset: 0 }));
     }
 
     /// 🧾️ The ledger a body starts a render with — the ONE budget both sides of the wire spend.
@@ -150,7 +150,7 @@ mod panel_kit_tests {
         let body = builder.build().expect("bounded fixture");
         assert_eq!(body.children.len(), keys.len());
         for section in body.children.iter() {
-            assert_eq!(section_window(section), Some(TreeWindow { total: 63, offset: 0 }), "every container publishes its full extent, including one the ledger could not seat");
+            assert_eq!(section_window(section), Some(TreeWindow { row_extent: Default::default(), total: 63, offset: 0 }), "every container publishes its full extent, including one the ledger could not seat");
         }
         let rows: usize = body.children.iter().map(|section| section.children.len()).sum();
         println!("[DEBUG] tree-window-ledger sections={} rows={rows} body_nodes={} remaining={}", keys.len(), body_nodes(&body), windows.nodes_remaining());
@@ -203,7 +203,7 @@ mod panel_kit_tests {
         assert!(body_nodes(&body) <= UI_DOCUMENT_NODES, "{} > {UI_DOCUMENT_NODES}", body_nodes(&body));
         assert_eq!(windows.nodes_remaining(), 0);
         for section in body.children.iter() {
-            assert_eq!(section_window(section), Some(TreeWindow { total: 200, offset: 0 }));
+            assert_eq!(section_window(section), Some(TreeWindow { row_extent: Default::default(), total: 200, offset: 0 }));
         }
     }
 
@@ -241,7 +241,7 @@ mod panel_kit_tests {
         let commands = &panel.children[1];
         let fixed = body_nodes(&panel) - commands.children.len() - 1;
         println!("[DEBUG] tree-window-ledger history commands={} fixed={fixed} body_nodes={}", commands.children.len(), body_nodes(&panel));
-        assert_eq!(section_window(commands), Some(TreeWindow { total: 300, offset: 0 }), "the scrollbar spans the whole log");
+        assert_eq!(section_window(commands), Some(TreeWindow { row_extent: Default::default(), total: 300, offset: 0 }), "the scrollbar spans the whole log");
         assert!(commands.children.len() <= LEDGER, "{} > {LEDGER}", commands.children.len());
         assert!(fixed <= TREE_WINDOW_FIXED_NODE_HEADROOM, "the un-ledgered Actions rows fit the reserve: {fixed} > {TREE_WINDOW_FIXED_NODE_HEADROOM}");
         assert!(body_nodes(&panel) <= UI_DOCUMENT_NODES, "{} > {UI_DOCUMENT_NODES}", body_nodes(&panel));
@@ -302,7 +302,7 @@ mod panel_kit_tests {
         assert_eq!(windows.nodes_reserved(), 1, "an off-screen open container reserves its own node and no rows");
         let section = tree_window_section(&windows, "ns.offscreen", window_label(), true, &entries, window_row).expect("bounded fixture");
         assert!(section.children.is_empty(), "a zero-row request materialises nothing, never the first-paint default");
-        assert_eq!(section_window(&section), Some(TreeWindow { total: 60, offset: 40 }), "and the host keeps the scroll position it reported");
+        assert_eq!(section_window(&section), Some(TreeWindow { row_extent: Default::default(), total: 60, offset: 40 }), "and the host keeps the scroll position it reported");
         assert_eq!(windows.nodes_remaining(), LEDGER - 1);
     }
 
@@ -318,7 +318,7 @@ mod panel_kit_tests {
         let section = tree_window_section(&TreeWindows::for_body(&view, "body"), "ns.rows", window_label(), true, &entries, window_row).expect("bounded fixture");
         assert_eq!(section.children.len(), 5, "a stale offset still shows a full window");
         assert_eq!(section.children[0].key.as_str(), "ns.row.7");
-        assert_eq!(section_window(&section), Some(TreeWindow { total: 12, offset: 7 }), "clamped to `total - rows`, so offset + length == total");
+        assert_eq!(section_window(&section), Some(TreeWindow { row_extent: Default::default(), total: 12, offset: 7 }), "clamped to `total - rows`, so offset + length == total");
 
         let short = window_entries(3);
         let view = ViewModel {
@@ -327,7 +327,7 @@ mod panel_kit_tests {
         };
         let section = tree_window_section(&TreeWindows::for_body(&view, "body"), "ns.rows", window_label(), true, &short, window_row).expect("bounded fixture");
         assert_eq!(section.children.len(), 3, "a container shorter than the window shows all of it from the top");
-        assert_eq!(section_window(&section), Some(TreeWindow { total: 3, offset: 0 }));
+        assert_eq!(section_window(&section), Some(TreeWindow { row_extent: Default::default(), total: 3, offset: 0 }));
     }
 
     /// 🔑️ One entity id under two different parents is TWO containers, and they must not steer each
@@ -358,10 +358,10 @@ mod panel_kit_tests {
         let Component::TreeItem(nested_combination) = &in_combinations.children[0].component else { panic!("expected a nested TreeItem") };
         assert_eq!(in_cases.children[0].key.as_str(), "uls", "the node key stays the raw pick target id");
         assert_eq!(in_combinations.children[0].key.as_str(), "uls");
-        assert_eq!(nested_case.window, Some(TreeWindow { total: 30, offset: 4 }), "the load case honours ITS request");
+        assert_eq!(nested_case.window, Some(TreeWindow { row_extent: Default::default(), total: 30, offset: 4 }), "the load case honours ITS request");
         assert_eq!(in_cases.children[0].children.len(), 3);
         assert_eq!(in_cases.children[0].children[0].key.as_str(), "ns.row.4");
-        assert_eq!(nested_combination.window, Some(TreeWindow { total: 30, offset: 0 }), "the combination is closed by ITS own request and keeps its extent");
+        assert_eq!(nested_combination.window, Some(TreeWindow { row_extent: Default::default(), total: 30, offset: 0 }), "the combination is closed by ITS own request and keeps its extent");
         assert!(in_combinations.children[0].children.is_empty(), "a closed container elsewhere in the body is not this one");
     }
 
@@ -442,7 +442,7 @@ mod panel_kit_tests {
         let section = tree_window_section(&windows, &long, window_label(), true, &entries, window_row).expect("an unsendable path still assembles");
         assert!(long.chars().count() > 256, "the fixture is past the view-context identifier ceiling");
         assert_eq!(section.children.len(), 12, "it takes the shared first-paint budget, exactly as a container the host has never seen");
-        assert_eq!(section_window(&section), Some(TreeWindow { total: 30, offset: 0 }), "and still publishes its full extent");
+        assert_eq!(section_window(&section), Some(TreeWindow { row_extent: Default::default(), total: 30, offset: 0 }), "and still publishes its full extent");
     }
 
     /// 🔑️ The host keys open state, geometry and windows by the container's window PATH, so a body
@@ -491,7 +491,7 @@ mod panel_kit_tests {
         let section = tree_window_section(&windows, "ns.rows", window_label(), false, &entries, window_row).expect("bounded fixture");
         assert_eq!(body_nodes(&section), 1, "a closed container is its own record and nothing else");
         assert_eq!(windows.nodes_remaining(), LEDGER - 1);
-        assert_eq!(section_window(&section), Some(TreeWindow { total: 5_000, offset: 0 }), "and it still publishes the whole extent the host may scroll into");
+        assert_eq!(section_window(&section), Some(TreeWindow { row_extent: Default::default(), total: 5_000, offset: 0 }), "and it still publishes the whole extent the host may scroll into");
     }
 
     /// 🥇️ Request priority — the packet's starvation case. The container the user scrolled to sits
@@ -518,9 +518,9 @@ mod panel_kit_tests {
         assert_eq!(scrolled.children.len(), 40, "the scrolled container is honoured exactly, not starved by the one in front of it");
         assert_eq!(scrolled.children[0].key.as_str(), "ns.row.120");
         assert_eq!(scrolled.children[39].key.as_str(), "ns.row.159");
-        assert_eq!(section_window(scrolled), Some(TreeWindow { total: 200, offset: 120 }));
+        assert_eq!(section_window(scrolled), Some(TreeWindow { row_extent: Default::default(), total: 200, offset: 120 }));
         assert_eq!(first_paint.children.len(), LEDGER - 41 - 1, "a first paint spends only the records no request is holding");
-        assert_eq!(section_window(first_paint), Some(TreeWindow { total: 200, offset: 0 }));
+        assert_eq!(section_window(first_paint), Some(TreeWindow { row_extent: Default::default(), total: 200, offset: 0 }));
         assert!(body_nodes(&body) <= UI_DOCUMENT_NODES, "{} > {UI_DOCUMENT_NODES}", body_nodes(&body));
     }
 
@@ -546,7 +546,7 @@ mod panel_kit_tests {
         println!("[DEBUG] tree-window-ledger clamp rows={rows:?} body_nodes={}", body_nodes(&body));
         assert_eq!(rows, vec![LEDGER - 1, 0, 0, 0], "the first request is seated whole; the clamp falls on the tail");
         for section in body.children.iter() {
-            assert_eq!(section_window(section), Some(TreeWindow { total: 200, offset: 0 }), "every container stamps its total, seated or not");
+            assert_eq!(section_window(section), Some(TreeWindow { row_extent: Default::default(), total: 200, offset: 0 }), "every container stamps its total, seated or not");
         }
         assert!(body_nodes(&body) <= UI_DOCUMENT_NODES, "{} > {UI_DOCUMENT_NODES}", body_nodes(&body));
     }
@@ -575,10 +575,10 @@ mod panel_kit_tests {
         let nested: usize = body.children[0].children.iter().map(|group| group.children.len()).sum();
         println!("[DEBUG] tree-window-ledger nested-section groups={} nested={nested} body_nodes={} remaining={}", body.children[0].children.len(), body_nodes(&body), windows.nodes_remaining());
         assert!(body_nodes(&body) <= UI_DOCUMENT_NODES, "{} > {UI_DOCUMENT_NODES}", body_nodes(&body));
-        assert_eq!(section_window(&body.children[0]), Some(TreeWindow { total: 40, offset: 0 }));
-        assert_eq!(section_window(&body.children[1]), Some(TreeWindow { total: 40, offset: 0 }), "a container the exhausted ledger could not seat still publishes its extent");
+        assert_eq!(section_window(&body.children[0]), Some(TreeWindow { row_extent: Default::default(), total: 40, offset: 0 }));
+        assert_eq!(section_window(&body.children[1]), Some(TreeWindow { row_extent: Default::default(), total: 40, offset: 0 }), "a container the exhausted ledger could not seat still publishes its extent");
         let Component::TreeItem(group) = &body.children[0].children[0].component else { panic!("expected a nested TreeItem") };
-        assert_eq!(group.window, Some(TreeWindow { total: 25, offset: 0 }), "and so does every nested group row");
+        assert_eq!(group.window, Some(TreeWindow { row_extent: Default::default(), total: 25, offset: 0 }), "and so does every nested group row");
     }
 
     /// 🧾️ Only `ui.fixed-capacity` ends a window early; anything else is a real assembly fault and
@@ -603,7 +603,7 @@ mod panel_kit_tests {
         })
         .expect("a fixed-capacity refusal must end the window, never the render");
         assert_eq!(section.children.len(), 5);
-        assert_eq!(section_window(&section), Some(TreeWindow { total: 20, offset: 0 }));
+        assert_eq!(section_window(&section), Some(TreeWindow { row_extent: Default::default(), total: 20, offset: 0 }));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -649,7 +649,7 @@ mod panel_kit_tests {
         let panel = ui_history_panel(&history, "ctrl", false, false, &ViewModel::default()).await.expect("bounded fixture");
         let commands = &panel.children[1];
         assert_eq!(commands.children.len(), (TREE_WINDOW_DEFAULT_ROWS as usize).min(UI_BUILT_CHILDREN_MAX), "a cold paint materialises one viewport of commands, clamped by the built-children ceiling");
-        assert_eq!(section_window(commands), Some(TreeWindow { total: 100, offset: 0 }), "the scrollbar spans the whole log");
+        assert_eq!(section_window(commands), Some(TreeWindow { row_extent: Default::default(), total: 100, offset: 0 }), "the scrollbar spans the whole log");
         let json = panel_body_json(&panel).to_string();
         assert!(!json.contains(".more"), "no continuation row key survives: {json}");
         assert!(!json.contains("\"+"), "no `+N` label survives: {json}");

@@ -1089,6 +1089,7 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             // boot; without an app-level declaration the shell drops it before dispatch and the
             // example picker never renders at all.
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
             .action_interactive_job("incrementCounter", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("noMutation", InteractiveJobClassification::Migrated)

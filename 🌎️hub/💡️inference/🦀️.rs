@@ -40,7 +40,7 @@ pub fn sha256(bytes: &[u8]) -> String {
 }
 
 pub struct InferenceOperationControlV1 {
-    deadline: Instant,
+    deadline: Option<Instant>,
     cancelled: AtomicBool,
     interrupted: tokio::sync::Notify,
     progress: AtomicU64,
@@ -49,11 +49,23 @@ pub struct InferenceOperationControlV1 {
 
 impl InferenceOperationControlV1 {
     pub fn new(lifetime_ms: u64, work_limit: u64) -> Result<Self, InferenceErrorV1> {
-        if lifetime_ms == 0 || lifetime_ms > schema::JOB_MAX_LIFETIME_MS || work_limit == 0 || work_limit > 65_536 {
+        if lifetime_ms == 0 || lifetime_ms > schema::JOB_MAX_LIFETIME_MS {
             return Err(InferenceErrorV1::Bounds);
         }
         let deadline = Instant::now().checked_add(Duration::from_millis(lifetime_ms)).ok_or(InferenceErrorV1::Bounds)?;
-        Ok(Self { deadline, cancelled: AtomicBool::new(false), interrupted: tokio::sync::Notify::new(), progress: AtomicU64::new(0), work_limit })
+        Ok(Self { deadline: Some(deadline), ..Self::work_bounded(work_limit)? })
+    }
+
+    /// ⏳️ One operation whose only bounds are its work-unit budget and explicit cancellation. A
+    /// wall-clock lifetime answers `Expired` for time the operation never spent running — time it
+    /// lost to whatever else the machine was doing — so an owner that already enforces the client's
+    /// lifetime elsewhere, and any law whose subject is the operation's own outcome rather than its
+    /// duration, takes this control and stays a statement about ordering instead of about speed.
+    pub fn work_bounded(work_limit: u64) -> Result<Self, InferenceErrorV1> {
+        if work_limit == 0 || work_limit > 65_536 {
+            return Err(InferenceErrorV1::Bounds);
+        }
+        Ok(Self { deadline: None, cancelled: AtomicBool::new(false), interrupted: tokio::sync::Notify::new(), progress: AtomicU64::new(0), work_limit })
     }
 
     pub fn cancel(&self) {
@@ -65,7 +77,7 @@ impl InferenceOperationControlV1 {
         if self.cancelled.load(Ordering::Acquire) {
             return Err(InferenceErrorV1::Cancelled);
         }
-        if Instant::now() >= self.deadline {
+        if self.deadline.is_some_and(|deadline| Instant::now() >= deadline) {
             return Err(InferenceErrorV1::Expired);
         }
         if completed > self.work_limit {
@@ -86,9 +98,13 @@ impl InferenceOperationControlV1 {
         if let Err(error) = self.checkpoint(self.progress().0) {
             return error;
         }
+        let Some(deadline) = self.deadline else {
+            notified.await;
+            return InferenceErrorV1::Cancelled;
+        };
         tokio::select! {
             _ = &mut notified => InferenceErrorV1::Cancelled,
-            _ = tokio::time::sleep_until(tokio::time::Instant::from_std(self.deadline)) => InferenceErrorV1::Expired,
+            _ = tokio::time::sleep_until(tokio::time::Instant::from_std(deadline)) => InferenceErrorV1::Expired,
         }
     }
 }
