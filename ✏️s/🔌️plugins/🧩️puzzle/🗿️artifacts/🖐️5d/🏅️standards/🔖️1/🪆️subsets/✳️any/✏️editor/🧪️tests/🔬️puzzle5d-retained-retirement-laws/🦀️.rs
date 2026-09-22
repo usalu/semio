@@ -229,7 +229,27 @@ fn close_completion_rejection(owner: &mut Puzzle5dPendingCompletionRejection) ->
             PluginCloseStep::Blocked { reason } => panic!("completion rejection close blocked: {reason}"),
             PluginCloseStep::AwaitingInput { .. } => panic!("completion rejection close cannot await input"),
         }
-        assert!(turns < 100_000, "completion rejection close did not converge");
+        assert!(
+            turns < 100_000,
+            "completion rejection close did not converge after {turns} bounded turns — phases emit_closed={} ephemeral_closed={} fault_closed={}, remaining owner {}",
+            owner.emit_closed,
+            owner.ephemeral_closed,
+            owner.fault_closed,
+            owner
+                .owner
+                .as_ref()
+                .map(|owner| match owner.emit.as_ref() {
+                    Ok(emit) => format!(
+                        "emit(mutations={} cap={} effects={} cap={} events={} children={} cap={} description={:?} coalesce={:?}) ephemeral(presence={} transient={} window_transient={}) fault(causes={} cap={} message_len={} code_len={} span={})",
+                        emit.artifact_mutations.len(), emit.artifact_mutations.capacity(), emit.effects.len(), emit.effects.capacity(), emit.events.len(), emit.child_emits.len(), emit.child_emits.capacity(),
+                        emit.description.as_ref().map(String::len), emit.coalesce_key.as_ref().map(String::len),
+                        owner.ephemeral.presence.len(), owner.ephemeral.transient.len(), owner.ephemeral.window_transient.len(),
+                        owner.fault.causes.len(), owner.fault.causes.capacity(), owner.fault.message.len(), owner.fault.code.0.len(), owner.fault.span.is_some()
+                    ),
+                    Err(fault) => format!("emit=Err(causes={} message_len={})", fault.causes.len(), fault.message.len()),
+                })
+                .unwrap_or_else(|| "none".to_string())
+        );
     }
     assert!(owner.owner.is_none());
     turns

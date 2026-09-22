@@ -13,7 +13,7 @@ export async function testPreview2GuestLogVendoring(repoRoot: string): Promise<v
   const fixture = JSON.parse(readFileSync(join(testSourceDirectory, "🔣️.json"), "utf8"));
   const { ensurePreview2ShimVendorAt, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease } = await import("../../🏗️materialization/🟦️.ts");
   const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  assert(artifactBase?.includes("🗑️generated"));
+  assert(artifactBase !== undefined && artifactBase.includes("🗑️generated"));
   mkdirSync(artifactBase, { recursive: true });
   const vendor = mkdtempSync(join(artifactBase, "preview2-log-vendor-"));
   const observe = async (path: string, isolated: boolean, flushed = false) => {

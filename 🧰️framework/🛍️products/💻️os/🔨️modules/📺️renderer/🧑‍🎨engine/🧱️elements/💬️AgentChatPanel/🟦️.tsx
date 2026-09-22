@@ -2,7 +2,8 @@
 // 🎨️ framework/products/os/modules/renderer/engine/elements/AgentChatPanel/component.tsx
 /** @emoji 💬️ `AgentChatPanel` — the OS shell's agent dock. It renders the LIVE MCP conversation:
  * every tool the connected agent invokes (with its real arguments), every result, every approval the
- * gateway parked, and every turn the human typed back — all of it sourced from `🧵️bridge` frames the
+ * gateway parked, every turn the human typed back, and every free-text turn the agent itself
+ * published through `conversation_reply` — all of it sourced from `🧵️bridge` frames the
  * `semio-os-mcp` gateway emits from its own `tools/call` dispatch (`AgentToolCall`/`AgentToolResult`)
  * and approval gate (`ApprovalRequested`/`ApprovalResolved`). Nothing on this surface is generated
  * locally: with no bridge attached the transcript is empty and the composer is disabled, which is the
@@ -79,7 +80,8 @@ function AgentChatEntry({
   const youLabel = useLabel(agentUiLabel("os.agent.chat.youRole"));
   const toolCallLabel = useLabel(agentUiLabel("os.agent.chat.toolCallRole"));
   const approvalLabel = useLabel(agentUiLabel("os.agent.chat.approvalRole"));
-  const roleLabel = entry.kind === "userMessage" ? youLabel : entry.kind === "toolCall" ? toolCallLabel : approvalLabel;
+  const agentLabel = useLabel(agentUiLabel("os.agent.chat.agentRole"));
+  const roleLabel = entry.kind === "userMessage" ? youLabel : entry.kind === "toolCall" ? toolCallLabel : entry.kind === "agentMessage" ? agentLabel : approvalLabel;
   const runningLabel = useLabel(agentUiLabel("os.agent.chat.running"));
   const failedLabel = useLabel(agentUiLabel("os.agent.chat.failed"));
   const succeededLabel = useLabel(agentUiLabel("os.agent.chat.succeeded"));
@@ -96,6 +98,8 @@ function AgentChatEntry({
   const approvalTargetLabel = useLabel(agentUiLabel("os.agent.chat.approvalTarget"));
   const requestedByLabel = useLabel(agentUiLabel("os.agent.approvals.requestedBy"));
   const approvalExpiredLabel = useLabel(agentUiLabel("os.agent.chat.approvalExpired"));
+  const replyStreamingLabel = useLabel(agentUiLabel("os.agent.chat.replyStreaming"));
+  const replyToLabel = useLabel(agentUiLabel("os.agent.chat.replyTo"));
   // 🧾️ The parked approval, read out of the ONE wire string the gateway sends (`🛡️policy`'s
   // `ApprovalRequest::shell_summary`). Parsed unconditionally — hooks may not run behind a branch —
   // and only rendered on an approval row.
@@ -104,7 +108,7 @@ function AgentChatEntry({
   const countdownLabel = useLabel(agentUiLabel("os.agent.chat.approvalCountdown"), { seconds: String(secondsLeft ?? 0) });
 
   const toolState = entry.kind === "toolCall" ? (entry.state === "running" ? runningLabel : entry.state === "cancelling" ? cancellingLabel : entry.state === "failed" ? failedLabel : succeededLabel) : "";
-  const state = entry.kind === "toolCall" ? toolState : entry.kind === "approval" ? (entry.state === "pending" ? approvalPendingLabel : (entry.decision ?? "")) : "";
+  const state = entry.kind === "toolCall" ? toolState : entry.kind === "approval" ? (entry.state === "pending" ? approvalPendingLabel : (entry.decision ?? "")) : entry.kind === "agentMessage" && entry.state === "streaming" ? replyStreamingLabel : "";
   // 🛑️ Only a call still reported as running can be cancelled: a `cancelling` row already sent its
   // frame, and a settled one has nothing left to stop.
   const cancellable = entry.kind === "toolCall" && entry.state === "running" && onCancelToolCall !== undefined;
@@ -113,7 +117,7 @@ function AgentChatEntry({
   const decidable = entry.kind === "approval" && entry.state === "pending" && onResolveApproval !== undefined;
 
   return (
-    <li id={entryElementId(entry)} data-semio-agent-chat-entry={entry.kind} data-agent-chat-state={entry.kind === "toolCall" ? entry.state : entry.kind === "approval" ? entry.state : "sent"} className="flex min-w-0 flex-col gap-single py-single">
+    <li id={entryElementId(entry)} data-semio-agent-chat-entry={entry.kind} data-agent-chat-state={entry.kind === "toolCall" ? entry.state : entry.kind === "approval" ? entry.state : entry.kind === "agentMessage" ? entry.state : "sent"} className="flex min-w-0 flex-col gap-single py-single">
       <div className="flex min-w-0 items-baseline justify-between gap-single">
         <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{roleLabel}</span>
         <span className="flex items-center gap-single">
@@ -134,6 +138,22 @@ function AgentChatEntry({
         </span>
       </div>
       {entry.kind === "userMessage" ? <p className="whitespace-pre-wrap break-words text-xs text-foreground">{entry.text}</p> : null}
+      {entry.kind === "agentMessage" ? (
+        // 💬️ The agent's own prose. A live region because a streaming turn grows without the human
+        // doing anything — announced politely, never interrupting — and `aria-busy` says the turn is
+        // not finished yet, which is the same fact the visible state word carries.
+        <p
+          role="status"
+          aria-live="polite"
+          aria-busy={entry.state === "streaming"}
+          data-semio-agent-chat-reply={entry.id}
+          data-semio-agent-chat-reply-to={entry.inReplyTo ?? ""}
+          title={entry.inReplyTo ? replyToLabel : undefined}
+          className="whitespace-pre-wrap break-words text-xs text-foreground"
+        >
+          {entry.text}
+        </p>
+      ) : null}
       {entry.kind === "approval" ? (
         // 🧾️ WHO asked, WHAT it does, WHAT it touches — the three facts a human needs to decide,
         // each omitted rather than blanked when the producer did not send it. A row missing every

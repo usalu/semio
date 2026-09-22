@@ -379,6 +379,18 @@ pub enum GatewayToShell {
         ok: bool,
         summary: String,
     },
+    /// 💬️ One chunk of the connected agent's OWN free-text turn — the wgpu twin of the gateway's
+    /// `AgentReply` (`🌉️mcp/🧵️bridge/🦀️.rs:1389`) and of React's `agentMessage` conversation entry.
+    /// Every chunk of one turn repeats `reply_id`, so a shell appends to the row it already has
+    /// instead of stacking one row per chunk; `in_reply_to` is the `message_id` of the
+    /// `ShellToGateway::AgentMessage` this answers, or `None` for a turn the agent opened itself;
+    /// `complete` marks the last chunk. The text is the agent's own words and carries no locale.
+    AgentReply {
+        reply_id: String,
+        in_reply_to: Option<String>,
+        text: String,
+        complete: bool,
+    },
 }
 
 impl GatewayToShell {
@@ -395,6 +407,7 @@ impl GatewayToShell {
             7 => GatewayToShell::Bye { reason: reader.read_string()? },
             8 => GatewayToShell::AgentToolCall { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, arguments: reader.read_string()? },
             9 => GatewayToShell::AgentToolResult { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, ok: reader.read_bool()?, summary: reader.read_string()? },
+            10 => GatewayToShell::AgentReply { reply_id: reader.read_string()?, in_reply_to: reader.read_option_string()?, text: reader.read_string()?, complete: reader.read_bool()? },
             other => return Err(BridgeFrameFault::UnknownTag(other)),
         };
         reader.finish()?;
@@ -457,6 +470,13 @@ impl GatewayToShell {
                 wire::write_string(&mut buf, tool_name);
                 wire::write_bool(&mut buf, *ok);
                 wire::write_string(&mut buf, summary);
+            }
+            GatewayToShell::AgentReply { reply_id, in_reply_to, text, complete } => {
+                wire::write_u8(&mut buf, 10);
+                wire::write_string(&mut buf, reply_id);
+                wire::write_option_string(&mut buf, in_reply_to);
+                wire::write_string(&mut buf, text);
+                wire::write_bool(&mut buf, *complete);
             }
         }
         buf
@@ -621,14 +641,25 @@ pub enum AgentConversationEntry {
     UserMessage { id: String, text: String },
     ToolCall { id: String, tool_name: String, arguments: String, state: AgentToolCallState, summary: Option<String> },
     Approval { id: String, summary: String, state: AgentApprovalState, decision: Option<ApprovalDecision> },
+    AgentMessage { id: String, text: String, state: AgentReplyState },
 }
 
 impl AgentConversationEntry {
     pub fn id(&self) -> &str {
         match self {
-            AgentConversationEntry::UserMessage { id, .. } | AgentConversationEntry::ToolCall { id, .. } | AgentConversationEntry::Approval { id, .. } => id,
+            AgentConversationEntry::UserMessage { id, .. } | AgentConversationEntry::ToolCall { id, .. } | AgentConversationEntry::Approval { id, .. } | AgentConversationEntry::AgentMessage { id, .. } => id,
         }
     }
+}
+
+/// 💬️ Whether the agent's turn is still arriving. One-for-one with React's
+/// `"streaming" | "complete"` on its `agentMessage` entry: the gateway's own `complete` flag decides
+/// it, so the panel never has to guess from timing.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum AgentReplyState {
+    #[default]
+    Streaming,
+    Complete,
 }
 
 /// ✂️ How many conversation entries the panel retains, one-for-one with React's
@@ -774,7 +805,24 @@ impl AgentBridgeState {
             GatewayToShell::AgentToolResult { invocation_id, ok, summary, .. } => {
                 self.settle_conversation_tool_call(&invocation_id, ok, summary);
             }
+            GatewayToShell::AgentReply { reply_id, text, complete, .. } => {
+                self.append_conversation_reply_chunk(reply_id, text, complete);
+            }
         }
+    }
+
+    /// ➕️ Appends one chunk of an agent turn, or extends the row that already carries this
+    /// `reply_id` — the wgpu twin of React's append/extend pair (`🔗️AgentBridge/🟦️.tsx:671`). A
+    /// chunk whose row has already been trimmed off the tail opens a new row rather than being
+    /// dropped, so a long turn stays visible instead of vanishing mid-sentence.
+    fn append_conversation_reply_chunk(&mut self, reply_id: String, text: String, complete: bool) {
+        let state = if complete { AgentReplyState::Complete } else { AgentReplyState::Streaming };
+        if let Some(AgentConversationEntry::AgentMessage { text: slot, state: slot_state, .. }) = self.conversation.iter_mut().find(|entry| entry.id() == reply_id) {
+            slot.push_str(&text);
+            *slot_state = state;
+            return;
+        }
+        self.append_conversation(AgentConversationEntry::AgentMessage { id: reply_id, text, state });
     }
 
     /// ➕️ Appends one entry and trims to [`AGENT_CONVERSATION_MAX_ENTRIES`], oldest first.

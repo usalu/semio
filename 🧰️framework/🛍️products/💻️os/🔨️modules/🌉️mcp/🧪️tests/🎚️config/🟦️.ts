@@ -27,7 +27,21 @@ export default defineConfig({
     name: "@semio-tech/framework-os-mcp",
     environment: "node",
     include: [resolve(root, "../../🧪️tests/*/🟦️.ts")],
-    exclude: [resolve(root, "../../🧪️tests/🧪️resolvemcpbinarypath/🟦️.ts")],
+    // 🚫️ Four files live under `🧪️tests/` and are NOT vitest suites, so the glob above swept them in
+    // and the project reported them as failures that measured nothing:
+    //   · `🎚️config` is the configuration you are reading — vitest called it a suite with no tests;
+    //   · `💬️agent-reply`, `🤖️live-agent-loop` and `🤖️hub-agent-participant` are LIVE GATES with
+    //     their own `*-check` Nx targets and `.vscode/launch.json` rows (group `4_gate`). Each one
+    //     needs an already-running `dev` serve or hub handed to it by environment, executes at
+    //     import time and ends in `process.exit`. Run under `test quick` they crashed on an unset
+    //     environment path instead of gating anything.
+    exclude: [
+      resolve(root, "../../🧪️tests/🧪️resolvemcpbinarypath/🟦️.ts"),
+      resolve(root, "../../🧪️tests/🎚️config/🟦️.ts"),
+      resolve(root, "../../🧪️tests/💬️agent-reply/🟦️.ts"),
+      resolve(root, "../../🧪️tests/🤖️live-agent-loop/🟦️.ts"),
+      resolve(root, "../../🧪️tests/🤖️hub-agent-participant/🟦️.ts"),
+    ],
     coverage: { include: ["../../🟦️.ts"] },
     includeSource: ["../../🟦️.ts"],
     testTimeout: 30_000,

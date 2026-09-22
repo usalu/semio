@@ -36,7 +36,14 @@ fn replace_document_operations(current: &RasterSnapshot, mut next: RasterSnapsho
     for asset_id in current.assets.keys() {
         operations.push(RasterMutation::RemoveLayerAsset(remove_layer_asset::mutation::RemoveLayerAsset { asset_id: asset_id.clone() }));
     }
-    operations.extend(example_media_operations(example_id, current));
+    // 🖼️ UNCONDITIONALLY, not through [`example_media_operations`]: the loop above just emitted a
+    // `remove-layer-asset` for EVERY asset the open document carries, so by the time this batch's
+    // media lands the pool is empty — and `example_media_operations`'s guard reads `current`, i.e.
+    // the pool as it was BEFORE those removals. Re-selecting the demo over a document that already
+    // carried the materialized emblem (any edit that makes the layer forests differ takes this path,
+    // the early-return in `handle` no longer applies) therefore removed the emblem and planted
+    // nothing, leaving a pixel-less handle pool and a BLANK composite.
+    operations.extend(example_media(example_id));
     for (asset_id, _) in next.assets.iter() {
         if let Some(asset) = raster_asset(&next.assets, asset_id) {
             operations.push(RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: asset_id.to_owned(), asset }));
@@ -64,10 +71,18 @@ fn drain_owned_map<V>(map: &mut RasterOwnedMap<V>) {
 /// 🎞️ Media a committed example declares but its `.dsl.semio` carrier cannot carry — the same split
 /// `📸️remodel`'s `example_media_operations` uses for synthetic-orbit frame PNGs.
 pub(crate) fn example_media_operations(example_id: &str, current: &RasterSnapshot) -> Vec<RasterMutation> {
-    if example_id != crate::examples::art_raster_demo::ID {
+    if crate::raster_asset(&current.assets, "semio-emblem").is_some() {
         return Vec::new();
     }
-    if crate::raster_asset(&current.assets, "semio-emblem").is_some() {
+    example_media(example_id)
+}
+
+/// 🎞️ The same media, planted UNCONDITIONALLY — what a caller needs when it has already emptied the
+/// asset pool itself (see [`replace_document_operations`]). [`example_media_operations`] is this
+/// plus the "the open document already resolves these pixels" guard, which only a caller that keeps
+/// the pool may ask.
+pub(crate) fn example_media(example_id: &str) -> Vec<RasterMutation> {
+    if example_id != crate::examples::art_raster_demo::ID {
         return Vec::new();
     }
     vec![RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset: crate::examples::art_raster_demo::emblem_image_asset() })]
@@ -116,6 +131,28 @@ mod tests {
         let operations = example_media_operations(crate::examples::art_raster_demo::ID, &empty_raster_snapshot());
         assert_eq!(operations.len(), 1);
         assert!(matches!(&operations[0], RasterMutation::AddLayerAsset(_)));
+    }
+
+    /// ⚖️ LAW: the replace batch is self-contained — it removes the open asset pool, so it must plant
+    /// the example's own media back in the SAME batch, whatever the open pool held. Reading the
+    /// `current` pool for that decision (which `example_media_operations` does, correctly, for the
+    /// "nothing to do" check in `handle`) made re-selecting the demo over an already-materialized
+    /// document emit `remove-layer-asset semio-emblem` and nothing else: a pixel-less handle pool and
+    /// a blank composite (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP).
+    #[test]
+    fn replacing_a_materialized_document_plants_the_example_media_it_just_removed() {
+        let current = crate::standards::v1::subsets::any::schema::semio_example_document();
+        assert!(crate::raster_asset(&current.assets, "semio-emblem").is_some(), "the open document starts with real pixels");
+        let example = raster_example_document(crate::examples::art_raster_demo::ID).expect("the demo example document");
+        let operations = replace_document_operations(&current, example, crate::examples::art_raster_demo::ID);
+        let removed = operations.iter().filter(|operation| matches!(operation, RasterMutation::RemoveLayerAsset(remove) if remove.asset_id == "semio-emblem")).count();
+        let planted = operations.iter().any(|operation| matches!(operation, RasterMutation::AddLayerAsset(add) if add.asset_id == "semio-emblem" && !add.asset.data.is_empty()));
+        assert_eq!(removed, 1, "the batch removes the open pool");
+        assert!(planted, "and plants real emblem pixels back in the same batch");
+        for operation in operations {
+            crate::standards::v1::subsets::any::schema::mutations::retire_raster_mutation(operation);
+        }
+        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(current);
     }
 }
 //#endregion 🧪️Tests

@@ -132,5 +132,18 @@ impl store::ArtifactPack for TxtSnapshot {
         let body = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(Self::from_body(&body))
     }
+    /// 🧬️ The structural fingerprint `ArtifactCodec::pack_schema_hash` and the hub's trusted
+    /// catalog pin this kind by. The `dsl::DslRecord` derive above already generates the spec —
+    /// the same one `register_schema_spec("stdio.txt", TxtSnapshot::__dsl_spec)` publishes to the
+    /// DSL registry — but a HAND-ROLLED `ArtifactPack` never picks up the derive's `record_spec`
+    /// override the way `DslArtifact` does, so this kind silently answered the trait's `None`
+    /// opt-out. That opt-out is what `codec.pack-schema-hash(stdio.txt)` reported as
+    /// `artifact codec schema has no structural record specification`, and what the catalog
+    /// builder refuses as the zero fingerprint (ticket 26/09/18 slice TC4). The body's raw
+    /// line-joined pack encoding is unaffected: this hash fingerprints the SNAPSHOT RECORD's
+    /// fields, not the pack container.
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

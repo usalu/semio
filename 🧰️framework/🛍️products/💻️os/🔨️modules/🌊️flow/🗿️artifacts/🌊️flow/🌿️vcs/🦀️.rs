@@ -632,12 +632,27 @@ impl FlowHostSnapshotRetirement {
 }
 
 impl ErasedSnapshotRetirement for FlowHostSnapshotRetirement {
+    /// 📏️ A heap allocation is freed WHOLE or not at all, so this wrapper grants the physical
+    /// demand its frontier publishes out of its own allocation currency and charges the caller's
+    /// payload page only what fits in it. The demand is republished below so a driver that CAN pay
+    /// it from its own page does (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
-        self.retirement.close_page(maximum_items, maximum_bytes)
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Ok(SnapshotRetirementStep::Blocked);
+        }
+        let demand = self.retirement.next_close_byte_demand().map_err(str::to_owned)?;
+        Ok(match self.retirement.close_page(maximum_items, maximum_bytes.max(demand))? {
+            SnapshotRetirementStep::Pending { released_items, released_bytes } => SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes.min(maximum_bytes) },
+            step => step,
+        })
     }
 
     fn terminal_is_empty(&self) -> bool {
         self.retirement.terminal_is_empty()
+    }
+
+    fn next_close_byte_demand(&self) -> usize {
+        ErasedSnapshotRetirement::next_close_byte_demand(&self.retirement)
     }
 }
 
@@ -687,6 +702,11 @@ impl ErasedSnapshotRetirement for FlowSnapshotRetirement {
     fn terminal_is_empty(&self) -> bool {
         self.snapshot.is_none() && self.host_snapshot.is_none()
     }
+
+    /// 📏️ Forwarded from the nested host-document owner this retirement is currently spending.
+    fn next_close_byte_demand(&self) -> usize {
+        self.host_snapshot.as_ref().map_or(1, ErasedSnapshotRetirement::next_close_byte_demand)
+    }
 }
 
 impl Drop for FlowSnapshotRetirement {
@@ -735,9 +755,10 @@ impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetiremen
 }
 
 /// ♻️ One owned `FlowHostSnapshot` as the framework's own incremental owner cursor, so a flow document
-/// can be opened as an owned MEMBER of a composed document. It drives flow's own reserve-then-close
-/// frontier through [`FlowRetirement::close_page`] — the single entry point that never answers
-/// `Blocked` under a non-zero grant — rather than the bare `close_step` a naive bridge would call.
+/// can be opened as an owned MEMBER of a composed document. A heap allocation is freed WHOLE or not
+/// at all, so this cursor READS the demand flow's frontier publishes and grants it out of its own
+/// allocation currency, then charges the caller's payload page only what fits in it — a bridge that
+/// grants only a fixed page stalls on the first owner whose backing is larger.
 struct FlowOwnedSnapshotCursor {
     retirement: FlowRetirement,
 }
@@ -750,7 +771,10 @@ impl crate::os_store::retirement::RetirementCursor for FlowOwnedSnapshotCursor {
         if maximum_bytes == 0 {
             return crate::os_store::retirement::RetirementStep::BudgetExhausted;
         }
-        match self.retirement.close_page(1, maximum_bytes) {
+        let Ok(demand) = self.retirement.next_close_byte_demand() else {
+            return crate::os_store::retirement::RetirementStep::BudgetExhausted;
+        };
+        match self.retirement.close_page(1, maximum_bytes.max(demand)) {
             Ok(SnapshotRetirementStep::Complete) => crate::os_store::retirement::RetirementStep::Complete,
             Ok(SnapshotRetirementStep::Pending { released_bytes, .. }) => crate::os_store::retirement::RetirementStep::Bytes(released_bytes.min(maximum_bytes)),
             Ok(SnapshotRetirementStep::Blocked) | Err(_) => crate::os_store::retirement::RetirementStep::BudgetExhausted,

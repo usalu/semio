@@ -387,11 +387,15 @@ export function proveMcpInferenceBridgeFixture(repoRoot: string): InferenceBridg
   const expected = [
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/approval-undos",
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs",
+    // 🔁 The hub's own job-reconciliation endpoint. This client never calls it — it is named here
+    // because the census is exact in BOTH directions: a hub route this oracle has never seen is a
+    // surface the client may have to learn, and silently widening the comparison would hide it.
+    "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/reconcile",
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/approval",
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/cancel",
     "/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs/{job_id}/events",
   ].sort();
-  must(JSON.stringify(registered) === JSON.stringify(expected), `the hub binary registers ${JSON.stringify(registered)}, not the four routes this client calls`);
+  must(JSON.stringify(registered) === JSON.stringify(expected), `the hub binary registers ${JSON.stringify(registered)}, not the ${expected.length} gis-map inference routes this oracle knows`);
   const render = (template: string) => template.replace("{space_id}", encodeSegment("space:alpha")).replace("{document_id}", encodeSegment("doc:tokyo")).replace("{job_id}", encodeSegment(jobId));
   must(jobsPath("space:alpha", "doc:tokyo") === render(expected.find((route) => route.endsWith("/jobs"))!), "the submit path builder drifted from the registered route");
   must(cancelPath("space:alpha", "doc:tokyo", jobId) === render(expected.find((route) => route.endsWith("/cancel"))!), "the cancel path builder drifted");

@@ -417,8 +417,21 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     let accepted_snapshot = accepted.snapshot().expect("accepted Process3d production snapshot");
     assert_eq!(&accepted_snapshot, &expected_snapshot, "real maintenance replay must publish the complete deep semantic state");
     assert_eq!(production_semantic_digest(&accepted_snapshot), expected_digest, "real maintenance replay must publish the deterministic semantic digest");
-    let machine = accepted_snapshot.workshop.machines.first().expect("deep production machine");
-    assert_eq!((machine.id.as_str(), machine.label.as_str(), machine.icon_id.as_str()), ("machine", "Renamed Machine", "drill"));
+    // 🪪️ The SAME id-keyed lookup `production_envelope_wire` builds its expectation with: the initial
+    // workshop declares three generic machines (saw, drill, attacher) BEFORE the one this law renames,
+    // so `machines.first()` reads `saw` — a machine the replay never touches — and the literal
+    // `("machine", "Renamed Machine", "drill")` was a positional accident, not the published state.
+    let fixtures = crate::spr::process3d_all_retained_mutation_fixtures_for_test();
+    let (renamed_id, renamed_label) = match &fixtures[9] {
+        Process3dMutation::RenameMachine(value) => (value.id.clone(), value.new_label.clone()),
+        _ => unreachable!("fixed all-variant fixture order"),
+    };
+    let renamed_icon = match &fixtures[10] {
+        Process3dMutation::ChangeMachineIcon(value) => value.new_icon_id.clone(),
+        _ => unreachable!("fixed all-variant fixture order"),
+    };
+    let machine = accepted_snapshot.workshop.machines.iter().find(|machine| machine.id == renamed_id).expect("deep production machine");
+    assert_eq!((machine.label.as_str(), machine.icon_id.as_str()), (renamed_label.as_str(), renamed_icon.as_str()));
     let capability = machine.capabilities.first().expect("deep production capability");
     assert!(matches!(&capability.recipe, MeasureRecipe::BoxAttach { width, depth, height } if (width.as_str(), depth.as_str(), height.as_str()) == ("width", "depth", "height")));
     assert_eq!((capability.parameters.len(), capability.rules.len(), accepted_snapshot.stock_label.as_str(), accepted_snapshot.resolved_up_to), (3, 2, "Beam", Some(7)));

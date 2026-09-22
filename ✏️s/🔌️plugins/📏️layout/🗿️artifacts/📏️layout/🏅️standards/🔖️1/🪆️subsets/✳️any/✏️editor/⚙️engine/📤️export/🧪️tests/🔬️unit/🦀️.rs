@@ -1,12 +1,23 @@
 use super::*;
 
+/// 🚧️ How many close slices this oracle gives one ladder before it calls the ladder broken. A close
+/// ladder is required to make progress on every slice; one that answers `Blocked` (or a `Pending` that
+/// releases nothing) forever turns `while !terminal_is_empty()` into a livelock. That is not a
+/// hypothetical: it cost this crate every one of its 375 results in three consecutive fleet runs,
+/// because the 30-minute test-binary watchdog SIGKILLs the whole binary and no summary is ever printed.
+/// Bounded here so a stuck ladder is a NAMED failing test instead of a dead binary.
+const CLOSE_LADDER_SLICE_BUDGET: usize = 100_000;
+
 fn drive_test_job<J: InteractiveJob + 'static>(job: J, params: BatchJobParams) -> StepOutcome {
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
         Ok(session) => session,
         Err(mut rejected) => {
             rejected.begin_close();
+            let mut slices = 0usize;
             while !rejected.terminal_is_empty() {
                 let _ = rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                slices += 1;
+                assert!(slices < CLOSE_LADDER_SLICE_BUDGET, "the rejected admission's close ladder never reached terminal-empty");
             }
             panic!("test oracle admits retained session");
         }
@@ -15,13 +26,22 @@ fn drive_test_job<J: InteractiveJob + 'static>(job: J, params: BatchJobParams) -
         session.step().expect("test oracle caller opportunity");
         let Some(mut outcome) = session.take_outcome() else { continue };
         let terminal = outcome.is_terminal();
+        let mut outcome_slices = 0usize;
         while !outcome.terminal_is_empty() {
             let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            outcome_slices += 1;
+            assert!(outcome_slices < CLOSE_LADDER_SLICE_BUDGET, "the step outcome's close ladder never reached terminal-empty");
         }
         if terminal {
             session.begin_close();
+            let mut session_slices = 0usize;
             while !session.terminal_is_empty() {
                 let _ = session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                session_slices += 1;
+                assert!(
+                    session_slices < CLOSE_LADDER_SLICE_BUDGET,
+                    "the session's close ladder never reached terminal-empty — it is answering Blocked (or releasing nothing) on every slice"
+                );
             }
             return outcome;
         }
@@ -646,4 +666,39 @@ fn checkpoint_is_lossless_bounded_and_authority_qualified() {
     let mut malformed = checkpoint_state;
     malformed[0] ^= 0xff;
     assert!(LayoutExportJob::restore(operation, request(LayoutExportKind::Package), &malformed).is_err());
+}
+
+/// ⚖️ LAW: the RESERVED close ladder drains the publication stage instead of refusing it forever.
+///
+/// 🪪️ `begin_close` parks the job on `LayoutExportCloseStage::Publication`, and `close_export_step`'s
+/// `Publication` arm is a hard `Err` by design — whichever ladder runs must drain the retained
+/// publication payload and advance the stage itself. Only the `InteractiveJob` ladder did;
+/// `ArtifactReservedJob::close_step` (the reserved media-export route this file's
+/// `LayoutMediaExportJobFactory` laws drive) delegated straight to `close_export_step` and took that
+/// refusal on EVERY call, releasing nothing and never reaching terminal. A caller that closes with
+/// `while !terminal_is_empty() { close_step(…) }` — which `drive_test_job` and the framework's own
+/// session ladders both do — then spun forever, minting one `Fault` per turn, until the 30-minute
+/// test-binary watchdog SIGKILLed the binary and took every other layout result with it.
+/// Bounded on purpose: a close ladder that cannot leave one stage in a bounded number of slices is the
+/// defect, so this law counts slices rather than hanging the way the three export laws did.
+#[test]
+fn the_reserved_close_ladder_leaves_the_publication_stage_in_bounded_slices() {
+    let request = request(LayoutExportKind::Svg);
+    let snapshot_owner = Arc::clone(&request.snapshot);
+    let mut job = LayoutExportJob::new(operation(), request).expect("job");
+    InteractiveJob::begin_close(&mut job);
+    assert_eq!(job.close_stage, LayoutExportCloseStage::Publication, "begin_close parks the job on the publication stage");
+    for slice in 0..64 {
+        match ArtifactReservedJob::close_step(&mut job, 1, OUTPUT_CHUNK_BYTES) {
+            Ok(PluginCloseStep::Pending { .. } | PluginCloseStep::Complete) => {}
+            Ok(step) => panic!("the reserved publication close is blocked at slice {slice}: {step:?}"),
+            Err(error) => panic!("the reserved close ladder refused its own publication stage at slice {slice}: {error:?}"),
+        }
+        if job.close_stage != LayoutExportCloseStage::Publication {
+            drop(snapshot_owner);
+            return;
+        }
+    }
+    drop(snapshot_owner);
+    panic!("the reserved close ladder never left the publication stage");
 }

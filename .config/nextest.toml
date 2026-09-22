@@ -11,3 +11,17 @@ slow-timeout = { period = "300s", terminate-after = 1 }
 
 [profile.exhaustive]
 slow-timeout = { period = "900s", terminate-after = 1 }
+
+# 🐳️ The live database lanes are not ordinary unit tests: each one `docker run`s its own
+# `postgres:16-alpine` / `neo4j:5-community` and polls it for up to 30 s / 60 s
+# (`🌎️hub/📇️directory/{🐘️postgres,🌐️neo4j}/🧪️tests/🔬️unit/🦀️.rs`). Run in parallel they start a
+# server per test at once, and on a loaded machine none of them comes up inside the level budget:
+# measured 2026-09-22, seven `directory::neo4j::` laws each hit the `long` profile's 300 s
+# terminate-after while the SAME laws pass in 76–99 s when the lane runs by itself (DB2 §3, DB3 §4).
+# One at a time is the fix; it costs the suite nothing, because the whole set is minutes.
+[test-groups]
+live-database-lanes = { max-threads = 1 }
+
+[[profile.default.overrides]]
+filter = 'test(/^directory::(neo4j|postgres)::/)'
+test-group = 'live-database-lanes'

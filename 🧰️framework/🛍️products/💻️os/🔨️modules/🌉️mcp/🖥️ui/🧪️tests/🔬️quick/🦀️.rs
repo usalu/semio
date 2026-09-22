@@ -32,10 +32,16 @@ fn all_four_tools_register_under_valid_mcp_names_with_object_top_level_schemas()
 }
 
 #[test]
-fn ui_capabilities_expose_the_same_four_tool_names_with_the_right_kinds() {
+fn ui_capabilities_expose_the_same_five_tool_names_with_the_right_kinds() {
     let capabilities = ui_capabilities();
-    assert_eq!(capabilities.len(), 4);
-    let expectations = [("ui.focus", "ui_focus", CapabilityKind::Ui), ("ui.reveal", "ui_reveal", CapabilityKind::Ui), ("job.get", "job_get", CapabilityKind::Job), ("job.cancel", "job_cancel", CapabilityKind::Job)];
+    assert_eq!(capabilities.len(), 5);
+    let expectations = [
+        ("ui.focus", "ui_focus", CapabilityKind::Ui),
+        ("ui.reveal", "ui_reveal", CapabilityKind::Ui),
+        ("conversation.reply", "conversation_reply", CapabilityKind::Ui),
+        ("job.get", "job_get", CapabilityKind::Job),
+        ("job.cancel", "job_cancel", CapabilityKind::Job),
+    ];
     for (id, tool_name, kind) in expectations {
         let capability = capabilities.iter().find(|capability| capability.id.as_str() == id).unwrap_or_else(|| panic!("missing capability {id}"));
         assert_eq!(capability.kind, kind);
@@ -378,3 +384,146 @@ fn conversation_text_is_truncated_on_a_char_boundary() {
     assert!(std::str::from_utf8(truncated.as_bytes()).is_ok(), "a cut inside a multi-byte char would not be utf-8");
 }
 //#endregion 💬️AgentConversation
+
+//#region 💬️ConversationReply
+/// ⚖️ AC1's local laws for `conversation_reply` — the frame the agent's own words travel on.
+/// `PolicyEngine`/`AgentPrincipal` are built here rather than through a whole `ActionAdapter`,
+/// because the only thing the handler asks the engine is the scope subset check.
+fn reply_policy() -> crate::policy::PolicyEngine {
+    crate::policy::PolicyEngine::new(Arc::new(crate::handles::HandleTable::new()), crate::policy::AutoApprovePolicy::Never)
+}
+
+fn reply_principal(scopes: &[&str]) -> crate::policy::AgentPrincipal {
+    crate::policy::AgentPrincipal::from_scope_names("agent:test", "claude-code", &scopes.iter().map(|scope| scope.to_string()).collect::<Vec<_>>(), None)
+}
+
+/// 🔐️ `conversation.write` is the scope that decides it, and nothing else is a substitute: an agent
+/// granted every window-moving grant `ui.control` expands to still may not put text in front of a
+/// human, and the refusal is the typed `PERMISSION_DENIED` naming the missing scope.
+#[test]
+fn conversation_reply_is_refused_without_the_conversation_write_scope() {
+    let (policy, slot) = (reply_policy(), filled_slot());
+    let bridge = slot.get().cloned().expect("filled");
+    let refused = conversation_reply_handler(&policy, &reply_principal(&["ui.control", "artifact.write"]), Some(&bridge), serde_json::json!({ "text": "hello" }));
+    assert!(refused.is_error, "an unscoped principal must not reach the human's screen");
+    let structured = refused.structured_content.as_ref().expect("a typed refusal");
+    assert_eq!(structured["code"], "PERMISSION_DENIED");
+    assert!(structured["message"].as_str().unwrap_or_default().contains("shell.converse"), "{structured}");
+
+    let granted = conversation_reply_handler(&policy, &reply_principal(&["conversation.write"]), Some(&bridge), serde_json::json!({ "text": "hello" }));
+    assert!(!granted.is_error, "the granted principal is admitted: {:?}", granted.structured_content);
+}
+
+/// 📭️ No shell attached is a tier, not a failure — but it is never a silent success either: with no
+/// bridge at all the call is the same typed `PLUGIN_UNAVAILABLE` every other shell-dependent tool
+/// answers, and with a bridge nobody dialed it answers honestly that it reached `0` shells.
+#[test]
+fn conversation_reply_reports_how_many_shells_it_reached() {
+    let policy = reply_policy();
+    let principal = reply_principal(&["conversation.write"]);
+    let unbound = conversation_reply_handler(&policy, &principal, None, serde_json::json!({ "text": "hello" }));
+    assert!(unbound.is_error);
+    assert_eq!(unbound.structured_content.as_ref().expect("typed")["code"], "PLUGIN_UNAVAILABLE");
+
+    let slot = filled_slot();
+    let bridge = slot.get().cloned().expect("filled");
+    let empty_room = conversation_reply_handler(&policy, &principal, Some(&bridge), serde_json::json!({ "text": "hello" }));
+    assert!(!empty_room.is_error);
+    assert_eq!(empty_room.structured_content.as_ref().expect("typed")["shells"], 0);
+}
+
+/// 🚫️ Every input the schema admits is checked, and an empty turn is refused rather than published:
+/// a blank row in the transcript tells the human less than nothing.
+#[test]
+fn conversation_reply_refuses_malformed_input() {
+    let (policy, slot) = (reply_policy(), filled_slot());
+    let bridge = slot.get().cloned().expect("filled");
+    let principal = reply_principal(&["conversation.write"]);
+    for arguments in [
+        serde_json::json!({}),
+        serde_json::json!({ "text": "" }),
+        serde_json::json!({ "text": "hi", "replyId": 7 }),
+        serde_json::json!({ "text": "hi", "replyId": "" }),
+        serde_json::json!({ "text": "hi", "inReplyTo": 7 }),
+        serde_json::json!({ "text": "hi", "complete": "yes" }),
+    ] {
+        let refused = conversation_reply_handler(&policy, &principal, Some(&bridge), arguments.clone());
+        assert!(refused.is_error, "{arguments} must be refused");
+        assert_eq!(refused.structured_content.as_ref().expect("typed")["code"], "INPUT_INVALID", "{arguments}");
+    }
+}
+
+/// 💬️ The streaming contract, on a real connection: two chunks of ONE turn carry the same
+/// `reply_id`, only the last one is `complete`, and `in_reply_to` correlates the turn to the human
+/// message that asked for it. A turn longer than the bridge's bounded text cap is cut, never
+/// dropped.
+#[tokio::test]
+async fn conversation_reply_streams_chunks_of_one_turn_over_the_real_bridge() {
+    let policy = reply_policy();
+    let principal = reply_principal(&["conversation.write"]);
+    let slot: BridgeSlot = Arc::new(OnceLock::new());
+    let handle = Arc::new(BridgeHandle::new());
+    assert!(slot.set(handle.clone()).is_ok());
+    let (_connection, mut outbox) = handle.register();
+
+    let first = conversation_reply_handler(&policy, &principal, Some(&handle), serde_json::json!({ "text": "Widening that wall means", "replyId": "rep_stream", "inReplyTo": "msg_1", "complete": false }));
+    assert!(!first.is_error);
+    assert_eq!(first.structured_content.as_ref().expect("typed")["shells"], 1);
+    let second = conversation_reply_handler(&policy, &principal, Some(&handle), serde_json::json!({ "text": " the 300 mm variant.", "replyId": "rep_stream" }));
+    assert!(!second.is_error);
+
+    let mut frames = Vec::new();
+    for _ in 0..2 {
+        frames.push(tokio::time::timeout(Duration::from_secs(5), outbox.recv()).await.expect("the bridge delivers every admitted reply frame").expect("the outbox stays open"));
+    }
+    assert_eq!(
+        frames,
+        vec![
+            GatewayToShell::AgentReply { reply_id: "rep_stream".into(), in_reply_to: Some("msg_1".into()), text: "Widening that wall means".into(), complete: false },
+            GatewayToShell::AgentReply { reply_id: "rep_stream".into(), in_reply_to: None, text: " the 300 mm variant.".into(), complete: true },
+        ]
+    );
+
+    let huge = "ä".repeat(crate::bridge::AGENT_CONVERSATION_MAX_TEXT);
+    assert!(!conversation_reply_handler(&policy, &principal, Some(&handle), serde_json::json!({ "text": huge })).is_error);
+    let cut = tokio::time::timeout(Duration::from_secs(5), outbox.recv()).await.expect("delivered").expect("open");
+    let GatewayToShell::AgentReply { text, reply_id, .. } = cut else { panic!("the third frame is a reply") };
+    assert!(text.ends_with('…'), "an oversized turn is cut and marked, never dropped");
+    assert!(reply_id.starts_with("rep_"), "a client that mints no id gets one: {reply_id}");
+}
+
+/// 💬️ A `conversation_reply` call must NOT also appear as a tool-call row: the frame it publishes
+/// is already the row, and `SELF_PUBLISHING_CONVERSATION_TOOLS` is the declared list that says so.
+#[test]
+fn conversation_reply_is_declared_self_publishing() {
+    assert!(crate::bridge::SELF_PUBLISHING_CONVERSATION_TOOLS.contains(&"conversation_reply"));
+    assert!(!crate::bridge::SELF_PUBLISHING_CONVERSATION_TOOLS.contains(&"action_invoke"));
+}
+//#endregion 💬️ConversationReply
+
+//#region 💬️AgentMessagePush
+/// 🔔️ The reverse direction: a turn the HUMAN types reaches the agent as a push, not only as a
+/// poll. The inbox already existed (read-once through `semio://ui/agent-messages`); AC1 adds the
+/// `notifications/resources/updated` that tells a subscribed client the question was asked, so the
+/// channel `conversation_reply` answers on has no poll-interval latency floor of its own.
+#[test]
+fn a_typed_human_turn_pushes_a_resource_update_for_the_agent_inbox() {
+    let handle = Arc::new(BridgeHandle::new());
+    let (connection, _outbox) = handle.register();
+    let subscriptions = crate::notify::ResourceSubscriptions::registered();
+    let sink: crate::notify::NotificationSlot = crate::notify::notification_slot();
+    let recorder = Arc::new(crate::notify::RecordingSink::new());
+    assert!(sink.set(recorder.clone() as Arc<dyn crate::notify::NotificationSink>).is_ok());
+    subscriptions.bind_sink(sink);
+    assert!(subscriptions.subscribe("semio://ui/agent-messages"));
+
+    handle.record(connection, crate::bridge::ShellToGateway::AgentMessage { message_id: "msg_push".into(), text: "widen that wall to 300".into() });
+
+    let pushed = recorder.taken();
+    assert!(
+        pushed.iter().any(|notification| notification.method == "notifications/resources/updated" && notification.params.as_ref().map(|params| params["uri"] == "semio://ui/agent-messages").unwrap_or(false)),
+        "a subscribed client is told at once: {pushed:?}"
+    );
+    assert_eq!(handle.pending_agent_message_count(connection), 1, "and the turn is still there to be read");
+}
+//#endregion 💬️AgentMessagePush

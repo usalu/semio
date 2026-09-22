@@ -120,15 +120,17 @@ async fn produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to `WiresDiff`. `WiresDiff` carries a
-/// container-level `#[serde(default)]` and no per-field `skip_serializing_if`, so all five slots
-/// must be present and `null`.
+/// container-level `#[serde(default)]` and no per-field `skip_serializing_if`, so all FOUR slots
+/// (`artifact`, `wiresFixture`, `content`, `meta`) must be present and `null`. The count is read off
+/// the struct's own roster: the fifth slot this law used to demand was `camera`, which moved to the
+/// concrete canvas window's own config and is no longer a document-diff slot at all.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: WiresDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "resize-node/reports-a-no-op-when-the-radius-already-matches: committed diff JSON is not canonical");
-    assert_eq!(original.as_object().map(|slots| slots.len()), Some(5), "every WiresDiff slot must be written out, `null` included");
+    assert_eq!(original.as_object().map(|slots| slots.len()), Some(4), "every WiresDiff slot must be written out, `null` included");
 }
 
 /// 🩹 Applying the committed diff straight to `before` yields the committed `after` — for a no-op

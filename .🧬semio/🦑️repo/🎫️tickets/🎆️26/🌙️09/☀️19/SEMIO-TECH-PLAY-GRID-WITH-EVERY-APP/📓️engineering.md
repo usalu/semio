@@ -414,3 +414,211 @@ Two changes worth making together: report the `ChildRestoreProjectionError` in t
 through `A::child_restore_projection`, which apps already implement precisely so their own diagnostic
 wins (gismap's says `gis map child projection failed: {error}`). As it stands the gismap live-load red is
 unattributable from outside the framework — hence the crate-side law added in fix 18.
+
+## 2026-09-22 (session 7) — the `--no-fail-fast` bug, real numbers, five fixes
+
+### 0. Why sessions 6's chains 11–13 produced nothing
+
+`run-mutexed.sh` appended `--no-fail-fast` to the END of the caller's argv — i.e. AFTER the caller's own
+`--` — so cargo handed it to libtest and every invocation died with
+`error: Unrecognized option: 'no-fail-fast'`. Replaced by an inner script that spells the flag before the
+`--` and runs BOTH cargo batches (the `component-app-assembly` four and the fifteen plain crates) inside
+ONE mutex hold.
+
+Predecessor edits were verified on disk first: `🏪️store/🦀️.rs`'s `try_release_aliased` + one-shot
+`return_now` are now COMMITTED (the uncommitted store diff on disk is peer FP11's `next_close_byte_demand`
+work — untouched here), and process3d's `next_step_id(snapshot)`, id-keyed machine expectation and stock
+dimension read are all present. The store crate's own suite was already `ok 1118 / 0`, so it was not re-run.
+
+### 1. First real run (13:16) — per crate
+
+| crate | result |
+| --- | --- |
+| `semio-s-artifact-fem-2d` | 1258 / 3 |
+| `semio-s-artifact-fem-3d` | SIGABRT, no result line |
+| `semio-s-artifact-gis-gismap` | 263 / 1 |
+| `semio-s-artifact-gis-gisterrain` | **ok 92 / 0** |
+| `semio-s-artifact-process-process3d` | 355 / 4 |
+| `semio-s-artifact-sourcing-curation` | **ok 152 / 0** |
+| `semio-s-artifact-energy-model` | **ok 6292 / 0** |
+| `semio-s-plugin-fem` | **ok 5 / 0** |
+| `semio-s-plugin-energy` | 3 / 1 (`descriptor_is_fresh`) |
+| `semio-s-plugin-gis` | 5 / 1 (`descriptor_is_fresh`) |
+| gis native-codecs target | **ok 3 / 0** |
+| `semio-s-plugin-process{,-wood,-concrete,-metal,-robotic}` | **all ok** |
+| `semio-s-plugin-sourcing{,-beams,-slabs,-windows}` | **all ok** |
+
+An earlier attempt at 11:13 produced no results at all: six compile errors inside peer FP11's in-flight
+`🔌️plugin` rewrite (`TaskSlot.reserved` absent, `Emit` destructured without `tasks`). Both sites were
+repaired by the peer within fifteen minutes — a torn read of their edit, not a standing break.
+
+### 2. The framework change behind four of the reds
+
+A peer landed an ACCRUED page charge in `🧰️framework/🔨️modules/🧵️job/🦀️.rs` (`charge_payload_page`, in
+today's 11:20 commit, ticket 26/09/18): a close turn granted less than `JOB_PAYLOAD_PAGE_BYTES` used to
+be refused outright with `Pending { 0, 0 }`, which turned the store's 4 KiB retirement ladders into an
+unbounded spin; it now SPENDS its grant into the page's one-time charge and frees the backing on the turn
+that completes it. Four laws in my scope encoded the OLD all-or-nothing contract:
+
+- **fix 22** `✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/🔬️unit/🦀️.rs` — the three
+  `sparse::tests::pcg_job_*` laws each probe with `close_step(1, JOB_PAYLOAD_PAGE_BYTES - 1)` and asserted
+  `released_bytes == 0`; the probe now legitimately answers `16383`, and those bytes then went missing from
+  the laws' own `retained == released` ledger (the observed delta was exactly `PAGE - 1` on every one of
+  the 125/173 cuts). Each probe now captures what it spent and seeds the ledger with it; "a sub-page grant
+  frees nothing" is still pinned, by `released_items == 0` and the unchanged retained backing.
+- **fix 23** `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/…/✏️editor/🧵️session/🧪️tests/🔬️unit/🦀️.rs` — the same
+  restatement for `fem3d_numerical_child_retains_every_outcome_until_bounded_retirement`, expressed as an
+  exact byte ledger (`paid_bytes == pages × JOB_PAYLOAD_PAGE_BYTES`). This law was the reason fem-3d had NO
+  result line at all: its assertion unwound through a live `RetainedJobPayload`, whose `Drop` debug_asserts
+  ("requires one-page close to terminal-empty"), so the panic became a non-unwinding abort and SIGKILLed
+  the whole test binary.
+
+### 3. process3d — one real defect reported as four
+
+- **fix 24** `…/✏️editor/🧪️tests/🔬️unit/🦀️.rs`: `vcs_artifact_app_production_maintenance_swap…` still read
+  `accepted_snapshot.workshop.machines.first()` and asserted the literal `("machine","Renamed Machine",
+  "drill")`, although the initial workshop declares saw/drill/attacher BEFORE the machine the replay
+  renames — so it read `("saw","Generic Saw","scissors")`. Now the same id-keyed lookup
+  `production_envelope_wire` builds its expectation with, reading label and icon off mutations 9 and 10.
+- **fix 25** `…/✏️editor/🌉️wasm/🧪️tests/🔬️mounted-registry/🦀️.rs`:
+  `authoritative_publication_rejects_stale_generation_aba_and_parent` expected
+  `process3d-publication.wrong-operation` for a FOREIGN operation id. The authority is looked up BY
+  operation (`FixedOperationRegistry::get_operation` matches `entry.key.operation` exactly), so an unknown
+  operation can only ever be `authority-missing` — `wrong-operation` is reachable solely through the
+  `#[cfg(test)]` hostile injection. Restated to the outcome the lookup can actually produce.
+- **fix 26** `…/🧬️schema/🧬️mutations/💾️binary/🦀️.rs`: fixture hygiene. The publication lease table is a
+  process-global FOUR-slot direct-mapped registry and `FixedOperationRegistry` cannot be enumerated, so a
+  law that panics between its `admit` and its `release` strands a lease forever and every later law reports
+  `process3d-publication.saturated`. `process3d_publication_authority_lane()` now drains what the previous
+  holder left (a `#[cfg(test)]` admitted-key list maintained by admit/release, taken in the same lock order
+  so no pair can invert). That is what turned fix 24's single defect into three extra reds.
+
+### 4. Second real run (13:47), after fixes 22–24
+
+`semio-s-artifact-fem-2d` **ok 1261 / 0** — all three PCG laws green AND both wall-clock laws
+(`assembly_job_one_fuel_steps…`, `mesh_job_large_boundary…`) green at load 12, so session 5's 191 ms/152 ms
+readings were pure host jitter, as suspected. `fem-3d` 1130 / 1 (no longer aborts). `gisterrain` **ok 92 / 0**
+(session 6's `dsl::variants_text` adoption confirmed). `process3d` 356 / 3. Everything else unchanged.
+
+### 5. `export_brep_out…` is resolved — note for stdio-b
+
+The stdio-side fix is already on disk: `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🦀️.rs:680`
+`representation_short_id` derives the SHORT format id from the representation's first extension minus the
+dot, which is exactly the key `MeshExporter::format_kind` and `export_process3d_model` look up. Verified for
+the four definitions process3d reaches: `s.stdio.step` → `step`, `s.stdio.obj` → `obj`, `s.stdio.stl` →
+`stl`, `s.stdio.gltf` → TWO representation capabilities, `gltf` and `glb` (`model/gltf-binary`, `.glb`).
+Session 6's note that `s.stdio.gltf` declares no representation capability is STALE. The test has not
+appeared in a failure list since.
+
+### 6. Live panes (03:04 activation, 11:25 — one defect)
+
+All seven engineering panes `outcome=ready`, `verdict=content`, 0 console errors, 0 page errors, 0
+refused/panic lines. fem2d/fem3d/energy/process3d/sourcing/gis2d each boot their curated example
+(`defaultExampleOk=true`: Demo, Concrete Forest, BESTEST 600, Concrete Forest, Demo, Reuse Map).
+
+**gis3d has no example picker at all.** The gisterrain `demo` example is authored for exactly the app's own
+dialect (`{s.gis.gisterrain, "1", "*"}`), but `🗿️artifacts/🏔️gisterrain/…/✏️editor/🦀️.rs` declares no
+`ActionDefinition::new("setActiveExample", …)` — gismap's editor declares it at line 1228 — so the host's
+`appSwitchesExamples` gate empties `exampleOptions`, the navbar hides the trigger and `resolveBootExampleId`
+announces nothing. The pane opens the GENESIS document (`exaggeration: 0.0`, no imported features) instead
+of the curated Liège terrain (exaggeration 1.5, origin 5.5818/50.603, two positions). It is a tracked upper
+bound in `🏢️semio-tech/🎡️play/🧪️tests/🧪️playpanedefaults/🟦️.ts`. NOT fixed here on purpose: declaring the
+action changes the gis action surface and would re-stale `semio-s-plugin-gis`'s `descriptor_is_fresh`
+immediately after the coordinator's describe regenerated it, and this topic may not run `describe`.
+
+### 7. Incident — `🗑️generated` swept at ~16:30
+
+The repo's workspace cleanup deleted `$T/🗑️generated` while this topic was mid-flight: every engineering
+log, script, probe result and the private `CARGO_TARGET_DIR` was destroyed (only `knowledge-children`
+remained). No source edit was lost — every fix is under `✏️s/…` and was re-verified with `git diff HEAD`.
+Per the coordinator's 16:40 addendum this topic's STATUS, run logs and target dir now live at
+`.🧬semio/🦑️repo/⚡️cache/play-fleet/engineering`, and the run scripts were re-created there.
+
+### 8. Final verification run — 17:39–17:52, one mutex hold, `--no-fail-fast` before `--`
+
+Logs: `.🧬semio/🦑️repo/⚡️cache/play-fleet/engineering/s7d-assembly.txt` and `…/s7d-plain.txt`
+(`CARGO_BUILD_JOBS=2`, `CARGO_INCREMENTAL=0`, private `CARGO_TARGET_DIR` rebuilt from cold after the sweep,
+`--test-threads=4`, load 15).
+
+| crate | result |
+| --- | --- |
+| `semio-s-artifact-fem-2d` | **ok 1261 / 0** |
+| `semio-s-artifact-fem-3d` | **ok 1131 / 0** |
+| `semio-s-artifact-gis-gismap` | 263 / 1 |
+| `semio-s-artifact-gis-gisterrain` | **ok 92 / 0** |
+| `semio-s-artifact-energy-model` | **ok 6292 / 0** |
+| `semio-s-artifact-process-process3d` | **ok 359 / 0** |
+| `semio-s-artifact-sourcing-curation` | **ok 152 / 0** |
+| `semio-s-plugin-energy` | **ok 4 / 0** |
+| `semio-s-plugin-fem` | **ok 5 / 0** |
+| `semio-s-plugin-gis` (lib) | **ok 6 / 0** |
+| `semio-s-plugin-gis` (gis native-codecs target) | **ok 3 / 0** |
+| `semio-s-plugin-process` | **ok 1 / 0** |
+| `semio-s-plugin-process-concrete` | **ok 5 / 0** |
+| `semio-s-plugin-process-metal` | **ok 5 / 0** |
+| `semio-s-plugin-process-robotic` | **ok 5 / 0** |
+| `semio-s-plugin-process-wood` | **ok 6 / 0** |
+| `semio-s-plugin-sourcing` | **ok 3 / 0** |
+| `semio-s-plugin-sourcing-beams` | **ok 2 / 0** |
+| `semio-s-plugin-sourcing-slabs` | **ok 2 / 0** |
+| `semio-s-plugin-sourcing-windows` | **ok 2 / 0** |
+
+Nineteen of twenty crates green. Notable confirmations: fem-3d's
+`result_animation_frame_cost_stays_flat_across_a_long_run` — session 5's `presence local read registry is
+busy or exhausted` and session 7's 4.3× frame-cost growth — is GREEN at load 15, so the store's
+`try_release_aliased` did fix the starvation and the growth reading was fleet load, not retirement debt.
+process3d went 355/4 → **359/0**: the id-keyed machine expectation, the ABA authority restatement and the
+lane drain between them cleared every publication red, and `export_brep_out…` stays green on stdio-b's
+short-format-id fix. `descriptor_is_fresh` passes for both plugin-energy and plugin-gis after the
+coordinator's 15:47 describe.
+
+### 9. The one remaining red — gismap, and why it is not mine to close
+
+`editor::gis2d::component::unit_tests::gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed`
+fails with `Fault { code: plugin.internal, message: "candidate parent child projection is invalid" }` out of
+one `maintenance_step`. That string exists at exactly one place,
+`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:23401`, where the replacement pump calls
+`store::ChildRestoreProjection::from_snapshot(candidate.snapshot_ref())` and `map_err`s the
+`ChildRestoreProjectionError` away.
+
+The crate-side law `every_gis_map_parent_snapshot_projects_its_canonical_child_handles` is GREEN and proves
+the projection succeeds — exactly two rows, `child_id == artifact_id`, kind `s.stdio.semio` — for
+`empty_gis_map_snapshot()` (which IS `GisMapSnapshot::default()`, the snapshot this fixture's wire carries),
+for `default_document()`, and for both the pack and the DSL round trip of each. The child handles themselves
+are constants (`gismap-drawing` / `gismap-value`, dialect `s.stdio.semio v1 drawing|value`), so no field the
+visitor rejects (`child_id != artifact_id`, wrong kind, any empty field) can arise from a snapshot this crate
+can construct. The invalid candidate is therefore produced INSIDE the pump, and the erased error is what makes
+it unattributable from the plugin side.
+
+**Proposed diff (peer-owned `🔌️plugin/🦀️.rs`, NOT applied)** — unchanged from session 6, restated because it
+is now the last thing blocking this crate:
+
+```rust
+-let projection = store::ChildRestoreProjection::from_snapshot(candidate.snapshot_ref()).map_err(|_| plugin_sdk_fault("candidate parent child projection is invalid"))?;
++let projection = A::child_restore_projection(candidate.snapshot_ref())?;
+```
+
+`A::child_restore_projection` is what every app implements for exactly this reason — gismap's says
+`gis map child projection failed: {error}` — and routing through it both names the
+`ChildRestoreProjectionError` variant and lets an app that composes its children differently answer for
+itself. A one-line alternative that keeps the direct call is
+`.map_err(|error| plugin_sdk_fault(format!("candidate parent child projection is invalid: {error:?}")))`.
+
+No store (`🏪️store/🦀️.rs`) change was needed or made this session; peer FP11's `next_close_byte_demand`
+work there is untouched.
+
+### 10. Live panes on the 15:47 activation (:6033 restarted 15:57)
+
+| pane | outcome | ready | canvas | cropVar | console errors | page errors | refused/panic | example |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| fem2d | ready | 2.7 s | 2 | 70.4 | 0 | 0 | 0 | Demo ✅ |
+| fem3d | ready | 3.0 s | 2 | 33.8 | 0 | 0 | 0 | Concrete Forest ✅ |
+| energy | ready | 2.5 s | 1 | 43.3 | 0 | 0 | 0 | BESTEST 600 ✅ |
+| process3d | ready | 2.5 s | 1 | 34.7 | 0 | 0 | 0 | Concrete Forest ✅ |
+| sourcing | ready | 2.6 s | 1 | 23.2 | 0 | 0 | 0 | Demo ✅ |
+| gis2d | ready | 2.9 s | 1 | 1521.9 | 0 | 0 | 0 | Reuse Map ✅ |
+| gis3d | ready | 2.9 s | 1 | 89.7 | 0 | 0 | 0 | **no picker** ❌ |
+
+Evidence: `…/⚡️cache/play-fleet/engineering/probe-act1547/results.ndjson` plus the per-pane console dumps.
+Six of seven boot their curated example with visible content and a clean console; gis3d renders terrain from
+the genesis document because the gisterrain editor declares no `setActiveExample` (§6).

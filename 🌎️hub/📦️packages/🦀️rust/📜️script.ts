@@ -10013,16 +10013,23 @@ function stageTrustedBootstrapCandidateCurrent(candidateDataRoot: string, curren
     if (existsSync(generationRoot)) {
       trustedBootstrapVerifyGeneration(generationRoot, bundleBytes, receipts, check);
     } else {
-      mkdirSync(join(stageRoot, "packages", "gis", "browser"), { recursive: true, mode: 0o700 });
-      mkdirSync(join(stageRoot, "packages", "stdio"), { recursive: true, mode: 0o700 });
+      // 🧳️ Derived from the receipts the bundle itself carries, exactly the way
+      // `trustedBootstrapVerifyGeneration` derives the closure it then checks this staging against.
+      // Spelled as the fixed gis+stdio pair (ticket 26/09/18 slice TC3c generalised
+      // `materializeTrustedCatalogBundle` and left this copy behind) the candidate staged two
+      // packages out of a three-package selection and the very next line's fence answered
+      // `generation directory is not the exact regular closure` — TC3e measured that at 13:48:13 on
+      // 2026-09-22, seven minutes into a hold, with the note package already published upstream.
+      const stagedPlugins = [...receipts.keys()].sort();
+      const stagedCarriesActor = (plugin: string): boolean => receipts.get(plugin)!.browserActor.kind === "closed-browser-actor";
+      const files: { relative: string; maximum: number }[] = [];
+      for (const plugin of stagedPlugins) {
+        mkdirSync(stagedCarriesActor(plugin) ? join(stageRoot, "packages", plugin, "browser") : join(stageRoot, "packages", plugin), { recursive: true, mode: 0o700 });
+        files.push({ relative: `packages/${plugin}/component.wasm`, maximum: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES });
+        files.push({ relative: `packages/${plugin}/descriptor.semio`, maximum: DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES });
+        if (stagedCarriesActor(plugin)) files.push({ relative: `packages/${plugin}/browser/closed-actor.mjs`, maximum: DOCUMENT_BROWSER_ACTOR_MAX_BYTES });
+      }
       trustedBootstrapWriteNew(join(stageRoot, "trusted-catalog.json"), bundleBytes, check);
-      const files = [
-        { relative: "packages/gis/component.wasm", maximum: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES },
-        { relative: "packages/gis/descriptor.semio", maximum: DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES },
-        { relative: "packages/gis/browser/closed-actor.mjs", maximum: DOCUMENT_BROWSER_ACTOR_MAX_BYTES },
-        { relative: "packages/stdio/component.wasm", maximum: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES },
-        { relative: "packages/stdio/descriptor.semio", maximum: DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES },
-      ];
       for (const file of files) {
         const bytes = trustedBootstrapReadRegular(join(sourceRoot, file.relative), file.maximum, `trusted candidate ${file.relative}`, check);
         try {
@@ -10031,9 +10038,10 @@ function stageTrustedBootstrapCandidateCurrent(candidateDataRoot: string, curren
           bytes.fill(0);
         }
       }
-      trustedBootstrapFsyncDirectory(join(stageRoot, "packages", "gis", "browser"));
-      trustedBootstrapFsyncDirectory(join(stageRoot, "packages", "gis"));
-      trustedBootstrapFsyncDirectory(join(stageRoot, "packages", "stdio"));
+      for (const plugin of stagedPlugins) {
+        if (stagedCarriesActor(plugin)) trustedBootstrapFsyncDirectory(join(stageRoot, "packages", plugin, "browser"));
+        trustedBootstrapFsyncDirectory(join(stageRoot, "packages", plugin));
+      }
       trustedBootstrapFsyncDirectory(join(stageRoot, "packages"));
       trustedBootstrapFsyncDirectory(stageRoot);
       trustedBootstrapVerifyGeneration(stageRoot, bundleBytes, receipts, check);

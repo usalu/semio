@@ -745,6 +745,9 @@ pub fn create_grid3d_editor() -> semio_framework_plugin::AppDefinition {
         .tool(fill_tool::definition())
         .mode_tools(edit::GRID3D_EDIT_MODE_ID, vec![semio_framework::io::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
         .default_layout(edit::layout())
+        .action_destructive("deleteTile")
+        .action_destructive("deleteRule")
+        .action_destructive(grid::ACTION_SET_ACTIVE_EXAMPLE)
         .build_definition()
 }
 //#endregion 🔖️Manifest

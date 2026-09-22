@@ -100,7 +100,13 @@ impl store::ErasedSnapshotRetirement for WriterSnapshotRetirement {
 
 impl Drop for WriterSnapshotRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "Writer snapshot retirement reached Drop before every exact string and child-handle owner was terminal-empty");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.value.is_none()), "Writer snapshot retirement reached Drop before every exact string and child-handle owner was terminal-empty");
     }
 }
 
@@ -152,7 +158,13 @@ impl store::ErasedSnapshotRetirement for WriterSnapshotRootRetirement {
 
 impl Drop for WriterSnapshotRootRetirement {
     fn drop(&mut self) {
-        assert!(self.owner.is_none() && self.retirement.is_none(), "Writer snapshot root retirement reached Drop before exact Arc handback and bounded field disposal");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.owner.is_none() && self.retirement.is_none()), "Writer snapshot root retirement reached Drop before exact Arc handback and bounded field disposal");
     }
 }
 
@@ -199,7 +211,13 @@ impl store::ErasedSnapshotRetirement for WriterMutationRetirement {
 
 impl Drop for WriterMutationRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "Writer mutation retirement reached Drop before its exact string owner was terminal-empty");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.value.is_none()), "Writer mutation retirement reached Drop before its exact string owner was terminal-empty");
     }
 }
 
@@ -336,7 +354,13 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<WriterSnapshot> for WriterSna
 
 impl Drop for WriterSnapshotDecodeAuthority {
     fn drop(&mut self) {
-        assert!(store::ArtifactEnvelopeSnapshotFieldAuthority::terminal_is_empty(self), "Writer snapshot decode reached Drop before publication or bounded retirement");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (store::ArtifactEnvelopeSnapshotFieldAuthority::terminal_is_empty(self)), "Writer snapshot decode reached Drop before publication or bounded retirement");
     }
 }
 
@@ -532,7 +556,13 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMut
 
 impl Drop for WriterMutationDecodeAuthority {
     fn drop(&mut self) {
-        assert!(store::ArtifactEnvelopeMutationFieldAuthority::terminal_is_empty(self), "Writer mutation decode reached Drop before exact publication or bounded retirement");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (store::ArtifactEnvelopeMutationFieldAuthority::terminal_is_empty(self)), "Writer mutation decode reached Drop before exact publication or bounded retirement");
     }
 }
 
@@ -578,7 +608,13 @@ impl ArtifactEnvelopeMutationFieldTarget<WriterMutation> for WriterMutationTarge
 
 impl Drop for WriterMutationTarget {
     fn drop(&mut self) {
-        assert!(self.reservation.is_none() && self.value.is_none(), "Writer mutation target reached Drop with a live reservation or value owner");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.reservation.is_none() && self.value.is_none()), "Writer mutation target reached Drop with a live reservation or value owner");
     }
 }
 
@@ -764,7 +800,13 @@ impl WriterMutationArrayAuthority {
 
 impl Drop for WriterMutationArrayAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Writer mutation array reached Drop before every exact mutation owner was published or cursor-retired");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Writer mutation array reached Drop before every exact mutation owner was published or cursor-retired");
     }
 }
 
@@ -1052,7 +1094,13 @@ impl store::ArtifactOwnedHistoryEntryAuthority<protocol::Edit<WriterMutation>> f
 
 impl Drop for WriterEditHistoryAuthority {
     fn drop(&mut self) {
-        assert!(store::ArtifactOwnedHistoryEntryAuthority::terminal_is_empty(self), "Writer edit decode reached Drop before exact publication or bounded retirement");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (store::ArtifactOwnedHistoryEntryAuthority::terminal_is_empty(self)), "Writer edit decode reached Drop before exact publication or bounded retirement");
     }
 }
 
@@ -1145,6 +1193,59 @@ pub fn writer_document_store_owners() -> store::DocumentStoreOwners<WriterSnapsh
         Box::new(store::ArtifactStoreCursorDisposer::<WriterSnapshot, WriterMutation>::new()),
     )
 }
+
+//#region 🔖️Store
+pub type WriterDocumentEnvelope = store::ArtifactEnvelope<WriterSnapshot, WriterMutation>;
+pub type WriterDocumentStore = store::ArtifactStore<WriterSnapshot, WriterMutation>;
+
+/// 🔐️ Opens a Writer store WITH its exact owner catalog installed. `ArtifactStore::new` installs no
+/// catalog, and `reserve_edit_history_slot` then refuses every `Apply`
+/// (`edit history insertion requires its exact mutation retirement factory`) — a bare
+/// `ArtifactStore::new` can be READ but never mutated, undone or closed. The app installs
+/// [`writer_document_store_owners`] through `ArtifactEditor::build_document_store_owners`; every
+/// standalone store goes through here instead. Mirrors `🕸️dag`'s `new_dag_store`.
+pub async fn new_writer_store(envelope: WriterDocumentEnvelope) -> Result<OwnedWriterStore, store::VcsError> {
+    let mut store = WriterDocumentStore::new(envelope).await?;
+    store.install_document_store_owners_exact(writer_document_store_owners());
+    Ok(OwnedWriterStore(store))
+}
+
+/// 🔚 A standalone Writer store that retires itself: `ArtifactStore::drop` panics `artifact store
+/// reached Drop without its exact terminal-empty shallow-shell witness` unless the store walked its
+/// bounded close loop first, so the guard runs that loop on drop (skipped while unwinding, where the
+/// original panic is the report worth keeping). Derefs to the bare store for every read and dispatch.
+pub struct OwnedWriterStore(WriterDocumentStore);
+
+impl OwnedWriterStore {
+    /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
+    pub fn close(&mut self) {
+        while !self.0.close_owned_terminal_is_empty() {
+            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Writer document store closes through its exact bounded owners");
+        }
+    }
+}
+
+impl std::ops::Deref for OwnedWriterStore {
+    type Target = WriterDocumentStore;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for OwnedWriterStore {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Drop for OwnedWriterStore {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            self.close();
+        }
+    }
+}
+//#endregion 🔖️Store
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum WriterStoreInitializationPhase {
@@ -1688,7 +1789,13 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<WriterSnapshot
 
 impl Drop for WriterStoreInitializationAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty_inner(), "Writer store initialization authority reached Drop before exact candidate handoff or retained rejection close");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.terminal_is_empty_inner()), "Writer store initialization authority reached Drop before exact candidate handoff or retained rejection close");
     }
 }
 

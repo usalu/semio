@@ -71,15 +71,27 @@ const bounds = { x: 0, y: 0, left: 0, top: 0, right: fixture.surface.width, bott
 
 type HostAction = { readonly controllerId: string; readonly action: string; readonly args?: Record<string, unknown> };
 
+/** 🖼️ The surface geometry every input fixture in this suite declares. `left`/`top` are optional
+ * because only the pointer-transfer fixture places its surface away from the viewport origin; the
+ * others start at `0, 0` and say so by omission. */
+type MountedSurface = {
+  readonly id: string;
+  readonly controllerId: string;
+  readonly width: number;
+  readonly height: number;
+  readonly left?: number;
+  readonly top?: number;
+};
+
 function mountedHost(
-  surface = fixture.surface,
+  surface: MountedSurface = fixture.surface,
   dispatchAction?: (action: HostAction) => void | Promise<unknown>,
   catalogueSource?: { readonly mime: string; readonly rawPayload: string; readonly types: readonly string[] },
   camera = { x: 0, y: 0, zoom: 1 },
 ) {
   const actions: HostAction[] = [];
-  const left = "left" in surface ? surface.left : 0;
-  const top = "top" in surface ? surface.top : 0;
+  const left = surface.left ?? 0;
+  const top = surface.top ?? 0;
   const surfaceBounds = { ...bounds, x: left, y: top, left, top, right: left + surface.width, bottom: top + surface.height, width: surface.width, height: surface.height } as DOMRect;
   const canvasHost = createElement(Canvas2dHost, {
       node: {
@@ -495,9 +507,9 @@ describe("🖱️ Canvas2d mounted input contract", () => {
     expect(getActiveCataloguePointerDragData()).toEqual({ payload: row.rawPayload, types: row.types });
     controller.pointerPaletteDrag?.cancel();
     expect(getActiveCataloguePointerDragData()).toBeNull();
-    controller.onDragStart?.({ items: [], section: { id: "catalogue" }, sourceItem: { id: "source", dragData: { [cataloguePointerTransfer.mime]: row.rawPayload } } });
+    controller.onDragStart?.({ items: [], section: { id: "catalogue" }, sourceItem: { id: "source", label: "source", dragData: { [cataloguePointerTransfer.mime]: row.rawPayload } } });
     expect(getActiveCataloguePointerDragData()).toBeNull();
-    controller.onDragEnd?.({ items: [], section: { id: "catalogue" }, sourceItem: { id: "source" } });
+    controller.onDragEnd?.({ items: [], section: { id: "catalogue" }, sourceItem: { id: "source", label: "source" } });
   });
 
   it.each(cataloguePointerTransfer.cases)("routes $id pointer catalogue ownership through the mounted canvas host", async row => {
@@ -570,13 +582,16 @@ describe("🖱️ Canvas2d mounted input contract", () => {
   });
 
   it.each(catalogueTerminal.cases)("serializes $terminal catalogue cleanup before the terminal raw drop", async row => {
-    let finishLeave: (() => void) | null = null;
+    // 🧯️ Held on an object, not a `let`: a resolver assigned only inside the dispatch callback leaves
+    // the local narrowed to its `null` initialiser at the call below, while the property keeps its
+    // declared type — which is what this law actually holds (the cleanup finishes out of band).
+    const leave: { finish?: () => void } = {};
     const starts: string[] = [];
     const { actions, host } = mountedHost(catalogueTerminal.surface, action => {
       starts.push(action.action);
       if (action.action !== "canvasDragLeave") return Promise.resolve();
       return new Promise<void>((resolve, reject) => {
-        finishLeave = () => row.leaveOutcome === "reject" ? reject(new Error("fixture cleanup refusal")) : resolve();
+        leave.finish = () => row.leaveOutcome === "reject" ? reject(new Error("fixture cleanup refusal")) : resolve();
       });
     });
     let dataReads = 0;
@@ -595,7 +610,7 @@ describe("🖱️ Canvas2d mounted input contract", () => {
     if (isCatalogue) {
       expect(dataReads).toBe(1);
       host.getBoundingClientRect = () => ({ ...bounds, left: 500, top: 500, x: 500, y: 500 } as DOMRect);
-      finishLeave?.();
+      leave.finish?.();
       await settle();
     } else {
       expect(dataReads).toBe(0);

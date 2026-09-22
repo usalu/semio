@@ -365,7 +365,12 @@ describe("hub first-run inside the hub workspace", () => {
         throw new Error("unused");
       },
       redeemInvite: async () => ({ status: 200 }),
-    } as HubConnectionPortV1;
+      listAgentDelegations: async () => [],
+      createAgentDelegation: async () => {
+        throw new Error("unused");
+      },
+      revokeAgentDelegation: async () => undefined,
+    };
   }
 
   function mount(storage: HubConnectionStorageV1 | null) {

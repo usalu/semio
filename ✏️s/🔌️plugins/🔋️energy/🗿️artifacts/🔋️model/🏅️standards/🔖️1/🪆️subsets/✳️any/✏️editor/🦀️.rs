@@ -298,7 +298,10 @@ mod args_bridge {
         let u32_or = |key: &str, fallback: u32| number(args, key).map_or(fallback, |value| value as u32);
         let bool_or = |key: &str, fallback: bool| flag(args, key).unwrap_or(fallback);
         Ok(match action {
-            super::SET_NODE_ACTION_ID => Command::SetStructureField { field: text_or("id", ""), value: text_or("value", "") },
+            // 🧱️ `nodeId` is the argument name `TreeWindowKit::editable_window_kind()` declares for
+            // its own `set-node` row; `id` is what this editor's structure tree sent before the kit
+            // named the argument at all, and both reach the same field.
+            super::SET_NODE_ACTION_ID => Command::SetStructureField { field: text(args, "nodeId").unwrap_or_else(|| text_or("id", "")), value: text_or("value", "") },
             super::SET_CELL_ACTION_ID => Command::SetZoneCell { row: u32_or("row", 0), column: text_or("column", ""), value: text_or("value", "") },
             super::CREATE_ZONE_ACTION_ID => Command::CreateZone { name: text_or("name", "Zone"), volume_m3: f64_or("volumeM3", 100.0), multiplier: u32_or("multiplier", 1), conditioned: bool_or("conditioned", true) },
             super::RENAME_ZONE_ACTION_ID => Command::RenameZone { zone: u32_or("zone", 0), new_name: text_or("newName", "") },

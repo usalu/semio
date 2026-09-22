@@ -49,8 +49,10 @@ export async function bundleFlowBrowserModule(write: boolean, packageRoot = core
   const contents = source.replace(nativeInitializer, 'import("../flow_core.js")').replace(hostInitializer, '"../🖥️host/🟨️.js"');
   const browser = await Bun.build({
     entrypoints: [browserSource],
-    outdir: join(packageRoot, "🌐️browser"),
-    write,
+    // 💾️ Bun writes a build to disk exactly when it is given an `outdir` — there is no separate
+    // `write` switch — so the preview path simply asks for no output directory and reads the
+    // bundle out of the in-memory blob it gets back.
+    ...(write ? { outdir: join(packageRoot, "🌐️browser") } : {}),
     target: "browser",
     format: "esm",
     plugins: [{ name: "flow-browser-publication", setup(build) {

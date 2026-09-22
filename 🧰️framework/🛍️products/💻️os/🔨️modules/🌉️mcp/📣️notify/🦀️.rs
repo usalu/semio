@@ -212,6 +212,16 @@ pub fn artifact_roster_changed() -> usize {
         + resource_update_broker().broadcast(&ResourceChange::Updated { uri: "semio://workspace/artifacts".to_string() })
 }
 
+//#region 💬️AgentMessages
+/// 💬️ A human typed a turn at the agent in the shell's chat panel and it landed in this gateway's
+/// inbox. Every connection subscribed to `semio://ui/agent-messages` is told at once, so an MCP
+/// client learns of the question the moment it is asked instead of only when it next happens to
+/// poll — the push half of the channel `conversation_reply` answers on.
+pub fn agent_messages_changed() -> usize {
+    resource_update_broker().broadcast(&ResourceChange::Updated { uri: "semio://ui/agent-messages".to_string() })
+}
+//#endregion 💬️AgentMessages
+
 /// 🔗️ Every resource URI this crate projects for one artifact id, in the order `resources/list` and
 /// `📇️registry`'s templates declare them.
 pub fn artifact_resource_uris(artifact_id: &str) -> Vec<String> {
@@ -395,7 +405,7 @@ pub fn jobs_for_request(request_id: &serde_json::Value) -> Vec<String> {
 
 //#region 🔖️Pagination
 /// 📄️ The default page every `*/list` method serves when the client names no `cursor`. Large enough
-/// that today's 27 tools and small resource roster are one page (no client sees a behaviour change),
+/// that today's 28 tools and small resource roster are one page (no client sees a behaviour change),
 /// small enough that a spec-strict client's paging code is genuinely exercised by a grown catalog.
 pub const DEFAULT_PAGE_SIZE: usize = 100;
 

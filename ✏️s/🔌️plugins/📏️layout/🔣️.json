@@ -1865,7 +1865,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -5051,8 +5051,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "90c420d595a60580e4990f1fe3d07f4eb88f009888fcfdaf912e020f69a7a3cf",
-    "coreWasmSha256": "2b6c587c38ea09c32ec02f3aad188160c1d8848704f60b83b333a4b3ff64a8d8",
-    "descriptorSha256": "401a2e66e1453b30fc905d3d1e2eb57d1c8870dfbf28cbcea464444271cdde0f"
+    "wasmSha256": "7a40b798ecebbdb44f5f0c43d6ec8f306299275b696fcc11d2dac9ddbc7d4215",
+    "coreWasmSha256": "5553a392f89589cb89a0f322be559f9ef41ebb747a429581ca3c74d4cc707ace",
+    "descriptorSha256": "d44a65ec457c3336050676eb6506db6ddc8b5c2b1e42ab856c9d07c415feff48"
   }
 }

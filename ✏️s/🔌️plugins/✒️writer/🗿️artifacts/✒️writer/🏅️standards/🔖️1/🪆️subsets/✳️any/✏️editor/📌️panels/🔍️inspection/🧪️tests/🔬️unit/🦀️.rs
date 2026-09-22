@@ -12,6 +12,9 @@ async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
 async fn writer_labels_resolve_native_by_default() {
     let mut app = new_app().await;
     let inspection = render_body(&mut app, WRITER_PLAY_BODY_INSPECTION).await;
-    assert!(inspection.contains("\"Document\""));
-    assert!(inspection.contains("\"Camera\""));
+    // 🗣️ This body renders ONE section, labelled with the app's own `artifact` term — native English
+    // "Artifact", never the German "Artefakt". "Document"/"Camera" are not in `WriterPlayLabels` and
+    // this panel renders no camera section, so those literals tested nothing but their own staleness.
+    assert!(inspection.contains("\"Artifact\""), "{inspection}");
+    assert!(!inspection.contains("Artefakt"), "{inspection}");
 }

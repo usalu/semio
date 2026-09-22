@@ -21,7 +21,7 @@ const compareSegment = (left: Segment, right: Segment) => comparePoint(left[0], 
 function actualThreeSegments(record: { readonly positions: readonly Point[]; readonly indices: readonly number[] }): Segment[] {
   const geometry = new BufferGeometry();
   geometry.setAttribute("position", new Float32BufferAttribute(record.positions.flat(), 3));
-  geometry.setIndex(record.indices);
+  geometry.setIndex([...record.indices]);
   const edges = new EdgesGeometry(geometry, fixture.thresholdAngleDegrees);
   const positions = edges.getAttribute("position");
   const segments: Segment[] = [];

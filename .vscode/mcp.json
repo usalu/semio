@@ -24,7 +24,7 @@
         "--folder",
         ".",
         "--scopes",
-        "workspace.read,artifact.write,inference.execute,ui.observe,ui.control"
+        "workspace.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"
       ]
     }
   }

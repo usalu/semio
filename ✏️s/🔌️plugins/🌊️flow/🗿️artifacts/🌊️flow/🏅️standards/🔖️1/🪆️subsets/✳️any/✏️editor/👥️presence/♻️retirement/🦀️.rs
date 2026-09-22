@@ -12,13 +12,15 @@ pub struct FlowPresenceRetirementFactory;
 
 impl SnapshotRetirementFactory<FlowPresence> for FlowPresenceRetirementFactory {
     fn retire(&self, root: Arc<FlowPresence>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(FlowPresenceRetirement { root: ManuallyDrop::new(Some(root)), domain: FlowRetirement::default() })
+        Box::new(FlowPresenceRetirement { root: ManuallyDrop::new(Some(root)), domain: FlowRetirement::default(), debt: 0 })
     }
 }
 
 struct FlowPresenceRetirement {
     root: ManuallyDrop<Option<Arc<FlowPresence>>>,
     domain: FlowRetirement,
+    /// 🎟️ Bytes already freed above the caller's page, still owed to the caller's accounting.
+    debt: usize,
 }
 
 impl ErasedSnapshotRetirement for FlowPresenceRetirement {
@@ -26,17 +28,19 @@ impl ErasedSnapshotRetirement for FlowPresenceRetirement {
         if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(SnapshotRetirementStep::Blocked);
         }
-        if let Some(root) = self.root.take() {
-            if let Some(value) = Arc::into_inner(root) {
-                self.domain.push(FlowOwner::Strings(value.preview_off_node_ids));
+        if self.debt == 0 {
+            if let Some(root) = self.root.take() {
+                if let Some(value) = Arc::into_inner(root) {
+                    self.domain.push(FlowOwner::Strings(value.preview_off_node_ids));
+                }
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
             }
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        self.domain.close_page(1, maximum_bytes)
+        crate::retirement::close_frontier_page(&mut self.domain, &mut self.debt, maximum_bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.root.is_none() && self.domain.is_empty()
+        self.root.is_none() && self.domain.is_empty() && self.debt == 0
     }
 }
 

@@ -11,6 +11,7 @@ async fn package_descriptor_advertises_metadata_only_cold_inference_routes() {
         inference_schema_version: 1,
         algorithm_version: 1,
         policy_version: 1,
+        payload: None,
     };
     let plugin = crate::app::Plugin::<crate::app::NoPluginApp>::builder(metadata.owner).label("Describe Routed Inference").version("0.1.0").package_id("semio:describe-routed-inference").routed_inference(metadata).try_build().expect("routed plugin assembles");
     let runtime = crate::plugin_runtime::PluginRuntime::new();

@@ -186,6 +186,7 @@ fn gltf_inference_leaf_service(inference_schema: &'static str, infer: ArtifactIn
             inference_schema_version: 1,
             algorithm_version: GLTF_INFERENCE_ALGORITHM_VERSION,
             policy_version: GLTF_INFERENCE_POLICY_VERSION,
+            payload: None,
         },
         infer,
     )

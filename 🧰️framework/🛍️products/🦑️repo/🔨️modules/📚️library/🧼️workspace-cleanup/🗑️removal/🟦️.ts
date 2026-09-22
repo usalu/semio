@@ -4,6 +4,7 @@ import { exactCargoGeneratedOutputHasLiveLease, runProbe } from "../../🟦️.t
 import {
   cleanBuildArtifactRemovals,
   cleanCollectMisplaced,
+  cleanCollectRootTransient,
   cleanCollectWindowsIllegal,
   cleanDedupePreferDeepest,
   cleanDiscoverTicketFolders,
@@ -50,6 +51,7 @@ export function runWorkspaceClean(root: string, dry: boolean): { removals: Clean
   const skippedProtected = protectedPrefixes.filter((p) => existsSync(p)).map((p) => relative(root, p) || p);
   const pending: CleanRemoval[] = [];
   pending.push(...cleanCollectMisplaced(root, protectedPrefixes));
+  pending.push(...cleanCollectRootTransient(root, protectedPrefixes));
   pending.push(...cleanCollectWindowsIllegal(root, protectedPrefixes));
   const gitignoredMap = cleanGitignoredMapForTicketRoots(root, ticketRoots);
   for (const ticketFolder of ticketFolders) {

@@ -342,7 +342,12 @@ async fn utility_registry_declares_canvas_utilities_scoped_to_composite_window()
     assert_eq!(selects, ["selectDirect", "selectMarquee"]);
     let composite_window = definition.window_kinds.iter().find(|window| window.id == NOTE_PLAY_WINDOW_COMPOSITE).expect("composite window");
     assert_eq!(composite_window.utilities.len(), definition.utilities.len(), "every utility is scoped to the composite canvas");
-    assert!(composite_window.actions.iter().any(|action| action.id == semio_framework::SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, Kind::View)));
+    // 🪟️ The injected `setActiveUtility` reaches the composite window through the app roster, not by
+    // being cloned into `WindowKindDefinition.actions` — ticket 26/09/18 slice DS1 stopped the builder
+    // duplicating the roster into every window kind (see `AppDefinition::actions`). The dispatchable
+    // set is `semio_framework::window_kind_actions`, the predicate the plugin host itself uses.
+    let dispatchable = semio_framework::window_kind_actions(&definition, composite_window);
+    assert!(dispatchable.iter().any(|action| action.id == semio_framework::SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, Kind::View)));
 }
 //#endregion 🔖️ManifestSanity
 

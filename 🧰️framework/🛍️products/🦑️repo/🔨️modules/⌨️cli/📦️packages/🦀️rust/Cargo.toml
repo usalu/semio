@@ -19,7 +19,7 @@ name = "semio"
 path = "../../🚪️entrypoint/🦀️.rs"
 
 [[bin]]
-name = "semio-repo-mcp"
+name = "repo"
 path = "📦️mcp-main.rs"
 
 [dependencies]

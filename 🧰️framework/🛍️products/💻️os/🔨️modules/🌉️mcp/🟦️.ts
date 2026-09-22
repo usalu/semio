@@ -440,6 +440,17 @@ function revisionOf(reply: McpToolReply): RevisionStampWire | undefined {
   return reply.structuredContent?.expectedRevision as RevisionStampWire | undefined;
 }
 
+/** 🧊️ The WHOLE document an `artifact_snapshot` reply carries, as one comparable string. A `.spk`
+ * `pack` is the GENESIS snapshot (`envelope.vcs.initial_snapshot.encode_pack()`) and never moves
+ * again; every committed mutation lands in the `.spr` event log. Comparing `packBase64` alone
+ * therefore asserted something the format can never deliver — it read identical across a commit
+ * that landed perfectly (measured 2026-09-22, slice CE3). */
+function snapshotDocumentBase64(reply: McpToolReply): string {
+  const pack = String(reply.structuredContent?.packBase64 ?? "");
+  const spr = String(reply.structuredContent?.sprBase64 ?? "");
+  return pack.length === 0 && spr.length === 0 ? "" : `${pack}.${spr}`;
+}
+
 /** 📄️ Walks one cursor-paginated list method exactly as a spec-strict client does: page one, then
  * every `nextCursor` until there is none. Bounded by a page cap so a server that ever returned a
  * non-advancing cursor fails this gate instead of hanging it. */
@@ -632,6 +643,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    plugin per journey is also one cold component compile per journey.
     const beforeSnapshot = await session.call("artifact_snapshot", { artifactId: typedArtifactId });
     const packBefore = String(beforeSnapshot.structuredContent?.packBase64 ?? "");
+    const documentBefore = snapshotDocumentBase64(beforeSnapshot);
 
     const prepared = await session.call("action_prepare", { capabilityId: CLIENT_E2E_PINNED_CAPABILITY_ID, input });
     const baselineRevision = revisionOf(prepared);
@@ -672,13 +684,15 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     // 📦️ The snapshot is taken of the artifact this journey created, by the SAME id
     //    `action_prepare` stamped and `action_invoke` mutated — one identity, asserted above. It is
     //    read from the live guest session the mutation went to, not from the row frozen at create
-    //    time, so the bytes MUST differ across the commit: a snapshot that cannot show the change
-    //    the agent just made is worse than no snapshot, and the shipped `mutate-safely` prompt
-    //    tells an agent to confirm exactly this way.
+    //    time, so the DOCUMENT bytes MUST differ across the commit: a snapshot that cannot show the
+    //    change the agent just made is worse than no snapshot, and the shipped `mutate-safely`
+    //    prompt tells an agent to confirm exactly this way. The document is `pack` AND `spr`, never
+    //    `pack` alone — see `snapshotDocumentBase64`.
     const afterSnapshot = await session.call("artifact_snapshot", { artifactId: typedArtifactId });
     const packAfter = String(afterSnapshot.structuredContent?.packBase64 ?? "");
     announce(steps, { step: "os: artifact_snapshot (the created artifact)", ok: afterSnapshot.isError !== true && Number(afterSnapshot.structuredContent?.packBytes ?? 0) > 0, detail: afterSnapshot.isError === true ? `${typedArtifactId}: ${JSON.stringify(afterSnapshot.structuredContent).slice(0, 300)}` : `artifactId=${typedArtifactId} packBytes=${afterSnapshot.structuredContent?.packBytes} sprBytes=${afterSnapshot.structuredContent?.sprBytes}`, wire: { ...afterSnapshot.structuredContent, packBase64: `${packAfter.slice(0, 32)}…` } });
-    announce(steps, { step: "os: the snapshot shows the mutation", ok: packBefore.length > 0 && packAfter.length > 0 && packAfter !== packBefore, detail: packBefore.length === 0 ? `the pre-mutation snapshot answered no bytes: ${JSON.stringify(beforeSnapshot.structuredContent).slice(0, 200)}` : packAfter === packBefore ? `${typedArtifactId} is byte-identical across the commit (${packAfter.length} base64 chars) — the snapshot is reading a frozen row, not the document the mutation went to` : `${packBefore.length} → ${packAfter.length} base64 chars across the commit`, wire: { before: packBefore.slice(0, 24), after: packAfter.slice(0, 24) } });
+    const documentAfter = snapshotDocumentBase64(afterSnapshot);
+    announce(steps, { step: "os: the snapshot shows the mutation", ok: documentBefore.length > 0 && documentAfter.length > 0 && documentAfter !== documentBefore, detail: documentBefore.length === 0 ? `the pre-mutation snapshot answered no bytes: ${JSON.stringify(beforeSnapshot.structuredContent).slice(0, 200)}` : documentAfter === documentBefore ? `${typedArtifactId} is byte-identical across the commit (pack ${packAfter.length}, spr ${String(afterSnapshot.structuredContent?.sprBase64 ?? "").length} base64 chars) — the snapshot is reading a frozen row, not the document the mutation went to` : `${documentBefore.length} → ${documentAfter.length} base64 chars across the commit (pack ${packBefore.length} → ${packAfter.length}, spr ${String(beforeSnapshot.structuredContent?.sprBase64 ?? "").length} → ${String(afterSnapshot.structuredContent?.sprBase64 ?? "").length})`, wire: { before: documentBefore.slice(0, 24), after: documentAfter.slice(0, 24) } });
 
     const headAfterInvoke = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
     announce(steps, { step: "os: live head advanced", ok: headAfterInvoke !== undefined && headAfterInvoke.headEditId === revisionAfter?.headEditId && headAfterInvoke.headEditId !== baselineRevision?.headEditId, detail: `re-read head ${stampText(headAfterInvoke)} (baseline ${stampText(baselineRevision)}, invoke reported ${stampText(revisionAfter)})`, wire: headAfterInvoke });
@@ -714,8 +728,22 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     // 💡️ The roster must CONTAIN the pinned service — the list is a union over every installed
     //    plugin's declared roster, so which entry is first is another thing the gate must not read.
     const service = declared.find((row) => row.artifactKind === CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND && row.inferenceSchema === CLIENT_E2E_PINNED_INFERENCE_SCHEMA);
-    announce(steps, { step: "os: inference_list declares the pinned service", ok: listed.isError !== true && service !== undefined, detail: listed.isError === true ? JSON.stringify(listed.structuredContent).slice(0, 200) : service ? `${declared.length} declared inference(s), including ${CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND}/${CLIENT_E2E_PINNED_INFERENCE_SCHEMA} by ${service.contributor || service.owner}` : `${declared.length} declared inference(s), none of them ${CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND}/${CLIENT_E2E_PINNED_INFERENCE_SCHEMA}: ${declared.map((row) => `${row.artifactKind}/${row.inferenceSchema}`).join(", ")}`, wire: declared.slice(0, 8) });
+    // 📜️ A declared row is not enough: an agent also has to be able to READ what to send. The row
+    //    must publish its payload contract (`payloadSchemaId` + an input schema), because without
+    //    one `inference_run` can only ever dispatch `{}` and the guest answers a decode fault after
+    //    the whole component has been compiled (`📓️pz2-…md` §5.2 measured 240 s of exactly that).
+    const contract = service?.payload as Record<string, any> | undefined;
+    const contractOk = typeof contract?.payloadSchemaId === "string" && typeof contract?.inputSchema === "string" && contract.inputSchema.length > 0;
+    announce(steps, { step: "os: inference_list declares the pinned service", ok: listed.isError !== true && service !== undefined && contractOk, detail: listed.isError === true ? JSON.stringify(listed.structuredContent).slice(0, 200) : service ? `${declared.length} declared inference(s), including ${CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND}/${CLIENT_E2E_PINNED_INFERENCE_SCHEMA} by ${service.contributor || service.owner}${contractOk ? `, contract ${contract?.payloadSchemaId} (binds \`${contract?.artifactBinding?.field ?? "<none>"}\`, ${String(contract?.inputSchema ?? "").length} B input schema)` : ", publishing NO payload contract — a client cannot know what to send"}` : `${declared.length} declared inference(s), none of them ${CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND}/${CLIENT_E2E_PINNED_INFERENCE_SCHEMA}: ${declared.map((row) => `${row.artifactKind}/${row.inferenceSchema}`).join(", ")}`, wire: declared.slice(0, 8) });
     if (!service) return steps;
+    // 🗿️ The artifact the inference is RUN ON — its own kind, created through the same
+    //    `artifact_create` every other artifact in this journey goes through. It carries no row of
+    //    its own on purpose: the denominator stays comparable across slices, and a create that
+    //    fails is visible in the `inference_run` row it serves (the gateway then refuses by name,
+    //    `INPUT_INVALID … artifactId`, instead of dispatching a body no guest can decode).
+    const inferenceArtifactId = `${artifactId}-inference`;
+    const inferenceArtifact = await session.call("artifact_create", { artifactId: inferenceArtifactId, kind: CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND });
+    if (inferenceArtifact.isError === true) console.log(`[client-e2e] artifact_create ${CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND}: ${JSON.stringify(inferenceArtifact.structuredContent).slice(0, 200)}`);
     // 📈️ The spec's own progress mechanism, on the one tool that mints a job: the call carries
     // `_meta.progressToken`, and every `JobRegistry` row of that job must arrive as a
     // `notifications/progress` carrying that exact token — no `job_get` poll in this step.
@@ -728,8 +756,8 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    not a cold-compile budget, it is a solve that does not return, so the budget stays at the
     //    journey's own 240 s and the row says so.
     const inferenceEnvelope = await session
-      .request("tools/call", { name: "inference_run", arguments: { artifactKind: service.artifactKind, inferenceSchema: service.inferenceSchema, pluginId: CLIENT_E2E_PINNED_INFERENCE_PLUGIN_ID, cancellationId: `${artifactId}-cancel` }, _meta: { progressToken } })
-      .catch((error: Error) => ({ jsonrpc: "2.0" as const, id: null, error: { code: -32000, message: error.message } }));
+      .request("tools/call", { name: "inference_run", arguments: { artifactKind: service.artifactKind, inferenceSchema: service.inferenceSchema, pluginId: CLIENT_E2E_PINNED_INFERENCE_PLUGIN_ID, artifactId: inferenceArtifactId, cancellationId: `${artifactId}-cancel` }, _meta: { progressToken } })
+      .catch((error: Error): McpEnvelope => ({ jsonrpc: "2.0", id: null, error: { code: -32000, message: error.message } }));
     const inference = (inferenceEnvelope.error ? { isError: true, structuredContent: { code: `JSONRPC_${inferenceEnvelope.error.code}`, message: inferenceEnvelope.error.message } } : (inferenceEnvelope.result ?? {})) as McpToolReply;
     const progressRows = session.serverNotifications().slice(progressBefore).filter((envelope) => envelope.method === "notifications/progress" && (envelope.params as any)?.progressToken === progressToken);
     announce(steps, { step: "os: notifications/progress for _meta.progressToken", ok: progressRows.length > 0, detail: progressRows.length > 0 ? `${progressRows.length} progress row(s), last progress=${(progressRows[progressRows.length - 1]?.params as any)?.progress}` : `no progress notification carried token ${progressToken} — the job reported none, or the push is not wired`, wire: progressRows.map((envelope) => envelope.params) });
@@ -737,7 +765,12 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     // arrives after the call it names returned: what it proves here is that the server accepts the
     // notification, answers nothing (JSON-RPC's rule for notifications) and stays responsive.
     session.notify("notifications/cancelled", { requestId: inferenceEnvelope.id ?? 0, reason: "client-e2e cancellation probe" });
-    const stillAlive = await session.request("ping", {});
+    // ⏳️ Same law as the `inference_run` call above, and for the same reason: this `ping` follows a
+    //    call that can still be busy in the guest, and an uncaught rejection here abandons the
+    //    journey before it prints a tally or a single `FAIL` line. Measured 2026-09-22 (slice CE3):
+    //    a `s.wfc.bitmap.solve` that did not return inside its own 240 s budget left this `ping`
+    //    unanswered too, and the whole gate died with a stack trace at 27 printed rows.
+    const stillAlive = await session.request("ping", {}).catch((error: Error): McpEnvelope => ({ jsonrpc: "2.0", id: null, error: { code: -32000, message: error.message } }));
     announce(steps, { step: "os: notifications/cancelled is accepted and unanswered", ok: !stillAlive.error, detail: stillAlive.error ? `the server stopped answering after notifications/cancelled: ${JSON.stringify(stillAlive.error)}` : "cancelled accepted with no response; ping still answers", wire: stillAlive.result });
     // 🏃️ A REFUSED inference still minted a job — the gateway registers the row before it dispatches
     //    and reports it back inside the error's own `details` — so the job rows below are read from
@@ -745,7 +778,7 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     //    `job_get`/`job_cancel` unreachable the moment the plugin refused, which is exactly when a
     //    client most needs them to work.
     const jobId = (inference.structuredContent?.jobId ?? (inference.structuredContent?.details as Record<string, unknown> | undefined)?.jobId) as string | undefined;
-    announce(steps, { step: "os: inference_run", ok: inference.isError !== true, detail: inference.isError === true ? JSON.stringify(inference.structuredContent).slice(0, 300) : `jobId=${jobId} status=${inference.structuredContent?.status} complete=${inference.structuredContent?.complete} bytes=${inference.structuredContent?.payloadBytes ?? 0}`, wire: inference.structuredContent });
+    announce(steps, { step: "os: inference_run", ok: inference.isError !== true, detail: inference.isError === true ? JSON.stringify(inference.structuredContent).slice(0, 300) : `jobId=${jobId} artifactId=${inference.structuredContent?.artifactId || "<none>"} status=${inference.structuredContent?.status} complete=${inference.structuredContent?.complete} bytes=${inference.structuredContent?.payloadBytes ?? 0}`, wire: inference.structuredContent });
 
     if (jobId) {
       const progress = await session.call("job_get", { jobId });

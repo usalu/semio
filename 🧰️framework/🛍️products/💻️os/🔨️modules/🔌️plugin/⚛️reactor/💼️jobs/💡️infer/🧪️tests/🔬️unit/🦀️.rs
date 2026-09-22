@@ -15,6 +15,7 @@ const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceService
     inference_schema_version: 1,
     algorithm_version: 1,
     policy_version: 1,
+    payload: None,
 };
 
 fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, crate::app::ArtifactInferenceExecutionError> {

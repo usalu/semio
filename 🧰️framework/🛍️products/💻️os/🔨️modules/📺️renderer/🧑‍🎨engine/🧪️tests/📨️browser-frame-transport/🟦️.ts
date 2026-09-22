@@ -551,7 +551,12 @@ describe("browser frame worker transport", () => {
     try {
       mutate("push-after-return");
     } catch (error) {
-      if (!(error instanceof DOMException) || error.name !== "AbortError") faults.push(String(error));
+      // 🧪️ `AbortSignal.throwIfAborted()` throws the signal's own reason, which the platform mints as
+      // a `DOMException` named `AbortError`. Under this suite's DOM environment the `AbortController`
+      // is the host runtime's while `globalThis.DOMException` is the emulated document's, so the two
+      // constructors are different realms and `instanceof` is false for an object that IS the
+      // contract's error. The NAME is what the contract pins, so the name is what this asserts.
+      if ((error as { readonly name?: string }).name !== "AbortError") faults.push(String(error));
     }
     expect(ownerCalls).toEqual(["reserve-busy"]);
     expect(faults).toEqual([]);

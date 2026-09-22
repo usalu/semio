@@ -37,7 +37,7 @@ it("interprets the neutral compact Tree and preserves checkbox identity, authori
     const store = new UiDocumentStore("compact-tree-law");
     store.loadSnapshot({ surface: "compact-tree-law", revision: 1, root: rootId, nodes, layoutEpoch: 0n } as any);
     const intents: any[] = [];
-    const view = render(createElement(FlowProvider, { inline: "rtl", children: createElement(UiNodeView, { store, id: rootId, context: { store, onAction: () => {}, onIntent: (intent: unknown) => intents.push(intent) } }) }));
+    const view = render(createElement(FlowProvider, { inline: "rtl", children: createElement(UiNodeView, { store, id: rootId, context: { store, onAction: () => {}, onIntent: (intent: unknown) => { intents.push(intent); } } }) }));
     const tree = view.container.querySelector("[role='tree']")!;
     expect(tree.getAttribute("data-tree-presentation")).toBe("compact");
     expect(tree.getAttribute("dir")).toBe("rtl");

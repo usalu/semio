@@ -17,6 +17,7 @@ import {
   Icon,
   type IconName,
   Input,
+  type PanelTabBranch,
   type PanelTabNode,
   Select,
   SelectContent,
@@ -1077,7 +1078,7 @@ function buildConflictsTree(host: ConflictsHostApi): TreePanelConfig {
 }
 //#endregion 🔖️ConflictsPanel
 
-export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi | null, getDefaultAppsHost?: () => DefaultAppsHostApi | null, getConflictsHost?: () => ConflictsHostApi | null): PanelTabNode {
+export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi | null, getDefaultAppsHost?: () => DefaultAppsHostApi | null, getConflictsHost?: () => ConflictsHostApi | null): PanelTabBranch {
   const children: PanelTabNode[] = [
     singleTreeLeaf({
       id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,

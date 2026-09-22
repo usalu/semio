@@ -135,6 +135,15 @@ pub trait AuthorityOperationControl: Send + Sync {
 
     /// 📡️ Observes monotonic bounded progress without taking candidate ownership.
     fn report(&self, progress: AuthorityProgress);
+
+    /// 🧯️ Names, in the operation's own words, why it ended without the answer it was asked for.
+    ///
+    /// A terminal phase is a status code: it says an operation stopped, never why. Where the
+    /// reason is a driver message, a refused catalog selection or a publication fault, dropping it
+    /// leaves an operator with a `failed` and nothing else, and the host cannot tell a defect from
+    /// a legitimate refusal. The default ignores the sentence, so a control with nowhere to put one
+    /// is not forced to invent a sink.
+    fn fault(&self, _detail: &str) {}
 }
 
 /// ⏱️ What ends one authority operation that was not cancelled.

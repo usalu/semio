@@ -324,15 +324,23 @@ today is that a loopback hub no longer hands a credentialed grant to `https://ev
 |---|---|
 | `GET /healthz` | Liveness. Always `200` while the process serves: `{schema: "semio.hub.liveness/v1", status: "live", runId, uptimeMs}`. It says nothing about readiness. |
 | `GET /readyz` | Readiness. `200` when every gate is open, **`503` otherwise**, with the same body either way. |
+| `GET /admin/api/observability` | Per-event counters and latency percentiles, behind the same admin capability as every other `/admin/api` route. Body: `{schema: "semio.hub.observability/v1", level, droppedEvents, declaredEvents, rows: [{event, started, ok, refused, failed, cancelled, total, samples, p50Us, p95Us, p99Us}]}`. |
 
 `/readyz`'s body names what is closed and why rather than claiming a bare status: `blocked_by` is a
 list of `{gate, reason}` pairs (e.g. `artifactCasSweeper` /
 `artifact-cas-maintenance-supervisor-failed-closed`), and the authentication block carries
 `publicSessionIssuance`. Point a load balancer at `/readyz` and a process supervisor at `/healthz`.
 
-There is **no metrics endpoint and no structured request/WebSocket tracing** — the hub has no
-`tracing`/`prometheus`/`opentelemetry` dependency. Startup prints a `[WARN] … closed gates: …` line
-when it comes up not-ready. Plan your observability around `/readyz` polling and stdout.
+The hub carries **no `tracing`/`prometheus`/`opentelemetry` dependency** — the observer is
+first-party (`semio_framework_trace`). Every HTTP route, the document WebSocket handler, the
+directory backend faults and the boot itself open a span on it, configured from `SEMIO_TRACE_LEVEL`
+and `SEMIO_TRACE_SINK`; the records go to the configured sink, and the bounded counter table behind
+them is what `/admin/api/observability` returns. `declaredEvents` ships the vocabulary so a
+dashboard shows a never-fired event as a zero rather than a missing series, and a non-zero
+`droppedEvents` means some event name is being built from request data. Startup still prints a
+`[WARN] … closed gates: …` line when it comes up not-ready. There is no Prometheus exposition
+format and no scrape endpoint: point a dashboard at the admin route, a load balancer at `/readyz`
+and a process supervisor at `/healthz`.
 
 ## Backup and restore
 
@@ -693,7 +701,10 @@ An operator should know these before putting anything real into a hub:
   network bind (see "Run it"), but the TLS terminator was simulated by sending the headers Caddy or
   nginx would send. The Caddy/nginx/systemd examples below remain correct-by-construction against
   the router's real socket routes, not configs anyone has loaded.
-- **No metrics, no request tracing.** `/readyz` and stdout are the whole observability surface.
+- **No Prometheus/OpenTelemetry exposition.** Structured tracing and per-event counters *are*
+  shipped (`SEMIO_TRACE_LEVEL`/`SEMIO_TRACE_SINK`, `GET /admin/api/observability`, see
+  "Health and readiness"); what does not exist is a scrape endpoint in anyone else's format, so a
+  Prometheus-based stack needs an exporter in front of the admin route.
 - **No cross-version *migration*.** Each durable store now stamps its format version on creation and
   refuses a data root written by a different one with a named error, so an upgrade cannot corrupt
   history silently — but there is still nothing that converts an old root into a new one.

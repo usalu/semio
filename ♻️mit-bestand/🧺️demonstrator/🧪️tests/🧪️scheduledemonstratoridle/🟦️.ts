@@ -1,8 +1,11 @@
-type TestSource = { readonly directory: string; readonly url: string };
+import type * as DemonstratorBrand from "../../🪧️brand.ts";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+type TestSource = { readonly directory: string; readonly url: string };
+type TestDependencies = Pick<typeof DemonstratorBrand, "demonstratorPaneBootVariants" | "scheduleDemonstratorIdle">;
+type DemonstratorIdleScheduler = DemonstratorBrand.DemonstratorIdleScheduler;
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: TestDependencies, source: TestSource): Promise<void> {
   const { demonstratorPaneBootVariants, scheduleDemonstratorIdle } = dependencies;
-  type DemonstratorIdleScheduler = any;
 
   const { describe, expect, it } = vitest;
 

@@ -4,7 +4,7 @@
 Feature: The `mcp` verb serves the repo repository on stdio
   `semio mcp [kind]` starts the repo Model Context Protocol server on standard input and output
   with the profile the operand names or `SEMIO_REPO_MCP_CLIENT` supplies, and the shipped
-  `semio-repo-mcp` binary serves the same repository. The protocol itself belongs to 🔌️mcp; what
+  `repo` binary serves the same repository. The protocol itself belongs to 🔌️mcp; what
   this case proves is that the verb wires the production repository behind it, that `initialize`
   ignores members it does not know, and that the declared tool and resource vocabulary reaches a
   client unchanged.

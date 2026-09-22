@@ -129,10 +129,11 @@ fn csv_example_snapshot(example_id: &str) -> CsvSnapshot {
 fn csv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<CsvEditorCommand, Fault> {
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(CsvEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
+        "set-cell" => Ok(CsvEditorCommand::SetCell { row: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["row"], 0), column: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["column"], 0), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.csv.unhandled-action"),
-            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample)"),
+            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, set-cell)"),
         )),
     }
 }

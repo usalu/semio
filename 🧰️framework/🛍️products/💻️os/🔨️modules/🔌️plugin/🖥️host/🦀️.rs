@@ -1298,34 +1298,45 @@ impl OwnedRuntime {
     /// apply from the component itself, so a package whose Rust codec the server does not link is
     /// still fully creatable and editable. The instance is created and dropped per call — nothing
     /// here observes or mutates live actor state.
-    fn codec_call<T: serde::de::DeserializeOwned>(&self, compiled: &CompiledHandle, operation: OwnedOperation, input: &OwnedCodecInput<'_>, budget: Budget) -> Result<T, TurnFault> {
+    fn codec_call<T: serde::de::DeserializeOwned>(&self, compiled: &CompiledHandle, operation: OwnedOperation, input: &OwnedCodecInput<'_>, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<T, TurnFault> {
         let mut instance = self.instantiate_actor(compiled, RuntimeActorId(0)).map_err(TurnFault::Host)?;
         let state = owned_state_mut(&mut instance)?;
         let encoded = serde_json::to_vec(input).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(state, operation, Some(encoded))?;
-        let invocation = resume_owned_operation(state, operation, budget.fuel, budget.deadline_ms)?;
+        let invocation = resume_owned_operation_observed(state, operation, budget.fuel, budget.deadline_ms, OwnedDeadline::NoFuelProgress, progress)?;
         decode_owned_result(&invocation.output)
     }
 
     /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
     pub async fn codec_pack_schema_hash(&self, compiled: &CompiledHandle, artifact_schema: &str, budget: Budget) -> Result<[u8; 32], TurnFault> {
-        let bytes: Vec<u8> = self.codec_call(compiled, OwnedOperation::PackSchemaHash, &OwnedCodecInput { artifact_schema, document_id: "", pack: &[], spr: &[], ops: &[] }, budget)?;
+        let bytes: Vec<u8> = self.codec_call(compiled, OwnedOperation::PackSchemaHash, &OwnedCodecInput { artifact_schema, document_id: "", pack: &[], spr: &[], ops: &[] }, budget, |_, _| {})?;
         <[u8; 32]>::try_from(bytes.as_slice()).map_err(|_| TurnFault::Trapped("guest pack schema hash is not 32 bytes".to_string()))
     }
 
     /// 🌱️ `codec.genesis` — the canonical empty document of `artifact_schema` at `document_id`.
     pub async fn codec_genesis(&self, compiled: &CompiledHandle, artifact_schema: &str, document_id: &str, budget: Budget) -> Result<GuestDocumentPair, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::Genesis, &OwnedCodecInput { artifact_schema, document_id, pack: &[], spr: &[], ops: &[] }, budget)
+        self.codec_genesis_observed(compiled, artifact_schema, document_id, budget, |_, _| {}).await
+    }
+
+    /// 📈️ `codec.genesis` with bounded fuel-progress observations, for a caller whose own bound is a
+    /// STALL bound. A hub creates a document on a detached task under
+    /// `OperationContext::stall_bounded`, and the guest call is the single longest thing that task
+    /// does — without the guest's fuel progress reaching it, the hub cannot tell an interpreter that
+    /// is stepping from one that is wedged, and has to pick between refusing honest work and never
+    /// refusing anything. The observations are the same ones `describe_observed` reports: one per
+    /// 25 M fuel or per 5 s, whichever comes first.
+    pub async fn codec_genesis_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, document_id: &str, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<GuestDocumentPair, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::Genesis, &OwnedCodecInput { artifact_schema, document_id, pack: &[], spr: &[], ops: &[] }, budget, progress)
     }
 
     /// 📥️ `codec.print-mirror` — the host's pair-validation fence for an unlinked package.
     pub async fn codec_print_mirror(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], budget: Budget) -> Result<GuestDocumentMirror, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::PrintMirror, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: &[] }, budget)
+        self.codec_call(compiled, OwnedOperation::PrintMirror, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: &[] }, budget, |_, _| {})
     }
 
     /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for an unlinked package.
     pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget) -> Result<GuestDocumentPair, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget)
+        self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, |_, _| {})
     }
 
     /// 📈️ Executes owned `describe` with bounded fuel-progress observations for build tooling.
@@ -1470,10 +1481,10 @@ fn begin_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperati
 /// ⏱️ What `deadline_ms` bounds, chosen per call site because the two callers want opposite things.
 ///
 /// A live turn owes the shell a frame, so its bound is TOTAL wall time: a turn that overruns is late
-/// whether or not the guest is healthy, and `Poll`/`codec` therefore keep [`Self::TotalWall`].
+/// whether or not the guest is healthy, and `Poll` therefore keeps [`Self::TotalWall`].
 ///
-/// A build-time `describe()` owes nobody a frame, and its runaway bound is the deterministic fuel
-/// cap (`DESCRIBE_FUEL_BUDGET`). Measured on 2026-09-21 (slice CE2): the SAME `🗒️note` guest ran its
+/// A build-time `describe()` and a `codec` call owe nobody a frame, and their runaway bound is the
+/// deterministic fuel cap (`DESCRIBE_FUEL_BUDGET`; for `codec` the caller's own `budget.fuel`). Measured on 2026-09-21 (slice CE2): the SAME `🗒️note` guest ran its
 /// describe at 1 320 k fuel/s at 20:36 and at 520 k fuel/s at 22:10 — a 2.5× swing from fleet load
 /// alone, with nothing about the guest changed. Under a saturated fleet the owned interpreter
 /// sustains ≈ 210 k fuel/s, so a 1 800 000 ms TOTAL cap buys only ≈ 380 M of the 8 G fuel budget and
@@ -1487,6 +1498,15 @@ fn begin_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperati
 /// zero-fuel yield outright, and a host call that never returns blocks inside `reply_owned_host`
 /// where no deadline check can run — so a total-wall cap here never caught a runaway the fuel cap
 /// would have missed.
+///
+/// 🌱️ `codec` joined `describe` on 2026-09-22 (ticket 26/09/18 slice HC1) for the same reason, one
+/// layer further out: a hub arms `GUEST_CODEC_BUDGET` (4 G fuel, 30 000 ms) and creates the
+/// document on a DETACHED task no socket is waiting on, so nothing there owes a frame either. Under
+/// a total-wall bound the biggest staged component — `🌍️gis`, ≈ 48 MB of `wasm-release` — could not
+/// be created at all: hub 7671 failed every `POST …/artifact-creations` in 32.0 s at machine load
+/// 120, 33 and 21 alike, with the hub process burning 130–145 % CPU for the whole window
+/// (`🗑️generated/hc1-create-sampled-1.txt`). A guest running flat out and cut by the calendar is
+/// precisely what this enum exists to stop calling a fault.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum OwnedDeadline {
     TotalWall,
@@ -1881,6 +1901,60 @@ fn guest_wasi_ctx() -> (WasiCtx, Option<wasmtime_wasi::p2::pipe::MemoryOutputPip
 /// 512 MiB linear-memory budget.
 const GUEST_DIAGNOSTICS_CAPACITY_BYTES: usize = 4 * 1024 * 1024;
 
+/// 🩺️ What a wasmtime trap actually WAS, for every async-lifted export of `world actor`.
+///
+/// `Display` on a wasmtime error is only its FIRST line ("error while executing at wasm backtrace:
+/// …"); the trap code itself ("all fuel consumed by WebAssembly", "epoch deadline reached", "wasm
+/// trap: unreachable executed", a `rust_oom` abort) lives in the source chain, which `Debug`
+/// renders. `execute_turn` classified off `Debug` from the start; `start-job`/`step-job`/
+/// `cancel-job` did not, so every fuel or epoch cut inside a guest JOB arrived as an unattributed
+/// `Trapped(<backtrace>)` — the shape `📓️wi1-…md` §7.2 measured, where the same call answered a
+/// different innermost frame on every run because a fuel cut lands on whatever instruction the
+/// counter reached. One classifier for all four exports.
+/// ⏱️ The host's WEDGED watchdog for ONE `start-job`/`step-job` crossing — NOT the guest's
+/// cooperative step budget.
+///
+/// `JobBudget` carries TWO different quantities that were being spent as one. `deadline_ms`/`fuel`
+/// are the grant the GUEST's own bounded state machine reads and yields against (`💼️jobs`' work-unit
+/// prices; `BatchDriveConfig.step_budget_us`); the wasmtime store's epoch deadline and fuel are the
+/// host's hard kill, after which the component instance is unrecoverable ("cannot enter component
+/// instance"). Setting the second from the first gave a `step-job` crossing
+/// `USER_VISIBLE_LANE_WALL_US / 1_000` = **2** epoch ticks at [`EPOCH_TICK_INTERVAL_MS`] = 1 ms —
+/// the host killed the guest at the exact instant the guest was supposed to yield cooperatively,
+/// with zero margin, inside a JIT, on a machine running a whole fleet. A state action that
+/// legitimately costs more than 2 ms (`💼️jobs`' `Execute`, priced `WORK_UNITS_EXECUTE` = 1 024 for
+/// "one whole unchunked native dispatch", or one `Pump` of a real solve) could therefore never
+/// complete: the cut lands on whatever instruction the guest reached, which is why the same
+/// `s.wfc.bitmap.solve` call answered `alloc::Global::deallocate` under
+/// `drop_glue::<wit_bindgen…FutureState>` on one run and `[async-lift]…#step-job` on the next
+/// (`📓️wi1-…md` §7.2, `🗑️generated/gj1-trap-probe{,-2}.txt`). 30 s is the same "declared wedged"
+/// ceiling the gateway's own cold-open budget uses, three orders of magnitude above the cooperative
+/// slice it now stops impersonating.
+const GUEST_JOB_WATCHDOG_MS: u64 = 30_000;
+
+
+/// ⏱️ Arms one guest job crossing with the host's watchdog instead of the guest's own grant.
+/// Fuel is deliberately disarmed, for the reason the gateway's cold-open budget already states: a
+/// fuel yield is exactly as unresumable as an epoch cut under the JIT, so arming both only adds a
+/// second, harder-to-read way to say "wedged".
+fn arm_guest_job_watchdog(store: &mut Store<ActorHostState>) -> Result<(), PluginHostError> {
+    store.set_fuel(u64::MAX).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+    store.set_epoch_deadline(GUEST_JOB_WATCHDOG_MS);
+    Ok(())
+}
+
+fn classify_guest_trap(trap: &impl std::fmt::Debug) -> TurnFault {
+    let message = format!("{trap:?}");
+    let lowered = message.to_ascii_lowercase();
+    if lowered.contains("fuel") {
+        TurnFault::FuelExhausted
+    } else if lowered.contains("epoch") || lowered.contains("interrupt") {
+        TurnFault::DeadlineExceeded
+    } else {
+        TurnFault::Trapped(message)
+    }
+}
+
 /// 🧬️ `pure` (`📜️wit/📜️pure.wit`) is `world actor`'s ONLY import — `log`/`now-ms`/`trace-span`,
 /// none fallible, none async.
 impl actor_bindings::semio::framework::pure::Host for ActorHostState {
@@ -2155,7 +2229,101 @@ impl WasmtimeRuntime {
             .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
         Ok(GuestDocumentPair { pack: pair.pack, spr: pair.spr })
     }
+
+    /// 📥️ `codec.print-mirror` — the host's pair-validation fence for a package whose Rust codec the
+    /// host does not link. A pair the component cannot print back is not a document of this kind,
+    /// which is what makes this callable as a DISCRIMINATOR and not only as a printer.
+    pub async fn codec_print_mirror(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], budget: &Budget) -> Result<GuestDocumentMirror, TurnFault> {
+        let mut instance = self.codec_instance(compiled, budget).await?;
+        let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
+            return Err(TurnFault::Trapped("codec.print-mirror called on a non-wasmtime GuestInstance".to_string()));
+        };
+        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let artifact_schema = artifact_schema.to_string();
+        let pair = actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
+        let mirror = store
+            .run_concurrent(async |accessor| bindings.semio_framework_codec().call_print_mirror(accessor, artifact_schema, pair).await)
+            .await
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+        Ok(GuestDocumentMirror { dsl: mirror.0, ops: mirror.1 })
+    }
+
+    /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for a package whose Rust codec the
+    /// host does not link.
+    pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: &Budget) -> Result<GuestDocumentPair, TurnFault> {
+        let mut instance = self.codec_instance(compiled, budget).await?;
+        let GuestInstanceState::Wasmtime(state) = &mut instance.state else {
+            return Err(TurnFault::Trapped("codec.apply-ops called on a non-wasmtime GuestInstance".to_string()));
+        };
+        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let artifact_schema = artifact_schema.to_string();
+        let pair = actor_bindings::exports::semio::framework::codec::DocumentPair { pack: pack.to_vec(), spr: spr.to_vec() };
+        let ops = ops.to_vec();
+        let next = store
+            .run_concurrent(async |accessor| bindings.semio_framework_codec().call_apply_ops(accessor, artifact_schema, pair, ops).await)
+            .await
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
+        Ok(GuestDocumentPair { pack: next.pack, spr: next.spr })
+    }
 }
+
+//#region 🗂️GuestCodecDispatch
+/// 🗂️ The component's own `codec` interface, dispatched across whichever runtime a caller actually
+/// holds. Both concrete runtimes implement all four functions; [`GuestRuntimes`] did not forward any
+/// of them, so a caller holding the enum — which is what `🏃️run` and `🌉️mcp` both hold, because a
+/// `wasmtime::Component` belongs to the `Engine` that compiled it and cannot be moved to a second
+/// runtime — could not reach a package's codec at all. That is what made a hub-bound MCP gateway
+/// unable to register a `store::ArtifactCodec` for a fourth package's document kind, and therefore
+/// unable to open that document's socket (ticket 26/09/18 slices M9 §8.1 / M10 §3.3).
+///
+/// ⛽️ Every one of these is pure by the WIT's own contract: it reads no storage, opens no window,
+/// emits no effect, and runs on a throwaway instance the runtime creates and drops per call.
+impl GuestRuntimes {
+    /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
+    pub async fn codec_pack_schema_hash(&self, compiled: &CompiledHandle, artifact_schema: &str, budget: &Budget) -> Result<[u8; 32], TurnFault> {
+        match self {
+            Self::Owned(runtime) => runtime.codec_pack_schema_hash(compiled, artifact_schema, budget.clone()).await,
+            Self::Wasmtime(runtime) => runtime.codec_pack_schema_hash(compiled, artifact_schema, budget).await,
+            #[cfg(test)]
+            Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("codec.pack-schema-hash has no scripted runtime — it needs a real component".to_string())),
+        }
+    }
+
+    /// 🌱️ `codec.genesis` — the canonical empty document of `artifact_schema` at `document_id`.
+    pub async fn codec_genesis(&self, compiled: &CompiledHandle, artifact_schema: &str, document_id: &str, budget: &Budget) -> Result<GuestDocumentPair, TurnFault> {
+        match self {
+            Self::Owned(runtime) => runtime.codec_genesis(compiled, artifact_schema, document_id, budget.clone()).await,
+            Self::Wasmtime(runtime) => runtime.codec_genesis(compiled, artifact_schema, document_id, budget).await,
+            #[cfg(test)]
+            Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("codec.genesis has no scripted runtime — it needs a real component".to_string())),
+        }
+    }
+
+    /// 📥️ `codec.print-mirror` — the pair-validation fence.
+    pub async fn codec_print_mirror(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], budget: &Budget) -> Result<GuestDocumentMirror, TurnFault> {
+        match self {
+            Self::Owned(runtime) => runtime.codec_print_mirror(compiled, artifact_schema, pack, spr, budget.clone()).await,
+            Self::Wasmtime(runtime) => runtime.codec_print_mirror(compiled, artifact_schema, pack, spr, budget).await,
+            #[cfg(test)]
+            Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("codec.print-mirror has no scripted runtime — it needs a real component".to_string())),
+        }
+    }
+
+    /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply.
+    pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: &Budget) -> Result<GuestDocumentPair, TurnFault> {
+        match self {
+            Self::Owned(runtime) => runtime.codec_apply_ops(compiled, artifact_schema, pack, spr, ops, budget.clone()).await,
+            Self::Wasmtime(runtime) => runtime.codec_apply_ops(compiled, artifact_schema, pack, spr, ops, budget).await,
+            #[cfg(test)]
+            Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("codec.apply-ops has no scripted runtime — it needs a real component".to_string())),
+        }
+    }
+}
+//#endregion 🗂️GuestCodecDispatch
 
 impl GuestRuntime for WasmtimeRuntime {
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
@@ -2244,22 +2412,7 @@ impl GuestRuntime for WasmtimeRuntime {
             .and_then(|inner| inner);
         let poll_result = match call_result {
             Ok(inner) => inner,
-            Err(trap) => {
-                // 🩺️ `Display` on a wasmtime error is only its FIRST line ("error while executing at
-                // wasm backtrace: …"); the trap code itself ("out of fuel", "wasm trap: unreachable",
-                // the `rust_oom` abort this ticket chased) lives in the source chain, which `Debug`
-                // renders. Classifying — and reporting — off the first line alone made every guest
-                // trap arrive as an unattributed backtrace.
-                let message = format!("{trap:?}");
-                let lowered = message.to_ascii_lowercase();
-                return Err(if lowered.contains("fuel") {
-                    TurnFault::FuelExhausted
-                } else if lowered.contains("epoch") || lowered.contains("interrupt") {
-                    TurnFault::DeadlineExceeded
-                } else {
-                    TurnFault::Trapped(message)
-                });
-            }
+            Err(trap) => return Err(classify_guest_trap(&trap)),
         };
         let wit_turn_result = poll_result.map_err(decode_guest_plugin_error)?;
         // 🚪️ B1 world-collapse: everything the guest pushed through `host-async.emit` during THIS
@@ -2315,12 +2468,17 @@ impl GuestRuntime for WasmtimeRuntime {
             return Err(TurnFault::Trapped("start_job called on a non-wasmtime GuestInstance".to_string()));
         };
         let WasmtimeInstanceState { store, bindings, .. } = state;
+        // ⏱️ The host's own ceilings, never the guest's grant — see [`GUEST_JOB_WATCHDOG_MS`]. Armed
+        // HERE because `start-job` armed nothing at all and inherited whatever the preceding
+        // `execute_turn`/`step-job` left in the store: a start after a fully spent turn began with
+        // an already-passed epoch and no fuel.
+        arm_guest_job_watchdog(store).map_err(TurnFault::Host)?;
         let kind = kind.to_string();
         store
             .run_concurrent(async |accessor| bindings.semio_framework_jobs().call_start_job(accessor, job, kind, input).await)
             .await
-            .map_err(|error| TurnFault::Trapped(error.to_string()))?
-            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| classify_guest_trap(&error))?
+            .map_err(|error| classify_guest_trap(&error))?
             .map_err(|error| TurnFault::Trapped(format!("{error:?}")))
     }
 
@@ -2329,14 +2487,14 @@ impl GuestRuntime for WasmtimeRuntime {
             return Err(TurnFault::Trapped("step_job called on a non-wasmtime GuestInstance".to_string()));
         };
         let WasmtimeInstanceState { store, bindings, .. } = state;
-        store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
-        store.set_epoch_deadline(budget.deadline_ms as u64);
+        // ⏱️ …and the guest still receives its own cooperative grant, unchanged, on `wit_budget`.
+        arm_guest_job_watchdog(store).map_err(TurnFault::Host)?;
         let wit_budget = wit_jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
         let step = store
             .run_concurrent(async |accessor| bindings.semio_framework_jobs().call_step_job(accessor, job, wit_budget).await)
             .await
-            .map_err(|error| TurnFault::Trapped(error.to_string()))?
-            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| classify_guest_trap(&error))?
+            .map_err(|error| classify_guest_trap(&error))?
             .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
         Ok(match step {
             wit_jobs::JobStep::Running(bytes) => JobStep::Running { progress: bytes },
@@ -2350,10 +2508,14 @@ impl GuestRuntime for WasmtimeRuntime {
             return Err(TurnFault::Trapped("cancel_job called on a non-wasmtime GuestInstance".to_string()));
         };
         let WasmtimeInstanceState { store, bindings, .. } = state;
+        // ⏱️ A cancellation may arrive long after the step that preceded it, and an epoch deadline
+        // is ABSOLUTE — an unarmed `cancel-job` ran against the previous crossing's spent deadline
+        // and trapped the instance it was trying to wind down. See [`GUEST_JOB_WATCHDOG_MS`].
+        arm_guest_job_watchdog(store).map_err(TurnFault::Host)?;
         // 🧬️ `jobs.wit`'s `cancel-job: async func(job: u64);` has no `result<_, plugin-error>`
         // wrapper (unlike `start-job`/`step-job`), so only the trap-level results can fail: one
         // from `run_concurrent` itself, one from the call.
-        store.run_concurrent(async |accessor| bindings.semio_framework_jobs().call_cancel_job(accessor, job).await).await.map_err(|error| TurnFault::Trapped(error.to_string()))?.map_err(|error| TurnFault::Trapped(error.to_string()))
+        store.run_concurrent(async |accessor| bindings.semio_framework_jobs().call_cancel_job(accessor, job).await).await.map_err(|error| classify_guest_trap(&error))?.map_err(|error| classify_guest_trap(&error))
     }
 
     async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
@@ -5664,6 +5826,17 @@ pub struct GuestArtifactInferenceMetadata {
     #[serde(default)]
     #[value(default)]
     pub depends_on: Vec<String>,
+    /// 📜️ The inference's own PUBLISHED payload contract (`semio_framework::
+    /// InferencePayloadContract`), carried on the roster so this router accepts the committed
+    /// descriptor verbatim. The router itself never reads it — the contract is a CLIENT-facing
+    /// declaration the gateway enforces before dispatch — but the roster this router decodes IS
+    /// `contributions.inferenceServices`, so a row it cannot decode is a row it cannot route
+    /// (`inference route registration: json: 0.unknown field 'payload'`, measured 2026-09-22 21:08
+    /// the moment the first contract was committed). Additive+defaulted, so a descriptor from
+    /// before contracts existed still decodes unchanged.
+    #[serde(default)]
+    #[value(default)]
+    pub payload: Option<semio_framework::InferencePayloadContract>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]

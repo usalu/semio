@@ -237,9 +237,31 @@ pub fn wires_working_scene_for_handle(handle: &WiresContentChild) -> WiresWorkin
     handle.local_owner::<WiresWorkingScene>().map(|scene| scene.as_ref().clone()).unwrap_or_default()
 }
 
-/// 🔎 Reads the current document's live nodes/edges off its `content` child handle.
+/// 🔎 Reads the current document's live nodes/edges off its `content` child handle, recovering from
+/// the document's OWN persisted board when that handle arrived without its working scene.
+///
+/// 🩹️ A `WiresWorkingScene` is an in-process owner attached to one exact `ArtifactChild`: it rides
+/// the pack and DSL codecs (both mint it on decode) but it is NOT part of `WiresSnapshot`'s value
+/// projection, whose `content` is just the `(child_id, target)` pair. A document that reaches this
+/// app through any transport that does not run one of those two codecs therefore arrives with
+/// `wires_fixture` fully populated and `content` empty — which is exactly what the play pane showed
+/// on 2026-09-22: the Artifact panel listed all seven IDENTITIES (read off `wires_fixture`) while
+/// RELATIONSHIPS was empty and the canvas drew nothing but its grid, because both of those read the
+/// board through this accessor. `wires_fixture.board` is a plain persisted `DslValue` that survives
+/// every one of those transports, so an unmaterialized handle falls back to it.
+///
+/// ⚠️ Only a handle with NO owner at all falls back. Every in-session edit installs one (a mutation's
+/// diff carries `content: Some(wires_content_child_with_owner(..))`), so an owner that exists and is
+/// empty means the user really did empty the board and is honoured verbatim — the fallback can never
+/// resurrect content the document no longer has.
 pub fn wires_working_scene(snapshot: &WiresSnapshot) -> WiresWorkingScene {
-    wires_working_scene_for_handle(&snapshot.content)
+    if let Some(scene) = snapshot.content.local_owner::<WiresWorkingScene>() {
+        return scene.as_ref().clone();
+    }
+    let board = snapshot.wires_fixture.get("board");
+    let nodes = board.and_then(|board| board.get("nodes")).and_then(|value| value.as_array()).map(|items| items.to_vec()).unwrap_or_default();
+    let edges = board.and_then(|board| board.get("edges")).and_then(|value| value.as_array()).map(|items| items.to_vec()).unwrap_or_default();
+    WiresWorkingScene { nodes: canonical_board_values(nodes), edges: canonical_board_values(edges) }
 }
 
 /// 🏗️ Mints one content-addressed child and transfers its immutable working scene into that exact

@@ -14,7 +14,7 @@ pub(crate) struct SetLabel {
 impl MutationKind<TestSnapshot, TestMutation> for SetLabel {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "label", kind: "set-label", record: "SetLabel" };
     fn diff(&self, _: &TestSnapshot) -> MutationOutcome<TestDiff> {
-        MutationOutcome::new(TestDiff { count: None, label: Some(self.value.clone()) })
+        MutationOutcome::new(TestDiff { count: None, label: Some(self.value.clone()), slot: None })
     }
     fn inverse(&self, base: &TestSnapshot) -> Vec<TestMutation> {
         vec![Self { value: base.label.clone() }.into()]

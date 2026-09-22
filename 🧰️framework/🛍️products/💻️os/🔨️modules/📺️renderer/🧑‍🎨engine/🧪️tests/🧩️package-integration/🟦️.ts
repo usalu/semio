@@ -414,7 +414,7 @@ describe("framework renderer wgpu generated worker", () => {
     const bundleRoot = join(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust");
     let workspaceRoot = dirname(fileURLToPath(import.meta.url));
     while (!existsSync(join(workspaceRoot, "nx.json"))) workspaceRoot = dirname(workspaceRoot);
-    const contexts = [
+    const contexts: readonly { readonly cwd: string; readonly env: Record<string, string> }[] = [
       { cwd: workspaceRoot, env: {} },
       { cwd: bundleRoot, env: { SEMIO_RENDERER: "wgpu", S_OS_PORT: "6118", CARGO_TARGET_DIR: join(workspaceRoot, "target-cross-context-probe") } },
       { cwd: dirname(workspaceRoot), env: { SEMIO_RENDERER: "react", S_OS_PORT: "6018", NODE_ENV: "production" } },

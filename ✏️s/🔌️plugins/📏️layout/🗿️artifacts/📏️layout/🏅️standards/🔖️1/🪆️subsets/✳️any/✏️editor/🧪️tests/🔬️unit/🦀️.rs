@@ -61,11 +61,33 @@ pub(crate) mod context {
         LayoutApp(app)
     }
 
+    /// 🪟️ The blueprint window instance every fixture dispatch rides. `ShellHost` NEVER dispatches
+    /// without an addressed window — it stamps `ActionMeta.view_state` with the focused window
+    /// instance — and layout's window-lane verbs (`setCamera`, the canvas pointer gestures,
+    /// `focusPreflightIssue`) refuse a viewless dispatch with `layout-window-view-required`
+    /// (`✏️editor/🦀️.rs`'s `addressed_window`). A fixture dispatching with bare `meta("local")`
+    /// therefore put the app in a state the running shell can never produce, and every window-lane
+    /// verb in this file was refused before its assertion ever ran.
+    pub const WINDOW: &str = "layout-blueprint-1";
+
+    /// 🪟️ The addressed view the shell would send for {@link WINDOW}.
+    pub fn windowed_view() -> ViewModel {
+        ViewModel {
+            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: WINDOW.into(), window_kind_id: LAYOUT_PLAY_WINDOW_BLUEPRINT.into() }],
+            ..Default::default()
+        }
+    }
+
+    /// 🎯️ `meta("local")` bound to {@link WINDOW}, exactly as `ShellHost` binds it.
+    pub fn windowed_meta() -> semio_framework_plugin::ActionMeta {
+        semio_framework_plugin::ActionMeta { view_state: windowed_view().for_window_instance(WINDOW), ..meta("local") }
+    }
+
     /// 🎯️ Dispatches one typed command through the retained route and settles its typed operation,
     /// so the snapshot a test reads next is the committed one.
     pub async fn dispatch(app: &mut LayoutApp, command: LayoutCommand) -> InvocationResult {
         let verb = command.command_id().to_string();
-        let result = app.0.dispatch_typed(command, &meta("local")).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
+        let result = app.0.dispatch_typed(command, &windowed_meta()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
         settle_registered_typed_operation(&mut app.0, INSTANCE).await.unwrap_or_else(|fault| panic!("{verb} did not settle: {fault:?}"));
         result
     }
@@ -616,8 +638,11 @@ async fn window_engagements_cover_both_windows() {
 async fn registry_backed_add_frame_emits_operation() {
     // 🧬️ addFrame is declared `Mutation`: the registry-backed wrapper must let its operations through.
     let mut app = layout_app_with_registry().await;
-    let result = dispatch(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None })).await;
-    assert_eq!(result.mutations.len(), 1);
+    // 🧾️ Mounted: `result.mutations` is EMPTY, the SETTLED document is the record (bucket 3). What this
+    // law proves is that the registry-backed wrapper lets a `Mutation` verb's operation through at all.
+    let before = app.snapshot().expect("projection").pages[0].frames.len();
+    dispatch(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None })).await;
+    assert_eq!(app.snapshot().expect("projection").pages[0].frames.len(), before + 1);
 }
 
 #[semio_framework_async_macros::async_test]

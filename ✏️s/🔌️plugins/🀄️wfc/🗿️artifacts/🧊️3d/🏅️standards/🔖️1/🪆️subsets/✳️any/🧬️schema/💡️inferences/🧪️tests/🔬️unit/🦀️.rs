@@ -169,7 +169,7 @@ fn an_oversized_tile_catalogue_is_refused_at_admission() {
     let mut snapshot = two_slot_two_tile();
     snapshot.tiles = (0..(MAX_WFC3D_TILES + 1)).map(|index| tile(&format!("t{index}"), 1.0)).collect();
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
-    assert!(Wfc3dInferenceJob::new(operation, Wfc3dInferenceRequest { snapshot, checkpoint: None }).is_err());
+    assert!(Wfc3dInferenceJob::new(operation, Wfc3dInferenceRequest { snapshot: Some(snapshot), document: None, checkpoint: None }).is_err());
 }
 
 #[test]

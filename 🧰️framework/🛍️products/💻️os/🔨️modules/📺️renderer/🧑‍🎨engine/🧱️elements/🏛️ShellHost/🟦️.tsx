@@ -99,6 +99,7 @@ import {
   type AppCatalogue,
   type PluginAppLabelsOverlay,
   type PluginContextMenuRequest,
+  type PluginRegistryEntry,
   type PluginSource,
   type PluginSourceEvent,
   type PluginUiRefreshSectionResponse,
@@ -581,6 +582,8 @@ import {
   SEGMENTED_DOWNLOAD_MARKER_PREFIX,
   sessionWindowInstances,
   setAsDefaultText,
+  shellChromeCommandLabel,
+  shellLabelLocale,
   shellLabel,
   integrateAppSettingsPanelTabsIntoFrameworkBranch,
   shellRendersPanelTabItself,
@@ -660,6 +663,7 @@ import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦�
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { BootstrapStatusNotice, ExecutionTargetStatusNotice, InferencePortPanel, inferencePortStatusRuntimeKeyV1, reduceBootstrapUiState, reduceExecutionTargetUiState, resolveRequiredHostApps, retainInferencePortOwnerAfterCloseV1, shellHistoryUndoRouteV1, type BootstrapUiState, type ExecutionTargetUiState, type InferencePortOwnerV1, type InferencePortUiAction } from "./🪪️host-bootstrap/🟦️.tsx";
 import { ArtifactCreationCatalogNotice, ArtifactCreationProgressNotice, reduceArtifactCreationProgressUiV1, type ArtifactCreationProgressOwnerV1, type ArtifactCreationProgressUiStateV1 } from "./🌱️artifact-creation/🟦️.tsx";
+import { replayRefusalCodeV1, replayRefusalNoticeTextV1, type ReplayRefusalReasonV1 } from "./📣️replay-refusal/🟦️.ts";
 import {
   DirectoryBootstrapStatusNotice,
   applyDirectoryEventPageBootstrapV1,
@@ -1233,7 +1237,7 @@ export class TutorialRecorder {
 export interface FrameworkOsShellProps {
   readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
   readonly pluginFilter?: string;
-  readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+  readonly plugins: readonly PluginRegistryEntry[];
   readonly appId?: string;
   /** 👁️✏️ Boot-time surface role preference (contract freeze §5) — resolved by
    * `resolveBootAppRole`/`VITE_SEMIO_APP_ROLE` at the `bootFrameworkOs` call site, default `"editor"`.
@@ -2038,7 +2042,7 @@ function FrameworkOsShellInner({
   activationRegistry,
 }: {
   readonly pluginFilter?: string;
-  readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+  readonly plugins: readonly PluginRegistryEntry[];
   readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
   readonly appId?: string;
   readonly appRole?: AppRole;
@@ -2082,6 +2086,14 @@ function FrameworkOsShellInner({
   // array reads `uiLocale`/`uiTerminology` during this render, and a `const` declared after it is still in its
   // temporal dead zone there — the shell then throws `Cannot access 'uiLocale' before initialization` on first paint.
   const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft, uiKeybindingOverrides } = shellState.uiPrefs;
+  // 🌐️ The shared `shellLabel` port moves HERE, in render, not in the appearance effect below that
+  // also calls it: every builder memo under this line (`osCommands`, the command/tool category
+  // trees, the panel tab names) calls `shellLabel` while rendering, so a port moved in a post-paint
+  // effect is one render too late — those memos recompute against the previous language and, since
+  // `uiLocale` does not change again, keep that text for good. The effect's call stays: it is what
+  // moves the scope's own i18n instance and `documentElement.lang`, and the two ports must move
+  // together (`syncShellLabelLocale`'s own doc). Guarded so an unchanged locale costs one compare.
+  if (shellLabelLocale() !== uiLocale) syncShellLabelLocale(uiLocale);
   const boardSessionFactory = useMemo(() => resolveAppSurfaceSessionFactory(surfaceSessionFactories ?? [], session ? { pluginId: session.pluginId, appId: session.app.id, instanceId: session.instanceId } : null), [surfaceSessionFactories, session?.pluginId, session?.app.id, session?.instanceId]);
   /** 🧾️ Applies one `HistoryPatch` to the projection of the program that produced it. `owner` is that
    * program — the dispatch's target session, the completion's spawned instance, the snapshot's
@@ -3035,10 +3047,31 @@ function FrameworkOsShellInner({
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         const expectedSurfaceId = entry?.scope !== undefined && entry.session.app.dialect ? canonicalSurfaceId(entry.session.app.dialect, entry.session.app.role) : null;
         const windowKind = entry?.session.app.windowKinds.find((candidate) => candidate.id === message.patch.surface);
-        if (entry === undefined || entry.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId || expectedSurfaceId !== message.verifiedSurfaceId || windowKind === undefined || message.instanceId !== 0) return;
+        // 🩻️ An offer this shell cannot apply is REFUSED by name, never dropped. Dropping it left the
+        // worker's 15 s patch-result deadline to close the child with no reason anywhere, so a guest
+        // whose surface the session disagreed about looked exactly like a guest that had stopped.
+        // Only an offer addressed to no live client of this shell stays silent: there is no session
+        // left to answer for.
+        if (entry === undefined || entry.clientInstanceId !== message.clientInstanceId) return;
         const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
-        if (retained !== undefined && (retained.clientInstanceId !== message.clientInstanceId || retained.activationGeneration !== message.activationGeneration || retained.verifiedSurfaceId !== message.verifiedSurfaceId || retained.sessionInstanceId !== entry.session.instanceId || retained.windowKindId !== windowKind.id)) return;
-        if (retained === undefined && message.patch.baseRevision !== 0) return;
+        const refusal =
+          entry.scope === undefined || entry.scope.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId
+            ? "scope-mismatch"
+            : expectedSurfaceId !== message.verifiedSurfaceId
+              ? `verified-surface-mismatch: session ${expectedSurfaceId ?? "<none>"} offer ${message.verifiedSurfaceId}`
+              : windowKind === undefined
+                ? `unknown-window-kind: ${message.patch.surface}`
+                : message.instanceId !== 0
+                  ? `instance-mismatch: ${message.instanceId}`
+                  : retained !== undefined && (retained.clientInstanceId !== message.clientInstanceId || retained.activationGeneration !== message.activationGeneration || retained.verifiedSurfaceId !== message.verifiedSurfaceId || retained.sessionInstanceId !== entry.session.instanceId || retained.windowKindId !== windowKind.id)
+                    ? "retained-owner-mismatch"
+                    : retained === undefined && message.patch.baseRevision !== 0
+                      ? `base-revision-mismatch: ${message.patch.baseRevision}`
+                      : null;
+        if (refusal !== null || windowKind === undefined) {
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "rejected", revision: retained?.store.getRevisionSnapshot() ?? 0, reason: refusal ?? "unknown-window-kind" }) });
+          return;
+        }
         const store = retained?.store ?? new UiDocumentStore(windowKind.id);
         const applied = store.applyPatch(message.patch);
         const revision = store.getRevisionSnapshot();
@@ -6145,12 +6178,16 @@ function FrameworkOsShellInner({
         if ("replayShellCommand" in effect) {
           const { actionId, args } = effect.replayShellCommand;
           const argsRecord = args as Record<string, unknown> | undefined;
+          const refuseReplay = (reason: ReplayRefusalReasonV1, line: string, ...rest: readonly unknown[]): void => {
+            console.warn(`[os-shell] replayShellCommand: ${line}`, ...rest);
+            showTransientNoticeRef.current(replayRefusalNoticeTextV1(reason, uiLocaleRef.current), "warning", replayRefusalCodeV1(reason));
+          };
           if (actionId === "os.directory.open-administration") {
             const opening = shellSpaceAdministrationOpening(actionId, argsRecord, spaceAdministrationEpochRef.current + 1);
             if (opening === null) {
-              console.warn("[os-shell] replayShellCommand: administration requires an exact space id");
+              refuseReplay("space-required", "administration requires an exact space id");
             } else if (!identityRef.current) {
-              console.warn("[os-shell] replayShellCommand: administration dropped, no signed-in identity");
+              refuseReplay("sign-in-required", "administration dropped, no signed-in identity");
             } else {
               const worker = ensureBackboneWorker();
               spaceAdministrationEpochRef.current = opening.state.operationEpoch;
@@ -6168,9 +6205,9 @@ function FrameworkOsShellInner({
             if (origin === undefined || origin[1].scope === undefined || effectOrigin?.document?.runtimeKey !== origin[0]
               || effectOrigin.document.clientInstanceId !== origin[1].clientInstanceId
               || !shellDialogSessionIsCurrentV1(baseSession, shellStateRef.current.pluginRuntime.session)) {
-              console.warn("[os-shell] replayShellCommand: space artifact creation requires one mounted Space index");
+              refuseReplay("space-index-required", "space artifact creation requires one mounted Space index");
             } else if (!identityRef.current) {
-              console.warn("[os-shell] replayShellCommand: space artifact creation dropped, no signed-in identity");
+              refuseReplay("sign-in-required", "space artifact creation dropped, no signed-in identity");
             } else {
               const requestId = mintDirectoryCommandRequestId();
               const currentCatalog = captureSpaceArtifactCreationCatalogAuthorityV1(
@@ -6180,7 +6217,7 @@ function FrameworkOsShellInner({
               );
               const request = spaceArtifactCreationRequestFromAction(actionId, argsRecord, origin[1].scope.spaceId, requestId, effectOwner.creationCatalog, currentCatalog);
               if (request === null) {
-                console.warn("[os-shell] replayShellCommand: invalid space artifact creation request");
+                refuseReplay("invalid-request", "invalid space artifact creation request");
               } else {
                 const owner: SpaceArtifactCreationOwnerV1 = {
                   requestId,
@@ -6204,9 +6241,9 @@ function FrameworkOsShellInner({
           } else if (actionId.startsWith("os.directory.")) {
             const command = directoryCommandFromAction(actionId, argsRecord);
             if (!command) {
-              console.warn("[os-shell] replayShellCommand: unrecognized directory action", actionId);
+              refuseReplay("invalid-request", "unrecognized directory action", actionId);
             } else if (!identityRef.current) {
-              console.warn("[os-shell] replayShellCommand: directory command dropped, no signed-in identity", actionId);
+              refuseReplay("sign-in-required", "directory command dropped, no signed-in identity", actionId);
             } else {
               const worker = ensureBackboneWorker();
               const requestId = mintDirectoryCommandRequestId();
@@ -6216,7 +6253,7 @@ function FrameworkOsShellInner({
             try {
               const opening = await resolveArtifactOpeningWithActivationRef.current(actionId, argsRecord);
               if (!opening) {
-                console.warn("[os-shell] replayShellCommand: artifact router is not ready", args);
+                refuseReplay("router-not-ready", "artifact router is not ready", args);
                 continue;
               }
               const target = await openArtifactWithAppRefRef.current(opening.app, opening.dialect, opening.role, () => isCurrentEffectOwner(effectOwner));
@@ -6224,13 +6261,13 @@ function FrameworkOsShellInner({
                 await openDocumentRef.current({ documentId: opening.documentId, schema: opening.schema, ...(opening.spaceId ? { spaceId: opening.spaceId } : {}) }, undefined, target);
               }
             } catch (openingError) {
-              console.warn("[os-shell] replayShellCommand: artifact opening rejected", openingError, args);
+              refuseReplay("open-rejected", "artifact opening rejected", openingError, args);
             }
           } else if (isShellOwnedCommandId(actionId)) {
             // 🐚️ Chrome replays against shell-owned state. Routing one into the guest is what the
             // window-kind gate refused as `undeclared-action` after every undo (ticket 26/09/18 §3.2).
             if (!replayShellOwnedCommandRef.current(actionId, argsRecord)) {
-              console.warn("[os-shell] replayShellCommand: no shell route for chrome command", actionId);
+              refuseReplay("unrouted-command", "no shell route for chrome command", actionId);
             }
           } else {
             if (actionId === SET_ACTIVE_EXAMPLE_ACTION_ID) {
@@ -6681,6 +6718,17 @@ function FrameworkOsShellInner({
       if (target?.expectedCatalogGenerationId !== undefined && hubBinding === undefined) return null;
       const creationMount = target?.expectedCatalogGenerationId === undefined ? null : createArtifactCreationCatalogMountV1(target.expectedCatalogGenerationId);
       const scope: DocumentScope | undefined = hubBinding === undefined ? undefined : { spaceId: hubBinding.spaceId, documentId: ref.documentId };
+      // 📇️ The space INDEX is the shell's projection of a space's DIRECTORY, not an artifact the hub
+      // stores: no hub data root in this repository has ever held a document descriptor for it, so
+      // `POST /spaces/{id}/documents/index/open-plan` answers 404 (`NotFound` from
+      // `get_document_descriptor`), `runDocumentOpeningAttemptV1`'s socket phase rejects before
+      // `attach` ever runs, and with it the scoped directory stream AND the artifact-creation catalog
+      // never open — which is why the artifact table renders its header and zero rows on every hub and
+      // why `createArtifact`'s kind chooser is empty (measured 2026-09-22, ticket 26/09/18 S12 §2.2).
+      // The hub BINDING stays: `scope`, the hub runtime key and the catalog/presence lanes are all
+      // keyed on it. Only the worker's own document open drops it.
+      const spaceIndexDocument = ref.documentId === S_SPACE_INDEX_DOCUMENT_ID;
+      const workerBindings = spaceIndexDocument ? resolvedBindings.filter((binding) => binding.kind !== "hub") : resolvedBindings;
       const runtimeKey = scope === undefined ? ref.documentId : documentRuntimeKeyV1({ kind: "hub", ...scope });
       const openingAttempt = { clientInstanceId: crypto.randomUUID() };
       const { clientInstanceId } = openingAttempt;
@@ -6708,11 +6756,11 @@ function FrameworkOsShellInner({
         clientInstanceId,
         documentId: ref.documentId,
         schema: ref.schema,
-        bindings: resolvedBindings,
+        bindings: workerBindings,
         watchExternal: true,
         actor: shellActorIdRef.current,
       };
-      const expectsSocketActor = resolvedBindings.some((binding) => binding.kind === "hub");
+      const expectsSocketActor = workerBindings.some((binding) => binding.kind === "hub");
       const socketActor = expectsSocketActor
         ? new Promise<string>((resolve, reject) => socketActorReadyRef.current.set(runtimeKey, { clientInstanceId, resolve, reject }))
         : null;
@@ -8879,6 +8927,30 @@ function FrameworkOsShellInner({
     [osCommands, noteShellCommand, uiTerminology, uiLocale],
   );
 
+  /** 🌐️ One history row's text, resolved against the locale this shell is showing RIGHT NOW.
+   *
+   * A plugin row carries a real `LocalizedLabel` (every terminology × locale the guest filled), so
+   * `historyEntryLabelText` alone already re-renders it on a locale switch. A CHROME row does not:
+   * `noteShellCommand` takes a resolved `string`, and the guest stores it as `LocalizedLabel::data`,
+   * which projects that one string onto every axis — so the row is frozen in the locale it was
+   * journalled in, and re-resolving it can only hand the same text back. Measured 2026-09-21 (S10
+   * §2.10 item 2): after switching to German the older rows still read `"Switch Panel Tab"` while
+   * the row for the switch itself read `"Panel-Tab wechseln"`, breaking `HistoryEntry.label`'s own
+   * promise that "a locale switch re-renders the whole ledger". Chrome text is the shell's to own,
+   * so both chrome families are resolved here from the row's `actionId` instead of from the frozen
+   * string: the nine `shell.*` notes through their `ui.shellCommand.*` keys, and an `os.*` note
+   * through the live `osCommands` catalog that the palette itself renders. */
+  const historyRowLabelText = useCallback(
+    (entry: HistoryEntry): string => {
+      const chrome = shellChromeCommandLabel(entry.actionId);
+      if (chrome !== null) return chrome;
+      const osCommandLabel = osCommands.find((command) => command.id === entry.actionId)?.label as LocalizedLabel | string | undefined;
+      if (osCommandLabel !== undefined) return resolveManifestLabel(osCommandLabel, uiTerminology, uiLocale);
+      return historyEntryLabelText(entry.label, uiTerminology, uiLocale);
+    },
+    [osCommands, uiTerminology, uiLocale],
+  );
+
   const commitUiPreference = useCallback(
     (mutation: UiPreferencesConfigMutation) => {
       if (
@@ -9816,7 +9888,7 @@ function FrameworkOsShellInner({
             label: historyPanelText("commands", uiLocale),
             items: entries.map((entry) => ({
               id: `framework.history.entry.${entry.seq}`,
-              label: entry.count && entry.count > 1 ? `${historyEntryLabelText(entry.label, uiTerminology, uiLocale)} ×${entry.count}` : historyEntryLabelText(entry.label, uiTerminology, uiLocale),
+              label: entry.count && entry.count > 1 ? `${historyRowLabelText(entry)} ×${entry.count}` : historyRowLabelText(entry),
               description: entry.opLines?.join(" · "),
               dimmed: entry.applied === false,
               // 🕰️ The shell's ONLY revert-to-command affordance. It was an id-less glyph button, so

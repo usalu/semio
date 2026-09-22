@@ -32,7 +32,7 @@ impl Finding {
 /// 📇️ `📋️master.md` §3.4's scope table, right-hand `CapabilityId`s — every value a `CapabilityPolicy`
 /// is allowed to name. `fs.read:*`/`fs.write:*`/`http:*`/`secrets:*` are prefix families (the table's
 /// own `<root>`/`<origin>`/`<name>` placeholders).
-const KNOWN_EXACT_SCOPES: [&str; 12] = ["artifacts.read", "artifacts.write", "jobs.spawn", "shell.observe", "shell.control", "ui.window", "ui.dialog", "shell.navigate", "shell.raw", "shell.clipboard", "packages.install", "process.spawn"];
+const KNOWN_EXACT_SCOPES: [&str; 13] = ["artifacts.read", "artifacts.write", "jobs.spawn", "shell.observe", "shell.converse", "shell.control", "ui.window", "ui.dialog", "shell.navigate", "shell.raw", "shell.clipboard", "packages.install", "process.spawn"];
 const KNOWN_SCOPE_PREFIXES: [&str; 4] = ["fs.read:", "fs.write:", "http:", "secrets:"];
 
 fn is_known_scope(scope: &str) -> bool {

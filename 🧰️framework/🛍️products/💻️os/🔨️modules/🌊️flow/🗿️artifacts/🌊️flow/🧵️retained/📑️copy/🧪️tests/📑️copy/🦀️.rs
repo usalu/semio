@@ -19,7 +19,10 @@ impl SnapshotRetirementFactory<Root> for RootFactory {
 impl ErasedSnapshotRetirement for RootRetirement {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         if maximum_items == 0 || maximum_bytes == 0 { return Ok(SnapshotRetirementStep::Blocked); }
-        if !self.retirement.is_empty() { return self.retirement.close_step(maximum_items, maximum_bytes); }
+        if !self.retirement.is_empty() {
+            let demand = self.retirement.next_close_byte_demand().map_err(str::to_owned)?;
+            return self.retirement.close_page(maximum_items, maximum_bytes.max(demand));
+        }
         if let Some(root) = self.root.take() {
             let mut root = Arc::into_inner(root).expect("final selected copy source");
             self.retirement.push(Owner::HostSnapshot(root.host_snapshot.take().unwrap()));
@@ -28,6 +31,7 @@ impl ErasedSnapshotRetirement for RootRetirement {
         Ok(SnapshotRetirementStep::Complete)
     }
     fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.retirement.is_empty() }
+    fn next_close_byte_demand(&self) -> usize { ErasedSnapshotRetirement::next_close_byte_demand(&self.retirement) }
 }
 fn source() -> (Arc<Root>, Arc<AtomicUsize>) {
     let fixture = crate::os_pack::json::parse(include_str!("../../../🧫️fixtures/🔣️.json")).unwrap();
@@ -151,6 +155,7 @@ fn flow_selected_copy_rejects_root_retirement_overgrant_and_closes_factory_owner
             self.inner.close_step(items, bytes)
         }
         fn terminal_is_empty(&self) -> bool { self.inner.terminal_is_empty() }
+        fn next_close_byte_demand(&self) -> usize { ErasedSnapshotRetirement::next_close_byte_demand(&self.inner) }
     }
     impl SnapshotRetirementFactory<Root> for Factory {
         fn retire(&self, root: Arc<Root>) -> Box<dyn ErasedSnapshotRetirement> {
@@ -199,7 +204,7 @@ fn flow_selected_copy_allocation_admission_is_separate_and_never_reallocates_pay
         }
     }
     assert!(cursor.allocation().reserved_bytes() <= 32 * 1024 * 1024);
-    eprintln!("[DEBUG] selected Flow fixture allocation count={} admitted-bytes={} maximum-reserve-ns={}", cursor.allocation().reservation_count(), cursor.allocation().reserved_bytes(), maximum_reservation.as_nanos());
+    assert!(maximum_reservation < std::time::Duration::from_secs(1), "an admitted reservation is one allocation, not a copy");
     close(&mut cursor.cursor, 4096);
     assert_eq!(drops.load(Ordering::SeqCst), 1);
     let (root, _) = source();
@@ -217,5 +222,71 @@ fn flow_selected_copy_allocation_admission_is_separate_and_never_reallocates_pay
     retirement.retire_cold();
     let mut root_retirement = RootFactory.retire(root);
     while !matches!(root_retirement.close_step(1, 4096).unwrap(), SnapshotRetirementStep::Complete) {}
+}
+#[test]
+fn flow_selected_copy_pays_a_published_close_demand_and_refuses_a_frontier_that_never_progresses() {
+    struct Chunky { inner: RootRetirement, owed: usize }
+    impl ErasedSnapshotRetirement for Chunky {
+        fn close_step(&mut self, items: usize, bytes: usize) -> Result<SnapshotRetirementStep, String> {
+            if self.owed == 0 { return self.inner.close_step(items, bytes); }
+            if bytes < self.owed { return Ok(SnapshotRetirementStep::Blocked); }
+            let released_bytes = std::mem::take(&mut self.owed);
+            Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes })
+        }
+        fn terminal_is_empty(&self) -> bool { self.owed == 0 && self.inner.terminal_is_empty() }
+        fn next_close_byte_demand(&self) -> usize {
+            if self.owed == 0 { ErasedSnapshotRetirement::next_close_byte_demand(&self.inner) } else { self.owed }
+        }
+    }
+    struct ChunkyFactory;
+    impl SnapshotRetirementFactory<Root> for ChunkyFactory {
+        fn retire(&self, root: Arc<Root>) -> Box<dyn ErasedSnapshotRetirement> {
+            Box::new(Chunky { inner: RootRetirement { root: Some(root), retirement: Retirement::default() }, owed: 4096 })
+        }
+    }
+    let (root, drops) = source();
+    let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_snapshot.as_ref()?.widgets.get(index), Arc::new(ChunkyFactory), allocation());
+    cursor.begin_close();
+    let mut charged = 0usize;
+    for _ in 0..200_000 {
+        match cursor.close_step(1, 1).unwrap() {
+            SnapshotRetirementStep::Complete => break,
+            SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1 && released_bytes <= 1, "the caller's one-byte payload page is never over-charged");
+                charged += released_bytes;
+            }
+            SnapshotRetirementStep::Blocked => panic!("a published close demand must never block"),
+        }
+    }
+    assert!(cursor.terminal_is_empty());
+    assert_eq!(cursor.allocation().returned_bytes(), 4095, "the 4096-byte demand is paid from the copy's OWN admission, all but the caller's one byte");
+    assert!(charged >= 1);
+    assert_eq!(drops.load(Ordering::SeqCst), 1);
+
+    struct Stalled;
+    impl ErasedSnapshotRetirement for Stalled {
+        fn close_step(&mut self, _: usize, _: usize) -> Result<SnapshotRetirementStep, String> { Ok(SnapshotRetirementStep::Blocked) }
+        fn terminal_is_empty(&self) -> bool { false }
+    }
+    struct StalledFactory;
+    impl SnapshotRetirementFactory<Root> for StalledFactory {
+        fn retire(&self, root: Arc<Root>) -> Box<dyn ErasedSnapshotRetirement> {
+            std::mem::forget(root);
+            Box::new(Stalled)
+        }
+    }
+    let (root, stalled_drops) = source();
+    let mut cursor = FlowWidgetCopy::new(root, 0, |root, index| root.host_snapshot.as_ref()?.widgets.get(index), Arc::new(StalledFactory), allocation());
+    cursor.begin_close();
+    let mut refusal = None;
+    for _ in 0..FLOW_COPY_CLOSE_STALL_BOUND + 8 {
+        if let Err(error) = cursor.close_step(1, 1) {
+            refusal = Some(error);
+            break;
+        }
+    }
+    assert!(refusal.expect("a retirement that never progresses must be refused").contains("made no progress at its published close demand"));
+    assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| drop(cursor))).is_err());
+    assert_eq!(stalled_drops.load(Ordering::SeqCst), 0);
 }
 //#endregion 🧪️CanonicalCopy

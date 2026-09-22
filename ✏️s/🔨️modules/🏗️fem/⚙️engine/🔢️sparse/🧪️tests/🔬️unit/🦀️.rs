@@ -1453,8 +1453,19 @@ fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
             let cancelled = matches!(job.step(&mut context), StepOutcome::Cancelled) && snapshot(&job) == before;
             let zero_items = matches!(InteractiveJob::close_step(&mut job, 0, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }) && snapshot(&job) == before;
             let has_pages = job.publication.as_ref().is_some_and(|publication| publication.writer.page_count() != 0 || publication.writer.staged_page_len().is_some());
-            let subexact = !has_pages || (job.close_step(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1) == (false, 0, 0) && snapshot(&job) == before);
-            let mut released = 0;
+            // 💰️ `charge_payload_page` (`🧰️framework/🔨️modules/🧵️job/🦀️.rs`) ACCRUES a page's charge
+            // across turns instead of refusing every sub-page grant — the repair for the close spin
+            // of ticket 26/09/18. So a sub-page turn still frees NOTHING (no item, backing intact,
+            // `snapshot == before`) but it SPENDS its grant, and those bytes are part of the page's
+            // one-time charge. The law is the ledger, so the probe's spend is folded into it rather
+            // than asserted to be zero.
+            let (subexact, probe_bytes) = if has_pages {
+                let (terminal, items, bytes) = job.close_step(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1);
+                (!terminal && items == 0 && bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES && snapshot(&job) == before, bytes)
+            } else {
+                (true, 0)
+            };
+            let mut released = probe_bytes;
             let mut bounded = true;
             for _ in 0..10_000 {
                 let (terminal, items, bytes) = job.close_step(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
@@ -1532,8 +1543,14 @@ fn pcg_job_restore_every_cut_cancels_without_advancing_candidate() {
         let mut later = StepContext::new(semio_framework_job::OperationId(operation.operation.0 + 1), operation.generation, StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         let sticky = restore.step(&mut later).err() == Some(NumericalCheckpointFault::Cancelled) && snapshot(&restore) == before;
         let zero = matches!(restore.close_step(0, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }) && snapshot(&restore) == before;
-        let held = matches!(restore.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }) && retained(&restore) == before.4;
-        let mut released = 0;
+        // 💰️ Accrued page charge (see `charge_payload_page`): a sub-page grant frees no ITEM and
+        // leaves the retained backing exactly as it was, but it SPENDS its grant into the page's
+        // one-time charge — so the spend belongs in the ledger below, not asserted away as zero.
+        let (held, probe_bytes) = match restore.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1) {
+            semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes } => (released_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES && retained(&restore) == before.4, released_bytes),
+            _ => (false, 0),
+        };
+        let mut released = probe_bytes;
         let mut bounded = true;
         for _ in 0..10_000 {
             match restore.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
@@ -1662,10 +1679,16 @@ fn pcg_job_restore_rejects_malformed_owners_and_closes_exact_backing() {
         let sticky = restore.step(&mut later).err() == error;
         let unchanged = before == (restore.page_slot, restore.page_entry, restore.expected_field, retained(&restore));
         let zero_items = matches!(restore.close_step(0, usize::MAX), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }) && retained(&restore) == before.3;
-        let subexact = if restore.payload.as_ref().is_some_and(|payload| payload.page_count() != 0) {
-            matches!(restore.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 }) && retained(&restore) == before.3
-        } else { true };
-        let mut released = 0;
+        // 💰️ Accrued page charge (see `charge_payload_page`): a sub-page grant frees no ITEM and
+        // leaves the retained backing exactly as it was, but it SPENDS its grant into the page's
+        // one-time charge — so the spend belongs in the ledger below, not asserted away as zero.
+        let (subexact, probe_bytes) = if restore.payload.as_ref().is_some_and(|payload| payload.page_count() != 0) {
+            match restore.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES - 1) {
+                semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes } => (released_bytes < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES && retained(&restore) == before.3, released_bytes),
+                _ => (false, 0),
+            }
+        } else { (true, 0) };
+        let mut released = probe_bytes;
         let mut bounded = true;
         for _ in 0..100_000 {
             match restore.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {

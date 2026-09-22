@@ -27,6 +27,15 @@ fn repo_root() -> PathBuf {
 /// the newest mtime across every `target*` root is what keeps these laws honest about the tree
 /// that is actually checked out rather than about whichever build happened to land first.
 fn plugin_wasm(file_name: &str) -> Option<PathBuf> {
+    plugin_wasm_in_profiles(file_name, &PLUGIN_WASM_PROFILE_DIRS)
+}
+
+/// 🎯️ The same search restricted to named profiles. A law about how LONG a component takes must
+/// say which build it means: `wasm-dev` carries four times the code of `wasm-release` for the same
+/// plugin (215 MB against 48 MB for `🌍️gis` on 2026-09-22), and a trusted catalog stages the
+/// RELEASE component, so a timing law that silently picked up whichever profile a peer rebuilt last
+/// measures a build no hub ever runs — which is exactly what happened to slice HC1 at 21:52.
+fn plugin_wasm_in_profiles(file_name: &str, profiles: &[&str]) -> Option<PathBuf> {
     let cache = repo_root().join(PLUGIN_WASM_CARGO_CACHE_DIR);
     let mut newest: Option<(std::time::SystemTime, PathBuf)> = None;
     for entry in std::fs::read_dir(&cache).ok()?.flatten() {
@@ -35,7 +44,7 @@ fn plugin_wasm(file_name: &str) -> Option<PathBuf> {
         if name != "target" && !name.starts_with("target-") {
             continue;
         }
-        for profile in PLUGIN_WASM_PROFILE_DIRS {
+        for profile in profiles.iter().copied() {
             let candidate = entry.path().join("wasm32-wasip2").join(profile).join(file_name);
             let Ok(modified) = candidate.metadata().and_then(|meta| meta.modified()) else { continue };
             if newest.as_ref().is_none_or(|(seen, _)| modified > *seen) {
@@ -223,8 +232,11 @@ const MINTED_DOCUMENT_ID: &str = "artifact-0123456789abcdef0123456789abcdef";
 
 /// 🌱️ A codec budget, not an interactive slice: the four `codec` exports run to completion on a
 /// throwaway instance, so slicing them at 8 ms would only measure the interpreter's re-entry.
+/// ⛽️ A `codec` call is bounded by the guest STALLING (`OwnedDeadline::NoFuelProgress`, slice HC1),
+/// so its ceiling is the FUEL cap and `u64::MAX` fuel would let a guest that spins keep these laws
+/// running for ever. 8 G is the same order the describe path uses for the biggest staged component.
 fn codec_budget() -> Budget {
-    Budget { fuel: u64::MAX, deadline_ms: 120_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+    Budget { fuel: 8_000_000_000, deadline_ms: 120_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
 }
 
 /// 🌱️ The permanent oracle that `codec.genesis` answers on a REAL staged component. Ticket
@@ -281,6 +293,16 @@ async fn owned_codec_pack_schema_hash_answers_on_a_real_plugin_component() {
 /// document, then print its pair back through the guest's own mirror. `print-mirror` and `apply-ops`
 /// take the SELECTED app by reference and used to drop it on the way out, so they carry the same
 /// defect as genesis and need the same oracle.
+///
+/// 🪪️ The mirror is TWO files and the minted identity lives in exactly one of them. `print-mirror`
+/// answers `(dsl, ops)`: the dsl is `initial_snapshot.print_dsl()` — the snapshot's OWN domain
+/// fields, so `semio note.note.dsl v1\nschema=note.document id=empty …` is `NoteSnapshot::id`, not
+/// the envelope's — while `print_ops_log`'s very first line is
+/// `OpsHeaderLine::Doc { id: envelope.id, schema: envelope.schema }` (`🏪️store/🦀️.rs`), which is
+/// the server-minted identity and the exact field `parse_document_text` reads it back out of.
+/// Reading this as "print-mirror lost the minted identity" (2026-09-22) and then relaxing the
+/// assertion to the dsl alone drops the round-trip property altogether, so ticket 26/09/18 slice
+/// TC4 asserts it where the identity actually is.
 #[semio_framework_async_macros::async_test]
 async fn owned_codec_print_mirror_round_trips_a_genesis_pair() {
     let Some(path) = plugin_wasm("semio_s_plugin_note.wasm") else { return };
@@ -289,7 +311,13 @@ async fn owned_codec_print_mirror_round_trips_a_genesis_pair() {
     let compiled = runtime.compile(&package_ref("semio:note", &bytes), &bytes).await.expect("compile plugin component");
     let pair = runtime.codec_genesis(&compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, codec_budget()).await.expect("codec.genesis");
     let mirror = runtime.codec_print_mirror(&compiled, NOTE_DOCUMENT_SCHEMA, &pair.pack, &pair.spr, codec_budget()).await.expect("codec.print-mirror");
-    assert!(mirror.dsl.contains(MINTED_DOCUMENT_ID), "the mirrored document must carry the minted identity, got {} bytes of dsl", mirror.dsl.len());
+    assert!(!mirror.dsl.is_empty(), "the mirror printed no dsl at all");
+    assert!(
+        mirror.ops.contains(MINTED_DOCUMENT_ID) && mirror.ops.contains(NOTE_DOCUMENT_SCHEMA),
+        "the mirrored ops log must open on a doc header carrying the minted identity and the schema, got {} bytes beginning {:?}",
+        mirror.ops.len(),
+        mirror.ops.chars().take(320).collect::<String>()
+    );
     let applied = runtime.codec_apply_ops(&compiled, NOTE_DOCUMENT_SCHEMA, &pair.pack, &pair.spr, &[], codec_budget()).await.expect("codec.apply-ops with an empty batch");
     assert!(!applied.pack.is_empty() && !applied.spr.is_empty(), "an empty apply-ops batch must return the baseline pair, not an empty one");
 }
@@ -315,40 +343,84 @@ async fn wasmtime_codec_genesis_answers_the_same_pair_as_the_interpreter() {
 }
 
 
-/// 🧾️ The three packages the trusted-catalog bootstrap stages, as
-/// `(package id, component file, artifact kind, document schema)`. Kinds and schemas are the
-/// literals their own artifact crates declare — `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🦀️.rs`,
-/// `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs` (`GIS_MAP_SCHEMA`) and
-/// `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs` (`STDIO_TXT_DOCUMENT_SCHEMA`) — pinned here
+/// 🧾️ Every package the trusted-catalog bootstrap stages, as
+/// `(package id, component file, artifact kind, document schema, runtime)`. Adding a package is one
+/// row.
+///
+/// 🎯️ Membership is EVERY staged package, not only the ones the hub routes through the guest.
+/// `🌎️hub/📦️packages/🦀️rust/📜️script.ts` short-circuits a package carrying a `linkedCodecRegistry`
+/// to its linked rows, so a hub asks note's component and not gis's or stdio's — but the four
+/// `codec` exports are the component's own contract, the bundle is published either way, and
+/// `plugin_artifact_codec_app` constructs and closes EVERY app of the bundle it is asked of. That
+/// makes this sweep the one standing law that walks all 298 editor/viewer apps of the three staged
+/// packages and refuses a fail-closed bounded disposer anywhere among them.
+///
+/// ⚙️ Why gis and stdio run under the JIT. The owned interpreter is the runtime a HUB arms, and it
+/// holds note's 14 610 991 B component comfortably; at 47 969 539 B and 49 723 044 B the same
+/// interpreter needs ~840 s for a single `codec.genesis` (ticket 26/09/18 slice HC1 §1) and took the
+/// whole test process to `signal: 9, SIGKILL` twice on this 32 GiB machine (slice TC3e). The
+/// components are pure functions of their bytes and
+/// `wasmtime_codec_genesis_answers_the_same_pair_as_the_interpreter` is the standing proof that the
+/// two runtimes agree, so the big two are swept through `GuestRuntimes::Wasmtime` and note through
+/// both. A law nobody can afford to run proves nothing.
+const STAGED_CODEC_COMPONENTS: [(&str, &str, &str, &str, CodecSweepRuntime); 4] = [
+    ("semio:note", "semio_s_plugin_note.wasm", NOTE_ARTIFACT_KIND, NOTE_DOCUMENT_SCHEMA, CodecSweepRuntime::Owned),
+    ("semio:note", "semio_s_plugin_note.wasm", NOTE_ARTIFACT_KIND, NOTE_DOCUMENT_SCHEMA, CodecSweepRuntime::Jit),
+    ("semio:gis", "semio_s_plugin_gis.wasm", "s.gis.gismap", GIS_DOCUMENT_SCHEMA, CodecSweepRuntime::Jit),
+    ("semio:stdio", "semio_s_plugin_stdio.wasm", "s.stdio.txt", STDIO_DOCUMENT_SCHEMA, CodecSweepRuntime::Jit),
+];
+
+/// 🏎️ Which guest runtime one sweep row is driven through — see `STAGED_CODEC_COMPONENTS`'s own doc
+/// for why the two biggest staged components are not interpreted.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum CodecSweepRuntime {
+    Owned,
+    Jit,
+}
+
+/// 🔤️ `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🦀️.rs` `STDIO_TXT_DOCUMENT_SCHEMA`, pinned here
 /// because this crate cannot depend on an `s` plugin.
-const STAGED_CODEC_COMPONENTS: [(&str, &str, &str, &str); 3] =
-    [("semio:note", "semio_s_plugin_note.wasm", NOTE_ARTIFACT_KIND, NOTE_DOCUMENT_SCHEMA), ("semio:gis", "semio_s_plugin_gis.wasm", "s.gis.gismap", "gis.map"), ("semio:stdio", "semio_s_plugin_stdio.wasm", "s.stdio.txt", "stdio.txt")];
+const STDIO_DOCUMENT_SCHEMA: &str = "stdio.txt";
 
 /// 🧹️ Drives ALL FOUR `codec` exports over one staged component, both resolver keys included.
 /// Returns the failure text rather than panicking so the sweep above it can report every component
 /// in one run instead of dying on the first.
-async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, schema: &str) -> Result<(), String> {
-    let Some(path) = plugin_wasm(file_name) else { return Err(format!("{file_name} is not built in any target root")) };
+async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, schema: &str, which: CodecSweepRuntime) -> Result<(), String> {
+    let Some(path) = plugin_wasm_in_profiles(file_name, &["wasm-release"]) else { return Err(format!("{file_name} is not built in any target root")) };
     let bytes = std::fs::read(&path).map_err(|error| format!("read {}: {error}", path.display()))?;
-    let runtime = OwnedRuntime::new();
+    let runtime = match which {
+        CodecSweepRuntime::Owned => GuestRuntimes::Owned(OwnedRuntime::new()),
+        CodecSweepRuntime::Jit => GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).await.map_err(|error| format!("engine: {error:?}"))?),
+    };
+    let budget = match which {
+        CodecSweepRuntime::Owned => codec_budget(),
+        CodecSweepRuntime::Jit => jit_budget(),
+    };
     let compiled = runtime.compile(&package_ref(package, &bytes), &bytes).await.map_err(|error| format!("compile {}: {error:?}", path.display()))?;
-    let hash = runtime.codec_pack_schema_hash(&compiled, schema, codec_budget()).await.map_err(|error| format!("codec.pack-schema-hash({schema}): {error:?}"))?;
+    let hash = runtime.codec_pack_schema_hash(&compiled, schema, &budget).await.map_err(|error| format!("codec.pack-schema-hash({schema}): {error:?}"))?;
     if hash == [0; 32] {
         return Err(format!("codec.pack-schema-hash({schema}) answered the zero fingerprint"));
     }
-    let pair = runtime.codec_genesis(&compiled, schema, MINTED_DOCUMENT_ID, codec_budget()).await.map_err(|error| format!("codec.genesis({schema}): {error:?}"))?;
+    let pair = runtime.codec_genesis(&compiled, schema, MINTED_DOCUMENT_ID, &budget).await.map_err(|error| format!("codec.genesis({schema}): {error:?}"))?;
     if pair.pack.is_empty() || pair.spr.is_empty() {
         return Err(format!("codec.genesis({schema}) produced an empty pair"));
     }
-    let by_kind = runtime.codec_genesis(&compiled, kind, MINTED_DOCUMENT_ID, codec_budget()).await.map_err(|error| format!("codec.genesis({kind}): {error:?}"))?;
+    let by_kind = runtime.codec_genesis(&compiled, kind, MINTED_DOCUMENT_ID, &budget).await.map_err(|error| format!("codec.genesis({kind}): {error:?}"))?;
     if by_kind != pair {
         return Err(format!("codec.genesis({kind}) and codec.genesis({schema}) selected different apps"));
     }
-    let mirror = runtime.codec_print_mirror(&compiled, schema, &pair.pack, &pair.spr, codec_budget()).await.map_err(|error| format!("codec.print-mirror({schema}): {error:?}"))?;
-    if !mirror.dsl.contains(MINTED_DOCUMENT_ID) {
-        return Err(format!("codec.print-mirror({schema}) lost the minted identity"));
+    let mirror = runtime.codec_print_mirror(&compiled, schema, &pair.pack, &pair.spr, &budget).await.map_err(|error| format!("codec.print-mirror({schema}): {error:?}"))?;
+    if mirror.dsl.is_empty() {
+        return Err(format!("codec.print-mirror({schema}) printed no dsl at all"));
     }
-    let applied = runtime.codec_apply_ops(&compiled, schema, &pair.pack, &pair.spr, &[], codec_budget()).await.map_err(|error| format!("codec.apply-ops({schema}): {error:?}"))?;
+    if !mirror.ops.contains(MINTED_DOCUMENT_ID) || !mirror.ops.contains(schema) {
+        return Err(format!(
+            "codec.print-mirror({schema}) lost the minted identity: its ops log must open on a doc header carrying {MINTED_DOCUMENT_ID} and {schema}, got {} bytes beginning {:?}",
+            mirror.ops.len(),
+            mirror.ops.chars().take(320).collect::<String>()
+        ));
+    }
+    let applied = runtime.codec_apply_ops(&compiled, schema, &pair.pack, &pair.spr, &[], &budget).await.map_err(|error| format!("codec.apply-ops({schema}): {error:?}"))?;
     if applied.pack.is_empty() || applied.spr.is_empty() {
         return Err(format!("codec.apply-ops({schema}) returned an empty baseline"));
     }
@@ -366,22 +438,112 @@ async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, s
 /// `interactive-job.close-owned-disposer-missing … document-store`, which killed the three-package
 /// bootstrap at 04:12:44 on 2026-09-22.
 ///
-/// 🚧️ A component that is not built in any target root is SKIPPED, not failed — a slice rebuilds
-/// only the plugins it needs, and a law that demanded all three would be red on every machine that
-/// has not run the bootstrap. The sweep fails if it found nothing at all.
+/// 🚧️ A component that has no `wasm-release` build in any target root is SKIPPED, not failed — a
+/// slice rebuilds only the plugins it needs, and a law that demanded all three would be red on every
+/// machine that has not run the bootstrap. The sweep fails if it found nothing at all. The profile
+/// is named rather than taken by mtime because a hub stages the RELEASE component and a `wasm-dev`
+/// build of the same plugin carries four times the code (ticket 26/09/18 slice HC1 §1).
 #[semio_framework_async_macros::async_test]
 async fn owned_codec_answers_every_call_on_every_staged_component() {
     let mut swept = 0usize;
     let mut failures = Vec::new();
-    for (package, file_name, kind, schema) in STAGED_CODEC_COMPONENTS {
-        if plugin_wasm(file_name).is_none() {
+    for (package, file_name, kind, schema, which) in STAGED_CODEC_COMPONENTS {
+        if plugin_wasm_in_profiles(file_name, &["wasm-release"]).is_none() {
             continue;
         }
         swept += 1;
-        if let Err(detail) = codec_sweep_one_component(package, file_name, kind, schema).await {
-            failures.push(format!("{package}: {detail}"));
+        let began = std::time::Instant::now();
+        if let Err(detail) = codec_sweep_one_component(package, file_name, kind, schema, which).await {
+            failures.push(format!("{package} [{which:?}] after {:?}: {detail}", began.elapsed()));
         }
     }
-    assert!(swept > 0, "no staged plugin component is built in any target root, so this law proved nothing");
-    assert!(failures.is_empty(), "{swept} staged components swept, {} failed:\n{}", failures.len(), failures.join("\n"));
+    assert!(swept > 0, "no staged plugin component has a wasm-release build in any target root, so this law proved nothing");
+    assert!(failures.is_empty(), "{swept} staged component rows swept, {} failed:\n{}", failures.len(), failures.join("\n"));
 }
+
+/// ⏱️ The budget a HUB actually arms on every guest `codec` call, copied verbatim from
+/// `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs` `GUEST_CODEC_BUDGET`. Every law above runs
+/// a budget this crate chose for itself; this one runs the caller's, because the fault ticket
+/// 26/09/18 slice C8 measured — every `POST …/artifact-creations` failing in 32 s with
+/// `genesis materialization failed: … epoch deadline exceeded` — lives entirely in the difference
+/// between those two numbers.
+const HUB_GUEST_CODEC_BUDGET: Budget = Budget { fuel: 4_000_000_000, deadline_ms: 30_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
+
+/// 🗺️ `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs` `GIS_MAP_SCHEMA`, and the biggest component
+/// the trusted-catalog bootstrap stages (≈ 48 MB of `wasm-release`).
+const GIS_DOCUMENT_SCHEMA: &str = "gis.map";
+
+/// ⏱️ The law ticket 26/09/18 slice HC1 owes the hub: a `codec` call is bounded by the GUEST
+/// STALLING, never by a wall clock the machine's other work spends for it.
+///
+/// 🪦️ `codec_call` spent `budget.deadline_ms` as [`OwnedDeadline::TotalWall`] — the exact bound
+/// `describe_observed` had already abandoned for [`OwnedDeadline::NoFuelProgress`] after `🀄️wfc`
+/// and `🧩️puzzle` both died `DeadlineExceeded` while progressing normally. On the hub's 30 s that
+/// made the biggest staged component uncreatable: C8's hub 7671 failed every creation in 32.0 s at
+/// load 120, 33 and 21 alike, and HC1 measured the hub process burning 130–145 % CPU for the whole
+/// window (`🗑️generated/hc1-create-sampled-1.txt`) — a guest that is running, not one that hangs.
+///
+/// 🚧️ Skipped when gis is not staged in any target root: a slice rebuilds only the plugins it
+/// needs, and note is driven by the laws above.
+#[semio_framework_async_macros::async_test]
+async fn owned_codec_genesis_answers_the_biggest_staged_component_under_the_hub_s_own_budget() {
+    let Some(path) = plugin_wasm_in_profiles("semio_s_plugin_gis.wasm", &["wasm-release"]) else { return };
+    let bytes = std::fs::read(&path).expect("read plugin component");
+    let runtime = OwnedRuntime::new();
+    let compiled = runtime.compile(&package_ref("semio:gis", &bytes), &bytes).await.expect("compile plugin component");
+    let started = std::time::Instant::now();
+    let pair = runtime
+        .codec_genesis(&compiled, GIS_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, HUB_GUEST_CODEC_BUDGET)
+        .await
+        .unwrap_or_else(|error| panic!("codec.genesis({GIS_DOCUMENT_SCHEMA}) on {} ({} bytes) after {:?}: {error}", path.display(), bytes.len(), started.elapsed()));
+    assert!(!pair.pack.is_empty() && !pair.spr.is_empty(), "codec.genesis produced an empty pair: pack={} spr={}", pair.pack.len(), pair.spr.len());
+    let hashed = std::time::Instant::now();
+    let hash = runtime
+        .codec_pack_schema_hash(&compiled, GIS_DOCUMENT_SCHEMA, HUB_GUEST_CODEC_BUDGET)
+        .await
+        .unwrap_or_else(|error| panic!("codec.pack-schema-hash({GIS_DOCUMENT_SCHEMA}) after {:?}: {error}", hashed.elapsed()));
+    assert_ne!(hash, [0; 32], "a kind with a structural record specification must not answer the zero fingerprint");
+    // ⏱️ No wall-clock assertion lives here, deliberately. A first cut of this law failed a run in
+    // which BOTH calls answered — genesis 840.703220583 s, pack-schema-hash 895.51642 s at machine
+    // load ≈ 40 (`🗑️generated/hc1-codec-laws-3.txt`) — which is the very judgement this slice took
+    // out of the product. What the law asserts is that the two calls a hub makes per creation ANSWER
+    // under the hub's own budget; how long they take is the machine's business, and the durations
+    // ride in the two failure messages above for whoever needs them.
+}
+
+//#region 🗂️GuestCodecDispatch
+/// 🗂️ ticket 26/09/18 slice M10: every real caller of a compiled plugin holds the `GuestRuntimes`
+/// ENUM, not a concrete runtime — a `wasmtime::Component` belongs to the `Engine` that compiled it,
+/// so a second runtime could not instantiate it at all. The enum forwarded the `GuestRuntime` trait
+/// and nothing else, so all four `codec` exports were unreachable from `🏃️run` and `🌉️mcp` alike,
+/// which is what left a headless server unable to register a document codec for a package it does
+/// not link. This law drives all four through the enum and pins them against the concrete runtime
+/// underneath: a forwarding method that dropped an argument or crossed two operations would answer
+/// something, and something is exactly what a fingerprint must never be.
+#[semio_framework_async_macros::async_test]
+async fn guest_runtimes_forwards_all_four_codec_exports_to_the_runtime_beneath_it() {
+    let Some(path) = plugin_wasm("semio_s_plugin_note.wasm") else { return };
+    let bytes = std::fs::read(&path).expect("read plugin component");
+    let concrete = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
+    let compiled = concrete.compile(&package_ref("semio:note", &bytes), &bytes).await.expect("compile plugin component");
+    let direct_hash = concrete.codec_pack_schema_hash(&compiled, NOTE_DOCUMENT_SCHEMA, &jit_budget()).await.expect("wasmtime codec.pack-schema-hash");
+    let direct_pair = concrete.codec_genesis(&compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, &jit_budget()).await.expect("wasmtime codec.genesis");
+
+    let routed = GuestRuntimes::from(concrete);
+    assert_eq!(routed.codec_pack_schema_hash(&compiled, NOTE_DOCUMENT_SCHEMA, &jit_budget()).await.expect("routed codec.pack-schema-hash"), direct_hash);
+    assert_eq!(routed.codec_genesis(&compiled, NOTE_DOCUMENT_SCHEMA, MINTED_DOCUMENT_ID, &jit_budget()).await.expect("routed codec.genesis"), direct_pair);
+
+    // 📥️ `print-mirror` and `apply-ops` had no `WasmtimeRuntime` implementation at all before this
+    // slice — only the owned interpreter carried them — so these two rows are the compiled half's
+    // first execution as well as the enum's.
+    let mirror = routed.codec_print_mirror(&compiled, NOTE_DOCUMENT_SCHEMA, &direct_pair.pack, &direct_pair.spr, &jit_budget()).await.expect("routed codec.print-mirror");
+    assert!(!mirror.dsl.is_empty(), "a genesis pair prints a non-empty dsl mirror");
+    let applied = routed.codec_apply_ops(&compiled, NOTE_DOCUMENT_SCHEMA, &direct_pair.pack, &direct_pair.spr, &[], &jit_budget()).await.expect("routed codec.apply-ops with an empty batch");
+    assert_eq!(applied, direct_pair, "an empty batch applied to a pair is that pair");
+
+    // 🚫️ …and a schema this component does not own is a typed refusal, never a fabricated answer —
+    // which is what makes `print-mirror` usable as the pair-validation DISCRIMINATOR the WIT says
+    // it is.
+    routed.codec_pack_schema_hash(&compiled, "not.a.kind.this.package.owns", &jit_budget()).await.expect_err("a foreign kind has no fingerprint here");
+}
+//#endregion 🗂️GuestCodecDispatch

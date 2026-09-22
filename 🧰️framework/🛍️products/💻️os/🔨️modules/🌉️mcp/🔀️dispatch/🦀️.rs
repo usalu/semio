@@ -111,6 +111,22 @@ pub struct InferCommand {
     pub cancellation_id: String,
     pub work_units: u64,
     pub canonical_payload: Vec<u8>,
+    /// 🔗️ The artifact this inference is being run ON, and its canonical pair. An inference over an
+    /// artifact is not expressible as a hand-typed payload — nobody types 4 096 bitmap cells into a
+    /// tool call — so the caller names an artifact and this command carries the document the
+    /// guest reads its own snapshot out of. Empty for an inference whose published contract
+    /// declares no artifact binding (`semio_framework::InferenceArtifactBinding`), which is the
+    /// only case where a bare `canonical_payload` is the whole request.
+    pub artifact_id: String,
+    pub artifact_document: Option<ArtifactDocumentBinding>,
+}
+
+/// 📦️ One artifact's canonical `pack`/`spr` pair on its way to a guest inference — host-opaque
+/// bytes, carried verbatim and encoded only at the boundary the plugin's own contract names.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ArtifactDocumentBinding {
+    pub pack: Vec<u8>,
+    pub spr: Vec<u8>,
 }
 
 /// 📥️ Replies — [`AppFrame::Error`] is a COMMAND-level (business) failure (e.g. generation-mismatch,

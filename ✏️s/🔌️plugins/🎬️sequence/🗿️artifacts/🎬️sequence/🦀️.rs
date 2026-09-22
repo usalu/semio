@@ -51,9 +51,27 @@ pub const SEQUENCE_DIALECT: semio_framework_plugin::Dialect = semio_framework_pl
 #[value(transparent)]
 pub struct StepParams(pub Dictionary);
 
+/// 🧊️ The same fail-closed boundary `imperative_engine::Step` declares for its own `params`
+/// (`✏️s/🔨️modules/📜️imperative/⚙️engine/🦀️.rs:53`): a `StepParams` is cloned into host snapshots,
+/// working scenes, mutation payloads, edit history and editor transients, and is dropped by the
+/// framework wherever a snapshot dies — there is no single call site that could own that
+/// retirement, and in the wasm guest a missed one is an abort rather than a test failure. Measured
+/// by the play session on 2026-09-22: five `final Dictionary ownership must be explicitly retired
+/// or owned by a cold boundary` panics, every one of them with `drop_glue::<StepParams>` in the
+/// same frame, one of them reached through an `Arc<dyn Any>` inside the framework's own child-owner
+/// machinery where no call site exists to fix. Because the type now has a `Drop`, `.0` can no
+/// longer be moved out of an owned value — `std::mem::take(&mut …)` it instead.
+impl Drop for StepParams {
+    fn drop(&mut self) {
+        neural_engine::ColdRetire::retire_cold(std::mem::take(&mut self.0));
+    }
+}
+
+/// 🧊️ Kept so `SequenceStep`/`Vec<SequenceStep>` still satisfy `ColdRetire`; the work itself is the
+/// `Drop` boundary above, so consuming the value IS the retirement.
 impl neural_engine::ColdRetire for StepParams {
     fn retire_cold(self) {
-        self.0.retire_cold();
+        drop(self);
     }
 }
 impl neural_engine::ColdRetire for SequenceStep {
@@ -72,8 +90,8 @@ impl StepParams {
         Self(Dictionary::new())
     }
 
-    pub fn insert(self, key: impl Into<String>, value: Value) -> Self {
-        Self(self.0.insert(key, value))
+    pub fn insert(mut self, key: impl Into<String>, value: Value) -> Self {
+        Self(std::mem::take(&mut self.0).insert(key, value))
     }
 }
 

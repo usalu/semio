@@ -638,6 +638,22 @@ pub struct PluginArtifactChannel {
     /// `"…-typed"` — two ids for one document, and `artifact_snapshot(revisionAfter.artifactId)`
     /// answered `no such artifact: note` (`📓️ce1-client-e2e-pinning-and-puzzle-bound.md` §8 gap 4).
     session_artifact_id: Option<String>,
+    /// 📥️ Per guest instance, the artifact id whose canonical pair that guest's session document
+    /// currently IS — see [`Self::load_session_document`]. Empty for a guest still sitting on the
+    /// plugin's own genesis document, which is every folder-lane guest and was, before ticket
+    /// 26/09/18 slice M10, every hub-lane one as well.
+    session_documents: HashMap<u32, String>,
+    /// 🧵️ Document-backbone messages this guest published and this channel has not handed on yet —
+    /// the `Effect::SendMessage { target: Backbone { uri } }` payloads addressed at this channel's
+    /// own actor uri. They used to be dropped on the floor: `exchange_one_turn` named every effect
+    /// for diagnostics and admitted only the `Shell{instance}` reply lane, so a committed
+    /// transaction's envelopes — the ONE thing that has to leave the process for anyone else to see
+    /// the edit — went nowhere at all.
+    backbone_egress: Vec<Vec<u8>>,
+    /// 🧵️ The instances whose document backbone this channel has bound — see
+    /// [`Self::ensure_document_backbone`]. Cleared per instance by [`Self::discard_instance`],
+    /// because a guest that was thrown away holds no binding.
+    backbone_bindings: std::collections::BTreeSet<u32>,
     /// 💡️ Lazily opened on the FIRST `AppCommand::Infer` — a second guest activation of the same
     /// component, dedicated to the cold `semio.infer` job lane. Deliberately separate from
     /// `instances` above: `PluginInstanceHandle` takes ownership of its `GuestInstance` and drives
@@ -951,8 +967,76 @@ impl PluginArtifactChannel {
             rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
             next_seq: 1,
             session_artifact_id: None,
+            session_documents: HashMap::new(),
+            backbone_egress: Vec::new(),
+            backbone_bindings: std::collections::BTreeSet::new(),
             inference: None,
         })
+    }
+
+    /// 🧵️ Takes every document-backbone message this guest has published since the last drain. The
+    /// caller owns the relay: this channel knows the plugin, not the document actor.
+    pub fn drain_backbone_egress(&mut self) -> Vec<Vec<u8>> {
+        std::mem::take(&mut self.backbone_egress)
+    }
+
+    /// 🧵️ Binds this guest instance's DOCUMENT BACKBONE to this channel's own actor uri, once.
+    ///
+    /// 🐛️ A guest publishes `Effect::SendMessage { target: Backbone { uri } }` **only for an
+    /// instance a host has explicitly bound** (`🔌️plugin/🦀️.rs`'s
+    /// `plugin_handle_document_backbone_binding` → `document_backbone_effects`). Without this
+    /// command the agent's committed transaction is real inside the guest — `action_invoke` answers
+    /// `SUCCEEDED` with a moved `headEditId` — and its envelopes are published to nobody, so the hub
+    /// ledger stays at `head_seq 0`. Measured live on hub 7681, 2026-09-22
+    /// (`🗑️generated/m10-7681-note-status-after.txt`): an invoke that succeeded against a document
+    /// whose ledger never moved. A silent success is the worst shape this lane can have, which is
+    /// why the bind is a hard precondition of dispatch rather than a best-effort extra.
+    ///
+    /// 🪢 The uri is [`Self::actor_label`]'s value, which is the SAME string
+    /// [`document_backbone_payload`] fences egress on — bind and relay cannot drift apart because
+    /// they read one field.
+    ///
+    /// 🧭️ Ordering: the guest refuses a bind-then-load
+    /// (`plugin.document-backbone.load-while-bound`), so this runs AFTER
+    /// [`Self::load_session_document`], never before.
+    fn ensure_document_backbone(&mut self, instance: u32) -> Result<(), Fault> {
+        if self.backbone_bindings.contains(&instance) {
+            return Ok(());
+        }
+        self.ensure_instance(instance)?;
+        let command = semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1 {
+            operation: semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingOperationV1::Bind,
+            instance_id: instance,
+            binding_generation: DOCUMENT_BACKBONE_BINDING_GENERATION,
+            uri: self.actor_label.clone(),
+        };
+        let payload = command.encode().map_err(|error| Self::not_wired("document-backbone bind", error))?;
+        let event = semio_framework::kernel::Event::Message { source: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload };
+        let runtime = Arc::clone(&self.runtime);
+        let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("document-backbone bind", format!("no open instance {instance}")))?;
+        let turn = semio_framework_async::block_on(runtime.execute_turn(guest, std::slice::from_ref(&event), headless_command_budget())).map_err(|error| Self::not_wired("document-backbone bind", error))?;
+        let receipts: Vec<&Vec<u8>> = turn
+            .effects
+            .iter()
+            .filter_map(|effect| match effect {
+                semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Shell { instance: target }, payload } if target.0 == instance.to_string() => Some(payload),
+                _ => None,
+            })
+            .collect();
+        if receipts.len() != 1 {
+            return Err(Self::not_wired("document-backbone bind", format!("the guest answered {} shell receipt(s) for one bind", receipts.len())));
+        }
+        semio_framework_plugin::document_backbone_binding::require_document_backbone_binding_receipt_v1(receipts[0], &command).map_err(|error| Self::not_wired("document-backbone bind", error))?;
+        // 🧵️ A bind turn can already carry egress — the guest flushes whatever its store had
+        // pending onto the freshly bound backbone — so it is captured here exactly as a command
+        // turn's is, rather than left in the turn and lost.
+        for effect in &turn.effects {
+            if let Some(egress) = document_backbone_payload(&self.actor_label, effect) {
+                self.backbone_egress.push(egress.to_vec());
+            }
+        }
+        self.backbone_bindings.insert(instance);
+        Ok(())
     }
 
     /// 🗿️ Names the artifact this channel's guest session document is, for the stamps it answers.
@@ -960,6 +1044,32 @@ impl PluginArtifactChannel {
     /// see [`Self::session_artifact_id`].
     pub fn bind_session_artifact(&mut self, artifact_id: Option<String>) {
         self.session_artifact_id = artifact_id;
+    }
+
+    /// 📥️ Makes `artifact_id`'s canonical pair this guest's session document — one
+    /// `AppCommand::LoadDocument`, the SAME verb the shell's own open path and this file's
+    /// `ExportMedia` arm already drive, so nothing about the bytes is interpreted here.
+    ///
+    /// 🧭️ Idempotent per guest: a channel that already holds this artifact's pair does nothing, so
+    /// the load happens once per (instance, artifact) and never once per command — re-loading on
+    /// every exchange would discard the guest's own uncommitted transaction state between
+    /// `TransactionPrepare` and `TransactionCommit`, which is the whole two-phase contract.
+    /// [`Self::discard_instance`] forgets it, because a thrown-away guest holds nothing.
+    ///
+    /// 🏁️ `LoadDocument` publishes no frame of its own, so its answer is the stamped
+    /// `AppFrame::Done` `await_response` mints — see [`PendingResponsePage::Stamped`].
+    pub fn load_session_document(&mut self, instance: u32, artifact_id: &str, pack: &[u8], spr: &[u8]) -> Result<(), Fault> {
+        if self.session_documents.get(&instance).is_some_and(|loaded| loaded == artifact_id) {
+            return Ok(());
+        }
+        self.ensure_instance(instance)?;
+        match self.exchange_one_real(instance, store::AppCommand::LoadDocument { seq: 0, pack: pack.to_vec(), spr: spr.to_vec() })? {
+            store::AppFrame::Done { .. } => {}
+            store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
+            other => return Err(Self::not_wired("LoadDocument", format!("unexpected real AppFrame variant {other:?}"))),
+        }
+        self.session_documents.insert(instance, artifact_id.to_string());
+        Ok(())
     }
 
     /// 🗿️ What a `RevisionStamp` from this channel names. A channel with no bound artifact answers
@@ -1040,17 +1150,22 @@ impl PluginArtifactChannel {
             policy_version: declared.policy_version,
             revision: command.revision,
             generation: command.generation,
-            // 🗣️ The artifact kind's own native dialect coordinate — the same
-            // `<kind>@<schemaVersion>/*` grammar every plugin's committed artifact identity uses.
-            // The guest echoes it verbatim and the router asserts the echo, so a plugin that reads
-            // it at all sees exactly its own declared dialect, never an invented one.
-            source_dialect: format!("{}@{}/*", declared.artifact_schema, declared.artifact_schema_version),
+            // 🗣️ The artifact schema's own canonical identity, exactly as the plugin committed it.
+            // It is an `ArtifactIdentity`, which the guest validates with `ArtifactIdentity::parse`
+            // (`🔌️plugin/🦀️.rs`, `validate_wire_request_resources`): dot-delimited segments of
+            // `[a-z0-9_-]` only. The `<kind>@<schemaVersion>/*` form this used to send is the
+            // CAPABILITY-id grammar, not an identity — `@`, `/` and `*` are all non-canonical
+            // segment bytes, so every real inference died `artifact-inference.source-dialect:
+            // identity "s.wfc.bitmap@1/*" has a non-canonical segment` before the guest ran a
+            // single step (measured 2026-09-22, slice CE3). The version is not lost by dropping the
+            // suffix: `artifact_schema_version` is its own field on this same request.
+            source_dialect: declared.artifact_schema.clone(),
             policy: Vec::new(),
             budgets: crate::schema::ArtifactInferenceBudgetV1 { allocation_bytes: INFERENCE_ALLOCATION_BYTES, work_units: command.work_units.max(1), recursion_depth: INFERENCE_RECURSION_DEPTH },
             cancellation_id: command.cancellation_id.clone(),
             previous_state: None,
             requested_cache_mode: crate::schema::ArtifactInferenceCacheModeV1::Cold,
-            canonical_payload: command.canonical_payload.clone(),
+            canonical_payload: bind_inference_document(&declared, command)?,
             dependencies: Vec::new(),
         };
         let request_bytes = serde_json::to_vec(&request).map_err(|error| Self::not_wired("encoding the inference request", error))?;
@@ -1138,6 +1253,8 @@ impl PluginArtifactChannel {
     /// `GuestRuntime` contract names for closing an instance, and under wasmtime it is exactly the
     /// `Store` release the pooling allocator needs to reclaim the slab.
     fn discard_instance(&mut self, instance: u32) {
+        self.session_documents.remove(&instance);
+        self.backbone_bindings.remove(&instance);
         if let Some(guest) = self.instances.remove(&instance) {
             semio_framework_async::block_on(self.runtime.drop_instance(guest));
         }
@@ -1339,10 +1456,15 @@ impl PluginArtifactChannel {
             .map_err(|fault| Self::not_wired("retained command driver", format!("{}: {}", fault.code.0, fault.message)))?
             .map_err(|fault| Self::not_wired("command acknowledgement", format!("{}: {} — the guest answered {:?} while this gateway drives instance {instance} seq {seq}", fault.code.0, fault.message, turn.command_ingress)))?;
         let mut published: Vec<String> = Vec::new();
+        let mut backbone_egress: Vec<Vec<u8>> = Vec::new();
         for effect in &turn.effects {
             published.push(effect_shape(instance, effect));
+            if let Some(payload) = document_backbone_payload(&self.actor_label, effect) {
+                backbone_egress.push(payload.to_vec());
+            }
             Self::admit_reply_frame(self.pending_exchanges.get_mut(instance).expect("pending exchange was admitted"), instance, seq, effect);
         }
+        self.backbone_egress.append(&mut backbone_egress);
         match progress {
             semio_framework::kernel::CommandBatchProgress::Complete => {
                 self.pending_command_closes.remove_terminal(u64::from(instance), seq).map_err(|fault| Self::not_wired("terminal command owner", format!("{}: {}", fault.code.0, fault.message)))?;
@@ -1647,6 +1769,19 @@ fn shell_app_frame_payload(instance: u32, effect: &semio_framework::kernel::Effe
     Some(payload.as_slice())
 }
 
+/// 🧵️ One effect's document-backbone payload, when it is one addressed at `actor_label` — the guest's
+/// own `BackboneMessage::Mutations` bytes on their way to the document actor. The uri check is the
+/// same ownership fence `route_document_backbone_effects` applies in the wgpu shell: a guest that
+/// addresses another actor's backbone is publishing into a document this channel does not own, and
+/// its bytes must not be relayed as if it did.
+#[cfg(not(target_arch = "wasm32"))]
+fn document_backbone_payload<'a>(actor_label: &str, effect: &'a semio_framework::kernel::Effect) -> Option<&'a [u8]> {
+    let semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Backbone { uri }, payload } = effect else {
+        return None;
+    };
+    (uri == actor_label).then(|| payload.as_slice())
+}
+
 /// 🧾️ One effect named by SHAPE, never by payload — what a fault says the guest published instead
 /// of the answer it owed. A shell message is named with the instance it addresses, because
 /// "addressed at another instance" and "addressed at this one but unreadable" are different defects
@@ -1804,6 +1939,65 @@ fn app_media_out_ports(app: &semio_framework::AppDefinition) -> Vec<String> {
     let mut seen: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     ports.retain(|port| seen.insert(port.clone()));
     ports
+}
+
+/// 🔗️ Folds the artifact this inference is being run ON into the canonical request body, under the
+/// field the inference's OWN published contract names.
+///
+/// 🧭️ Declared, never invented. The host writes exactly `InferenceArtifactBinding.field`, in exactly
+/// `InferenceArtifactBinding.encoding`, and refuses by name in every other case: an unpublished
+/// contract, an encoding this host has no writer for, or a required binding with no artifact named.
+/// Before this existed an agent could only ever send `{}` — `inference_run`'s tool schema had no
+/// artifact at all — and the guest answered `missing field 'snapshot'` after the whole component had
+/// been compiled and dispatched (`📓️pz2-puzzle-describe-under-budget.md` §5.2).
+///
+/// ✍️ A caller that supplies the bound field itself keeps it: the binding fills a GAP, it never
+/// overwrites a body the caller authored.
+#[cfg(not(target_arch = "wasm32"))]
+fn bind_inference_document(declared: &semio_framework::ContributedInferenceMetadata, command: &crate::actions::InferCommand) -> Result<Vec<u8>, Fault> {
+    let Some(binding) = declared.payload.as_ref().and_then(|contract| contract.artifact_binding.as_ref()) else {
+        return Ok(command.canonical_payload.clone());
+    };
+    if binding.encoding != semio_framework::INFERENCE_ARTIFACT_PACK_BASE64 {
+        return Err(Fault {
+            code: "mutation.rejected".to_string(),
+            message: format!("`{}` declares artifact binding encoding `{}`, which this gateway has no writer for (it writes `{}`)", declared.inference_schema, binding.encoding, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64),
+        });
+    }
+    let mut body: serde_json::Value = if command.canonical_payload.is_empty() {
+        serde_json::json!({})
+    } else {
+        serde_json::from_slice(&command.canonical_payload).map_err(|error| Fault { code: "mutation.rejected".to_string(), message: format!("`{}` payload is not a JSON object: {error}", declared.inference_schema) })?
+    };
+    let Some(object) = body.as_object_mut() else {
+        return Err(Fault { code: "mutation.rejected".to_string(), message: format!("`{}` payload is not a JSON object", declared.inference_schema) });
+    };
+    if object.contains_key(&binding.field) {
+        return serde_json::to_vec(&body).map_err(|error| Fault { code: "plugin.internal".to_string(), message: format!("encoding the inference payload: {error}") });
+    }
+    match command.artifact_document.as_ref() {
+        // 📦️ The one shape `INFERENCE_ARTIFACT_PACK_BASE64` names, written with the same standard
+        // alphabet the guest's `ArtifactDocumentPayload::pair()` decodes with. The gateway does not
+        // link the guest SDK (`🌉️mcp` depends on the plugin HOST, never on the plugin crate), so
+        // the encoding constant is the contract between the two halves, not a shared type.
+        Some(document) => {
+            object.insert(binding.field.clone(), serde_json::json!({ "pack": crate::shell_channel::encode_base64(&document.pack), "spr": crate::shell_channel::encode_base64(&document.spr) }));
+        }
+        // 🧭️ `required` means "this inference needs SOME body and the caller cannot type one", not
+        // "this field or nothing": a published contract may offer a second carrier (`🀄️wfc`'s own
+        // request schema is `oneOf [document, snapshot]`), and a caller who stated one has already
+        // answered the requirement. Refusing an authored body here made a hand-written `snapshot`
+        // unroutable (measured 2026-09-22 21:2x) — the guest, which owns the schema, is the judge
+        // of a body that exists; this gateway only refuses an EMPTY one.
+        None if binding.required && object.is_empty() => {
+            return Err(Fault {
+                code: "mutation.rejected".to_string(),
+                message: format!("`{}` is artifact-bound: name the artifact to run it on with `artifactId`, or supply `payload.{}` yourself", declared.inference_schema, binding.field),
+            })
+        }
+        None => {}
+    }
+    serde_json::to_vec(&body).map_err(|error| Fault { code: "plugin.internal".to_string(), message: format!("encoding the inference payload: {error}") })
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -2043,6 +2237,196 @@ fn open_plugin_artifact_channel(source: Option<&PluginComponentSource>, plugin_i
     PluginArtifactChannel::from_component(&bytes, plugin_id.to_string(), descriptor, app_ref, actor_label.to_string())
 }
 
+//#region 🗂️GuestDocumentCodec
+/// ⛽️ The ceiling one pure `codec` call runs under. The WIT states the contract these functions
+/// honour — no storage, no window, no effect, one throwaway instance per call — so what bounds them
+/// is wall time, not effect or frame counts. 60 s is the same order as [`headless_open_budget`],
+/// because printing or applying against an 80 KB document pack is work of the same scale as bringing
+/// an instance up, and a guest that needs longer is wedged rather than busy.
+/// 🧵️ The binding generation this gateway claims for a document backbone. One session opens one
+/// binding per instance and never rebinds — a rebind is what a shell does when a window swaps
+/// documents, which a headless channel with one bound artifact per plugin cannot do — so the
+/// generation is a constant rather than a counter that would imply a history it does not have.
+#[cfg(not(target_arch = "wasm32"))]
+const DOCUMENT_BACKBONE_BINDING_GENERATION: u64 = 1;
+
+#[cfg(not(target_arch = "wasm32"))]
+fn headless_codec_budget() -> semio_framework::kernel::Budget {
+    semio_framework::kernel::Budget { fuel: u64::MAX, deadline_ms: 60_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
+}
+
+/// 🌐️ The process's tokio I/O reactor, for the hub DOCUMENT SOCKET and nothing else.
+///
+/// 🐛️ `store::sync`'s native artifact actor dials its document socket with
+/// `tokio_tungstenite::connect_async` under a `tokio::time::timeout`
+/// (`🏪️store/🔄️sync/🦀️.rs`, `connect_hub`), and `spawn_actor` captures
+/// `tokio::runtime::Handle::try_current()` **at the moment `ArtifactHost::open` is awaited**, then
+/// `enter()`s it around every turn it polls. A shell binary is inside a tokio runtime when it opens
+/// a document; this gateway is not — `semio_framework_os_services::TokioHostRuntime` is the repo's
+/// own `WorkerPool`-backed host runtime and carries no tokio reactor despite the name. So the
+/// captured handle was `None` and the FIRST socket dial panicked the pool worker with "there is no
+/// reactor running, must be called from the context of a Tokio 1.x runtime" (measured live on hub
+/// 7681, 2026-09-22, `🗑️generated/m10-write-path-7681-note.txt`).
+///
+/// 🧭️ Multi-threaded on purpose, and tiny: a current-thread runtime would register the socket but
+/// park nobody on its I/O driver, so readiness would never be delivered to a future this crate polls
+/// on a worker thread. Two workers are enough for one websocket per open document, and the reactor
+/// is process-wide so it outlives any one workspace — a document actor must not lose its driver
+/// because the session that opened it went away mid-close.
+#[cfg(not(target_arch = "wasm32"))]
+fn hub_socket_reactor() -> Result<&'static tokio::runtime::Runtime, GatewayError> {
+    static REACTOR: std::sync::OnceLock<Result<tokio::runtime::Runtime, String>> = std::sync::OnceLock::new();
+    REACTOR
+        .get_or_init(|| tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_io().enable_time().thread_name("semio-mcp-document-socket").build().map_err(|error| error.to_string()))
+        .as_ref()
+        .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the hub document-socket reactor: {error}")))
+}
+
+/// 🗂️ One package's own document codec, as the component exports it — the compiled component plus
+/// the artifact schema it was registered for.
+///
+/// 🧭️ `runtime` is the process-wide [`shared_plugin_runtime`] and never a second one: a
+/// `wasmtime::Component` belongs to the `Engine` that compiled it, so `compiled` is only
+/// instantiable by the runtime that produced it.
+#[cfg(not(target_arch = "wasm32"))]
+struct GuestCodecRoute {
+    artifact_schema: String,
+    plugin_id: String,
+    runtime: Arc<GuestRuntimes>,
+    compiled: semio_framework_plugin_host::CompiledHandle,
+}
+
+/// 🗂️ Every guest-backed codec this process has registered, in registration order.
+///
+/// 🧭️ A process-global table exists because [`store::ArtifactCodec`]'s four operations are bare,
+/// NON-CAPTURING `fn` pointers — an erasure table, by design, so that a schema-string-keyed caller
+/// can print and apply without naming a concrete `P`/`Mutation`. A thunk therefore cannot close over
+/// a component, and cannot be told which schema it was registered under either: the signatures carry
+/// only bytes. So a thunk resolves its route by asking the components themselves, in order, and
+/// taking the first that answers — see [`guest_print_mirror`] for why that is the WIT's own
+/// discriminator rather than a guess.
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_codec_routes() -> &'static Mutex<Vec<Arc<GuestCodecRoute>>> {
+    static ROUTES: std::sync::OnceLock<Mutex<Vec<Arc<GuestCodecRoute>>>> = std::sync::OnceLock::new();
+    ROUTES.get_or_init(|| Mutex::new(Vec::new()))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_codec_route_snapshot() -> Vec<Arc<GuestCodecRoute>> {
+    guest_codec_routes().lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+}
+
+/// 📥️ `(pack, spr) -> (dsl, ops)` through whichever registered component owns this pair.
+///
+/// 🧭️ **The component IS the discriminator.** `interface codec`'s own contract states it: "a pair
+/// the component cannot print back is not a document of this kind". So asking each registered
+/// package in turn and taking the first that answers is not a guess at the schema — it is running
+/// the exact fence the interface defines, once per candidate. In a real gateway session the
+/// candidate list is the packages whose documents this agent has open, which is one or two.
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_print_mirror<'a>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<store::ArtifactTextFiles, store::VcsError>> + Send + 'a>> {
+    Box::pin(async move {
+        let routes = guest_codec_route_snapshot();
+        let mut refusals: Vec<String> = Vec::new();
+        for route in &routes {
+            match route.runtime.codec_print_mirror(&route.compiled, &route.artifact_schema, pack, spr, &headless_codec_budget()).await {
+                Ok(mirror) => return Ok(store::ArtifactTextFiles { dsl: mirror.dsl, ops: mirror.ops }),
+                Err(error) => refusals.push(format!("{}/{}: {error}", route.plugin_id, route.artifact_schema)),
+            }
+        }
+        Err(store::VcsError::Deserialize(format!("no registered guest codec prints this pair ({} candidate(s): {})", routes.len(), refusals.join("; "))))
+    })
+}
+
+/// 🧩️ `(pack, spr, encode_ops_vec) -> (pack, spr, ops text)` through the same route resolution.
+/// The ops text is the component's own print of the RESULT pair, never a host re-derivation.
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_apply_ops_binary<'a>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8]) -> store::ArtifactCodecApplyFuture<'a> {
+    Box::pin(async move {
+        let routes = guest_codec_route_snapshot();
+        let mut refusals: Vec<String> = Vec::new();
+        for route in &routes {
+            let budget = headless_codec_budget();
+            let applied = match route.runtime.codec_apply_ops(&route.compiled, &route.artifact_schema, pack, spr, ops, &budget).await {
+                Ok(applied) => applied,
+                Err(error) => {
+                    refusals.push(format!("{}/{}: {error}", route.plugin_id, route.artifact_schema));
+                    continue;
+                }
+            };
+            let mirror = route
+                .runtime
+                .codec_print_mirror(&route.compiled, &route.artifact_schema, &applied.pack, &applied.spr, &budget)
+                .await
+                .map_err(|error| store::VcsError::Serialize(format!("{}/{} applied the batch but cannot print the result: {error}", route.plugin_id, route.artifact_schema)))?;
+            return Ok((applied.pack, applied.spr, mirror.ops));
+        }
+        Err(store::VcsError::Deserialize(format!("no registered guest codec applies this batch ({} candidate(s): {})", routes.len(), refusals.join("; "))))
+    })
+}
+
+/// 🚫️ `interface codec` exports four functions and neither of these is one of them: there is no
+/// `compile-dsl` and no `edit-text-from-envelope` in the WIT, because both belong to the FOLDER text
+/// lane (`FolderTextStorage`'s `.dsl`/`.ops` writes) and a guest-backed codec exists precisely for a
+/// binding that has no folder. A typed refusal naming that is the honest answer; fabricating text
+/// here would put bytes in a `.ops` file that no component ever produced.
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_compile_dsl<'a>(_dsl: &'a str, _ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(store::ArtifactPackFiles, String), store::VcsError>> + Send + 'a>> {
+    Box::pin(async move { Err(store::VcsError::Deserialize("a guest-backed document codec has no `compile-dsl`: `interface codec` exports pack-schema-hash, genesis, print-mirror and apply-ops only".to_string())) })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn guest_edit_text_from_envelope<'a>(_envelope: &'a store::os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, store::VcsError>> + 'a>> {
+    Box::pin(async move { Err(store::VcsError::Deserialize("a guest-backed document codec has no per-envelope text printer: `interface codec` prints whole pairs, not single edits".to_string())) })
+}
+
+/// 🗂️ Registers `artifact_schema`'s document codec from the component's OWN `codec` export, and
+/// answers the pack-schema hash the component itself computed.
+///
+/// 🪪️ `expected_pack_schema_hash` is the hub's declared hex hash for this document, and it is a
+/// CROSS-CHECK, never the source: the hash that goes into the registry is the one
+/// `codec.pack-schema-hash` returned from the component bytes the hub authorized and this process
+/// verified by SHA-256. Registering the hub's own number would make `finish_connect_hub`'s
+/// `local_schema_hash == authority.pack_schema_hash` compare the hub's value with itself, which is
+/// not satisfying that check — it is deleting it.
+///
+/// 🔁️ Idempotent per schema: a second registration of a schema this process already serves is a
+/// no-op that still verifies the hash, so re-opening a document never stacks routes.
+#[cfg(not(target_arch = "wasm32"))]
+fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, component: &[u8], expected_pack_schema_hash: &str) -> Result<[u8; 32], GatewayError> {
+    let runtime = shared_plugin_runtime()?;
+    let compiled = shared_compiled_component(runtime.as_ref(), plugin_id, component)?;
+    let pack_schema_hash = semio_framework_async::block_on(runtime.codec_pack_schema_hash(&compiled, artifact_schema, &headless_codec_budget()))
+        .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("`{plugin_id}` could not answer codec.pack-schema-hash for `{artifact_schema}`: {error}")))?;
+    let computed = pack_schema_hash.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    if !expected_pack_schema_hash.is_empty() && computed != expected_pack_schema_hash {
+        return Err(GatewayError::new(
+            GatewayErrorCode::PreconditionFailed,
+            format!("`{plugin_id}`'s own codec hashes `{artifact_schema}` to {computed}, but the hub's document descriptor declares {expected_pack_schema_hash}"),
+        ));
+    }
+    let mut routes = guest_codec_routes().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if routes.iter().any(|route| route.artifact_schema == artifact_schema) {
+        return Ok(pack_schema_hash);
+    }
+    routes.push(Arc::new(GuestCodecRoute { artifact_schema: artifact_schema.to_string(), plugin_id: plugin_id.to_string(), runtime: Arc::clone(&runtime), compiled }));
+    drop(routes);
+    store::register_document_codec(store::ArtifactCodec {
+        schema: artifact_schema.to_string(),
+        // 📦️ The generic pack container extension. A guest-backed codec never reaches the folder
+        // text lane (see [`guest_compile_dsl`]), which is the only place this is read.
+        extension: "semio",
+        pack_schema_hash,
+        compile_dsl: guest_compile_dsl,
+        print_mirror: guest_print_mirror,
+        edit_text_from_envelope: guest_edit_text_from_envelope,
+        apply_ops_binary: guest_apply_ops_binary,
+    })
+    .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("registering a guest-backed codec for `{artifact_schema}`: {error}")))?;
+    Ok(pack_schema_hash)
+}
+//#endregion 🗂️GuestDocumentCodec
+
 /// 🧩️ Where a workspace's plugin components come from. A `--folder` workspace builds them itself and
 /// reads them off the repo's own `wasm32-wasip2` deliverable tree; a `--hub` workspace has NO repo —
 /// its components are the execution targets the Hub authorized, served by the Hub, verified against
@@ -2138,6 +2522,59 @@ impl RoutingArtifactChannel {
         Some(first)
     }
 
+    /// 📥️ The canonical pair `plugin_id`'s single bound artifact carries, when it has one — a hub
+    /// document, whose bytes live on the hub and nowhere a guest could reach on its own. Keyed off
+    /// exactly the binding [`Self::session_artifact_for`] names, so a plugin with two bound
+    /// artifacts (which no single session document could be) seeds none.
+    fn session_document_for(&self, plugin_id: &str) -> Option<(String, Arc<SessionDocumentPair>)> {
+        let artifact_id = self.session_artifact_for(plugin_id)?;
+        let bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let document = bound.get(&artifact_id)?.document.clone()?;
+        Some((artifact_id, document))
+    }
+
+    /// 🧵️ Hands `plugin_id`'s bound document actor every backbone message its guest just published.
+    /// `ArtifactActorMsg::DocumentBackbone` is the actor's own verified ingress — it decodes the
+    /// envelopes, refuses any that name another document, retains them and relays them to the hub as
+    /// `ClientFrame::Commands`. Nothing here interprets a byte of them.
+    ///
+    /// 🚧️ A binding with no document actor is a typed, named fault, never a silent drop: the guest
+    /// HAS committed by the time these bytes exist, so "the edit went nowhere" must be something the
+    /// agent is told. [`PluginArtifactBinding::backbone_blocked_by`] carries the reason.
+    fn relay_backbone_egress(&self, plugin_id: &str, egress: Vec<Vec<u8>>) -> Result<(), Fault> {
+        // 🔒️ `session_artifact_for` takes the same lock, so it is called BEFORE this one is held —
+        // `std::sync::Mutex` is not reentrant and nesting them deadlocked the very first committed
+        // message (measured 2026-09-22, the test hung past its 60 s report threshold).
+        let artifact_id = self.session_artifact_for(plugin_id);
+        let binding = {
+            let bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            artifact_id.and_then(|artifact_id| bound.get(&artifact_id).map(|binding| (artifact_id, binding.backbone.clone(), binding.backbone_blocked_by.clone(), Arc::clone(&binding.relayed))))
+        };
+        let Some((artifact_id, backbone, blocked_by, relayed)) = binding else {
+            return Err(Fault {
+                code: "channel.not-wired".to_string(),
+                message: format!("plugin `{plugin_id}` published {} document-backbone message(s) but this workspace has bound no document to it", egress.len()),
+            });
+        };
+        let Some(backbone) = backbone else {
+            return Err(Fault {
+                code: "channel.not-wired".to_string(),
+                message: format!(
+                    "`{artifact_id}` accepted {} committed document-backbone message(s) that cannot reach the hub: {}",
+                    egress.len(),
+                    blocked_by.unwrap_or_else(|| "this document has no open document actor".to_string())
+                ),
+            });
+        };
+        for message in egress {
+            backbone
+                .send(store::sync::ArtifactActorMsg::DocumentBackbone { message })
+                .map_err(|_| Fault { code: "channel.not-wired".to_string(), message: format!("`{artifact_id}`'s document actor mailbox refused a committed document-backbone message") })?;
+            relayed.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        }
+        Ok(())
+    }
+
     fn plugin_id_for(&self, instance: u32, commands: &[AppCommand]) -> Result<String, Fault> {
         for command in commands {
             match command {
@@ -2166,6 +2603,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         let plugin_id = self.plugin_id_for(instance, &commands)?;
         let session_artifact_id = self.session_artifact_for(&plugin_id);
+        let session_document = self.session_document_for(&plugin_id);
         let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
         if !channels.contains_key(&plugin_id) {
             let channel = open_plugin_artifact_channel(self.components.as_ref(), &plugin_id, &self.actor_label).map_err(routing_fault)?;
@@ -2176,7 +2614,29 @@ impl ArtifactChannel for RoutingArtifactChannel {
         // AFTER the channel that seeded it from the plugin's genesis was already opened, so a
         // stamp taken from an open-time snapshot would name nothing for the very first mutation.
         channel.bind_session_artifact(session_artifact_id);
-        channel.exchange(instance, commands)
+        // 📥️ …and the same re-read seeds the guest with the bound document itself when the binding
+        // carries one (a hub document, whose bytes live on the hub and nowhere this guest can
+        // reach). `load_session_document` is idempotent per instance, so a prepare/commit pair does
+        // not reload between its two halves; an `Infer` skips it because the inference lane drives
+        // its own guest on its own actor ordinal, which this document never belongs to.
+        if let Some((artifact_id, document)) = session_document.filter(|_| !matches!(commands.first(), Some(AppCommand::Infer(_)))) {
+            channel.load_session_document(instance, &artifact_id, &document.pack, &document.spr)?;
+            // 🧵️ …then bind the guest's document backbone, in that order: the guest refuses a load
+            // while bound. Until this runs the guest publishes no backbone effect at all, so a
+            // committed transaction would answer `SUCCEEDED` and reach nobody.
+            channel.ensure_document_backbone(instance)?;
+        }
+        let frames = channel.exchange(instance, commands);
+        // 🧵️ …and whatever the guest published on its document backbone during that exchange leaves
+        // the process now, on the bound document's own actor mailbox. Drained on BOTH outcomes: a
+        // command that faulted after its guest already committed still owes those envelopes to the
+        // hub, and leaving them in the channel would hand them to the next, unrelated exchange.
+        let egress = channel.drain_backbone_egress();
+        drop(channels);
+        if !egress.is_empty() {
+            self.relay_backbone_egress(&plugin_id, egress)?;
+        }
+        frames
     }
 }
 //#endregion 🔖️Routing
@@ -2236,6 +2696,18 @@ impl ShellRoutedArtifactChannel {
 
 impl ArtifactChannel for ShellRoutedArtifactChannel {
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+        // 💡️ An inference is not a shell command and never was: `ShellArtifactChannel` refuses
+        // `AppCommand::Infer` outright ("the gateway owns its own inference guest"), and the
+        // headless lane's `ensure_inference_route` drives its OWN guest instance on its own actor
+        // ordinal, holding no document the shell owns. Sending it down the shell branch made
+        // `inference_run` answer `plugin.unavailable` for the whole of a shell-resolved session —
+        // i.e. exactly the session an MCP client driving a live shell has (measured 2026-09-22
+        // 22:1x, `🗑️generated/gj1-trap-probe.txt` first run). Routing it headless here is what the
+        // refusal's own message asks a caller to do, done for them, and it splits no document:
+        // the inference guest is not the shell's.
+        if matches!(commands.first(), Some(AppCommand::Infer(_))) {
+            return self.headless.exchange(instance, commands);
+        }
         match self.binding.resolve() {
             crate::shell_channel::ChannelKind::Shell => {
                 // 🎯️ Name the artifact's owner before dispatching, exactly as the headless lane
@@ -2312,14 +2784,66 @@ pub struct InstalledArtifactKind {
     pub export_formats: Vec<String>,
 }
 
-/// 🗂️ One created plugin-typed artifact's real ownership: the artifact kind its owning plugin
-/// declares (`ArtifactKindSpec.kind_id`/`AppIo.artifact_schema`), that plugin's id, and the app whose
-/// media ports can export it.
-#[derive(Clone, Debug)]
+/// 📦️ One document's authoritative binary pair — the exact `(pack, spr)` `store::print_document_pack`
+/// writes and the hub's `active-checkpoint/pair` route serves. Held behind an `Arc` on a
+/// [`PluginArtifactBinding`] so the ~80 KB of a real document is read from the hub ONCE per open and
+/// then only ever cloned into the single `AppCommand::LoadDocument` that seeds a guest with it.
+#[derive(Debug)]
+pub struct SessionDocumentPair {
+    pub pack: Vec<u8>,
+    pub spr: Vec<u8>,
+}
+
+/// 🗂️ One plugin-typed artifact's real ownership: the artifact kind its owning plugin declares
+/// (`ArtifactKindSpec.kind_id`/`AppIo.artifact_schema`), that plugin's id, and the app whose media
+/// ports can export it.
+///
+/// 🌎️ For a HUB document the binding additionally carries the surface the hub's own execution-target
+/// lease names (`DocumentOpenSurfaceV1.surface_id`, e.g. `s.gis.gismap@1/*#editor`) and the document's
+/// canonical pair, so the plugin's guest can be seeded with THE HUB'S document rather than with the
+/// plugin's genesis — see [`RoutingArtifactChannel::exchange`]. A folder-created artifact has neither:
+/// it has no hub surface, and its bytes already live in this workspace's own event log.
+#[derive(Clone)]
 pub struct PluginArtifactBinding {
     pub schema: String,
     pub plugin_id: String,
     pub app_id: String,
+    pub surface_id: Option<String>,
+    pub document: Option<Arc<SessionDocumentPair>>,
+    /// 🧵️ The hub document actor's own mailbox, when this binding opened one. Every
+    /// `MessageEndpoint::Backbone` message the plugin's guest publishes for this document is handed
+    /// to it as `ArtifactActorMsg::DocumentBackbone`, which is the actor path that persists the
+    /// envelopes and relays them to the hub as `ClientFrame::Commands` — the SAME route the wgpu
+    /// shell's `route_document_backbone_effects` drives for a human's edit.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub backbone: Option<store::sync::ArtifactMailboxSender>,
+    /// 🚧️ Why this binding opened no document actor, when it did not. A hub document whose artifact
+    /// schema has no registered `store::ArtifactCodec` in this process cannot open a document socket
+    /// at all: `connect_hub` reads `document_codec(schema).pack_schema_hash` to build its
+    /// `SocketHelloV1` and silently reschedules a reconnect forever when there is none. Recording
+    /// the reason here is what turns that silence into something a reader can see.
+    pub backbone_blocked_by: Option<String>,
+    /// 🧾️ How many document-backbone messages this binding has handed to its document actor. The
+    /// ONE fact that separates "the guest published nothing" from "the actor has it and the socket
+    /// has not flushed yet", and the agent is owed it: `action_invoke` answers `SUCCEEDED` for a
+    /// transaction the guest committed, which is true and is not the same as "anyone else can see
+    /// it". Published by `artifact_open`'s `sessionDocument.relayedBatches`.
+    pub relayed: Arc<std::sync::atomic::AtomicU64>,
+}
+
+impl std::fmt::Debug for PluginArtifactBinding {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("PluginArtifactBinding")
+            .field("schema", &self.schema)
+            .field("plugin_id", &self.plugin_id)
+            .field("app_id", &self.app_id)
+            .field("surface_id", &self.surface_id)
+            .field("document_bytes", &self.document.as_ref().map(|pair| pair.pack.len() + pair.spr.len()))
+            .field("backbone_blocked_by", &self.backbone_blocked_by)
+            .field("relayed", &self.relayed.load(std::sync::atomic::Ordering::Relaxed))
+            .finish()
+    }
 }
 
 /// 🚪️ Real teardown for a `--folder`/`--hub`-bound `semio-os-mcp` process (and every test that opens
@@ -2332,6 +2856,18 @@ pub struct PluginArtifactBinding {
 /// already follows for its actor runners.
 impl Drop for HeadlessWorkspace {
     fn drop(&mut self) {
+        // 🧵️ Bound hub documents close FIRST, before the driver: their actors hold the socket-grant
+        // source the driver owns, and a document that is still dialling when its grant source
+        // vanishes reconnects against nothing instead of retiring its presence row.
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let bound = std::mem::take(&mut *self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
+            for (artifact_id, binding) in bound {
+                if binding.backbone.is_some() {
+                    self.artifact_host.close_key(&self.origin.artifact_document_key(&artifact_id));
+                }
+            }
+        }
         #[cfg(not(target_arch = "wasm32"))]
         drop(self.hub_driver.take());
         let probes = std::mem::take(&mut *self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
@@ -2799,6 +3335,148 @@ impl HeadlessWorkspace {
         self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id).cloned()
     }
 
+    /// 🌎️ Binds one HUB document to the plugin, app, artifact schema and SURFACE the hub's own
+    /// execution-target lease names for it, and holds the canonical pair the caller already read so
+    /// that plugin's guest can be seeded with THIS document instead of with its own genesis
+    /// (`RoutingArtifactChannel::exchange` → `PluginArtifactChannel::load_session_document`).
+    ///
+    /// 🐛️ Before this existed, `plugin_artifacts` was written by `create_plugin_artifact` alone — a
+    /// folder-only path — so a hub-bound agent that opened a real hub document had NO binding at
+    /// all: every stamp it answered named the pseudo-id `plugin:<id>`, and every mutation it prepared
+    /// ran against the plugin's genesis document rather than against the one it had open. That is
+    /// step 1 of the write path M8 §5.3 / M9 §8.1 name.
+    ///
+    /// 🪪️ Every field comes from an authenticated route, none is derived from the artifact id or
+    /// guessed from a single-plugin workspace: the lease is fetched for this exact scope and its
+    /// package identity is cross-checked against the descriptor snapshot the binding already
+    /// verified. `Ok(false)` means this workspace is not hub-bound or the hub authorizes no
+    /// execution target for the document — an unbound artifact stays readable, it simply has no
+    /// guest to seed.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn bind_hub_session_document(&self, artifact_id: &str, pack: &[u8], spr: &[u8]) -> Result<bool, GatewayError> {
+        let WorkspaceOrigin::Hub { space_id, .. } = &self.origin else {
+            return Ok(false);
+        };
+        let snapshot = self.hub_snapshot()?;
+        let Some(document) = snapshot.documents.values().find(|document| document.scope.document_id == artifact_id) else {
+            return Ok(false);
+        };
+        let scope = document.scope.clone();
+        if &scope.space_id != space_id {
+            return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, format!("document `{artifact_id}` is not in this session's bound space")));
+        }
+        let driver = self.hub_driver.as_ref().ok_or_else(|| GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub binding actor is not running").retryable())?;
+        let lease = driver.fetch_execution_target_lease(&scope, &format!("mcp-session-document-{artifact_id}"))?;
+        if lease.package.plugin_id != document.view.descriptor.owner.plugin_id || lease.artifact.schema != document.view.descriptor.artifact_schema || lease.artifact.kind != document.view.descriptor.artifact_kind {
+            return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "hub execution-target lease disagrees with the authenticated document descriptor"));
+        }
+        // 🔁️ Re-opening a document this session already bound must not open a SECOND actor: the
+        // first one holds the live socket, the presence lease and the outbox that still owes the hub
+        // this agent's envelopes. Only the canonical pair is refreshed.
+        let established = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id).filter(|binding| binding.backbone.is_some()).cloned();
+        let (backbone, backbone_blocked_by, relayed) = match established {
+            Some(binding) => (binding.backbone, binding.backbone_blocked_by, binding.relayed),
+            None => {
+                let (backbone, blocked) = self.open_hub_document_actor(artifact_id, &lease);
+                (backbone, blocked, Arc::new(std::sync::atomic::AtomicU64::new(0)))
+            }
+        };
+        let binding = PluginArtifactBinding {
+            schema: lease.artifact.schema.clone(),
+            plugin_id: lease.package.plugin_id.clone(),
+            app_id: lease.surface.app_id.clone(),
+            surface_id: Some(lease.surface.surface_id.clone()),
+            document: Some(Arc::new(SessionDocumentPair { pack: pack.to_vec(), spr: spr.to_vec() })),
+            backbone,
+            backbone_blocked_by,
+            relayed,
+        };
+        self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), binding);
+        Ok(true)
+    }
+
+    /// 🧵️ Opens the hub document's own `store::sync` actor — the one that holds the document socket
+    /// (`…/socket-grants` → `semio.socket.v1`), sends `ClientFrame::Commands` for every local
+    /// envelope, and beats presence for this session. Returns its mailbox, or the reason there is
+    /// none.
+    ///
+    /// 🪪️ The binding is `PersistenceBinding::Hub { surface: Some(<the LEASE's surface>) }`, not the
+    /// pinned `PROBE_SURFACE_ID` `WorkspaceOrigin::persistence_binding` mints for this crate's own
+    /// probe documents. A surface id is an authorization coordinate: `finish_connect_hub` compares
+    /// the socket authority's scope, schema and pack-schema hash against the client's own, and the
+    /// hub issues the authority for the surface the client asked for. Claiming the probe editor's
+    /// surface for a `gis` document was the pin M8 §5.3 and M9 §8.1 both name as the open unknown here
+    /// (`🏠️workspace/🦀️.rs:501`). The lease is handed to the host FIRST
+    /// (`set_document_execution_target_lease`), because `open` consumes it when it spawns the actor
+    /// and the actor sends it inside `DocumentSocketExpectationV1`.
+    ///
+    /// 🚧️ No registered `ArtifactCodec` for the document's artifact schema ⇒ no socket, and this
+    /// says so instead of opening an actor that would reconnect-loop in silence: `connect_hub`
+    /// needs `document_codec(schema).pack_schema_hash` to build `SocketHelloV1` at all. This
+    /// process links the three native codecs `📇️native-openable-provider` compiles in, so a
+    /// fourth package's kind — `gis.map` among them — has none. The root fix is to route the
+    /// registration through the component's own `codec` export
+    /// (`🔌️plugin/🧬️schema/📜️.wit`'s `interface codec`, TC3b); it is NOT done here and the
+    /// reason is reported rather than papered over.
+    /// 🗂️ Registers the document kind's codec from the package the HUB authorized for it — the same
+    /// component bytes `action_prepare` executes, fetched through the same verified route and cached
+    /// by the same `(catalog generation, component SHA-256)` key, so the codec and the guest can
+    /// never be two different builds of one package.
+    ///
+    /// 🪪️ The hub's own declared `pack_schema_hash` is passed as a CROSS-CHECK and never as the
+    /// value — see [`register_guest_document_codec`] for why registering the hub's number would
+    /// delete the check that reads it back.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn register_hub_document_codec(&self, lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1) -> Result<(), GatewayError> {
+        let Some(PluginComponentSource::Hub(components)) = self.plugin_components() else {
+            return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "a hub workspace with no authorized component source cannot resolve a document kind's codec").retryable());
+        };
+        let (component, _) = components.resolve(&lease.package.plugin_id)?;
+        register_guest_document_codec(&lease.package.plugin_id, &lease.artifact.schema, &component, &lease.artifact.pack_schema_hash)?;
+        Ok(())
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn open_hub_document_actor(&self, artifact_id: &str, lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1) -> (Option<store::sync::ArtifactMailboxSender>, Option<String>) {
+        let schema = lease.artifact.schema.clone();
+        match semio_framework::io::resolve_ready(store::document_codec(&schema)) {
+            Ok(Some(_)) => {}
+            // 🗂️ Nothing links this kind's codec, so take it from the package itself — the
+            // component the hub authorized, whose bytes this process already SHA-256-verified.
+            Ok(None) => {
+                if let Err(error) = self.register_hub_document_codec(&lease) {
+                    return (None, Some(error.message));
+                }
+            }
+            Err(error) => return (None, Some(format!("document codec registry refused `{schema}`: {error}"))),
+        }
+        let WorkspaceOrigin::Hub { base_url, space_id } = &self.origin else {
+            return (None, Some("not a hub-bound workspace".to_string()));
+        };
+        let document_key = self.origin.artifact_document_key(artifact_id);
+        self.artifact_host.set_document_execution_target_lease(&document_key, lease.clone());
+        // 🌐️ `open` must be awaited INSIDE the reactor's context: `spawn_actor` captures
+        // `Handle::try_current()` there, once, and every later turn of this actor is polled under
+        // the handle it captured. Entering after the open would be entering nothing.
+        let reactor = match hub_socket_reactor() {
+            Ok(reactor) => reactor,
+            Err(error) => return (None, Some(error.message)),
+        };
+        let _io_reactor = reactor.enter();
+        let channels = semio_framework_async::block_on(self.artifact_host.open(store::sync::ArtifactActorConfig {
+            document_id: artifact_id.to_string(),
+            schema,
+            bindings: vec![store::sync::PersistenceBinding::Hub { base_url: base_url.clone(), space_id: space_id.clone(), surface: Some(lease.surface.surface_id.clone()) }],
+            watch_external: false,
+            actor: self.actor_label(),
+        }));
+        if channels.document_key != document_key {
+            self.artifact_host.close_key(&channels.document_key);
+            return (None, Some(format!("document `{artifact_id}` opened outside its authenticated document scope")));
+        }
+        (Some(channels.cmd_tx), None)
+    }
+
     /// 🆕️ Creates `artifact_id` as a REAL artifact of `schema`, seeded from the owning plugin's own
     /// freshly-opened document (`AppCommand::ReadArtifact` → the guest's `ReadDocument`) and persisted
     /// under that plugin's real schema id. The bytes are host-opaque throughout — this crate never
@@ -2823,7 +3501,7 @@ impl HeadlessWorkspace {
         self.plugin_artifacts
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
-            .insert(artifact_id.to_string(), PluginArtifactBinding { schema: kind.schema.clone(), plugin_id: kind.plugin_id.clone(), app_id: kind.app_id.clone() });
+            .insert(artifact_id.to_string(), PluginArtifactBinding { schema: kind.schema.clone(), plugin_id: kind.plugin_id.clone(), app_id: kind.app_id.clone(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)) });
         Ok((pack.len(), spr.len()))
     }
 
@@ -3171,7 +3849,7 @@ impl HeadlessWorkspace {
                 None => {
                     let scope = snapshot.documents.keys().find(|scope| scope.document_id == artifact_id).cloned().ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")))?;
                     let (pack, spr) = self.read_hub_canonical_pair(&scope)?;
-                    let body = serde_json::json!({ "artifactId": artifact_id, "packBytes": pack.len(), "sprBytes": spr.len(), "packBase64": base64_encode(&pack) });
+                    let body = serde_json::json!({ "artifactId": artifact_id, "packBytes": pack.len(), "sprBytes": spr.len(), "packBase64": base64_encode(&pack), "sprBase64": base64_encode(&spr) });
                     return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
                 }
                 // 🪢 Two vocabularies, both published, neither collapsed into the other. `schema` is
@@ -3194,7 +3872,7 @@ impl HeadlessWorkspace {
         match suffix {
             None => match self.read_artifact_bytes(artifact_id)? {
                 Some((pack, spr)) => {
-                    let body = serde_json::json!({ "artifactId": artifact_id, "packBytes": pack.len(), "sprBytes": spr.len(), "packBase64": base64_encode(&pack) });
+                    let body = serde_json::json!({ "artifactId": artifact_id, "packBytes": pack.len(), "sprBytes": spr.len(), "packBase64": base64_encode(&pack), "sprBase64": base64_encode(&spr) });
                     Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }])
                 }
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}"))),

@@ -244,8 +244,8 @@ func TestBuildBinaryArtifactsGitIgnored(t *testing.T) {
 	artifacts := []string{
 		".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo",
 		".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo.exe",
-		".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo-mcp",
-		".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo-mcp.exe",
+		".🧬semio/🦑️repo/⚡️cache/🗃️bin/repo",
+		".🧬semio/🦑️repo/⚡️cache/🗃️bin/repo.exe",
 		"🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server",
 		"🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server.exe",
 		"coda/example/compose-blnbo-roomprogram/.coda/validators/programming.exe",
@@ -365,7 +365,7 @@ func TestMcpStdioInitializeHandshake(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read initialize response: %v", err)
 	}
-	if !strings.Contains(line, `"result"`) || !strings.Contains(line, `jsonrpc`) || !strings.Contains(line, `"name":"repo-cursor"`) {
+	if !strings.Contains(line, `"result"`) || !strings.Contains(line, `jsonrpc`) || !strings.Contains(line, `"name":"repo"`) {
 		t.Fatalf("unexpected initialize response: %s", line)
 	}
 }

@@ -1,10 +1,13 @@
 {
   "mutation": "createStep",
-  "pathRef": {},
+  "pathRef": {
+    "owner": null,
+    "slot": null
+  },
   "step": {
+    "bodies": {},
     "id": "step-1",
     "kind": "log.print",
-    "params": {},
-    "bodies": {}
+    "params": {}
   }
 }

@@ -149,7 +149,8 @@
       }
     ],
     "walk": {
-      "outputDirectories": ["dist", "target", "node_modules", "pkg", ".git"]
+      "outputDirectories": ["dist", "target", "node_modules", "pkg", ".git"],
+      "generatedOwnerFiles": ["🔣️.json", "🛂️.descriptor.semio"]
     }
   }
 }

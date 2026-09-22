@@ -35,7 +35,7 @@ use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, C
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::handles::{mint_id, HandleKind};
 use crate::protocol::{CallToolResult, ContentBlock, InMemoryToolRegistry, Resource, ResourceContent, ResourceTemplate, Tool};
-use crate::schema::{job_cancel_input_schema, job_get_input_schema, job_snapshot_output_schema, ui_focus_input_schema, ui_focus_output_schema, ui_reveal_input_schema, ui_reveal_output_schema};
+use crate::schema::{conversation_reply_input_schema, conversation_reply_output_schema, job_cancel_input_schema, job_get_input_schema, job_snapshot_output_schema, ui_focus_input_schema, ui_focus_output_schema, ui_reveal_input_schema, ui_reveal_output_schema};
 use crate::workspace::HeadlessWorkspace;
 use semio_framework_os_kernel::{FromValue, ToValue};
 use serde::Serialize;
@@ -442,11 +442,41 @@ fn job_cancel_capability() -> CapabilityDefinition {
     }
 }
 
+//#region 💬️ConversationCapability
+/// 💬️ `conversation.reply` — the agent's own voice in the shell's agent panel. It is the only
+/// gateway capability that writes PROSE rather than state, so it declares its own scope
+/// (`shell.converse`, reached through the `conversation.write` MCP scope) rather than borrowing
+/// `ui.control`'s window/navigation grants: an agent that may not move a window may still explain
+/// itself, and an agent granted nothing may not put text in front of a human at all.
+fn conversation_reply_capability() -> CapabilityDefinition {
+    CapabilityDefinition {
+        id: CapabilityRef("conversation.reply".to_string()),
+        version: 1,
+        owner: CapabilityOwner::Gateway,
+        kind: CapabilityKind::Ui,
+        audience: CapabilityAudience::Agent,
+        title: "Reply In Chat".to_string(),
+        description: "Publishes one chunk of the agent's own free-text turn into the shell's agent panel.".to_string(),
+        artifact_kind: None,
+        use_when: vec!["answer the human in the chat panel".to_string(), "ask a clarifying question".to_string(), "say what you are about to do".to_string()],
+        input_schema: conversation_reply_input_schema(),
+        output_schema: conversation_reply_output_schema(),
+        effects: Default::default(),
+        policy: semio_framework::manifest::CapabilityPolicy { scopes: vec![semio_framework::manifest::kernel::CapabilityId("shell.converse".into())], ..Default::default() },
+        execution: Default::default(),
+        exposure: ToolExposure::Direct { tool_name: "conversation_reply".to_string() },
+        presentation: CapabilityPresentation { icon_id: Some("message".to_string()), category: Some("ui".to_string()), keys: None, in_palette: false, args: Vec::new() },
+        examples: Vec::new(),
+        source: CapabilitySource::Gateway,
+    }
+}
+//#endregion 💬️ConversationCapability
+
 /// 🖥️ The UI + job capabilities, folded into `CatalogSource.gateway` alongside `🦀️.rs`'s
 /// own `core_tool_capabilities()` — same pattern, disjoint ids (`ui.*`/`job.*` vs `capabilities.*`/
 /// `context.*`), so both compile into the SAME catalog with zero collision risk.
 pub fn ui_capabilities() -> Vec<CapabilityDefinition> {
-    vec![ui_focus_capability(), ui_reveal_capability(), job_get_capability(), job_cancel_capability()]
+    vec![ui_focus_capability(), ui_reveal_capability(), conversation_reply_capability(), job_get_capability(), job_cancel_capability()]
 }
 //#endregion 🔖️Capabilities
 
@@ -548,6 +578,70 @@ pub fn register_ui_tools(registry: &mut InMemoryToolRegistry, bridge: Option<Bri
     job_cancel.output_schema = Some(job_snapshot_output_schema("job.cancel"));
     registry.register(job_cancel, move |arguments| job_cancel_handler(arguments)).expect("job_cancel is a valid tool name");
 }
+
+//#region 💬️ConversationReply
+/// 🔢️ The gateway's own reply-turn counter, for a client that streams without minting ids of its
+/// own. Process-wide like [`job_registry`], for the same reason: the shell keys rows by this id and
+/// two connections must never hand it the same one.
+static NEXT_REPLY_ID: AtomicU64 = AtomicU64::new(1);
+
+/// 💬️ `conversation_reply` — publishes one chunk of the agent's free-text turn to every attached
+/// shell. It answers `shells: 0` (never an error) when nobody is looking, because a gateway with no
+/// shell attached is an ordinary tier, not a failure; it refuses only when the principal was never
+/// granted `shell.converse`, when `text` is missing, or when no `/bridge` exists at all.
+fn conversation_reply_handler(policy: &crate::policy::PolicyEngine, principal: &crate::policy::AgentPrincipal, bridge: Option<&Arc<BridgeHandle>>, arguments: serde_json::Value) -> CallToolResult {
+    let capability = conversation_reply_capability();
+    if let Err(error) = policy.authorize_scopes(principal, &capability) {
+        return CallToolResult::tool_error(&error);
+    }
+    let Some(text) = arguments.get("text").and_then(serde_json::Value::as_str) else {
+        return input_invalid("text is required");
+    };
+    if text.is_empty() {
+        return input_invalid("text must not be empty — an empty turn tells the human nothing");
+    }
+    let reply_id = match arguments.get("replyId") {
+        None => format!("rep_{}", NEXT_REPLY_ID.fetch_add(1, Ordering::Relaxed)),
+        Some(serde_json::Value::String(reply_id)) if !reply_id.is_empty() => reply_id.clone(),
+        Some(_) => return input_invalid("replyId must be a non-empty string when present"),
+    };
+    let in_reply_to = match arguments.get("inReplyTo") {
+        None => None,
+        Some(serde_json::Value::String(message_id)) => Some(message_id.clone()),
+        Some(_) => return input_invalid("inReplyTo must be a string when present"),
+    };
+    let complete = match arguments.get("complete") {
+        None => true,
+        Some(serde_json::Value::Bool(complete)) => *complete,
+        Some(_) => return input_invalid("complete must be a boolean when present"),
+    };
+    let Some(bridge) = bridge else {
+        return CallToolResult::tool_error(&bridge_not_running_error());
+    };
+    let frame = GatewayToShell::AgentReply { reply_id: reply_id.clone(), in_reply_to, text: crate::bridge::truncate_conversation_text(text), complete };
+    let shells = match bridge.broadcast(frame) {
+        Ok(shells) => shells,
+        Err(_) => return CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::Internal, "the shell bridge refused this reply — it exceeds the bridge's per-broadcast admission budget").retryable()),
+    };
+    CallToolResult::ok(
+        vec![ContentBlock::Text { text: format!("published {} chars of reply {reply_id} to {shells} shell(s)", text.chars().count()) }],
+        Some(serde_json::json!({ "ok": true, "replyId": reply_id, "complete": complete, "shells": shells })),
+    )
+}
+
+/// 💬️ Registers `conversation_reply`. Separate from [`register_ui_tools`] because it is the one
+/// tool here that is scope-gated, and therefore the one that needs the connection's own principal
+/// and policy engine rather than only the bridge slot.
+pub fn register_conversation_tools(registry: &mut InMemoryToolRegistry, bridge: Option<BridgeSlot>, actions: Arc<crate::actions::ActionAdapter>, principal: crate::policy::AgentPrincipal) {
+    let mut conversation_reply = Tool::new("conversation_reply", conversation_reply_input_schema());
+    conversation_reply.title = Some("Reply In Chat".to_string());
+    conversation_reply.description = Some("Publishes one chunk of your own free-text turn into the shell's agent panel, so the human reads your answer where they typed their question. Pass the same replyId with complete=false to stream.".to_string());
+    conversation_reply.output_schema = Some(conversation_reply_output_schema());
+    registry
+        .register(conversation_reply, move |arguments| conversation_reply_handler(actions.policy(), &principal, resolve_bridge(bridge.as_ref()), arguments))
+        .expect("conversation_reply is a valid tool name");
+}
+//#endregion 💬️ConversationReply
 //#endregion 🔖️ToolHandlers
 
 //#region 🔖️ShellStateProjection

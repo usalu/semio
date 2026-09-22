@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/tests/component-instantiation/component.json",
+  "title": "Semio OS Plugin Component Instantiation Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["component", "calls", "expected"],
+  "properties": {
+    "component": { "type": "string", "pattern": "^\\(component " },
+    "calls": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["instance", "delta"],
+        "properties": {
+          "instance": { "type": "integer", "minimum": 0, "maximum": 1 },
+          "delta": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["moduleImportInstances", "instantiated", "results", "memory", "distinctMemories", "factoryHasNoModuleInstanceRoots", "automaticHasModuleInstanceRoots"],
+      "properties": {
+        "moduleImportInstances": { "const": 0 },
+        "instantiated": { "type": "integer", "minimum": 2 },
+        "results": { "type": "array", "minItems": 2, "items": { "type": "integer", "minimum": 0 } },
+        "memory": { "type": "array", "minItems": 2, "items": { "type": "integer", "minimum": 0 } },
+        "distinctMemories": { "const": true },
+        "factoryHasNoModuleInstanceRoots": { "const": true },
+        "automaticHasModuleInstanceRoots": { "const": true }
+      }
+    }
+  }
+}

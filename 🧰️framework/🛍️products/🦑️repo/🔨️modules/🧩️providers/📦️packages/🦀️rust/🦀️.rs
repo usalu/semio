@@ -340,12 +340,7 @@ pub fn mcp_kind_from_resolved_client(client: &str) -> McpClientKind {
 /// 🏷️ The MCP server identifier for the given kind.
 pub fn mcp_server_name(kind: McpClientKind) -> &'static str {
     match kind {
-        McpClientKind::Cursor => "repo-cursor",
-        McpClientKind::Kiro => "repo-kiro",
-        McpClientKind::Copilot => "repo-copilot",
-        McpClientKind::Claude => "repo-claude",
-        McpClientKind::Codex => "repo-codex",
-        McpClientKind::Generic => "repo",
+        McpClientKind::Cursor | McpClientKind::Kiro | McpClientKind::Copilot | McpClientKind::Claude | McpClientKind::Codex | McpClientKind::Generic => "repo",
     }
 }
 // #endregion 🪪️McpClientKind
@@ -1857,7 +1852,7 @@ mod tests {
         assert_eq!(parse_mcp_client_kind("  CODEX ").unwrap(), McpClientKind::Codex);
         assert_eq!(parse_mcp_client_kind("client").unwrap(), McpClientKind::Generic);
         assert!(parse_mcp_client_kind("unknown").is_err());
-        assert_eq!(mcp_server_name(McpClientKind::Kiro), "repo-kiro");
+        assert_eq!(mcp_server_name(McpClientKind::Kiro), "repo");
         assert_eq!(hook_client_for_mcp_kind(McpClientKind::Claude), "claude-code");
         assert_eq!(mcp_kind_from_resolved_client("cursor-chat"), McpClientKind::Cursor);
     }

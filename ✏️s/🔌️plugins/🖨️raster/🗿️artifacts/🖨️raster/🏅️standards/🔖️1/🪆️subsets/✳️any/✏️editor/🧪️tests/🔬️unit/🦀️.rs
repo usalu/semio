@@ -992,6 +992,48 @@ async fn mounted_boot_replays_the_demo_example_through_the_retained_route() {
     assert!(assets_json.contains("semio-emblem") && assets_json.contains("image/png"), "the booted document's asset pool must resolve to real pixels, not pixel-less handles: {assets_json}");
 }
 
+/// ⚖️ LAW — the play pane's ACTUAL boot, read off the PUBLISHED surface rather than off
+/// `raster_scene`. The law above reads the scene as the app builds it, i.e. BEFORE `scene_surface`
+/// splits it into the fixed-capacity `SurfaceProps.doc` spine plus one `paged_text_carrier` child per
+/// declared lane. Everything that can go wrong between those two points — the guest's UI arena
+/// refusing the carrier, a lane dropped from the manifest, a carrier that reassembles to something
+/// other than what the manifest promised — was therefore invisible to this suite while the pane on
+/// :6033 rendered an empty composite with ZERO console errors: `Paint2dHost` never called `atob`,
+/// meaning `parsePaint2dAssets` got `{}` and uploaded no texture
+/// (`.🧬semio/🦑️repo/⚡️cache/play-fleet/raster/browser9/page.png`, 2026-09-22).
+///
+/// The two assertions are deliberately split so a failure says WHICH half broke:
+/// the spine's own `SceneLaneRef` manifest is what the GUEST measured before paging, and the
+/// reassembled `assets_json` is what a host gets back out of the carrier.
+#[semio_framework_async_macros::async_test]
+async fn mounted_boot_publishes_the_emblem_pixels_on_the_composite_assets_lane() {
+    use semio_framework_plugin::Paint2dScene;
+
+    let mut app = mounted::mounted_app();
+    mounted::dispatch(&mut app, RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() })).await;
+    let json = render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await;
+    std::mem::forget(app);
+
+    let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<Paint2dScene>(&json).expect("the composite window publishes a paint-2d surface");
+    let manifest = scene.lanes.iter().find(|lane| lane.lane == "assets").unwrap_or_else(|| panic!("the published spine declares an assets lane: {:?}", scene.lanes));
+    assert!(manifest.bytes > 8 * 1_024, "the GUEST measured real emblem pixels onto the assets lane before paging, got {} bytes: {}", manifest.bytes, scene.assets_json);
+
+    assert_eq!(scene.assets_json.len() as u32, manifest.bytes, "the assets carrier reassembles to exactly the payload the lane manifest promised");
+    let assets: Value = dsl::os_pack::json::parse(&scene.assets_json).expect("assets json");
+    let entry = assets.get("semio-emblem").unwrap_or_else(|| panic!("the published assets lane names the emblem: {}", scene.assets_json));
+    assert_eq!(entry.get("mime").and_then(Value::as_str), Some("image/png"));
+    let data = entry.get("data").and_then(Value::as_str).expect("the emblem's base64 payload");
+    // 🖼️ A NON-TRIVIAL image, read off the PNG's own IHDR (bytes 16..24, big-endian) after decoding the
+    // exact base64 the host would hand `atob`. The curated demo used to publish a 75-byte 2×2 swatch,
+    // which travelled the whole lane correctly and still drew four pixels — indistinguishable in the
+    // browser from the blank pane the missing `paint-2d` lane route caused.
+    let bytes = base64_codec::base64_standard_decode(data.as_bytes()).expect("the emblem payload is valid base64");
+    assert!(bytes.len() > 8 * 1_024, "the emblem's payload is a real image, got {} bytes", bytes.len());
+    let width = u32::from_be_bytes([bytes[16], bytes[17], bytes[18], bytes[19]]);
+    let height = u32::from_be_bytes([bytes[20], bytes[21], bytes[22], bytes[23]]);
+    assert!(width >= 256 && height >= 256, "the published emblem is large enough to see: {width}x{height}");
+}
+
 /// ↩️ The five-clause bar's undo/redo half on the LIVE document shape: boot the demo carrier, paint
 /// a layer, then walk `undo → redo → undo`. Every step displaces a projection that owns the demo's
 /// asset pool, so each one must reach its owner instead of `RasterOwnedMap`'s fail-closed `Drop`

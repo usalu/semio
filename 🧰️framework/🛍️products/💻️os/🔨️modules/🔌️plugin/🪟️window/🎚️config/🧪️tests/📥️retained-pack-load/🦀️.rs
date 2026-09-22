@@ -28,6 +28,8 @@ fn retained_load_fixture() -> serde_json::Value {
 pub(super) struct RetainedLoadCameraConfig {
     #[dsl(block)]
     pub viewport: semio_framework_os_kernel::Viewport2d,
+    #[dsl(coord)]
+    pub eye: [f64; 3],
 }
 
 impl store::ArtifactDsl for RetainedLoadCameraConfig {
@@ -190,7 +192,11 @@ fn keyed_packs(packs: Vec<WindowConfigPack>) -> BTreeMap<(String, String), store
 
 fn saved_camera(fixture: &serde_json::Value) -> RetainedLoadCameraConfig {
     let viewport = &fixture["savedCamera"]["viewport"];
-    RetainedLoadCameraConfig { viewport: semio_framework_os_kernel::Viewport2d { x: viewport["x"].as_f64().unwrap(), y: viewport["y"].as_f64().unwrap(), zoom: viewport["zoom"].as_f64().unwrap() } }
+    let eye = fixture["savedCamera"]["eye"].as_array().expect("saved camera eye");
+    RetainedLoadCameraConfig {
+        viewport: semio_framework_os_kernel::Viewport2d { x: viewport["x"].as_f64().unwrap(), y: viewport["y"].as_f64().unwrap(), zoom: viewport["zoom"].as_f64().unwrap() },
+        eye: [eye[0].as_f64().unwrap(), eye[1].as_f64().unwrap(), eye[2].as_f64().unwrap()],
+    }
 }
 
 #[test]
@@ -198,7 +204,7 @@ fn window_config_retained_pack_load_current_registry_identity_and_reopen_baselin
     run_retained_window_load_lane("window-config-retained-load-baseline", || {
         let fixture = retained_load_fixture();
         assert_eq!(fixture["budgets"]["typedMutationBytes"], 4_096);
-        assert_eq!(fixture["requiredScenarios"].as_array().expect("required scenarios").len(), 12);
+        assert_eq!(fixture["requiredScenarios"].as_array().expect("required scenarios").len(), 13);
         block_on_retained_window_load(Box::pin(async {
             let mut source = WindowConfigOwnerRegistry::default();
             register_retained_load_owners(&mut source);
@@ -294,5 +300,51 @@ fn window_config_retained_pack_load_refuses_exhausted_turn_bounds_and_over_bound
             close_retained_load_registry(&mut reopened);
         }));
         eprintln!("[DEBUG] Window retained-load bound: exhausted=typed overBound=typed retired=true");
+    });
+}
+
+/// 📐️ A window config state whose field is a DSL coordinate reloads its exact coordinate.
+///
+/// The packed-numeric wire form of a homogeneous float sequence (`TAG_PACKED_F64`) carries no
+/// tuple-vs-list marker, so the retained decoder must read the tuple-ness out of the record spec's
+/// shape. While it recognised only `Shape::Tuple` a `#[dsl(coord)] [f64; 3]` came back as a
+/// `FieldValue::List`, `DslField::from_value` refused it and every reload of such a window answered
+/// `window-config.typed-state` — per-window persistence was silently lost for every plugin with a
+/// coordinate in its window state (CAD's `CadCamera::position`/`::target`, measured by ticket
+/// 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, cad-content §11).
+#[test]
+fn window_config_retained_pack_load_reloads_a_coordinate_valued_window_state() {
+    run_retained_window_load_lane("window-config-retained-load-coordinate", || {
+        let fixture = retained_load_fixture();
+        assert!(
+            fixture["requiredScenarios"].as_array().expect("required scenarios").iter().any(|scenario| scenario["id"] == "coordinate-valued-state"),
+            "the coordinate-valued reopen scenario is declared by the fixture"
+        );
+        let camera = saved_camera(&fixture);
+        assert_ne!(camera.eye, RetainedLoadCameraConfig::default().eye, "the saved coordinate differs from Default, so a lost coordinate cannot pass unnoticed");
+        block_on_retained_window_load(Box::pin(async move {
+            let mut source = WindowConfigOwnerRegistry::default();
+            register_retained_load_owners(&mut source);
+            let owner = source.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).expect("registered coordinate owner");
+            drop(owner.capture("left").await.expect("materialize coordinate partition"));
+            owner
+                .dispatch("coordinate-actor", WindowConfigMutation::of::<RetainedLoadOwnerA>("left", RetainedLoadCameraConfigMutation::Snapshot { config: Box::new(camera.clone()) }), None, None)
+                .await
+                .expect("save the coordinate-valued state");
+            let saved = source.packs().await.expect("coordinate packs");
+            let saved_bytes = keyed_packs(saved.iter().map(|pack| WindowConfigPack { window_id: pack.window_id.clone(), window_kind_id: pack.window_kind_id.clone(), files: pack.files.clone() }).collect());
+            close_retained_load_registry(&mut source);
+
+            let mut reopened = WindowConfigOwnerRegistry::default();
+            register_retained_load_owners(&mut reopened);
+            for pack in saved {
+                reopened.load(pack).await.expect("a window config Pack carrying a coordinate loads");
+            }
+            let restored = reopened.snapshot(RetainedLoadOwnerA::WINDOW_KIND_ID, "left").expect("reopened coordinate snapshot").get::<RetainedLoadOwnerA>().cloned().expect("reopened coordinate state");
+            assert_eq!(restored.eye, camera.eye, "the reopened window reads its exact saved coordinate");
+            assert_eq!(restored, camera, "no other field of the coordinate-bearing state drifts across the reload");
+            assert_eq!(keyed_packs(reopened.packs().await.expect("reopened coordinate packs")), saved_bytes, "the coordinate round trips byte-exactly through Pack+SPR");
+            close_retained_load_registry(&mut reopened);
+        }));
     });
 }

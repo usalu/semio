@@ -185,17 +185,23 @@ function parseCanonicalOps(value: unknown): UiPatchOp[] {
  *
  * 🐛️ Until 2026-09-15 a turn carried at most one patch, so this read `patches[0]` and demanded it
  * name `expectedSurface`; a turn that now publishes every ready surface would have made the reader
- * throw on any batch whose first patch belonged to someone else. */
+ * throw on any batch whose first patch belonged to someone else.
+ *
+ * 🐛️ Until 2026-09-22 `receipt` arrived here as raw bytes and was decoded with
+ * `decodeActorUiPatchReceipt`. That is the SHARD wire's shape, not this one: the browser-bundle
+ * child answers the WIT `turn-result`, whose `ui-patch-receipt` is a RECORD
+ * (`🔌️plugin/🧬️schema/📜️.wit`, `record ui-patch-receipt { lifetime, patch-sequence }`), so every
+ * turn that carried a patch died on `uiPatch.receipt: invalid bytes` and no hub document could ever
+ * mount. The caller owns the WIT read; this reader takes the receipt already parsed and keeps the
+ * authority check in `validateActorUiPatchPairing`, which re-encodes it. */
 export function captureBrowserActorUiPatchV1(
   patches: unknown,
-  receiptValue: unknown,
+  receipt: ActorUiPatchReceipt | null,
   expectedLifetime: ActorInstanceLifetime,
   expectedSurface: string,
   port: BrowserActorUiPatchDecodePort,
 ): { readonly instanceId: number; readonly patch: UiPatch; readonly receipt: ActorUiPatchReceipt } | null {
   if (!Array.isArray(patches)) throw new Error("uiPatch: invalid list");
-  const receiptBytes = receiptValue === undefined || receiptValue === null ? null : bytes(receiptValue, "uiPatch.receipt");
-  const receipt = receiptBytes === null ? null : decodeActorUiPatchReceipt(receiptBytes);
   validateActorUiPatchPairing(patches.length, receipt);
   if (patches.length === 0) return null;
   if (receipt === null || !actorInstanceLifetimeEquals(receipt.lifetime, expectedLifetime)) throw new Error("uiPatch: lifetime mismatch");

@@ -360,6 +360,12 @@
         "artifactId": {
           "type": "string"
         },
+        "artifactKind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "kind": {
           "type": [
             "string",
@@ -435,6 +441,12 @@
         "packBytes": {
           "type": [
             "integer",
+            "null"
+          ]
+        },
+        "sprBase64": {
+          "type": [
+            "string",
             "null"
           ]
         },
@@ -750,6 +762,44 @@
         "scopes",
         "sessionId"
       ],
+      "type": "object"
+    },
+    "ConversationReplyInput": {
+      "additionalProperties": false,
+      "properties": {
+        "complete": {
+          "type": "boolean"
+        },
+        "inReplyTo": {
+          "type": "string"
+        },
+        "replyId": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "type": "object"
+    },
+    "ConversationReplyOutput": {
+      "properties": {
+        "complete": {
+          "type": "boolean"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "replyId": {
+          "type": "string"
+        },
+        "shells": {
+          "type": "integer"
+        }
+      },
       "type": "object"
     },
     "GatewayError": {

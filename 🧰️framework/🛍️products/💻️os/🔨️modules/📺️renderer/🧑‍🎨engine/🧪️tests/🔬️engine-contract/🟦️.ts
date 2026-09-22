@@ -1523,7 +1523,7 @@ function boardTestSession(): flowSessionLoader.Board2dWasmSession {
   return {
     attach_canvas: vi.fn(async () => {}), setSize: vi.fn(), renderFrame: vi.fn(), parseFixtureJson: () => true,
     syncDescriptorJson: vi.fn(), setKindCatalogsJson: vi.fn(), setCamera: vi.fn(), setSelectionIdsJson: vi.fn(), setCanvasThemeJson: vi.fn(),
-    pointerDownScreen: vi.fn(), pointerMoveScreen: vi.fn(), pointerUpScreen: vi.fn(), wheelScreen: vi.fn(),
+    pointerDownScreen: vi.fn(), pointerMoveScreen: vi.fn(), pointerUpScreen: vi.fn(), pointerCancelScreen: vi.fn(), wheelScreen: vi.fn(),
     drainEventsJson: vi.fn(() => "[]"), cameraJson: () => '{"x":0,"y":0,"zoom":1}', gpuReady: () => true, free: vi.fn(),
     setSelectionIdsJsonSilent: vi.fn(), setFixtureDropPreviewJson: vi.fn(),
   };
@@ -4452,6 +4452,10 @@ describe("framework renderer hosts", () => {
     const view = render(createElement(NodeGraphHost, {
       node: { type: "componentScene", surfaceId: "graph.cancel", controllerId: "graph", componentKind: "node-graph", nodeGraph: {
         nodes: [{ id: "node-a", instanceId: "app-a", label: "Draw", x: 10, y: 20, width: 160, height: 80, inputs: [], outputs: [] }], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, editable: true,
+        // 🎯️ Hover and selection are published to an interaction DOMAIN: `nodeGraphHoverActionArgs`
+        // (`🧱️elements/🕸️NodeGraph/🟦️.ts?:252`) returns `undefined` without one, so a scene that
+        // declares none can never publish the retired hover this law measures.
+        interactionDomain: { id: "graph.cancel", nodeTargetPrefix: "node:", edgeTargetPrefix: "edge:", handleTargetPrefix: "handle:" },
       } }, onAction,
     }));
     try {
@@ -8543,7 +8547,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
       semantics: actionSemanticsForKind("mutation"),
       kind: "mutation",
       inPalette: true,
-      args: index === 31 ? [{ id: "kind", label: "Kind", schema: { kind: "string", options: ["inputSlider", "note"] }, required: true }] : [],
+      args: index === 31 ? [{ id: "kind", label: "Kind", schema: { kind: "string", options: [{ value: "inputSlider", label: "inputSlider" }, { value: "note", label: "note" }] }, required: true }] : [],
     }));
     const { container } = render(createElement(Harness, { actions: rows, onExecute: vi.fn() }));
     const pane = container.querySelector('[data-slot="window-action-pane"]');

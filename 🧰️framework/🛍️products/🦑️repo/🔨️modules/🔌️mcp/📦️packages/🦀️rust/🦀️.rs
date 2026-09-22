@@ -1686,12 +1686,7 @@ impl Profile {
     /// 🖥️ The server name reported in `initialize`.
     pub fn server_name(self) -> &'static str {
         match self {
-            Profile::Generic => "repo",
-            Profile::Cursor => "repo-cursor",
-            Profile::Kiro => "repo-kiro",
-            Profile::Copilot => "repo-copilot",
-            Profile::Claude => "repo-claude",
-            Profile::Codex => "repo-codex",
+            Profile::Generic | Profile::Cursor | Profile::Kiro | Profile::Copilot | Profile::Claude | Profile::Codex => "repo",
         }
     }
 }
@@ -2186,7 +2181,7 @@ mod tests {
             .expect("dispatch")
             .expect("response");
         assert!(response.contains(r#""protocolVersion":"2025-06-18""#), "{response}");
-        assert!(response.contains(r#""name":"repo-claude""#), "{response}");
+        assert!(response.contains(r#""name":"repo""#), "{response}");
         assert!(!response.contains("error"), "{response}");
     }
 
@@ -2198,7 +2193,7 @@ mod tests {
 
     #[test]
     fn every_profile_advertises_its_own_surface() {
-        for (profile, name) in [(Profile::Generic, "repo"), (Profile::Cursor, "repo-cursor"), (Profile::Kiro, "repo-kiro"), (Profile::Copilot, "repo-copilot"), (Profile::Claude, "repo-claude"), (Profile::Codex, "repo-codex")] {
+        for (profile, name) in [(Profile::Generic, "repo"), (Profile::Cursor, "repo"), (Profile::Kiro, "repo"), (Profile::Copilot, "repo"), (Profile::Claude, "repo"), (Profile::Codex, "repo")] {
             assert_eq!(profile.server_name(), name);
             let open = &tool_schemas(profile).into_iter().find(|tool| tool.name == "ticket_open").expect("ticket_open").input_schema;
             assert_eq!(open.properties.contains_key("plan_id"), matches!(profile, Profile::Cursor | Profile::Copilot | Profile::Claude | Profile::Codex));

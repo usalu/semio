@@ -436,8 +436,15 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: end-to-end proof the "program"
 /// domain's real pick surface (the document panel's element rows) actually drives the framework's
 /// injected `interactionSelect` — dispatches it directly (the only way a downstream crate can
-/// populate a genuine `InteractionView`, see `context::drive`'s own doc comment), then confirms
-/// the SAME element row renders `"selected":true` (mirrors `note`'s `select_blocks` proof).
+/// populate a genuine `InteractionView`, see `context::drive`'s own doc comment), then confirms the
+/// framework marked the SAME element row.
+///
+/// 👥️ The mark no longer lives in the rendered row. `stamp_and_cache_interaction_ui`'s
+/// presence-stamping half was replaced by the render-plane presence OUTBOX
+/// (`PluginApp::take_pending_presence` → `PresenceUpdate { node_key, own.selected }`), so a rendered
+/// tree carries only the one tree-level DOMAIN binding and never a `"selected":true` row flag. Both
+/// halves are asserted here: the binding that makes the rows pickable, and the outbox entry that
+/// says the pick landed on THIS element's row key (`element_row` keys rows by the raw `EntityId`).
 #[semio_framework_async_macros::async_test]
 async fn interaction_select_stamps_the_picked_element_as_selected_in_the_document_panel() {
     let mut app = context::app_with_registry().await;
@@ -446,7 +453,10 @@ async fn interaction_select_stamps_the_picked_element_as_selected_in_the_documen
     context::framework_verb(&mut app, "interactionSelect", &dsl::json::to_dsl_value(&dsl::json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" }))).await;
     let rendered = context::render(&mut app, document_panel::ARCHITECT_BODY_ARTIFACT).await;
     assert!(rendered.contains(&element_id), "the rendered tree must still list the picked element");
-    assert!(rendered.contains("\"selected\":true"), "the picked element must be stamped selected by the framework wrapper");
+    assert!(rendered.contains(&format!("\"interactionDomain\":\"{ARCHITECT_INTERACTION_PROGRAM}\"")), "the rendered tree must carry the one tree-level pick binding that makes its rows pickable: {rendered}");
+    let presence = PluginApp::take_pending_presence(&mut *app).await;
+    let selected = presence.iter().filter(|update| update.own.selected).map(|update| update.node_key.clone()).collect::<Vec<_>>();
+    assert_eq!(selected, vec![element_id], "the framework wrapper must mark exactly the picked element's row key; outbox = {:?}", presence.iter().map(|update| (&update.node_key, update.own.selected)).collect::<Vec<_>>());
 }
 //#endregion 🔖️Behavior
 

@@ -40,6 +40,14 @@ pub const MCP_SCOPE_TABLE: &[(&str, &[&str])] = &[
     //#endregion 💡️Inference
     ("ui.observe", &["shell.observe"]),
     ("ui.control", &["shell.control", "ui.window", "ui.dialog", "shell.navigate"]),
+    //#region 💬️Conversation
+    // 💬️ Writing PROSE into the shell's agent panel is neither of its neighbours: it changes no
+    // shell state, opens no window and navigates nothing (so `ui.control`'s four grants are all
+    // wrong for it), yet it does write into a surface a human reads (so `ui.observe` is too weak).
+    // Its own row, expanding to one capability of its own, is the honest shape — and it means a
+    // read-only agent granted `ui.observe,conversation.write` can still answer the human.
+    ("conversation.write", &["shell.converse"]),
+    //#endregion 💬️Conversation
     ("ui.raw-control", &["shell.raw"]),
     ("clipboard.read", &["shell.clipboard"]),
     ("clipboard.write", &["shell.clipboard"]),

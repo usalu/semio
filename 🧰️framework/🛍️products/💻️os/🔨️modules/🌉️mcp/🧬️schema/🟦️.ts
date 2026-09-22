@@ -96,7 +96,7 @@ function parseExport(exportId: string, value: unknown): unknown {
 
 //#region 🔖️Exports
 /** 🆔️ Every ExportId this scope publishes, in the document's own (key-sorted) order. */
-export const OS_MCP_EXPORT_IDS = ["ActionInvokeInput", "ActionPrepareInput", "ArtifactCreateInput", "ArtifactCreateOutput", "ArtifactCreateTemplateInput", "ArtifactExportInput", "ArtifactExportOutput", "ArtifactInferenceBudgetV1", "ArtifactInferenceCacheModeV1", "ArtifactInferenceRequestV1", "ArtifactInferenceResultV1", "ArtifactOpenInput", "ArtifactOpenOutput", "ArtifactSnapshotInput", "ArtifactSnapshotOutput", "ArtifactValidateInput", "ArtifactValidateOutput", "CallToolResult", "CapabilitiesDescribeInput", "CapabilitiesDescribeOutput", "CapabilitiesSearchInput", "CapabilitiesSearchOutput", "CapabilityActionInput", "CapabilityGenericInput", "CapabilityGenericOutput", "ContentBlock", "ContextResolveInput", "ContextResolveOutput", "ContextSummary", "GatewayError", "GatewayErrorCode", "GisMapInferenceApprovalRequestV1", "HandleInput", "InferenceApproveInput", "InferenceGetInput", "InferenceGetOutput", "InferenceJobHandleInput", "InferenceJobOutput", "InferenceListInput", "InferenceListOutput", "InferenceRunInput", "InferenceRunOutput", "InferenceSubmitInput", "InvocationReport", "InvocationStatus", "JobCancelInput", "JobGetInput", "JobSnapshotOutput", "JobState", "JobStatus", "NullableRevisionStamp", "PreparedActionReport", "Prompt", "PromptArgument", "PromptGetResult", "PromptMessage", "Resource", "ResourceContent", "ResourceTemplate", "RevisionStamp", "SearchHit", "Tool", "TransactionBeginInput", "UiDialogOpenInput", "UiFocusInput", "UiFocusOutput", "UiRevealInput", "UiRevealOutput"] as const;
+export const OS_MCP_EXPORT_IDS = ["ActionInvokeInput", "ActionPrepareInput", "ArtifactCreateInput", "ArtifactCreateOutput", "ArtifactCreateTemplateInput", "ArtifactExportInput", "ArtifactExportOutput", "ArtifactInferenceBudgetV1", "ArtifactInferenceCacheModeV1", "ArtifactInferenceRequestV1", "ArtifactInferenceResultV1", "ArtifactOpenInput", "ArtifactOpenOutput", "ArtifactSnapshotInput", "ArtifactSnapshotOutput", "ArtifactValidateInput", "ArtifactValidateOutput", "CallToolResult", "CapabilitiesDescribeInput", "CapabilitiesDescribeOutput", "CapabilitiesSearchInput", "CapabilitiesSearchOutput", "CapabilityActionInput", "CapabilityGenericInput", "CapabilityGenericOutput", "ContentBlock", "ContextResolveInput", "ContextResolveOutput", "ContextSummary", "ConversationReplyInput", "ConversationReplyOutput", "GatewayError", "GatewayErrorCode", "GisMapInferenceApprovalRequestV1", "HandleInput", "InferenceApproveInput", "InferenceGetInput", "InferenceGetOutput", "InferenceJobHandleInput", "InferenceJobOutput", "InferenceListInput", "InferenceListOutput", "InferenceRunInput", "InferenceRunOutput", "InferenceSubmitInput", "InvocationReport", "InvocationStatus", "JobCancelInput", "JobGetInput", "JobSnapshotOutput", "JobState", "JobStatus", "NullableRevisionStamp", "PreparedActionReport", "Prompt", "PromptArgument", "PromptGetResult", "PromptMessage", "Resource", "ResourceContent", "ResourceTemplate", "RevisionStamp", "SearchHit", "Tool", "TransactionBeginInput", "UiDialogOpenInput", "UiFocusInput", "UiFocusOutput", "UiRevealInput", "UiRevealOutput"] as const;
 
 export type OsMcpExportId = (typeof OS_MCP_EXPORT_IDS)[number];
 
@@ -195,6 +195,7 @@ export type ArtifactOpenInput = {
 
 export type ArtifactOpenOutput = {
   readonly "artifactId"?: string;
+  readonly "artifactKind"?: string | null;
   readonly "kind"?: string | null;
   readonly "revision"?: {
     readonly "artifactId"?: string;
@@ -217,6 +218,7 @@ export type ArtifactSnapshotOutput = {
   readonly "artifactId"?: string;
   readonly "packBase64"?: string | null;
   readonly "packBytes"?: number | null;
+  readonly "sprBase64"?: string | null;
   readonly "sprBytes"?: number | null;
 };
 
@@ -299,6 +301,20 @@ export type ContextSummary = {
   readonly "principal": string;
   readonly "scopes": readonly string[];
   readonly "sessionId": string;
+};
+
+export type ConversationReplyInput = {
+  readonly "complete"?: boolean;
+  readonly "inReplyTo"?: string;
+  readonly "replyId"?: string;
+  readonly "text": string;
+};
+
+export type ConversationReplyOutput = {
+  readonly "complete"?: boolean;
+  readonly "ok"?: boolean;
+  readonly "replyId"?: string;
+  readonly "shells"?: number;
 };
 
 export type GatewayError = {
@@ -577,6 +593,8 @@ export const parseContentBlock = (value: unknown): ContentBlock => parseExport("
 export const parseContextResolveInput = (value: unknown): ContextResolveInput => parseExport("ContextResolveInput", value) as ContextResolveInput;
 export const parseContextResolveOutput = (value: unknown): ContextResolveOutput => parseExport("ContextResolveOutput", value) as ContextResolveOutput;
 export const parseContextSummary = (value: unknown): ContextSummary => parseExport("ContextSummary", value) as ContextSummary;
+export const parseConversationReplyInput = (value: unknown): ConversationReplyInput => parseExport("ConversationReplyInput", value) as ConversationReplyInput;
+export const parseConversationReplyOutput = (value: unknown): ConversationReplyOutput => parseExport("ConversationReplyOutput", value) as ConversationReplyOutput;
 export const parseGatewayError = (value: unknown): GatewayError => parseExport("GatewayError", value) as GatewayError;
 export const parseGatewayErrorCode = (value: unknown): GatewayErrorCode => parseExport("GatewayErrorCode", value) as GatewayErrorCode;
 export const parseGisMapInferenceApprovalRequestV1 = (value: unknown): GisMapInferenceApprovalRequestV1 => parseExport("GisMapInferenceApprovalRequestV1", value) as GisMapInferenceApprovalRequestV1;

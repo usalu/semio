@@ -125,6 +125,84 @@
         ],
         "actions": [
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              },
+              "reuse": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "file",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "demo"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -2385,6 +2463,84 @@
           }
         ],
         "actions": [
+          {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              },
+              "reuse": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "file",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "demo"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
           {
             "id": "undo",
             "label": {
@@ -4647,6 +4803,84 @@
         ],
         "actions": [
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              },
+              "reuse": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "file",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "demo"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -6907,6 +7141,84 @@
           }
         ],
         "actions": [
+          {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              },
+              "reuse": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "file",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "demo"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
           {
             "id": "undo",
             "label": {
@@ -9169,6 +9481,84 @@
         ],
         "actions": [
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              },
+              "reuse": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "file",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "demo"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -11429,6 +11819,84 @@
           }
         ],
         "actions": [
+          {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              },
+              "reuse": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "file",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "demo"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
           {
             "id": "undo",
             "label": {
@@ -13691,6 +14159,84 @@
         ],
         "actions": [
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              },
+              "reuse": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "file",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "demo"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -15951,6 +16497,84 @@
         ],
         "actions": [
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              },
+              "reuse": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "file",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "demo"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -18210,6 +18834,84 @@
         ],
         "actions": [
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              },
+              "reuse": {
+                "en": "Load Example",
+                "de": "Beispiel laden"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "file",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "demo"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -20367,10 +21069,170 @@
           }
         },
         "iconId": "file",
+        "artifactJson": "semio stdio.csv.dsl v1\nname,note\nalpha,plain\n\"Doe, John\",\"He said \"\"hi\"\"\"\n",
+        "dialect": {
+          "artifactKind": "s.stdio.csv",
+          "standard": "rfc4180",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio stdio.tsv.dsl v1\nid\tname\tqty\tunit_price\tnote\n1\tOak Panel\t12\t18.50\tin stock\n2\tSteel Bracket L-90\t48\t2.05\tbackordered\n3\tGlass Pane 4mm\t6\t44.99\tfragile;handle with care\n4\tCable Tie 200mm\t500\t0.03\tbag of 100 -> qty is bags\n5\tWeathering Test\\tSample\t1\t0.00\tliteral backslash-t, NOT a real tab -- see NOTES.md\n",
+        "dialect": {
+          "artifactKind": "s.stdio.tsv",
+          "standard": "iana",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "Hello, stdio.txt!\n",
+        "dialect": {
+          "artifactKind": "s.stdio.txt",
+          "standard": "utf-8",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio stdio.json.dsl v1\n{\n  \"name\": \"semio\",\n  \"count\": 42,\n  \"ratio\": 3.5,\n  \"active\": true,\n  \"missing\": null,\n  \"tags\": [\n    \"a\",\n    \"b\",\n    \"c\"\n  ],\n  \"nested\": {\n    \"deep\": {\n      \"deeper\": [\n        1,\n        2,\n        3\n      ]\n    }\n  }\n}",
+        "dialect": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio stdio.json.dsl v1\n{\n  \"id\": \"semio.stdio.i-json.demo\",\n  \"interoperable\": true,\n  \"revision\": 1048576,\n  \"ratio\": 0.25,\n  \"members\": [\n    {\n      \"name\": \"alpha\",\n      \"weight\": 0.5\n    },\n    {\n      \"name\": \"beta\",\n      \"weight\": 0.5\n    }\n  ]\n}",
+        "dialect": {
+          "artifactKind": "s.stdio.json",
+          "standard": "rfc8259",
+          "subset": "i-json"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio stdio.xml.dsl v1\n[737464696f2e786d6c,[1,E[636174616c6f67,[[786d6c6e733a63,75726e3a6578616d706c653a636174616c6f67],[76657273696f6e,32]],[M[2064656d6f20636174616c6f6720],P[786d6c2d7374796c657368656574,74657874],E[6974656d,[[6964,31]],[T[546f6d2026204a65727279]]],E[656d707479,[[666c6167,74727565]],[]],D[726177206d61726b7570]]]],[1,[636174616c6f67,[0],[]]],[1,[312e30,[1,5554462d38],[1,1],0]],[]]",
+        "dialect": {
+          "artifactKind": "s.stdio.xml",
+          "standard": "1.0",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE catalog SYSTEM \"catalog.dtd\">\n<catalog><item id=\"1\"><title>Concrete Forest</title></item><item id=\"2\"><title>Hexagonal Cut</title></item></catalog>\n",
+        "dialect": {
+          "artifactKind": "s.stdio.xml",
+          "standard": "1.0",
+          "subset": "valid"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
         "artifactJson": "semio stdio.md.dsl v1\n# Title\n\n> > Deeply quoted.\n\nLossless **markdown** body with *emphasis* and `inline code`.\n\n```rust\nfn demo() -> i32 {\n    42\n}\n```\n\n---",
         "dialect": {
           "artifactKind": "s.stdio.md",
           "standard": "commonmark",
+          "subset": "*"
+        }
+      },
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "<!DOCTYPE html>\n<html lang=\"en\"><body><p>Hello from the <b>semio</b> html demo.</p></body></html>\n",
+        "dialect": {
+          "artifactKind": "s.stdio.html",
+          "standard": "5",
           "subset": "*"
         }
       }
@@ -23738,9 +24600,34 @@
                 },
                 {
                   "claims": [],
+                  "descriptorSha256": "8f6230ad6e09aed6ed3aa903fc09b3eecf49aa63de02b41bd02fc8c77bd9255d",
+                  "executable": false,
+                  "identity": "s.stdio.gltf.standard.2-0.representation.binary",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
                   "descriptorSha256": "5d3f2dca3430813d210d7f467961ca72b37bad92d08a85bb34d9c33ad7cac6ac",
                   "executable": false,
                   "identity": "s.stdio.gltf.standard.2-0.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".glb"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "model/gltf-binary"
+                    }
+                  ],
+                  "descriptorSha256": "14b07dc1b079ce4c70c27242b95f15a60e7f35d1ba0000f57e8a0744a78cbf30",
+                  "executable": false,
+                  "identity": "s.stdio.gltf.standard.2-0.representation.mime-model-gltf-binary-extension-glb",
                   "kind": "representation",
                   "localizations": []
                 },
@@ -33355,9 +34242,34 @@
                 },
                 {
                   "claims": [],
+                  "descriptorSha256": "8f6230ad6e09aed6ed3aa903fc09b3eecf49aa63de02b41bd02fc8c77bd9255d",
+                  "executable": false,
+                  "identity": "s.stdio.gltf.standard.2-0.representation.binary",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
                   "descriptorSha256": "5d3f2dca3430813d210d7f467961ca72b37bad92d08a85bb34d9c33ad7cac6ac",
                   "executable": false,
                   "identity": "s.stdio.gltf.standard.2-0.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".glb"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "model/gltf-binary"
+                    }
+                  ],
+                  "descriptorSha256": "14b07dc1b079ce4c70c27242b95f15a60e7f35d1ba0000f57e8a0744a78cbf30",
+                  "executable": false,
+                  "identity": "s.stdio.gltf.standard.2-0.representation.mime-model-gltf-binary-extension-glb",
                   "kind": "representation",
                   "localizations": []
                 },
@@ -42710,8 +43622,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "bf3455822cf7a72468fa87452d2508d90ccb58e7f097e2a859230fc0c6ab9fce",
-    "coreWasmSha256": "3a94e182e1d40f6e14ec4368dfd7e87d4e620fc07c5d458a0238e594ca508d27",
-    "descriptorSha256": "43f73b25628072c10f54e996a372822b0dd76c425c8721837bffb2e60414f831"
+    "wasmSha256": "b0d39c81bc0105cab54c3a3b88c9a7dc3056051a12322dd9dae3d07e809722de",
+    "coreWasmSha256": "db2e6816fd927819fa34d2724a66f67316d00cf22145dbbae14196cf946be853",
+    "descriptorSha256": "50e0ce89e8f3ea17db9799729be1c82438f7629b9d1aea54b8b30f9222110c80"
   }
 }

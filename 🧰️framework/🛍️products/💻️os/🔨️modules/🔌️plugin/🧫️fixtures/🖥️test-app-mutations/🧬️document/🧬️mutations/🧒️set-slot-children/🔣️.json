@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children",
+  "semanticKind": "set-slot-children",
+  "displayName": "Set Slot Children",
+  "emoji": "🧒️",
+  "aggregateVariant": "SetSlotChildren",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-slot-children",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

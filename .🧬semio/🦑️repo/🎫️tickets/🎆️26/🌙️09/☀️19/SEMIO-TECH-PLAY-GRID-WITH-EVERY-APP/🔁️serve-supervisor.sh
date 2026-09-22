@@ -4,7 +4,7 @@ set -u
 ROOT="/Users/ueli/Documents/semio"
 TK="$(cd "$(dirname "$0")" && pwd)"
 PORT="${SEMIO_TECH_PLAY_PORT:-6033}"
-LOG="$TK/🗑️generated/serve-$PORT-supervised.txt"
+LOG="${SEMIO_TECH_PLAY_SUPERVISOR_LOG:-$TK/🗑️generated/serve-$PORT-supervised.txt}"
 EVENTS="$LOG.events.txt"
 alive() { [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 120 "http://127.0.0.1:$PORT/" 2>/dev/null)" = "200" ]; }
 listening() { [ -n "$(lsof -nP -iTCP:"$PORT" -sTCP:LISTEN -t 2>/dev/null)" ]; }

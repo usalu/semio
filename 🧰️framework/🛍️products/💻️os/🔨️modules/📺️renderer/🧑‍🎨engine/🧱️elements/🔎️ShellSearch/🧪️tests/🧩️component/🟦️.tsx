@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { uiI18n } from "@semio-tech/ui-react";
+import { isShellLocale } from "@semio-tech/framework";
 import Ajv2020 from "ajv/dist/2020";
 import { useEffect, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -38,7 +39,8 @@ function FindSeed() {
 
 describe("ShellSearch React parity oracle", () => {
   it("resolves canonical built-in command labels from the active React locale", async () => {
-    const previous = uiI18n.language || "en";
+    const active = uiI18n.language ?? "";
+    const previous = isShellLocale(active) ? active : "en";
     try {
       for (const row of fixture.producer.localizedCommands) {
         for (const locale of ["en", "de"] as const) {

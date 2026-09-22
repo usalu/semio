@@ -4,10 +4,12 @@
   "expectedWorkItems": 1,
   "toolIds": [
     "setExaggeration",
-    "setCamera"
+    "setCamera",
+    "setActiveExample"
   ],
   "publicationLanes": {
     "setExaggeration": ["artifact", "ui", "terminal"],
-    "setCamera": ["window-config", "ui", "terminal"]
+    "setCamera": ["window-config", "ui", "terminal"],
+    "setActiveExample": ["artifact", "ui", "terminal"]
   }
 }

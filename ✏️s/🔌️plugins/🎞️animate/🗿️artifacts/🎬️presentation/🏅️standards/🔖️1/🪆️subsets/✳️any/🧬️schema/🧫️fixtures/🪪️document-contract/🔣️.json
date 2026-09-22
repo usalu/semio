@@ -1,6 +1,18 @@
 {
   "document": {
     "schema": "animate.presentation",
+    "source": {
+      "src": "/fixture-deck.png",
+      "kind": "figure",
+      "frame": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0
+      },
+      "sourceAspect": 1.5
+    },
+    "tiles": [],
     "presentation": {
       "childId": "presentation-fixture",
       "target": {
@@ -70,10 +82,10 @@
         "src": "sample.svg",
         "kind": "image",
         "frame": {
-          "x": 0,
-          "y": 0,
-          "width": 1,
-          "height": 1
+          "x": 0.0,
+          "y": 0.0,
+          "width": 1.0,
+          "height": 1.0
         }
       },
       "tiles": []
@@ -103,8 +115,8 @@
         }
       },
       "camera": {
-        "x": 0,
-        "y": 0,
+        "x": 0.0,
+        "y": 0.0,
         "zoom": 1
       }
     },
@@ -176,10 +188,10 @@
           "src": "sample.svg",
           "kind": "image",
           "frame": {
-            "x": 0,
-            "y": 0,
-            "width": 1,
-            "height": 1
+            "x": 0.0,
+            "y": 0.0,
+            "width": 1.0,
+            "height": 1.0
           }
         },
         "tiles": []

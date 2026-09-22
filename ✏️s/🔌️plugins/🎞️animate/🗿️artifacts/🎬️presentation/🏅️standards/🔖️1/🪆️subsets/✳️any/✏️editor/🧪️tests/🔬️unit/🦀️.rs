@@ -85,12 +85,22 @@ pub(crate) mod context {
         semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, meta("local").instance_id).await;
     }
     
+    /// 🖼️ Renders one body and PROJECTS it, the way `🏛️architect`, `✒️writer` and `🖨️raster` all do.
+    ///
+    /// 🔑️ It used to read the tree back off `format!("{:?}", ..)`. Every node KEY and every LABEL is a
+    /// `UiText` — a fixed-capacity buffer whose `Debug` is not its string — so a substring search for
+    /// `"animate.presentation.play.catalogue.templates"`, `"tile-r0-c0"`, `"Tile templates"` or the
+    /// document schema could never match, while a search for an enum variant name like `Canvas2d`
+    /// still did. `project_and_retire_fixture_tree` is the framework's own projection (and it RETIRES
+    /// the rendered tree, which the `Debug` route leaked).
     pub async fn render(app: &mut PresentationApp, body_key: &str) -> String {
-        // 🌱️ `BuiltNode` deliberately has no `ToValue`/`FromValue` (framework `🦀️builder.rs`'s own
-        // "DslValue-free exception" for `UiValue`-embedding types), so every caller here reads
-        // rendered content back off the `Debug` rendering instead of round-tripping through JSON —
-        // every call site below only substring-searches the result, never parses it as JSON.
-        format!("{:?}", app.render(body_key, None, &ViewModel::default()).await.expect("render"))
+        render_with_view(app, body_key, &ViewModel::default()).await
+    }
+
+    /// 🌍️ [`render`] under an explicit `ViewModel` — the locale lives there, so a label law that wants
+    /// German has to pass one (the default view model resolves NATIVE English).
+    pub async fn render_with_view(app: &mut PresentationApp, body_key: &str, view_state: &ViewModel) -> String {
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, view_state).await.expect("render")).expect("render JSON")
     }
 }
 

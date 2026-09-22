@@ -12,7 +12,9 @@ export type OwnedBuildMiddleware = (request: IncomingMessage, response: ServerRe
 export type OwnedBuildServer = {
   readonly middlewares: { use(middleware: OwnedBuildMiddleware): void };
   readonly ws: { send(payload: Readonly<Record<string, unknown>>): void };
-  readonly config: { readonly root: string; readonly cacheDir: string };
+  readonly config: { readonly root: string; readonly cacheDir: string; readonly base: string; readonly server: { readonly hmr?: unknown } };
+  readonly watcher: { emit(event: string, ...args: readonly unknown[]): boolean };
+  readonly httpServer: { once(event: string, listener: () => void): void } | null;
 };
 
 export type OwnedResolvedBuildConfig = {
@@ -20,7 +22,7 @@ export type OwnedResolvedBuildConfig = {
   readonly build: { readonly outDir: string; readonly write?: boolean };
 };
 
-export type OwnedBuildEnvironment = { readonly command: "build" | "serve"; readonly mode: string };
+export type OwnedBuildEnvironment = { readonly command: "build" | "serve"; readonly mode: string; readonly isSsrBuild?: boolean; readonly isPreview?: boolean };
 export type OwnedBuildServerHookResult = void | (() => void);
 export type OwnedBuildHtmlTag = {
   readonly tag: string;
@@ -68,7 +70,11 @@ export type OwnedBuildConfig = {
   readonly publicDir?: string | false;
   readonly assetsInclude?: readonly string[];
   readonly plugins?: readonly (OwnedBuildPlugin | readonly OwnedBuildPlugin[])[];
-  readonly worker?: Readonly<Record<string, unknown>>;
+  readonly worker?: {
+    readonly format?: "es" | "iife";
+    readonly plugins?: () => readonly (OwnedBuildPlugin | readonly OwnedBuildPlugin[])[];
+    readonly [key: string]: unknown;
+  };
   readonly define?: Readonly<Record<string, unknown>>;
   readonly build?: OwnedBuildOptions;
   readonly server?: {
@@ -91,6 +97,8 @@ export type OwnedBuildConfig = {
 };
 
 export type OwnedTestProjectConfig = OwnedBuildConfig & { root?: string };
+
+export type OwnedBuildConfigFactory = (environment: OwnedBuildEnvironment) => OwnedBuildConfig | Promise<OwnedBuildConfig>;
 //#endregion 🔖️OwnedBuildContract
 
 //#region 🏭️Factories
@@ -112,5 +120,11 @@ export function defineOwnedTestConfig<T extends OwnedBuildConfig>(config: T): T 
 /** @emoji 🏗️ Identity helper for owned build configs that need no implementation runtime. */
 export function defineOwnedBuildConfig<T extends OwnedBuildConfig>(config: T): T {
   return config;
+}
+
+/** @emoji 🏭️ Identity helper for an owned build config a build tool resolves per command, the form a
+ * configuration whose shape depends on `serve` versus `build` must take. */
+export function defineOwnedBuildConfigFactory<T extends OwnedBuildConfigFactory>(factory: T): T {
+  return factory;
 }
 //#endregion 🏭️Factories

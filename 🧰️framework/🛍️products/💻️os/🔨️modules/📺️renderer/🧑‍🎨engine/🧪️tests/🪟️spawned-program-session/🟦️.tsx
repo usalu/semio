@@ -113,7 +113,7 @@ describe("🪟️ spawned layout seed", () => {
     const renamed = renameLayoutWindowIdsV1(declared, spawnedLayoutRenameV1(SPAWNED_ID, DRAW_KINDS));
     expect(JSON.stringify(renamed)).toContain("draw-7::draw-main");
     expect(JSON.stringify(renamed)).toContain("draw-7::draw-layers");
-    expect((renamed as Extract<SpawnedLayoutNodeV1, { kind: "row" }>).children[0]).toMatchObject({ activeId: "draw-7::draw-main" });
+    expect((renamed as Extract<SpawnedLayoutNodeV1, { kind: "row" | "column" }>).children[0]).toMatchObject({ activeId: "draw-7::draw-main" });
   });
 
   it("leaves a leaf the app does not declare alone rather than minting a window", () => {

@@ -8703,6 +8703,7 @@
         "📝️change-test-config-selection",
         "📝️set-test-count",
         "🏷️set-label",
+        "🧒️set-slot-children",
         "🔁️set-state"
       ],
       "source": "registry"
@@ -28388,43 +28389,6 @@
         }
       ],
       "reason": "The entity catalog target and check own exact TypeScript, Go, and Rust projections"
-    },
-    "setup-wizard-config": {
-      "ownership": "external",
-      "ownerPath": null,
-      "target": null,
-      "inputPatterns": [],
-      "outputRoots": [
-        {
-          "path": ".ralph-tui/config.toml",
-          "inclusion": "tracked"
-        },
-        {
-          "path": ".ralph-tui/prd/kit-store-architecture-contracts-first-multi-backbone-pointer-based-rs-core/prd.json",
-          "inclusion": "tracked"
-        },
-        {
-          "path": ".ralph-tui/prd/kit-store-architecture-contracts-first-multi-backbone-pointer-based-rs-core/prd.md",
-          "inclusion": "tracked"
-        },
-        {
-          "path": ".ralph-tui/progress.md",
-          "inclusion": "tracked"
-        },
-        {
-          "path": ".ralph-tui/ralph.lock",
-          "inclusion": "tracked"
-        },
-        {
-          "path": ".ralph-tui/session-meta.json",
-          "inclusion": "tracked"
-        },
-        {
-          "path": ".ralph-tui/session.json",
-          "inclusion": "tracked"
-        }
-      ],
-      "reason": "Ralph TUI externally owns the exact tracked setup, PRD, progress, lock, and session state files"
     },
     "shell-typegen": {
       "ownership": "owned",

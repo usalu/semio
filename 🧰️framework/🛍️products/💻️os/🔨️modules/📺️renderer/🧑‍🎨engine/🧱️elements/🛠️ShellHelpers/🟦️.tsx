@@ -405,6 +405,41 @@ export function buildNoteShellCommandAction(controllerId: string, commandId: str
  * action id the guest itself declared, while a `🐚️Shell`-kind row replays chrome the guest has no
  * window kind for. Dispatching the latter into the guest is what produced the framework-wide
  * `undeclared-action (guest window=… causedBy=…)` error after every undo (ticket 26/09/18 §3.2). */
+/** 🌐️ The nine chrome commands `noteShellCommand` journals, each paired with the `ui.shellCommand.*`
+ * key whose EN/DE text it was built from. The pairing is the map, not a `shell.X → ui.shellCommand.X`
+ * derivation, because a derived key resolves to itself for an id nobody translated and the row would
+ * then read `ui.shellCommand.whatever` instead of its own text.
+ *
+ * ⏳️ Why this exists at all: `noteShellCommand(commandId, label, …)` takes a `string`, and every call
+ * site passes `shellLabel("ui.shellCommand.…")` — already resolved in the locale that was current
+ * when the user dragged the panel. The guest journals that ONE string, so the row's `LocalizedLabel`
+ * carries the dispatch locale on every axis, and `historyEntryLabelText` re-resolving it against a
+ * new locale can only hand back the same frozen text. Measured on 2026-09-21 (S10 §2.10 item 2):
+ * after switching the shell to German the older rows still read `"Switch Panel Tab"` while the newly
+ * journalled one read `"Panel-Tab wechseln"` — which breaks `HistoryEntry.label`'s own promise that
+ * "a locale switch re-renders the whole ledger instead of leaving logged rows in their dispatch
+ * locale". A chrome row's label is CHROME: the shell owns its text and knows its current locale, so
+ * the shell resolves it at render from the row's `actionId` and never trusts the frozen string.
+ * Plugin rows are untouched — their `LocalizedLabel` really does carry every locale. */
+const SHELL_CHROME_COMMAND_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>> = {
+  "shell.dockMove": "ui.shellCommand.dockMove",
+  "shell.panelTab": "ui.shellCommand.panelTab",
+  "shell.panelToggle": "ui.shellCommand.panelToggle",
+  "shell.windowActivate": "ui.shellCommand.windowActivate",
+  "shell.windowClose": "ui.shellCommand.windowClose",
+  "shell.windowMove": "ui.shellCommand.windowMove",
+  "shell.windowOpenInNewWindow": "ui.shellCommand.windowOpenInNewWindow",
+  "shell.windowResize": "ui.shellCommand.windowResize",
+  "shell.windowSplit": "ui.shellCommand.windowSplit",
+};
+
+/** 🌐️ This shell's own current-locale text for a journalled chrome command row, or `null` when the
+ * id is not one of the nine — in which case the caller keeps the row's carried `LocalizedLabel`. */
+export function shellChromeCommandLabel(commandId: string): string | null {
+  const key = SHELL_CHROME_COMMAND_LABEL_KEYS[commandId];
+  return key === undefined ? null : shellLabel(key);
+}
+
 export function isShellOwnedCommandId(commandId: string): boolean {
   return commandId.startsWith("shell.") || commandId.startsWith("os.");
 }
@@ -607,17 +642,17 @@ export const PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS = 2000;
  * is precisely what the hub publishes for a lapsed lease. A rejection is the same answer as a
  * timeout: presence is not the place to surface a document fault. */
 export async function presenceEphemeralSnapshotWithinBoundV1(
-  plugin: { readonly ephemeralSnapshot?: (instanceId: string) => Promise<{ readonly presence?: readonly number[] } | undefined> },
-  instanceId: string,
+  plugin: { readonly ephemeralSnapshot?: (instanceId: number) => Promise<{ readonly presence: readonly number[] } | null> },
+  instanceId: number,
   deadlineMs: number = PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS,
-): Promise<{ readonly presence?: readonly number[] } | undefined> {
+): Promise<{ readonly presence: readonly number[] } | undefined> {
   if (plugin.ephemeralSnapshot === undefined) return undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const bound = new Promise<undefined>((resolve) => {
     timer = setTimeout(() => resolve(undefined), deadlineMs);
   });
   try {
-    return await Promise.race([Promise.resolve(plugin.ephemeralSnapshot(instanceId)).catch(() => undefined), bound]);
+    return await Promise.race([Promise.resolve(plugin.ephemeralSnapshot(instanceId)).then((snapshot) => snapshot ?? undefined).catch(() => undefined), bound]);
   } finally {
     if (timer !== undefined) clearTimeout(timer);
   }
@@ -2541,6 +2576,20 @@ export function shellLabel(key: UiTranslationKey, options?: Record<string, unkno
  */
 export function syncShellLabelLocale(locale: Parameters<typeof uiI18n.changeLanguage>[0]): void {
   void uiI18n.changeLanguage(locale);
+}
+
+/** @emoji 🌐️ The language the shared port {@link shellLabel} reads is standing at RIGHT NOW. Every
+ * builder memo in `🏛️ShellHost` that calls `shellLabel` — the OS command catalogue, the command and
+ * tool category trees, the panel tab names — resolves its text during render, while
+ * {@link syncShellLabelLocale} used to be called only from a post-paint effect. So on the render in
+ * which `uiLocale` changed, each of those memos recomputed against the OLD language and, because
+ * `uiLocale` never changes again, kept that text forever: measured 2026-09-22 on the live `s` shell
+ * as a History row for `os.setLocale` still reading "Set Locale" in a German shell that has
+ * "Sprache festlegen" for it. Comparing this against the wanted locale during render is what lets a
+ * caller move the port BEFORE the memos read it, which is the discipline `initUiLocaleSync`'s own
+ * doc already demands for boot. */
+export function shellLabelLocale(): string {
+  return uiI18n.resolvedLanguage ?? uiI18n.language ?? "";
 }
 
 /** 🗂️ EN/DE label for a `UI_RIBBON_PARENT_CATEGORIES` id, resolved off the SAME `ui.ribbon.parent.*`

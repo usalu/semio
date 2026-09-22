@@ -90,8 +90,19 @@ async function esbuildConfigGraph(): Promise<{ readonly modules: readonly string
 }
 
 /** @emoji 🔮️ Independent oracle: Bun's own bundler resolves the same entry under the same
- * externalize-every-package rule, and its sourcemap `sources` array is the module set it actually
- * read — a second implementation of the graph this contract bounds, not a second read of esbuild's. */
+ * externalize-every-package rule, and its sourcemap `sources` array is a second implementation's view
+ * of this graph, not a second read of esbuild's.
+ *
+ * 🩸️ What that array reports is the set Bun RETAINED, not the set it parsed: `bun build` exposes no
+ * metafile and no tree-shaking switch (`bun build --help`: `--emit-dce-annotations`, the four
+ * `--minify-*` flags, nothing else), so a module whose imported value the entry never reaches is
+ * simply absent from `sources`. Measured 2026-09-22 on this very entry: esbuild parses 44 TS/JS
+ * modules and retains 41 of them (`metafile.outputs[].inputs`), while Bun retains 39 — it drops
+ * `⚡️caching/🔒️leases` and `🏃️process/🌿️environment` that esbuild keeps. Equality between Bun's
+ * retained set and esbuild's PARSED set is therefore not a measurable claim, and the contract bounds
+ * the parsed set because that is what Vite parses and watches. The relation that IS measurable is
+ * asserted below: a second resolver must reach no module the first never parsed, must reach every
+ * required module, and must reach no denied one. */
 function bunConfigGraph(): readonly string[] {
   const bun = process.execPath.endsWith("bun") ? process.execPath : "bun";
   const outDir = mkdtempSync(join(tmpdir(), "semio-config-graph-"));
@@ -125,10 +136,12 @@ describe("vite config module graph", () => {
     console.log(`[DEBUG] vite config graph: ${modules.length} modules, ${sourceBytes} source bytes`);
   });
 
-  it("agrees with Bun's independent bundler on the resolved TypeScript module set", async () => {
+  it("resolves nothing outside the parsed graph and every required module under Bun's independent bundler", async () => {
     const { modules } = await esbuildConfigGraph();
+    const parsed = modules.filter((module) => /\.[cm]?[jt]sx?$/u.test(module));
     const oracle = bunConfigGraph();
-    expect(oracle).toEqual(modules.filter((module) => /\.[cm]?[jt]sx?$/u.test(module)));
+    expect(oracle.filter((module) => !parsed.includes(module))).toEqual([]);
+    for (const required of contract.require) expect(oracle).toContain(required);
     for (const denied of contract.deny) expect(oracle).not.toContain(denied);
   });
 });

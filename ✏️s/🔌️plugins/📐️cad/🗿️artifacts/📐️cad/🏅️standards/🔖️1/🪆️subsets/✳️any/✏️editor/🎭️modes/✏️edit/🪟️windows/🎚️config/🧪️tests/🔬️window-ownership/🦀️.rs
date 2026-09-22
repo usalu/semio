@@ -226,10 +226,20 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     assert_exact_state(&mut app, &left, &right, expected).await?;
                     let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
                     reopened.bind_instance_id(REOPENED_INSTANCE).await;
+                    // 🪦️ Nothing between the second app's construction and its close may `?`: an early
+                    // return drops a live `VcsArtifactApp` that never ran the close ladder, and the
+                    // document store's Drop witness then panics OVER the real diagnosis.
+                    let mut loaded: Result<(), String> = Ok(());
                     for pack in packs {
-                        reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;
+                        if let Err(error) = reopened.load_window_config_pack(pack).await {
+                            loaded = Err(format!("CAD reopened window config pack load refused: {error:?}"));
+                            break;
+                        }
                     }
-                    let restored = assert_exact_state(&mut reopened, &left, &right, expected).await;
+                    let restored = match loaded {
+                        Ok(()) => assert_exact_state(&mut reopened, &left, &right, expected).await,
+                        Err(error) => Err(error),
+                    };
                     artifact_app_laws::close_registered_fixture_app(&mut *reopened);
                     restored?;
                     let stale = ViewModel { window_id: Some("cad-missing".into()), window_instances: view.window_instances.clone(), ..Default::default() };
@@ -258,4 +268,99 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
         .expect("spawn CAD window ownership law")
         .join()
         .expect("CAD window ownership law thread");
+}
+
+/// 🪦️ A CAD app that has RENDERED a world window must still reach its exact terminal-empty close
+/// witness. No other CAD law renders a mounted app and then closes it: `window_engagements` is
+/// covered by `engagement_input_and_possible_engagements_present` and a dispatch by
+/// `add_object_through_wrapper_grows_the_composed_pane`, but `PluginApp::render` — which mints a
+/// render operation on the instance operation owner, fills the projection cache and stamps the
+/// interaction UI — was only ever closed inside the ownership law above, where a failing assertion
+/// masked the store witness behind `std::thread::panicking()`.
+#[test]
+fn cad_rendered_world_window_app_reaches_its_exact_terminal_close_witness() {
+    std::thread::Builder::new()
+        .name("cad-render-close-law".into())
+        .stack_size(8 * 1024 * 1024)
+        .spawn(|| {
+            block_on_cad_window_ownership(async {
+                use crate::editor::cad::{create_cad_app, CadPlayApp};
+                use semio_framework_plugin::{artifact_app_laws, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
+
+                fn manifest() -> App {
+                    App { definition: create_cad_app(), examples: Vec::new() }
+                }
+
+                let view = ViewModel {
+                    window_instances: vec![ViewWindowInstance { id: "cad-shape-left".into(), window_kind_id: shape::config::CadShapeWindowConfigOwner::WINDOW_KIND_ID.into() }],
+                    ..Default::default()
+                };
+                let left = view.for_window_instance("cad-shape-left").expect("left window");
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                app.bind_instance_id(93).await;
+                let tree = app.render(shape::BODY_KEY, None, &left).await.expect("CAD shape render");
+                let _json = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire the rendered CAD tree");
+                artifact_app_laws::close_registered_fixture_app(&mut *app);
+                eprintln!("[DEBUG] a rendered CAD world window app closed to its exact terminal-empty witness");
+            })
+        })
+        .expect("spawn CAD render close law")
+        .join()
+        .expect("CAD render close law thread");
+}
+
+/// 🪦️ The same witness for the OTHER thing the ownership law does to a second app: reopening the
+/// persisted exact-window packs. This one never renders, so a failure here is the retained window
+/// config load and a failure in the render law above is the render.
+#[test]
+fn cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness() {
+    std::thread::Builder::new()
+        .name("cad-window-config-reload-close-law".into())
+        .stack_size(8 * 1024 * 1024)
+        .spawn(|| {
+            block_on_cad_window_ownership(async {
+                use crate::editor::cad::{create_cad_app, CadPlayApp};
+                use semio_framework_plugin::{artifact_app_laws, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, VcsArtifactApp, WindowConfigOwner};
+
+                fn manifest() -> App {
+                    App { definition: create_cad_app(), examples: Vec::new() }
+                }
+
+                let view = ViewModel {
+                    window_instances: vec![
+                        ViewWindowInstance { id: "cad-shape-left".into(), window_kind_id: shape::config::CadShapeWindowConfigOwner::WINDOW_KIND_ID.into() },
+                        ViewWindowInstance { id: "cad-building".into(), window_kind_id: building::config::CadBuildingWindowConfigOwner::WINDOW_KIND_ID.into() },
+                    ],
+                    ..Default::default()
+                };
+                let mut source: Box<VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>> =
+                    Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                source.bind_instance_id(95).await;
+                let _measures = source.window_measures(&view).await;
+                let packs = source.window_config_packs().await.expect("CAD window config packs");
+                assert_eq!(packs.len(), 2, "both declared world windows materialize a partition: {:?}", packs.iter().map(|pack| pack.window_id.clone()).collect::<Vec<_>>());
+                artifact_app_laws::close_registered_fixture_app(&mut *source);
+                drop(source);
+                eprintln!("[DEBUG] the CAD window config source app closed to its exact terminal-empty witness");
+
+                let expected: Vec<(String, String, Vec<u8>, Vec<u8>)> = packs.iter().map(|pack| (pack.window_id.clone(), pack.window_kind_id.clone(), pack.files.pack.clone(), pack.files.spr.clone())).collect();
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest).await);
+                reopened.bind_instance_id(96).await;
+                for pack in packs {
+                    // 📍️ `CadCamera::position`/`target` are `#[dsl(coord)] [f64; 3]`, and the pack's
+                    // packed-f64 wire form carries no tuple-vs-list marker: a retained decoder that
+                    // knows only `Shape::Tuple` rebuilds them as a list and refuses the whole state
+                    // with `window-config.typed-state`.
+                    reopened.load_window_config_pack(pack).await.expect("reload the exact CAD window config pack");
+                }
+                let reloaded: Vec<(String, String, Vec<u8>, Vec<u8>)> =
+                    reopened.window_config_packs().await.expect("reopened CAD window config packs").into_iter().map(|pack| (pack.window_id, pack.window_kind_id, pack.files.pack, pack.files.spr)).collect();
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened);
+                assert_eq!(reloaded, expected, "a reopened CAD window config partition must be byte-exact with the one it was printed from");
+                eprintln!("[DEBUG] a CAD app that reloaded its exact window config packs closed to its exact terminal-empty witness");
+            })
+        })
+        .expect("spawn CAD window config reload close law")
+        .join()
+        .expect("CAD window config reload close law thread");
 }

@@ -10,6 +10,7 @@ import { TableAvatar } from "../📻️TableAvatar/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
+import type { UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { currentStylingAppearanceName, STYLING_PRESENCE_PALETTES } from "@semio-tech/ui-styling";
 // #endregion 🔌️Adapters
 
@@ -133,7 +134,7 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
         const roleLabel = peer.role === "author" ? authorRoleLabel : peer.role === "spectator" ? spectatorRoleLabel : undefined;
         // 🤖️ The agent badge is part of the accessible name, not decoration beside it: a screen
         // reader must hear "Drafting agent (AI agent, Editing)" from the roster row itself.
-        const qualifiers = [peer.isAgent === true ? agentKindLabel : undefined, roleLabel].filter((value): value is string => value !== undefined);
+        const qualifiers = [peer.isAgent === true ? agentKindLabel : undefined, roleLabel].filter((value): value is UiLabel => value !== undefined);
         const peerTitle = qualifiers.length > 0 ? `${peer.label} (${qualifiers.join(", ")})` : peer.label;
         return (
           <div

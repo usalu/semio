@@ -21086,7 +21086,7 @@
             "kind": "mutation",
             "iconId": "sparkles",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "writes": [
@@ -21112,7 +21112,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -22386,7 +22387,7 @@
             "kind": "view",
             "iconId": "hand",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -22413,7 +22414,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -22431,7 +22433,7 @@
             "kind": "view",
             "iconId": "hand",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -22458,7 +22460,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -23242,7 +23245,7 @@
             "kind": "view",
             "iconId": "mouse-pointer",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -23269,7 +23272,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -38164,7 +38168,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -41225,8 +41229,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "dac13f9117369bcb2f8eee7502ee9ba766ea6422a02b06cca97f0aa5ef270e18",
-    "coreWasmSha256": "12e6a6acdf81585da165ec960b596377c40e365b4316bc954e4d1beea8eaddfb",
-    "descriptorSha256": "10895d8b0aecf26388709b62a594c06efe787300d49800f70dc46b45f55ea0ae"
+    "wasmSha256": "0bbf44935a32109346f73b204985d75de6e3b63d50ee246b82984e60122bf118",
+    "coreWasmSha256": "4f6334d63a4cf16fd355a3e459ba68b3c57008d4c8a4c11f3b6ace6fc187c6aa",
+    "descriptorSha256": "0dfb64347caaebf66b5ac37422339700c948f967667260637fd6f1d4e55b40f6"
   }
 }

@@ -37,10 +37,21 @@ async fn the_default_viewport_frames_every_node_without_panning() {
     let top = nodes.iter().map(|node| node.y).fold(f64::INFINITY, f64::min);
     let right = nodes.iter().map(|node| node.x + node.width).fold(f64::NEG_INFINITY, f64::max);
     let bottom = nodes.iter().map(|node| node.y + node.height).fold(f64::NEG_INFINITY, f64::max);
-    assert!((left - ARCHITECT_GRAPH_MARGIN).abs() < 1e-9, "the node bounding box starts one margin from the scene origin, not at {left}");
-    assert!((top - ARCHITECT_GRAPH_MARGIN).abs() < 1e-9, "the node bounding box starts one margin from the scene origin, not at {top}");
+    // 📐️ The RING is anchored so its own bounding circle starts one margin from the scene origin; the
+    // node boxes therefore never reach negative coordinates, and on the axis where the ring's extreme
+    // point carries a node (always x, where `cos` attains −1 for an even count) the box bound IS the
+    // margin. Asserting equality on BOTH axes would be wrong: two elements sit on a horizontal
+    // diameter, so nothing is drawn at the ring's top and the vertical bound is the ring centre less
+    // half a node.
+    assert!(left >= ARCHITECT_GRAPH_MARGIN - 1e-9, "the node bounding box must stay in the positive quadrant, one margin clear of the scene origin, not at x={left}");
+    assert!(top >= ARCHITECT_GRAPH_MARGIN - 1e-9, "the node bounding box must stay in the positive quadrant, one margin clear of the scene origin, not at y={top}");
     assert!(right <= SMALLEST_GRAPH_PANE_PX, "node bounding box runs to x={right}, past the {SMALLEST_GRAPH_PANE_PX}px pane");
     assert!(bottom <= SMALLEST_GRAPH_PANE_PX, "node bounding box runs to y={bottom}, past the {SMALLEST_GRAPH_PANE_PX}px pane");
+    if program.elements.len() % 2 == 0 {
+        let radius = graph_ring_radius(program.elements.len());
+        assert!((left - ARCHITECT_GRAPH_MARGIN).abs() < 1e-9, "an even element count puts a node at the ring's left extreme, so the box bound IS the margin, not {left}");
+        assert!((right - (ARCHITECT_GRAPH_MARGIN + 2.0 * radius + ARCHITECT_GRAPH_NODE_WIDTH)).abs() < 1e-9, "the ring's own width plus one node box is the drawn extent, not {right}");
+    }
 }
 
 /// ↔️ Neighbours on the ring never overlap: the chord between two adjacent node centres clears a

@@ -28,7 +28,7 @@ export function orderedScrollFixture(): OrderedScrollFixture {
 
 function retainedQueueEvents(events: readonly OrderedScrollEvent[]): OrderedScrollEvent[] {
   let retainedPointer: { readonly sequence: number; readonly event: OrderedScrollEvent } | undefined;
-  const retained = events.flatMap((event, sequence) => {
+  const retained: { readonly sequence: number; readonly event: OrderedScrollEvent }[] = events.flatMap((event, sequence) => {
     if (event.kind === "pointer-move") {
       retainedPointer = { sequence, event };
       return [];

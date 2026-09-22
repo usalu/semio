@@ -1952,16 +1952,8 @@ func McpKindFromResolvedClient(client string) McpClientKind {
 // McpServerName returns the MCP server identifier string for the given kind.
 func McpServerName(kind McpClientKind) string {
 	switch kind {
-	case McpClientCursor:
-		return "repo-cursor"
-	case McpClientKiro:
-		return "repo-kiro"
-	case McpClientCopilot:
-		return "repo-copilot"
-	case McpClientClaude:
-		return "repo-claude"
-	case McpClientCodex:
-		return "repo-codex"
+	case McpClientCursor, McpClientKiro, McpClientCopilot, McpClientClaude, McpClientCodex, McpClientGeneric, "":
+		return "repo"
 	default:
 		return "repo"
 	}

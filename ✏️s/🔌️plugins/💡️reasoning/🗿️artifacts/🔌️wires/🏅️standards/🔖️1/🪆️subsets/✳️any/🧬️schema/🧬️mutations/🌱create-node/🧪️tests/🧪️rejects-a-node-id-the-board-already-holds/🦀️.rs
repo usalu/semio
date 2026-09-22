@@ -66,7 +66,13 @@ async fn a_colliding_node_id_is_a_fatal_duplicate_id() {
     let WiresMutation::CreateNode(CreateNode { node }) = mutation() else {
         panic!("rejects-a-node-id-the-board-already-holds's committed mutation must be a create-node");
     };
-    assert_eq!(find_board_node(&base, "node-alpha").as_ref(), Some(&node), "the occupant seeded from the before-snapshot must be field-for-field the node the payload asks to create");
+    // 🔤 Compared in the DSL's canonical key order. Every node that ENTERS a board goes through
+    // `crate::canonical_board_value` (`wires_content_child_with_owner`), because the op-text printer
+    // sorts object keys while `DslValue`'s `PartialEq` compares them positionally — so the occupant
+    // read back out of the before-snapshot is sorted, while a payload decoded straight off this
+    // committed fixture still carries the fixture's authoring order. The law is field-for-field
+    // identity, not authoring order.
+    assert_eq!(find_board_node(&base, "node-alpha").as_ref(), Some(&crate::canonical_board_value(&node)), "the occupant seeded from the before-snapshot must be field-for-field the node the payload asks to create");
     let produced = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation(), &base);
     assert_eq!(produced.diff(), &WiresDiff::default(), "a rejecting create-node must carry an empty diff, never a half-built content handle");
     let messages = produced.messages();

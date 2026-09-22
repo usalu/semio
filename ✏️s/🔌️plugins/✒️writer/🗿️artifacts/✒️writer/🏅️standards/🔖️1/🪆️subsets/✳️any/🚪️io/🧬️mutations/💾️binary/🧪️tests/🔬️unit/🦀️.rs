@@ -233,7 +233,10 @@ fn jack_mutations() -> Vec<WriterMutation> {
 
 #[semio_framework_async_macros::async_test]
 async fn writer_document_text_round_trips_through_the_store() {
-    let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
+    // 🔐️ Through the owner-installing constructor: a bare `ArtifactStore::new` installs no catalog
+    // and `reserve_edit_history_slot` then refuses every `Apply`
+    // (`edit history insertion requires its exact mutation retirement factory`).
+    let mut store = super::new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
     store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
@@ -248,9 +251,43 @@ async fn writer_document_text_round_trips_through_the_store() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
 
-    let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
+    // 🔐️ Through the owner-installing constructor: a bare `ArtifactStore::new` installs no catalog
+    // and `reserve_edit_history_slot` then refuses every `Apply`
+    // (`edit history insertion requires its exact mutation retirement factory`).
+    let mut store = super::new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
     store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).await.expect("apply");
     let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
 //#endregion 🔖️CommandEnvelopeTests
+
+/// 🧯️ LAW: a Drop witness must never turn a REPORTED failure into a process abort. See the identical
+/// law in `🎞️animate`'s own binary leaf for the full reasoning: a witness that fires while the thread
+/// is already unwinding from a test's own failed assertion becomes a `panic in a destructor during
+/// cleanup` — a NON-unwinding abort that kills the whole test binary and hides the first, real
+/// failure. Every witness in this file therefore checks `std::thread::panicking()` first, the shape
+/// `store::ArtifactEnvelope::drop` already uses.
+///
+/// This law can only pass when the guard is there: without it the panic below aborts the process
+/// instead of being caught here.
+#[semio_framework_async_macros::async_test]
+async fn a_live_owner_dropped_during_a_panic_unwinds_instead_of_aborting() {
+    let catalog: std::sync::Arc<dyn store::ArtifactEnvelopeOwnedFieldCatalog<WriterSnapshot, WriterMutation>> = std::sync::Arc::new(WriterEnvelopeOwnedFieldCatalog);
+    let decoder = WriterEditHistoryDecoder { catalog };
+    let authority = store::ArtifactOwnedHistoryEntryDecoder::begin_entry(
+        &decoder,
+        semio_framework_job::OperationId(1),
+        semio_framework_job::Generation(1),
+        store::OwnedSchemaPath::field("value").expect("bounded Writer test path"),
+        std::sync::Arc::new(UnusedWriterEditRetirementFactory),
+    );
+    assert!(!authority.terminal_is_empty(), "a freshly begun entry authority is NOT terminal-empty, or this law proves nothing");
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(Box::new(|_| {}));
+    let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
+        let _live = authority;
+        panic!("a test failure while an undrained edit authority is still live");
+    }));
+    std::panic::set_hook(previous);
+    assert!(outcome.is_err(), "the fixture panic must reach this caller as an unwind");
+}

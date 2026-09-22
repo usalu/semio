@@ -287,12 +287,19 @@ record("1d-rosters", sessions.every((s) => s.afterAttach.peers.length > 0), JSON
 // stops touching the socket, so reading it at the end of the run measures the decay, not the feature.
 for (const session of sessions) await shot(session, "presence");
 {
-  const everyColour = report.rosters.flatMap((r) => r.colors);
-  const distinct = new Set(everyColour).size === everyColour.length && everyColour.length > 0;
+  const distinct = report.rosters.length > 0 && report.rosters.every((r) => r.colors.length > 0 && new Set(r.colors).size === r.colors.length);
+  const palette = new Map();
+  let agreed = true;
+  for (const roster of report.rosters)
+    for (const [index, peer] of roster.peers.entries()) {
+      const colour = roster.colors[index];
+      if (!palette.has(peer)) palette.set(peer, colour);
+      else if (palette.get(peer) !== colour) agreed = false;
+    }
   const bothListed = report.rosters.some((r) => r.peers.length >= sessions.length);
   const symmetric = report.rosters.every((r) => r.peers.length >= sessions.length);
-  report.presence = { bothListed, symmetric, distinct };
-  record("5-presence-distinct-colours", symmetric && distinct, `${JSON.stringify(report.rosters)} symmetric=${symmetric} bothListedInOneRoster=${bothListed} distinctColours=${distinct}`);
+  report.presence = { bothListed, symmetric, distinct, agreed };
+  record("5-presence-distinct-colours", symmetric && distinct && agreed, `${JSON.stringify(report.rosters)} symmetric=${symmetric} bothListedInOneRoster=${bothListed} distinctColoursPerRoster=${distinct} sameColourForSamePeerAcrossRosters=${agreed}`);
 }
 
 report.baseline = [];

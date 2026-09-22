@@ -122,6 +122,33 @@ fn declared_inferences_for_workspace_finds_the_real_wfc_roster() {
     );
 }
 
+/// 🧩️ ticket 26/09/18 slice M10 (`📓️g19-ai-user-experience-audit.md` gap 3): an extension package
+/// declares no app, no command and no owner-authored inference service, so it emits no catalog entry
+/// and folder-mode `discovery_descriptors` — which is derived from catalog entries — never loads its
+/// descriptor. Its contributed inference was therefore unreachable from `inference_list` for any
+/// workspace, however complete the install. The law pins both halves of the reachability rule: the
+/// contribution IS listed when the kind it contributes onto is owned by a package in the roster's
+/// source set, and is NOT listed when it is not.
+#[test]
+fn declared_inferences_for_workspace_lists_an_extension_contributed_service_on_a_kind_it_reaches() {
+    let workspace = open_workspace(plugin_only_catalog("cad"));
+    let declared = declared_inferences_for_workspace(&workspace).expect("cad is the sole plugin owner");
+    let contributed: Vec<(&str, &str, &str)> = declared.iter().filter(|row| row.contributor != row.owner || row.owner != "cad").map(|row| (row.owner.as_str(), row.artifact_kind.as_str(), row.inference_schema.as_str())).collect();
+    assert_eq!(
+        contributed,
+        vec![("cad-extension-aec-building", "s.cad.cad", "s.cad-extension-aec-building.building-structure-summary")],
+        "the committed 📐️cad extension's own contributed inference, routed by its own contributor id"
+    );
+    assert_eq!(declared.iter().filter(|row| row.inference_schema == "s.cad-extension-aec-building.building-structure-summary").count(), 1, "a contributed service is listed once, never once per source set it appears in");
+}
+
+#[test]
+fn declared_inferences_for_workspace_omits_an_extension_contribution_onto_an_unreachable_kind() {
+    let workspace = open_workspace(wfc_only_catalog());
+    let declared = declared_inferences_for_workspace(&workspace).expect("wfc is the sole plugin owner");
+    assert!(declared.iter().all(|row| row.artifact_kind.starts_with("s.wfc.")), "no contribution onto a kind this workspace does not own may reach the roster: {declared:?}");
+}
+
 #[test]
 fn declared_inferences_for_workspace_is_plugin_unavailable_for_an_empty_catalog() {
     let workspace = open_workspace(empty_catalog());
@@ -173,6 +200,7 @@ fn lookup_inference_distinguishes_no_such_service_from_execute() {
         policy_version: 1,
         contributor: "wfc".to_string(),
         depends_on: Vec::new(),
+        payload: None,
     }];
     assert!(matches!(lookup_inference(&declared, "s.wfc.wfc3d.solve"), InferenceLookup::Execute(_)));
     assert!(matches!(lookup_inference(&declared, "no.such.schema"), InferenceLookup::NoSuchService));
@@ -191,6 +219,7 @@ fn execute_lookup_reports_a_retryable_channel_not_wired_gap() {
         policy_version: 1,
         contributor: "wfc".to_string(),
         depends_on: Vec::new(),
+        payload: None,
     };
     let error = execution_not_wired_error(&item);
     assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
@@ -354,3 +383,115 @@ async fn inference_run_is_scope_gated() {
     assert!(channel.frame_log().is_empty());
 }
 //#endregion 🧪️Execution
+
+//#region 🧪️PayloadContract
+/// 📜️ One declared row carrying the contract a re-described `🀄️wfc` publishes.
+fn contract_row(required: bool, input_schema: &str) -> DeclaredInference {
+    DeclaredInference {
+        owner: "wfc".to_string(),
+        artifact_kind: "s.wfc.bitmap".to_string(),
+        artifact_schema: "s.wfc.bitmap".to_string(),
+        artifact_schema_version: 1,
+        inference_schema: "s.wfc.bitmap.solve".to_string(),
+        inference_schema_version: 1,
+        algorithm_version: 1,
+        policy_version: 1,
+        contributor: "wfc".to_string(),
+        depends_on: Vec::new(),
+        payload: Some(semio_framework::InferencePayloadContract {
+            payload_schema_id: "s.wfc.bitmap.inference.request.v1".to_string(),
+            input_schema: input_schema.to_string(),
+            output_schema: "{}".to_string(),
+            progress_unit: "cells".to_string(),
+            artifact_binding: Some(semio_framework::InferenceArtifactBinding { field: "document".to_string(), encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64.to_string(), required }),
+        }),
+    }
+}
+
+/// 🚧️ The refusal `📓️pz2-puzzle-describe-under-budget.md` §5.2 asked for: an artifact-bound
+/// inference called with neither `artifactId` nor `payload` answers `INPUT_INVALID` naming
+/// `artifactId` — machine-readable in `details.field` — instead of dispatching `{}` into a guest
+/// that answers `missing field 'snapshot'` after a whole component compile.
+#[test]
+fn an_artifact_bound_inference_without_an_artifact_is_input_invalid_naming_artifact_id() {
+    let error = validate_inference_request(&contract_row(true, "{\"type\":\"object\"}"), None, None).expect_err("an artifact-bound inference needs an artifact");
+    assert_eq!(error.code, GatewayErrorCode::InputInvalid);
+    assert_eq!(error.details.get("field").and_then(serde_json::Value::as_str), Some("artifactId"));
+    assert!(error.message.contains("payload.document"), "the refusal names the field the binding fills: {}", error.message);
+}
+
+/// ✅️ …and the same call WITH an artifact passes the gate, so the refusal is a gate and not a wall.
+#[test]
+fn an_artifact_bound_inference_with_an_artifact_is_admitted() {
+    validate_inference_request(&contract_row(true, "{\"type\":\"object\"}"), None, Some("art-1")).expect("naming the artifact is the whole requirement");
+}
+
+/// 🧾️ A caller-authored payload is checked against the contract's OWN `required` list, and the
+/// refusal names the missing field rather than the tool.
+#[test]
+fn a_payload_missing_a_contract_required_field_names_that_field() {
+    let row = contract_row(false, "{\"type\":\"object\",\"required\":[\"snapshot\"]}");
+    let payload = serde_json::json!({ "checkpoint": [] });
+    let error = validate_inference_request(&row, Some(&payload), None).expect_err("a required field is missing");
+    assert_eq!(error.details.get("field").and_then(serde_json::Value::as_str), Some("snapshot"));
+}
+
+/// 🫙 An inference that publishes no contract at all and is called with no payload says so — the
+/// honest answer when nothing in the tree can tell a client what to send.
+#[test]
+fn an_unpublished_contract_refuses_by_naming_payload_and_its_owner() {
+    let mut row = contract_row(true, "{}");
+    row.payload = None;
+    let error = validate_inference_request(&row, None, None).expect_err("nothing can build this body");
+    assert_eq!(error.details.get("field").and_then(serde_json::Value::as_str), Some("payload"));
+    assert!(error.message.contains("wfc"), "the refusal names the plugin that must declare one: {}", error.message);
+}
+
+/// 📜️ The contract a plugin commits in its descriptor is the contract `inference_list` publishes —
+/// one declaration, carried, never re-derived.
+#[test]
+fn a_committed_contract_reaches_the_published_roster_row() {
+    let metadata = semio_framework::ContributedInferenceMetadata {
+        owner: "wfc".into(),
+        artifact_kind: "s.wfc.bitmap".into(),
+        artifact_schema: "s.wfc.bitmap".into(),
+        artifact_schema_version: 1,
+        inference_schema: "s.wfc.bitmap.solve".into(),
+        inference_schema_version: 1,
+        algorithm_version: 1,
+        policy_version: 1,
+        contributor: "wfc".into(),
+        depends_on: Vec::new(),
+        payload: contract_row(true, "{\"type\":\"object\"}").payload,
+    };
+    let row = DeclaredInference::from(&metadata);
+    let published = serde_json::to_value(&row).expect("a roster row serialises");
+    assert_eq!(published["payload"]["payloadSchemaId"], "s.wfc.bitmap.inference.request.v1");
+    assert_eq!(published["payload"]["artifactBinding"]["field"], "document");
+    assert_eq!(published["payload"]["progressUnit"], "cells");
+}
+//#endregion 🧪️PayloadContract
+
+/// 📜️ A READ of an artifact-bound inference is still a gap, but it is now an INSTRUCTION: the
+/// refusal names `inference_run`, the field the binding fills, and carries the whole published
+/// contract in its details — so a client learns what to send in the same round trip it asked in.
+#[test]
+fn a_read_of_an_artifact_bound_inference_answers_with_its_contract() {
+    let error = execution_not_wired_error(&contract_row(true, "{\"type\":\"object\"}"));
+    assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
+    assert!(error.retryable);
+    assert!(error.message.contains("inference_run") && error.message.contains("payload.document"), "{}", error.message);
+    assert_eq!(error.details["payload"]["payloadSchemaId"], "s.wfc.bitmap.inference.request.v1");
+    assert_eq!(error.details["payload"]["artifactBinding"]["field"], "document");
+}
+
+/// 🫙 …and a row with no published contract keeps the older wording, so nothing is claimed for a
+/// plugin that has declared nothing.
+#[test]
+fn a_read_of_an_unbound_inference_keeps_its_plain_refusal() {
+    let mut row = contract_row(true, "{}");
+    row.payload = None;
+    let error = execution_not_wired_error(&row);
+    assert!(error.message.contains("carries no canonical request payload"), "{}", error.message);
+    assert!(error.details["payload"].is_null());
+}

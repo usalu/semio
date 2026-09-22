@@ -95,13 +95,28 @@ pub const PUZZLE2D_PROXIMITY_GESTURE_MAX: usize = 64;
 /// which "nearby" stops meaning anything on a board.
 pub const PUZZLE2D_PROXIMITY_RADIUS_MAX: f64 = 480.0;
 
+/// 🧵 The shipped examples' document JSON, decoded from their authored DSL EXACTLY ONCE per process
+/// — the same `LazyLock` shape `🧊️3d` and `🖐️5d` use for their own `*_EXAMPLE_JSON`.
+///
+/// 🐛️ These two accessors used to call `ExampleSource::document_json()` per call. That was a cheap
+/// `String` clone while the bodies were inline, but every puzzle example is now
+/// `ExampleSource::deferred`, and a deferred body's `document_json()` RUNS ITS PRODUCER — a full
+/// parse of the authored `.dsl.semio` (93 779 B for nakagin) plus a JSON re-serialisation — on every
+/// single call. `puzzle2d_node_kind_arg()` is built twice (the `addNode` arg form and the Add Node
+/// dialog) and each build reads both examples, so ASSEMBLING THE APP DEFINITION decoded ~384 KB of
+/// DSL where 96 KB is needed. `AppDefinition` assembly happens on the `describe()` path, inside the
+/// owned interpreter, under a 1 800 s guest epoch — this was pure multiplier on the cost that put
+/// `🧩️puzzle` over that epoch.
+static CONCRETE_FOREST_EXAMPLE_JSON: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| crate::examples::puzzle2d::concrete_forest::SOURCE.document_json());
+static NAKAGIN_EXAMPLE_JSON: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE.document_json());
+
 /// 🧵 Reuses the manifest's canonical, initialization-owned example payload so an interactive
 /// command never repeats DSL decoding inside its bounded worker step.
 pub fn concrete_forest_example_json() -> String {
-    crate::examples::puzzle2d::concrete_forest::SOURCE.document_json().to_owned()
+    CONCRETE_FOREST_EXAMPLE_JSON.clone()
 }
 pub fn nakagin_example_json() -> String {
-    crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE.document_json().to_owned()
+    NAKAGIN_EXAMPLE_JSON.clone()
 }
 //#endregion 🔖️Constants
 
@@ -520,23 +535,65 @@ pub fn puzzle2d_node_kind_rows(fixture: &Value) -> Vec<Value> {
 /// minted once per process and never sees the live document, so the union of the SHIPPED examples'
 /// own node kinds is the reachable kind set — never the literal `"node"` option this select used to
 /// hardcode, which could not add a single real kind of either example (puzzle3d's own §23 bug).
+///
+/// 🖐️ Those rows are AUTHORED below rather than derived, in the two shipped examples' own catalog
+/// order, and pinned to the documents by `shipped_node_kinds_are_the_two_examples_own_catalog_rows`.
+///
+/// 🐛️ Deriving it dereferenced `CONCRETE_FOREST_EXAMPLE_JSON` and `NAKAGIN_EXAMPLE_JSON`, i.e.
+/// parsed 96 005 B of authored DSL, re-serialised it to JSON and parsed that back into two
+/// `serde_json::Value`s — on the `AppDefinition` path, which is the `describe()` path AND every
+/// actor boot. Measured natively on 2026-09-22 (slice PZ2,
+/// `🗑️generated/pz2-native-profile-*.txt`): `create_puzzle2d_app()` cost 157 ms cold against ~1 ms
+/// with those statics warm, so ALL of it was this one select.
+pub const PUZZLE2D_SHIPPED_NODE_KINDS: &[(&str, &str)] = &[
+    ("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"),
+    ("Balcony", "Balcony"),
+    ("Base", "Base"),
+    ("Base Blob", "Base Blob"),
+    ("Bridge", "Bridge"),
+    ("Capital", "Capital"),
+    ("Capsule", "Capsule"),
+    ("Capsule Backslash", "Capsule Backslash"),
+    ("Capsule J", "Capsule J"),
+    ("Capsule L", "Capsule L"),
+    ("Capsule P", "Capsule P"),
+    ("Capsule q", "Capsule q"),
+    ("Capsule S", "Capsule S"),
+    ("Capsule Slash", "Capsule Slash"),
+    ("Capsule With Balcony Backslash", "Capsule With Balcony Backslash"),
+    ("Capsule With Balcony J", "Capsule With Balcony J"),
+    ("Capsule With Balcony L", "Capsule With Balcony L"),
+    ("Capsule With Balcony P", "Capsule With Balcony P"),
+    ("Capsule With Balcony Q", "Capsule With Balcony Q"),
+    ("Capsule With Balcony S", "Capsule With Balcony S"),
+    ("Capsule With Balcony Slash", "Capsule With Balcony Slash"),
+    ("Capsule With Balcony Z", "Capsule With Balcony Z"),
+    ("Capsule Z", "Capsule Z"),
+    ("Cylindric Capital", "Cylindric Capital"),
+    ("Cylindric First Storey Tambour", "Cylindric First Storey Tambour"),
+    ("Cylindric Last Storey Tambour", "Cylindric Last Storey Tambour"),
+    ("Cylindric Single Storey Tambour", "Cylindric Single Storey Tambour"),
+    ("Cylindric Tambour", "Cylindric Tambour"),
+    ("Ellipsoid", "Ellipsoid"),
+    ("First Storey Tambour", "First Storey Tambour"),
+    ("Last Storey Tambour", "Last Storey Tambour"),
+    ("Single Storey Tambour", "Single Storey Tambour"),
+    ("Tambour", "Tambour"),
+    ("Trapezoid", "Trapezoid"),
+    ("Trapezoid Capsule Backslash", "Trapezoid Capsule Backslash"),
+    ("Trapezoid Capsule J", "Trapezoid Capsule J"),
+    ("Trapezoid Capsule L", "Trapezoid Capsule L"),
+    ("Trapezoid Capsule P", "Trapezoid Capsule P"),
+    ("Trapezoid Capsule Q", "Trapezoid Capsule Q"),
+    ("Trapezoid Capsule S", "Trapezoid Capsule S"),
+    ("Trapezoid Capsule Slash", "Trapezoid Capsule Slash"),
+    ("Trapezoid Capsule Z", "Trapezoid Capsule Z"),
+    ("Piece", "Piece"),
+];
+
+/// 🗂️ The `kind` select's options, mapped from [`PUZZLE2D_SHIPPED_NODE_KINDS`].
 pub fn puzzle2d_node_kind_options() -> Vec<ActionArgOption> {
-    let mut options: Vec<ActionArgOption> = Vec::with_capacity(PUZZLE2D_NODE_KIND_OPTIONS_MAX);
-    for json in [concrete_forest_example_json(), nakagin_example_json()] {
-        let Ok(fixture) = serde_json::from_str::<Value>(&json) else { continue };
-        for row in puzzle2d_node_kind_rows(&fixture) {
-            if options.len() >= PUZZLE2D_NODE_KIND_OPTIONS_MAX {
-                return options;
-            }
-            let Some(id) = row.get("id").and_then(Value::as_str).filter(|id| !id.is_empty()) else { continue };
-            if options.iter().any(|option| option.value == id) {
-                continue;
-            }
-            let label = row.get("name").and_then(Value::as_str).filter(|name| !name.is_empty()).unwrap_or(id);
-            options.push(ActionArgOption::new(id, LocalizedLabel::data(label.to_string())));
-        }
-    }
-    options
+    PUZZLE2D_SHIPPED_NODE_KINDS.iter().take(PUZZLE2D_NODE_KIND_OPTIONS_MAX).map(|(id, label)| ActionArgOption::new(*id, LocalizedLabel::data(*label))).collect()
 }
 
 /// 🗂️ The one `kind` select both the standalone `addNode` arg form and the Add Node dialog declare —
@@ -1928,9 +1985,18 @@ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActio
         .item(item("focusSelection", if is_de { "Auf Auswahl zoomen" } else { "Zoom to selection" }, "crosshair", "focusSelection", None, false, false))
         // 📋️ The framework declares copy/cut/paste (and their mod+c/x/v keys); these rows are the
         // pointer route to the same three reserved verbs [`Puzzle2dClipboardJob`] answers.
-        .item(item("copy", if is_de { "Kopieren" } else { "Copy" }, "copy", "copy", None, false, !has_selected_node))
-        .item(item("cut", if is_de { "Ausschneiden" } else { "Cut" }, "scissors", "cut", None, false, !has_selected_node || !any_unlocked))
-        .item(item("paste", if is_de { "Einfügen" } else { "Paste" }, "clipboard", "paste", None, false, false))
+        //
+        // 🗂️ ONE disclosure group, not three top-level leaves. `organize_context_menu` counts
+        // INTERACTIVE rows against `CONTEXT_MENU_ROW_BUDGET = 9` and only then appends the
+        // `separator-organized-*` row ahead of the destructive one — so nine interactive rows take the
+        // within-budget path and still render TEN rows. Three clipboard verbs that every shell already
+        // binds to mod+c/x/v are the right three to fold: the menu is shorter, the budget is respected
+        // as the shell measures it, and no verb is lost.
+        .group("clipboard", |m| {
+            m.item(item("copy", if is_de { "Kopieren" } else { "Copy" }, "copy", "copy", None, false, !has_selected_node))
+                .item(item("cut", if is_de { "Ausschneiden" } else { "Cut" }, "scissors", "cut", None, false, !has_selected_node || !any_unlocked))
+                .item(item("paste", if is_de { "Einfügen" } else { "Paste" }, "clipboard", "paste", None, false, false))
+        })
         .group("selection", |m| m.item(item("selectSameKind", if is_de { "Gleiche Art auswählen" } else { "Select same kind" }, "layers", "selectSameKind", None, false, false)))
         .item(item("deleteSelection", &format!("{} ({phrase})", if is_de { "Löschen" } else { "Delete" }), "trash", "deleteSelection", None, true, false))
         .build()
@@ -4118,7 +4184,14 @@ fn puzzle2d_retire_string_step(owner: &mut String, maximum_bytes: usize) -> Resu
 }
 
 fn puzzle2d_retire_vec_backing<T>(owners: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
-    if !owners.is_empty() || owners.capacity() == 0 {
+    // 🐛️ A `Vec` of a ZERO-SIZED element never allocates and reports `usize::MAX` capacity by
+    // definition, so `capacity() == 0` is false forever and this answered
+    // `Pending { released_items: 1 }` on every call for a lane with no backing at all — an
+    // unterminating close. `Emit::draft_mutations` is exactly that lane
+    // (`NoDraftMutation = NoConfigMutation`, the uninhabited `pub enum NoConfigMutation {}`).
+    // Measured on `🖐️5d`'s identical helper, whose four `*_completion_rejection_*` laws spun 100 000
+    // bounded turns; fixed here at the same time because the code is the same code.
+    if !owners.is_empty() || owners.capacity() == 0 || size_of::<T>() == 0 {
         return Ok(None);
     }
     let bytes = owners.capacity().saturating_mul(size_of::<T>());
@@ -5323,6 +5396,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             // drag-connect gesture, and the drop-time auto-connect's programmatic entry point.
             .action_with(ActionDefinition::bounded_catalog("createEdge", puzzle2d_localized(|l| l.connect), ActionKind::Mutation).with_category("create"))
             .action_with(ActionDefinition::bounded_catalog("deleteEdge", puzzle2d_localized(|l| l.disconnect), ActionKind::Mutation).with_category("selection"))
+            .action_destructive("deleteEdge")
             .action_with(ActionDefinition::bounded_catalog("proximityConnect", LocalizedLabel::native("Connect Nearby", "In der Nähe verbinden"), ActionKind::Mutation).with_category("create"))
             .action_with(puzzle2d_internal_action("setProximityRadius", puzzle2d_localized(|l| l.proximity_radius), ActionKind::View).with_category("settings"))
             // 👁️ Palette-visible ephemeral view/selection commands.
@@ -5339,13 +5413,16 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             // 🎥️ `setCamera` is session-only view state, so it belongs in this View-kind group.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
+            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
             // ⌨️ A submitted engagement line ("move 50 25", "connect …") EDITS the document — its own
             // publication contract declares the Artifact lane — so it is a `Mutation`, exactly as
             // `📐️cad` and `🏭️process`'s identical verb declare it. Declared `View`, kind discipline
             // refused every submitted line at dispatch with "View-kind command 'engagementSubmit' must
             // not emit operations", i.e. the command line could not move, connect or place anything.
             .action_with(puzzle2d_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
+            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
+            .action_audience("engagementAbort", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"), ActionKind::View, "hand") })
             .action_with(puzzle2d_internal_action("setLodModeForPane", LocalizedLabel::native("Set LOD Mode For Pane", "LOD-Modus für Bereich festlegen"), ActionKind::View))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setGridSnapEnabled", LocalizedLabel::native("Set Grid Snap Enabled", "Rasterfang aktivieren"), ActionKind::View, "grid-3x3") })
@@ -5359,6 +5436,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             // entity-scoped verbs stay off the palette exactly as puzzle3d keeps its own off it.
             .mutation("addTargetRegion", puzzle2d_localized_phrase(|l| l.target_region, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("deleteTargetRegion", LocalizedLabel::native("Delete Target Region", "Zielbereich löschen"), ActionKind::Mutation).with_category("targets") })
+            .action_destructive("deleteTargetRegion")
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setTargetRegionFlag", LocalizedLabel::native("Set Target Region Flag", "Zielbereichsmarkierung festlegen"), ActionKind::Mutation).with_category("targets") })
             .action_with(puzzle2d_internal_action("relocateTargetRegion", LocalizedLabel::native("Relocate Target Region", "Zielbereich verlagern"), ActionKind::Mutation))
             .action_with(puzzle2d_internal_action("setAreaBrushSize", LocalizedLabel::native("Set Area Brush Size", "Flächenpinselgröße festlegen"), ActionKind::View))

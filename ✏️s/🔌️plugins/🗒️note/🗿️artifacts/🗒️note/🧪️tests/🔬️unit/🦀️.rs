@@ -106,7 +106,15 @@ async fn regenerate_committed_diff_fixtures() {
             let path = entry.path();
             if path.is_dir() {
                 walk(&path, out);
-            } else if path.file_name().is_some_and(|name| name == "🔣️.json") && path.parent().is_some_and(|parent| parent.file_name().is_some_and(|name| name == "🔺️diff")) {
+            } else if path.file_name().is_some_and(|name| name == "🔣️.json")
+                && path.parent().is_some_and(|parent| parent.file_name().is_some_and(|name| name == "🔺️diff"))
+                // 🚧️ `🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json` is the committed JSON *SCHEMA* for
+                // `NoteDiff`, not a fixture instance of one — and `NoteDiff` decodes it leniently
+                // (its `title` field swallows the schema's own `"title": "NoteDiff"`), so a
+                // regeneration pass that reaches it silently replaces 309 lines of schema with a
+                // 17-line diff instance. Only fixtures under `🧫️fixtures/` are regenerable.
+                && path.components().any(|component| component.as_os_str().to_string_lossy() == "🧫️fixtures")
+            {
                 out.push(path);
             }
         }
@@ -176,39 +184,3 @@ async fn note_apply_ops_reduces_a_nonempty_batch_and_closes_its_store() {
 }
 //#endregion 🔖️ApplyOpsLaw
 
-#[test]
-fn temporary_regenerate_mutation_fixtures() {
-    fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
-        for entry in std::fs::read_dir(dir).into_iter().flatten().flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                walk(&path, out);
-            } else if path.file_name().is_some_and(|name| name == "🔣️.json") {
-                out.push(path);
-            }
-        }
-    }
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets");
-    let mut files = Vec::new();
-    walk(&root, &mut files);
-    for path in files {
-        let text = std::fs::read_to_string(&path).expect("fixture reads");
-        let parent = path.parent().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
-        let canonical = if parent == "🔺️diff" {
-            dsl::os_pack::from_json_str::<NoteDiff>(&text).ok().map(|value| dsl::os_pack::to_json_string(&value))
-        } else if parent == "🦠️mutation" {
-            dsl::os_pack::from_json_str::<crate::schema::mutations::NoteMutation>(&text).ok().map(|value| dsl::os_pack::to_json_string(&value))
-        } else if parent == "⬅️before" || parent == "➡️after" {
-            dsl::os_pack::from_json_str::<NoteSnapshot>(&text).ok().map(|value| dsl::os_pack::to_json_string(&value))
-        } else {
-            None
-        };
-        let Some(canonical) = canonical else { continue };
-        let reparsed: serde_json::Value = serde_json::from_str(&canonical).expect("canonical reparses");
-        let original: serde_json::Value = serde_json::from_str(&text).expect("original reparses");
-        if reparsed != original {
-            std::fs::write(&path, format!("{}\n", serde_json::to_string_pretty(&reparsed).expect("pretty"))).expect("fixture writes");
-            println!("[DEBUG] rewrote {}", path.display());
-        }
-    }
-}

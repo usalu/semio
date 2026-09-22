@@ -379,8 +379,43 @@ fn brush_broad_phase_withdraws_an_owner_the_scene_dropped() {
 
 /// 🥽️ Wave W-P: one mesh identity decodes once per process through the `puzzle3d.mesh-decode` engine, and
 /// a brand-new session adopts the derived geometry by id alone — the wire never carries buffers twice.
+/// 🔒️ Exclusive access to the PROCESS-WIDE brush-mesh store for the laws that assert its behaviour.
+///
+/// 🐛️ `brush_mesh_store()` is one `Mutex<Puzzle3dBrushMeshStore>` per process, and every accessor
+/// (`derive_brush_mesh`, `shared_brush_mesh`, `adopt_brush_mesh_by_digest`, `stage_brush_mesh_page`)
+/// reaches it through `try_lock().ok()?` — so a CONTENDED lock is indistinguishable from "this
+/// geometry is not resident". That is right in the guest, which is single-threaded, and wrong under
+/// libtest's four threads: two laws staging into the store at the same moment make each other's
+/// digest short-circuit miss, and `a_run_over_resident_geometry_closes_on_its_first_page` /
+/// `a_resident_identity_never_stays_in_the_re_upload_request_set` then read `Ok(Some(1))` where the
+/// contract says `Ok(None)` — reproduced with `--test-threads=4` on this module alone, green in the
+/// same source at `--test-threads=1`. These laws are assertions about a SINGLETON, so they take it
+/// exclusively rather than the suite being serialised. Poison is re-entered: a law that panicked
+/// while holding it has already failed, and its siblings still describe the same store.
+/// 🔎️ Whether the process-wide store really holds geometry for `url`, retried past a CONTENDED lock.
+///
+/// 🐛️ `shared_brush_mesh` answers `try_lock().ok()?`, so `None` means EITHER "not resident" OR "another
+/// thread holds the store right now" — and laws outside `brush_mesh_store_laws_guard`'s set (every
+/// fill/brush law that goes through `FillToolRunPreparation`) take that lock too. Reading it once made
+/// `an_uploaded_mesh_is_adopted_by_url_and_digest` fail on residency it had just installed.
+fn resident_shared_mesh(url: &str) -> bool {
+    for _ in 0..4_096 {
+        if shared_brush_mesh(url).is_some() {
+            return true;
+        }
+        std::thread::yield_now();
+    }
+    false
+}
+
+fn brush_mesh_store_laws_guard() -> std::sync::MutexGuard<'static, ()> {
+    static BRUSH_MESH_STORE_LAWS: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    BRUSH_MESH_STORE_LAWS.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
 #[test]
 fn a_registered_mesh_is_shared_by_id_across_sessions() {
+    let _store = brush_mesh_store_laws_guard();
     let (positions, indices) = unit_cube_mesh_buffers();
     let url = "/test/shared-by-id.glb";
     let (derived_positions, derived_indices) = derive_brush_mesh(url, &positions, &indices).expect("derived geometry");
@@ -446,6 +481,7 @@ fn brush_mesh_page_wire_bytes(url: &str, digest: &str, page: u32, page_count: u3
 /// last page, and the reassembled geometry is byte-identical to what the client loaded.
 #[test]
 fn a_document_scale_mesh_uploads_in_pages_and_registers() {
+    let _store = brush_mesh_store_laws_guard();
     let fixture = brush_mesh_upload_fixture();
     let scale = &fixture["documentScale"][0];
     let position_count = fixture_count(&scale["positions"]);
@@ -486,6 +522,7 @@ fn a_document_scale_mesh_uploads_in_pages_and_registers() {
 /// client never announced is refused with a named fault — never silently half-installed.
 #[test]
 fn a_gapped_or_mismatched_page_run_is_refused() {
+    let _store = brush_mesh_store_laws_guard();
     let (positions, indices) = unit_cube_mesh_buffers();
     let url = "/test/gapped.glb";
     let digest = brush_mesh_digest(&positions, &indices);
@@ -515,6 +552,7 @@ fn a_gapped_or_mismatched_page_run_is_refused() {
 /// collision engine still holds the two ids as two identities.
 #[test]
 fn an_uploaded_mesh_is_adopted_by_url_and_digest() {
+    let _store = brush_mesh_store_laws_guard();
     let (positions, indices) = unit_cube_mesh_buffers();
     let url = "/test/adopt-by-digest.glb";
     let digest = brush_mesh_digest(&positions, &indices);
@@ -531,7 +569,7 @@ fn an_uploaded_mesh_is_adopted_by_url_and_digest() {
     let sibling = "/test/adopt-by-digest-sibling.glb";
     assert!(aliased.adopt_shared_mesh(sibling, Some(&digest)), "a second id over resident geometry adopts it instead of paging the bytes again");
     assert!(aliased.has_mesh(sibling), "the aliased id is its own live collision identity");
-    assert!(shared_brush_mesh(sibling).is_some(), "the alias is resident for every later session too");
+    assert!(resident_shared_mesh(sibling), "the alias is resident for every later session too");
     let (unseen, unseen_indices) = seeded_cube_mesh_buffers(97.0);
     let mut unknown = Puzzle3dCollision::new();
     assert!(!unknown.adopt_shared_mesh("/test/never-uploaded.glb", Some(&brush_mesh_digest(&unseen, &unseen_indices))), "geometry this process never derived has nothing to adopt, by id or by digest");
@@ -542,6 +580,7 @@ fn an_uploaded_mesh_is_adopted_by_url_and_digest() {
 /// run. Browser-measured before this: 202 `registerBrushMesh` commands for one example switch.
 #[test]
 fn a_run_over_resident_geometry_closes_on_its_first_page() {
+    let _store = brush_mesh_store_laws_guard();
     let (positions, indices) = seeded_cube_mesh_buffers(41.0);
     let digest = brush_mesh_digest(&positions, &indices);
     let mut session = Puzzle3dPrecomputeSession::new();
@@ -561,6 +600,7 @@ fn a_run_over_resident_geometry_closes_on_its_first_page() {
 /// duplicate made one retried page cost the client all 72 of them.
 #[test]
 fn a_retransmitted_page_is_acknowledged_without_dropping_the_run() {
+    let _store = brush_mesh_store_laws_guard();
     let (positions, indices) = seeded_cube_mesh_buffers(53.0);
     let digest = brush_mesh_digest(&positions, &indices);
     let url = "/test/b22-retransmit.glb";
@@ -582,6 +622,7 @@ fn a_retransmitted_page_is_acknowledged_without_dropping_the_run() {
 /// retires the instant real geometry installs, so a steady state never carries a standing request.
 #[test]
 fn an_identity_this_guest_cannot_serve_becomes_a_request_for_the_bytes() {
+    let _store = brush_mesh_store_laws_guard();
     // 🎲️ Geometry no other law derives: the store is content-addressed since B22, so the shared cube
     // would be adoptable by digest and the refusal this law is about could never happen.
     let (positions, indices) = seeded_cube_mesh_buffers(11.0);
@@ -622,6 +663,7 @@ fn an_identity_this_guest_cannot_serve_becomes_a_request_for_the_bytes() {
 /// the world body's re-upload lane, however the client announced it and however often.
 #[test]
 fn a_resident_identity_never_stays_in_the_re_upload_request_set() {
+    let _store = brush_mesh_store_laws_guard();
     // 🎲️ A seed no other law derives: the process-wide store outlives one test, and
     // `an_uploaded_mesh_is_adopted_by_url_and_digest` asserts that seed 97 geometry is UNKNOWN to it.
     let (positions, indices) = seeded_cube_mesh_buffers(149.0);
@@ -659,6 +701,7 @@ fn a_resident_identity_never_stays_in_the_re_upload_request_set() {
 /// mesh ceiling the collision engine admits, so a client re-announcing junk can never grow the world body.
 #[test]
 fn the_residency_counter_only_climbs_and_the_request_set_is_bounded() {
+    let _store = brush_mesh_store_laws_guard();
     let (positions, indices) = unit_cube_mesh_buffers();
     let digest = brush_mesh_digest(&positions, &indices);
     let mut session = Puzzle3dPrecomputeSession::new();
@@ -690,6 +733,7 @@ fn the_residency_counter_only_climbs_and_the_request_set_is_bounded() {
 /// payload and digest the plugin decodes is the one the renderer's pager encodes.
 #[test]
 fn the_paged_upload_contract_matches_the_language_neutral_fixture() {
+    let _store = brush_mesh_store_laws_guard();
     let fixture = brush_mesh_upload_fixture();
     assert_eq!(fixture_count(&fixture["commandRawBytes"]), crate::retained_command::PUZZLE_COMMAND_RAW_BYTES);
     assert_eq!(fixture_count(&fixture["pageValues"]), PUZZLE3D_MESH_PAGE_VALUES);
@@ -718,6 +762,7 @@ fn the_paged_upload_contract_matches_the_language_neutral_fixture() {
 /// registry's own retirement sweeps it — never unbounded memory, and never a live run.
 #[test]
 fn an_abandoned_page_run_is_retired_and_a_live_one_survives() {
+    let _store = brush_mesh_store_laws_guard();
     let (positions, indices) = unit_cube_mesh_buffers();
     let abandoned = "/test/abandoned.glb";
     let live = "/test/live.glb";

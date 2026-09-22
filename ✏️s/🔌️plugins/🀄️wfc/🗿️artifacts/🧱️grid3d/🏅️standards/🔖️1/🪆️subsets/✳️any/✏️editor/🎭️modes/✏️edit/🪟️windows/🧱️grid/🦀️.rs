@@ -119,6 +119,13 @@ pub fn definition() -> WindowKindDefinition {
         ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(ACTION_WORLD_PICK, LocalizedLabel::native("World Pick", "Weltauswahl"), ActionKind::View) },
         ActionDefinition::bounded_catalog("setCamera", LocalizedLabel::native("Set Camera", "Kamera setzen"), ActionKind::Mutation),
         ActionDefinition::bounded_catalog(ACTION_SET_ACTIVE_EXAMPLE, LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation),
+        // 🏁 `solve` starts the fill tool run. It rides `GRID3D_RETAINED_TOOL_IDS` and carries a
+        // `bounded_first_step_tool_proofs!` row, and the framework joins those rows to the MIGRATED
+        // action roster (`validate_tool_job_rows`: `expected = TOOL_JOB_IDS ∩ migrated`). A proof row
+        // for a verb no window declares is refused `interactive-job.catalog-authority`, and that
+        // refusal is a guest `panic!` that aborts the whole wfc component at app registration — so
+        // this row is what keeps every grid3d pane reaching `data-shell-ready`.
+        ActionDefinition::bounded_catalog("solve", LocalizedLabel::native("Solve", "Lösen"), ActionKind::Mutation),
     ]);
     for action in &mut definition.actions {
         action.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;

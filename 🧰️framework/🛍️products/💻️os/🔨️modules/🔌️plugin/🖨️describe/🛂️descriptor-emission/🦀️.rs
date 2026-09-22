@@ -240,7 +240,7 @@ impl actor_bindings::semio::framework::host_async::HostWithStore<DescribeHostSta
 /// must be sized against; `semio-s-plugin-gis` exhausted **4_000_000_000** fuel at ~1_024_604 ms
 /// (2026-09-17), so `8_000_000_000` is the next measured step. Re-measure, do not re-estimate, if a
 /// larger plugin trips it.
-const DESCRIBE_FUEL_BUDGET: u64 = 32_000_000_000;
+const DESCRIBE_FUEL_BUDGET: u64 = 8_000_000_000;
 
 /// ⏳️ How long `describe()` may make NO fuel progress at all before the build gives up. It is a
 /// stall bound, not a total-runtime bound — `OwnedDeadline::NoFuelProgress`, which

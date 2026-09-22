@@ -78,3 +78,39 @@ async fn wires_working_scene_is_owned_by_the_exact_snapshot_child() {
 
     assert_eq!(observed, SerdeJsonWiresChildOwnerOracle::expected());
 }
+
+/// 🩹️ A document whose composed `content` handle arrived WITHOUT its working scene still reads its
+/// board. This is the exact live defect the play pane showed on 2026-09-22: the reasoning-wires
+/// canvas drew nothing but its grid and the Artifact panel's RELATIONSHIPS section was empty, while
+/// the same render's IDENTITIES section listed all seven topics — identities come off the persisted
+/// `wires_fixture`, the board came off the child owner, and the owner had not survived the transport
+/// the document arrived through (the sibling law above pins that a plain wire round trip of the
+/// handle drops it). `wires_working_scene` now recovers from `wires_fixture.board`, which every
+/// transport carries because it is ordinary persisted document data.
+#[semio_framework_async_macros::async_test]
+async fn an_unmaterialized_content_child_still_reads_the_documents_own_board() {
+    let loaded = crate::schema::metabolism_wires_example_snapshot().expect("the committed metabolism example parses");
+    assert_eq!(crate::schema::fixture_nodes(&wires_working_board(&loaded)).len(), 7, "the codec-decoded example materializes its child");
+
+    // 🚚️ Exactly what a transport that runs neither the pack nor the DSL codec hands the app back:
+    // the same persisted fields, and a `content` handle reduced to its `(child_id, target)` pair.
+    let wire = dsl::os_pack::to_json_string(&loaded.content);
+    let stripped: WiresContentChild = dsl::os_pack::from_json_str(&wire).expect("Wires child wire roundtrip");
+    assert!(stripped.local_owner::<WiresWorkingScene>().is_none(), "the wire form carries no working scene — that is the premise of this law");
+    let arrived = WiresSnapshot { wires_fixture: loaded.wires_fixture.clone(), content: stripped, meta: loaded.meta.clone() };
+
+    let board = wires_working_board(&arrived);
+    assert_eq!(crate::schema::fixture_nodes(&board).len(), 7, "the canvas renders one layer per identity, never an empty grid");
+    assert_eq!(crate::schema::fixture_edges(&board).len(), 9, "the Artifact panel's RELATIONSHIPS section reads these");
+    assert_eq!(crate::schema::fixture_nodes(&board), crate::schema::fixture_nodes(&wires_working_board(&loaded)), "the recovered board is the decoded one, node for node");
+}
+
+/// 🩹️ The recovery is for an ABSENT owner only: a document the user really did empty keeps its empty
+/// board, however stale the persisted `wires_fixture.board` beside it may be.
+#[semio_framework_async_macros::async_test]
+async fn an_owned_empty_scene_is_never_refilled_from_the_persisted_board() {
+    let loaded = crate::schema::metabolism_wires_example_snapshot().expect("the committed metabolism example parses");
+    let emptied = WiresSnapshot { wires_fixture: loaded.wires_fixture.clone(), content: wires_content_child_with_owner(Vec::new(), Vec::new()), meta: loaded.meta.clone() };
+    assert!(crate::schema::fixture_nodes(&wires_working_board(&emptied)).is_empty(), "an owner that exists is honoured verbatim");
+}
+

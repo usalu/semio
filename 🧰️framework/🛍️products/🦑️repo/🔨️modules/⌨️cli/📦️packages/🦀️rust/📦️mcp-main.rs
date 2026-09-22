@@ -2,7 +2,7 @@
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
-//! 🚀️ `semio-repo-mcp` — the repo Model Context Protocol server over stdio, backed by the same
+//! 🚀️ `repo` — the repo Model Context Protocol server over stdio, backed by the same
 //! production repository `semio mcp` serves. The profile comes from `SEMIO_REPO_MCP_CLIENT`; no
 //! command arguments are accepted.
 

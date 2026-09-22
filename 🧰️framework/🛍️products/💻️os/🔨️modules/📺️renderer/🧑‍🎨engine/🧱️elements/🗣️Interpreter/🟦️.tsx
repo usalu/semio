@@ -50,6 +50,7 @@ import {
   interactionMergeFromModifiers,
   renderControlIcon,
   TREE_WINDOW_PATH_SEPARATOR,
+  TREE_WINDOW_ROW_EXTENTS,
   treeWindowPathOf,
   treeWindowRequestsForViewport,
   treeWindowVisibleRowsForViewport,
@@ -65,6 +66,7 @@ import {
   type TreePanelConfig,
   type TreeWindowContainerMeasure,
   type TreeWindowRequest,
+  type TreeWindowRowExtent,
   type TreeWindowRowMeasure,
   type UiLabel,
   type UiTranslationKey,
@@ -85,12 +87,14 @@ import {
   type SceneLaneRef,
   BOARD2D_SCENE_LANES,
   CANVAS2D_SCENE_LANES,
+  PAINT2D_SCENE_LANES,
   TILEDMAP_SCENE_LANES,
   WORLD3D_SCENE_LANES,
   WORLD3D_SCENE_LANE_KEY_PREFIX,
   board2dSceneFromLanes,
   canvas2dSceneFromLanes,
   createContinuousGestureLane,
+  paint2dSceneFromLanes,
   sceneFromLanes,
   world3dSceneFromLanes,
   world3dSceneLaneForBodyKey,
@@ -425,6 +429,31 @@ const SURFACE_KIND_SCENE_FIELD: Record<string, string> = {
   "event-feed": "eventFeed",
 };
 
+/** 🚚️ `SurfaceKind` wire tag → the lane table of every scene kind whose Rust `SceneDoc` overrides
+ * `split_lanes` (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs`). A kind IN this table must be
+ * rendered through {@link PagedSurfaceView}, which puts the lanes back; a kind that is absent renders
+ * its decoded doc verbatim.
+ *
+ * ⚠️ The membership of this table IS the routing decision — {@link SurfaceView} asks it rather than
+ * repeating a list of kinds. `paint-2d` used to be missing from that repeated list while
+ * `Paint2dScene::split_lanes` split `documentSyncJson`/`assetsJson` unconditionally, so `Paint2dHost`
+ * received `""` for both and its own `try/catch` swallowed the failure: the raster pane's composite and
+ * navigator windows rendered completely empty, with no console error and no texture upload
+ * (measured on :6033, ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). One table, one decision. */
+const SURFACE_KIND_SCENE_LANES: Record<string, readonly SceneLane<Record<string, unknown>>[]> = {
+  "world-3d": WORLD3D_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
+  "canvas-2d": CANVAS2D_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
+  "board-2d": BOARD2D_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
+  "tiled-map": TILEDMAP_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
+  "paint-2d": PAINT2D_SCENE_LANES as readonly SceneLane<Record<string, unknown>>[],
+};
+
+/** 🚚️ The lane table a surface kind publishes out of its doc, or `undefined` when it publishes none.
+ * See {@link SURFACE_KIND_SCENE_LANES}. */
+export function surfaceKindSceneLanes(kind: string): readonly SceneLane<Record<string, unknown>>[] | undefined {
+  return SURFACE_KIND_SCENE_LANES[kind];
+}
+
 function menuRefFromContract(menu: UiNodeRecord["menu"]): UiMenuRef | undefined {
   if (!menu) return undefined;
   const args = menu.args && typeof menu.args === "object" && !Array.isArray(menu.args) ? (menu.args as Record<string, unknown>) : undefined;
@@ -505,8 +534,10 @@ function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfacePr
 }
 
 /** 🚚️ Reattaches a surface's out-of-doc payload lanes to the spine its `doc.bytes` decoded to. Only a
- * scene kind that declares lanes has one (`world-3d`); every other kind renders its decoded doc
- * verbatim. See {@link PagedSurfaceView}. */
+ * scene kind that declares lanes has one — the FIVE whose Rust `SceneDoc` overrides `split_lanes`:
+ * `world-3d`, `canvas-2d`, `board-2d`, `tiled-map` and `paint-2d`. Every other kind renders its decoded
+ * doc verbatim. A kind that splits but is not listed in {@link SurfaceView}'s route gets its lane
+ * fields as EMPTY STRINGS, which is silent at every layer — see {@link PagedSurfaceView}. */
 type SurfaceSceneAssembler = (spine: Record<string, unknown>) => Record<string, unknown>;
 
 /** 🖱️ The `onAction` a scene host receives: the shell's funnel with every dispatch stamped `origin: "gesture"`
@@ -1587,7 +1618,7 @@ export function treeWindowContainersUnder(root: HTMLElement, viewport: HTMLEleme
     // 🧯️ A CLOSED section still renders its content element, `hidden`, so its rect is zero — it is not on
     // screen, it materialises nothing, and measuring it would ask for rows nobody is looking at.
     if (rect.height <= 0) continue;
-    measured.push({ key, total, offset: treeWindowAttributeNumber(element, "data-tree-window-offset"), length: treeWindowAttributeNumber(element, "data-tree-window-length"), top: rect.top - originTop, height: rect.height, rows: treeWindowRowsUnder(element, originTop) });
+    measured.push({ key, total, rowExtent: treeWindowRowExtentAttribute(element), offset: treeWindowAttributeNumber(element, "data-tree-window-offset"), length: treeWindowAttributeNumber(element, "data-tree-window-length"), top: rect.top - originTop, height: rect.height, rows: treeWindowRowsUnder(element, originTop) });
   }
   return measured;
 }
@@ -1619,6 +1650,16 @@ function treeWindowAttributeNumber(element: HTMLElement, attribute: string): num
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
 }
 
+/** 🪟️ The closed row geometry the Tree element stamped on this container. A container rendered by an
+ * older paint (or a target that never stamped the attribute) reads as `standard`, which is the
+ * contract's own `TreeWindowRowExtent::default()` — the measure never carries `undefined`, because the
+ * viewport rule prices every row through {@link treeWindowRowExtentPx} and an absent token would make
+ * the whole container's geometry `NaN`. */
+function treeWindowRowExtentAttribute(element: HTMLElement): TreeWindowRowExtent {
+  const token = element.getAttribute("data-tree-window-row-extent");
+  return TREE_WINDOW_ROW_EXTENTS.find((extent) => extent === token) ?? "standard";
+}
+
 /** 🪟️ The one line a report is compared on — the host is refreshed only when the ANSWER changed, not
  * every time a scroll frame recomputed the same answer (a panel scrolled one pixel inside a row still
  * wants exactly the rows it already has). */
@@ -1646,9 +1687,9 @@ const TREE_WINDOW_OFFSCREEN_SEED_ROWS = 1;
  * {@link capTreeWindowRequests} because the guest's ledger charges `1 + rows` for EVERY container in the
  * body, on-screen or not — pricing only the visible ones is what made the host ask 112 and be answered 110
  * on every render (📓️s3-review-streaming-loop.md §1). */
-export function treeWindowBodyRequestsV1(containers: readonly TreeWindowContainerMeasure[], viewportHeight: number, rowHeightPx: number): readonly TreeWindowRequest[] {
-  const visible = treeWindowVisibleRowsForViewport(containers, 0, viewportHeight, rowHeightPx);
-  const wanted = new Map(treeWindowRequestsForViewport(containers, 0, viewportHeight, rowHeightPx, TREE_WINDOW_OVERSCAN_ROWS).map((request) => [request.key, request] as const));
+export function treeWindowBodyRequestsV1(containers: readonly TreeWindowContainerMeasure[], viewportHeight: number): readonly TreeWindowRequest[] {
+  const visible = treeWindowVisibleRowsForViewport(containers, 0, viewportHeight);
+  const wanted = new Map(treeWindowRequestsForViewport(containers, 0, viewportHeight, TREE_WINDOW_OVERSCAN_ROWS).map((request) => [request.key, request] as const));
   const requests = containers.map((container) => {
     const known = wanted.get(container.key);
     if (known) return known;
@@ -1710,7 +1751,7 @@ function useTreeWindowObserver(rootRef: RefObject<HTMLDivElement | null>, window
       const viewportHeight = treeWindowViewportMetrics(viewport).height;
       const containers = treeWindowContainersUnder(live, viewport);
       reportDuplicateTreeWindowKeys(containers, channel.bodyKey, duplicateKeysRef.current);
-      const requests = treeWindowBodyRequestsV1(containers, viewportHeight, rowHeight).map((request) => ({ nodeKey: request.key, offset: request.offset, rows: request.rows }));
+      const requests = treeWindowBodyRequestsV1(containers, viewportHeight).map((request) => ({ nodeKey: request.key, offset: request.offset, rows: request.rows }));
       const viewportRows = Math.max(1, Math.ceil(viewportHeight / rowHeight));
       const signature = treeWindowReportSignatureV1(requests, viewportRows);
       if (signature === lastReportRef.current) return;
@@ -2022,7 +2063,7 @@ function PagedSurfaceView({ record, component, context }: { readonly record: UiN
   const store = context.store;
   const revision = useUiDocumentRevision(store);
   const carrierEpoch = useSurfaceCarrierEpoch(store, record);
-  const lanes = (component.kind === "canvas-2d" ? CANVAS2D_SCENE_LANES : component.kind === "board-2d" ? BOARD2D_SCENE_LANES : component.kind === "tiled-map" ? TILEDMAP_SCENE_LANES : WORLD3D_SCENE_LANES) as readonly SceneLane<Record<string, unknown>>[];
+  const lanes = surfaceKindSceneLanes(component.kind) ?? [];
   const assemble = useCallback(
     (spine: Record<string, unknown>): Record<string, unknown> => {
       void revision;
@@ -2087,7 +2128,9 @@ function SurfaceAccessibilityShell({ record, context, children }: { readonly rec
 
 function SurfaceView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "surface" }>;
-  const body = component.kind === "world-3d" || component.kind === "canvas-2d" || component.kind === "board-2d" || component.kind === "tiled-map" ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
+  // 🚚️ EVERY scene kind that publishes lanes comes through `PagedSurfaceView`, which puts them back;
+  // the membership test is {@link SURFACE_KIND_SCENE_LANES} itself, never a list repeated here.
+  const body = surfaceKindSceneLanes(component.kind) ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
   return (
     <SurfaceAccessibilityShell record={record} context={context}>
       {body}
@@ -2265,12 +2308,16 @@ if (import.meta.vitest) {
       world3dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, WORLD3D_SCENE_LANES),
       canvas2dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, CANVAS2D_SCENE_LANES),
       board2dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, BOARD2D_SCENE_LANES),
+      paint2dSurfaceLaneTexts: (record: UiNodeRecord, state: UiDocumentState, declared: readonly SceneLaneRef[]) => surfaceLaneTexts(record, state, declared, PAINT2D_SCENE_LANES),
       world3dSceneFromLanes,
       canvas2dSceneFromLanes,
       board2dSceneFromLanes,
+      paint2dSceneFromLanes,
+      surfaceKindSceneLanes,
       WORLD3D_SCENE_LANES,
       CANVAS2D_SCENE_LANES,
       BOARD2D_SCENE_LANES,
+      PAINT2D_SCENE_LANES,
       WORLD3D_SCENE_LANE_KEY_PREFIX,
       world3dSceneLaneForBodyKey,
     },

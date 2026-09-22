@@ -114,10 +114,11 @@ fn tsv_example_snapshot(example_id: &str) -> TsvSnapshot {
 fn tsv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<TsvEditorCommand, Fault> {
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(TsvEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
+        "set-cell" => Ok(TsvEditorCommand::SetCell { row: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["row"], 0), column: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["column"], 0), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.tsv.unhandled-action"),
-            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample)"),
+            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, set-cell)"),
         )),
     }
 }

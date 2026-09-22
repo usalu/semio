@@ -1,9 +1,7 @@
 import {readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineOwnedBuildConfigFactory, uiReactBuildPlugin, uiTailwindBuildPlugins, type OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin, semioAssetsVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { DEFAULT_HOST_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
@@ -21,7 +19,7 @@ import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/�
 const configDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
-export default defineConfig(async ({ command }) => {
+export default defineOwnedBuildConfigFactory(async ({ command }): Promise<OwnedBuildConfig> => {
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
 const profile = command === "build" || process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
@@ -112,7 +110,7 @@ return {
   cacheDir: playgroundCacheDir,
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
-  worker: { format: "es", plugins: () => [semioProductionTestBoundaryVitePlugin()], rollupOptions: { output: distributionRollupOutput } },
+  worker: { format: "es" as const, plugins: () => [semioProductionTestBoundaryVitePlugin()], rollupOptions: { output: distributionRollupOutput } },
   // 🏷️ A brand's own `distDir` (e.g. the Aggregator's `♻️/aggregator/dist`) keeps its build output
   // self-contained alongside its brand config/assets instead of the shared playground `dist/`.
   build: {
@@ -220,7 +218,7 @@ return {
     ...(brand?.assetsDir ? staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${brand.assetsDir}`, root: brand.assetsDir }) : []),
     ...semioBrandHtmlVitePlugins(repoRoot, brand),
     ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
-    ...(renderer === "wgpu" ? [tailwindcss()] : [react(), semioPlaygroundReactRefreshCoherenceVitePlugin(), tailwindcss()]),
+    ...(renderer === "wgpu" ? uiTailwindBuildPlugins() : [uiReactBuildPlugin(), semioPlaygroundReactRefreshCoherenceVitePlugin(), ...uiTailwindBuildPlugins()]),
   ],
   optimizeDeps: {
     entries: [path.join(playDir, "🌐️.html")],

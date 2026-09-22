@@ -35,7 +35,7 @@ fn catalog_projection_budget_matches_serde_and_refuses_before_overdraw() {
 fn catalog_projection_preflight_matches_actual_serde_payload_bytes() {
     let assemblies = artifact_assemblies().unwrap();
     let receipts = native_codec_factory_receipts().unwrap();
-    let expected = preflight_native_catalog_projection(&assemblies, &receipts).unwrap();
+    let expected = preflight_native_catalog_projection(&assemblies, &receipts, &native_codec_factories()).unwrap();
     let contribution = artifact_catalog_contribution(&assemblies).unwrap();
     let payload = serde_json::to_value(&contribution).unwrap()["payload"].clone();
     assert_eq!(serde_json::to_vec(&payload).unwrap().len(), expected.projection);

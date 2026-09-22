@@ -31,3 +31,24 @@ test("clean removes generated ticket run output without removing ticket material
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("clean removes root Generation3d transient mounts without removing ordinary directories", () => {
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for cleanup fixture output.");
+  mkdirSync(artifactRoot, { recursive: true });
+  const root = mkdtempSync(join(artifactRoot, "semio-clean-root-transient-"));
+  const transients = [".generation3d-crate-link", ".generation3d-edit-link", ".w-g3-ticket"].map((name) => join(root, name));
+  const retained = join(root, "source");
+  try {
+    for (const directory of transients) {
+      mkdirSync(directory, { recursive: true });
+      writeFileSync(join(directory, "state"), "transient\n");
+    }
+    mkdirSync(retained, { recursive: true });
+    new CleanScript(root, root).run([]);
+    for (const directory of transients) expect(existsSync(directory)).toBe(false);
+    expect(existsSync(retained)).toBe(true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

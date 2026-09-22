@@ -37,7 +37,11 @@ async fn format_artifact_reformats_jack_query() {
     let mut app = app_with_jack().await;
     dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name".into() })).await;
     let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::FormatDocument(format_document::FormatDocument {})).await;
-    assert_eq!(result.mutations.len(), 1);
+    // 🧾️ A MOUNTED app never surfaces its operations in `result.mutations`: the edit lands through
+    // the retained publication lane and `InvocationResult::mutations` stays empty (fleet-brief
+    // stale-test bucket 3). Asserting a count of 1 there tested the UNMOUNTED shape this harness
+    // stopped using; the projection assertion that follows is the real proof the edit landed.
+    assert!(result.mutations.is_empty(), "a mounted dispatch publishes through its receipt lanes, not result.mutations: {:?}", result.mutations);
     assert!(writer_text(&app.snapshot().expect("projection")).contains('\n'));
 }
 
@@ -54,7 +58,8 @@ async fn format_document_without_change_emits_no_operation() {
 async fn set_text_action_updates_projection() {
     let mut app = new_app().await;
     let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: "MATCH (a) RETURN a".into() })).await;
-    assert_eq!(result.mutations.len(), 1);
+    // 🧾️ Mounted dispatch — see the note on `format_artifact_reformats_jack_query`.
+    assert!(result.mutations.is_empty(), "a mounted dispatch publishes through its receipt lanes, not result.mutations: {:?}", result.mutations);
     assert_eq!(writer_text(&app.snapshot().expect("projection")), "MATCH (a) RETURN a");
 }
 
@@ -82,7 +87,8 @@ async fn commit_rename_renames_all_spans_at_the_config_selection() {
     // a real selection command first (mirrors what the editor surface does before offering rename).
     dispatch(&mut app, WriterCommand::SetEditorSelection(crate::editor::writer::commands::set_editor_selection::SetEditorSelection { start, end: start })).await;
     let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::CommitRename(commit_rename::CommitRename { text: "piece".into() })).await;
-    assert_eq!(result.mutations.len(), 1);
+    // 🧾️ Mounted dispatch — see the note on `format_artifact_reformats_jack_query`.
+    assert!(result.mutations.is_empty(), "a mounted dispatch publishes through its receipt lanes, not result.mutations: {:?}", result.mutations);
     let text = writer_text(&app.snapshot().expect("projection"));
     assert_eq!(text.matches("piece").count(), 3);
     assert_eq!(text.matches("a:Piece").count(), 0);
@@ -91,10 +97,14 @@ async fn commit_rename_renames_all_spans_at_the_config_selection() {
 /// 🌱️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright) —
 /// `setActiveExample` now surfaces as a `Effect::LoadDocument` carrying the replacement
 /// document's pack bytes, exactly like `📐️cad`'s `importCadFile` (`reset_document_effect`).
+/// 📚️ `"demo"` is the ONE example id this subset PUBLISHES (`📚️examples/🎬️demo`), and the document it
+/// loads is the jack fixture. The dispatched id used to be `"jack"`, which
+/// `document_for_example_id` has never published — it fell through to the empty document, so this law
+/// proved the opposite of its own name.
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_jack_fixture() {
     let mut app = new_app().await;
-    let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "jack".into() })).await;
+    let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
     assert!(result.mutations.is_empty(), "whole-document replace is an effect, not an in-history mutation");
     let projection = loaded_document(&result);
     assert_eq!(projection.id, "jack");
@@ -109,10 +119,14 @@ async fn set_active_example_loads_dag_jack_fixture() {
     assert_eq!(loaded_document(&result).id, "dag-jack");
 }
 
+/// 🪹 An id this app does not publish resets to the EMPTY document rather than faulting (the navbar
+/// dispatches whatever its combobox holds). The EMPTY id is not that case: it means "load my default
+/// example", exactly like `📽️animate`'s own `setActiveExample` — so this law now files an id the app
+/// genuinely does not publish.
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_falls_back_to_empty_document() {
     let mut app = app_with_jack().await;
-    let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() })).await;
+    let result = crate::editor::writer::unit_tests::context::dispatch(&mut app, WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "not-a-published-example".into() })).await;
     assert!(result.mutations.is_empty());
     let projection = loaded_document(&result);
     assert_eq!(projection.id, "empty");

@@ -481,7 +481,12 @@ impl Neo4jDirectory {
         let observed_now = validate_artifact_creation_authority(&mut txn, &append.actor, &append.space_id, None).await?;
         let mut facts = artifact_creation_facts(&mut txn, &request_key).await?;
         let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        if append.recorded_at_ms > observed_now || matches!(append.body, ArtifactCreationFactBodyV1::Prepared { .. }) && observed_now >= operation.intent.deadline_ms {
+        // ⏱️ A fact may not be stamped in the future. It may be stamped LATE: the durable
+        // `deadline_ms` is what closes an ABANDONED key, and refusing a `Prepared` past it here
+        // refused a genesis the guest had already produced — a 176 s honest creation on the biggest
+        // staged component (ticket 26/09/18 slice HC1, hub 7681). A key the recovery sweep did close
+        // is terminal, and `decide_artifact_creation_fact_append_v1` refuses the transition on it.
+        if append.recorded_at_ms > observed_now {
             return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into()));
         }
         if let Some(next) = decide_artifact_creation_fact_append_v1(&facts, append, observed_now)? {
@@ -554,7 +559,12 @@ impl Neo4jDirectory {
             txn.commit().await.map_err(backend)?;
             return Ok(DocumentGenesisCommitV1::Existing(operation));
         }
-        if append.now_ms > observed_now || observed_now >= append.intent.deadline_ms {
+        // ⏱️ The durable `deadline_ms` closes an ABANDONED key; it is not a bound on how long an
+        // honest genesis may take. Refusing the publication past it stranded a creation whose
+        // pair was already prepared, in `preparing`, until the recovery sweep closed it (ticket
+        // 26/09/18 slice HC1, hub 7681: 128 s of guest genesis, then this). A closed key is
+        // terminal and `validate_document_genesis_append_v1` refuses a publication on it.
+        if append.now_ms > observed_now {
             return Err(DirectoryError::Conflict("genesis publication is outside its live server deadline".into()));
         }
         validate_document_genesis_append_v1(&operation, append)?;

@@ -143,7 +143,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -215,11 +215,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -2625,7 +2625,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -2705,11 +2723,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -5115,7 +5133,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -5195,11 +5231,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -7605,7 +7641,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -7685,11 +7739,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -10095,7 +10149,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -10175,11 +10247,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -12585,7 +12657,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -12665,11 +12755,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -15075,7 +15165,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -15155,11 +15263,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -17565,7 +17673,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -17645,11 +17771,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -20055,7 +20181,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -20135,11 +20279,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -22545,7 +22689,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -22625,11 +22787,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -25035,7 +25197,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -25115,11 +25295,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -27525,7 +27705,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -27605,11 +27803,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -30015,7 +30213,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -30095,11 +30311,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -32505,7 +32721,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -34995,7 +35229,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "snapshot",
+                "label": {
+                  "native": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  },
+                  "reuse": {
+                    "en": "Document JSON",
+                    "de": "Dokument-JSON"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -35075,11 +35327,11 @@
             "label": {
               "native": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               },
               "reuse": {
                 "en": "Set Selected Check",
-                "de": "AusgewÃ¤hlte PrÃ¼fung setzen"
+                "de": "Ausgewählte Prüfung setzen"
               }
             },
             "kind": "view",
@@ -39322,8 +39574,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "04f92f3209d0b27ba98d06ff4d0d34a61725ee099759460c3288b2b12c88aac8",
-    "coreWasmSha256": "f7f7ff7aa3ec7d93597647a046f2d751d9723bd0e1f5f33c96842100046442b6",
-    "descriptorSha256": "5759ccff106701708a2b56e9a908e5e52e36dcc971b0b30b267900f07521b0a4"
+    "wasmSha256": "d6f5e31e2c1e4d1befc57db422279c0cdf38665271e6bab2454a52a9b857c30b",
+    "coreWasmSha256": "446496bcd81b40700be8bb7a707cacdf7280912899b509041c818978f0a4d8b3",
+    "descriptorSha256": "e9fe017e3736faf5991d831e0203cd1251bc89937092665dea312cbc8c92bc73"
   }
 }

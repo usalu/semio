@@ -280,7 +280,7 @@ pub mod document_backbone_binding;
 
 #[path = "👥️presence/♻️retirement/🦀️.rs"]
 mod presence_retirement;
-pub use presence_retirement::{no_presence_local_root_retirement_factory, no_presence_peer_retirement_factory, no_presence_store_disposer, NoPresenceRetirementFactory, PresenceStoreOwnedDisposer};
+pub use presence_retirement::{bounded_presence_root_retirement_factory, bounded_presence_store_disposer, no_presence_local_root_retirement_factory, no_presence_peer_retirement_factory, no_presence_store_disposer, NoPresenceRetirementFactory, PresenceStoreOwnedDisposer};
 
 #[path = "🎚️config/🚫️none/♻️retirement/🦀️.rs"]
 mod no_config_retirement;
@@ -1466,6 +1466,49 @@ pub mod app {
         pub inference_schema_version: u32,
         pub algorithm_version: u32,
         pub policy_version: u32,
+        /// 📜️ This inference's published payload contract, authored beside the inference itself and
+        /// carried all the way into the committed descriptor. `None` is the honest answer for an
+        /// inference nobody has written a contract for yet — the gateway then refuses the call by
+        /// name rather than dispatching a body the guest cannot decode.
+        pub payload: Option<ArtifactInferencePayloadContract>,
+    }
+
+    /// 📜️ The `&'static str` twin of `semio_framework::InferencePayloadContract` — authored in a
+    /// `const fn` beside the inference, so the contract a plugin publishes and the one its guest
+    /// enforces are one declaration.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct ArtifactInferencePayloadContract {
+        pub payload_schema_id: &'static str,
+        pub input_schema: &'static str,
+        pub output_schema: &'static str,
+        pub progress_unit: &'static str,
+        pub artifact_binding: Option<ArtifactInferenceDocumentBinding>,
+    }
+
+    /// 🔗️ The `&'static str` twin of `semio_framework::InferenceArtifactBinding`.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct ArtifactInferenceDocumentBinding {
+        pub field: &'static str,
+        pub encoding: &'static str,
+        pub required: bool,
+    }
+
+    impl From<ArtifactInferenceDocumentBinding> for semio_framework::InferenceArtifactBinding {
+        fn from(binding: ArtifactInferenceDocumentBinding) -> Self {
+            Self { field: binding.field.to_owned(), encoding: binding.encoding.to_owned(), required: binding.required }
+        }
+    }
+
+    impl From<ArtifactInferencePayloadContract> for semio_framework::InferencePayloadContract {
+        fn from(contract: ArtifactInferencePayloadContract) -> Self {
+            Self {
+                payload_schema_id: contract.payload_schema_id.to_owned(),
+                input_schema: contract.input_schema.to_owned(),
+                output_schema: contract.output_schema.to_owned(),
+                progress_unit: contract.progress_unit.to_owned(),
+                artifact_binding: contract.artifact_binding.map(Into::into),
+            }
+        }
     }
 
     /// ⚠️ Structured failure returned by a type-erased inference execution boundary.
@@ -1699,6 +1742,114 @@ pub mod app {
         pub inference_schema_version: u32,
         pub algorithm_version: u32,
         pub policy_version: u32,
+        /// 📜️ The published payload contract, carried from the guest's own declaration to
+        /// `describe`, which commits it into `contributions.inferenceServices[].payload`. Not part
+        /// of this row's IDENTITY — [`validate_wire_request_metadata`] compares the identity
+        /// projection, because a REQUEST names an inference and never re-states its contract.
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub payload: Option<WireInferencePayloadContract>,
+    }
+
+    /// 📜️ Wire twin of [`ArtifactInferencePayloadContract`] — the shape that crosses the guest
+    /// boundary on the inference roster.
+    #[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
+    pub struct WireInferencePayloadContract {
+        pub payload_schema_id: String,
+        pub input_schema: String,
+        pub output_schema: String,
+        #[value(default, skip_serializing_if = "String::is_empty")]
+        pub progress_unit: String,
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub artifact_binding: Option<WireInferenceArtifactBinding>,
+    }
+
+    /// 🔗️ Wire twin of [`ArtifactInferenceDocumentBinding`].
+    #[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
+    pub struct WireInferenceArtifactBinding {
+        pub field: String,
+        pub encoding: String,
+        pub required: bool,
+    }
+
+    /// 📦️ The artifact document an artifact-bound inference is run against: the artifact's own
+    /// canonical `pack`/`spr` pair, each standard base64, under the payload field the inference's
+    /// published contract names (`InferenceArtifactBinding.field`, encoding
+    /// `semio_framework::INFERENCE_ARTIFACT_PACK_BASE64`). The host fills it from the artifact the
+    /// caller named; the guest decodes it back into its OWN snapshot type — neither side ever
+    /// interprets the other's document shape.
+    #[derive(Clone, Debug, Default, PartialEq, Eq, ToValue, FromValue)]
+    #[value(rename_all = "camelCase", deny_unknown_fields)]
+    pub struct ArtifactDocumentPayload {
+        pub pack: String,
+        pub spr: String,
+    }
+
+    impl ArtifactDocumentPayload {
+        /// 📦️ Builds the payload from raw pair bytes — the host half of the binding.
+        pub fn from_pair(pack: &[u8], spr: &[u8]) -> Self {
+            Self { pack: base64_codec::base64_standard_encode(pack), spr: base64_codec::base64_standard_encode(spr) }
+        }
+
+        /// 🔡️ The pair bytes back, or a named decode failure — never a partial decode.
+        pub fn pair(&self) -> Result<(Vec<u8>, Vec<u8>), String> {
+            let pack = base64_codec::base64_standard_decode(&self.pack).map_err(|error| format!("artifact-document-pack-base64:{error}"))?;
+            let spr = base64_codec::base64_standard_decode(&self.spr).map_err(|error| format!("artifact-document-spr-base64:{error}"))?;
+            Ok((pack, spr))
+        }
+
+        /// 🔭️ The document's LIVE snapshot in the guest's own type — one call for every plugin that
+        /// binds an inference to an artifact, so the five `🀄️wfc` kinds share one decode path.
+        // 🚫️async: E2 — `artifact_pair_snapshot` is the only awaited callee and it does not suspend;
+        // an inference factory is a synchronous contract, so the settle happens at the call site.
+        pub async fn snapshot<P, Mutation>(&self) -> Result<P, String>
+        where
+            P: Clone + store::ArtifactPack,
+            Mutation: store::OpText + store::OpBinary + store::Mutation<P>,
+        {
+            let (pack, spr) = self.pair()?;
+            crate::app::artifact_pair_snapshot::<P, Mutation>(&pack, &spr).await.map_err(|error| format!("artifact-document-decode:{error}"))
+        }
+    }
+
+    impl ArtifactDocumentPayload {
+        /// 🔭️ [`Self::snapshot`] settled in place. A `ToolJobFactory::create_job_from_wire` is a
+        /// SYNCHRONOUS contract — an inference factory has no executor to park on — and the whole
+        /// decode chain below this call is `io-async-signatures`-async with no suspension point, so
+        /// the settle is total. One call, so every artifact-bound inference in the tree shares one
+        /// decode path instead of re-deriving it per kind.
+        pub fn settled_snapshot<P, Mutation>(&self) -> Result<P, String>
+        where
+            P: Clone + store::ArtifactPack,
+            Mutation: store::OpText + store::OpBinary + store::Mutation<P>,
+        {
+            semio_framework::io::resolve_ready(self.snapshot::<P, Mutation>())
+        }
+    }
+
+    impl From<ArtifactInferencePayloadContract> for WireInferencePayloadContract {
+        fn from(contract: ArtifactInferencePayloadContract) -> Self {
+            Self {
+                payload_schema_id: contract.payload_schema_id.to_owned(),
+                input_schema: contract.input_schema.to_owned(),
+                output_schema: contract.output_schema.to_owned(),
+                progress_unit: contract.progress_unit.to_owned(),
+                artifact_binding: contract.artifact_binding.map(|binding| WireInferenceArtifactBinding { field: binding.field.to_owned(), encoding: binding.encoding.to_owned(), required: binding.required }),
+            }
+        }
+    }
+
+    impl From<WireInferencePayloadContract> for semio_framework::InferencePayloadContract {
+        fn from(contract: WireInferencePayloadContract) -> Self {
+            Self {
+                payload_schema_id: contract.payload_schema_id,
+                input_schema: contract.input_schema,
+                output_schema: contract.output_schema,
+                progress_unit: contract.progress_unit,
+                artifact_binding: contract.artifact_binding.map(|binding| semio_framework::InferenceArtifactBinding { field: binding.field, encoding: binding.encoding, required: binding.required }),
+            }
+        }
     }
 
     impl From<ArtifactInferenceServiceMetadata> for WireArtifactInferenceMetadata {
@@ -1712,6 +1863,7 @@ pub mod app {
                 inference_schema_version: metadata.inference_schema_version,
                 algorithm_version: metadata.algorithm_version,
                 policy_version: metadata.policy_version,
+                payload: metadata.payload.map(Into::into),
             }
         }
     }
@@ -2028,9 +2180,14 @@ pub mod app {
             inference_schema_version: request.inference_schema_version,
             algorithm_version: request.algorithm_version,
             policy_version: request.policy_version,
+            payload: None,
         };
-        if &actual != expected {
-            return Err(ArtifactInferenceExecutionError::new("artifact-inference.metadata-mismatch", format!("request metadata {actual:?} does not match registered service {expected:?}")));
+        // 📜️ The IDENTITY projection, not the whole row: a request names an inference and never
+        // re-states the contract the service publishes, so comparing `payload` here would refuse
+        // every real call the moment an owner published one.
+        let expected_identity = WireArtifactInferenceMetadata { payload: None, ..expected.clone() };
+        if actual != expected_identity {
+            return Err(ArtifactInferenceExecutionError::new("artifact-inference.metadata-mismatch", format!("request metadata {actual:?} does not match registered service {expected_identity:?}")));
         }
         Ok(())
     }
@@ -4406,6 +4563,7 @@ pub mod app {
                         policy_version: metadata.policy_version,
                         contributor: plugin_id.to_string(),
                         depends_on: self.inference_depends_on.get(metadata.inference_schema).cloned().unwrap_or_default(),
+                        payload: metadata.payload.map(Into::into),
                     }
                 })
                 .collect();
@@ -7223,10 +7381,28 @@ pub mod app {
             VcsArtifactApp::with_registry(A::default(), registry).await
         }
 
-        /// 🧬️ A registry-backed wrapper whose manifest is authored asynchronously by the concrete fixture.
+        /// 🧬️ A registry-backed wrapper whose manifest is authored asynchronously by the concrete fixture,
+        /// over the default (empty) member roster. The body lives in
+        /// [`new_registered_app_with_members`]; this is the `NoMembers` spelling of it.
         pub async fn new_registered_app<A, Manifest>(manifest: Manifest) -> VcsArtifactApp<A>
         where
             A: ArtifactApp + Default,
+            Manifest: std::future::Future<Output = App>,
+        {
+            new_registered_app_with_members::<A, super::NoMembers, Manifest>(manifest).await
+        }
+
+        /// 🧬️ [`new_registered_app`] over an explicit member roster `M`. An app whose
+        /// `ArtifactApp::genesis_child_pack` mints a composed child cannot be constructed on the default
+        /// roster at all — its own construction fails `derived child dialect '…' is not declared by this
+        /// app's member roster` — so every registered law was unreachable for a composing app
+        /// (mathematical's equation and imperative's procedure, ticket
+        /// 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, knowledge). Rust has no default type parameter on
+        /// a function, so the roster-carrying generic is the twin and the plain name delegates to it.
+        pub async fn new_registered_app_with_members<A, M, Manifest>(manifest: Manifest) -> VcsArtifactApp<A, M>
+        where
+            A: ArtifactApp + Default,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
             Manifest: std::future::Future<Output = App>,
         {
             let definition = manifest.await.definition;
@@ -7249,6 +7425,9 @@ pub mod app {
             pub completions: usize,
             pub completion_operations: Vec<u64>,
             pub revisions: Vec<u64>,
+            /// 🧩️ One entry per composed gesture this settle observed — see
+            /// [`crate::app::ComposedGestureResult`].
+            pub composed: Vec<crate::app::ComposedGestureResult>,
         }
 
         /// 🎚️ Projects current config from the concrete window registry, including its applied event history.
@@ -7259,7 +7438,7 @@ pub mod app {
         /// 🔁️ Drives the same bounded continuation and exact ACK protocol as the plugin host.
         pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32) -> Result<TypedOperationFixtureReceipt, super::Fault> {
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-            let mut receipt = TypedOperationFixtureReceipt { lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, completions: 0, completion_operations: Vec::new(), revisions: Vec::new() };
+            let mut receipt = TypedOperationFixtureReceipt { lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, completions: 0, completion_operations: Vec::new(), revisions: Vec::new(), composed: Vec::new() };
             let mut publication_fault = None;
             while app.has_pending_typed_operations() {
                 if std::time::Instant::now() >= deadline {
@@ -7301,6 +7480,12 @@ pub mod app {
                 }
                 while let Some(scope) = app.take_typed_operation_ui_scope() {
                     receipt.ui_scope = Some(scope);
+                }
+                // 🧩️ The composed lane rides the same bounded outbox and is counted by
+                // `has_pending_typed_operations`, so leaving it undrained would spin this loop to its
+                // 30 s deadline exactly the way the terminal witness once did.
+                while let Some(composed) = app.take_typed_operation_composed_result() {
+                    receipt.composed.push(composed);
                 }
                 // 🧹️ The terminal witness lands in its OWN outbox (`typed_completion_outbox`), which
                 // `has_pending_typed_operations` counts — leaving it undrained spun this loop until
@@ -7427,15 +7612,29 @@ pub mod app {
             (a, b)
         }
 
-        /// 🧬️ Two explicitly registered fixture instances joined by an in-memory backbone.
+        /// 🧬️ Two explicitly registered fixture instances joined by an in-memory backbone, over the
+        /// default (empty) member roster — the `NoMembers` spelling of
+        /// [`paired_registered_apps_with_members`].
         pub async fn paired_registered_apps<A, Manifest, Build>(channel: &str, manifest: Build) -> (VcsArtifactApp<A>, VcsArtifactApp<A>)
         where
             A: ArtifactApp + Default,
             Manifest: std::future::Future<Output = App>,
             Build: Fn() -> Manifest,
         {
-            let mut a = new_registered_app::<A, _>(manifest()).await;
-            let mut b = new_registered_app::<A, _>(manifest()).await;
+            paired_registered_apps_with_members::<A, super::NoMembers, Manifest, Build>(channel, manifest).await
+        }
+
+        /// 🧬️ [`paired_registered_apps`] over an explicit member roster `M` — see
+        /// [`new_registered_app_with_members`] for why a composing app needs it.
+        pub async fn paired_registered_apps_with_members<A, M, Manifest, Build>(channel: &str, manifest: Build) -> (VcsArtifactApp<A, M>, VcsArtifactApp<A, M>)
+        where
+            A: ArtifactApp + Default,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
+            Manifest: std::future::Future<Output = App>,
+            Build: Fn() -> Manifest,
+        {
+            let mut a = new_registered_app_with_members::<A, M, _>(manifest()).await;
+            let mut b = new_registered_app_with_members::<A, M, _>(manifest()).await;
             a.bind_instance_id(meta("local").instance_id).await;
             b.bind_instance_id(meta("local").instance_id).await;
             let (backbone_a, backbone_b) = MemoryBackbone::pair(channel, channel).await;
@@ -7556,6 +7755,7 @@ pub mod app {
 
         /// 🧬️ Registered twin of [`assert_two_instances_converge`]: every typed command is settled until its
         /// retained publication retires, so both edits really land before the replicas exchange events.
+        /// The `NoMembers` spelling of [`assert_two_registered_instances_converge_with_members`].
         pub async fn assert_two_registered_instances_converge<A, P, Manifest, Build>(channel: &str, manifest: Build, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P)
         where
             A: ArtifactApp + Default,
@@ -7563,7 +7763,20 @@ pub mod app {
             Manifest: std::future::Future<Output = App>,
             Build: Fn() -> Manifest,
         {
-            let (mut instance_a, mut instance_b) = paired_registered_apps::<A, Manifest, Build>(channel, manifest).await;
+            assert_two_registered_instances_converge_with_members::<A, super::NoMembers, P, Manifest, Build>(channel, manifest, command_a, command_b, probe).await;
+        }
+
+        /// 🧬️ [`assert_two_registered_instances_converge`] over an explicit member roster `M` — see
+        /// [`new_registered_app_with_members`] for why a composing app needs it.
+        pub async fn assert_two_registered_instances_converge_with_members<A, M, P, Manifest, Build>(channel: &str, manifest: Build, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P)
+        where
+            A: ArtifactApp + Default,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
+            P: PartialEq + std::fmt::Debug,
+            Manifest: std::future::Future<Output = App>,
+            Build: Fn() -> Manifest,
+        {
+            let (mut instance_a, mut instance_b) = paired_registered_apps_with_members::<A, M, Manifest, Build>(channel, manifest).await;
             let genesis = probe(&instance_a);
             let receiver = meta("actor-a").instance_id;
             instance_a.dispatch_typed(command_a, &meta("actor-a")).await.expect("a applies its edit");
@@ -7581,9 +7794,10 @@ pub mod app {
         /// 🔀️ Both replicas fold each other's events, `a` commits a checkpoint over everything it holds, `b`
         /// folds that commit — `probe` must agree after each exchange: edits and structural history alike
         /// converge by projection of the shared event log.
-        async fn exchange_and_assert_convergence<A, P>(instance_a: &mut VcsArtifactApp<A>, instance_b: &mut VcsArtifactApp<A>, actor_a: &str, probe: &impl Fn(&VcsArtifactApp<A>) -> P)
+        async fn exchange_and_assert_convergence<A, M, P>(instance_a: &mut VcsArtifactApp<A, M>, instance_b: &mut VcsArtifactApp<A, M>, actor_a: &str, probe: &impl Fn(&VcsArtifactApp<A, M>) -> P)
         where
             A: ArtifactApp,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
             P: PartialEq + std::fmt::Debug,
         {
             instance_a.tick_backbone().await.expect("a folds b's events");
@@ -7634,7 +7848,8 @@ pub mod app {
             assert_eq!(probe(&receiver), once, "feeding the same operation twice must not double-apply");
         }
 
-        /// 🧬️ Registered twin of [`assert_ingest_idempotent`].
+        /// 🧬️ Registered twin of [`assert_ingest_idempotent`] — the `NoMembers` spelling of
+        /// [`assert_registered_ingest_idempotent_with_members`].
         pub async fn assert_registered_ingest_idempotent<A, P, Manifest, Build>(manifest: Build, command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P)
         where
             A: ArtifactApp + Default,
@@ -7642,7 +7857,20 @@ pub mod app {
             Manifest: std::future::Future<Output = App>,
             Build: Fn() -> Manifest,
         {
-            let mut sender = new_registered_app::<A, _>(manifest()).await;
+            assert_registered_ingest_idempotent_with_members::<A, super::NoMembers, P, Manifest, Build>(manifest, command, probe).await;
+        }
+
+        /// 🧬️ [`assert_registered_ingest_idempotent`] over an explicit member roster `M` — see
+        /// [`new_registered_app_with_members`] for why a composing app needs it.
+        pub async fn assert_registered_ingest_idempotent_with_members<A, M, P, Manifest, Build>(manifest: Build, command: A::Command, probe: impl Fn(&VcsArtifactApp<A, M>) -> P)
+        where
+            A: ArtifactApp + Default,
+            M: super::SpaceMember + super::MemberFactory + Send + 'static,
+            P: PartialEq + std::fmt::Debug,
+            Manifest: std::future::Future<Output = App>,
+            Build: Fn() -> Manifest,
+        {
+            let mut sender = new_registered_app_with_members::<A, M, _>(manifest()).await;
             sender.bind_instance_id(meta("local").instance_id).await;
             let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent").await;
             sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
@@ -7656,7 +7884,7 @@ pub mod app {
             }
             assert!(!envelopes.is_empty(), "the applied edit must reach the channel as events");
             let operations = protocol::encode_envelopes(&envelopes);
-            let mut receiver = new_registered_app::<A, _>(manifest()).await;
+            let mut receiver = new_registered_app_with_members::<A, M, _>(manifest()).await;
             receiver.bind_instance_id(meta("local").instance_id).await;
             let genesis = probe(&receiver);
             receiver.ingest_operations(&operations).await.expect("ingest once");
@@ -9242,7 +9470,16 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if let Some(active) = self.active.as_mut() {
-                return match active.close_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
+                // 🪪️ A nested disposer's refusal is a NAMED law violation, not an anonymous internal
+                // error: the store's own `ReturnedSnapshotReadRetirement` polices exactly the
+                // invariant `interactive-job.child-snapshot-terminal-not-empty` below polices, but
+                // the erased trait can only answer with a `String`, so reporting it as
+                // `plugin.internal` erased which law was broken from every instrument that reads
+                // fault codes.
+                return match active
+                    .close_step(maximum_items, maximum_bytes)
+                    .map_err(|reason| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-snapshot-disposer-refused"), format!("child snapshot disposer refused its own bounded step: {reason}")))?
+                {
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                     store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-snapshot-retirement-over-budget"), "child snapshot disposer exceeded its exact item or byte grant")),
                     store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "child snapshot disposer is waiting on external ownership" }),
@@ -11971,9 +12208,12 @@ pub mod app {
             None
         }
 
-        /// 🧹️ Supplies exact bounded retirement for a displaced local presence root.
+        /// 🧹️ Supplies exact bounded retirement for a displaced local presence root. The framework
+        /// owns this lane by default (`bounded_presence_root_retirement_factory`) — an app that wants
+        /// its own paging overrides it, but none has to declare one to be allowed to READ its own
+        /// presence.
         fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            None
+            Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
         }
 
         /// 🧹️ Supplies exact bounded retirement for a displaced transient root.
@@ -12001,28 +12241,42 @@ pub mod app {
             }
         }
 
+        /// 🧹️ The five bounded close lanes `VcsArtifactApp`'s ladder drives
+        /// (`drive_artifact_owned_disposer`, lanes 0–4) are FRAMEWORK-owned by default, the same way
+        /// the presence retirement lane below is. Each default is built from the app's own
+        /// associated types — there is nothing app-specific in any of them — and an app that wants
+        /// its own paging still declares one, because these are defaults, not replacements.
+        ///
+        /// 🪦️ They were `None`, which `drive_artifact_owned_disposer` turns into
+        /// `interactive-job.close-owned-disposer-missing`: an app that declared no disposer could
+        /// not be CLOSED at all. Measured on 2026-09-22 (ticket 26/09/18 slices TC3e §7a, TC4 §3):
+        /// 229 of the 298 editor/viewer impls under `✏️s/🔌️plugins` sat on that fail-closed default,
+        /// and it is what killed the first three-package trusted-catalog bootstrap — the `codec`
+        /// resolver constructs EVERY app of a bundle to read its schema and closes each one it
+        /// rejects, so one undeclared disposer anywhere in a package refuses the whole publication.
         fn build_document_store_disposer() -> ArtifactDisposal<ArtifactStore<Self::Snapshot, Self::Mutation>> {
-            None
+            Some(bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
         }
 
         fn build_config_store_disposer() -> ArtifactDisposal<ConfigStore<Self::Config, Self::ConfigMutation>> {
-            None
+            Some(bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
         }
 
         fn build_draft_store_disposer() -> ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
-            None
+            Some(bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
         }
 
         fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-            None
+            Some(crate::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
         }
 
+        /// 🧹️ The peer half of the same lane, framework-owned by the same default.
         fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            None
+            Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
         }
 
         fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
-            None
+            Some(bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
         }
         /// @emoji 📜️ Stable document schema id — prefer this over `artifact_schema(&self)`.
         const DOCUMENT_SCHEMA: &'static str;
@@ -12625,6 +12879,8 @@ pub mod app {
         /// 🏁️ Drains one terminal typed-operation witness, resolving its command-log delta and
         /// content revision against CURRENT state — the payload of one `AppFrame::OperationCompleted`.
         async fn take_typed_operation_completion(&mut self) -> Result<Option<TypedOperationCompletion>, Fault>;
+        /// 🧩️ Takes one composed gesture's published result — see [`ComposedGestureResult`].
+        fn take_typed_operation_composed_result(&mut self) -> Option<ComposedGestureResult>;
         /// 📨️ Starts one command-scoped report at the app's live merge policy.
         async fn begin_dispatch_report(&mut self);
         /// 📨️ Returns the current command's authoritative merge-policy report.
@@ -12674,6 +12930,18 @@ pub mod app {
         /// deliberately narrower than a `TaskResolution::Command` resume, which goes through
         /// `handle_command_frame` above instead).
         async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumes an `AsyncTask`
+        /// whose future resolved with `TaskResolution::Command` — `command_bytes` are that
+        /// resolution's own `OpBinary::encode_op` of this app's typed `Command`, re-entered through
+        /// the exact APPLYING lane a fresh command uses (`dispatch_typed`), stamped with the task's
+        /// originating `ActionMeta`.
+        ///
+        /// 🚪️ Deliberately NOT `handle_command_frame`: that is the agent PREPARE lane
+        /// (`preview_addressed_action` — it runs the reducer and hands the ops back for a separate
+        /// `TransactionPrepare`/`TransactionCommit`, and it decodes an owner-qualified
+        /// `ManifestActionInvocation`, which a task resolution is not). A task follow-up is
+        /// Msg-from-Cmd: it APPLIES, exactly once, against CURRENT state.
+        async fn resume_task_command(&mut self, command_bytes: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// 🧾 Drains the last Emit op packs captured during `handle_command_frame` (PureCommand path).
         async fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)>;
         /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): drains the render-plane presence outbox
@@ -14330,6 +14598,10 @@ pub mod app {
     /// `interactive-job.publication-stalled` rather than left spinning. A power of two so the stall
     /// trace's own streak rule names it on the way past.
     const TYPED_OPERATION_STALL_FAULT_CEILING: u64 = 4_096;
+    /// 🧮️ Folds the publication ladder's monotone progress term into the one-`u64` witness key the
+    /// streak counter remembers between turns, so two witnesses that differ ONLY in how far the
+    /// publication has advanced are never mistaken for the same one.
+    const TYPED_OPERATION_STALL_PROGRESS_MIX: u64 = 0x9E37_79B9_7F4A_7C15;
     /// 🩺️ The stage code [`ArtifactApp::typed_operation_stall_witness`] gives a `Publishing` operation.
     const TYPED_OPERATION_STALL_PUBLISHING_STAGE: u8 = 1;
     const TYPED_OPERATION_HOST_OUTBOX_SLOTS: usize = 64;
@@ -14883,6 +15155,14 @@ pub mod app {
         pub snapshot: std::sync::Arc<A::Snapshot>,
         pub config: std::sync::Arc<A::Config>,
         pub history: std::sync::Arc<HistoryView>,
+        /// 🧩️ The parent's composed children, the same view `ArtifactView` hands the synchronous
+        /// `A::import_media`. A composing app's LIVE scene is its children, not its own snapshot
+        /// (sequence's steps live on the `content` Flow child), and the mounted route builds the emit
+        /// exclusively from the resumable job — so without this a composed app could not write a
+        /// resumable importer at all and every delivery died `interactive-job.missing-reserved-builder`
+        /// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, media §8). Cheap to clone
+        /// (`Option<Arc<ChildContentRoot>>`); a job releases it as soon as it has decoded.
+        pub children: ChildContentView,
         pub raw_wire: Vec<u8>,
         pub input: ArtifactReservedToolInput,
         pub completion: ArtifactToolCompletion<A>,
@@ -14967,12 +15247,7 @@ pub mod app {
         C: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
         M: Clone + protocol::ToValue + protocol::FromValue + Mutation<C> + OpBinary + OpText + Send + 'static,
     {
-        store::DocumentStoreOwners::new(
-            std::sync::Arc::new(BoundedConfigRetirementFactory::<C>::new()),
-            std::sync::Arc::new(BoundedConfigRetirementFactory::<C>::new()),
-            std::sync::Arc::new(BoundedConfigRetirementFactory::<M>::new()),
-            Box::new(store::ArtifactStoreCursorDisposer::<C, M>::new()),
-        )
+        store::bounded_artifact_store_owners::<C, M>()
     }
 
     /// 🎛️ Exact one-item PUBLICATION authority for an explicitly bounded app configuration store —
@@ -18136,6 +18411,32 @@ pub mod app {
         child_content_generation: u64,
     }
 
+    /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): what ONE composed gesture's linearized
+    /// publication actually produced — the parent's `KernelMutation`s under its own
+    /// `ArtifactHandle` PLUS one per touched child under the child's content-addressed handle, and
+    /// the single `UndoGroup` whose `member_edits` name every document the gesture committed to.
+    ///
+    /// 🎯️ Why it is retained instead of returned: on the migrated route `dispatch_typed` only
+    /// ADMITS, so the composed dispatch happens turns later inside the publication ladder, long
+    /// after the caller's `InvocationResult` was handed back. `dispatch_emit_group` builds this
+    /// whole thing and the ladder used to keep three scalars of it
+    /// (`ChildPublicationResultV1`) and DROP the rest, so the child lane of a composite gesture
+    /// existed in the documents and in history but was invisible to every host-visible result
+    /// (`📓️fp10-plugin-lib-and-lanes.md` §2.3). It now rides the same bounded host outbox the
+    /// effect, event, UI-scope and terminal-completion lanes ride, and is drained by the app's own
+    /// close ladder.
+    ///
+    /// 🚫️ Deliberately NOT counted by `has_pending_typed_operations`: the composed result is
+    /// published in the SAME unit that queues the `Child` result page, so the operation's own ACK
+    /// already keeps the actor runnable until a host that wants it has had its turn to take it — and
+    /// a driver that loops until nothing is pending while never reading this lane (the live-cleanup
+    /// pump does exactly that) would otherwise spin forever on a lane it does not own.
+    pub struct ComposedGestureResult {
+        pub operation: u64,
+        pub mutations: Vec<KernelMutation>,
+        pub inverse_group: UndoGroup,
+    }
+
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum PendingChildGroupPublicationPhase {
         Ready,
@@ -18403,6 +18704,15 @@ pub mod app {
         result_page: Option<TypedOperationResultPage>,
         result_page_presented: bool,
         result_sequence: u32,
+        /// 🧮️ The publication ladder's OWN monotone progress: how many publication units actually
+        /// moved this operation's pending store publication, counted by the store's checkpoint
+        /// rather than by the unit having been spent. A healthy ladder that folds one mutation per
+        /// unit raises it on every unit; an owner that cannot advance never raises it at all, which
+        /// is exactly the term [`Self::typed_operation_stall_witness`]'s three facts were missing.
+        publication_progress: u64,
+        /// 🧮️ The last checkpoint the pending publication answered with, so a unit that repeats it
+        /// verbatim is recognised as no movement at all instead of as progress.
+        publication_checkpoint: Option<store::ArtifactStoreOneItemCheckpoint>,
         publication_attempt: u8,
         ui_pending: bool,
         published_artifact: bool,
@@ -18414,6 +18724,19 @@ pub mod app {
     }
 
     impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
+        /// 🧮️ Records what the store answered for ONE publication unit. The checkpoint carries the
+        /// store's own cursor, completed items and completed bytes; a unit that repeats the
+        /// previous checkpoint verbatim moved nothing and raises no progress, so an owner that can
+        /// never advance still runs its streak up to
+        /// [`TYPED_OPERATION_STALL_FAULT_CEILING`], while a ladder folding one mutation per unit
+        /// resets that streak every unit however many mutations the edit carries.
+        fn note_publication_checkpoint(&mut self, checkpoint: store::ArtifactStoreOneItemCheckpoint) {
+            if self.publication_checkpoint != Some(checkpoint) {
+                self.publication_checkpoint = Some(checkpoint);
+                self.publication_progress = self.publication_progress.saturating_add(1);
+            }
+        }
+
         fn drive_worker_step(&mut self, pool: &semio_framework_async::WorkerPool, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             if self.stage != MountedTypedCommandFullOperationStage::Worker {
                 return Ok(PluginCloseStep::Blocked { reason: "typed command awaits its bounded revision-validated publication or ACK turn" });
@@ -21532,6 +21855,8 @@ pub mod app {
         /// `Invocation.output.interactionView` lane a host-dispatched verb answers on.
         typed_inline_interaction_leftover: Option<TypedOperationLeftover>,
         typed_completion_outbox: ArtifactFixedQueue<TypedOperationCompletionWitness>,
+        /// 🧩️ See [`ComposedGestureResult`] — one entry per composed gesture this actor published.
+        typed_composed_outbox: ArtifactFixedQueue<ComposedGestureResult>,
         /// 📨️ The authoritative outcome of the current app command, reset before dispatch and then
         /// filled from the store receipt or policy rejection before the runtime frames it.
         dispatch_report: protocol::DispatchReport,
@@ -22137,6 +22462,30 @@ pub mod app {
     #[path = "🧪️tests/🕹️interaction-selection-laws/🦀️.rs"]
     mod interaction_selection_laws;
 
+    /// ✅️ Whether ONE ledger row's edit is still live, as the host reads it: `dimmed: applied ===
+    /// false` in the History panel and `entry.kind === "mutation" && entry.applied !== false` in
+    /// `#s-checkin`'s uncommitted count.
+    ///
+    /// A row publishes into up to three stores. `undo`/`redo` dispatch against the PARENT document
+    /// store alone (`interaction_store`'s own doc says so), so the parent lane is authoritative for
+    /// any row that published a parent edit — a multi-lane row (`Artifact` + `Config`, which is what
+    /// 💠️lowpoly's `addPrimitive` and 🎥️shooting's `addShot` declare) keeps a live config edit after
+    /// its document edit is undone, and answering `document || config || child` left it applied for
+    /// ever. A row with NO parent edit at all (🌊️flow's `addWidget`, 🎬️sequence's `addStep`,
+    /// 🌀️procedural's `generate`) has nothing else to answer with, and asking only the parent lane
+    /// made those read as UNDONE the moment they landed.
+    ///
+    /// Named rather than inlined so the law can drive all eight lane combinations without an app, a
+    /// retained multi-lane factory or a pinned proof roster — the two shapes that could not be
+    /// written in this suite (ticket 26/09/18 S11 §3.4b).
+    pub fn history_row_applied_v1(has_parent_edit: bool, document_applied: bool, config_applied: bool, child_applied: bool) -> bool {
+        if has_parent_edit {
+            document_applied
+        } else {
+            config_applied || child_applied
+        }
+    }
+
     impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
         #[cfg(test)]
         pub(crate) fn test_registered_tool_keys(&self) -> BTreeSet<(String, String)> {
@@ -22604,6 +22953,7 @@ pub mod app {
                 typed_inline_interaction_verbs: Vec::new(),
                 typed_inline_interaction_leftover: None,
                 typed_completion_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
+                typed_composed_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
                 dispatch_report,
                 cache: None,
                 registry,
@@ -23337,7 +23687,12 @@ pub mod app {
                     return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
                 }
                 let candidate = active.retained_store.as_ref().ok_or_else(|| plugin_sdk_fault("awaiting owned document replacement lost its parent candidate"))?;
-                let projection = store::ChildRestoreProjection::from_snapshot(candidate.snapshot_ref()).map_err(|_| plugin_sdk_fault("candidate parent child projection is invalid"))?;
+                // 🧩️ The app's own projection answers, never the structural one: `A::child_restore_projection`
+                // is what every composing app implements so its diagnostic names the refused row, and an app
+                // that composes its children differently answers for itself. The structural call here erased
+                // the `ChildRestoreProjectionError` behind one flat string, which made a live-load refusal
+                // unattributable from the plugin side (gismap, ticket 26/09/19 engineering §9).
+                let projection = A::child_restore_projection(candidate.snapshot_ref())?;
                 if projection.get(0).is_none() {
                     active.begin_members(0, u64::MAX)?;
                     active.seal_members()?;
@@ -24932,7 +25287,21 @@ pub mod app {
                 // `Child`, 🌀️procedural's `generate` is `Config` — each of which moved its document
                 // and still read `edits 0` (ticket 26/09/18 S10; PB3 §3.6 named the child half).
                 // `revertible` below already consulted all three; this is the same law for `applied`.
-                let applied = document_applied || config_applied || child_applied;
+                //
+                // ⏪️ …but ONLY for a row that has no parent-document edit of its own. `undo`/`redo`
+                // dispatch against `self.store` alone — `interaction_store`'s own doc states it in as
+                // many words — so a MULTI-lane row (`Artifact` + `Config`, which is what
+                // 💠️lowpoly's `addPrimitive` and 🎥️shooting's `addShot` declare) keeps a live config
+                // edit after its document edit has been undone. Reading those two with `||` made such
+                // a row report `applied: true` for ever: the History panel never dimmed it and
+                // `#s-checkin`'s uncommitted count never came back down. Measured inside `s` on
+                // 2026-09-22 at three different machine loads as `edits [0,1,1,1]` with the ledger
+                // still growing on the undo AND the redo (`applied [0,1,3,6]` / `[1,2,4,7]`) — a
+                // regression of the fix above, in the two kinds that publish on more than one lane
+                // (ticket 26/09/18 S11). The parent document lane is authoritative whenever the row
+                // published into it; the other two answer only for a row that has no parent edit at
+                // all, which is exactly the Child/Config-only case the fix above exists for.
+                let applied = history_row_applied_v1(entry.edit_id.is_some(), document_applied, config_applied, child_applied);
                 let revertible = (document_applied && edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == local_actor))
                     || (config_applied && config_edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == config_local_actor))
                     || child_applied
@@ -25321,18 +25690,21 @@ pub mod app {
                 ui_scope,
                 child_emits,
                 interaction_writes,
-                #[cfg(test)]
                 tasks,
             } = emit;
             let effects = self.stamp_load_document_effects(effects)?;
             debug_assert!(extension_invocations.is_empty(), "mint_extension_invocations drains the lane before destructuring");
 
-            #[cfg(test)]
+            // 🧵️ The task lane belongs to the MIGRATED publication ladder
+            // (`publish_mounted_typed_operation_unit`), which owns the per-operation cancellation
+            // lease a spawned task must be cancellable under and spends exactly one task per
+            // bounded publication unit. This unmigrated route has neither, so a task emitted here
+            // is refused by name rather than spawned unowned.
             if !tasks.is_empty() {
                 return Err(Fault::new(
                     FaultOrigin::Framework,
-                    FaultCode::new("interactive-job.reactor-task-disposal-unproved"),
-                    "interactive async tasks are fail-closed until their owners implement the required bounded ReactorTask disposal protocol",
+                    FaultCode::new("interactive-job.task-lane-unmigrated-route"),
+                    format!("verb {verb:?} emitted {} async task(s) on the unmigrated dispatch route; the task lane is published by the migrated typed-operation ladder, which owns the cancellation lease every spawned task is retired under", tasks.len()),
                 ));
             }
 
@@ -26571,6 +26943,7 @@ pub mod app {
                 snapshot,
                 config,
                 history,
+                children: ChildContentView::clone(&self.child_content_root),
                 raw_wire,
                 input: ArtifactReservedToolInput::Action { args: args.cloned(), interaction: self.interaction_selection_snapshot(), hover: self.interaction_hover.clone() },
                 completion: completion.clone(),
@@ -26594,6 +26967,7 @@ pub mod app {
                 snapshot,
                 config,
                 history,
+                children: ChildContentView::clone(&self.child_content_root),
                 raw_wire: Vec::new(),
                 input: ArtifactReservedToolInput::Media { port: port.to_string(), media },
                 completion: completion.clone(),
@@ -27606,11 +27980,21 @@ pub mod app {
             })
         }
 
-        /// 🩺️ What the publication cursor is about to advance, as the three facts that decide which ladder
-        /// arm runs: the operation it selected, that operation's stage, and the ownership flags the arms
-        /// branch on. Compared before and after one unit by [`Self::typed_operation_stall_streak`].
+        /// 🩺️ What the publication cursor is about to advance, as the four facts that decide whether the
+        /// ladder can move at all AND whether it did: the operation it selected, that operation's stage,
+        /// the ownership flags the arms branch on, and the publication's own monotone progress.
+        /// Compared before and after one unit by [`Self::typed_operation_stall_streak`].
+        ///
+        /// 🐛️ The progress term is the fourth fact because the first three are constant for a HEALTHY
+        /// publication: an edit of 5 745 mutations (puzzle5d's `capsule-dream` example switch) folds one
+        /// bounded mutation per unit for ~19 000 units with the same operation id, the same `Publishing`
+        /// stage and the same ownership flags, so the streak counter could not tell it from an owner that
+        /// can never advance and terminated it at [`TYPED_OPERATION_STALL_FAULT_CEILING`] — about a fifth
+        /// of the way through — with `interactive-job.publication-stalled`. Measured by the
+        /// "Semio-tech play" session on 2026-09-21. Raising the ceiling would only move the cliff to the
+        /// next document size and re-open the silent spins the guard exists to catch.
         // 🚫️async: E1 pure census over an already-owned fixed table — see R9.
-        fn typed_operation_stall_witness(&self) -> Option<(u64, u8, u8)> {
+        fn typed_operation_stall_witness(&self) -> Option<(u64, u8, u8, u64)> {
             let (_, operation_id) = self.next_advanceable_typed_operation()?;
             let operation = self.tool_operations.get(operation_id)?;
             let stage = match operation.stage {
@@ -27627,7 +28011,7 @@ pub mod app {
                 | u8::from(operation.terminal_outcome.is_some()) << 5
                 | u8::from(operation.terminal_seen) << 6
                 | u8::from(operation.result_page.is_some()) << 7;
-            Some((operation_id, stage, flags))
+            Some((operation_id, stage, flags, operation.publication_progress))
         }
 
         /// 🩺️ How many consecutive publication units advanced the SAME operation without changing any of
@@ -27641,10 +28025,10 @@ pub mod app {
         /// and nothing says WHICH arm of the publication ladder is not moving. Measured 2026-09-20 on the
         /// signed-in `s` Home, whose `applyDirectoryEventPage` operation spun for the whole session
         /// (ticket 26/09/18 S8).
-        fn typed_operation_stall_streak(before: (u64, u8, u8), after: (u64, u8, u8)) -> Option<u64> {
+        fn typed_operation_stall_streak(before: (u64, u8, u8, u64), after: (u64, u8, u8, u64)) -> Option<u64> {
             static WITNESS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(u64::MAX);
             static STREAK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-            let key = after.0.wrapping_shl(16) | u64::from(after.1).wrapping_shl(8) | u64::from(after.2);
+            let key = (after.0.wrapping_shl(16) | u64::from(after.1).wrapping_shl(8) | u64::from(after.2)) ^ after.3.wrapping_mul(TYPED_OPERATION_STALL_PROGRESS_MIX);
             if before != after || WITNESS.swap(key, std::sync::atomic::Ordering::Relaxed) != key {
                 STREAK.store(0, std::sync::atomic::Ordering::Relaxed);
                 return None;
@@ -28028,6 +28412,8 @@ pub mod app {
                     result_page: None,
                     result_page_presented: false,
                     result_sequence: 0,
+                    publication_progress: 0,
+                    publication_checkpoint: None,
                     publication_attempt: 0,
                     ui_pending: false,
                     published_artifact: false,
@@ -28239,7 +28625,16 @@ pub mod app {
                     mounted.canonical_revision = self.store.content_revision_now();
                     mounted.operation.base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(mounted.canonical_revision[..8].try_into().expect("revision lane width")));
                     mounted.operation.generation = semio_framework_job::Generation(mounted.artifact_generation);
-                    let receipt = ChildPublicationResultV1 { invocation_id: result.inverse_group.invocation_id.0, committed_members: result.inverse_group.member_edits.len(), child_content_generation: self.child_content_generation };
+                    let receipt = ChildPublicationResultV1 { invocation_id: result.inverse_group.invocation_id.0.clone(), committed_members: result.inverse_group.member_edits.len(), child_content_generation: self.child_content_generation };
+                    // 🧩️ The composed lane is PUBLISHED, not discarded: `dispatch_emit_group` has just
+                    // built the parent's mutations, one per touched child under the child's own
+                    // content-addressed handle, and the single `UndoGroup` that names them all. The
+                    // three scalars of `receipt` are what the host ACKs; this is what the host READS.
+                    if self.typed_composed_outbox.push(ComposedGestureResult { operation: mounted.operation.operation.0, mutations: result.mutations, inverse_group: result.inverse_group }).is_err() {
+                        let fault = pending.reject_and_fault(&plugin_sdk_fault("typed-operation composed gesture receiver is saturated"));
+                        mounted.pending_child_publication = Some(pending);
+                        return Err(fault);
+                    }
                     if let Err(error) = pending.commit(receipt.clone()) {
                         let fault = pending.reject_and_fault(&error);
                         mounted.pending_child_publication = Some(pending);
@@ -28366,7 +28761,11 @@ pub mod app {
                         let token = mounted.next_token();
                         mounted.queue_page(TypedOperationResultPage::try_serialize(token, pending_lane, &receipt)?)
                     }
-                    store::ArtifactStoreOneItemAdvance::Progress(_) | store::ArtifactStoreOneItemAdvance::Blocked => Ok(()),
+                    store::ArtifactStoreOneItemAdvance::Progress(checkpoint) => {
+                        mounted.note_publication_checkpoint(checkpoint);
+                        Ok(())
+                    }
+                    store::ArtifactStoreOneItemAdvance::Blocked => Ok(()),
                     store::ArtifactStoreOneItemAdvance::AwaitingAck(_) => Err(plugin_sdk_fault("artifact-store publication awaits an ACK without its retained host page")),
                     store::ArtifactStoreOneItemAdvance::Complete => Err(plugin_sdk_fault("artifact-store publication completed before result ACK")),
                 };
@@ -29043,6 +29442,8 @@ pub mod app {
                     result_page: None,
                     result_page_presented: false,
                     result_sequence: 0,
+                    publication_progress: 0,
+                    publication_checkpoint: None,
                     publication_attempt: 0,
                     ui_pending: false,
                     published_artifact: false,
@@ -29477,6 +29878,10 @@ pub mod app {
                 drop(completion);
                 return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
+            if let Some(composed) = self.typed_composed_outbox.pop() {
+                drop(composed);
+                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
             let registry_step = self.registry.close_step(maximum_items.min(1), maximum_bytes);
             if registry_step != PluginCloseStep::Complete {
                 return registry_step;
@@ -29526,6 +29931,7 @@ pub mod app {
                 && self.typed_event_outbox.len() == 0
                 && self.typed_ui_outbox.len() == 0
                 && self.typed_completion_outbox.len() == 0
+                && self.typed_composed_outbox.len() == 0
                 && self.registry.terminal_is_empty()
                 && self.bounded_tool_proofs.is_empty()
                 && self.bounded_tool_contracts.is_empty()
@@ -31018,6 +31424,10 @@ pub mod app {
             Ok(Some(TypedOperationCompletion { operation: witness.operation, revision: u64::from_be_bytes(revision[..8].try_into().expect("revision lane width")), ui_scope: witness.ui_scope, history_patch }))
         }
 
+        fn take_typed_operation_composed_result(&mut self) -> Option<ComposedGestureResult> {
+            self.typed_composed_outbox.pop()
+        }
+
         async fn begin_dispatch_report(&mut self) {
             self.reset_dispatch_report().await;
         }
@@ -31108,6 +31518,20 @@ pub mod app {
             let _ = self.qualified_tool_proof(verb)?;
             let merged = merge_ui_values(intent.args.as_ref(), intent.input.as_ref()).await?;
             let command = A::command_from_action(verb, merged.as_ref()).await?;
+            self.dispatch_typed(command, meta).await
+        }
+
+        /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: decodes the task resolution's own
+        /// `OpBinary`-encoded `A::Command` and re-enters `dispatch_typed` with it — see the trait
+        /// method's own doc for why this is the applying lane and not `handle_command_frame`.
+        async fn resume_task_command(&mut self, command_bytes: Vec<u8>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            let command = <A::Command as ::protocol::OpBinary>::decode_op(&command_bytes).map_err(|error| {
+                Fault::new(
+                    FaultOrigin::Framework,
+                    FaultCode::new("interactive-job.task-resume-command"),
+                    format!("an AsyncTask resolved TaskResolution::Command with bytes that are not this app's typed Command: {error}"),
+                )
+            })?;
             self.dispatch_typed(command, meta).await
         }
 
@@ -32274,7 +32698,15 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Text", "Text", SurfaceKind::TextEditor, "type", vec![ActionDefinition::bounded_catalog("replace-text", LocalizedLabel::native("Replace Text", "Text ersetzen"), ActionKind::Mutation)])
+            window_kind_definition(
+                Self::KIND_ID,
+                "Text",
+                "Text",
+                SurfaceKind::TextEditor,
+                "type",
+                vec![ActionDefinition::bounded_catalog("replace-text", LocalizedLabel::native("Replace Text", "Text ersetzen"), ActionKind::Mutation)
+                    .with_args(vec![ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()])],
+            )
         }
 
         fn render(view: &TextView) -> UiAssemblyResult<BuiltNode> {
@@ -32323,7 +32755,18 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Table", "Tabelle", SurfaceKind::Table, "table-2", vec![ActionDefinition::bounded_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation)])
+            window_kind_definition(
+                Self::KIND_ID,
+                "Table",
+                "Tabelle",
+                SurfaceKind::Table,
+                "table-2",
+                vec![ActionDefinition::bounded_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation).with_args(vec![
+                    ActionArgDef::number("row", LocalizedLabel::native("Row", "Zeile")).required(),
+                    ActionArgDef::text("column", LocalizedLabel::native("Column", "Spalte")).required(),
+                    ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
+                ])],
+            )
         }
 
         /// 📊️ Emits the renderer table contract both hosts read: `columnsJson` as `{id, label}` records
@@ -32691,7 +33134,17 @@ pub mod app {
         }
 
         fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Tree", "Baum", SurfaceKind::BlockList, "list-tree", vec![ActionDefinition::bounded_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation)])
+            window_kind_definition(
+                Self::KIND_ID,
+                "Tree",
+                "Baum",
+                SurfaceKind::BlockList,
+                "list-tree",
+                vec![ActionDefinition::bounded_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation).with_args(vec![
+                    ActionArgDef::text("nodeId", LocalizedLabel::native("Node", "Knoten")).required(),
+                    ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
+                ])],
+            )
         }
 
         fn render(view: &TreeView) -> UiAssemblyResult<BuiltNode> {
@@ -32736,6 +33189,17 @@ pub mod app {
 
     pub struct ImageWindowKit;
 
+    /// 🚚️ Out-of-doc lane key for an image whose data URI is larger than one [`UiText`]
+    /// (`UI_TEXT_MAX_BYTES` is 512, so no real composited PNG fits). The payload rides in a
+    /// [`paged_text_carrier`] sibling of the image node under the window's own body key — the same
+    /// shape `scene_surface` uses for a world scene's lanes, and readable by the existing lane
+    /// reassembly (`fixture_carrier_text`, the React Interpreter's `surfaceSceneLaneText`).
+    pub const IMAGE_WINDOW_PIXELS_LANE_KEY: &str = "framework.window.image.pixels";
+
+    /// 🖼️ Node key of the image itself once the payload moved out of the doc; distinct from the lane
+    /// carrier's key so both can be children of one window body.
+    pub const IMAGE_WINDOW_PAGED_NODE_KEY: &str = "framework.window.image.view";
+
     impl WindowKit for ImageWindowKit {
         type ViewModel = ImageView;
         const KIND_ID: &'static str = "framework.window.image";
@@ -32748,11 +33212,29 @@ pub mod app {
             window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", vec![ActionDefinition::bounded_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation)])
         }
 
+        /// 🖼️ An image's payload size is a property of the document, never of the UI contract, so a
+        /// composite too large for one [`UiText`] pages out of the doc instead of refusing the whole
+        /// window. Below the `UiText` bound the node is byte-identical to what this always produced;
+        /// above it the `src` names [`IMAGE_WINDOW_PIXELS_LANE_KEY`] and the data URI rides in a
+        /// [`paged_text_carrier`] sibling. Before this, every raster viewer window died at assembly
+        /// with `ui.fixed-capacity … image-window.source` because `UI_TEXT_MAX_BYTES` is 512 and a real
+        /// composited PNG never fits (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, raster §3).
         fn render(view: &ImageView) -> UiAssemblyResult<BuiltNode> {
-            let src = UiText::try_format(format_args!("data:{};base64,{}", view.mime, view.base64)).ok_or_else(|| ui_assembly_error("image-window.source"))?;
+            let source = format!("data:{};base64,{}", view.mime, view.base64);
             let alt = UiText::try_format(format_args!("{}x{}", view.width, view.height)).map(Label).ok_or_else(|| ui_assembly_error("image-window.alt"))?;
-            let builder = image(src).alt(alt);
-            builder.try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("image-window.id"))?.try_build().map_err(|_| ui_assembly_error("image-window.build"))
+            if let Some(src) = UiText::try_format(format_args!("{source}")) {
+                return image(src).alt(alt).try_id(Self::KIND_ID).map_err(|_| ui_assembly_error("image-window.id"))?.try_build().map_err(|_| ui_assembly_error("image-window.build"));
+            }
+            let lane = UiText::try_format(format_args!("{IMAGE_WINDOW_PIXELS_LANE_KEY}")).ok_or_else(|| ui_assembly_error("image-window.lane-key"))?;
+            let node = image(lane).alt(alt).try_id(IMAGE_WINDOW_PAGED_NODE_KEY).map_err(|_| ui_assembly_error("image-window.paged-id"))?.try_build().map_err(|_| ui_assembly_error("image-window.paged-build"))?;
+            let carrier = paged_text_carrier(IMAGE_WINDOW_PIXELS_LANE_KEY, &source)?;
+            column()
+                .try_id(Self::KIND_ID)
+                .map_err(|_| ui_assembly_error("image-window.id"))?
+                .try_children(vec![node, carrier])
+                .map_err(|_| ui_assembly_error("image-window.paged-children"))?
+                .try_build()
+                .map_err(|_| ui_assembly_error("image-window.build"))
         }
     }
     //#endregion 🔖️ImageWindowKit
@@ -33057,8 +33539,10 @@ pub mod app {
         }
 
         /// 👥️ Grants exact typed retirement for peer presence snapshots to this editor adapter.
+        /// Framework-owned by default, for the same reason as `ArtifactApp`'s twin: `EditorApp<E>`
+        /// forwards THIS answer, so a `None` here would take the framework's default back out.
         fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            None
+            Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
         }
 
         /// 🧹️ Grants bounded displaced-transient-root retirement to this editor adapter.
@@ -33083,24 +33567,29 @@ pub mod app {
             }
         }
 
+        /// 🧹️ The bounded close lanes are FRAMEWORK-owned by default — see `ArtifactApp`'s own
+        /// defaults for the measurement. The adapter (`EditorApp`/`ViewerApp`) FORWARDS this trait's
+        /// answer to `ArtifactApp`, so a `None` here overrides the framework default one layer up
+        /// and reinstates `interactive-job.close-owned-disposer-missing`; the defaults therefore
+        /// live on both traits (ticket 26/09/18 slice TC4 §3).
         fn build_document_store_disposer() -> ArtifactDisposal<ArtifactStore<Self::Snapshot, Self::Mutation>> {
-            None
+            Some(bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
         }
 
         fn build_config_store_disposer() -> ArtifactDisposal<ConfigStore<Self::Config, Self::ConfigMutation>> {
-            None
+            Some(bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
         }
 
         fn build_draft_store_disposer() -> ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
-            None
+            Some(bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
         }
 
         fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-            None
+            Some(crate::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
         }
 
         fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
-            None
+            Some(bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
         }
 
         /// 👥️🫧️ The two EPHEMERAL lanes this command touches. Returns a plain tuple rather than
@@ -33341,6 +33830,25 @@ pub mod app {
     /// 🧩️ Applies one `os_spr::encode_ops_vec` batch to an app-owned pair — the guest half of
     /// `world actor`'s `codec.apply-ops` export, structurally the same reduction
     /// `store::ArtifactCodec::apply_ops_binary` performs for a natively linked codec.
+    /// 🔭️ The LIVE snapshot of one artifact `pack`/`spr` pair, without loading it into any
+    /// instance and without leaving a history shell behind. This is how a READER — an inference
+    /// computing over the artifact its caller named, never an editor — gets the document it was
+    /// asked about: the pair is the authoritative one, `parse_document_pack` replays it exactly as
+    /// `load_document_pack` does, and `into_snapshot` retires the envelope through the store's own
+    /// bounded path instead of dropping it (a bare drop aborts the process — every terminal shell
+    /// under `ArtifactEnvelope` asserts its owners were retired first).
+    pub async fn artifact_pair_snapshot<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<P, store::VcsError>
+    where
+        P: Clone + store::ArtifactPack,
+        Mutation: store::OpText + store::OpBinary + store::Mutation<P>,
+    {
+        if pack.is_empty() || spr.is_empty() {
+            return Err(store::VcsError::Deserialize("artifact pair carries no pack+spr baseline".into()));
+        }
+        let parsed: store::ParsedDocumentText<P, Mutation> = store::parse_document_pack(pack, spr).await.map_err(|error| store::VcsError::Deserialize(error.to_string()))?;
+        Ok(parsed.into_snapshot())
+    }
+
     pub async fn artifact_app_apply_ops<A: ArtifactApp>(pack: &[u8], spr: &[u8], ops: &[u8]) -> Result<store::ArtifactPackFiles, store::VcsError> {
         if pack.is_empty() || spr.is_empty() {
             return Err(store::VcsError::Deserialize("artifact apply-ops has no pack+spr baseline".into()));
@@ -33363,8 +33871,24 @@ pub mod app {
             mutations.push(<A::Mutation as OpBinary>::decode_op(bytes).map_err(|error| store::VcsError::Deserialize(error.to_string()))?);
         }
         let mut owner = store::ArtifactStore::<A::Snapshot, A::Mutation>::new(envelope).await?;
-        owner.dispatch(store::ArtifactCommand::Apply { mutations, description: None }).await?;
-        let printed = store::print_document_pack(owner.envelope()).await;
+        // 🛂️ The throwaway reduction store gets the app's OWN owner catalogue, the same call
+        // `VcsArtifactApp`'s constructor makes for its live document store. `ArtifactStore::new`
+        // installs none, and an uninstalled store cannot retire: the close cursor below answered
+        // `artifact store has no owner-supplied bounded disposer` for the first nonempty batch this
+        // path ever ran (ticket 26/09/18 slice TC3e). The EMPTY batch returns before a store exists,
+        // which is why this went unseen.
+        if let Some(owners) = A::build_document_store_owners() {
+            owner.install_document_store_owners_exact(owners);
+        }
+        // 🪦️ `?` must never touch this store: a live `ArtifactStore` that reaches `Drop` asserts its
+        // exact terminal-empty shallow-shell witness, so an early return here aborts — the guest, on
+        // wasm32. The reduction's own fault leaves as a VALUE and the close cursor below runs either
+        // way. Measured 2026-09-22 (ticket 26/09/18 slice TC3e): the first NONEMPTY batch this path
+        // ever ran took the process down here, inside `artifact_app_apply_ops`, not in the cursor.
+        let printed = match owner.dispatch(store::ArtifactCommand::Apply { mutations, description: None }).await {
+            Ok(_) => store::print_document_pack(owner.envelope()).await,
+            Err(error) => Err(error),
+        };
         // 🧺️ The same witness `store::ArtifactCodec`'s own `apply_ops_binary` thunk pays (ticket
         // 26/09/18 slice TC3c §2): this is the guest-side twin that builds a store, prints from it
         // and lets it fall out of scope, so it drains through the identical close cursor rather than
@@ -33391,8 +33915,16 @@ pub mod app {
                 }
             }
         }
+        // 🪦️ A store that did not reach its witness must never be DROPPED: `ArtifactStore`'s `Drop`
+        // asserts that witness, so dropping it turns a reportable fault into a process abort — on a
+        // `panic = "abort"` wasm32 guest, the whole instance. Retaining it is the same trade
+        // `retain_unclosed_artifact_codec_app` makes one layer up, and a codec instance is thrown
+        // away per call, so the guest's linear memory goes with it.
+        if let Err(error) = closed {
+            std::mem::forget(owner);
+            return Err(error);
+        }
         drop(owner);
-        closed?;
         printed
     }
     //#endregion 🔖️ArtifactEditor
@@ -33415,24 +33947,29 @@ pub mod app {
             None
         }
 
+        /// 🧹️ The bounded close lanes are FRAMEWORK-owned by default — see `ArtifactApp`'s own
+        /// defaults for the measurement. The adapter (`EditorApp`/`ViewerApp`) FORWARDS this trait's
+        /// answer to `ArtifactApp`, so a `None` here overrides the framework default one layer up
+        /// and reinstates `interactive-job.close-owned-disposer-missing`; the defaults therefore
+        /// live on both traits (ticket 26/09/18 slice TC4 §3).
         fn build_document_store_disposer() -> ArtifactDisposal<ArtifactStore<Self::Snapshot, Self::Mutation>> {
-            None
+            Some(bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
         }
 
         fn build_config_store_disposer() -> ArtifactDisposal<ConfigStore<Self::Config, Self::ConfigMutation>> {
-            None
+            Some(bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
         }
 
         fn build_presence_store_disposer() -> ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-            None
+            Some(crate::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
         }
 
         fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
-            None
+            Some(bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
         }
 
         fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-            None
+            Some(crate::bounded_presence_root_retirement_factory::<Self::Presence>())
         }
 
         /// 🎭️ Always `Viewer` in practice — defaulted so implementors never restate it.
@@ -34996,6 +35533,87 @@ pub mod plugin_runtime {
     use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicU8, Ordering};
     use ui_wgpu::wgpu::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
 
+    /// 🛎️ Why a lane did not get [`RuntimeAppCell::instance`]. `Contended` is a hold that releases
+    /// on its own — another lane is mid-step; `Poisoned` is a hold that never will.
+    #[derive(Debug)]
+    enum RuntimeInstanceRefusal {
+        Contended,
+        Poisoned,
+    }
+
+    /// 🛎️ The liveness backstop on a host crossing's wait for a background lane, counted in
+    /// scheduler yields. One background turn is priced at [`RUNTIME_CLOSE_INNER_GRANT_US`] and
+    /// every yield hands the core to whoever holds the app, so a well-behaved lane releases within
+    /// a handful of them; this ceiling exists only so a lane that breaks its own step budget turns
+    /// into the refusal the host already knows how to report rather than an unbounded host stall.
+    const RUNTIME_HOST_CONTENTION_YIELDS: u32 = 4_096;
+
+    /// 🛎️ A host crossing's exclusive hold on one app, which keeps every background lane off the
+    /// app for as long as it lives. It is deliberately held across `.await`: a host crossing's
+    /// local future retains exclusive app ownership while suspended (a submitted media export
+    /// spans several awaits), which is what makes the crossing atomic against the maintenance and
+    /// close lanes; those lanes never wait on it — they read [`RuntimeAppCell::host_crossings`] and
+    /// yield their whole turn.
+    struct HostInstanceGuard<'a, PA: PluginApp> {
+        cell: &'a RuntimeAppCell<PA>,
+        instance: Option<std::sync::MutexGuard<'a, AppInstance<PA>>>,
+    }
+
+    impl<PA: PluginApp> std::ops::Deref for HostInstanceGuard<'_, PA> {
+        type Target = AppInstance<PA>;
+
+        fn deref(&self) -> &AppInstance<PA> {
+            self.instance.as_ref().expect("a live host crossing holds its app")
+        }
+    }
+
+    impl<PA: PluginApp> std::ops::DerefMut for HostInstanceGuard<'_, PA> {
+        fn deref_mut(&mut self) -> &mut AppInstance<PA> {
+            self.instance.as_mut().expect("a live host crossing holds its app")
+        }
+    }
+
+    /// 🛎️ The app is released BEFORE the crossing is unregistered, so no lane can ever read a free
+    /// counter while the mutex is still held — the reading a waiting lane makes its decision on is
+    /// never stale in the direction that would refuse a crossing.
+    impl<PA: PluginApp> Drop for HostInstanceGuard<'_, PA> {
+        fn drop(&mut self) {
+            drop(self.instance.take());
+            self.cell.host_crossings.fetch_sub(1, Ordering::SeqCst);
+        }
+    }
+
+    /// 🔧️ A background maintenance or close turn's hold on one app, counted while it lives so a
+    /// host crossing can tell a transient hold from one it must refuse.
+    struct BackgroundInstanceGuard<'a, PA: PluginApp> {
+        cell: &'a RuntimeAppCell<PA>,
+        instance: Option<std::sync::MutexGuard<'a, AppInstance<PA>>>,
+    }
+
+    impl<PA: PluginApp> std::ops::Deref for BackgroundInstanceGuard<'_, PA> {
+        type Target = AppInstance<PA>;
+
+        fn deref(&self) -> &AppInstance<PA> {
+            self.instance.as_ref().expect("a live background turn holds its app")
+        }
+    }
+
+    impl<PA: PluginApp> std::ops::DerefMut for BackgroundInstanceGuard<'_, PA> {
+        fn deref_mut(&mut self) -> &mut AppInstance<PA> {
+            self.instance.as_mut().expect("a live background turn holds its app")
+        }
+    }
+
+    /// 🔧️ The app is released BEFORE the hold is unregistered. The other order has a window in
+    /// which a waiting host crossing reads zero background holds while the mutex is still taken,
+    /// and refuses the very turn it was waiting out.
+    impl<PA: PluginApp> Drop for BackgroundInstanceGuard<'_, PA> {
+        fn drop(&mut self) {
+            drop(self.instance.take());
+            self.cell.background_holds.fetch_sub(1, Ordering::SeqCst);
+        }
+    }
+
     struct RuntimeAppCell<PA: PluginApp> {
         id: u32,
         instance: std::sync::Mutex<AppInstance<PA>>,
@@ -35004,6 +35622,17 @@ pub mod plugin_runtime {
         maintenance_fault_us: AtomicU64,
         maintenance_generation: AtomicU64,
         maintenance_stalled_steps: AtomicU32,
+        /// 🛎️ How many HOST crossings currently want or hold [`Self::instance`]. A background lane
+        /// reads it before it touches the mutex and yields its whole turn while it is non-zero, so
+        /// the host lane — which has nothing to yield to — is never made to wait on maintenance it
+        /// did not ask for.
+        host_crossings: AtomicU32,
+        /// 🔧️ How many BACKGROUND lane turns currently want or hold [`Self::instance`]. It is
+        /// raised before the try-lock and lowered on release, so a non-zero reading is the host's
+        /// proof that a refused try-lock is a transient maintenance or close step (which is priced
+        /// at [`RUNTIME_CLOSE_INNER_GRANT_US`] and will release) rather than an app the host lane
+        /// itself already owns.
+        background_holds: AtomicU32,
         /// 🌡️ [`PluginApp::maintenance_under_pressure`] as of the last maintenance step — read by the
         /// reactor turn to decide whether this instance gets a burst of steps instead of one.
         maintenance_pressure: AtomicBool,
@@ -35025,6 +35654,8 @@ pub mod plugin_runtime {
                 maintenance_fault_us: AtomicU64::new(0),
                 maintenance_generation: AtomicU64::new(0),
                 maintenance_stalled_steps: AtomicU32::new(0),
+                host_crossings: AtomicU32::new(0),
+                background_holds: AtomicU32::new(0),
                 maintenance_pressure: AtomicBool::new(false),
                 #[cfg(target_arch = "wasm32")]
                 maintenance_probe_turns: AtomicU64::new(0),
@@ -35032,6 +35663,53 @@ pub mod plugin_runtime {
                 maintenance_probe_entries: AtomicU64::new(0),
                 #[cfg(test)]
                 maintenance_probe_input_waits: AtomicU64::new(0),
+            }
+        }
+
+        /// 🛎️ Takes the app for a HOST crossing, which outranks every background lane. Registering
+        /// the crossing BEFORE the try-lock stops a background lane from starting a new turn on
+        /// this app at all; a turn that was already running is waited out, because it is priced at
+        /// [`RUNTIME_CLOSE_INNER_GRANT_US`] and releases on its own, and refusing the host over it
+        /// would turn a scheduling accident into a `plugin.internal` fault the caller has no way to
+        /// retry. `None` keeps the one meaning the bare try-lock always had at a host site: the app
+        /// is owned by something that will NOT release for this crossing — the host lane itself (a
+        /// reentrant crossing, or a submitted media export holding the app across its await) or a
+        /// poisoned mutex.
+        fn host_instance(&self) -> Option<HostInstanceGuard<'_, PA>> {
+            self.host_crossings.fetch_add(1, Ordering::SeqCst);
+            for _ in 0..RUNTIME_HOST_CONTENTION_YIELDS {
+                match self.instance.try_lock() {
+                    Ok(instance) => return Some(HostInstanceGuard { cell: self, instance: Some(instance) }),
+                    Err(std::sync::TryLockError::Poisoned(_)) => break,
+                    Err(std::sync::TryLockError::WouldBlock) => {
+                        if self.background_holds.load(Ordering::SeqCst) == 0 {
+                            break;
+                        }
+                        std::thread::yield_now();
+                    }
+                }
+            }
+            self.host_crossings.fetch_sub(1, Ordering::SeqCst);
+            None
+        }
+
+        /// 🔧️ Takes the app for a BACKGROUND maintenance or close turn. It never waits: a host
+        /// crossing in flight, or a lock already taken, is a contended turn, and the lane's own
+        /// `Yield` is exactly what a contended turn costs.
+        fn background_instance(&self) -> Result<BackgroundInstanceGuard<'_, PA>, RuntimeInstanceRefusal> {
+            if self.host_crossings.load(Ordering::SeqCst) > 0 {
+                return Err(RuntimeInstanceRefusal::Contended);
+            }
+            self.background_holds.fetch_add(1, Ordering::SeqCst);
+            match self.instance.try_lock() {
+                Ok(instance) => Ok(BackgroundInstanceGuard { cell: self, instance: Some(instance) }),
+                Err(refusal) => {
+                    self.background_holds.fetch_sub(1, Ordering::SeqCst);
+                    Err(match refusal {
+                        std::sync::TryLockError::Poisoned(_) => RuntimeInstanceRefusal::Poisoned,
+                        std::sync::TryLockError::WouldBlock => RuntimeInstanceRefusal::Contended,
+                    })
+                }
             }
         }
     }
@@ -36037,13 +36715,13 @@ pub mod plugin_runtime {
             let Some(cell) = self.cell.as_ref().and_then(std::sync::Weak::upgrade) else {
                 return semio_framework_job::StepOutcome::Cancelled;
             };
-            let mut instance = match cell.instance.try_lock() {
+            let mut instance = match cell.background_instance() {
                 Ok(instance) => instance,
-                Err(std::sync::TryLockError::WouldBlock) => {
+                Err(RuntimeInstanceRefusal::Contended) => {
                     self.contended = true;
                     return semio_framework_job::StepOutcome::Yield;
                 }
-                Err(std::sync::TryLockError::Poisoned(_)) => {
+                Err(RuntimeInstanceRefusal::Poisoned) => {
                     return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin live cleanup authority is poisoned") });
                 }
             };
@@ -36328,13 +37006,13 @@ pub mod plugin_runtime {
                     return semio_framework_job::StepOutcome::Yield;
                 }
             }
-            let mut instance = match cell.instance.try_lock() {
+            let mut instance = match cell.background_instance() {
                 Ok(instance) => instance,
-                Err(std::sync::TryLockError::WouldBlock) => {
+                Err(RuntimeInstanceRefusal::Contended) => {
                     self.contended = true;
                     return semio_framework_job::StepOutcome::Yield;
                 }
-                Err(std::sync::TryLockError::Poisoned(_)) => {
+                Err(RuntimeInstanceRefusal::Poisoned) => {
                     return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, b"plugin app close authority is poisoned") });
                 }
             };
@@ -36491,10 +37169,10 @@ pub mod plugin_runtime {
         };
         let Some(cell) = owner.as_ref() else { return RuntimeCloseStatus::Complete };
         {
-            let instance = match cell.instance.try_lock() {
+            let instance = match cell.background_instance() {
                 Ok(instance) => instance,
-                Err(std::sync::TryLockError::WouldBlock) => return RuntimeCloseStatus::Ready,
-                Err(std::sync::TryLockError::Poisoned(_)) => return runtime_close_fault(state, RuntimeCleanupFault::InstancePoisoned),
+                Err(RuntimeInstanceRefusal::Contended) => return RuntimeCloseStatus::Ready,
+                Err(RuntimeInstanceRefusal::Poisoned) => return runtime_close_fault(state, RuntimeCleanupFault::InstancePoisoned),
             };
             if !instance.app.close_terminal_is_empty() {
                 return runtime_close_fault(state, RuntimeCleanupFault::InstanceNotDrained);
@@ -36977,9 +37655,9 @@ pub mod plugin_runtime {
     // 🚫️async: E1-adjacent pure lookup consumed by `with_instances_mut`'s sync callback
     // (`FnOnce(&mut Vec<AppInstance>) -> Result<R, Fault>`, itself required sync by the
     // single-threaded `RefCell::borrow_mut` reentrancy guard) — see R9.
-    fn find_instance<'a, PA: PluginApp>(list: &'a RuntimeInstanceRegistry<std::sync::Arc<RuntimeAppCell<PA>>>, instance_id: u32) -> Result<std::sync::MutexGuard<'a, AppInstance<PA>>, Fault> {
+    fn find_instance<'a, PA: PluginApp>(list: &'a RuntimeInstanceRegistry<std::sync::Arc<RuntimeAppCell<PA>>>, instance_id: u32) -> Result<HostInstanceGuard<'a, PA>, Fault> {
         let cell = list.get(instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown instance: {instance_id}")))?;
-        cell.instance.try_lock().map_err(|_| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))
+        cell.host_instance().ok_or_else(|| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))
     }
 
     fn runtime_instance_cell<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Result<std::sync::Arc<RuntimeAppCell<PA>>, Fault> {
@@ -37245,7 +37923,6 @@ pub mod plugin_runtime {
         }
     }
 
-    #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_handle_action<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, action_json: &str, context_json: &str) -> Result<InvocationResult, Fault> {
         debug_runtime_line(format_args!("[DEBUG] plugin_handle_action entry instance={instance_id}"));
         validate_public_json_envelope(action_json, "action")?;
@@ -37265,7 +37942,7 @@ pub mod plugin_runtime {
         let active_mode_id = view.active_mode_id.clone();
         let meta = ActionMeta { actor, instance_id, view_state: Some(view) };
         let cell = runtime_instance_cell(runtime, instance_id)?;
-        let mut instance = cell.instance.try_lock().map_err(|_| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))?;
+        let mut instance = cell.host_instance().ok_or_else(|| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))?;
         instance.surface_contexts.update_view(meta.view_state.as_ref().expect("addressed UI action has host context"));
         drive_self_waking_ready(instance.app.handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta))
     }
@@ -37718,34 +38395,30 @@ pub mod plugin_runtime {
     }
 
     /// 🎬️ Interactive workflow entry: submits without waiting for the exporter to finish.
-    #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_submit_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, port_id: &str) -> Result<ArtifactMediaExportHandle, MediaError> {
         let cell = runtime_instance_cell(runtime, instance_id).map_err(|error| MediaError::Payload(port_id.to_string(), error.message))?;
-        let mut instance = cell.instance.try_lock().map_err(|_| MediaError::Payload(port_id.to_string(), format!("instance busy or poisoned: {instance_id}")))?;
+        let mut instance = cell.host_instance().ok_or_else(|| MediaError::Payload(port_id.to_string(), format!("instance busy or poisoned: {instance_id}")))?;
         instance.app.submit_media_export(port_id).await
     }
 
     /// 📡️ Interactive workflow entry: advances one bounded slice and exposes progress/checkpoint/result.
-    #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_poll_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: &ArtifactMediaExportHandle) -> Result<ArtifactMediaExportPoll, MediaError> {
         let cell = runtime_instance_cell(runtime, instance_id).map_err(|error| MediaError::Payload(handle.parent_document_id.clone(), error.message))?;
-        let mut instance = cell.instance.try_lock().map_err(|_| MediaError::Payload(handle.parent_document_id.clone(), format!("instance busy or poisoned: {instance_id}")))?;
+        let mut instance = cell.host_instance().ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), format!("instance busy or poisoned: {instance_id}")))?;
         instance.app.poll_media_export(handle).await
     }
 
     /// 🛑️ Interactive workflow entry: cancels the exact live operation named by the handle.
-    #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_cancel_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: &ArtifactMediaExportHandle) -> Result<(), MediaError> {
         let cell = runtime_instance_cell(runtime, instance_id).map_err(|error| MediaError::Payload(handle.parent_document_id.clone(), error.message))?;
-        let mut instance = cell.instance.try_lock().map_err(|_| MediaError::Payload(handle.parent_document_id.clone(), format!("instance busy or poisoned: {instance_id}")))?;
+        let mut instance = cell.host_instance().ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), format!("instance busy or poisoned: {instance_id}")))?;
         instance.app.cancel_media_export(handle).await
     }
 
     /// 🧵️ Takes one already-produced bounded action-download chunk without blocking another instance.
-    #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_take_segmented_download_chunk<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operation_id: u64) -> Result<Option<Vec<u8>>, Fault> {
         let cell = runtime_instance_cell(runtime, instance_id)?;
-        let mut instance = cell.instance.try_lock().map_err(|_| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))?;
+        let mut instance = cell.host_instance().ok_or_else(|| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))?;
         instance.app.take_segmented_download_chunk(operation_id).await
     }
 
@@ -38634,7 +39307,7 @@ pub mod plugin_runtime {
 
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumes ONE `AsyncTask`
     /// follow-up against `instance_id`'s live `dyn PluginApp` — `Command` re-enters through
-    /// `PluginApp::handle_command_frame` (the SAME typed-command path a fresh command uses,
+    /// `PluginApp::resume_task_command` (the SAME APPLYING typed-command path a fresh command uses,
     /// against CURRENT state — Elm's Msg-from-Cmd), `Emit` through `PluginApp::resume_task_emit`
     /// (decode + `dispatch_emit` directly, no re-entry into `handle`). Frames the result EXACTLY
     /// like `AppCommand::PureCommand` does (`AppFrame::Emit`, carrying the SAME
@@ -38654,7 +39327,7 @@ pub mod plugin_runtime {
             TaskResumeInput::Command(bytes) => {
                 with_instances_mut(runtime, |list| {
                     let mut instance = find_instance(list, instance_id)?;
-                    resolve_ready(instance.app.handle_command_frame(&bytes, meta))
+                    resolve_ready(instance.app.resume_task_command(bytes, meta))
                 })
                 .await
             }
@@ -39019,7 +39692,6 @@ pub mod plugin_runtime {
     }
 
 
-    #[expect(clippy::await_holding_lock, reason = "This local future retains exclusive app ownership while suspended; competing production instance access uses try_lock and refuses or yields instead of waiting.")]
     pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command: Option<(u64, PluginCommandIngress)>) -> Result<PluginExchangeOutput, Fault> {
         debug_runtime_line(format_args!("[DEBUG] plugin_exchange entry instance={instance_id} command={}", command.is_some()));
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
@@ -39195,7 +39867,7 @@ pub mod plugin_runtime {
                                 Err(plugin_internal_fault(format!("action plugin owner {} does not match the active program", invocation.address.plugin_id)))
                             } else {
                                 let cell = runtime_instance_cell(runtime, instance_id)?;
-                                let mut instance = cell.instance.try_lock().map_err(|_| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))?;
+                                let mut instance = cell.host_instance().ok_or_else(|| plugin_internal_fault(format!("instance busy or poisoned: {instance_id}")))?;
                                 drive_self_waking_ready(instance.app.handle_action_invocation(&invocation, active_mode_id.as_deref(), &meta))
                             }
                         }
@@ -41428,6 +42100,7 @@ pub use app::{
     CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES,
     artifact_app_apply_ops,
     artifact_app_genesis_pair,
+    artifact_pair_snapshot,
     built_text_node,
     built_text_to_component_tree,
     built_to_component_tree,
@@ -41484,9 +42157,12 @@ pub use app::{
     ArtifactIdentityClaim,
     ArtifactIdentityNamespace,
     ArtifactInference,
+    ArtifactDocumentPayload,
+    ArtifactInferenceDocumentBinding,
     ArtifactInferenceExecution,
     ArtifactInferenceExecutionError,
     ArtifactInferenceExecutionRequest,
+    ArtifactInferencePayloadContract,
     ArtifactInferenceRegistrationError,
     ArtifactInferenceService,
     ArtifactInferenceServiceKey,
@@ -41632,6 +42308,8 @@ pub use app::{
     WireArtifactInferenceProvenance,
     WireArtifactInferenceRequest,
     WireArtifactInferenceResult,
+    WireInferenceArtifactBinding,
+    WireInferencePayloadContract,
     ARTIFACT_INFERENCE_WIRE_VERSION,
     MAINTENANCE_STAGES,
 };

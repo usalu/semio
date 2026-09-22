@@ -1,5 +1,5 @@
 // 🐹️ Go subject for the MCP initialize handshake. The Go implementation is a `package main` process,
-// so the adapter drives the real `semio-repo-mcp` binary over its own stdio transport — the same
+// so the adapter drives the real `repo` binary over its own stdio transport — the same
 // surface a client sees — and projects only what the reply carries.
 package adapter
 
@@ -38,7 +38,7 @@ func sourceIsNewer(source string, built time.Time) bool {
 
 // 🗃️binaryPath returns the built MCP binary, rebuilding it into the marked cache when it is absent or stale.
 func binaryPath(repoRoot string) (string, error) {
-	name := "semio-repo-mcp"
+	name := "repo"
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
@@ -57,7 +57,7 @@ func binaryPath(repoRoot string) (string, error) {
 	build.Dir = source
 	build.Env = append(os.Environ(), "GOWORK="+filepath.Join(repoRoot, "go.work"), "GOFLAGS=")
 	if output, err := build.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("build semio-repo-mcp: %v: %s", err, output)
+		return "", fmt.Errorf("build repo: %v: %s", err, output)
 	}
 	return binary, nil
 }
@@ -173,7 +173,7 @@ func pipelinedHandshake(ctx *host.Context) (map[string]any, error) {
 }
 
 // 🚰️burstThenEOF writes every request, closes standard input at once and only then reads: the
-// `printf … | semio-repo-mcp` shape, where end of input arrives while requests are still queued.
+// `printf … | repo` shape, where end of input arrives while requests are still queued.
 func burstThenEOF(repoRoot string, profile string, requests []string) ([]map[string]json.RawMessage, error) {
 	binary, err := binaryPath(repoRoot)
 	if err != nil {

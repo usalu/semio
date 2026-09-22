@@ -64,6 +64,20 @@ fn window_law_request(node_key: &str, open: Option<bool>, offset: u32, rows: u32
     TreeWindowRequest { body_key: WRITER_PLAY_BODY_ARTIFACT.into(), node_key: node_key.into(), open, offset, rows }
 }
 
+/// 🔑️ A windowed container nested inside another is addressed by its **window PATH** — the enclosing
+/// windowed containers' keys, outermost first, then its own key, joined by
+/// `TREE_WINDOW_PATH_SEPARATOR` (`TreeWindows::path_of`). A bare node key only ever matches a
+/// top-level container, so a request filed as plain `"match"` silently misses and the level falls
+/// back to its author default: the closed law materialised the whole first paint (47 rows) and the
+/// window law read offset 0 instead of 30. These laws file the path the host really sends, exactly
+/// like `🖨️raster`'s `nested_key` and `📐️cad`'s own nested document requests.
+///
+/// 🌳️ These two laws call `jack_ast_to_tree_item` DIRECTLY, so the AST root is the outermost
+/// windowed container and the path of a level below it is `root␟<id>`.
+fn ast_window_path(node_key: &str) -> String {
+    format!("root{}{node_key}", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+}
+
 fn window_law_node<'a>(root: &'a BuiltNode, key: &str) -> &'a BuiltNode {
     fn walk<'a>(node: &'a BuiltNode, key: &str) -> Option<&'a BuiltNode> {
         if node.key.as_str() == key {
@@ -115,7 +129,7 @@ async fn an_oversized_ast_level_stamps_the_full_total_and_materialises_at_most_i
 #[semio_framework_async_macros::async_test]
 async fn a_closed_ast_level_stamps_its_total_and_builds_no_children() {
     let root = oversized_ast(OVERSIZED);
-    let view = window_law_view(vec![window_law_request("match", Some(false), 0, 32)]);
+    let view = window_law_view(vec![window_law_request(&ast_window_path("match"), Some(false), 0, 32)]);
     let node = super::jack_ast_to_tree_item(&root, &TreeWindows::for_body(&view, WRITER_PLAY_BODY_ARTIFACT)).expect("the AST row builds");
     let matched = window_law_node(&node, "match");
     assert_eq!(window_law_extent(matched), (OVERSIZED as u32, 0));
@@ -125,7 +139,7 @@ async fn a_closed_ast_level_stamps_its_total_and_builds_no_children() {
 #[semio_framework_async_macros::async_test]
 async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_raw_ast_id() {
     let root = oversized_ast(OVERSIZED);
-    let view = window_law_view(vec![window_law_request("match", Some(true), 30, 4)]);
+    let view = window_law_view(vec![window_law_request(&ast_window_path("match"), Some(true), 30, 4)]);
     let node = super::jack_ast_to_tree_item(&root, &TreeWindows::for_body(&view, WRITER_PLAY_BODY_ARTIFACT)).expect("the AST row builds");
     let matched = window_law_node(&node, "match");
     assert_eq!(window_law_extent(matched), (OVERSIZED as u32, 30));

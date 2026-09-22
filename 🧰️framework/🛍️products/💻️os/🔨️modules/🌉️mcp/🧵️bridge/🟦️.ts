@@ -338,7 +338,11 @@ export type GatewayToShell =
   | { variant: "pong" }
   | { variant: "bye"; reason: string }
   | { variant: "agentToolCall"; invocationId: string; toolName: string; arguments: string }
-  | { variant: "agentToolResult"; invocationId: string; toolName: string; ok: boolean; summary: string };
+  | { variant: "agentToolResult"; invocationId: string; toolName: string; ok: boolean; summary: string }
+  /** 💬️ One chunk of the agent's own free-text turn — `replyId` identifies the turn (repeated by
+   * every chunk of it), `inReplyTo` is the `agentMessage` it answers or `null`, and `complete`
+   * marks the last chunk. The text is the agent's own words and carries no locale. */
+  | { variant: "agentReply"; replyId: string; inReplyTo: string | null; text: string; complete: boolean };
 
 export function encodeGatewayToShell(frame: GatewayToShell): Uint8Array {
   const writer = new Writer();
@@ -396,6 +400,13 @@ export function encodeGatewayToShell(frame: GatewayToShell): Uint8Array {
       writer.bool(frame.ok);
       writer.string(frame.summary);
       break;
+    case "agentReply":
+      writer.u8(10);
+      writer.string(frame.replyId);
+      writer.optionString(frame.inReplyTo);
+      writer.string(frame.text);
+      writer.bool(frame.complete);
+      break;
   }
   return writer.finish();
 }
@@ -434,6 +445,9 @@ export function decodeGatewayToShell(bytes: Uint8Array): GatewayToShell {
       break;
     case 9:
       frame = { variant: "agentToolResult", invocationId: reader.string(), toolName: reader.string(), ok: reader.bool(), summary: reader.string() };
+      break;
+    case 10:
+      frame = { variant: "agentReply", replyId: reader.string(), inReplyTo: reader.optionString(), text: reader.string(), complete: reader.bool() };
       break;
     default:
       throw new Error(`bridge frame: unknown GatewayToShell tag ${tag}`);

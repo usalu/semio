@@ -81,6 +81,15 @@ framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️p
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
+# 🎫️ ticket 26/09/18 slice M10: `document_backbone_binding` — the host↔guest CONTROL-PLANE codec for
+# binding a guest instance's document backbone (`DocumentBackboneBindingCommandV1::encode` +
+# `require_document_backbone_binding_receipt_v1`). A guest publishes `MessageEndpoint::Backbone`
+# effects only once a host has bound one, so a gateway that wants its agent's committed envelopes to
+# leave the process has to send that command. The wgpu renderer — the other real host — links this
+# crate for exactly the same pair of functions (`🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`
+# `bind_document_backbone`); writing a second copy of the wire shape here instead would be the
+# duplicate codec this repo forbids.
+semio-framework-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 
 [dev-dependencies]
 # 🔌️ Drives the `🧵️bridge` `BridgeServer` skeleton's websocket upgrade end-to-end in tests — same

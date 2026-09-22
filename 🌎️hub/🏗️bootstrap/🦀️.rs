@@ -4384,6 +4384,19 @@ fn checkpoint_publication_response<'a>(
     })
 }
 
+/// @emoji 🧾️ `POST /spaces/{space_id}/documents/{document_id}/checkpoint-publications` — the hub's
+/// published contract for a client that holds a canonical artifact pair and wants the hub to fence,
+/// verify and publish it as a checkpoint.
+///
+/// **It has no caller outside this crate, and that is a fact about the clients, not about the
+/// route.** G2 §10 left "dead or merely undiscovered?" open and G16 restated it unchanged; the
+/// answer, re-established by grepping the whole tree for the path, for `CheckpointPublicationCommandV1`
+/// and for `semio.hub.checkpoint-publication-command/v1` on 2026-09-22: the only producers anywhere
+/// are `🧪️tests/🔬️bin-unit` and `📦️packages/🦀️rust/📜️script.ts`'s own process probe. No shell, no
+/// wgpu/native client, no MCP gateway and no React host builds this command. It is **undiscovered**
+/// — the route is complete, fenced, authenticated as a document-write subject and covered by laws,
+/// and nothing has been written yet that needs it. Deleting it would delete the only authority path
+/// by which a non-hub process can publish a checkpoint at all.
 async fn post_checkpoint_publication(Path((space_id, document_id)): Path<(String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     if uri.query().is_some() || headers.get_all(axum::http::header::CONTENT_TYPE).iter().count() != 1 || headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()) != Some("application/json") {
         return StatusCode::BAD_REQUEST.into_response();
@@ -4652,7 +4665,7 @@ async fn document_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Pat
 /// worker's `validateArtifactBootstrapIdentity` does exactly that — refuses a pair the hub itself
 /// produced. This is the single boundary where the internal key becomes the client's identity
 /// again, and [`wire_frontier_to_db`] is its exact inverse on the way in.
-fn project_wire_frontier(frontier: &mut protocol::RuntimeFrontierSummary, document_id: &str) {
+fn project_wire_frontier(frontier: &mut RuntimeFrontierSummary, document_id: &str) {
     frontier.document_id = ProtocolArtifactId(document_id.to_string());
 }
 
@@ -4692,7 +4705,7 @@ const fn frame_carries_frontier(frame: &ServerFrame) -> bool {
 /// (`db_sync` refuses a hello whose advertised frontier does not name its own document). A frontier
 /// naming anything other than the socket's own document is refused rather than re-keyed — the hub
 /// must never accept an identity claim it then overwrites.
-fn wire_frontier_to_db(frontier: &mut protocol::RuntimeFrontierSummary, document_id: &str, db_id: &ProtocolArtifactId) -> bool {
+fn wire_frontier_to_db(frontier: &mut RuntimeFrontierSummary, document_id: &str, db_id: &ProtocolArtifactId) -> bool {
     if frontier.document_id.0 != document_id {
         return false;
     }
@@ -5555,15 +5568,21 @@ const ARTIFACT_CREATION_SHUTDOWN_DEADLINE: std::time::Duration = std::time::Dura
 
 #[cfg(feature = "native-artifact-execution")]
 struct ArtifactCreationHttpControlV1 {
-    deadline: std::time::Instant,
     cancelled: std::sync::atomic::AtomicBool,
     shutdown_cancelled: Option<Arc<std::sync::atomic::AtomicBool>>,
+    fault: Mutex<Option<String>>,
 }
 
 #[cfg(feature = "native-artifact-execution")]
 impl ArtifactCreationHttpControlV1 {
+    /// 🛑️ Cancellation only. The control used to carry a wall-clock instant of its own and report
+    /// `is_cancelled` past it, which made every creation a race against the calendar twice over —
+    /// once in the control and once in the `OperationContext` — and turned an honest overrun into
+    /// `Cancelled`, the one terminal phase that says the AUTHOR stopped the work. The bound lives
+    /// in the context alone now (`ARTIFACT_CREATION_STALL_BOUND_MS`), which is the single place
+    /// ticket 26/09/18 slice HT16 put operation bounds.
     fn new() -> Self {
-        Self { deadline: std::time::Instant::now() + std::time::Duration::from_millis(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS), cancelled: std::sync::atomic::AtomicBool::new(false), shutdown_cancelled: None }
+        Self { cancelled: std::sync::atomic::AtomicBool::new(false), shutdown_cancelled: None, fault: Mutex::new(None) }
     }
 
     fn recovery(shutdown_cancelled: Arc<std::sync::atomic::AtomicBool>) -> Self {
@@ -5572,6 +5591,11 @@ impl ArtifactCreationHttpControlV1 {
 
     fn cancel(&self) {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+    }
+
+    /// 🧯️ Takes the sentence the operation left behind, so the host reports it exactly once.
+    fn take_fault(&self) -> Option<String> {
+        self.fault.lock().ok().and_then(|mut held| held.take())
     }
 }
 
@@ -5582,10 +5606,16 @@ impl AuthorityOperationControl for ArtifactCreationHttpControlV1 {
     }
 
     fn is_cancelled(&self) -> bool {
-        self.cancelled.load(std::sync::atomic::Ordering::Acquire) || self.shutdown_cancelled.as_ref().is_some_and(|cancelled| cancelled.load(std::sync::atomic::Ordering::Acquire)) || std::time::Instant::now() >= self.deadline
+        self.cancelled.load(std::sync::atomic::Ordering::Acquire) || self.shutdown_cancelled.as_ref().is_some_and(|cancelled| cancelled.load(std::sync::atomic::Ordering::Acquire))
     }
 
     fn report(&self, _progress: AuthorityProgress) {}
+
+    fn fault(&self, detail: &str) {
+        if let Ok(mut held) = self.fault.lock() {
+            held.get_or_insert_with(|| detail.to_owned());
+        }
+    }
 }
 
 #[cfg(feature = "native-artifact-execution")]
@@ -5659,9 +5689,21 @@ impl ArtifactCreationHttpTaskOwnerV1 {
         ArtifactCreationHttpAdmissionV1::Owner(ArtifactCreationHttpReservationV1 { owner: self.clone(), key, pending, activated: false })
     }
 
+    /// 🔑️ Whether a live execution in THIS process owns that creation key right now — it holds a
+    /// reservation, or its detached task has not finished. Recovery must ask before it closes an
+    /// uncommitted key: the sweep runs every second and reads only durable facts, so a creation
+    /// that is legitimately still working looks exactly like one whose executor died, and closing
+    /// it takes the key out from under an execution that is about to append `Prepared`.
+    fn owns_live_execution(&self, key: &str) -> bool {
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.tasks.retain(|_, task| !task.task.is_finished());
+        state.reservations.contains_key(key) || state.tasks.contains_key(key)
+    }
+
     fn start_recovery(self: &Arc<Self>, service: Arc<ArtifactCreationServiceV1>, authority: Arc<HubArtifactCreationCommitAuthorityV1>, tracer: Tracer) {
         let cancelled = self.recovery_cancelled.clone();
         let wake = self.changed.clone();
+        let owner = Arc::downgrade(self);
         let task = tokio::spawn(async move {
             loop {
                 tokio::select! {
@@ -5685,12 +5727,21 @@ impl ArtifactCreationHttpTaskOwnerV1 {
                     if cancelled.load(std::sync::atomic::Ordering::Acquire) {
                         break;
                     }
+                    let Some(owner) = owner.upgrade() else { break };
+                    if owner.owns_live_execution(&artifact_creation_task_key_v1(&intent.actor.user_id, &intent.scope.space_id, &intent.request.request_id)) {
+                        continue;
+                    }
+                    drop(owner);
                     let control = ArtifactCreationHttpControlV1::recovery(cancelled.clone());
-                    let deadline = control.now_ms().saturating_add(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS);
-                    let context = OperationContext::new(deadline, AuthorityLimits::maximum(), &control);
+                    let Ok(context) = OperationContext::stall_bounded(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_STALL_BOUND_MS, AuthorityLimits::maximum(), &control) else { break };
                     if let Err(error) = service.recover(intent, authority.as_ref(), &context).await {
                         let mut record = TraceRecord::new("server.artifact.maintenance", TraceOutcome::Failed);
                         record.detail = Some(format!("creation-recovery-attempt-unavailable:{error}"));
+                        tracer.emit(record);
+                    }
+                    if let Some(detail) = control.take_fault() {
+                        let mut record = TraceRecord::new("server.artifact.creation", TraceOutcome::Failed);
+                        record.detail = Some(detail);
                         tracer.emit(record);
                     }
                 }
@@ -5931,8 +5982,9 @@ async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(
             ArtifactCreationHttpAdmissionV1::Unavailable => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
         }
     };
-    let deadline = control.now_ms().saturating_add(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS);
-    let context = OperationContext::new(deadline, AuthorityLimits::maximum(), control.as_ref());
+    let Ok(context) = OperationContext::stall_bounded(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_STALL_BOUND_MS, AuthorityLimits::maximum(), control.as_ref()) else {
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    };
     let acceptance = match service.accept(&actor, &space_id, request, &context).await {
         Ok(acceptance) => acceptance,
         Err(error) => return artifact_creation_error_status(error).into_response(),
@@ -5945,11 +5997,26 @@ async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(
         let authority = state.artifact_creation_commit_authority.clone();
         let execution_tracer = state.tracer.clone();
         reservation.activate(async move {
-            let deadline = control.now_ms().saturating_add(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS);
-            let context = OperationContext::new(deadline, AuthorityLimits::maximum(), control.as_ref());
+            // 🧗️ No socket is waiting on what follows: the route has already answered 202 and the
+            // client polls the durable status. Its bound is therefore the stall bound, fed by the
+            // guest codec's own fuel progress, never the calendar.
+            let context = match OperationContext::stall_bounded(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_STALL_BOUND_MS, AuthorityLimits::maximum(), control.as_ref()) {
+                Ok(context) => context,
+                Err(error) => {
+                    let mut record = TraceRecord::new("server.artifact.creation", TraceOutcome::Failed);
+                    record.detail = Some(format!("creation-retained-execution-unbounded:{error}"));
+                    execution_tracer.emit(record);
+                    return;
+                }
+            };
             if let Err(error) = service.execute(execution, authority.as_ref(), &context).await {
                 let mut record = TraceRecord::new("server.artifact.maintenance", TraceOutcome::Failed);
                 record.detail = Some(format!("creation-retained-execution-unavailable:{error}"));
+                execution_tracer.emit(record);
+            }
+            if let Some(detail) = control.take_fault() {
+                let mut record = TraceRecord::new("server.artifact.creation", TraceOutcome::Failed);
+                record.detail = Some(detail);
                 execution_tracer.emit(record);
             }
         });

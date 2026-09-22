@@ -11,13 +11,13 @@ pub struct SnapshotRetirementFactory;
 
 impl store::SnapshotRetirementFactory<FlowSnapshot> for SnapshotRetirementFactory {
     fn retire(&self, snapshot: Arc<FlowSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(SnapshotRetirement { root: ManuallyDrop::new(Some(snapshot)), owned: ManuallyDrop::new(None), retirement: FlowRetirement::default(), phase: 0 })
+        Box::new(SnapshotRetirement { root: ManuallyDrop::new(Some(snapshot)), owned: ManuallyDrop::new(None), retirement: FlowRetirement::default(), debt: 0, phase: 0 })
     }
 }
 
 impl store::ArtifactOwnedValueRetirementFactory<FlowSnapshot> for SnapshotRetirementFactory {
     fn retire_owned(&self, snapshot: FlowSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(SnapshotRetirement { root: ManuallyDrop::new(None), owned: ManuallyDrop::new(Some(snapshot)), retirement: FlowRetirement::default(), phase: 0 })
+        Box::new(SnapshotRetirement { root: ManuallyDrop::new(None), owned: ManuallyDrop::new(Some(snapshot)), retirement: FlowRetirement::default(), debt: 0, phase: 0 })
     }
 }
 
@@ -25,6 +25,8 @@ struct SnapshotRetirement {
     root: ManuallyDrop<Option<Arc<FlowSnapshot>>>,
     owned: ManuallyDrop<Option<FlowSnapshot>>,
     retirement: FlowRetirement,
+    /// 🎟️ Bytes already freed above the caller's page, still owed to the caller's accounting.
+    debt: usize,
     phase: u8,
 }
 
@@ -34,8 +36,8 @@ impl store::ErasedSnapshotRetirement for SnapshotRetirement {
         if items == 0 || bytes == 0 {
             return Ok(Step::Blocked);
         }
-        if !self.retirement.is_empty() {
-            return self.retirement.close_page(1, bytes);
+        if self.debt > 0 || !self.retirement.is_empty() {
+            return super::close_frontier_page(&mut self.retirement, &mut self.debt, bytes);
         }
         if let Some(root) = self.root.take() {
             self.owned = ManuallyDrop::new(Arc::into_inner(root));
@@ -69,14 +71,14 @@ impl store::ErasedSnapshotRetirement for SnapshotRetirement {
         Ok(Step::Pending { released_items: 1, released_bytes: 0 })
     }
     fn terminal_is_empty(&self) -> bool {
-        self.root.is_none() && self.owned.is_none() && self.retirement.is_empty()
+        self.root.is_none() && self.owned.is_none() && self.retirement.is_empty() && self.debt == 0
     }
 }
 
 impl Drop for SnapshotRetirement {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(self.root.is_none() && self.owned.is_none() && self.retirement.is_empty(), "Flow snapshot retirement must close exactly");
+            assert!(self.root.is_none() && self.owned.is_none() && self.retirement.is_empty() && self.debt == 0, "Flow snapshot retirement must close exactly");
         }
     }
 }

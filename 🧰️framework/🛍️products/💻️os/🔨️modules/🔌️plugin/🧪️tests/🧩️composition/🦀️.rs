@@ -432,6 +432,14 @@ impl store::ArtifactEnvelopeOwnedFieldCatalog<ComposedParentSnapshot, RecursiveF
     }
 }
 
+/// 🚫️ A parent revision whose composition only the APP knows to be unrestorable: the structural
+/// projection accepts the very same snapshot, so a framework seam that still calls
+/// `store::ChildRestoreProjection::from_snapshot` directly answers no fault at all here.
+const COMPOSED_PARENT_PROJECTION_REFUSAL_REVISION: i32 = -7;
+
+/// 🗣️ The exact diagnostic the app owns; the structural error type has no way to spell it.
+const COMPOSED_PARENT_PROJECTION_REFUSAL_MESSAGE: &str = "composed parent child projection failed: revision is not restorable";
+
 #[derive(Default)]
 struct ComposedParentApp<const HAS_CHILD: bool = true>;
 
@@ -440,6 +448,9 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
     const DOCUMENT_SCHEMA: &'static str = "semio.composed-test/v1";
     const DIALECT: Dialect = Dialect { artifact_kind: "s.test.composed", standard: StandardId("1"), subset: SubsetId::ANY };
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        if snapshot.revision == COMPOSED_PARENT_PROJECTION_REFUSAL_REVISION {
+            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("test.parent-projection"), COMPOSED_PARENT_PROJECTION_REFUSAL_MESSAGE));
+        }
         store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("test.parent-projection"), error.to_string()))
     }
     type Snapshot = ComposedParentSnapshot;
@@ -1039,28 +1050,29 @@ async fn retained_composed_replacement_fixture(
     parent_id: &str,
     child_count: i32,
 ) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
-    let generation = semio_framework_job::Generation(app.store.generation_now());
+    retained_composed_replacement_fixture_at_revision(app, operation, parent_id, child_count, 0).await
+}
+
+async fn retained_composed_replacement_fixture_at_revision(
+    app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
+    operation: u64,
+    parent_id: &str,
+    child_count: i32,
+    parent_revision: i32,
+) -> (crate::app::ArtifactEnvelopeDecodeOperationHandle, crate::app::OwnedDocumentMemberIngress) {
     let child_dialect = test_child_dialect().await;
     let parent_dialect: ArtifactDialect = ComposedParentApp::<true>::DIALECT.into();
     let child_reference = ArtifactRef { artifact_id: "child-1".into(), dialect: child_dialect.clone() };
-    let snapshot = ComposedParentSnapshot { slot: Some(ParentFixtureChild::new("child-1".into(), child_reference.clone())), revision: 0 };
-    let mut envelope = store::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(ComposedParentApp::<true>::DOCUMENT_SCHEMA, parent_id, snapshot, None);
-    envelope.dialect = Some(parent_dialect.clone());
-    let mut candidate = store::ArtifactStore::new(envelope).await.expect("candidate parent store");
-    candidate.install_document_store_owners_exact(ComposedParentApp::<true>::build_document_store_owners().expect("candidate parent owners"));
-    let job = crate::app::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::from_candidate(candidate)));
-    let operation = semio_framework_job::OperationId(operation);
-    app.store_replacement_jobs.insert_admitted(
-        operation.0,
-        crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job),
-    );
+    let handle = composed_replacement_candidate(app, operation, parent_id, parent_revision).await;
+    let generation = handle.generation;
+    let operation = handle.operation;
 
     let owner = store::OwnerRef {
         parent: ArtifactRef { artifact_id: parent_id.into(), dialect: parent_dialect },
         slot: "slot".into(),
         child_id: "child-1".into(),
     };
-    let mut member = TestMembers::create("child-1", &child_dialect, &TestSnapshot { count: child_count, label: "replacement".into() }.encode_pack()).await.expect("candidate child");
+    let mut member = TestMembers::create("child-1", &child_dialect, &TestSnapshot { count: child_count, label: "replacement".into(), slot: Vec::new() }.encode_pack()).await.expect("candidate child");
     member.set_owner(Some(owner.clone())).await;
     let bytes = member.envelope_pack_bytes().await.expect("candidate child full envelope");
     close_member_admission_fixture(&mut member);
@@ -1072,7 +1084,30 @@ async fn retained_composed_replacement_fixture(
     pages.seal().expect("candidate member page set");
     let request = store::MemberOpenRequest::new(operation, generation, u64::MAX, child_reference.clone(), Some(owner.clone()), pages).admit(1).unwrap_or_else(|_| panic!("candidate member request"));
     let ingress = crate::app::OwnedDocumentMemberIngress::try_new(0, child_reference, owner, request).unwrap_or_else(|_| panic!("candidate member ingress"));
-    (crate::app::ArtifactEnvelopeDecodeOperationHandle { operation, generation }, ingress)
+    (handle, ingress)
+}
+
+/// 🧬️ The candidate parent half of a retained replacement alone — no member ingress, so a law that
+/// never reaches member admission leaves no ingress owner to hand off.
+async fn composed_replacement_candidate(
+    app: &mut VcsArtifactApp<ComposedParentApp, TestMembers>,
+    operation: u64,
+    parent_id: &str,
+    parent_revision: i32,
+) -> crate::app::ArtifactEnvelopeDecodeOperationHandle {
+    let generation = semio_framework_job::Generation(app.store.generation_now());
+    let child_dialect = test_child_dialect().await;
+    let parent_dialect: ArtifactDialect = ComposedParentApp::<true>::DIALECT.into();
+    let child_reference = ArtifactRef { artifact_id: "child-1".into(), dialect: child_dialect };
+    let snapshot = ComposedParentSnapshot { slot: Some(ParentFixtureChild::new("child-1".into(), child_reference)), revision: parent_revision };
+    let mut envelope = store::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(ComposedParentApp::<true>::DOCUMENT_SCHEMA, parent_id, snapshot, None);
+    envelope.dialect = Some(parent_dialect);
+    let mut candidate = store::ArtifactStore::new(envelope).await.expect("candidate parent store");
+    candidate.install_document_store_owners_exact(ComposedParentApp::<true>::build_document_store_owners().expect("candidate parent owners"));
+    let job = crate::app::ArtifactStoreInitializationJob::new(Box::new(ReadyComposedParentInitialization::from_candidate(candidate)));
+    let operation = semio_framework_job::OperationId(operation);
+    app.store_replacement_jobs.insert_admitted(operation.0, crate::app::ActiveArtifactStoreReplacement::new(operation, generation, app.child_content_generation, job));
+    crate::app::ArtifactEnvelopeDecodeOperationHandle { operation, generation }
 }
 
 async fn drive_composed_replacement_to(
@@ -1520,6 +1555,37 @@ async fn retained_composed_replacement_cancellation_during_open_closure_and_view
         close_member_admission_app(&mut app);
     }
     eprintln!("[DEBUG] recursive replacement cancellation retained the live bundle during member open, closure validation, and immutable-view preparation");
+}
+
+/// 🧩️ A candidate parent's child projection is the APP's answer, never the structural one.
+///
+/// The replacement pump used to call `store::ChildRestoreProjection::from_snapshot` on the candidate
+/// and `map_err` the `ChildRestoreProjectionError` into one flat `candidate parent child projection is
+/// invalid`, so a live-load refusal was unattributable from the plugin side: gismap's
+/// `gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed` failed with that
+/// string while its own projection law was green over every snapshot the crate can build (ticket
+/// 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, engineering §9). This law pins the seam from the far
+/// side: the fixture's snapshot is the very one the sibling replacement laws drive to publication, so
+/// the structural projection accepts it; only `ComposedParentApp`'s own projection refuses this
+/// revision, and a pump that bypassed the app would answer progress here instead of a fault.
+#[semio_framework_async_macros::async_test]
+async fn retained_composed_replacement_candidate_projection_is_the_apps_own_answer() {
+    let mut app = live_composed_replacement_app().await;
+    let old_parent_id = app.store.envelope().id.clone();
+    let handle = composed_replacement_candidate(&mut app, 741, "app-projection-parent", COMPOSED_PARENT_PROJECTION_REFUSAL_REVISION).await;
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::AwaitingMembers).await;
+
+    app.maintenance_stage = 14;
+    let fault = PluginApp::maintenance_step(&mut app, 1, 4096).expect_err("the app's refusal must reach the caller, never be answered as progress");
+    assert_eq!(fault.code.0, "test.parent-projection", "the app's own fault code survives the pump");
+    assert_eq!(fault.message, COMPOSED_PARENT_PROJECTION_REFUSAL_MESSAGE, "the app's own diagnostic survives the pump, not a flat framework string");
+
+    app.cancel_artifact_store_replacement(handle).expect("cancel the refused candidate");
+    drive_composed_replacement_to(&mut app, handle, crate::app::ActiveArtifactStoreReplacementState::Complete).await;
+    assert_eq!(app.poll_artifact_store_replacement(handle), crate::app::ArtifactEnvelopeDecodeOperationPoll::Cancelled);
+    assert_eq!(app.store.envelope().id, old_parent_id, "a refused candidate never displaces the live parent");
+    assert!(app.acknowledge_artifact_store_replacement(handle).expect("refused candidate acknowledgement"));
+    close_member_admission_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -924,7 +924,7 @@ impl McpServer {
             resources,
             prompts,
             backend,
-            server_name: "semio-os-mcp".to_string(),
+            server_name: "semio".to_string(),
             server_version: env!("CARGO_PKG_VERSION").to_string(),
             era: None,
             negotiated_version: None,
@@ -1145,7 +1145,11 @@ impl McpServer {
         // 💬️ The ONE real dispatch point every tool call passes through — so the shell's agent
         // panel shows the agent's actual calls, in order, with their real arguments and outcomes,
         // rather than a second bookkeeping path that could drift from what ran.
-        let invocation = self.conversation.as_ref().map(|conversation| conversation.begin_tool_call(name, &arguments));
+        // 💬️ …except for a tool whose own result IS a conversation frame: `conversation_reply`
+        // publishes the agent's prose itself, and a tool-call row carrying the same sentence as its
+        // `arguments` would print every turn twice (`SELF_PUBLISHING_CONVERSATION_TOOLS`).
+        let publishes_itself = crate::bridge::SELF_PUBLISHING_CONVERSATION_TOOLS.contains(&name);
+        let invocation = self.conversation.as_ref().filter(|_| !publishes_itself).map(|conversation| conversation.begin_tool_call(name, &arguments));
         let outcome = self.tools.call(name, arguments);
         if let (Some(conversation), Some(invocation_id)) = (self.conversation.as_ref(), invocation.as_deref()) {
             let (ok, summary) = match &outcome {

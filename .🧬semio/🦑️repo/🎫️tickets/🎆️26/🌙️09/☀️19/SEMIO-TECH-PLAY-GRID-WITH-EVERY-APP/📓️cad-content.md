@@ -164,3 +164,178 @@ Swap was exhausted (998 MB free of 13 312 MB) and free disk fell 113 GB → 62 G
 died with no error line and no watchdog entry. A private `CARGO_TARGET_DIR` does **not** solve this — it
 clears the artifact-directory lease but not the shared build-dir unit locks, and it is what broke run9.
 **The fleet's `📜️native-test-mutex.sh` did solve it** (run14: 27 units, complete, under 20 min).
+
+## Session 7 — 2026-09-22 11:00–17:00
+
+Durable working home after the 16:0x sweep: `.🧬semio/🦑️repo/⚡️cache/play-fleet/cad-content`
+(`STATUS.md`, `run18.txt`, `run19.txt`, `target/`). **At ~16:05–16:25 the repo's workspace-cleanup
+deleted most of `$T/🗑️generated`** — my session-7 run logs (`run16.txt`, `run17.txt`), the probe
+evidence folders `probe-0922{,b,c,d}/`, the shared `activation/` logs and the first `STATUS.md` went
+with it. Every number and quotation below was read out of those logs before they were deleted; the
+source edits live outside `🗑️generated` and are intact.
+
+### 9. Numbers
+
+| run | when | result |
+|---|---|---|
+| `run16` | 12:05–12:40 | `semio-s-artifact-cad-cad --lib` **428 passed / 2 failed / 1 ignored**; plugin-cad 5✅ · aec-building 8✅ · aec-building-energy 2✅ · aec-building-structure 2✅ · spatial-shape 2✅ |
+| `run17` | 13:10–13:29 | `semio-s-artifact-cad-cad --lib` **430 passed / 2 failed / 1 ignored**; other five green (5, 8, 2, 2, 2) |
+| `run19` | launched 16:48 | the verification run for §11; see the addendum at the end of this section |
+
+`world_scene_render_cost_probe` (`…/✏️editor/🧪️tests/🔬️unit/🦀️.rs:2344-2365`) failed in run16 with
+`assertion failed: warm < cold` printing `cold 1.025042ms warm 1.415666ms`, at load 75 with 26 peer
+cargos on 10 cores, and **passed again in run17**. It is a bare wall-clock probe (one cold render vs the
+mean of ten warm ones) — a load flake under fleet rule 5. Re-measured, nothing loosened.
+
+### 10. The three window config packs are NOT a cross-window leak (the open item from brief v5)
+Every CAD window command — `SetCamera`, `SetProjection`, `SetProjectionParam`, `ToggleSun`,
+`SetSunAzimuth`, `SetDislocateOption` — ends in `window_config::addressed_from_context(ctx, config)`
+(`🎮️commands/🎥️camera/🦀️.rs:32,71,110`, `🌞️sun/🦀️.rs:26,48,69,90`, `🧰️utility/🦀️.rs:34`).
+`addressed_from_context` (`🪟️windows/🎚️config/🦀️.rs:166` → `addressed`, `:153`) resolves the target from
+`ctx.view_state.window_id` ALONE; the payload's `pane` is deliberately dead (`let _surface = …`,
+`🎥️camera/🦀️.rs:29`). A dispatch made in a shape window structurally cannot write the building window's
+config, whatever `pane` the payload carries.
+The building partition exists for an unrelated reason: `VcsArtifactApp::window_measures` and
+`window_engagements` LOOP over `view_state.window_instances` and call `window_config_store.capture(…)`
+for every one (`🧰️framework/…/🔌️plugin/🦀️.rs:31708` and `:31674`), and `capture` lazily creates a
+partition (`🪟️window/🎚️config/🦀️.rs:399-409`). `assert_exact_state` calls `window_measures`, so all three
+declared WORLD windows materialise; `cad-panel` is kind `cad-document-panel`, has no registered owner,
+`capture` answers `Ok(None)`, and it correctly gets no pack.
+**So the predecessor's restatement to the exact owner SET of three is right**, and the old
+`packs.len() == 1` confused "only one window was written" with "only one window exists". Isolation is
+still proven twice over: each `dispatch()` asserts exactly ONE `WindowConfig` result lane, and
+`assert_exact_state` requires the same-kind sibling `right` to still hold its defaults for camera,
+projection, sun and utility.
+
+### 11. The real defect: a CAD window config pack could not be reloaded at all
+**What the law reported.** After the restatement the law got far enough to die with
+`artifact store reached Drop without its exact terminal-empty shallow-shell witness`
+(`🧰️framework/…/🏪️store/🦀️.rs:18927`). `RUST_BACKTRACE=1` (run16) named it exactly:
+```
+2: <ArtifactStore<CadSnapshot, CadMutation> as Drop>::drop
+4: drop_glue::<VcsArtifactApp<EditorApp<CadPlayApp>, SemioMembers>>
+5: drop_glue::<Box<VcsArtifactApp<…>>>
+6: …window-ownership…{closure#0}{closure#0}{closure#0}
+```
+— the DOCUMENT store of the law's SECOND app (`reopened`), dropped at the end of the inner async block.
+That panic was always latent: before the restatement the law returned `Err` at the packs assertion, so
+`outcome.expect(...)` panicked first and every later store `Drop` ran under `std::thread::panicking()`,
+which the witness explicitly suppresses.
+
+**Bisect.** No other CAD test renders a mounted app and then closes it, and none reloads a window config
+pack. Two new laws in `…/🪟️windows/🎚️config/🧪️tests/🔬️window-ownership/🦀️.rs` separate the two:
+- `cad_rendered_world_window_app_reaches_its_exact_terminal_close_witness` — render → close → drop:
+  **green in run17**, so the close ladder is fine and rendering is not the cause;
+- `cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness` — **fails at the LOAD**:
+  `Fault { origin: Framework, code: FaultCode("window-config.typed-state"),
+  message: "retained exact window config Pack load was rejected" }`.
+With a scaffolding guard added to the ownership law (its `for pack in packs { …? }` used to `?` out of
+the async block leaving a LIVE app that had never run the close ladder — the Drop witness then panicked
+over the real refusal), the ownership law now prints that same fault instead of the Drop panic.
+**The Drop witness was a mask. The defect is that CAD cannot reopen its persisted per-window state.**
+
+**Root cause, read from source.** `CadCamera::position` and `::target` are `#[dsl(coord)] [f64; 3]`
+(`📐️cad/🗿️artifacts/📐️cad/🦀️.rs:365-370`) → `Shape::Coord(3)`, whose value is a `FieldValue::Tuple`
+(`🗣️dsl/🧬️schema/🦀️.rs:88-92`). A homogeneous float sequence is written in the pack's packed wire form
+`TAG_PACKED_F64` (`🎒️pack/🌱️value/🦀️.rs:466`, `encode_seq`), **which carries no tuple-vs-list marker**.
+The whole-pack decoder knows this and spells the whole set — `is_tuple_shape` =
+`Tuple | Coord | Dir | Dim | Range` (`🎒️pack/🌱️value/🦀️.rs:100-102`) — and has a regression test for
+precisely this hazard (`🎒️pack/🌱️value/🧪️tests/🔬️unit/🦀️.rs:287-299`: a `List` "fails `[T; N]`'s
+`DslField::from_value` downstream"). The RETAINED window-config decoder duplicated that predicate and
+knew only `Shape::Tuple`, so `position` was rebuilt as a `FieldValue::List`, `CadWorldWindowConfig`'s
+`DslField::from_value` refused it, and the load answered `TypedState`.
+**Every plugin whose window config state carries a coord/dir/dim/range field is affected**; CAD is the
+one in the play fleet that has one.
+
+**Fix.** `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📥️retained/🦀️.rs`
+(framework-general, not on the peer no-touch list; `git status` for `🔌️plugin/🪟️window/` was clean when
+I took it):
+1. new `shape_is_tuple_valued()` mirroring the whole-pack decoder's `is_tuple_shape`, with the
+   provenance and the failure it fixes in its doc comment;
+2. `end_container` uses it for the tuple-vs-list decision (was `matches!(…, Shape::Tuple(_, _))`);
+3. `child_element` gives a coord/dir/dim/range's elements `Shape::Float` instead of no shape at all.
+Test-side, the reload law also asserts the reopened packs are **byte-exact** with the ones they were
+printed from, so the coordinate round-trip is pinned by a law and not only by the close witness.
+
+### 12. Describe — SUCCEEDED
+The coordinator's serial chain logged `describe cad ok` at 14:32–14:33, `describe phase done; failed:
+none`, and `activate-dev rc=0` at 15:47:19. cad's `🛂️.descriptor.semio` and `🔣️.json` are updated on
+disk (`git diff HEAD --stat` shows both). **cad never had a cad-side describe blocker.** The three
+earlier failures were all foreign:
+- 09-21 17:24 chain: `✔ nx run @semio-tech/cad-plugin:describe` — it already worked then;
+- 09-21 21:30 chain: `error[E0063]: missing field accessibility_label in initializer of UiInputNode`
+  at `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧩️component/🦀️.rs:2639` (a peer's in-flight wgpu edit);
+- 09-22 01:30 chain: `cargo build -p semio-framework-plugin-describe killed by signal SIGTERM`;
+- 09-22 11:06 chain: a peer's `TaskSlot.reserved` edit in `🔌️plugin/⚛️reactor/🧵️executor/🦀️.rs`
+  (`E0027`, 4× `E0609`, `E0560` → `could not compile semio-framework-plugin`) killed the queue at
+  `describe animate FAILED` 11:19:44 and `describe writer FAILED` 11:25:35, before cad's turn.
+I touched `🗑️generated/describe.request/cad` at 12:25; the 14:32 describe is the answer.
+
+### 13. Live pane — GREEN on the new activation
+`:6033` was relaunched 15:57:03 onto the 15:47 activation (HTTP 200). Probe D, 16:10, read-only
+playwright with `--use-angle=metal`, one page (evidence `probe-0922d/` was deleted by the sweep minutes
+later; the figures are as read at 16:10):
+- `data-shell-ready="cad"`, **no** `data-shell-error`;
+- **4 `<canvas>` elements**, each 788×437 (CSS 789×438) — one per pane;
+- 115 SVGs and 47 text rows: `Example / Demo`, `Editor`, `Viewer`, and `Shape` / `Building` / `Energy` /
+  `Structure Classic`, each with `Projection` / `Window Options` / `Actions` / `Search` / `Utilities`;
+- **0 console errors, 0 page errors, 0 refusals, 0 admission rejections** (grep `refus|reject|error`
+  over the console log: 0 hits);
+- the 466 936-byte screenshot was **byte-identical (md5 `e012d9af79cea45fcfe6d239454a9f13`) to probe C**
+  of 03:32 — the same correct `Demo` geometry, unchanged across an activation.
+Caveat for the record: that serve's `[stale] source-newer` banner still listed ~33 plugins including
+`cad` (`staged 2026-09-22T12:2x < 📐️cad/🔣️.json 12:33`), so the demonstrator lane the pane runs from was
+staged at ~12:2x rather than by the 15:42 `activate-dev`. The pane is correct on what is served; a
+descriptor-fresh restage of `demonstrator` is a coordinator matter, not a cad defect.
+
+### 14. Verification — `run20`, 2026-09-22 21:38: ALL SIX CAD CRATES GREEN
+Log `.🧬semio/🦑️repo/⚡️cache/play-fleet/cad-content/run20.txt`, through
+`📜️native-test-mutex.sh cad-content` with `CARGO_TARGET_DIR=$G/target`, `CARGO_INCREMENTAL=0`,
+`CARGO_BUILD_JOBS=2`, `RUST_MIN_STACK=33554432`, `RUST_BACKTRACE=1`, `--lib`, `--no-fail-fast` BEFORE
+the `--`, `-- --test-threads=4`. 111 compiler warnings in the log, so the tree really was type-checked.
+
+| crate | result |
+|---|---|
+| `semio-s-artifact-cad-cad --lib` | **432 passed / 0 failed / 1 ignored** (34.54 s) |
+| `semio-s-plugin-cad` | 5 passed / 0 failed |
+| `semio-s-plugin-cad-aec-building` | 8 passed / 0 failed |
+| `semio-s-plugin-cad-aec-building-energy` | 2 passed / 0 failed |
+| `semio-s-plugin-cad-aec-building-structure` | 2 passed / 0 failed |
+| `semio-s-plugin-cad-spatial-shape` | 2 passed / 0 failed |
+
+**0 red across all six crates.** The one `ignored` is the pre-existing documented skip
+`default_example_dsl_round_trips` ("fixture predates the model/drawing composition rewrite; regenerate
+via print_dsl before re-enabling") — not introduced or touched this session.
+Every law named in §11 reports `... ok`, including the two new bisecting close laws, the ownership law
+itself, `two_instances_converge_disjoint_edits_via_backbone`, `forest_transformation_uses_live_shape_pane`
+and `world_scene_render_cost_probe` (confirming run16's `warm < cold` red was a load flake, rule 5).
+
+`run19` (17:53) produced no result and is not a cad defect: it died on a peer's mid-edit
+`🧰️framework/…/🔌️plugin/🦀️.rs` — `error[E0425] cannot find value TYPED_OPERATION_STALL_PROGRESS_MIX`
+(:27892) and `error[E0599] no method named note_publication_checkpoint` (:28626), i.e.
+`could not compile semio-framework-plugin`. Both symbols existed again by 21:16; run20 is the rerun.
+
+### 15. Live pane re-probed with durable evidence
+`probe-cad.mjs` was deleted with the rest of `🗑️generated`, so it was rewritten into
+`⚡️cache/play-fleet/cad-content/` and run once (21:41) against the 15:47 activation, `:6033` HTTP 200.
+Evidence: `⚡️cache/play-fleet/cad-content/probe-2200/{cad.png, cad-console.txt, cad-report.json}`.
+`data-shell-ready="cad"`, no `data-shell-error`; **4 canvases** 788×437 (CSS 789×438); 115 SVGs;
+47 text rows; **0 console errors, 0 page errors, 0 refusals, 0 admission rejections**; screenshot md5
+`e012d9af79cea45fcfe6d239454a9f13` — byte-identical to probe C (03:32) and probe D (16:10), i.e. the
+same correct `Demo` geometry, stable across the activation. This matches the coordinator's strict
+acceptance run (70/70 on the 15:47 activation, cad passing).
+
+### 16. What remains
+1. **The retained-decoder fix has not reached the browser yet.**
+   `🔌️plugin/🪟️window/🎚️config/📥️retained/🦀️.rs` is framework code compiled into every plugin's wasm
+   component, so a re-describe/activate is needed before a served guest can reopen a window config pack.
+   I touched `🗑️generated/activate.request/demonstrator` at 21:41 (that lane also clears the outstanding
+   `[stale] cad: source-newer` banner entry). I did not run any wasm32/describe/activate target myself.
+2. **The same gap is worth a fleet-wide check.** The retained decoder refused ANY window config state
+   with a `#[dsl(coord)]` / `dir` / `dim` / `range` field, so every such plugin silently lost its
+   per-window persistence on reopen. A repo-wide grep for `dsl(coord|dir|dim|range)` inside a
+   `WindowConfigOwner::State` would say who else was affected; CAD is the only one in the play fleet
+   whose own law caught it, because the other window-ownership laws' states are plain scalars.
+3. `🗑️generated` was wiped at ~16:0x and again risks being swept; the durable home for this topic is
+   `.🧬semio/🦑️repo/⚡️cache/play-fleet/cad-content` (`STATUS.md`, `run18/19/20.txt`, `probe-cad.mjs`,
+   `probe-2200/`, `target/`).

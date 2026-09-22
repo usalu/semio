@@ -447,11 +447,34 @@ pub fn artifact_open_input_schema() -> serde_json::Value {
 }
 
 /// 📐️ Deliberately NOT the resource's full-body shape (`semio://artifact/{id}` — packBytes/sprBytes/
-/// packBase64): `artifact_open` answers identity/kind/revision/size, never the whole body.
+/// packBase64/sprBase64): `artifact_open` answers identity/kind/revision/size, never the whole body.
 pub fn artifact_open_output_shape() -> serde_json::Value {
     serde_json::json!({
         "type": "object",
-        "properties": { "artifactId": { "type": "string" }, "kind": { "type": ["string", "null"] }, "artifactKind": { "type": ["string", "null"] }, "revision": nullable_revision_stamp_shape(), "sizeBytes": { "type": ["integer", "null"] } },
+        "properties": {
+            "artifactId": { "type": "string" },
+            "kind": { "type": ["string", "null"] },
+            "artifactKind": { "type": ["string", "null"] },
+            "revision": nullable_revision_stamp_shape(),
+            "sizeBytes": { "type": ["integer", "null"] },
+            "sessionDocument": session_document_shape(),
+        },
+    })
+}
+
+/// 🌎️ What `artifact_open` binding a HUB document reports back: which plugin's guest now holds this
+/// document as its session document, on which authorized surface, and whether a mutation committed
+/// against it can actually leave the process. `null` for a folder artifact and for a hub document
+/// the hub authorizes no execution target for — neither of which has a hub surface at all.
+///
+/// 🧭️ `writePath` is a FACT the agent is owed before it spends a mutation: `open` means the
+/// document's own actor and socket are up, and any other value is the reason they are not, in the
+/// words of whatever refused. An agent that reads a closed write path knows its edit would commit in
+/// a guest and reach nobody.
+pub fn session_document_shape() -> serde_json::Value {
+    serde_json::json!({
+        "type": ["object", "null"],
+        "properties": { "pluginId": { "type": "string" }, "appId": { "type": "string" }, "surfaceId": { "type": ["string", "null"] }, "packBytes": { "type": "integer" }, "sprBytes": { "type": "integer" }, "writePath": { "type": "string" }, "relayedBatches": { "type": "integer" } },
     })
 }
 
@@ -505,10 +528,17 @@ pub fn artifact_snapshot_input_schema() -> serde_json::Value {
     wire("artifact.snapshot", "input", artifact_snapshot_input_shape())
 }
 
+/// 🧊️ Both halves of the document, because one of them can never move. A `.spk` pack is
+/// `envelope.vcs.initial_snapshot.encode_pack()` — the GENESIS snapshot, fixed for the life of
+/// the document — while every committed mutation lands in the `.spr` event log. Publishing
+/// `packBase64` alone therefore handed an agent bytes that are byte-identical before and after
+/// its own commit (measured 2026-09-22, slice CE3: `note.addBlock` moved spr 223 → 612 bytes
+/// with the pack at 299 on both sides), so the shipped `mutate-safely` prompt's "re-read the
+/// artifact and confirm the change landed" could not be carried out from this tool's reply.
 pub fn artifact_snapshot_output_shape() -> serde_json::Value {
     serde_json::json!({
         "type": "object",
-        "properties": { "artifactId": { "type": "string" }, "packBytes": { "type": ["integer", "null"] }, "sprBytes": { "type": ["integer", "null"] }, "packBase64": { "type": ["string", "null"] } },
+        "properties": { "artifactId": { "type": "string" }, "packBytes": { "type": ["integer", "null"] }, "sprBytes": { "type": ["integer", "null"] }, "packBase64": { "type": ["string", "null"] }, "sprBase64": { "type": ["string", "null"] } },
     })
 }
 
@@ -574,6 +604,40 @@ pub fn ui_reveal_output_shape() -> serde_json::Value {
 
 pub fn ui_reveal_output_schema() -> serde_json::Value {
     wire("ui.reveal", "output", ui_reveal_output_shape())
+}
+
+/// 📐️ `conversation.reply` — the agent's own free-text turn. `text` is the only required field:
+/// a client that streams passes the same `replyId` on every chunk and `complete: false` until the
+/// last one, and a client that answers in one shot passes neither.
+pub fn conversation_reply_input_shape() -> serde_json::Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": {
+            "text": { "type": "string" },
+            "replyId": { "type": "string" },
+            "inReplyTo": { "type": "string" },
+            "complete": { "type": "boolean" },
+        },
+        "required": ["text"],
+        "additionalProperties": false,
+    })
+}
+
+pub fn conversation_reply_input_schema() -> serde_json::Value {
+    wire("conversation.reply", "input", conversation_reply_input_shape())
+}
+
+/// 📐️ `shells` is how many attached shells the chunk actually reached — `0` is an honest answer
+/// (nobody is looking) rather than a failure, and the agent can stop narrating to an empty room.
+pub fn conversation_reply_output_shape() -> serde_json::Value {
+    serde_json::json!({
+        "type": "object",
+        "properties": { "ok": { "type": "boolean" }, "replyId": { "type": "string" }, "complete": { "type": "boolean" }, "shells": { "type": "integer" } },
+    })
+}
+
+pub fn conversation_reply_output_schema() -> serde_json::Value {
+    wire("conversation.reply", "output", conversation_reply_output_shape())
 }
 
 pub fn job_get_input_shape() -> serde_json::Value {
@@ -1023,6 +1087,8 @@ pub fn schemas() -> Vec<(&'static str, serde_json::Value)> {
         ("UiFocusOutput", ui_focus_output_shape()),
         ("UiRevealInput", ui_reveal_input_shape()),
         ("UiRevealOutput", ui_reveal_output_shape()),
+        ("ConversationReplyInput", conversation_reply_input_shape()),
+        ("ConversationReplyOutput", conversation_reply_output_shape()),
         ("JobGetInput", job_get_input_shape()),
         ("JobCancelInput", job_cancel_input_shape()),
         ("JobSnapshotOutput", job_snapshot_output_shape()),
@@ -1200,7 +1266,7 @@ const LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), type
 /// 🏷️ `$defs` of `🔣️.json`, which `🧪️Tests::the_json_mirror_publishes_exactly_the_registry_exports`
 /// pins to [`schemas`]; `🧪️Tests::the_scope_export_declaration_matches_the_registry` pins this list to
 /// the same set, so a new registry entry cannot be published without being resolvable.
-const EXPORTS: [SchemaExport; 68] = [
+const EXPORTS: [SchemaExport; 70] = [
     SchemaExport { id: "ActionInvokeInput", leaves: LEAVES },
     SchemaExport { id: "ArtifactInferenceBudgetV1", leaves: LEAVES },
     SchemaExport { id: "ArtifactInferenceCacheModeV1", leaves: LEAVES },
@@ -1230,6 +1296,8 @@ const EXPORTS: [SchemaExport; 68] = [
     SchemaExport { id: "ContextResolveInput", leaves: LEAVES },
     SchemaExport { id: "ContextResolveOutput", leaves: LEAVES },
     SchemaExport { id: "ContextSummary", leaves: LEAVES },
+    SchemaExport { id: "ConversationReplyInput", leaves: LEAVES },
+    SchemaExport { id: "ConversationReplyOutput", leaves: LEAVES },
     SchemaExport { id: "GatewayError", leaves: LEAVES },
     SchemaExport { id: "GatewayErrorCode", leaves: LEAVES },
     SchemaExport { id: "GisMapInferenceApprovalRequestV1", leaves: LEAVES },

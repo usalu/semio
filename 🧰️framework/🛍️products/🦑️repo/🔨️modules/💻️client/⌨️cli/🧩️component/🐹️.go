@@ -30,9 +30,9 @@ import (
 	ignore "github.com/usalu/semio/repo/client/internal/ignore"
 	mcp "github.com/usalu/semio/repo/client/internal/mcp"
 	server "github.com/usalu/semio/repo/client/internal/mcpserver"
-	search "github.com/usalu/semio/repo/client/internal/search"
+	search "github.com/usalu/semio/repo/search"
 	templatefunc "github.com/usalu/semio/repo/client/internal/templatefunc"
-	yaml "github.com/usalu/semio/repo/client/internal/yaml"
+	yaml "github.com/usalu/semio/repo/yaml"
 	repopkg "github.com/usalu/semio/repo/go"
 	"io"
 	"io/fs"
@@ -45962,16 +45962,8 @@ func McpKindFromResolvedClient(client string) McpClientKind {
 // McpServerName returns the MCP server identifier string for the given kind.
 func McpServerName(kind McpClientKind) string {
 	switch kind {
-	case McpClientCursor:
-		return "repo-cursor"
-	case McpClientKiro:
-		return "repo-kiro"
-	case McpClientCopilot:
-		return "repo-copilot"
-	case McpClientClaude:
-		return "repo-claude"
-	case McpClientCodex:
-		return "repo-codex"
+	case McpClientCursor, McpClientKiro, McpClientCopilot, McpClientClaude, McpClientCodex, McpClientGeneric, "":
+		return "repo"
 	default:
 		return "repo"
 	}

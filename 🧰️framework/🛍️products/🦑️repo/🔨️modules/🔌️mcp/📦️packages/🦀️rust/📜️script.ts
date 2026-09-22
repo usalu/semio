@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
-/** ⚙️ Builds/tests the `semio-framework-repo-mcp` protocol crate; the `semio-repo-mcp` stdio server binary lives in `⌨️cli` because it carries the production repository. */
+/** ⚙️ Builds/tests the `semio-framework-repo-mcp` protocol crate; the `repo` stdio server binary lives in `⌨️cli` because it carries the production repository. */
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const CRATE = "semio-framework-repo-mcp";
 const SERVER_CRATE = "semio-framework-repo-cli";
-const BINARY = process.platform === "win32" ? "semio-repo-mcp.exe" : "semio-repo-mcp";
+const BINARY = process.platform === "win32" ? "repo.exe" : "repo";
 
 class BuildScript extends BundleScript {
   run(): void {
@@ -23,7 +23,7 @@ class TestScript extends BundleScript {
 /** ▶️ Builds then execs the stdio server with the profile taken from the first argument. */
 class RunScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd("cargo", ["build", "-p", SERVER_CRATE, "--bin", "semio-repo-mcp"], { cwd: this.repoRoot, env: devToolingEnv() });
+    runCmd("cargo", ["build", "-p", SERVER_CRATE, "--bin", "repo"], { cwd: this.repoRoot, env: devToolingEnv() });
     const environment = devToolingEnv();
     const profile = segments[0]?.trim();
     if (profile) environment.SEMIO_REPO_MCP_CLIENT = profile;

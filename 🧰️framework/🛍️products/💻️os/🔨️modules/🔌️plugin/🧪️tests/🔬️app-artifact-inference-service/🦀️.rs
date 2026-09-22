@@ -19,6 +19,7 @@ mod artifact_inference_service_tests {
             inference_schema_version: 1,
             algorithm_version: 1,
             policy_version: 1,
+            payload: None,
         }
     }
 

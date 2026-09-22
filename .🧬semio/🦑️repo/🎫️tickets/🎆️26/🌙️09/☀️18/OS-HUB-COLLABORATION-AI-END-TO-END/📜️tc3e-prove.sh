@@ -33,7 +33,7 @@ echo "=== 1. rebuilt-component codec laws at $(date -Iseconds) ===" >> "$OUT"
 echo "laws exit=$? $(grep -m1 'test result:' "$GEN/tc3e-codec-laws.txt")" >> "$OUT"
 
 echo "=== 2. provision + create-and-attach at $(date -Iseconds) ===" >> "$OUT"
-zsh "$TICKET/📜️tc3e-provision.sh" "$PORT" >> "$OUT" 2>&1
+zsh "$TICKET/📜️tc3e-provision.sh" "$PORT" "$ROOT/.🧬semio/🌐hub/tc3e-hub" "$ROOT/.🧬semio/🦑️repo/⚡️cache/cargo/target-tc3d/debug/os-hub" s.note.note s.gis.gismap >> "$OUT" 2>&1
 echo "provision exit=$?" >> "$OUT"
 
 echo "=== 3. hub still up at $(date -Iseconds) ===" >> "$OUT"

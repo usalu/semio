@@ -87,7 +87,7 @@ import { BROWSER_ACTOR_CHILD_LIMITS, boundChildText, measureChildValue } from ".
 import { coldDocumentPairCursorEquals, coldDocumentPairFrontierEquals, parseColdDocumentPairLifetime, parseWitColdPairIngressStatus, type ColdDocumentPairFrontier, type ColdPairIngressStatus } from "../../../../../🔨️modules/🎭️actor/📥️cold-pair/🟦️.ts";
 import { createShardCommandIngressPages, type ShardCommandIngressPage } from "../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifetimeEquals, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceLifetime, type ActorInstanceOpenRequest } from "../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
-import { encodeActorUiPatchReceipt } from "../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
+import { encodeActorUiPatchReceipt, type ActorUiPatchReceipt } from "../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, type BrowserActorUiPatchOfferV1, type BrowserActorUiPatchResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
 import { BROWSER_ACTOR_ACTION_APP_CHANNEL_VERSION, BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM, parseBrowserActorActionRequestV1, parseBrowserActorHostEffectBytesV1, type BrowserActorActionRequestV1, type BrowserActorActionResultV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
 import { decodeBrowserActorCommandPublicationV1, decodeBrowserActorIntentPublicationV1, encodeBrowserActorHostEffectV1, requireBrowserActorCommandBackboneProjectionV1, type BrowserActorCommandBackboneEnvelopeV1, type BrowserActorCommandPublicationV1 } from "../../🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts";
@@ -1493,6 +1493,18 @@ function unwrapBrowserActorOption(value: BrowserActorChildValue | undefined): Br
   return value;
 }
 
+/** 🩹️ Reads the guest's own `option<ui-patch-receipt>` as the WIT RECORD it is. The shard wire
+ * carries this receipt as varint bytes and the browser-bundle child does not: it answers the WIT
+ * `turn-result` directly, so a byte reader refuses every receipt a patch turn issues. */
+function browserActorUiPatchReceipt(value: BrowserActorChildValue | undefined): ActorUiPatchReceipt | null {
+  const raw = unwrapBrowserActorOption(value);
+  if (raw === undefined) return null;
+  const record = browserActorRecord(raw, "document browser actor: invalid patch receipt");
+  const sequence = record.patchSequence;
+  if (typeof sequence !== "bigint" || sequence < 1n || sequence > 0xffffffffffffffffn) throw new Error("document browser actor: invalid patch receipt sequence");
+  return { lifetime: parseColdDocumentPairLifetime(record.lifetime), patchSequence: sequence };
+}
+
 function browserActorTurnResult(value: BrowserActorChildValue): Record<string, BrowserActorChildValue> {
   const result = browserActorRecord(value, "document browser actor: invalid turn result");
   const status = browserActorRecord(result.status, "document browser actor: invalid turn status");
@@ -1846,10 +1858,10 @@ class DocumentBrowserActorReservation {
           await this.renderSurface(child, assertCurrent);
         }
       });
-    })().catch(() => {
+    })().catch((error: unknown) => {
       if (this.closed) return;
       const binding = hubBinding(this.state.config);
-      if (binding) emitExecutionTargetStatus(this.state, binding, "renderer-unavailable");
+      if (binding) emitExecutionTargetStatus(this.state, binding, "renderer-unavailable", undefined, error instanceof Error ? error.message : String(error));
       this.close();
     }).finally(() => { this.viewRefresh = null; });
   }
@@ -2122,7 +2134,6 @@ class DocumentBrowserActorReservation {
       return browserActorActionDisposition(request, "rejected", 0, [], reason);
     }
   }
-  private readonly timer: ReturnType<typeof setTimeout>;
   private readonly retire = () => this.close();
 
   constructor(
@@ -2135,9 +2146,16 @@ class DocumentBrowserActorReservation {
     this.scope = Object.freeze({ ...fields.scope });
     this.windowKindId = fields.surface.windowKindId;
     this.generation = ++documentBrowserActorGeneration;
+    // ⏳️ A LIVE browser actor is bounded by its socket and its lease, never by the calendar the
+    // admission plan was minted with. `grant.retireAtMs` is `plan.expiresAtUnixMs`, whose TTL is at
+    // most `DOCUMENT_OPEN_PLAN_MAX_TTL_MS` (30 s) — the window in which the one-shot plan receipt may
+    // be exchanged for a socket grant, not a lifetime. Arming a retirement on it closed the child of
+    // every healthy hub document ~30 s after the plan was minted, with the socket still open and the
+    // guest still answering (measured 2026-09-22 on hub 7681: `grant retired at … (admitted with
+    // -10 ms left)` while the gis actor had been `actor-ready` for 21 s). The two signals below are
+    // the real bounds: the document's abort and the lease's retirement.
     state.docAbort.signal.addEventListener("abort", this.retire, { once: true });
     lease.retirement.addEventListener("abort", this.retire, { once: true });
-    this.timer = setTimeout(this.retire, Math.min(0x7fffffff, Math.max(0, grant.retireAtMs - Date.now())));
   }
 
   async reserve(): Promise<void> {
@@ -2167,9 +2185,7 @@ class DocumentBrowserActorReservation {
           this.state.pendingSocketActorId !== null ||
           this.state.browserActorReservation !== this ||
           documentBrowserActorLease(this.state) !== this.lease ||
-          this.lease.browserActorGrant() !== this.grant ||
-          Date.now() >= this.grant.reserveBeforeMs ||
-          Date.now() >= this.grant.retireAtMs
+          this.lease.browserActorGrant() !== this.grant
         )
           throw new Error("document browser actor: stale Session");
         this.lease.assertBrowserActorCurrent();
@@ -2350,8 +2366,16 @@ class DocumentBrowserActorReservation {
 
   private captureUiPatch(value: BrowserActorChildValue, lifetime: ActorInstanceLifetime) {
     const result = browserActorTurnResult(value);
-    const rawReceipt = result.uiPatchReceipt;
-    return captureBrowserActorUiPatchV1(result.uiPatches, rawReceipt instanceof Uint8Array ? rawReceipt : unwrapBrowserActorOption(rawReceipt), lifetime, this.windowKindId, { decodePack: decodePackWire, natural: packWireNatural });
+    return captureBrowserActorUiPatchV1(result.uiPatches, browserActorUiPatchReceipt(result.uiPatchReceipt), lifetime, this.windowKindId, { decodePack: decodePackWire, natural: packWireNatural });
+  }
+
+  /** 🩻️ Names a failure the reservation resolves by itself. `refreshHostView`'s catch reports only
+   * while the reservation is still open, so a deadline that closes the child before its rejection
+   * propagates left the shell on "Verifying document component…" forever with no reason anywhere. */
+  private reportExecutionTargetFault(diagnostic: string): void {
+    if (this.closed) return;
+    const binding = hubBinding(this.state.config);
+    if (binding) emitExecutionTargetStatus(this.state, binding, "integrity-failed", undefined, diagnostic);
   }
 
   private awaitUiPatchResult(offer: BrowserActorUiPatchOfferV1): Promise<BrowserActorUiPatchResultV1> {
@@ -2365,6 +2389,7 @@ class DocumentBrowserActorReservation {
       () => {
         if (this.pendingUiPatch?.offer !== offer) return;
         this.pendingUiPatch = null;
+        this.reportExecutionTargetFault("document browser actor: patch result deadline");
         reject(new Error("document browser actor: patch result deadline"));
         this.close();
       },
@@ -2397,6 +2422,7 @@ class DocumentBrowserActorReservation {
     if (lifetime === null) throw new Error("document browser actor: missing patch lifetime");
     let value: BrowserActorChildValue | null = initial;
     let mutations = 0;
+    let lastRejection: string | null = null;
     try {
       for (let patchCount = 0; patchCount < 8; patchCount += 1) {
         const routed = await this.routeTurnEffects(value, publication ?? "ordinary");
@@ -2443,8 +2469,9 @@ class DocumentBrowserActorReservation {
         assertCurrent();
         if (browserActorColdStatus(value).kind !== "idle") throw new Error("document browser actor: cold ingress after patch feedback");
         if (result.outcome === "acknowledged") this.acknowledgedUiRevision = result.revision;
+        else lastRejection = result.reason ?? "<unnamed>";
       }
-      throw new Error("document browser actor: patch feedback limit");
+      throw new Error(`document browser actor: patch feedback limit${lastRejection === null ? "" : ` (last rejection: ${lastRejection})`}`);
     } finally {
       if (value !== null) wipeBrowserActorValue(value);
     }
@@ -2528,7 +2555,6 @@ class DocumentBrowserActorReservation {
   close(): void {
     if (this.closed) return;
     this.closed = true;
-    clearTimeout(this.timer);
     this.state.docAbort.signal.removeEventListener("abort", this.retire);
     this.lease.retirement.removeEventListener("abort", this.retire);
     if (this.pendingUiPatch !== null) {
@@ -4074,8 +4100,14 @@ async function seedColdPairFromCanonicalCheckpoint(state: ArtifactState, resumeT
     { method: "GET", headers: { accept: CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1 } },
     { timeoutMs: CANONICAL_CHECKPOINT_PAIR_REQUEST_TIMEOUT_MS, signal: lease.retirement, admit: () => state.executionTargetLease === lease && lease.live },
   );
-  if (!response.ok) throw new Error(`canonical checkpoint pair: unavailable (${response.status})`);
-  if (response.headers.get("content-type") !== CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1) throw new Error("canonical checkpoint pair: media type mismatch");
+  // 🧯️ A hub that does not HAND OVER a pair is not an integrity violation: it is the state every
+  // client was in before this route existed (no pack, no cold pair, a live socket that can still
+  // carry edits), and a hub whose binary predates the route answers every one of these with a 404.
+  // Throwing here destroyed the lease and closed the socket with 1008, so one missing route made
+  // EVERY cold document unopenable — the freeze outcome 3 forbids. A pair the hub DID hand over and
+  // that does not verify stays fatal below: that one is an integrity violation.
+  if (!response.ok) return false;
+  if (response.headers.get("content-type") !== CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1) return false;
   const control: ExecutionTargetReadControl = { signal: lease.retirement, deadlineAtMs: Date.now() + CANONICAL_CHECKPOINT_PAIR_REQUEST_TIMEOUT_MS, assertCurrent };
   const body = await readBoundedExecutionTargetBody(response, null, CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES, control, (completedBytes, totalBytes) =>
     emitExecutionTargetStatus(state, binding, "verifying", { stage: "canonical-pair", completedBytes, totalBytes }),

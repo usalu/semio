@@ -29,7 +29,10 @@ fn value_round_trip_matches_serde_shape() {
     check(GraphError::NodeNotFound(7));
     check(GraphError::NotImplementedForKind { algorithm: "planarity".to_string(), kind: "multigraph".to_string() });
     check(Node { id: 1, center: Point::new(1.5, -2.5), radius: 3.0, width: 4.0, height: 5.0, shape: NodeShape::Rectangle, draggable: true, kind: Some("box".to_string()), label: None, properties: PropertyBag::new() });
-    check(Handle { angle: 0.5, id: 9, node_id: 1, radius: 2.0, role: HandleRole::Source, kind: None, properties: PropertyBag::new() });
+    // 🔤️ `value_types` is the port's declared value-schema set (empty = undeclared, still connectable);
+    // it joined `Handle` after this round-trip law was written and left the crate's own test target
+    // un-compilable, which hides every law in this file.
+    check(Handle { angle: 0.5, id: 9, node_id: 1, radius: 2.0, role: HandleRole::Source, kind: None, value_types: Vec::new(), properties: PropertyBag::new() });
 
     let mut storage: Storage<Ported, Directed> = Storage::default();
     let n0 = storage.add_node();

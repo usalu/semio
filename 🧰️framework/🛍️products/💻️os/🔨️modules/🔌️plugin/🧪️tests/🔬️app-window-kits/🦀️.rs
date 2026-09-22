@@ -232,6 +232,36 @@ mod window_kits_tests {
         assert_eq!(image.src.as_str(), "data:image/png;base64,QUJD");
     }
 
+    /// 🖼️ A composite larger than one `UiText` renders through pages instead of refusing the window.
+    ///
+    /// `UI_TEXT_MAX_BYTES` is 512, so a real composited PNG's `data:` URI never fitted the image node's
+    /// `src` and EVERY raster viewer window died at assembly with `ui.fixed-capacity …
+    /// image-window.source` — not only in tests, the pane's `Viewer` mode could not assemble at all
+    /// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, raster §3). A payload whose size is a
+    /// document property must page out of the doc, the way `scene_surface` pages a world scene's lanes.
+    #[semio_framework_async_macros::async_test]
+    async fn image_kit_pages_a_composite_larger_than_one_ui_text_out_of_the_doc() {
+        let base64 = "Q".repeat(128 * UI_TEXT_MAX_BYTES);
+        let view = ImageView { width: 512, height: 512, mime: "image/png".into(), base64: base64.clone() };
+        let expected = format!("data:image/png;base64,{base64}");
+        assert!(expected.len() > UI_TEXT_MAX_BYTES, "the fixture composite really is beyond one UiText");
+
+        let node = ImageWindowKit::render(&view).expect("a composite beyond one UiText still assembles its window");
+        assert_eq!(node.key.as_str(), ImageWindowKit::KIND_ID, "the window body key is unchanged by paging");
+        assert_eq!(node.children.len(), 2, "the paged window is the image node plus exactly one payload carrier");
+
+        let image_node = node.children.get(0).expect("image node");
+        assert_eq!(image_node.key.as_str(), IMAGE_WINDOW_PAGED_NODE_KEY);
+        let Component::Image(image) = &image_node.component else { panic!("expected Image") };
+        assert_eq!(image.src.as_str(), IMAGE_WINDOW_PIXELS_LANE_KEY, "the src names the lane the pixels ride in");
+        assert_eq!(image.alt.as_ref().map(|alt| alt.0.as_str()), Some("512x512"), "the accessible name survives paging");
+
+        let carrier = node.children.get(1).expect("payload carrier");
+        assert_eq!(carrier.key.as_str(), IMAGE_WINDOW_PIXELS_LANE_KEY);
+        assert!(carrier.children.len() > 1, "the composite really is paged: one packed leaf holds UI_TEXT_MAX_BYTES * (1 + UI_FIXED_LIST_ITEMS) bytes, this fixture needs several");
+        assert_eq!(artifact_app_laws::built_carrier_text(carrier), expected, "the exact data URI reassembles out of the carrier's pages");
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn mesh_kit_renders_world3d_component_scene() {
         let view = MeshView { camera_json: "{}".into(), meshes_json: "[]".into(), instances_json: "[]".into(), selection_json: "[]".into() };

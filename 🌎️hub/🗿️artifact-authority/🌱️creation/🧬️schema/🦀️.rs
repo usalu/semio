@@ -52,7 +52,23 @@ pub fn register_scope_exports() {
 mod scope_schema_export_law;
 //#endregion 🔖️ScopeSchemaExports
 
+/// ⏱️ How long an ABANDONED creation key stays uncommitted before recovery closes it. It is a
+/// calendar bound and it is the right one here: it answers "nobody is executing this any more"
+/// (the hub that accepted it restarted, or its task died), and the recovery sweep asks it only of
+/// keys no live execution owns — `ArtifactCreationHttpTaskOwnerV1::owns_live_execution`
+/// (`🌎️hub/🏗️bootstrap/🦀️.rs`) is consulted first. It is NOT the bound on the work: a creation that
+/// is running is bounded by [`ARTIFACT_CREATION_STALL_BOUND_MS`].
 pub const ARTIFACT_CREATION_DEADLINE_MS: u64 = 30_000;
+
+/// 🧗️ How long a RUNNING creation may reach no checkpoint before it is refused as wedged
+/// (`OperationContext::stall_bounded`, ticket 26/09/18 slice HT16). Creation runs on a detached
+/// task no socket waits on, so nothing about it owes an answer by an instant — and under the
+/// absolute bound it used to carry, the biggest staged component could not be created at all: hub
+/// 7671 failed every creation in 32.0 s at machine loads 120, 33 and 21 alike while the hub process
+/// burned 130–145 % CPU throughout (slice HC1, `🗑️generated/hc1-create-sampled-1.txt`). The guest
+/// codec call feeds this bound its own fuel progress, so an interpreter that keeps stepping keeps
+/// the creation alive and one that stops stepping is named within this span.
+pub const ARTIFACT_CREATION_STALL_BOUND_MS: u64 = 30_000;
 pub const ARTIFACT_CREATION_PAIR_MAX_BYTES: usize = 1024 * 1024;
 pub const ARTIFACT_CREATION_FACTS_MAX: usize = 3;
 
@@ -294,7 +310,13 @@ impl ArtifactCreationIntentV1 {
 }
 
 impl ArtifactCreationPreparedV1 {
-    /// 🧬️ The private pair, descriptor and exact zero checkpoint remain bound to their accepted intent.
+    /// 🧬️ The private pair, descriptor and exact zero checkpoint remain bound to their accepted
+    /// intent. Every clause here is an IDENTITY clause — the checkpoint belongs to this intent's
+    /// scope, owner, schema, pair bytes and digests. The one clause that was not
+    /// (`published_at_ms >= intent.deadline_ms`, i.e. "this took too long") is gone: it refused a
+    /// genesis the guest had already completed, which is a decision about a bound and not about
+    /// identity, and it belongs to the live operation's stall bound (ticket 26/09/18 slice HC1).
+    /// `published_at_ms < accepted_at_ms` stays, because a checkpoint cannot predate its own intent.
     pub fn validate(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<()> {
         intent.validate()?;
         let d = &self.descriptor;
@@ -315,7 +337,6 @@ impl ArtifactCreationPreparedV1 {
             || !c.baseline_frontier.is_genesis_for(&intent.scope)
             || c.parent_checkpoint_id.is_some()
             || c.published_at_ms < intent.accepted_at_ms
-            || c.published_at_ms >= intent.deadline_ms
             || directory::os_directory::descriptor_digest_v1(d).ok() != Some(c.descriptor_digest_v1)
             || c.pack.sha256 != ArtifactHash(Sha256::digest(&self.pack))
             || c.pack.byte_length != self.pack.len() as u64
@@ -361,8 +382,17 @@ impl ArtifactCreationOperationV1 {
                 (ArtifactCreationFactBodyV1::Accepted { .. }, _, 0) if fact.recorded_at_ms == intent.accepted_at_ms => {}
                 (ArtifactCreationFactBodyV1::Prepared { candidate }, SpaceArtifactCreationPhaseV1::Accepted, _) => {
                     candidate.validate(intent)?;
-                    if fact.recorded_at_ms < candidate.checkpoint.published_at_ms || fact.recorded_at_ms >= intent.deadline_ms {
-                        return Err(rejected("artifact creation preparation expired"));
+                    // ⏱️ Order, not the calendar: a fact cannot be recorded before the checkpoint it
+                    // carries. A Prepared fact recorded past `intent.deadline_ms` used to be refused
+                    // here as "expired", which made the durable history enforce a third copy of the
+                    // absolute bound the live path no longer carries — and turned an honest 180 s
+                    // genesis on the biggest staged component into a permanent, unrecoverable refusal
+                    // (ticket 26/09/18 slice HC1, measured on hub 7681). Nothing is lost: this arm
+                    // only accepts Prepared on a key still in `Accepted`, and a key the recovery
+                    // sweep closed is already terminal, so a late preparation on an abandoned key is
+                    // refused by the transition itself.
+                    if fact.recorded_at_ms < candidate.checkpoint.published_at_ms {
+                        return Err(rejected("artifact creation preparation predates its checkpoint"));
                     }
                     result.prepared = Some(candidate.clone());
                     result.phase = SpaceArtifactCreationPhaseV1::Preparing;

@@ -71,7 +71,7 @@ export class CleanScript extends Script {
     const totalBytes = report.removals.reduce((n, r) => n + r.bytes, 0);
     const lines = [
       `[clean] ${dry ? "dry-run" : "applied"} removals=${report.removals.length} bytes=${totalBytes}`,
-      ...(["misplaced", "gitignore", "ticket-file", "ticket-dir", "ticket-generated", "build-artifact", "windows-illegal"] as const).map((kind) => {
+      ...(["misplaced", "root-transient", "gitignore", "ticket-file", "ticket-dir", "ticket-generated", "build-artifact", "windows-illegal"] as const).map((kind) => {
         const rows = report.removals.filter((r) => r.kind === kind);
         return `[clean] ${kind}: ${rows.length} (bytes=${rows.reduce((n, r) => n + r.bytes, 0)})`;
       }),

@@ -116,6 +116,7 @@ async fn plugin_inference_services<PA: crate::app::PluginApp>(runtime: &crate::p
             policy_version: metadata.policy_version,
             contributor: metadata.owner,
             depends_on: Vec::new(),
+            payload: metadata.payload.map(Into::into),
         })
         .collect()
 }

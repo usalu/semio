@@ -5440,6 +5440,7 @@ pub(crate) fn agent_chat_entry_id(entry: &crate::agent_bridge::AgentConversation
         AgentConversationEntry::UserMessage { .. } => "userMessage",
         AgentConversationEntry::ToolCall { .. } => "toolCall",
         AgentConversationEntry::Approval { .. } => "approval",
+        AgentConversationEntry::AgentMessage { .. } => "agentMessage",
     };
     format!("framework.chat.entry.{kind}.{}", entry.id())
 }
@@ -5452,6 +5453,7 @@ fn agent_chat_role_label(entry: &crate::agent_bridge::AgentConversationEntry, is
         AgentConversationEntry::UserMessage { .. } => shell_chrome_string("chat.youRole", is_de),
         AgentConversationEntry::ToolCall { .. } => shell_chrome_string("chat.toolCallRole", is_de),
         AgentConversationEntry::Approval { .. } => shell_chrome_string("chat.approvalRole", is_de),
+        AgentConversationEntry::AgentMessage { .. } => shell_chrome_string("chat.agentRole", is_de),
     }
 }
 
@@ -5459,9 +5461,10 @@ fn agent_chat_role_label(entry: &crate::agent_bridge::AgentConversationEntry, is
 /// `os.agent.chat.{running,failed,succeeded,approvalPending}`, or the human's own decision once an
 /// approval is resolved. A sent turn carries no chip, exactly as React's empty `state` renders none.
 fn agent_chat_state_label(entry: &crate::agent_bridge::AgentConversationEntry, is_de: bool, locale: Locale) -> Option<String> {
-    use crate::agent_bridge::{AgentApprovalState, AgentConversationEntry, AgentToolCallState};
+    use crate::agent_bridge::{AgentApprovalState, AgentConversationEntry, AgentReplyState, AgentToolCallState};
     match entry {
         AgentConversationEntry::UserMessage { .. } => None,
+        AgentConversationEntry::AgentMessage { state, .. } => matches!(state, AgentReplyState::Streaming).then(|| shell_chrome_string("chat.replyStreaming", is_de).to_string()),
         AgentConversationEntry::ToolCall { state, .. } => Some(
             match state {
                 AgentToolCallState::Running => shell_chrome_string("chat.running", is_de),
@@ -5487,15 +5490,20 @@ pub(crate) fn agent_chat_entry_kind(entry: &crate::agent_bridge::AgentConversati
         AgentConversationEntry::UserMessage { .. } => "userMessage",
         AgentConversationEntry::ToolCall { .. } => "toolCall",
         AgentConversationEntry::Approval { .. } => "approval",
+        AgentConversationEntry::AgentMessage { .. } => "agentMessage",
     }
 }
 
 /// 🚥️ The row's own `state` attribute — React's `data-agent-chat-state`: a tool call's or approval's
 /// live state, and the literal `"sent"` for a human turn, which has none.
 pub(crate) fn agent_chat_entry_state_attribute(entry: &crate::agent_bridge::AgentConversationEntry) -> &'static str {
-    use crate::agent_bridge::{AgentApprovalState, AgentConversationEntry, AgentToolCallState};
+    use crate::agent_bridge::{AgentApprovalState, AgentConversationEntry, AgentReplyState, AgentToolCallState};
     match entry {
         AgentConversationEntry::UserMessage { .. } => "sent",
+        AgentConversationEntry::AgentMessage { state, .. } => match state {
+            AgentReplyState::Streaming => "streaming",
+            AgentReplyState::Complete => "complete",
+        },
         AgentConversationEntry::ToolCall { state, .. } => match state {
             AgentToolCallState::Running => "running",
             AgentToolCallState::Cancelling => "cancelling",
@@ -5537,6 +5545,7 @@ fn agent_chat_entry_node(entry: &crate::agent_bridge::AgentConversationEntry, is
     }
     match entry {
         AgentConversationEntry::UserMessage { text, .. } => rows.push(settings_text_row(text)),
+        AgentConversationEntry::AgentMessage { text, .. } => rows.push(settings_text_row(text)),
         AgentConversationEntry::Approval { summary, .. } => rows.push(settings_text_row(summary)),
         AgentConversationEntry::ToolCall { tool_name, arguments, summary, .. } => {
             rows.push(settings_text_row(tool_name));
@@ -27760,6 +27769,10 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("chat.youRole", true) => "Du",
         ("chat.toolCallRole", false) => "Tool call",
         ("chat.toolCallRole", true) => "Werkzeugaufruf",
+        ("chat.agentRole", false) => "Agent",
+        ("chat.agentRole", true) => "Agent",
+        ("chat.replyStreaming", false) => "Still writing…",
+        ("chat.replyStreaming", true) => "Schreibt noch…",
         ("chat.toolResultRole", false) => "Result",
         ("chat.toolResultRole", true) => "Ergebnis",
         ("chat.approvalRole", false) => "Approval",

@@ -4,13 +4,14 @@ type TestSource = { readonly url: string };
  * declaration the Rust producer is pinned against
  * (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json`). */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { UiDocumentStore, surfaceSceneLaneCache, utf8ByteLength, world3dSurfaceLaneTexts, canvas2dSurfaceLaneTexts, board2dSurfaceLaneTexts, world3dSceneFromLanes, canvas2dSceneFromLanes, board2dSceneFromLanes, WORLD3D_SCENE_LANES, CANVAS2D_SCENE_LANES, BOARD2D_SCENE_LANES, WORLD3D_SCENE_LANE_KEY_PREFIX, world3dSceneLaneForBodyKey } = dependencies;
+  const { UiDocumentStore, surfaceSceneLaneCache, utf8ByteLength, world3dSurfaceLaneTexts, canvas2dSurfaceLaneTexts, board2dSurfaceLaneTexts, paint2dSurfaceLaneTexts, world3dSceneFromLanes, canvas2dSceneFromLanes, board2dSceneFromLanes, paint2dSceneFromLanes, WORLD3D_SCENE_LANES, CANVAS2D_SCENE_LANES, BOARD2D_SCENE_LANES, PAINT2D_SCENE_LANES, WORLD3D_SCENE_LANE_KEY_PREFIX, world3dSceneLaneForBodyKey, surfaceKindSceneLanes } = dependencies;
   const { describe, expect, it } = vitest;
   void source;
 
   const { default: contract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️world3d-scene-lanes/🔣️.json");
   const { default: canvas2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json");
   const { default: board2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
+  const { default: paint2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json");
 
   type AnyRecord = Record<string, any>;
 
@@ -348,6 +349,40 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(Object.fromEntries(collected)).toEqual(laneTexts);
       expect(canvas2dSurfaceLaneTexts(record, store.getState(), spine.lanes).size).toBe(0);
       expect(board2dSceneFromLanes(spine, collected)).toEqual({ ...assembled, lanes: spine.lanes });
+    });
+  });
+
+  describe("paint-2d paged scene carrier", () => {
+    it("mirrors the language-neutral paint-2d lane declaration and walks the document-sync and assets lanes back", () => {
+      expect(PAINT2D_SCENE_LANES).toEqual(paint2dContract.lanes);
+      const { spine, laneTexts, assembled } = paint2dContract.roundTrip;
+      surfaceSceneLaneCache.clear();
+      const { store, record } = surfaceWithLanes(laneTexts, "paint-2d", paint2dContract.schema);
+      const collected = paint2dSurfaceLaneTexts(record, store.getState(), spine.lanes);
+      expect(Object.fromEntries(collected)).toEqual(laneTexts);
+      expect(canvas2dSurfaceLaneTexts(record, store.getState(), spine.lanes).size).toBe(0);
+      expect(paint2dSceneFromLanes(spine, collected)).toEqual({ ...assembled, lanes: spine.lanes });
+    });
+  });
+
+  describe("paged surface routing", () => {
+    /** ⚖️ LAW: the Interpreter routes a surface through `PagedSurfaceView` iff that kind publishes
+     * lanes. `SurfaceView` used to repeat the kind list by hand and `paint-2d` was missing from it
+     * while `Paint2dScene::split_lanes` split `documentSyncJson`/`assetsJson` unconditionally, so
+     * `Paint2dHost` received `""` for both fields and swallowed it in its own `try/catch`: the raster
+     * pane's composite and navigator rendered completely empty, with no console error and no texture
+     * upload (measured on :6033, ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). The routing
+     * decision is now the lane table's own membership, and this law pins that table against every lane
+     * declaration the scene module publishes. */
+    it("gives every lane-publishing scene kind a lane table, and none to a kind without lanes", () => {
+      expect(surfaceKindSceneLanes("world-3d")).toEqual(WORLD3D_SCENE_LANES);
+      expect(surfaceKindSceneLanes("canvas-2d")).toEqual(CANVAS2D_SCENE_LANES);
+      expect(surfaceKindSceneLanes("board-2d")).toEqual(BOARD2D_SCENE_LANES);
+      expect(surfaceKindSceneLanes("paint-2d")).toEqual(PAINT2D_SCENE_LANES);
+      expect(surfaceKindSceneLanes("tiled-map")?.length).toBeGreaterThan(0);
+      for (const kind of ["node-graph", "text-editor", "table", "icon-render", "ink-canvas", "diff-view", "event-feed"]) {
+        expect(surfaceKindSceneLanes(kind)).toBeUndefined();
+      }
     });
   });
 }

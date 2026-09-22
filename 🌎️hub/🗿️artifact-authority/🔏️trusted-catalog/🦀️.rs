@@ -276,12 +276,21 @@ pub struct GuestArtifactCodecBinding {
 }
 
 impl GuestArtifactCodecBinding {
-    async fn genesis(&self, document_id: &str) -> Result<ArtifactPair, AuthorityError> {
+    /// 🌱️ The guest's canonical empty document. The call is the longest single thing a creation
+    /// does — the interpreter walks a ≈ 48 MB component's whole app bundle — so the guest's own
+    /// fuel progress is reported into the caller's context as it happens: under a stall bound a
+    /// checkpoint is what says "still moving", and without these an honest interpreter would look
+    /// exactly like a wedged one. Cancellation is not read here: the interpreter cannot be steered
+    /// from an observation, and the caller's checkpoint on the far side of this call is where a
+    /// cancelled creation stops.
+    async fn genesis(&self, document_id: &str, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         let compiled = self.component.compiled().await?;
         let pair = self
             .component
             .runtime
-            .codec_genesis(compiled, &self.artifact_schema, document_id, GUEST_CODEC_BUDGET)
+            .codec_genesis_observed(compiled, &self.artifact_schema, document_id, GUEST_CODEC_BUDGET, |_fuel, _elapsed| {
+                let _ = context.checkpoint();
+            })
             .await
             .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: bounded_message(error) })?;
         Ok(ArtifactPair { pack: pair.pack, spr: pair.spr })
@@ -364,7 +373,7 @@ impl TrustedArtifactGenesisCodec for VerifiedNativeArtifactCodec {
     /// differs from the catalog's open target is refused here rather than silently accepted.
     async fn initial_pair(&self, document_id: &str, dialect: &directory::os_io::ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         context.checkpoint()?;
-        let pair = self.guest.genesis(document_id).await?;
+        let pair = self.guest.genesis(document_id, context).await?;
         context.checkpoint()?;
         let parsed = directory::os_spr::decode_history(&pair.spr, &directory::os_spr::DecodeOptions::default()).await.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: bounded_message(error) })?;
         if parsed.doc_id != document_id || !parsed.edits.is_empty() || !parsed.transitions.is_empty() || !parsed.conflicts.is_empty() {

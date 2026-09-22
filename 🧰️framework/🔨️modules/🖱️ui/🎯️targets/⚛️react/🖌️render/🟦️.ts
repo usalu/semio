@@ -74,63 +74,69 @@ export function cleanup(): void {
   testingCleanup();
 }
 
+/** 🎯️ Every node a semantic DOM event may be dispatched at. A host that installs its pointer
+ * listeners on `window` — the only way a drag keeps receiving moves after the pointer leaves the
+ * surface — can only be driven from the window, so the boundary names the window and the document
+ * alongside the element rather than forcing a caller to reach past it. */
+type UiTestEventTarget = Element | Document | Window;
+
 /** 🖱️ Dispatches owned semantic DOM events without exposing the underlying test adapter. */
 export const fireEvent = {
-  change(target: Element, init?: UiTestEventInit): boolean {
+  change(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.change(target, init);
   },
   /** 🖱️ `init` carries the modifier state a selection law turns on — a click boundary that dropped it
    * could only ever prove the unmodified `replace` branch. */
-  click(target: Element, init?: UiTestEventInit): boolean {
+  click(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.click(target, init);
   },
-  doubleClick(target: Element, init?: UiTestEventInit): boolean {
+  doubleClick(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.doubleClick(target, init);
   },
-  dragOver(target: Element, init?: UiTestEventInit): boolean {
+  dragOver(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.dragOver(target, init);
   },
-  dragStart(target: Element, init?: UiTestEventInit): boolean {
+  dragStart(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.dragStart(target, init);
   },
-  drop(target: Element, init?: UiTestEventInit): boolean {
+  drop(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.drop(target, init);
   },
   /** 🖱️ `Stepper`'s +/− buttons drive a press-and-hold from `onMouseDown`/`onMouseUp`, never `click`,
    * so a law about what one bump dispatches has to play the same two events a browser does. */
-  mouseDown(target: Element, init?: UiTestEventInit): boolean {
+  mouseDown(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.mouseDown(target, init);
   },
-  mouseUp(target: Element, init?: UiTestEventInit): boolean {
+  mouseUp(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.mouseUp(target, init);
   },
-  mouseLeave(target: Element, init?: UiTestEventInit): boolean {
+  mouseLeave(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.mouseLeave(target, init);
   },
   /** 🔢️ A numeric entry commits on the blur boundary (pointer away, Tab, or `Enter`, which blurs), so a
    * law about "one action per committed value, not one per keystroke" has to play focus and blur too. */
-  focus(target: Element, init?: UiTestEventInit): boolean {
+  focus(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.focus(target, init);
   },
-  blur(target: Element, init?: UiTestEventInit): boolean {
+  blur(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.blur(target, init);
   },
-  keyDown(target: Element, init?: UiTestEventInit): boolean {
+  keyDown(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.keyDown(target, init);
   },
-  keyUp(target: Element, init?: UiTestEventInit): boolean {
+  keyUp(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.keyUp(target, init);
   },
-  pointerDown(target: Element, init?: UiTestEventInit): boolean {
+  pointerDown(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.pointerDown(target, init);
   },
-  pointerMove(target: Element, init?: UiTestEventInit): boolean {
+  pointerMove(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.pointerMove(target, init);
   },
-  pointerUp(target: Element, init?: UiTestEventInit): boolean {
+  pointerUp(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.pointerUp(target, init);
   },
-  pointerCancel(target: Element, init?: UiTestEventInit): boolean {
+  pointerCancel(target: UiTestEventTarget, init?: UiTestEventInit): boolean {
     return testingFireEvent.pointerCancel(target, init);
   },
 };

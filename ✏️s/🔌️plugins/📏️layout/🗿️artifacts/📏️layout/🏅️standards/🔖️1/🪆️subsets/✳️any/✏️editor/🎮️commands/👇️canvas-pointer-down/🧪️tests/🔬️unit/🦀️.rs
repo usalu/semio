@@ -183,9 +183,12 @@ async fn a_cancelled_release_is_inert_and_the_wire_defaults_hold() {
 async fn canvas_drop_adds_frame_at_world_coords() {
     let mut app = layout_app().await;
     let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 100.0, 200.0);
-    let result = dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0 })).await;
-    assert_eq!(result.mutations.len(), 1);
+    // 🧾️ A MOUNTED app publishes through its retained typed operation, so `result.mutations` is EMPTY
+    // (fleet brief v2, stale-test bucket 3) — the settled document below is the committed record.
+    let before = app.snapshot().expect("projection").pages[0].frames.len();
+    dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0 })).await;
     let doc = app.snapshot().expect("projection");
+    assert_eq!(doc.pages[0].frames.len(), before + 1, "one drop appends exactly one frame");
     let frame = doc.pages[0].frames.last().unwrap();
     let bounds = frame.bounds();
     assert!((bounds.x - 100.0).abs() < 0.01);
@@ -196,8 +199,8 @@ async fn canvas_drop_adds_frame_at_world_coords() {
 async fn canvas_drop_page_kind_adds_page() {
     let mut app = layout_app().await;
     let before = app.snapshot().expect("projection").pages.len();
-    let result = dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0 })).await;
-    assert_eq!(result.mutations.len(), 1);
+    // 🧾️ Mounted: the settled document is the committed record, never `result.mutations` (bucket 3).
+    dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0 })).await;
     assert_eq!(app.snapshot().expect("projection").pages.len(), before + 1);
 }
 

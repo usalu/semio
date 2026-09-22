@@ -143,10 +143,11 @@ fn json_any_example_snapshot(example_id: &str) -> JsonSnapshot {
 fn json_any_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<JsonAnyEditorCommand, Fault> {
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(JsonAnyEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
+        "set-node" => Ok(JsonAnyEditorCommand::SetNode { node_id: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["nodeId", "node_id", "id"], ""), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.json.unhandled-action"),
-            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample)"),
+            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, set-node)"),
         )),
     }
 }

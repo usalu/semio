@@ -5060,17 +5060,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
     const unsettled = Object.entries(taxonomy.generatorContracts).filter(([, contract]) => !["owned", "external"].includes(contract.ownership as string)).map(([id]) => id);
     if (unsettled.length > 0) problems.push(`generatorContracts must contain zero unknown or unsafe contracts; found ${unsettled.join(", ")}.`);
     for (const removed of ["ownerless-ui-icons", "root-layering-declarations"]) if (taxonomy.generatorContracts[removed]) problems.push(`generatorContracts.${removed} is false ownership and must remain absent.`);
-    const ralphTrackedPaths = [
-      ".ralph-tui/config.toml",
-      ".ralph-tui/prd/kit-store-architecture-contracts-first-multi-backbone-pointer-based-rs-core/prd.json",
-      ".ralph-tui/prd/kit-store-architecture-contracts-first-multi-backbone-pointer-based-rs-core/prd.md",
-      ".ralph-tui/progress.md",
-      ".ralph-tui/ralph.lock",
-      ".ralph-tui/session-meta.json",
-      ".ralph-tui/session.json",
-    ];
-    const setup = taxonomy.generatorContracts["setup-wizard-config"];
-    if (!setup || setup.ownership !== "external" || setup.ownerPath !== null || setup.target !== null || setup.inputPatterns.length !== 0 || setup.outputRoots.some((output) => output.inclusion !== "tracked") || setup.outputRoots.map((output) => output.path).join("\0") !== ralphTrackedPaths.join("\0")) problems.push("generatorContracts.setup-wizard-config must externally own exactly the seven tracked Ralph files.");
+    const foreignMetadataRoots = Object.entries(taxonomy.fixedDirectoryContracts ?? {}).filter(([, contract]) => contract.scope.kind === "repository-root" && contract.pathPattern.startsWith(".") && !contract.pathPattern.includes("/")).map(([id, contract]) => [id, contract.pathPattern] as const);
     const ralphFileContracts: Readonly<Record<string, string>> = {
       "ralph-config": ".ralph-tui/config.toml",
       "ralph-lock": ".ralph-tui/ralph.lock",
@@ -5089,8 +5079,8 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       const contract = taxonomy.fixedDirectoryContracts[id];
       if (!contract || contract.pathPattern !== expected || contract.authority !== "Ralph TUI") problems.push(`fixedDirectoryContracts.${id} must be the exact Ralph-owned path contract ${JSON.stringify(expected)}.`);
     }
-    for (const [id, contract] of [...Object.entries(taxonomy.fixedFilenameContracts), ...Object.entries(taxonomy.fixedDirectoryContracts)]) if (contract.pathPattern.startsWith(".ralph-tui/") && contract.pathPattern.includes("**")) problems.push(`Ralph contract ${JSON.stringify(id)} must not use a recursive wildcard.`);
-    for (const output of outputOwners.filter((output) => output.path === ".ralph-tui" || output.path.startsWith(".ralph-tui/"))) if (output.id !== "setup-wizard-config") problems.push(`Ralph path ${JSON.stringify(output.path)} must be owned only by setup-wizard-config.`);
+    for (const [id, contract] of [...Object.entries(taxonomy.fixedFilenameContracts), ...Object.entries(taxonomy.fixedDirectoryContracts)]) for (const [, root] of foreignMetadataRoots) if (contract.pathPattern.startsWith(`${root}/`) && contract.pathPattern.includes("**")) problems.push(`Foreign metadata contract ${JSON.stringify(id)} must not use a recursive wildcard.`);
+    for (const output of outputOwners) for (const [contractId, root] of foreignMetadataRoots) if (output.path === root || output.path.startsWith(`${root}/`)) problems.push(`generatorContracts ${JSON.stringify(output.id)} declares output ${JSON.stringify(output.path)} inside the foreign metadata directory ${JSON.stringify(root)} owned by ${JSON.stringify(contractId)}; a foreign tool's own state is never a repository output.`);
     const fixedRootManifests: Readonly<Record<string, string>> = { "root-package": "package.json", "root-cargo": "Cargo.toml", "root-go-work": "go.work" };
     for (const [id, expected] of Object.entries(fixedRootManifests)) if (taxonomy.fixedFilenameContracts[id]?.pathPattern !== expected) problems.push(`fixedFilenameContracts.${id} must remain the authored root manifest contract ${JSON.stringify(expected)}.`);
     const generatedRootManifests = outputOwners.filter((output) => ["package.json", "Cargo.toml", "go.work"].includes(output.path));

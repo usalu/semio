@@ -1,5 +1,5 @@
 // 🐹️ Go subject for the advertised capability surface. The Go implementation is a `package main`
-// process, so the adapter drives the real `semio-repo-mcp` binary once per profile and lists what a
+// process, so the adapter drives the real `repo` binary once per profile and lists what a
 // client would see.
 package adapter
 
@@ -19,7 +19,7 @@ import (
 
 // 🗃️binaryPath returns the built MCP binary, building it into the marked cache when it is absent.
 func binaryPath(repoRoot string) (string, error) {
-	name := "semio-repo-mcp"
+	name := "repo"
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}
@@ -34,7 +34,7 @@ func binaryPath(repoRoot string) (string, error) {
 	build.Dir = filepath.Join(repoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client", "🔌️mcp")
 	build.Env = append(os.Environ(), "GOWORK="+filepath.Join(repoRoot, "go.work"), "GOFLAGS=")
 	if output, err := build.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("build semio-repo-mcp: %v: %s", err, output)
+		return "", fmt.Errorf("build repo: %v: %s", err, output)
 	}
 	return binary, nil
 }

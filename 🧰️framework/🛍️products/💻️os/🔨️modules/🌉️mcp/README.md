@@ -15,6 +15,8 @@ bun ./📜️script.ts dev mcp stdio os -- --folder <space> --scopes artifact.re
 
 `.mcp.json` exposes exactly two servers: `repo` (this codebase's own tooling) and `semio` (this).
 
+`serverInfo.name` is `semio`. This server speaks in documents, capabilities, and the shell. It does not use developer words such as goal or ticket.
+
 ## Using it from your own MCP client
 
 This section is for someone who wants their AI assistant to drive semio, rather than for someone
@@ -49,10 +51,17 @@ launch with `--auto-approve readonly` (read-only capabilities only) or `--auto-a
 default is `never`. There is deliberately no MCP tool that approves a call, because every MCP tool is
 callable by the agent — a tool like that would let the agent approve itself.
 
-> **Honest limit as of today:** no plugin descriptor in this repo actually declares
-> `destructive: true` yet, so the approval gate — although fully built and unit-tested — has nothing
-> to fire on. Treat `--auto-approve` as the control that matters right now, and assume an agent's
-> writes are **not** individually gated.
+> **Where the gate stands today, measured 2026-09-22** (`semio-os-mcp audit --folder .` on this
+> tree, plus a count over `✏️s/🔌️plugins/*/🔣️.json`): **128** capabilities across **27** plugin
+> descriptors now declare `effects.destructive: true`, so the approval gate really does fire — this
+> paragraph used to say no descriptor declared any, and that has not been true for some time. The
+> audit still reports **29 findings over 59 descriptors**: **25** verbs whose NAME reads destructive
+> (`delete…`, `remove…`, `setActiveExample`, `setSnapshot`) but which declare
+> `effects.destructive: false`, so `WhenDestructive` never fires for them, and **4** gesture routes
+> (`puzzle3d`'s `engagement*`/`worldPointerDown`) that declare no audience at all and were published
+> to agents unreviewed. So: most destructive work IS gated, a named minority is not, and
+> `--auto-approve` remains the blanket control. Run the audit yourself before trusting either
+> number — it reads the committed descriptors and needs no shell.
 
 ### Which binary exists today
 
@@ -173,7 +182,7 @@ Both examples assume you cloned this repository to `~/src/semio` and want the as
       "args": [
         "./📜️script.ts", "dev", "mcp", "stdio", "os",
         "--folder", "/Users/you/Documents/my-semio-space",
-        "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control"
+        "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"
       ],
       "cwd": "/Users/you/src/semio"
     }
@@ -182,6 +191,38 @@ Both examples assume you cloned this repository to `~/src/semio` and want the as
 ```
 
 `cwd` matters: `bun ./📜️script.ts` resolves against the repo root.
+
+**Claude Code, bound to a hub space instead of a folder.** `--folder` and `--hub` are mutually
+exclusive, so a hub-bound agent is a *different* config file, not an extra flag on the one above —
+this is the shape G15/G19 kept asking for:
+
+```json
+{
+  "mcpServers": {
+    "semio": {
+      "type": "stdio",
+      "command": "bun",
+      "args": [
+        "./📜️script.ts", "dev", "mcp", "stdio", "os",
+        "--hub", "https://hub.example.com",
+        "--space", "spc_studio",
+        "--credential-file", "/Users/you/.semio/agent-credential.json",
+        "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"
+      ],
+      "cwd": "/Users/you/src/semio"
+    }
+  }
+}
+```
+
+Three things this config needs that the folder one does not, each of which refuses loudly rather
+than degrading: the credential file must exist and be `0600` (group- or world-readable is refused
+with the `chmod 600` remedy in the message); its `hubOrigin`/`spaceId` must equal the `--hub`/
+`--space` you passed; and `--hub` requires `--space`. Write the file from the delegation download
+described above — never paste the token into `args`, where it would reach argv, your shell history
+and every process listing on the machine. The local `--scopes` still apply: they are admission for
+this connection, and the hub separately re-runs its own authorization on every call, so a scope you
+grant here can still be refused there.
 
 **Claude Desktop** — `claude_desktop_config.json`
 (macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`;
@@ -196,7 +237,7 @@ invoke the built binary by absolute path instead of going through `bun`:
       "args": [
         "stdio",
         "--folder", "/Users/you/Documents/my-semio-space",
-        "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control"
+        "--scopes", "workspace.read,artifact.read,artifact.write,inference.execute,ui.observe,ui.control,conversation.write"
       ]
     }
   }
@@ -205,14 +246,15 @@ invoke the built binary by absolute path instead of going through `bun`:
 
 The `--scopes` names are the left column of `MCP_SCOPE_TABLE` (`🛡️policy/🦀️.rs`) and nothing else:
 `workspace.read`, `artifact.read`, `artifact.write`, `document.read`/`document.write` (aliases),
-`inference.execute`, `ui.observe`, `ui.control`, `ui.raw-control`, `clipboard.read`/`clipboard.write`,
+`inference.execute`, `ui.observe`, `ui.control`, `conversation.write`, `ui.raw-control`,
+`clipboard.read`/`clipboard.write`,
 `host.filesystem.read`/`host.filesystem.write`, `network.external`, `process.spawn`,
 `plugin.install`/`extension.install`, `secrets.use`. **An entry that is not one of these is not
 rejected — it is passed through literally as a `CapabilityId` and silently grants nothing.** That is
 deliberate (a caller may grant a bare capability id such as `fs.read:/tmp/work` directly), and it is
 also why a plausible-looking typo costs you a whole tool family with no error: with
 `--scopes workspace.read,artifact.open,artifact.create,inference.run`, `inference_run` answers
-`PERMISSION_DENIED` because `jobs.spawn` was never granted, while `tools/list` still shows all 27
+`PERMISSION_DENIED` because `jobs.spawn` was never granted, while `tools/list` still shows all 28
 tools. Measured against the release binary, ticket 26/09/18 `📓️rb1-release-builds-and-production-posture.md`.
 
 Run `bun nx run @semio-tech/framework-os-mcp-rs:build-release` first so that path exists, and restart
@@ -246,7 +288,7 @@ how the client opens, with a single handler layer beneath. Do not "simplify" thi
 
 ## Surface
 
-Twenty-seven stable tools; the long tail of plugin capabilities is reached through the catalog rather than
+Twenty-eight stable tools; the long tail of plugin capabilities is reached through the catalog rather than
 by advertising thousands of tools:
 
 - discovery — `capabilities_search`, `capabilities_describe`, `context_resolve`
@@ -260,6 +302,12 @@ by advertising thousands of tools:
   service is refused locally, naming that kind's declared services and `inference_run`, instead of
   being submitted to the wrong service and refused by the hub a round trip later
 - jobs / UI — `job_get`, `job_cancel`, `ui_focus`, `ui_reveal`
+- conversation — `conversation_reply`: your own free-text turn, published into the chat panel of the
+  running semio window, so the human reads your answer where they typed their question. Pass the same
+  `replyId` with `complete: false` to stream it in chunks and `complete: true` (the default) on the
+  last one; `inReplyTo` correlates it to the `messageId` of the turn you are answering, which you read
+  from `semio://ui/agent-messages`. It needs the `conversation.write` scope, and it answers
+  `shells: 0` — not an error — when no window is attached to talk to
 
 Resources are `semio://…` URIs. Listed: `capability`, `workspace`, `workspace/artifacts`, one
 `artifact/{id}` and one `artifact/{id}/inference` per open artifact, `window`, `ui/active-context`,
@@ -316,8 +364,10 @@ drives the ordinary action → mutation → VCS → backbone path like any other
 is not an exception: it executes a **plugin's own declared inference service** (a native/wasm
 computation the plugin ships, e.g. GIS Map's geometry pass or WFC's solver), never a call to a model
 provider. The in-shell agent panel is a *view and a steering surface* for that external agent — it
-renders the live `tools/call` traffic and sends the human's turns back over `/bridge` — not a chat
-client that talks to a model itself.
+renders the live `tools/call` traffic, sends the human's turns back over `/bridge`, and shows the
+agent's own free-text turns when it chooses to publish them with `conversation_reply` — but the
+words are always the connected client's, relayed over the bridge. Nothing in this crate generates a
+sentence, and with no client attached the panel is empty rather than chatty.
 
 ## Mutation protocol
 

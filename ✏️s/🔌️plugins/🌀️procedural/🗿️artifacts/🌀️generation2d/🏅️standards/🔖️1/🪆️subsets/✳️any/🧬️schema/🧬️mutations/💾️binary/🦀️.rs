@@ -537,7 +537,12 @@ fn generation2d_close_flow_frontier(flow: &mut semio_framework_artifact_flow_flo
     if maximum_items == 0 || maximum_bytes == 0 {
         return Ok(store::SnapshotRetirementStep::Blocked);
     }
-    flow.close_page(maximum_items, maximum_bytes)
+    let demand = flow.next_close_byte_demand().map_err(str::to_owned)?;
+    let step = flow.close_page(maximum_items, maximum_bytes.max(demand))?;
+    Ok(match step {
+        store::SnapshotRetirementStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes.min(maximum_bytes) },
+        step => step,
+    })
 }
 
 struct Generation2dReplayRetirement {

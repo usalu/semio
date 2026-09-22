@@ -5,6 +5,16 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
+import { FRESH_COMPONENT_MAX_BYTES, pluginWasmArtifactPath } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
+
+/** 🪶️ Headroom this plugin holds under `FRESH_COMPONENT_MAX_BYTES`, so fifteen standards artifacts
+ * never again reach the admission bound unnoticed: norm's component was 273 934 765 B against a
+ * 268 435 456 B bound on 2026-09-22 and its `describe` was refused before the guest ran. */
+const NORM_COMPONENT_BUDGET_BYTES = 200 * 1024 * 1024;
+
+type WasmSection = { readonly id: number; readonly name: string; readonly bytes: number; readonly body: number };
+
+type NormComponentCensus = { readonly total: number; readonly module: number; readonly name: number; readonly code: number; readonly data: number };
 
 type MutationLeafTaxonomyRow = {
   readonly aggregateVariant: string;
@@ -270,7 +280,7 @@ class SurfaceRenderSourceScript extends BundleScript {
     hostile[3]!.rows[0]!.bodyKeys[0] = "unknown.body";
     hostile[4]!.rows[0]!.appId = "s.norm.unknown@1/*#editor";
     for (const candidate of hostile) if (admitted(candidate)) throw new Error("norm surface inventory admitted a hostile vector");
-    console.log(`[DEBUG] Norm surface inventory: ${variants.size} variants, ${fixture.rows.length} apps, ${fixture.rows.reduce((count, row) => count + row.bodyKeys.length, 0)} bodies, AJV and ${hostile.length} hostile vectors passed`);
+    console.log(`Norm surface inventory: ${variants.size} variants, ${fixture.rows.length} apps, ${fixture.rows.reduce((count, row) => count + row.bodyKeys.length, 0)} bodies, AJV and ${hostile.length} hostile vectors passed`);
   }
 }
 
@@ -278,6 +288,73 @@ class SurfaceRenderTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted(["semio-s-plugin-norm"], this.repoRoot, ["--test", "surface_render", ...rest], { ...process.env, RUST_MIN_STACK: "67108864" });
+  }
+}
+
+/** 🔢 Reads one unsigned LEB128 integer, answering its value and the cursor after it. */
+function wasmInteger(buffer: Buffer, cursor: number): [number, number] {
+  let value = 0;
+  let shift = 0;
+  for (let index = 0; index < 5; index++) {
+    const byte = buffer[cursor + index];
+    if (byte === undefined) throw new Error("wasm integer runs past the end of the artifact");
+    value |= (byte & 127) << shift;
+    if (byte < 128) return [value >>> 0, cursor + index + 1];
+    shift += 7;
+  }
+  throw new Error("wasm integer is not a 32-bit LEB128 value");
+}
+
+/** 🧱️ Walks the section headers of a component body or core module between two offsets. */
+function wasmSections(buffer: Buffer, start: number, end: number): WasmSection[] {
+  const sections: WasmSection[] = [];
+  let cursor = start;
+  while (cursor < end) {
+    const id = buffer[cursor];
+    if (id === undefined) throw new Error("wasm section identifier is missing");
+    const [bytes, body] = wasmInteger(buffer, cursor + 1);
+    if (body + bytes > end) throw new Error("wasm section runs past its container");
+    const [length, text] = id === 0 ? wasmInteger(buffer, body) : [0, body];
+    sections.push({ id, name: id === 0 ? buffer.toString("utf8", text, text + length) : "", bytes, body });
+    cursor = body + bytes;
+  }
+  return sections;
+}
+
+/** 📐️ Section census of the largest core module of a wasm component — the module the admission
+ * bound weighs, and the only place the `name` custom section can hide. */
+function componentCoreCensus(buffer: Buffer): NormComponentCensus {
+  if (buffer.length < 8 || buffer.toString("latin1", 0, 4) !== "\0asm") throw new Error("artifact is not a wasm binary");
+  const modules = wasmSections(buffer, 8, buffer.length).filter((section) => section.id === 1);
+  if (modules.length === 0) throw new Error("artifact carries no core module, so it is not a wasm component");
+  const core = modules.reduce((largest, section) => (section.bytes > largest.bytes ? section : largest));
+  const sections = wasmSections(buffer, core.body + 8, core.body + core.bytes);
+  const total = (admit: (section: WasmSection) => boolean): number => sections.filter(admit).reduce((sum, section) => sum + section.bytes, 0);
+  return { total: buffer.length, module: core.bytes, name: total((section) => section.id === 0 && section.name === "name"), code: total((section) => section.id === 10), data: total((section) => section.id === 11) };
+}
+
+/** ⚖️ Law: the `wasm-dev` component this plugin's `describe` reads fits the admission bound with
+ * norm's own headroom, and carries no `name` custom section — 55.9 % of the refused 2026-09-22
+ * component was mangled symbol names, so their absence is what keeps the bound met. */
+class ComponentBudgetScript extends BundleScript {
+  run(): void {
+    const component = pluginWasmArtifactPath(this.repoRoot, "semio-s-plugin-norm");
+    if (!existsSync(component)) throw new Error(`norm's wasm-dev component is absent, so its size cannot be weighed: build it with \`cargo build -p semio-s-plugin-norm --target wasm32-wasip2 --profile wasm-dev\` (${component})`);
+    const census = componentCoreCensus(readFileSync(component));
+    for (const hostile of [Buffer.from("this is not a wasm artifact"), Buffer.from("\0asm\r\0\0", "latin1")]) {
+      let refused = false;
+      try {
+        componentCoreCensus(hostile);
+      } catch {
+        refused = true;
+      }
+      if (!refused) throw new Error("the component census accepted an artifact that is not a wasm component");
+    }
+    if (census.code === 0 || census.module <= census.code) throw new Error(`norm's component census is not a real module: code=${census.code} module=${census.module}`);
+    if (census.name !== 0) throw new Error(`norm's wasm-dev component carries a ${census.name} B \`name\` custom section: \`[profile.wasm-dev.package.semio-s-plugin-norm] strip = "symbols"\` is not in effect, and without it this plugin does not fit ${FRESH_COMPONENT_MAX_BYTES} B`);
+    if (census.total > FRESH_COMPONENT_MAX_BYTES) throw new Error(`norm's wasm-dev component is ${census.total} B against the ${FRESH_COMPONENT_MAX_BYTES} B admission bound its own describe enforces: it is ${census.total - FRESH_COMPONENT_MAX_BYTES} B over`);
+    if (census.total > NORM_COMPONENT_BUDGET_BYTES) throw new Error(`norm's wasm-dev component is ${census.total} B against this plugin's own ${NORM_COMPONENT_BUDGET_BYTES} B budget: ${census.total - NORM_COMPONENT_BUDGET_BYTES} B of headroom is gone and the admission bound is next`);
+    console.log(`Norm wasm-dev component budget met: ${census.total} B total (core module ${census.module} B: code ${census.code} B, data ${census.data} B, name 0 B), ${FRESH_COMPONENT_MAX_BYTES - census.total} B under the admission bound, ${NORM_COMPONENT_BUDGET_BYTES - census.total} B under this plugin's own budget, 2 hostile artifacts refused`);
   }
 }
 
@@ -337,6 +414,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("results-window-config-source", ResultsWindowConfigSourceScript)
   .register("results-window-config-test", ResultsWindowConfigTestScript)
   .register("describe", DescribeScript)
+  .register("component-budget-check", ComponentBudgetScript)
   .register("mutation-leaf-taxonomy-generate", MutationLeafTaxonomyGenerateScript)
   .register("mutation-leaf-taxonomy-check", MutationLeafTaxonomyCheckScript);
 registerPlaygroundSiteBuildCommands(router);

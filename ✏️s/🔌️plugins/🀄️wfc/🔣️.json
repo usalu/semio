@@ -618,7 +618,7 @@
                       "artifact:{self}"
                     ],
                     "external": false,
-                    "destructive": false,
+                    "destructive": true,
                     "reversible": true
                   },
                   "policy": {
@@ -5505,7 +5505,7 @@
                       "artifact:{self}"
                     ],
                     "external": false,
-                    "destructive": false,
+                    "destructive": true,
                     "reversible": true
                   },
                   "policy": {
@@ -5681,7 +5681,7 @@
                       "artifact:{self}"
                     ],
                     "external": false,
-                    "destructive": false,
+                    "destructive": true,
                     "reversible": true
                   },
                   "policy": {
@@ -6121,7 +6121,7 @@
                       "artifact:{self}"
                     ],
                     "external": false,
-                    "destructive": false,
+                    "destructive": true,
                     "reversible": true
                   },
                   "policy": {
@@ -7373,7 +7373,7 @@
                       "artifact:{self}"
                     ],
                     "external": false,
-                    "destructive": false,
+                    "destructive": true,
                     "reversible": true
                   },
                   "policy": {
@@ -11414,7 +11414,7 @@
                       "artifact:{self}"
                     ],
                     "external": false,
-                    "destructive": false,
+                    "destructive": true,
                     "reversible": true
                   },
                   "policy": {
@@ -14574,7 +14574,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -15216,6 +15216,50 @@
             "iconId": "sparkles",
             "args": [],
             "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "commit-fill",
+            "label": {
+              "native": {
+                "en": "Commit Fill",
+                "de": "Füllen übernehmen"
+              },
+              "reuse": {
+                "en": "Commit Fill",
+                "de": "Füllen übernehmen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "writes": [
@@ -18254,7 +18298,7 @@
                       "artifact:{self}"
                     ],
                     "external": false,
-                    "destructive": false,
+                    "destructive": true,
                     "reversible": true
                   },
                   "policy": {
@@ -18430,7 +18474,7 @@
                       "artifact:{self}"
                     ],
                     "external": false,
-                    "destructive": false,
+                    "destructive": true,
                     "reversible": true
                   },
                   "policy": {
@@ -19241,6 +19285,50 @@
                     "default": "blocks"
                   }
                 ],
+                "inPalette": true,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": true,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "solve",
+                "label": {
+                  "native": {
+                    "en": "Solve",
+                    "de": "Lösen"
+                  },
+                  "reuse": {
+                    "en": "Solve",
+                    "de": "Lösen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -24712,7 +24800,7 @@
                       "artifact:{self}"
                     ],
                     "external": false,
-                    "destructive": false,
+                    "destructive": true,
                     "reversible": true
                   },
                   "policy": {
@@ -31840,7 +31928,18 @@
         "inferenceSchemaVersion": 1,
         "algorithmVersion": 1,
         "policyVersion": 1,
-        "contributor": "wfc"
+        "contributor": "wfc",
+        "payload": {
+          "payloadSchemaId": "s.wfc.bitmap.inference.request.v1",
+          "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/inference.request.json\",\n  \"title\": \"BitmapInferenceRequest\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"oneOf\": [{ \"required\": [\"document\"] }, { \"required\": [\"snapshot\"] }],\n  \"properties\": {\n    \"document\": {\n      \"type\": \"object\",\n      \"description\": \"The artifact this solve runs on, bound by the gateway from `inference_run`'s `artifactId` — a caller names the artifact, never these bytes.\",\n      \"additionalProperties\": false,\n      \"required\": [\"pack\", \"spr\"],\n      \"properties\": { \"pack\": { \"type\": \"string\", \"contentEncoding\": \"base64\" }, \"spr\": { \"type\": \"string\", \"contentEncoding\": \"base64\" } }\n    },\n    \"snapshot\": { \"type\": \"object\", \"description\": \"The problem stated in full instead of read from an artifact: the bitmap solve's own document shape.\" },\n    \"checkpoint\": { \"type\": \"array\", \"description\": \"A previous run's checkpoint bytes, to resume instead of restart.\", \"items\": { \"type\": \"integer\", \"minimum\": 0, \"maximum\": 255 } }\n  }\n}",
+          "outputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/inference.json\",\n  \"title\": \"BitmapInferenceCommit\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\"pixels\", \"contradiction\", \"entropy\"],\n  \"properties\": {\n    \"pixels\": { \"type\": \"string\", \"format\": \"base64\" },\n    \"contradiction\": { \"type\": \"boolean\" },\n    \"entropy\": { \"type\": \"array\", \"items\": { \"type\": \"number\" } }\n  }\n}\n",
+          "progressUnit": "cells",
+          "artifactBinding": {
+            "field": "document",
+            "encoding": "artifact-pack-base64",
+            "required": true
+          }
+        }
       },
       {
         "owner": "wfc",
@@ -31851,7 +31950,18 @@
         "inferenceSchemaVersion": 1,
         "algorithmVersion": 1,
         "policyVersion": 1,
-        "contributor": "wfc"
+        "contributor": "wfc",
+        "payload": {
+          "payloadSchemaId": "s.wfc.grid2d.inference.request.v1",
+          "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/inference.request.json\",\n  \"title\": \"Grid2dInferenceRequest\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"oneOf\": [{ \"required\": [\"document\"] }, { \"required\": [\"snapshot\"] }],\n  \"properties\": {\n    \"document\": {\n      \"type\": \"object\",\n      \"description\": \"The artifact this solve runs on, bound by the gateway from `inference_run`'s `artifactId` — a caller names the artifact, never these bytes.\",\n      \"additionalProperties\": false,\n      \"required\": [\"pack\", \"spr\"],\n      \"properties\": { \"pack\": { \"type\": \"string\", \"contentEncoding\": \"base64\" }, \"spr\": { \"type\": \"string\", \"contentEncoding\": \"base64\" } }\n    },\n    \"snapshot\": { \"type\": \"object\", \"description\": \"The problem stated in full instead of read from an artifact: the grid2d solve's own document shape.\" },\n    \"checkpoint\": { \"type\": \"array\", \"description\": \"A previous run's checkpoint bytes, to resume instead of restart.\", \"items\": { \"type\": \"integer\", \"minimum\": 0, \"maximum\": 255 } }\n  }\n}",
+          "outputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/inference.json\",\n  \"title\": \"Grid2dInferenceCommit\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\"assignments\", \"contradiction\", \"entropy\"],\n  \"properties\": {\n    \"assignments\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"array\",\n        \"minItems\": 3,\n        \"maxItems\": 3,\n        \"items\": [{ \"type\": \"integer\", \"minimum\": 0 }, { \"type\": \"integer\", \"minimum\": 0 }, { \"type\": \"string\" }]\n      }\n    },\n    \"contradiction\": { \"type\": \"boolean\" },\n    \"entropy\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"array\",\n        \"minItems\": 3,\n        \"maxItems\": 3,\n        \"items\": [{ \"type\": \"integer\", \"minimum\": 0 }, { \"type\": \"integer\", \"minimum\": 0 }, { \"type\": \"number\" }]\n      }\n    }\n  }\n}\n",
+          "progressUnit": "cells",
+          "artifactBinding": {
+            "field": "document",
+            "encoding": "artifact-pack-base64",
+            "required": true
+          }
+        }
       },
       {
         "owner": "wfc",
@@ -31862,7 +31972,18 @@
         "inferenceSchemaVersion": 1,
         "algorithmVersion": 1,
         "policyVersion": 1,
-        "contributor": "wfc"
+        "contributor": "wfc",
+        "payload": {
+          "payloadSchemaId": "s.wfc.grid3d.inference.request.v1",
+          "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/inference.request.json\",\n  \"title\": \"Grid3dInferenceRequest\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"oneOf\": [{ \"required\": [\"document\"] }, { \"required\": [\"snapshot\"] }],\n  \"properties\": {\n    \"document\": {\n      \"type\": \"object\",\n      \"description\": \"The artifact this solve runs on, bound by the gateway from `inference_run`'s `artifactId` — a caller names the artifact, never these bytes.\",\n      \"additionalProperties\": false,\n      \"required\": [\"pack\", \"spr\"],\n      \"properties\": { \"pack\": { \"type\": \"string\", \"contentEncoding\": \"base64\" }, \"spr\": { \"type\": \"string\", \"contentEncoding\": \"base64\" } }\n    },\n    \"snapshot\": { \"type\": \"object\", \"description\": \"The problem stated in full instead of read from an artifact: the grid3d solve's own document shape.\" },\n    \"checkpoint\": { \"type\": \"array\", \"description\": \"A previous run's checkpoint bytes, to resume instead of restart.\", \"items\": { \"type\": \"integer\", \"minimum\": 0, \"maximum\": 255 } }\n  }\n}",
+          "outputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/inferences/schema.json\",\n  \"title\": \"Grid3dSolve\",\n  \"description\": \"The s.wfc.grid3d.solve inference: request is the whole problem plus an optional resume checkpoint; the commit is the satisfiability verdict plus one {x, y, z, tileId} row per solved, unmasked cell. An unsatisfiable grid answers `satisfiable: false` with no rows — never an inference failure.\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"request\",\n    \"commit\"\n  ],\n  \"properties\": {\n    \"request\": {\n      \"title\": \"Grid3dInferenceRequest\",\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"snapshot\"\n      ],\n      \"properties\": {\n        \"snapshot\": {\n          \"$ref\": \"https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/snapshot/schema.json\"\n        },\n        \"checkpoint\": {\n          \"type\": [\n            \"array\",\n            \"null\"\n          ],\n          \"items\": {\n            \"type\": \"integer\",\n            \"minimum\": 0,\n            \"maximum\": 255\n          }\n        }\n      }\n    },\n    \"commit\": {\n      \"title\": \"Grid3dInferenceCommit\",\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"satisfiable\",\n        \"assignments\"\n      ],\n      \"properties\": {\n        \"satisfiable\": {\n          \"type\": \"boolean\"\n        },\n        \"assignments\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"title\": \"Grid3dAssignment\",\n            \"type\": \"object\",\n            \"additionalProperties\": false,\n            \"required\": [\n              \"x\",\n              \"y\",\n              \"z\",\n              \"tileId\"\n            ],\n            \"properties\": {\n              \"x\": {\n                \"type\": \"integer\",\n                \"minimum\": 0\n              },\n              \"y\": {\n                \"type\": \"integer\",\n                \"minimum\": 0\n              },\n              \"z\": {\n                \"type\": \"integer\",\n                \"minimum\": 0\n              },\n              \"tileId\": {\n                \"type\": \"string\"\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n",
+          "progressUnit": "cells",
+          "artifactBinding": {
+            "field": "document",
+            "encoding": "artifact-pack-base64",
+            "required": true
+          }
+        }
       },
       {
         "owner": "wfc",
@@ -31873,7 +31994,18 @@
         "inferenceSchemaVersion": 1,
         "algorithmVersion": 1,
         "policyVersion": 1,
-        "contributor": "wfc"
+        "contributor": "wfc",
+        "payload": {
+          "payloadSchemaId": "s.wfc.wfc2d.inference.request.v1",
+          "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/inference.request.json\",\n  \"title\": \"Wfc2dInferenceRequest\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"oneOf\": [{ \"required\": [\"document\"] }, { \"required\": [\"snapshot\"] }],\n  \"properties\": {\n    \"document\": {\n      \"type\": \"object\",\n      \"description\": \"The artifact this solve runs on, bound by the gateway from `inference_run`'s `artifactId` — a caller names the artifact, never these bytes.\",\n      \"additionalProperties\": false,\n      \"required\": [\"pack\", \"spr\"],\n      \"properties\": { \"pack\": { \"type\": \"string\", \"contentEncoding\": \"base64\" }, \"spr\": { \"type\": \"string\", \"contentEncoding\": \"base64\" } }\n    },\n    \"snapshot\": { \"type\": \"object\", \"description\": \"The problem stated in full instead of read from an artifact: the wfc2d solve's own document shape.\" },\n    \"checkpoint\": { \"type\": \"array\", \"description\": \"A previous run's checkpoint bytes, to resume instead of restart.\", \"items\": { \"type\": \"integer\", \"minimum\": 0, \"maximum\": 255 } }\n  }\n}",
+          "outputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/wfc/wfc2d/1/any/inferences/schema.json\",\n  \"title\": \"Wfc2dInferenceCommit\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"assignments\",\n    \"contradiction\",\n    \"entropy\"\n  ],\n  \"properties\": {\n    \"assignments\": {\n      \"type\": \"object\",\n      \"description\": \"Slot id to solved tile id.\",\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      }\n    },\n    \"contradiction\": {\n      \"type\": \"boolean\",\n      \"description\": \"True when the spec admits no total assignment.\"\n    },\n    \"entropy\": {\n      \"type\": \"object\",\n      \"description\": \"Slot id to pre-propagation Shannon entropy over the tile weights.\",\n      \"additionalProperties\": {\n        \"type\": \"number\"\n      }\n    }\n  }\n}\n",
+          "progressUnit": "slots",
+          "artifactBinding": {
+            "field": "document",
+            "encoding": "artifact-pack-base64",
+            "required": true
+          }
+        }
       },
       {
         "owner": "wfc",
@@ -31884,13 +32016,24 @@
         "inferenceSchemaVersion": 1,
         "algorithmVersion": 1,
         "policyVersion": 1,
-        "contributor": "wfc"
+        "contributor": "wfc",
+        "payload": {
+          "payloadSchemaId": "s.wfc.wfc3d.inference.request.v1",
+          "inputSchema": "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/inference.request.json\",\n  \"title\": \"Wfc3dInferenceRequest\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"oneOf\": [{ \"required\": [\"document\"] }, { \"required\": [\"snapshot\"] }],\n  \"properties\": {\n    \"document\": {\n      \"type\": \"object\",\n      \"description\": \"The artifact this solve runs on, bound by the gateway from `inference_run`'s `artifactId` — a caller names the artifact, never these bytes.\",\n      \"additionalProperties\": false,\n      \"required\": [\"pack\", \"spr\"],\n      \"properties\": { \"pack\": { \"type\": \"string\", \"contentEncoding\": \"base64\" }, \"spr\": { \"type\": \"string\", \"contentEncoding\": \"base64\" } }\n    },\n    \"snapshot\": { \"type\": \"object\", \"description\": \"The problem stated in full instead of read from an artifact: the wfc3d solve's own document shape.\" },\n    \"checkpoint\": { \"type\": \"array\", \"description\": \"A previous run's checkpoint bytes, to resume instead of restart.\", \"items\": { \"type\": \"integer\", \"minimum\": 0, \"maximum\": 255 } }\n  }\n}",
+          "outputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"$id\": \"https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/inference.json\",\n  \"title\": \"Wfc3dInferenceCommit\",\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"assignments\"\n  ],\n  \"properties\": {\n    \"assignments\": {\n      \"type\": \"object\",\n      \"additionalProperties\": {\n        \"type\": \"string\"\n      }\n    }\n  }\n}\n",
+          "progressUnit": "slots",
+          "artifactBinding": {
+            "field": "document",
+            "encoding": "artifact-pack-base64",
+            "required": true
+          }
+        }
       }
     ]
   },
   "hashes": {
-    "wasmSha256": "7544e0b01fbaf7c96c0a6b27d6eda1a5fe80ffe5474d54fd714808cfe819e437",
-    "coreWasmSha256": "fb968934d6bcd85b2435dc2da6fc783e7a17bf28b438f1aedbf5b02980c57550",
-    "descriptorSha256": "4b4829fe164556afa9c9394d5ee692c1ce7dcc9b313adf37010455bd40f07b38"
+    "wasmSha256": "61e057d0a50e96a0ddc593887bf4efbc6d37d709b58e458e199507eaaa212581",
+    "coreWasmSha256": "de944671a89256b6737f49070919c00f8fcfb6e0fde3d110d386718ecd7a7e33",
+    "descriptorSha256": "27d64fc5a51e900135886559a7c4f76dc9cf1bffc6b1a71194269dd8c730e121"
   }
 }

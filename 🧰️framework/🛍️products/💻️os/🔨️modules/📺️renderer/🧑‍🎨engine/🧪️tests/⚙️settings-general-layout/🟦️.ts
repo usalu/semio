@@ -43,11 +43,11 @@ function DriverPublicationHarness() {
   return h(
     "div",
     null,
-    h(Select, { value: driver, onValueChange: setDriver }, h(SelectTrigger, { "aria-label": "framework.settings.driver" }, h(SelectValue)), h(SelectContent, null, h(SelectItem, { value: "default" }, "default"), h(SelectItem, { value: "compact" }, "compact"), h(SelectItem, { value: "custom.studio-driver" }, "custom.studio-driver"))),
-    h(Select, { value: labels, onValueChange: setLabels }, h(SelectTrigger, { "aria-label": "framework.settings.driver.labels" }, h(SelectValue)), h(SelectContent, null, h(SelectItem, { value: "icons" }, "icons"), h(SelectItem, { value: "full" }, "full"))),
-    h(Input, { "aria-label": "framework.settings.driver.saveLabel", value: saveLabel, onChange: (event) => setSaveLabel(event.currentTarget.value) }),
-    h(Button, { "aria-label": "framework.settings.driver.save", disabled: saveLabel.trim() === "", text: "save", onClick: () => { setDriver("custom.studio-driver"); setSaveLabel(""); setCustom(true); } }),
-    custom ? h(Button, { "aria-label": "framework.settings.driver.delete", text: "delete", onClick: () => { setDriver("default"); setCustom(false); } }) : null,
+    h(Select, { id: "framework.settings.driver", value: driver, onValueChange: setDriver }, h(SelectTrigger, { "aria-label": "framework.settings.driver" }, h(SelectValue)), h(SelectContent, null, h(SelectItem, { value: "default" }, "default"), h(SelectItem, { value: "compact" }, "compact"), h(SelectItem, { value: "custom.studio-driver" }, "custom.studio-driver"))),
+    h(Select, { id: "framework.settings.driver.labels", value: labels, onValueChange: setLabels }, h(SelectTrigger, { "aria-label": "framework.settings.driver.labels" }, h(SelectValue)), h(SelectContent, null, h(SelectItem, { value: "icons" }, "icons"), h(SelectItem, { value: "full" }, "full"))),
+    h(Input, { id: "framework.settings.driver.saveLabel", "aria-label": "framework.settings.driver.saveLabel", value: saveLabel, onChange: (event) => setSaveLabel(event.currentTarget.value) }),
+    h(Button, { "aria-label": "framework.settings.driver.save", icon: "save", disabled: saveLabel.trim() === "", text: "save", onClick: () => { setDriver("custom.studio-driver"); setSaveLabel(""); setCustom(true); } }),
+    custom ? h(Button, { "aria-label": "framework.settings.driver.delete", icon: "trash-2", text: "delete", onClick: () => { setDriver("default"); setCustom(false); } }) : null,
   );
 }
 

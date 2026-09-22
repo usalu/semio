@@ -7,6 +7,26 @@ import { BundleScript } from "../../../../../../🦑️repo/🔨️modules/📚�
 
 declare const THREE: any;
 
+/** 🌐️ The names the browser bundle's own prelude supplies to the oracle bodies below. Each
+ * `run*Oracle` stringifies one of these functions (`Function.prototype.toString`) and prepends the
+ * matching `import` lines before Bun bundles the pair for the page, so these bindings exist in the
+ * BROWSER and are never resolved in this driver process — exactly like `THREE` above. */
+declare const React: typeof import("react");
+declare const createRoot: typeof import("react-dom/client").createRoot;
+declare const Canvas: React.ComponentType<Record<string, unknown>>;
+declare const Grid: React.ComponentType<Record<string, unknown>>;
+
+/** 🖼️ The slice of a pixel-oracle fixture a run reads back: where its schema lives and the rows a
+ * recorded run is compared against. Ajv's compiled validator is the type guard that proves it. */
+type PixelOracleFixture = {
+  readonly $schema: string;
+  readonly pixelOracle: {
+    readonly status: string;
+    readonly maximumRgbError: number;
+    readonly rows: readonly { readonly id: string; readonly rgba8: readonly number[] }[];
+  };
+};
+
 function paintedShaderFromProduction(shader: string): string {
   const replacements: readonly (readonly [string, string])[] = [
     [
@@ -1228,7 +1248,7 @@ export async function runReferenceVisualOracle(repoRoot: string, outputDirectory
   if (output) await mkdir(output, { recursive: true });
   const fixture = JSON.parse(await readFile(fixtureArgument, "utf8"));
   const schema = JSON.parse(await readFile(resolve(dirname(fixtureArgument), fixture.$schema), "utf8"));
-  const validate = new Ajv({ allErrors: true }).compile(schema);
+  const validate = new Ajv({ allErrors: true }).compile<PixelOracleFixture>(schema);
   if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
   const threePath = Bun.resolveSync("three", repoRoot);
   const program = webgpu ? renderReferenceVisualWgpu : renderReferenceVisual;
@@ -1490,7 +1510,7 @@ async function runGridVisualOracle(repoRoot: string, outputDirectory: string | u
   const fixtureArgument = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🌐️grid-visual/🔣️.json");
   const fixture = JSON.parse(await readFile(fixtureArgument, "utf8"));
   const schema = JSON.parse(await readFile(resolve(dirname(fixtureArgument), fixture.$schema), "utf8"));
-  const validate = new Ajv({ allErrors: true }).compile(schema);
+  const validate = new Ajv({ allErrors: true }).compile<PixelOracleFixture>(schema);
   if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
   const output = outputDirectory ? resolve(outputDirectory) : undefined;
   if (output) await mkdir(output, { recursive: true });

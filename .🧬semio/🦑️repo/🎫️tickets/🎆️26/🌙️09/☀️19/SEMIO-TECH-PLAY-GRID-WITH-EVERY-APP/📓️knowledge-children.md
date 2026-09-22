@@ -342,3 +342,500 @@ is `{x: 0, y: 0, zoom: 1}` — so the second node is entirely outside the viewpo
 (`Waiting`) plus its two unlabelled ports (`!…  !…`) can ever be in view. The layout must fit the
 window (or the default viewport must frame the node bounds). Handing this over rather than fixing it
 blind: it is the Graph window's layout contract, not the composed-child path this topic owns.
+
+---
+
+## 6. 2026-09-22 (session 7) — the two SIGABRTs, the graph fit and the demo figure
+
+Successor of the 04:30 session. Predecessor edits verified on disk first
+(`git diff HEAD --stat` over the three plugin dirs, 15 files, all coherent).
+
+### 6.1 Native numbers actually measured
+
+Every run through `📜️native-test-mutex.sh knowledge-children`, private
+`CARGO_TARGET_DIR`, ONE cargo invocation for all six crates, `--no-fail-fast` before the `--`.
+
+| crate | pass2-5 (04:2x) | pass3-2 (12:58) | **pass3-3 (13:47)** |
+|---|---|---|---|
+| `semio-s-artifact-architect-program` | 2084 / 1 | 2086 / 1 | **2087 passed / 0 failed — GREEN** |
+| `semio-s-plugin-architect` | 1 (`descriptor_is_fresh`) | 1 (same) | 2 / 1 (same) |
+| `semio-s-artifact-animate-presentation` | 14 red + SIGABRT | 14 red + SIGABRT | 15 red + SIGABRT (of 324; 187 ok printed) |
+| `semio-s-plugin-animate` | GREEN | **3 / 0** | **3 / 0** |
+| `semio-s-artifact-writer-writer` | 24 red + SIGABRT (partial) | **138 passed / 35 failed, NO abort** | aborts on its FIRST failing test |
+| `semio-s-plugin-writer` | GREEN | **6 / 0** | **6 / 0** |
+
+Logs were `🗑️generated/knowledge-children/pass3-{1,2,3}.txt`; the folder was swept at 16:34 by
+another agent, so the numbers above are transcribed here (a tracked file) rather than cited.
+`pass3-1` never produced numbers: it died in PEER churn — `semio-framework-plugin` failed to compile
+(`pattern does not mention field 'tasks'`, `no field 'reserved' on TaskSlot` ×5) while the
+MICROKERNEL-POOLED-ACTOR runtime was mid-landing; the peer fixed both halves within four minutes.
+
+### 6.2 The two aborts — root causes, both in PRODUCTION code, both fixed and proven
+
+**animate — the CANCEL path could never be reclaimed.**
+`semio_framework_job::WorkerJobSession::close_step` only advances a session whose phase IS
+`SESSION_CLOSE`; against any other phase it answers `Blocked` and changes nothing. `begin_close` is
+the only transition into that phase, and *while the worker holds the session it answers `Blocked`
+too* — it records the request, wakes the worker, and the worker then hands the authority back as
+`SESSION_TERMINAL`/`SESSION_OUTCOME`, **never** as `SESSION_CLOSE`. The handle issued `begin_close`
+exactly once and latched `close_started`, so a caller whose first `begin_close` was blocked answered
+`Blocked` for every later step: the registry never reached terminal-empty, the fixture's 100 000-step
+ceiling tripped, and `PresentationEnvelopeMaterializeRegistry::drop` asserted on top of that panic —
+`panic in a destructor during cleanup` → SIGABRT for the whole binary.
+Fix: both blocked arms (`retire_session_step`, `close_step`) now re-issue `begin_close` through the
+new `reissue_session_close` (idempotent against `SESSION_CLOSE`).
+Proof: `retained_presentation_envelope_caller_cancels_and_zero_grant_closes_without_output ... ok`
+in `pass3-3` (it had aborted the binary in every previous run).
+
+**writer — a REFUSAL dropped a live nested owner.**
+`WriterEditHistoryAuthority::accept_token` did `self.active.take()` and then `?`-propagated a nested
+fault, so the taken `WriterEditActive` was DROPPED on the spot. `WriterMutationArrayAuthority::drop`
+(and `OwnedSchemaStringAuthority`'s) assert terminal-empty, so a refused edit raised "Writer mutation
+array reached Drop before every exact mutation owner was published or cursor-retired" *inside the
+caller's unwind*, and this authority's own Drop assert turned it into the same double-panic SIGABRT.
+Fix: every arm now yields `(outcome, retain)`; a refused owner is retained exactly like a pending one
+and leaves through this authority's bounded `close_step` ladder, which already handles the faulted
+array. Proof: `pass3-2` produced writer's FIRST ever complete `test result:` line (138/35, no abort).
+
+### 6.3 architect — the Graph window now fits its pane (§5.8's handover, closed)
+
+`graph_media_json` laid every program out on a FIXED circle (`radius = 220`, centre `(320, 240)`) and
+used the ring point as the node rect's ORIGIN, so a two-element program put its second node's left
+edge at x = 540 with width 108 — in a 469 px pane whose `ArchitectGraphWindowConfig::default()`
+viewport is `{0, 0, 1}`. Only one label plus two unlabelled ports were ever in view: the audit's
+"Waiting !… !…" verdict.
+
+Now (`🪟️windows/🕸️graph/🦀️.rs`): `graph_ring_radius(count)` is the smallest radius whose
+neighbour-to-neighbour CHORD clears a whole node box measured on its DIAGONAL plus
+`ARCHITECT_GRAPH_NODE_GAP`; the ring centre is anchored so the node bounding box starts at
+`ARCHITECT_GRAPH_MARGIN`; and x/y are the box's top-left, not the ring point. Two elements now span
+x ∈ [24, 272] — inside the pane, with the default viewport untouched.
+Laws: `the_default_viewport_frames_every_node_without_panning` (positive quadrant, inside the
+narrowest measured pane, exact margin/extent on the axis where `cos` reaches −1) and
+`the_ring_radius_keeps_neighbouring_node_boxes_clear` (2…32 elements, monotone).
+
+### 6.4 animate — the demo figure is a REAL shipped asset now
+
+`default_figure_tile_source()` pointed at `/🖼️bauteilbörse.png`, which exists NOWHERE in this
+repository, so every host answered the figure request with its SPA fallback (`200 text/html`) and the
+booted deck painted fifteen blank tiles with no console error to explain it — the acceptance red
+`📓️play-runtime.md` records against the `animate` pane.
+
+It now names `DEMO_FIGURE_SRC = "/🖼️assets/🖼️images/🏙️architecture/🏘️habitat-67.png"` (2560 × 1707),
+a file this repository ships and `semioAssetsVitePlugin` serves — and a release build copies — at
+`/🖼️assets/*` for every host that mounts this app: the `semio-tech play` grid, animate's own
+playground and the CDN bundle alike. No registry, Cargo-manifest or play-config change is needed,
+which is why this beat declaring a per-plugin `static-dir` route. 17 JSON fixtures were rewritten
+(`src` + `sourceAspect` 1.3638392857142858 → 1.4997070884592854).
+Law: `the_demo_figure_source_names_a_shipped_asset` — the src must sit under the shared asset route
+AND resolve to a file on disk, and the declared aspect must be the shipped figure's pixel aspect.
+The committed `🖼️assets/🎬️demo/🗣️.dsl.semio` carries a content-HASHED composed-child id, so no hand
+edit of it can be correct: a new `zzz_write_demo_example_asset` writer test regenerates it from this
+crate's own printer (its law `the_committed_demo_asset_is_the_printers_own_demo_snapshot` reads the
+`include_str!` constant of the SAME binary, so the regenerated text is proven by the NEXT run).
+
+### 6.5 Stale laws restated (never weakened)
+
+- **architect `interaction_select_stamps_…`** (fleet bucket 5): the framework stopped writing
+  `"selected":true` into a rendered row — `stamp_and_cache_interaction_ui`'s presence-stamping half
+  became the render-plane presence OUTBOX. The law now asserts BOTH the one tree-level
+  `"interactionDomain":"program"` binding that makes the rows pickable AND that
+  `PluginApp::take_pending_presence` carries exactly one `own.selected` entry whose `node_key` is the
+  picked element id. GREEN.
+- **writer `drain_typed_operations`** (fleet bucket 6, 20 reds): the editor test context re-rolled the
+  retained-operation pump and never drained `take_typed_operation_completion`, the composed-result
+  outbox or the interaction-query replies — all three of which `has_pending_typed_operations` COUNTS —
+  so every command whose operation published no further lane page spun to the 30 s deadline ("Writer
+  retained operations did not finish"). It also took ONE page per turn where the framework helper
+  drains every presented page. Replaced with `artifact_app_laws::settle_registered_typed_operation`.
+- **writer `app_with_jack`** (4 reds): printed a document pack and then dropped the envelope;
+  `ArtifactEnvelope::drop` asserts its owners were detached by an app-owned bounded retirement
+  authority. New `retire_writer_envelope` runs `crate::spr::writer_document_store_owners()
+  .retire_envelope_uninstalled(..)`, the shape `🖨️raster`'s `retire_raster_envelope` already uses.
+- **writer `command_surface_has_the_expected_row_count_…`**: literal `21` → `WriterCommand::TOOL_JOB_IDS.len()`
+  (the surface is 19 rows since `ast-hover`/`text-hover` dissolved into the framework `ast` domain).
+- **writer's two nested window laws**: they filed a BARE node key (`"match"`), which only ever matches
+  a TOP-LEVEL container — `TreeWindows::path_of` joins enclosing windowed containers with
+  `TREE_WINDOW_PATH_SEPARATOR`. New `ast_window_path` files `root␟match`, the shape raster's
+  `nested_key` and cad's nested requests use. (That miss is why the closed law materialised 47 rows
+  instead of 0 and the window law read offset 0 instead of 30.)
+- **writer's two label laws**: they asserted `"Document"`/`"Camera"`, neither of which is in
+  `WriterPlayLabels` (the artifact term has always been `"Artifact"`) and the inspection panel renders
+  no camera section — they failed on their own vocabulary, not on a locale regression. Now: native
+  English `"Artifact"` present, German `"Artefakt"` absent.
+- **writer's three example-id laws**: `document_for_example_id` publishes exactly ONE id
+  (`crate::examples::demo::ID`), treats the EMPTY id as "load my default example" (animate does the
+  same) and resets to the empty document for anything else. The laws dispatched `"jack"` (never
+  published → empty document, so `lint_is_a_view_action_and_example_default_materializes` proved the
+  opposite of its own name and its failure then tripped the store Drop witness into a SIGABRT) and
+  `""` while expecting the empty fallback. They now dispatch the published id, and the fallback law
+  files an id the app genuinely does not publish.
+
+### 6.6 Live panes — the 15:47 activation
+
+The coordinator's chain landed `activate-dev rc=0` at 15:47 and the supervisor restarted :6033 at
+15:57. First probe (16:05, `probe-kc.mjs`, headless chromium `--use-angle=metal`):
+
+- **animate — the figure fix is PROVEN live.** The response log records
+  `200  http://127.0.0.1:6033/🖼️assets/🖼️images/🏙️architecture/🏘️habitat-67.png` — a real asset body,
+  NOT the `200 text/html` SPA fallback the same request answered on every earlier activation. Pane
+  reached `data-shell-ready=animate` (452 nodes) with the Demo example selected; zero bad-asset
+  responses. `curl` against the same URL returns 200 / 985 708 bytes.
+- **architect / writer** did not finish their boot inside 180 s on that first (cold) pass, and every
+  later probe (16:11, 16:16, 16:24) ended the same way for ALL THREE panes with one console error:
+  `Framework OS boot failed Error: plugin-handle.closed` (`🔌️PluginRuntime/🟦️.tsx:1857`
+  `requireOpening`). It is identical across the three panes, carries no plugin-specific code, and
+  appears on a pane (animate) that had booted fine minutes earlier — a host-side boot fault on this
+  activation under fleet load, not a knowledge-children defect. **Not verified visually this session:
+  the architect Graph fit and the writer pane.** The native law pins the graph geometry exactly
+  (§6.3); the pane screenshot is the piece that is still owed.
+
+### 6.7 What remains
+
+1. `animate-presentation` — 15 reds + one abort:
+   `retained_presentation_envelope_caller_faults_and_zero_grant_closes_malformed_pack` fails
+   `registry.fault(..).is_some()` and then aborts on the registry Drop assert, and
+   `envelope_helpers_round_trip` newly fails. Both assert BEFORE any close step, so neither is
+   reachable by §6.2's change; the common factor is the worker-session/pool path the peer's
+   MICROKERNEL-POOLED-ACTOR runtime is rewriting. The other 13 (manifest/panel/terminology/binary)
+   have never printed their messages — the abort truncates the binary. Next step is exactly the run
+   queued as `pass4-2.txt`: skip that one test and read them.
+2. `writer-writer` — after §6.5 the residue to re-measure is
+   `writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed` (the live decode
+   faults `writer-envelope.snapshot-pack-must-be-scalar`, `💾️binary/🦀️.rs:254`, on an envelope built
+   from `empty_writer_snapshot()`; animate's byte-identical guard passes, so the difference is what
+   writer's `capture_read` now puts in `initialSnapshot` since the `text`/`document` child reshape),
+   `writer_artifact_store_preparation_is_exact_bounded_and_reversible` (2 vs 1),
+   `scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack`, and the
+   mutation/operation-law reds.
+3. `semio-s-plugin-architect::descriptor_is_fresh` — the coordinator regenerated the architect
+   descriptor at 15:47, so this should pass on the next run; it needs a wasm `describe`, never a
+   native fix.
+4. A visual pass on the architect and writer panes once the host's `plugin-handle.closed` boot fault
+   clears.
+
+### 6.8 Files changed this session (absolute)
+
+Production:
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🦀️.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🦀️.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️.rs`
+
+Laws / tests:
+- `…/🏛️architect/…/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️graph/🧪️tests/🔬️unit/🦀️.rs`
+- `…/🏛️architect/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+- `…/🎞️animate/…/🧬️schema/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs`
+- `…/🎞️animate/…/🚪️io/📸️snapshot/📝️text/🧪️tests/🔬️unit/🦀️.rs`
+- `…/✒️writer/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+- `…/✒️writer/…/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs`
+- `…/✒️writer/…/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs`
+- `…/✒️writer/…/✏️editor/🎮️commands/📝️text-edit/🧪️tests/🔬️unit/🦀️.rs`
+- `…/✒️writer/…/✏️editor/🎮️commands/🔍️lint-document/🧪️tests/🔬️unit/🦀️.rs`
+
+Fixtures (17 files, `src` + `sourceAspect` only):
+`…/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations/**/📸️snapshot/**/🔣️.json`
+and `…/✏️editor/📌️panels/🔍️inspection/🧫️fixtures/🔣️panels.json`.
+
+> 🗂️ **Scratch relocation (16:47).** The repo workspace cleanup deletes `$T/🗑️generated`, so this
+> topic's STATUS.md, run logs, probe scripts and `CARGO_TARGET_DIR` now live under
+> `/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/play-fleet/knowledge-children` (coordinator's
+> brief-v5 16:40 addendum). This tracked file stays the durable record.
+
+### 6.9 Live verdicts CONFIRMED on the 15:47 activation (17:30)
+
+The coordinator's strict acceptance suite is **70/70** on this activation, with `animate`, `architect`
+and `writer` all passing — including the SPA-fallback asset guard that `📓️play-runtime.md` had
+recorded as a real red against `animate`. The `plugin-handle.closed` boot failures seen at 16:11–16:24
+were a transient host fault under load (machine load ~250); they do not reproduce now.
+
+Re-probed `#architect` alone at 17:30 (`probe-kc.mjs`, evidence under
+`⚡️cache/play-fleet/knowledge-children/panes7/`):
+`outcome=settled`, `data-shell-ready=architect`, **1070 nodes, 0 console errors, 0 page errors, 0
+refusals, 0 404/SPA-fallback asset responses**. The pane shows the demo document — Adjacency window
+(`Reception`, `Waiting`, `PAIRS`, `Reception ↔ Waiting [Required]`), Register window with both
+elements, Report window, example picker on **Demo**.
+
+**The Graph window is fixed, visibly.** `window:architect-graph` measures `[485, 61, 469, 907]` (the
+same 469 px pane that used to crop it) and the screenshot now shows BOTH element nodes drawn inside
+it, side by side and joined by their adjacency edge, with both labels legible. Under the previous
+fixed-radius layout the second node's left edge was at scene x = 540 — off the right side of this
+window with the default `{0, 0, 1}` viewport — which is exactly the "Waiting !… !…" crop
+`📓️audit-visual-2.md` reported and §5.8 handed over.
+
+### 6.10 pass4-2 (18:03) — four of six crates green, and the REAL reason the other two "abort"
+
+| crate | pass4-2 |
+|---|---|
+| `semio-s-artifact-architect-program` | **2087 passed / 0 failed — GREEN** |
+| `semio-s-plugin-architect` | **3 / 0 — GREEN** (`descriptor_is_fresh` passes on the coordinator's 15:47 descriptors) |
+| `semio-s-plugin-animate` | **3 / 0 — GREEN** |
+| `semio-s-plugin-writer` | **6 / 0 — GREEN** |
+| `semio-s-artifact-animate-presentation` | 16 red printed, then SIGABRT |
+| `semio-s-artifact-writer-writer` | SIGABRT on its first failing test |
+
+The two remaining SIGABRTs are **one defect, present in both crates, and it is not a close-ladder
+bug at all** — it is what makes every OTHER red in these two binaries invisible:
+
+> every owner in these two `🚪️io/🧬️mutations/💾️binary/🦀️.rs` files asserts its bounded-close witness in
+> `Drop` **unconditionally**. A witness exists to catch a leak on a HEALTHY path. When a test fails its
+> own assertion, the thread starts unwinding with a live owner still on the stack; the witness then
+> fires *during* that unwind, and a second panic in a destructor is a NON-unwinding abort. One red test
+> therefore kills the whole binary, the first real failure is never printed, and the other ~300 tests
+> in that binary are lost with it.
+
+pass4-2 shows this exactly: animate aborts out of
+`retained_presentation_envelope_publication_retries_backpressure_exactly_once` whose own
+`assert_eq!` failed first (`🔬️unit/🦀️.rs:255`), then
+`PresentationEnvelopeMaterializeRegistry::drop` (`💾️binary/🦀️.rs:1560`); writer aborts out of
+`commit_rename_renames_all_spans_at_the_config_selection` whose own `assert_eq!` failed first
+(`📝️text-edit/🧪️tests/🔬️unit/🦀️.rs:85`), then `WriterSnapshotRootRetirement::drop`
+(`💾️binary/🦀️.rs:155`).
+
+**Fix (production, both crates):** every `Drop` witness in those two files now reads
+`assert!(std::thread::panicking() || (<witness>), "…")` — the exact shape the framework's own
+`store::ArtifactEnvelope::drop` already uses (`🏪️store/🦀️.rs:2870`). 7 witnesses in animate, 9 in
+writer. A leak on a healthy path still aborts loudly; a leak observed while a test is already failing
+no longer replaces that test's message with a process abort.
+
+**Law (one per crate, `a_live_owner_dropped_during_a_panic_unwinds_instead_of_aborting`):** hold a
+genuinely live owner (a submitted `PresentationEnvelopeMaterializeRegistry` caller / a freshly begun
+`WriterEditHistoryAuthority`), assert it is NOT terminal-empty, then panic inside `catch_unwind` while
+it is dropped and require the panic to arrive as an `Err`. Without the guard this law does not fail —
+it aborts the process, which is precisely the behaviour it forbids.
+
+This also unblocks the two crates' remaining reds, which have never printed their messages: with the
+binary surviving its first failure, `--no-fail-fast` finally reports all of them in one run.
+
+### 6.11 pass5-1 (21:47) — the aborts are GONE, and every red is finally visible
+
+`🗑️…/pass5-1.txt` (now `⚡️cache/play-fleet/knowledge-children/pass5-1.txt`), no `--skip` at all:
+
+| crate | pass5-1 |
+|---|---|
+| `semio-s-artifact-architect-program` | **2087 / 0 — GREEN** |
+| `semio-s-plugin-architect` | **3 / 0 — GREEN** |
+| `semio-s-plugin-animate` | **3 / 0 — GREEN** |
+| `semio-s-plugin-writer` | **6 / 0 — GREEN** |
+| `semio-s-artifact-animate-presentation` | 305 passed / **22 failed**, NO abort |
+| `semio-s-artifact-writer-writer` | 156 passed / **19 failed**, NO abort |
+
+Both `a_live_owner_dropped_during_a_panic_unwinds_instead_of_aborting` laws pass. Neither binary
+aborts any more, so `--no-fail-fast` reports every red in one run for the first time in this ticket.
+`zzz_write_demo_example_asset` also did its job: `🖼️assets/🎬️demo/🗣️.dsl.semio` on disk now carries the
+`habitat-67` source and the recomputed `presentation-39a58fcf08cf1060` child id, so
+`the_committed_demo_asset_is_the_printers_own_demo_snapshot` goes green on the next build.
+
+#### animate — 22 reds, grouped by cause
+1. **Retained envelope publication never reaches Ready** (5):
+   `envelope_helpers_round_trip`, `retained_presentation_envelope_materializes_populated_history_in_order`,
+   `retained_presentation_envelope_publication_retries_backpressure_exactly_once` (`left: Pending, right: Ready`),
+   `retained_presentation_envelope_caller_faults_…` (`registry.fault(..).is_some()` false) and
+   `presentation_deck_materializes`. The first four are one symptom: the worker job never publishes.
+   Note `presentation_deck_materializes` and three writer reds share the message
+   `edit history insertion requires its exact mutation retirement factory` — fleet-brief bucket 2,
+   a bare `ArtifactStore::new` in the fixture.
+2. **Panels render nothing** (6): `document_lists_seeded_tiles` (no `tile-r0-c0`),
+   `catalogue_lists_templates`, `details_panel_reports_schema_and_tile_count`,
+   `presentation_semantic_panels_match_the_json_oracle` (`left: Null, right: "animate.presentation"`),
+   and the two terminology laws (`"Tile templates"` / `"Kachelvorlagen"`). One suspect: the mounted
+   fixture app boots an EMPTY deck, so every panel body renders its placeholder.
+3. **Manifest / interactive-job classification** (4): `missing declared operation addTile`,
+   `missing declared operation seedGrid`, `export_video_from_deck` refused with
+   `interactive-job.not-ui-safe … BatchOnlyPendingRewrite`, and `delete_selection` (0 vs 1).
+4. **Media import** (2): `media port 'frames:in' is registered but has no concrete resumable importer`
+   (`interactive-job.missing-reserved-builder`).
+5. **Fixture canonical form** (2, fleet bucket 1): `Number(1.0)` vs `Number(1)` in
+   `🖼️replace-source/…/📸️snapshot` and `✂️resize-tile-crop/…/🦠️mutation`. **Fixed in this session**:
+   five committed animate fixtures now write their integral `x/y/width/height/gap/sourceAspect`
+   floats as `0.0`/`1.0`, which is what the crate's own encoder emits.
+6. `presentation_document_contract_round_trips_children_and_rejects_foreign_owners`:
+   `ValueError("missing field source")` — a document-contract fixture predating `PresentationSnapshot::source`.
+7. `the_committed_demo_asset_…` — regenerated, see above.
+
+#### writer — 19 reds, grouped by cause
+1. **`edit history insertion requires its exact mutation retirement factory`** (5) — fleet bucket 2.
+2. **`result.mutations` on a MOUNTED app** (3: `commit_rename_…`, `format_artifact_…`,
+   `set_text_action_updates_projection`, all `left: 0, right: 1`) — fleet bucket 3: a mounted app's
+   `result.mutations` is always empty; assert receipt lanes / history length instead.
+3. **`EditText` inverse/apply do not round-trip** (2): `rename_writer_and_edit_text_invert_to_the_prior_field_value`
+   yields `EditText { text: "" }` where the base carries `"old text"`, and
+   `edit_text_obeys_the_inverse_and_diff_absorb_laws` restores a snapshot whose composed child id
+   (`document-74621fa791e15905`) differs from the base's (`document-c930b9687a2eaa95`) for the same
+   empty text. Both are consequences of `WriterSnapshot::text` becoming the persisted body while the
+   fixtures/handles still derive from the child handle — the one genuinely PRODUCTION-shaped item left.
+4. `writer_edit_history_decoder_uses_begin_mutation_and_faults_malformed_input` — the VALID decode is
+   refused with `writer-envelope.mutation-array-entry` at offset 78. Pre-existing and newly visible:
+   the abort this session removed was masking this first `.expect`.
+5. One each: `writer-envelope.snapshot-pack-must-be-scalar` on the live envelope,
+   `RetainedJobPayload requires one-page close…` on the store initializer, a missing
+   `language-neutral oracle catalog` file (`🔮️oracles/🔣️.json`, fleet bucket 9),
+   `Arc::ptr_eq` on the child-local-text fixture, the read-only viewer scene stamp,
+   `scene_emits_placeholders_…`, `writer_artifact_store_preparation_…` (2 vs 1), and
+   `writer_window_state_retained_publications_…` ("Writer window operations did not finish" — the
+   SAME hand-rolled-pump defect as `drain_typed_operations`, in the window-config leaf's own helper).
+
+### 6.12 Close-out (22:10)
+
+Two further verification runs (`pass5-2.txt` 22:06, `pass5-3.txt` 22:10) could not measure anything:
+`semio-framework-plugin` does not compile while the peer's interaction-selection work is mid-landing —
+`error[E0583]: file not found for module 'interaction_selection_laws'` (`🔌️plugin/🦀️.rs:22418`, the
+module file does not exist yet) plus `cannot find function 'history_row_applied_v1'` (that one the peer
+landed at 22:03). Nothing of this topic's is implicated; the two edits made after `pass5-1` and still
+unmeasured are the five float-canonical animate fixtures (§6.11 group 5) and nothing else.
+
+**State at hand-over**
+- GREEN through a real run log, no aborts: `semio-s-artifact-architect-program` 2087/0,
+  `semio-s-plugin-architect` 3/0, `semio-s-plugin-animate` 3/0, `semio-s-plugin-writer` 6/0.
+- `semio-s-artifact-animate-presentation` 305/22 and `semio-s-artifact-writer-writer` 156/19 — both
+  now report FULLY (the abort that used to hide them is fixed, §6.10), every red triaged in §6.11.
+- Live: strict acceptance 70/70 on the 15:47 activation with all three of this topic's panes passing;
+  the architect Graph fit re-probed and screenshotted (§6.9); the animate figure served for real (§6.4).
+- Next agent: start from §6.11's two grouped lists. The first three animate groups and the first two
+  writer groups are ~20 of the 41 reds and are all fleet-brief buckets 1/2/3, i.e. mechanical once the
+  framework compiles again.
+
+---
+
+## 7. 2026-09-22 late — clearing the mechanical buckets (source landed, verification blocked)
+
+Written while `semio-framework-plugin` does not compile: the peer's interaction-selection work
+declares `mod interaction_selection_laws;` (no `#[path]`) against a directory it created as
+`🧪️tests/🕹️interaction-selection-laws/`, and `history_row_applied_v1` is referenced from a scope that
+cannot see it. `pass5-2`, `pass5-3` and `pass6-1` all died on those two errors before reaching any
+crate of this topic. Everything below is landed source, queued behind that.
+
+### 7.1 Bucket 2 — `edit history insertion requires its exact mutation retirement factory` (8 tests)
+
+`ArtifactStore::new` installs NO owner catalog, and `reserve_edit_history_slot` then refuses every
+`Apply`: a bare store can be read but never mutated, undone or closed. Both crates now carry the
+owner-installing constructor + self-closing guard that `🕸️dag`'s `new_dag_store`/`OwnedDagStore`
+established, next to their existing owner catalogs:
+
+- `🎞️animate/…/🚪️io/🧬️mutations/💾️binary/🦀️.rs` — `new_presentation_store` → `OwnedPresentationStore`
+  (`Deref`/`DerefMut`, `close()` walking `close_owned_step` to the terminal-empty witness, `Drop`
+  running it unless panicking).
+- `✒️writer/…/🚪️io/🧬️mutations/💾️binary/🦀️.rs` — `new_writer_store` → `OwnedWriterStore`, installing
+  the crate's own `writer_document_store_owners()` (the same catalog the app installs through
+  `ArtifactEditor::build_document_store_owners`), plus the `WriterDocumentEnvelope`/`WriterDocumentStore`
+  aliases that were missing.
+
+Fixtures repointed: animate `presentation_deck_materializes` and `document_text_round_trip_with_operation_applied`;
+writer `seeded_store` (feeding `writer_document_vcs_replays_text_mutations` and
+`writer_document_vcs_undoes_text_mutation`), `writer_document_text_round_trips_through_the_store` and
+both `command_envelope_round_trip_holds_for_an_applied_operation` leaves.
+
+### 7.2 Bucket 3 — `result.mutations` on a MOUNTED app (3 tests)
+
+`format_artifact_reformats_jack_query`, `set_text_action_updates_projection` and
+`commit_rename_renames_all_spans_at_the_config_selection` asserted `result.mutations.len() == 1`.
+A mounted app answers first and publishes afterwards, so `InvocationResult::mutations` is ALWAYS
+empty there — the count-of-1 tested the unmounted shape this harness stopped using. Each now asserts
+the mounted contract (`result.mutations.is_empty()`, with the operations printed on failure) and
+keeps its own projection assertion, which is the real proof the edit landed.
+
+### 7.3 Bucket 1 — fixture float canonical form (2 tests)
+
+Five committed animate fixtures wrote integral `x`/`y`/`width`/`height`/`gap`/`sourceAspect` as
+integers where the crate's own encoder emits floats (`Number(1)` vs `Number(1.0)`), failing
+`replace-source/no-ops-when-the-source-is-already-identical` and
+`resize-tile-crop/rejects-a-zero-width-crop`'s `committed_json_is_canonical`. All five now carry the
+encoder's form.
+
+### 7.4 Bucket 9 — the oracle catalog moved (1 test)
+
+`direct_owners_descriptors_surfaces_and_catalog_correspond` read
+`🪆️subsets/✳️any/🔣️oracle.json`, which has not existed for some time — the language-neutral catalog
+lives in `🪆️subsets/✳️any/🔮️oracles/🔣️.json`. The law failed on `No such file or directory` rather
+than on any correspondence it was written to check; it now reads the real file.
+
+### 7.5 `WriterSnapshot::text` consistency (2 tests, the production-shaped pair)
+
+`rename_writer_and_edit_text_invert_to_the_prior_field_value` and
+`edit_text_obeys_the_inverse_and_diff_absorb_laws` hand-built a base that set the composed
+`document` handle from one body while leaving the PERSISTED `text` field empty. Since `text` became
+the body `writer_text` reads, that base is internally impossible: `EditText::inverse` correctly
+answers `EditText { text: "" }`, and the inverse law then re-mints the child handle from the restored
+text and gets a different content address than the hand-built one (`document-74621fa791e15905` vs
+`document-c930b9687a2eaa95`). Both bases — and the three outcome-law bases beside them — now go
+through the crate's own `writer_snapshot_with_text`, the single constructor that keeps the field and
+its content-addressed handle in step. The PRODUCTION inverse is correct as written; the fixtures were
+the stale half, and the doc comments now say why.
+
+### 7.6 Animate document contract (1 test)
+
+`🧬️schema/🧫️fixtures/🪪️document-contract/🔣️.json`'s `document` predates
+`PresentationSnapshot::source`/`tiles` and decoded with `ValueError("missing field 'source'")`. It now
+carries a neutral `source` (the same `/fixture-deck.png`, 3:2, full frame the sibling mutation
+fixtures use) and an empty `tiles`, in the encoder's float-canonical form.
+
+### 7.7 Still open, and why they are NOT being guessed at
+
+- **animate panel cluster** (`document_lists_seeded_tiles`, `catalogue_lists_templates`,
+  `details_panel_reports_schema_and_tile_count`, `presentation_semantic_panels_match_the_json_oracle`,
+  the two terminology laws). The semantic-contract failure is precise — `fields[0]["children"]` is
+  EMPTY where a `value` child is expected, i.e. `tree_item_desc`'s value no longer materialises as a
+  child node — but the same panel's Debug-rendered output also lacks the schema string when reached
+  through `app.render(PRESENTATION_PLAY_BODY_DETAILS, …)`, which is a different symptom. Two shapes
+  cannot both be inferred from a log; this needs one compile.
+- **animate retained-envelope publication** (`envelope_helpers_round_trip` and the three
+  `retained_presentation_envelope_*` publication laws): the worker never reaches `Ready`. Production,
+  and the close-ladder work in §6.2 is already in place, so the next step is instrumenting the
+  handle's `maintenance_step` state machine — again, needs a compile.
+- **animate manifest/interactive-job** (4) and **media import** (2):
+  `missing declared operation addTile`/`seedGrid`, `interactive-job.not-ui-safe …
+  BatchOnlyPendingRewrite` for `exportVideoFromDeck`, and
+  `media port 'frames:in' is registered but has no concrete resumable importer`.
+- **writer singles** (7): `writer-envelope.snapshot-pack-must-be-scalar` on the live envelope,
+  `RetainedJobPayload requires one-page close…`, `writer_edit_history_decoder_…`'s VALID decode
+  refused with `writer-envelope.mutation-array-entry` at offset 78, `Arc::ptr_eq` on the child-local
+  text fixture, the read-only viewer scene stamp, `scene_emits_placeholders_…`, and
+  `writer_window_state_retained_publications_…` ("Writer window operations did not finish" — the same
+  hand-rolled-pump defect as `drain_typed_operations`, in the window-config leaf's own helper).
+
+`pass6-1.txt` is the queued verification of §7.1–§7.6 (16 of the 41 reds); re-run it the moment
+`semio-framework-plugin` compiles.
+
+### 7.8 pass6-2 (22:39) — §7.1–§7.6 VERIFIED
+
+`⚡️cache/play-fleet/knowledge-children/pass6-2.txt`, the first run after the peer removed its broken
+`mod interaction_selection_laws;`:
+
+| crate | pass5-1 | **pass6-2** |
+|---|---|---|
+| `semio-s-artifact-architect-program` | 2087 / 0 | **2087 / 0 GREEN** |
+| `semio-s-plugin-animate` | 3 / 0 | **3 / 0 GREEN** |
+| `semio-s-plugin-writer` | 6 / 0 | **6 / 0 GREEN** |
+| `semio-s-artifact-writer-writer` | 156 / **19** | 167 / **8** |
+| `semio-s-artifact-animate-presentation` | 305 / **22** | 310 / **17** |
+| `semio-s-plugin-architect` | 3 / 0 | 2 / 1 — `descriptor_is_fresh` |
+
+Every item of §7.1–§7.5 is green. `descriptor_is_fresh` regressed for one honest reason: the
+`zzz_write_demo_example_asset` regeneration (§6.11) changed `🖼️assets/🎬️demo/🗣️.dsl.semio`, which the
+ANIMATE descriptor embeds, so `🗑️generated/describe.request/animate` is touched again — a wasm
+`describe`, never a native fix.
+
+### 7.9 Landed after pass6-2 (queued as `pass7-1`, blocked again on the peer)
+
+1. **animate's test `render` helper read the tree off `format!("{:?}", ..)`** — every node KEY and
+   every LABEL is a `UiText`, a fixed-capacity buffer whose `Debug` is not its string, so a substring
+   search for `"animate.presentation.play.catalogue.templates"`, `"tile-r0-c0"`, `"Tile templates"` or
+   the document schema could NEVER match, while a search for an enum variant name like `Canvas2d`
+   still did. That single outlier explains four of the six "panels render nothing" reds
+   (`document_lists_seeded_tiles`, `catalogue_lists_templates`,
+   `details_panel_reports_schema_and_tile_count`, `animate_presentation_labels_resolve_native_by_default`).
+   It now projects through `artifact_app_laws::project_and_retire_fixture_tree` like `🏛️architect`,
+   `✒️writer` and `🖨️raster` — which also RETIRES the rendered tree the `Debug` route leaked.
+2. **`animate_presentation_labels_translate_panels_in_german`** asked for German from a render given
+   the DEFAULT `ViewModel`, which resolves native English. New `render_with_view` helper; the law now
+   hands the app a German view model.
+3. **`writer_window_state_retained_publications_…`** re-rolled the retained-operation pump in its own
+   leaf (the same defect as `drain_typed_operations`, §6.5): it never drained the terminal-witness,
+   composed or interaction-query outboxes that `has_pending_typed_operations` counts, and took one
+   page per turn where a window command publishes a config AND a transient. Replaced with
+   `settle_registered_typed_operation`, counting the two window lanes off its receipt.
+
+`pass7-1` could not measure them: `semio-framework-plugin` stopped compiling again with 36 errors
+after the peer added a `Send` bound to `impl PluginApp for VcsArtifactApp<A, M>` without carrying it
+into their own `artifact_app_laws` helpers (`🔌️plugin/🦀️.rs:7415`, `:7638`, …). Same handling as
+before: requeue the identical command when it compiles.

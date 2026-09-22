@@ -15,10 +15,17 @@ export type ResourceLease = ResourceAccess & { release(): void };
 type LeaseDatabase = { exec(sql: string): void; read(sql: string, ...values: string[]): Record<string, unknown> | undefined; close(): void };
 const APPLICATION_ID = 0x534d4c53;
 
+/** 🗃️ Bun's own SQLite, named through a constant rather than inline. The specifier is a Bun BUILTIN:
+ * a bundler asked to analyse this module refuses it outright ("Cannot bundle built-in module"), which
+ * failed whole test FILES whose graph reaches this store from a browser-flavoured environment. Holding it
+ * in a `const` (whose literal type still gives the import its real module type) plus `@vite-ignore` leaves
+ * the resolution to the runtime, which is the only place it was ever meant to happen. */
+const BUN_SQLITE_MODULE = "bun:sqlite" as const;
+
 /** 🗃️ Uses each runtime's system SQLite behind the same local interface. */
 async function openDatabase(path: string): Promise<LeaseDatabase> {
   if (process.versions.bun) {
-    const { Database } = await import("bun:sqlite"), database = new Database(path, { create: true });
+    const { Database } = await import(/* @vite-ignore */ BUN_SQLITE_MODULE), database = new Database(path, { create: true });
     return { exec: sql => database.exec(sql), read: (sql, ...values) => database.query(sql).get(...values) as Record<string, unknown> | undefined, close: () => database.close() };
   }
   const { DatabaseSync } = await import("node:sqlite"), database = new DatabaseSync(path);

@@ -335,7 +335,7 @@ async fn mutation_inverse_law_retires_every_operation_it_mints() {
 async fn mutation_inverse_law_cold_retires_every_operation_it_mints() {
     COLD_COUNTER_RETIREMENTS.with(|count| count.set(0));
     let operation = ColdCounterMutation::add(5);
-    assert_mutation_inverse_law_cold(&10i64, &operation, drop, drop).await;
+    assert_mutation_inverse_law_cold(&10i64, &operation, |projection: i64| drop(projection), |delta: CounterDiff| drop(delta)).await;
     assert_eq!(COLD_COUNTER_RETIREMENTS.with(std::cell::Cell::get), 1, "the cold inverse law must retire the inverse operation it minted");
     crate::os_spr::Mutation::<i64>::retire_cold(operation);
 }

@@ -78,10 +78,11 @@ fn md_example_snapshot(example_id: &str) -> MdSnapshot {
 fn md_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<MdEditCommand, Fault> {
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(MdEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
+        "replace-text" => Ok(MdEditCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text"], "") }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.md.unhandled-action"),
-            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample)"),
+            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, replace-text)"),
         )),
     }
 }

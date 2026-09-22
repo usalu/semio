@@ -71,11 +71,14 @@ async fn pack_round_trips_representative_document() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::io::mutations::text::NoteMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
+    use store::{create_document_envelope, ArtifactCommand};
 
     let initial = crate::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
     let envelope = create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None);
-    let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    // 🔐️ Owner-installing guard (`🚪️io/📸️snapshot/💾️binary`) — a bare `ArtifactStore::new` installs
+    // no owner catalog and `reserve_edit_history_slot` then refuses every `Apply` with
+    // `edit history insertion requires its exact mutation retirement factory`.
+    let mut store = crate::standards::v1::subsets::any::io::snapshot::binary::new_note_store(envelope).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::schema::mutations::change_grid_visible(Some(false))], description: None }).await.expect("apply");
     let edit: &Edit<NoteMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;

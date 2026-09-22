@@ -89,6 +89,7 @@ const engineTestSuites = [
   engineSuite("♻️shell-document-retirement-index"),
   engineSuite("📂️retained-section-collapse", "tsx"),
   engineSuite("🎟️resident-refresh-budget"),
+  elementSuite("🛠️ShellHelpers", "🌐️chrome-history-locale"),
   elementSuite("🛠️ShellHelpers", "🧩️component"),
   elementSuite("🛠️ShellHelpers", "🪟️tree-windows", "tsx"),
   elementSuite("🛠️ShellHelpers/⏯️tool-run-panel", "🧩️component", "tsx"),

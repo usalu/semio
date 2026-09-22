@@ -4403,7 +4403,58 @@ pub struct ContributedInferenceMetadata {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub depends_on: Vec<String>,
+    /// 📜️ The PUBLISHED request/response contract of this inference — what a generic client has to
+    /// send and what it gets back. Absent for an inference whose owner has not declared one: a
+    /// gateway that cannot read a contract refuses the call by name instead of dispatching a body
+    /// the guest will reject after minutes of guest time (`📓️pz2-puzzle-describe-under-budget.md`
+    /// §5.2 measured exactly that: `inference_run` on `s.wfc.bitmap.solve` never answered inside
+    /// 240 s because nothing in the tree said the payload needed a `snapshot`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub payload: Option<InferencePayloadContract>,
 }
+
+/// 📜️ One inference's published payload contract — the schema-first answer to "what do I send?".
+/// `input_schema`/`output_schema` are JSON Schema 2020-12 documents as TEXT, authored beside the
+/// inference and carried verbatim, so the gateway validates against the plugin's own declaration
+/// instead of a host-side guess. `progress_unit` names what the bounded job counts, so a client can
+/// label a progress bar without knowing the algorithm.
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct InferencePayloadContract {
+    pub payload_schema_id: String,
+    pub input_schema: String,
+    pub output_schema: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[value(default, skip_serializing_if = "String::is_empty")]
+    pub progress_unit: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_binding: Option<InferenceArtifactBinding>,
+}
+
+/// 🔗️ How one inference's canonical request is BOUND to an artifact document. An inference over an
+/// artifact cannot be expressed by a client at all — nobody can type 4 096 bitmap cells into a tool
+/// call — so the plugin declares the payload field its own document goes into and the host fills it
+/// from the artifact the caller named. Declared, never invented: the host writes exactly the field
+/// this row names, in exactly the encoding it names, and refuses anything else by name.
+// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct InferenceArtifactBinding {
+    pub field: String,
+    pub encoding: String,
+    pub required: bool,
+}
+
+/// 📦️ The ONE encoding an artifact binding may name today: the artifact's canonical `pack`/`spr`
+/// pair, each base64, as `{ "pack": "…", "spr": "…" }` under the declared field. A binding naming
+/// anything else is refused at the gateway rather than silently filled with a shape the guest
+/// cannot read.
+pub const INFERENCE_ARTIFACT_PACK_BASE64: &str = "artifact-pack-base64";
 
 /// 🗂️ Everything one plugin contributes onto one artifact kind it depends on — see the registration
 /// gates in contract freeze §4 (accepted only when `artifact_kind`'s owner is a direct

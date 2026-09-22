@@ -3,8 +3,11 @@
 pub mod set_count;
 #[path = "🏷️set-label/🦀️.rs"]
 pub mod set_label;
+#[path = "🧒️set-slot-children/🦀️.rs"]
+pub mod set_slot_children;
 pub(crate) use set_count::SetCount;
 pub(crate) use set_label::SetLabel;
+pub(crate) use set_slot_children::SetSlotChildren;
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
@@ -13,6 +16,7 @@ pub(crate) use set_label::SetLabel;
 pub(crate) enum TestMutation {
     SetCount(SetCount),
     SetLabel(SetLabel),
+    SetSlotChildren(SetSlotChildren),
 }
 
 impl protocol::OpText for TestMutation {

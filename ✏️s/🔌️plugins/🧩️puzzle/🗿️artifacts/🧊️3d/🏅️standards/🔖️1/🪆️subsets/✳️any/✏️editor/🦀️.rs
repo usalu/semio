@@ -8393,23 +8393,35 @@ pub const PUZZLE3D_OBJECT_KIND_OPTIONS_MAX: usize = 64;
 /// import), so the union of the declared example catalogs IS the reachable kind set — not the single
 /// literal `"Object"` option this select used to hardcode, which could not add a single real kind of
 /// either example.
+///
+/// 🖐️ Those rows are AUTHORED below rather than derived, in the two shipped examples' own catalog
+/// order, and pinned to the documents by `shipped_object_kinds_are_the_two_examples_own_catalog_rows`.
+///
+/// 🐛️ Deriving it dereferenced `CONCRETE_FOREST_EXAMPLE_FIXTURE` and `NAKAGIN_EXAMPLE_FIXTURE`,
+/// i.e. parsed 136 395 B of authored DSL into two typed `Puzzle3dFixture`s — on the
+/// `AppDefinition` path, which is the `describe()` path AND every actor boot. Measured natively on
+/// 2026-09-22 (slice PZ2, `🗑️generated/pz2-native-profile-*.txt`): `create_puzzle3d_app()` cost
+/// 231 ms cold against ~1 ms with those statics warm, so ALL of it was this one select.
+pub const PUZZLE3D_SHIPPED_OBJECT_KINDS: &[(&str, &str)] = &[
+    ("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"),
+    ("Hexagonal Cut Concrete Forest Right", "Hexagonal Cut Concrete Forest Right"),
+    ("Base", "Base"),
+    ("Bridge", "Bridge"),
+    ("Capital", "Capital"),
+    ("Capsule With Balcony Backslash", "Capsule With Balcony Backslash"),
+    ("Capsule With Balcony J", "Capsule With Balcony J"),
+    ("Capsule With Balcony L", "Capsule With Balcony L"),
+    ("Capsule With Balcony P", "Capsule With Balcony P"),
+    ("Capsule With Balcony S", "Capsule With Balcony S"),
+    ("Capsule With Balcony Slash", "Capsule With Balcony Slash"),
+    ("First Storey Tambour", "First Storey Tambour"),
+    ("Last Storey Tambour", "Last Storey Tambour"),
+    ("Tambour", "Tambour"),
+];
+
+/// 🗂️ The `objectKind` select's options, mapped from [`PUZZLE3D_SHIPPED_OBJECT_KINDS`].
 fn puzzle3d_object_kind_options() -> Vec<ActionArgOption> {
-    let mut options: Vec<ActionArgOption> = Vec::with_capacity(PUZZLE3D_OBJECT_KIND_OPTIONS_MAX);
-    for fixture in [&*CONCRETE_FOREST_EXAMPLE_FIXTURE, &*NAKAGIN_EXAMPLE_FIXTURE] {
-        for entry in puzzle3d_catalog_entries(fixture, "objects") {
-            if options.len() >= PUZZLE3D_OBJECT_KIND_OPTIONS_MAX {
-                return options;
-            }
-            let Some(id) = entry.get("id").and_then(dsl::DslValue::as_str) else {
-                continue;
-            };
-            if options.iter().any(|option| option.value == id) {
-                continue;
-            }
-            options.push(ActionArgOption::new(id, LocalizedLabel::data(catalogue::catalog_entry_label(entry))));
-        }
-    }
-    options
+    PUZZLE3D_SHIPPED_OBJECT_KINDS.iter().take(PUZZLE3D_OBJECT_KIND_OPTIONS_MAX).map(|(id, label)| ActionArgOption::new(*id, LocalizedLabel::data(*label))).collect()
 }
 
 /// 🗂️ The kind the `objectKind` select stages when nothing is picked — the first catalog row, never a

@@ -373,5 +373,41 @@ pub(crate) mod fixture {
         let profiled = Std1StrictSnapshot::decode_pack(&bytes).expect("profile snapshot decodes");
         assert_eq!(profiled.value, 7);
     }
+
+    /// 🧹️ THE fail-closed-disposer law. `Std1AnyEditor`/`Std1AnyViewer` declare nothing at all about
+    /// store ownership — they are the shape 229 of the 298 editor/viewer impls under
+    /// `✏️s/🔌️plugins` had on 2026-09-22 — and `VcsArtifactApp`'s close ladder drives five owned
+    /// lanes through `drive_artifact_owned_disposer`, whose missing-disposer branch is the
+    /// fail-closed `interactive-job.close-owned-disposer-missing`. An app that cannot be CLOSED
+    /// cannot be published: the `codec` resolver constructs every app of a bundle to read its schema
+    /// and closes each one it rejects, which is how one undeclared disposer in `🗒️note` killed the
+    /// first three-package trusted-catalog bootstrap (ticket 26/09/18 slices TC3d/TC3e).
+    ///
+    /// 🎯️ Every lane is asserted through `ArtifactApp`, the trait the ladder actually reads, and for
+    /// BOTH adapters, because `EditorApp<E>`/`ViewerApp<V>` forward `E::`/`V::`'s answer and an
+    /// authoring-trait default of `None` would silently take the framework default back out.
+    #[semio_framework_async_macros::async_test]
+    async fn the_framework_owns_every_bounded_close_lane_an_app_declares_nothing_for() {
+        type Edit = crate::app::EditorApp<Std1AnyEditor>;
+        type View = crate::app::ViewerApp<Std1AnyViewer>;
+        let lanes = [
+            ("editor document-store", <Edit as crate::app::ArtifactApp>::build_document_store_disposer().is_some()),
+            ("editor config-store", <Edit as crate::app::ArtifactApp>::build_config_store_disposer().is_some()),
+            ("editor draft-store", <Edit as crate::app::ArtifactApp>::build_draft_store_disposer().is_some()),
+            ("editor presence-store", <Edit as crate::app::ArtifactApp>::build_presence_store_disposer().is_some()),
+            ("editor transient-store", <Edit as crate::app::ArtifactApp>::build_transient_store_disposer().is_some()),
+            ("viewer document-store", <View as crate::app::ArtifactApp>::build_document_store_disposer().is_some()),
+            ("viewer config-store", <View as crate::app::ArtifactApp>::build_config_store_disposer().is_some()),
+            ("viewer draft-store", <View as crate::app::ArtifactApp>::build_draft_store_disposer().is_some()),
+            ("viewer presence-store", <View as crate::app::ArtifactApp>::build_presence_store_disposer().is_some()),
+            ("viewer transient-store", <View as crate::app::ArtifactApp>::build_transient_store_disposer().is_some()),
+        ];
+        let missing: Vec<&str> = lanes.iter().filter(|(_, present)| !present).map(|(lane, _)| *lane).collect();
+        assert!(missing.is_empty(), "an app that declares no store ownership must still close: {} of {} lanes are fail-closed: {missing:?}", missing.len(), lanes.len());
+        assert!(
+            <Edit as crate::app::ArtifactApp>::build_presence_peer_retirement_factory().is_some() && <View as crate::app::ArtifactApp>::build_presence_peer_retirement_factory().is_some(),
+            "the peer half of the presence lane is framework-owned too"
+        );
+    }
     //#endregion 🔖️Tests
 }

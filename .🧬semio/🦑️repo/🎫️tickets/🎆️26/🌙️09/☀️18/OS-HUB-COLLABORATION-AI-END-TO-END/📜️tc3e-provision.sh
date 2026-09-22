@@ -10,9 +10,12 @@ ROOT=/Users/ueli/Documents/semio
 TICKET="$ROOT/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END"
 GEN="$TICKET/🗑️generated"
 PORT=${1:-7651}
-DATA=${2:-"$ROOT/.🧬semio/🌐hub/tc3e-boot"}
+DATA=${2:-"$ROOT/.🧬semio/🌐hub/tc3e-hub"}
 BIN=${3:-"$ROOT/.🧬semio/🦑️repo/⚡️cache/cargo/target-tc3d/debug/os-hub"}
-shift 3 2>/dev/null || true
+# 🔢 `shift 3` on fewer than three arguments leaves them in place under `set -u` instead of failing,
+# so the port itself was read as a KIND and the run probed `=========== 7651 ===========` against the
+# wrong data root (measured 18:23 on 2026-09-22, `🗑️generated/tc3e-prove.txt`).
+if [ $# -ge 3 ]; then shift 3; else shift $#; fi
 KINDS=("$@")
 [ ${#KINDS[@]} -gt 0 ] || KINDS=(s.note.note s.gis.gismap s.stdio.txt)
 ORIGIN="http://127.0.0.1:$PORT"

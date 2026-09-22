@@ -79,12 +79,16 @@ const RETAINED_LIMITS: &str = include_str!("../../🧫️fixtures/🧫️retaine
 //#region 🔖️CommandSurface
 /// 🎯️ One value per `app_commands!` row, in row order.
 fn every_command() -> Vec<Gis3dCommand> {
-    vec![Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.5 }), Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() })]
+    vec![
+        Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.5 }),
+        Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }),
+        Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example::DEFAULT_EXAMPLE_ID.into() }),
+    ]
 }
 
 /// 🏷️ The wire keyword each row prints under — the kebab `as` literal, independent of the camelCase
 /// manifest action id.
-const WIRE_KEYWORDS: &[&str] = &["exaggeration", "camera"];
+const WIRE_KEYWORDS: &[&str] = &["exaggeration", "camera", "active-example"];
 
 #[semio_framework_async_macros::async_test]
 async fn command_ids_are_unique_and_cover_every_row() {
@@ -94,7 +98,7 @@ async fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 2, "every Gis3dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 3, "every Gis3dCommand row must be covered by every_command()");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -199,6 +203,12 @@ async fn retained_commands_publish_only_their_declared_store_lanes() {
     let exaggeration_lanes = exaggeration.lanes.iter().map(lane_name).map(str::to_string).collect::<Vec<_>>();
     assert_eq!(exaggeration_lanes, expected("setExaggeration"));
     assert_eq!(app.snapshot().expect("settled Terrain snapshot").exaggeration, 2.0);
+    // 🎬️ The example load publishes the ARTIFACT lane only — terrain's picker does not re-frame its
+    // window the way gismap's does, and the fixture above is the oracle for that difference.
+    let example = dispatch(&mut app, Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example::DEFAULT_EXAMPLE_ID.into() })).await;
+    let example_lanes = example.lanes.iter().map(lane_name).map(str::to_string).collect::<Vec<_>>();
+    assert_eq!(example_lanes, expected("setActiveExample"));
+    assert_eq!(app.snapshot().expect("settled Terrain snapshot").exaggeration, 1.5, "the curated example's authored relief reaches the document");
     close(&mut app);
 }
 //#endregion 🔖️Manifest

@@ -129,7 +129,10 @@ fn every_declared_action_bridges_to_the_command_it_names() {
             bridged += 1;
         }
     }
-    assert_eq!(bridged, 21, "every grid-window action must be exercised");
+    // 🧮️ Pinned to the ROSTER, not to a literal: the grid window declares exactly the retained tool ids
+    // (the framework refuses any retained proof row whose verb no window declares), so a new verb that
+    // reaches `GRID3D_RETAINED_TOOL_IDS` must also reach this bridge — a stale literal here only hid that.
+    assert_eq!(bridged, GRID3D_RETAINED_TOOL_IDS.len(), "every grid-window action must be exercised");
 }
 
 /// 🖱️ The host's plugin-private world pick wraps the cell key in a one-entry `ids` array while the

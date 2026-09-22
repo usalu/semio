@@ -4,6 +4,7 @@ exports.uiTailwindBuildPlugins = uiTailwindBuildPlugins;
 exports.uiReactBuildPlugin = uiReactBuildPlugin;
 exports.defineOwnedTestConfig = defineOwnedTestConfig;
 exports.defineOwnedBuildConfig = defineOwnedBuildConfig;
+exports.defineOwnedBuildConfigFactory = defineOwnedBuildConfigFactory;
 //#region 🔌️Adapters
 var vite_1 = require("@tailwindcss/vite");
 var plugin_react_1 = require("@vitejs/plugin-react");
@@ -25,5 +26,10 @@ function defineOwnedTestConfig(config) {
 /** @emoji 🏗️ Identity helper for owned build configs that need no implementation runtime. */
 function defineOwnedBuildConfig(config) {
     return config;
+}
+/** @emoji 🏭️ Identity helper for an owned build config a build tool resolves per command, the form a
+ * configuration whose shape depends on `serve` versus `build` must take. */
+function defineOwnedBuildConfigFactory(factory) {
+    return factory;
 }
 //#endregion 🏭️Factories

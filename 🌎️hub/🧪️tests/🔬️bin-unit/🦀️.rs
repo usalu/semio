@@ -234,11 +234,46 @@ async fn artifact_creation_admission_cannot_activate_after_shutdown_deadline() {
     assert!(matches!(owner.reserve("user\0space\0request".into(), Arc::new(ArtifactCreationHttpControlV1::new())), ArtifactCreationHttpAdmissionV1::Unavailable));
 }
 
+/// 🔑️ Ticket 26/09/18 slice HC1: the one-second recovery sweep must not close a key an in-flight
+/// execution owns. Recovery reads durable facts alone, where a creation that is legitimately still
+/// working and one whose executor died look identical; the owner is the only thing in the process
+/// that knows the difference, and `owns_live_execution` is what the sweep asks before it closes
+/// anything. Ownership starts at the RESERVATION, not at the task, because the window between them
+/// is exactly where the accept fact becomes durable and visible to the sweep.
+#[cfg(feature = "native-artifact-execution")]
+#[tokio::test]
+async fn artifact_creation_recovery_never_closes_a_key_a_live_execution_owns() {
+    let owner = Arc::new(ArtifactCreationHttpTaskOwnerV1::new());
+    let key = "user\0space\0request".to_string();
+    assert!(!owner.owns_live_execution(&key), "an unknown key is recovery's to close");
+    let reservation = match owner.reserve(key.clone(), Arc::new(ArtifactCreationHttpControlV1::new())) {
+        ArtifactCreationHttpAdmissionV1::Owner(reservation) => reservation,
+        _ => panic!("first exact admission owns its reservation"),
+    };
+    assert!(owner.owns_live_execution(&key), "a reserved key is owned before its execution task exists");
+    let release = Arc::new(tokio::sync::Notify::new());
+    let held = release.clone();
+    reservation.activate(async move { held.notified().await });
+    assert!(owner.owns_live_execution(&key), "an activated execution owns its key while it runs");
+    release.notify_one();
+    let mut settled = false;
+    for _ in 0..1_000 {
+        if !owner.owns_live_execution(&key) {
+            settled = true;
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+    }
+    assert!(settled, "a finished execution releases its key back to recovery");
+    owner.shutdown().await;
+}
+
 #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
 #[tokio::test]
 async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_backed() {
     use semio_hub::artifact_authority::creation::ArtifactCreationOperationV1;
     use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
+    use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationCatalogV1;
 
     let profile = trusted_catalog_fixture::verified_gis_map_integration_profile(&trusted_catalog_fixture::unique_profile_root("artifact-creation-http")).await.expect("verified GIS Map creation profile");
     let mut state = test_state().await;
@@ -283,8 +318,9 @@ async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_
     assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], directory::os_pack::json::to_json_string(&stale_generation).as_bytes()).await.status, 409);
     assert!(state.directory.read_artifact_creation(&author.user_id, &stale_generation.request_id).await.expect("stale catalog creation facts").is_empty());
     assert_eq!(state.directory.head_seq().await.expect("directory head after stale catalog creation"), directory_head, "a stale catalog generation cannot claim an operation or append directory events");
-    let first = raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], body.as_bytes());
-    let duplicate = raw_http_request(addr, "POST", &route, &[("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")], body.as_bytes());
+    let creation_headers = [("Authorization", author_bearer.as_str()), ("Content-Type", "application/json")];
+    let first = raw_http_request(addr, "POST", &route, &creation_headers, body.as_bytes());
+    let duplicate = raw_http_request(addr, "POST", &route, &creation_headers, body.as_bytes());
     let (first, duplicate) = tokio::join!(first, duplicate);
     assert!([200, 202].contains(&first.status) && [200, 202].contains(&duplicate.status), "exact concurrent duplicate never reports capacity or owns a second factory");
     for response in [&first, &duplicate] {
@@ -311,7 +347,7 @@ async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_
         assert!(tokio::time::Instant::now() < deadline, "actual native genesis did not become Ready");
         tokio::time::sleep(std::time::Duration::from_millis(10)).await;
     };
-    let ready_scope = DocumentScope::new(&space_id, &ready.ready.as_ref().expect("Ready coordinates").document_id);
+    let ready_scope = DocumentScope::new(&space_id, &ready.ready.as_ref().expect("Ready coordinates").artifact_id);
     assert_eq!(ready.catalog_generation_id, request.expected_catalog_generation_id);
     assert_eq!(ready_scope.document_id, created_document_id, "both concurrent requests retain one server-minted document");
     assert!(state.directory.get_document_descriptor(&ready_scope).await.expect("created descriptor read").is_some());

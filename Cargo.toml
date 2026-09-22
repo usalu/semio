@@ -581,6 +581,24 @@ opt-level = 2
 [profile.wasm-dev.package.semio-s-artifact-remodel-remodeling]
 opt-level = 2
 
+# 🪶️ Admission size, not speed — the only wasm-dev override here that is not an `opt-level`.
+# `📕️norm` carries fifteen standards artifacts, so its UNOPTIMIZED component grew past
+# `FRESH_COMPONENT_MAX_BYTES` (256 MiB, `🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts`) and its
+# `describe` was refused before the guest ran: measured 273 934 765 B on 2026-09-22, 5 499 309 B over.
+# Where those bytes are, measured section by section (ticket 26/09/18,
+# `📓️nb1-norm-describe-under-bound.md` §2): `name` custom section 153 067 110 B (55.9 % of the whole
+# component, 405 825 mangled function names averaging 374 B), code 113 331 104 B, data 7 033 559 B.
+# All sixteen `semio-s-{plugin,artifact}-norm*` crates together compile to 5 126 605 B of that code —
+# 2.9 % of the component — so no source edit that keeps fifteen artifacts can pay a 5.5 MB overage;
+# the weight is generic instantiations of `semio-framework-plugin`/`core`/`alloc` that only LTO
+# deduplicates. `strip = "symbols"` drops the `name` section exactly as `[profile.wasm-release]`
+# below already does for the same reason ("pure debug/dev-tooling weight … never used at runtime"),
+# and the wasm-release build of THIS crate is the proof it works on this target and this linker:
+# 46 036 584 B with a 0-byte `name` section. The trade is norm-only and deliberate: a wasm trap in a
+# norm guest reports function indices instead of names until this line is removed.
+[profile.wasm-dev.package.semio-s-plugin-norm]
+strip = "symbols"
+
 # 🚀️ Ship profile for native binaries (`cargo build --release`, os-run in CI).
 # Dev loops use `[profile.dev]` only — see root `📜️script.ts` `os run` and wgpu native defaults.
 [profile.release]

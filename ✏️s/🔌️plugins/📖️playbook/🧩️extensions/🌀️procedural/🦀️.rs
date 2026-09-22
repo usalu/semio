@@ -760,6 +760,18 @@ impl ArtifactApp for ModuleApp {
         Some(bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("playbook-module-procedural-artifact-retained", MODULE_RETAINED_OUTPUT_BYTES))
     }
 
+    /// 🗃️ The artifact store needs its own retirement catalog before it may fold a batched item:
+    /// `ArtifactStore`'s batch stage copies `mutation_retirement`/`snapshot_retirement` out of the
+    /// store and refuses with `batched fold lacks exact snapshot or mutation retirement authority`
+    /// (`🧰️framework/…/🏪️store/🦀️.rs:17288`) when either is `None`, which the trait default is.
+    /// Measured inside `s` on 2026-09-22 as the refusal that replaced the presence one below, on the
+    /// same `importSolidGeometry`. This module's snapshot and mutation are both bounded values, so
+    /// the framework's own one-page catalog is exactly right — 🖨️raster, 🌊️flow, 🔱️trinity and
+    /// 📕️norm each declare this hook for the same reason.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
     /// 🧍 A presence DISPOSER is not a presence retirement OWNER. `PresenceStore::local_read` fails
     /// closed with `presence local read requires a live exact local retirement owner` while
     /// `local_retirement_factory` is `None`, so the first command whose ephemeral leg reads local

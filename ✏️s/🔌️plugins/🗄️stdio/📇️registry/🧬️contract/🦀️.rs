@@ -325,13 +325,13 @@ fn source(schema: &'static str) -> Result<Source, PluginAssemblyError> {
 ///
 /// The number a law reads to bound describe work: a schema is a compiled-in `&'static str`, so
 /// parsing and validating it is a pure function of its address and belongs in
-/// [`validated_source`]'s memo, not in every caller. Before that memo, assembling stdio's component
-/// re-parsed and re-validated each of the 36 definitions about EIGHT times (two full
-/// `artifact_assemblies()` passes, each of which validates the catalog and then builds every
-/// definition, plus the receipt pass and `native_codec_executables`) — ~290 parse+validate rounds
-/// over 231 KiB of JSON, every `format!`/`BTreeSet`/`ArtifactIdentity::parse` inside `validate`
-/// included. Cheap natively; the guest's `describe()` runs in the owned INTERPRETER, where that
-/// multiplier is the difference between minutes and the 1 800 s describe epoch.
+/// [`validated_source`]'s memo, not in every caller. MEASURED: one complete `plugin()` asks for a
+/// definition 196 times and now parses 36 — a 5.4× multiplier that used to be 196 parse+validate
+/// rounds over 231 KiB of JSON, every `format!`/`BTreeSet`/`ArtifactIdentity::parse` inside
+/// `validate` included (two full `artifact_assemblies()` passes, each validating the catalog and
+/// then building every definition, plus the receipt pass and `native_codec_executables`). Cheap
+/// natively; the guest's `describe()` runs in the owned INTERPRETER, where that multiplier is the
+/// difference between minutes and the 1 800 s describe epoch.
 pub fn artifact_definition_parse_count() -> usize {
     DEFINITION_PARSES.load(std::sync::atomic::Ordering::Relaxed)
 }
@@ -356,33 +356,27 @@ static DEFINITION_LOOKUPS: std::sync::atomic::AtomicUsize = std::sync::atomic::A
 /// `&'static str` it came from, and a guest that describes itself once never frees it anyway.
 /// Failures are not memoized: an invalid schema is an assembly error, and re-deriving it keeps the
 /// reported message identical on every call.
+///
+/// 🔒️ The parse happens WITH THE MEMO LOCKED, not beside it. Releasing the lock first and
+/// re-checking afterwards would be the cheaper shape, but then N threads that first touch the same
+/// schema together each parse it and only one result is kept — measured at 126 parses of 36
+/// definitions under `--test-threads=4`, i.e. "at most once" would be a claim the code does not
+/// make. The guest is single-threaded and every caller wants the same 36 tiny documents, so
+/// serializing them costs nothing and makes the count exact.
 fn validated_source(schema: &'static str) -> Result<&'static Source, PluginAssemblyError> {
     static CACHE: std::sync::Mutex<Vec<(usize, &'static Source)>> = std::sync::Mutex::new(Vec::new());
     let key = schema.as_ptr() as usize;
-    fn lookup(entries: &[(usize, &'static Source)], key: usize) -> Option<&'static Source> {
-        entries.iter().find(|(address, _)| *address == key).map(|(_, parsed)| *parsed)
-    }
-    {
-        let entries = CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(parsed) = lookup(&entries, key) {
-            return Ok(parsed);
-        }
+    DEFINITION_LOOKUPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let mut entries = CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if let Some(parsed) = entries.iter().find(|(address, _)| *address == key).map(|(_, parsed)| *parsed) {
+        return Ok(parsed);
     }
     let parsed = source(schema)?;
     validate(&parsed)?;
     DEFINITION_PARSES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let parsed: &'static Source = Box::leak(Box::new(parsed));
-    let mut entries = CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-    // 🤝 A peer thread may have won the race while this one parsed; keep the first entry so every
-    // caller observes one identical `&'static Source` for one schema.
-    let winner = lookup(&entries, key);
-    match winner {
-        Some(winner) => Ok(winner),
-        None => {
-            entries.push((key, parsed));
-            Ok(parsed)
-        }
-    }
+    entries.push((key, parsed));
+    Ok(parsed)
 }
 
 fn descriptor<T: kernel::ToValue>(value: &T) -> Vec<u8> {
@@ -1018,6 +1012,38 @@ pub fn example_id_argument(args: Option<&kernel::DslValue>, fallback: &str) -> S
         }
     }
     fallback.to_string()
+}
+
+/// 🧱️ The staged value of ONE declared argument of a framework window-kit verb, as text.
+///
+/// The three editable kits (`TextWindowKit`/`TableWindowKit`/`TreeWindowKit`) mint `replace-text`,
+/// `set-cell` and `set-node` as palette rows on every editor that composes them, and every stdio
+/// editor bridges those rows through its own `command_from_action`. A rail stages a number control
+/// as a `Number` and a text control as a `String`, so one reader admits both spellings; the first
+/// key that carries a non-empty value wins, which is what lets a wire written before the argument
+/// names were declared (`node_id`, `id`) still decode.
+pub fn window_kit_text_argument(args: Option<&kernel::DslValue>, keys: &[&str], fallback: &str) -> String {
+    let entries: &[(String, kernel::DslValue)] = match args {
+        Some(kernel::DslValue::Object(object)) => object.as_slice(),
+        _ => &[],
+    };
+    for key in keys {
+        match entries.iter().find(|(name, _)| name == key).map(|(_, value)| value) {
+            Some(kernel::DslValue::String(raw)) if !raw.is_empty() => return raw.clone(),
+            Some(kernel::DslValue::Number(number)) => return number.as_u64().map(|reading| reading.to_string()).or_else(|| number.as_i64().map(|reading| reading.to_string())).unwrap_or_else(|| number.as_f64().to_string()),
+            Some(kernel::DslValue::Bool(flag)) => return flag.to_string(),
+            _ => {}
+        }
+    }
+    fallback.to_string()
+}
+
+/// 🔢️ The same reader as [`window_kit_text_argument`], parsed as a grid index. A control that
+/// carries no reading at all answers `fallback` rather than refusing: `set-cell`'s own handler is
+/// the one place that knows whether an index addresses a live row.
+pub fn window_kit_index_argument(args: Option<&kernel::DslValue>, keys: &[&str], fallback: u32) -> u32 {
+    let raw = window_kit_text_argument(args, keys, "");
+    raw.trim().parse::<f64>().ok().filter(|reading| reading.is_finite() && *reading >= 0.0).map_or(fallback, |reading| reading as u32)
 }
 
 /// 🧬️ The whole-document load an example switch hands the host. Whole-document replacement is not an

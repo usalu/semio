@@ -56,6 +56,12 @@ pub struct DeclaredInference {
     pub policy_version: u32,
     pub contributor: String,
     pub depends_on: Vec<String>,
+    /// 📜️ The inference's own published payload contract, straight off the committed descriptor —
+    /// what a client must SEND and what it gets back. `inference_list` and `capabilities_describe`
+    /// carry it, so "what do I put in `payload`?" is answerable without reading plugin source.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub payload: Option<semio_framework::InferencePayloadContract>,
 }
 
 impl DeclaredInference {
@@ -86,6 +92,7 @@ impl From<&semio_framework::ContributedInferenceMetadata> for DeclaredInference 
             policy_version: metadata.policy_version,
             contributor: metadata.contributor.clone(),
             depends_on: metadata.depends_on.clone(),
+            payload: metadata.payload.clone(),
         }
     }
 }
@@ -97,6 +104,56 @@ fn declared_inferences_from_descriptor(descriptor: &semio_framework::PackageDesc
     descriptor.contributions.inference_services.iter().chain(descriptor.contributions.artifact_contributions.iter().flat_map(|contribution| contribution.inferences.iter())).map(DeclaredInference::from).collect()
 }
 
+/// 🗂️ Every artifact kind the packages in `descriptors` OWN — each app's own dialect kind, plus
+/// every plugin-level `artifact_kinds` row (a library package with zero apps declares its kinds
+/// there and nowhere else). This is the set an extension's contribution has to land on to be
+/// reachable from this workspace at all.
+fn owned_artifact_kinds(descriptors: &[semio_framework::PackageDescriptor]) -> std::collections::BTreeSet<String> {
+    descriptors.iter().flat_map(|descriptor| descriptor.manifest.apps.iter().map(|app| app.dialect.artifact_kind.clone()).chain(descriptor.manifest.artifact_kinds.iter().map(|kind| kind.id.clone()))).collect()
+}
+
+/// 🧩️ The installed packages that CONTRIBUTE an inference onto an artifact kind `primary` already
+/// owns, and that `primary` does not itself carry.
+///
+/// 🐛️ A contribution-only package declares no app, no command and no owner-authored inference
+/// service, so `catalog::compile` — which walks apps, commands, modes and
+/// `contributions.{inference,mutation,io,composer}_services`, never
+/// `contributions.artifact_contributions` — emits no catalog entry for it at all. Folder-mode
+/// `HeadlessWorkspace::discovery_descriptors` derives its descriptor set from exactly those catalog
+/// entries (`catalog_plugin_ids`), so an extension's inference could never appear in `inference_list`
+/// — `cad-extension-aec-building`'s `s.cad-extension-aec-building.building-structure-summary` on
+/// `s.cad.cad` is real, committed, and was invisible (`📓️g19-ai-user-experience-audit.md` gap 3,
+/// measured by CE1 §3b: the roster was `gis ×1 + wfc ×5`).
+///
+/// 🎯️ The membership rule is the reachability one, not "every installed package": a contributed
+/// inference is listed exactly when the artifact kind it contributes onto is owned by a package this
+/// workspace already reaches. An extension whose host plugin is absent contributes to nothing here
+/// and stays out, so the roster never advertises a service no artifact in this workspace can carry.
+fn contributed_inference_descriptors(primary: &[semio_framework::PackageDescriptor], installed: Vec<semio_framework::PackageDescriptor>) -> Vec<semio_framework::PackageDescriptor> {
+    let owned = owned_artifact_kinds(primary);
+    let present: std::collections::BTreeSet<&str> = primary.iter().map(|descriptor| descriptor.manifest.plugin_id.as_str()).collect();
+    let mut extra: Vec<semio_framework::PackageDescriptor> = installed
+        .into_iter()
+        .filter(|descriptor| {
+            !present.contains(descriptor.manifest.plugin_id.as_str()) && descriptor.contributions.artifact_contributions.iter().any(|contribution| !contribution.inferences.is_empty() && owned.contains(&contribution.artifact_kind))
+        })
+        .collect();
+    extra.sort_by(|left, right| left.manifest.plugin_id.cmp(&right.manifest.plugin_id));
+    extra
+}
+
+/// 🧩️ Folder mode's installed package set, for [`contributed_inference_descriptors`] — the same
+/// `registry::discover_descriptors` scan `build_catalog` already runs, over the SAME generated
+/// registry, which lists extension packages alongside plugin ones. A hub workspace never reaches
+/// this: its `discovery_descriptors` is the authenticated catalog's whole selection set, extension
+/// packages included, so the hub arm is already complete and must never consult a local registry.
+fn installed_descriptors_for_contributions(workspace: &HeadlessWorkspace) -> Result<Vec<semio_framework::PackageDescriptor>, GatewayError> {
+    match workspace.origin() {
+        crate::workspace::WorkspaceOrigin::Hub { .. } => Ok(Vec::new()),
+        crate::workspace::WorkspaceOrigin::Folder { .. } => crate::registry::discover_descriptors(&crate::find_repo_root()?),
+    }
+}
+
 /// 💡️ Real, static, plugin-agnostic discovery: the UNION of every registered plugin's own declared
 /// inference roster (`workspace.catalog_plugin_ids()` — no plugin id is hardcoded here, no
 /// single-plugin assumption; ticket 26/08/29/AI-MCP-END-TO-END packet W8, `📓️w8-capability-routing.md`
@@ -105,13 +162,18 @@ fn declared_inferences_from_descriptor(descriptor: &semio_framework::PackageDesc
 /// is ambiguous" defect this whole ticket fixes — the moment a catalog named more than one). Zero
 /// registered plugins is still the same typed, retryable `PLUGIN_UNAVAILABLE`; any OTHER plugin's
 /// registry/descriptor lookup failing aborts the whole roster rather than silently dropping it.
+///
+/// 🧩️ …plus every extension-contributed service reachable from that set — see
+/// [`contributed_inference_descriptors`] for why a contribution-only package is structurally absent
+/// from the catalog the primary set is derived from.
 pub fn declared_inferences_for_workspace(workspace: &HeadlessWorkspace) -> Result<Vec<DeclaredInference>, GatewayError> {
     let descriptors = workspace.discovery_descriptors()?;
     if descriptors.is_empty() {
         return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "no plugin-owned capability is registered in this workspace's catalog — nothing to read a declared inference roster from").retryable());
     }
+    let contributed = contributed_inference_descriptors(&descriptors, installed_descriptors_for_contributions(workspace)?);
     let mut roster = Vec::new();
-    for descriptor in &descriptors {
+    for descriptor in descriptors.iter().chain(contributed.iter()) {
         roster.extend(declared_inferences_from_descriptor(descriptor));
     }
     Ok(roster)
@@ -177,9 +239,28 @@ pub fn lookup_inference(declared: &[DeclaredInference], inference_schema: &str) 
 fn execution_not_wired_error(item: &DeclaredInference) -> GatewayError {
     GatewayError::new(
         GatewayErrorCode::PluginUnavailable,
-        format!("`{}/{}` is declared and executable, but a bare read carries no canonical request payload to run it against — call `inference_run` with `payload` instead", item.artifact_kind, item.inference_schema),
+        match item.payload.as_ref().and_then(|contract| contract.artifact_binding.as_ref()) {
+            // 🔗️ An artifact-bound inference HAS a request body for this artifact — the gateway can
+            // build it — but building it means running the guest, which a READ must not do on its
+            // own budget. So the refusal is now an instruction with everything in it.
+            Some(binding) => format!(
+                "`{}/{}` is declared, executable and artifact-bound: run it with `inference_run {{ artifactKind, inferenceSchema, artifactId }}` — this gateway binds the artifact's document into `payload.{}` for you. A READ does not spend guest time on its own",
+                item.artifact_kind, item.inference_schema, binding.field
+            ),
+            None => format!("`{}/{}` is declared and executable, but a bare read carries no canonical request payload to run it against — call `inference_run` with `payload` instead", item.artifact_kind, item.inference_schema),
+        },
     )
-    .with_details(serde_json::json!({ "artifactKind": item.artifact_kind, "inferenceSchema": item.inference_schema, "owner": item.owner, "runWith": "inference_run", "pluginId": item.route_plugin_id() }))
+    .with_details(serde_json::json!({
+        "artifactKind": item.artifact_kind,
+        "inferenceSchema": item.inference_schema,
+        "owner": item.owner,
+        "runWith": "inference_run",
+        "pluginId": item.route_plugin_id(),
+        // 📜️ The published contract travels WITH the refusal, so a client that asked for a value
+        // and got a gap learns in the same round trip what to call and what to send — instead of
+        // having to find `inference_list` and correlate the row itself.
+        "payload": item.payload,
+    }))
     .retryable()
 }
 
@@ -1553,6 +1634,100 @@ fn inference_run_result_value(payload: &[u8]) -> Option<serde_json::Value> {
     std::str::from_utf8(payload).ok().and_then(|text| serde_json::from_str(text).ok())
 }
 
+/// 📜️ The published contract check, BEFORE a single guest is touched. Three named refusals, each
+/// carrying the exact field a client has to fix:
+///
+/// 1. an artifact-bound inference with neither `artifactId` nor a caller-authored payload field —
+///    the case that used to spend a whole component compile and 240 s of guest time before the
+///    guest answered `missing field 'snapshot'` (`📓️pz2-…md` §5.2, `📓️ce3-…md` §3.3);
+/// 2. a caller payload missing a field the contract's own `input_schema` declares `required`;
+/// 3. an inference that publishes NO contract at all AND was called with no payload — nothing in
+///    the tree can tell the caller what to send, so saying so beats dispatching `{}`.
+///
+/// 🧾️ `input_schema` is the plugin's own JSON Schema TEXT. Only its top-level `required` list is
+/// enforced here: that is what makes the difference between "answers in 200 ms naming the field"
+/// and "hangs" — a full JSON Schema evaluator belongs to the guest that owns the schema.
+fn validate_inference_request(item: &DeclaredInference, payload: Option<&serde_json::Value>, artifact_id: Option<&str>) -> Result<(), GatewayError> {
+    let Some(contract) = item.payload.as_ref() else {
+        if payload.is_none() {
+            return Err(inference_field_invalid(
+                "payload",
+                format!("`{}/{}` publishes no payload contract, so this gateway cannot build its request body — send `payload` yourself, or have `{}` declare one on its inference metadata and be re-described", item.artifact_kind, item.inference_schema, item.route_plugin_id()),
+            ));
+        }
+        return Ok(());
+    };
+    let binding = contract.artifact_binding.as_ref();
+    if let Some(body) = payload.filter(|value| value.as_object().is_none_or(|object| !object.is_empty())) {
+        let Some(object) = body.as_object() else {
+            return Err(inference_field_invalid("payload", format!("`{}` takes a JSON object body, per `{}`", item.inference_schema, contract.payload_schema_id)));
+        };
+        for field in contract_required_fields(&contract.input_schema) {
+            if object.contains_key(&field) {
+                continue;
+            }
+            if binding.is_some_and(|binding| binding.field == field) && artifact_id.is_some() {
+                continue;
+            }
+            return Err(inference_field_invalid(&field, format!("`{}` requires `payload.{}` (contract `{}`)", item.inference_schema, field, contract.payload_schema_id)));
+        }
+        return Ok(());
+    }
+    if let Some(binding) = binding {
+        if binding.required && artifact_id.is_none() {
+            return Err(inference_field_invalid(
+                "artifactId",
+                format!("`{}` runs ON an artifact: name it with `artifactId` and this gateway binds its document into `payload.{}` for you (contract `{}`)", item.inference_schema, binding.field, contract.payload_schema_id),
+            ));
+        }
+        return Ok(());
+    }
+    for field in contract_required_fields(&contract.input_schema) {
+        return Err(inference_field_invalid(&field, format!("`{}` requires `payload.{}` (contract `{}`)", item.inference_schema, field, contract.payload_schema_id)));
+    }
+    Ok(())
+}
+
+/// 🧾️ The top-level `required` names of a JSON Schema document carried as TEXT. A schema this
+/// gateway cannot parse declares nothing here rather than refusing every call — the plugin's own
+/// guest is still the authority on its body.
+fn contract_required_fields(input_schema: &str) -> Vec<String> {
+    serde_json::from_str::<serde_json::Value>(input_schema)
+        .ok()
+        .and_then(|schema| schema.get("required").and_then(serde_json::Value::as_array).cloned())
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|value| value.as_str().map(str::to_string))
+        .collect()
+}
+
+/// 🏷️ The field a refusal already named, so folding the job identity onto its details never loses
+/// it. `details` is a plain value here, not a map the two writers share, so the name is read back
+/// rather than threaded through every construction site.
+fn inference_error_field(error: &GatewayError) -> String {
+    error.details.get("field").and_then(serde_json::Value::as_str).unwrap_or("artifactId").to_string()
+}
+
+/// 🚧️ `INPUT_INVALID` that NAMES the field — the difference between a client that can retry and one
+/// that can only guess. `details.field` is machine-readable on purpose.
+fn inference_field_invalid(field: &str, message: impl Into<String>) -> GatewayError {
+    GatewayError::new(GatewayErrorCode::InputInvalid, message).with_details(serde_json::json!({ "field": field }))
+}
+
+/// 🔗️ The named artifact's canonical pair, for an inference whose contract binds one. `None` when
+/// no artifact was named or the contract declares no binding; a NAMED artifact this workspace
+/// cannot read is `NOT_FOUND`, never a silent empty document.
+fn resolve_inference_artifact_document(workspace: &Arc<HeadlessWorkspace>, item: &DeclaredInference, artifact_id: Option<&str>) -> Result<Option<crate::actions::ArtifactDocumentBinding>, GatewayError> {
+    let Some(artifact_id) = artifact_id else { return Ok(None) };
+    if item.payload.as_ref().and_then(|contract| contract.artifact_binding.as_ref()).is_none() {
+        return Err(inference_field_invalid("artifactId", format!("`{}` publishes no artifact binding, so naming `artifactId` cannot change what it computes — send `payload` instead", item.inference_schema)));
+    }
+    match workspace.read_artifact_bytes(artifact_id)? {
+        Some((pack, spr)) => Ok(Some(crate::actions::ArtifactDocumentBinding { pack, spr })),
+        None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no readable document for artifact `{artifact_id}` — open or create it before running an inference on it"))),
+    }
+}
+
 /// 💡️ Runs one declared inference for real. Discovery, routing and execution are all plugin-agnostic
 /// — no plugin id is hardcoded, and a kind whose rows come from several contributors is
 /// disambiguated by the caller's optional `pluginId` rather than by a silent first-match.
@@ -1590,7 +1765,45 @@ fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_js
         }
     };
 
+    let requested_artifact = arguments.get("artifactId").and_then(serde_json::Value::as_str);
+    let caller_payload = arguments.get("payload").filter(|value| !value.is_null());
     let cancellation_id = arguments.get("cancellationId").and_then(serde_json::Value::as_str).map(str::to_string).unwrap_or_else(mint_inference_request_id);
+
+    // 🎫️ The job is minted BEFORE the contract is checked, and that ordering is load-bearing:
+    // `JobRegistry::begin` binds the id to this call's `_meta.progressToken`, so every step from
+    // here on — including a REFUSAL — is pushed to the client as `notifications/progress` and is
+    // readable afterwards with `job_get`/`job_cancel`. Validating first made a refused inference
+    // mint no job at all, which is exactly when a client most needs those two tools to work.
+    let jobs = crate::ui::job_registry();
+    let job_id = jobs.begin("inference.run");
+    let base = serde_json::json!({
+        "jobId": job_id,
+        "artifactKind": item.artifact_kind,
+        "inferenceSchema": item.inference_schema,
+        "pluginId": item.route_plugin_id(),
+        "cancellationId": cancellation_id,
+        "artifactId": requested_artifact.unwrap_or_default(),
+    });
+    jobs.report_progress(&job_id, 0.05, Some(format!("checking `{}` against its published payload contract", item.inference_schema)));
+    if let Err(error) = validate_inference_request(&item, caller_payload, requested_artifact) {
+        let field = inference_error_field(&error);
+        let error = error.with_details(merge_inference_run_fields(base.clone(), serde_json::json!({ "field": field })));
+        jobs.fail(&job_id, error.clone());
+        return CallToolResult::tool_error(&error);
+    }
+    jobs.report_progress(&job_id, 0.15, Some(match requested_artifact {
+        Some(artifact_id) => format!("binding artifact `{artifact_id}` into the request body"),
+        None => "no artifact binding declared — the caller's own body travels verbatim".to_string(),
+    }));
+    let artifact_document = match resolve_inference_artifact_document(workspace, &item, requested_artifact) {
+        Ok(document) => document,
+        Err(error) => {
+            let error = error.with_details(merge_inference_run_fields(base.clone(), serde_json::json!({ "field": "artifactId" })));
+            jobs.fail(&job_id, error.clone());
+            return CallToolResult::tool_error(&error);
+        }
+    };
+
     let command = crate::actions::InferCommand {
         plugin_id: item.route_plugin_id().to_string(),
         artifact_kind: item.artifact_kind.clone(),
@@ -1600,18 +1813,10 @@ fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_js
         cancellation_id: cancellation_id.clone(),
         work_units: arguments.get("workUnits").and_then(serde_json::Value::as_u64).unwrap_or(INFERENCE_DEFAULT_WORK_UNITS),
         canonical_payload: inference_run_payload_bytes(&arguments),
+        artifact_id: requested_artifact.unwrap_or_default().to_string(),
+        artifact_document,
     };
-
-    let jobs = crate::ui::job_registry();
-    let job_id = jobs.begin("inference.run");
-    jobs.report_progress(&job_id, 0.05, Some(format!("routing `{}/{}` to `{}`", command.artifact_kind, command.inference_schema, command.plugin_id)));
-    let base = serde_json::json!({
-        "jobId": job_id,
-        "artifactKind": item.artifact_kind,
-        "inferenceSchema": item.inference_schema,
-        "pluginId": item.route_plugin_id(),
-        "cancellationId": cancellation_id,
-    });
+    jobs.report_progress(&job_id, 0.25, Some(format!("routing `{}/{}` to `{}`", command.artifact_kind, command.inference_schema, command.plugin_id)));
     // 🛑️ Cooperative cancellation, at the two points this handler genuinely owns: before the guest
     // is ever dispatched, and again once it returns. The SAME `cancellationId` also travels on the
     // wire, where the guest's own `semio.infer` loop polls it — so a cancel issued mid-run is

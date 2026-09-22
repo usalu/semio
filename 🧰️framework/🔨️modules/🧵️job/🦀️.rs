@@ -433,6 +433,10 @@ pub const JOB_PAYLOAD_OPERATION_PAGES: usize = 256;
 pub const JOB_PAYLOAD_OPERATION_BYTES: usize = JOB_PAYLOAD_PAGE_BYTES * JOB_PAYLOAD_OPERATION_PAGES;
 pub const JOB_PAYLOAD_PROCESS_BYTES: usize = 64 * 1024 * 1024;
 
+/// 🏛️ The live sum of every operation ledger's retained payload pages, capped by
+/// [`JOB_PAYLOAD_PROCESS_BYTES`]. It is a CEILING over the whole process — every concurrent
+/// operation moves it — so it stays private and no owner samples its absolute value; an owner
+/// reads its own share through `JobPayloadOperationLedger::process_share_bytes`.
 static JOB_PAYLOAD_PROCESS_OWNED_BYTES: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -572,6 +576,18 @@ impl JobPayloadOperationLedger {
 
     fn terminal_is_empty(&self) -> bool {
         self.pages.load(Ordering::Acquire) == 0 && self.bytes.load(Ordering::Acquire) == 0 && self.stream_pages.iter().all(|count| count.load(Ordering::Acquire) == 0) && self.stream_bytes.iter().all(|count| count.load(Ordering::Acquire) == 0)
+    }
+
+    /// 🧾️ This ledger's own share of [`JOB_PAYLOAD_PROCESS_BYTES`]. [`Self::reserve`] and
+    /// [`Self::release`] are the ONLY mutators of `JOB_PAYLOAD_PROCESS_OWNED_BYTES`, and each moves
+    /// the process counter and this ledger's `bytes` by the same page in the same call, so the
+    /// process counter is exactly the sum of every live ledger's share and a ledger reading zero
+    /// here has returned every page it ever took from the process budget. This — not the process
+    /// counter's absolute value — is the observable an owner may assert: the absolute value is
+    /// moved by every other operation alive in the process, so sampling it before and after a
+    /// close ladder answers about the whole process rather than about this owner.
+    fn process_share_bytes(&self) -> usize {
+        self.bytes.load(Ordering::Acquire)
     }
 }
 

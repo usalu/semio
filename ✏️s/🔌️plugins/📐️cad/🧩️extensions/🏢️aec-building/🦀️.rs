@@ -145,6 +145,7 @@ fn building_structure_summary_service() -> ArtifactInferenceService {
             inference_schema_version: 1,
             algorithm_version: 1,
             policy_version: 1,
+            payload: None,
         },
         infer_building_structure_summary,
     )

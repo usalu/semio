@@ -145,6 +145,7 @@ fn routed_inference_is_frozen_into_the_plugin_roster_without_a_sync_service() {
         inference_schema_version: 1,
         algorithm_version: 1,
         policy_version: 1,
+        payload: None,
     };
     let plugin = Plugin::<NoPluginApp>::builder(metadata.owner)
         .label("Builder Test Routed Inference")

@@ -147,6 +147,103 @@ async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256
     println!("[DEBUG] genesis: neutral frontiers=8 private materializer=9 independent Node SHA256=5 factory once=1 no domain edit=1; no durable publication");
 }
 
+/// 🧗️ A control whose clock the TEST advances, so a creation that runs for minutes can be examined
+/// without waiting minutes. `GenesisControl` above pins one instant; this one moves.
+struct StallBoundControl {
+    now: std::sync::Arc<std::sync::atomic::AtomicU64>,
+}
+
+impl super::super::AuthorityOperationControl for StallBoundControl {
+    fn now_ms(&self) -> u64 {
+        self.now.load(std::sync::atomic::Ordering::Relaxed)
+    }
+    fn is_cancelled(&self) -> bool {
+        false
+    }
+    fn report(&self, _progress: AuthorityProgress) {}
+}
+
+/// 🌱️ A genesis codec that spends `steps` × `step_ms` of the control's clock, reaching a checkpoint
+/// between steps only when `checkpoints` is set — the exact difference between an interpreter that
+/// is stepping and one that is wedged.
+struct SlowGenesisCodec {
+    identity: TrustedArtifactIdentity,
+    pair: ArtifactPair,
+    clock: std::sync::Arc<std::sync::atomic::AtomicU64>,
+    steps: u64,
+    step_ms: u64,
+    checkpoints: bool,
+}
+
+impl TrustedArtifactCodec for SlowGenesisCodec {
+    fn identity(&self) -> &TrustedArtifactIdentity {
+        &self.identity
+    }
+    async fn validate_pair(&self, _pair: &ArtifactPair, _stage: ArtifactValidationStage, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+        context.checkpoint()
+    }
+    async fn apply_operation(&self, _pair: ArtifactPair, _operation: &super::super::AcceptedArtifactOperation, _context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        panic!("genesis must not apply an edit")
+    }
+}
+
+impl TrustedArtifactGenesisCodec for SlowGenesisCodec {
+    async fn initial_pair(&self, _document_id: &str, _dialect: &ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        for _ in 0..self.steps {
+            self.clock.fetch_add(self.step_ms, std::sync::atomic::Ordering::Relaxed);
+            if self.checkpoints {
+                context.checkpoint()?;
+            }
+        }
+        Ok(self.pair.clone())
+    }
+}
+
+impl TrustedArtifactCatalog for SlowGenesisCodec {
+    type Codec = Self;
+    async fn resolve<'a>(&'a self, _required: &TrustedArtifactIdentity) -> Result<&'a Self::Codec, AuthorityError> {
+        Ok(self)
+    }
+}
+
+/// 🧗️ Ticket 26/09/18 slice HC1: creation is bounded by the guest STALLING, never by the calendar.
+///
+/// 🪦️ Every creation used to run under `OperationContext::new(intent.deadline_ms, …)`, an absolute
+/// [`ARTIFACT_CREATION_DEADLINE_MS`] armed at accept time, and the biggest staged component could
+/// not be created at all: hub 7671 failed every `POST …/artifact-creations` in 32.0 s at machine
+/// loads 120, 33 and 21 alike while the hub process burned 130–145 % CPU throughout. The first row
+/// below is that creation — it spends four times the old deadline and is admitted, because it never
+/// stops reaching checkpoints. The second is a genuinely wedged one and is still refused, by
+/// [`AuthorityError::Stalled`] rather than by a deadline it never promised anyone.
+#[tokio::test]
+async fn creation_genesis_is_bounded_by_stalling_and_not_by_the_calendar() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️artifact-genesis-v1/🔣️.json")).unwrap();
+    let descriptor: DocumentDescriptor = directory::os_pack::json::from_json_str(&fixture["expected"]["descriptor"].to_string()).unwrap();
+    let expected: ArtifactCheckpoint = directory::os_pack::json::from_json_str(&fixture["expected"]["checkpoint"].to_string()).unwrap();
+    let dialect: ArtifactDialect = directory::os_pack::json::from_json_str(&fixture["dialect"].to_string()).unwrap();
+    for (label, checkpoints, admitted) in [("an interpreter that keeps stepping", true, true), ("an interpreter that is wedged", false, false)] {
+        let identity = TrustedArtifactIdentity::from_descriptor(&descriptor);
+        let clock = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(1_000));
+        let control = StallBoundControl { now: std::sync::Arc::clone(&clock) };
+        let codec = SlowGenesisCodec {
+            identity: identity.clone(),
+            pair: ArtifactPair { pack: serde_json::from_value(fixture["initialPair"]["pack"].clone()).unwrap(), spr: serde_json::from_value(fixture["initialPair"]["spr"].clone()).unwrap() },
+            clock: clock.clone(),
+            steps: 4 * ARTIFACT_CREATION_DEADLINE_MS / (ARTIFACT_CREATION_STALL_BOUND_MS / 2),
+            step_ms: ARTIFACT_CREATION_STALL_BOUND_MS / 2,
+            checkpoints,
+        };
+        let request = ArtifactGenesisRequest { scope: expected.scope.clone(), kind_id: identity.artifact_kind.clone() };
+        let context = OperationContext::stall_bounded(ARTIFACT_CREATION_STALL_BOUND_MS, super::super::AuthorityLimits::maximum(), &control).expect("a non-zero stall span is a bound");
+        let result = materialize_selected_genesis(&codec, request, identity, dialect.clone(), &context).await;
+        assert_eq!(result.is_ok(), admitted, "{label}: spent {} ms against a {ARTIFACT_CREATION_DEADLINE_MS} ms deadline and a {ARTIFACT_CREATION_STALL_BOUND_MS} ms stall bound", clock.load(std::sync::atomic::Ordering::Relaxed) - 1_000);
+        assert!(clock.load(std::sync::atomic::Ordering::Relaxed) - 1_000 > ARTIFACT_CREATION_DEADLINE_MS, "{label}: the case is vacuous unless the work outlives the old absolute deadline");
+        if let Err(error) = result {
+            assert_eq!(error, AuthorityError::Stalled, "{label}: a wedged creation is refused for not advancing, never for taking long");
+        }
+    }
+}
+
 #[test]
 fn directory_document_index_is_ordered_idempotent_and_backend_descriptor_bound() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/📇️document-index-v1/🔣️.json")).unwrap();

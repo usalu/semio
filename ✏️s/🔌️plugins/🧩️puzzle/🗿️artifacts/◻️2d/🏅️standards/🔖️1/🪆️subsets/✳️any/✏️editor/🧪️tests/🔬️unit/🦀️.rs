@@ -75,10 +75,56 @@ pub(crate) mod context {
         ActionMeta { view_state: Some(window_view(kind, id)), ..meta("local") }
     }
     
+    /// 📄️ Drains everything one settle turn can have left behind — presented pages, effects, events,
+    /// completions (and the HISTORY PATCH they carry), the UI scope and local-interaction replies.
+    ///
+    /// 🐛️ Called both inside the loop AND once more before the loop returns. `has_pending_typed_operations`
+    /// counts the outboxes and the mounted operations, but an operation that RETIRED during the previous
+    /// turn's `advance_typed_operation_publication` leaves its terminal completion queued while the
+    /// predicate already reads false — so the exit branch returned a result whose `history_patch` was
+    /// still sitting in the outbox, and every `committed_edits(&result)` read 0 for an edit that really
+    /// landed in the document.
+    fn drain_settled(app: &mut Puzzle2dApp, result: &mut InvocationResult) -> Result<(), Fault> {
+        while let Some(page) = app.take_typed_operation_result_page(1) {
+            if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
+                return Err(Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
+            }
+            app.acknowledge_typed_operation_result(page.token)?;
+        }
+        result.requested_effects.extend(app.take_typed_operation_effect());
+        result.events.extend(app.take_typed_operation_event());
+        while let Some(completion) = block_on(app.take_typed_operation_completion())? {
+            result.ui_scope = completion.ui_scope;
+            if let Some(patch) = completion.history_patch {
+                result.history_patch = Some(match result.history_patch.take() {
+                    Some(mut previous) => {
+                        previous.upserts.extend(patch.upserts);
+                        previous.cursor = patch.cursor;
+                        previous.can_undo = patch.can_undo;
+                        previous.can_redo = patch.can_redo;
+                        previous
+                    }
+                    None => patch,
+                });
+            }
+        }
+        if let Some(scope) = app.take_typed_operation_ui_scope() {
+            result.ui_scope = scope;
+        }
+        while let Some(reply) = app.take_local_interaction_query_reply() {
+            if let protocol::LocalInteractionQueryReply::Page { page } = reply {
+                let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
+                app.acknowledge_local_interaction_query(&token);
+            }
+        }
+        Ok(())
+    }
+
     fn settle(app: &mut Puzzle2dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
         let mut result = result?;
         for _ in 0..1_048_576 {
             if !app.has_pending_typed_operations() {
+                drain_settled(app, &mut result)?;
                 return Ok(result);
             }
             PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
@@ -89,38 +135,7 @@ pub(crate) mod context {
             // THE HISTORY PATCH) queued can be the very turn this loop exits on — and the caller then reads
             // a result with no committed edits at all. The framework's own `settle_registered_typed_operation`
             // drains both in inner loops for exactly this reason.
-            while let Some(page) = app.take_typed_operation_result_page(1) {
-                if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
-                    return Err(Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
-                }
-                app.acknowledge_typed_operation_result(page.token)?;
-            }
-            result.requested_effects.extend(app.take_typed_operation_effect());
-            result.events.extend(app.take_typed_operation_event());
-            while let Some(completion) = block_on(app.take_typed_operation_completion())? {
-                result.ui_scope = completion.ui_scope;
-                if let Some(patch) = completion.history_patch {
-                    result.history_patch = Some(match result.history_patch.take() {
-                        Some(mut previous) => {
-                            previous.upserts.extend(patch.upserts);
-                            previous.cursor = patch.cursor;
-                            previous.can_undo = patch.can_undo;
-                            previous.can_redo = patch.can_redo;
-                            previous
-                        }
-                        None => patch,
-                    });
-                }
-            }
-            if let Some(scope) = app.take_typed_operation_ui_scope() {
-                result.ui_scope = scope;
-            }
-            while let Some(reply) = app.take_local_interaction_query_reply() {
-                if let protocol::LocalInteractionQueryReply::Page { page } = reply {
-                    let token = protocol::LocalInteractionQueryToken { request_id: page.request_id, query_generation: page.query_generation, identity: page.identity.clone(), ordinal: page.ordinal };
-                    app.acknowledge_local_interaction_query(&token);
-                }
-            }
+            drain_settled(app, &mut result)?;
         }
         Err(Fault::from("puzzle2d test operation did not settle"))
     }
@@ -308,7 +323,11 @@ fn cohort_hostile_static_law_rejects_one_grant_complex_routes_and_missing_cursor
         "Puzzle2dExampleStage::Nodes",
         "Puzzle2dExampleStage::Edges",
     ] {
-        assert!(!cohort_routes_are_cursorized(&source.replacen(marker, "cursor-removed", 1)), "missing retained cursor was falsely accepted: {marker}");
+        // 🧨️ EVERY occurrence, not the first: a stage marker like `Puzzle2dForceStage::Nodes` appears
+        // more than once in the source (its declaration and each arm that advances to it), so
+        // `replacen(.., 1)` left one behind and `cohort_routes_are_cursorized` still found it — the
+        // negative fixture could not bite and the law proved nothing about that cursor.
+        assert!(!cohort_routes_are_cursorized(&source.replace(marker, "cursor-removed")), "missing retained cursor was falsely accepted: {marker}");
     }
 }
 
@@ -1536,3 +1555,30 @@ async fn the_board_scene_carries_the_area_brush_extent_and_the_regions_ride_the_
     close_app(&mut app);
 }
 //#endregion 🎯️BoardRegionEvents
+
+//#region 🔖️Pz2ShippedKindCatalog
+/// 🗂️ The authored [`PUZZLE2D_SHIPPED_NODE_KINDS`] IS the two shipped examples' own node-kind rows,
+/// in their own order — the law that lets the `kind` select be a `const` instead of a parse of
+/// 96 005 B of DSL on the `describe()` path (slice PZ2, 2026-09-22). It pays that parse HERE, once,
+/// and fails the moment an example's kinds change without the authored list following.
+#[semio_framework_async_macros::async_test]
+async fn shipped_node_kinds_are_the_two_examples_own_catalog_rows() {
+    let mut derived: Vec<(String, String)> = Vec::new();
+    for json in [concrete_forest_example_json(), nakagin_example_json()] {
+        let Ok(fixture) = serde_json::from_str::<Value>(&json) else { continue };
+        for row in puzzle2d_node_kind_rows(&fixture) {
+            if derived.len() >= PUZZLE2D_NODE_KIND_OPTIONS_MAX {
+                break;
+            }
+            let Some(id) = row.get("id").and_then(Value::as_str).filter(|id| !id.is_empty()) else { continue };
+            if derived.iter().any(|(existing, _)| existing == id) {
+                continue;
+            }
+            let label = row.get("name").and_then(Value::as_str).filter(|name| !name.is_empty()).unwrap_or(id);
+            derived.push((id.to_string(), label.to_string()));
+        }
+    }
+    let authored: Vec<(String, String)> = PUZZLE2D_SHIPPED_NODE_KINDS.iter().map(|(id, label)| ((*id).to_string(), (*label).to_string())).collect();
+    assert_eq!(authored, derived, "PUZZLE2D_SHIPPED_NODE_KINDS drifted from the shipped documents — re-author it from `concrete-forest` then `nakagin-capsule-tower`");
+}
+//#endregion 🔖️Pz2ShippedKindCatalog

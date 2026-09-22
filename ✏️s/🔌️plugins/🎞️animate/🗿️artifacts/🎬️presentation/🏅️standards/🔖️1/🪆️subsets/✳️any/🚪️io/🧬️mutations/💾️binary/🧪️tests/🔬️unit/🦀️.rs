@@ -293,7 +293,10 @@ async fn retained_presentation_envelope_stale_generation_cancels_and_unpublished
 
 #[semio_framework_async_macros::async_test]
 async fn presentation_deck_materializes() {
-    let mut store = PresentationStore::new(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", empty_presentation_snapshot(), None)).await.expect("valid artifact store fixture");
+    // 🔐️ Through the owner-installing constructor: a bare `new` installs no catalog and
+    // `reserve_edit_history_slot` then refuses every `Apply`
+    // (`edit history insertion requires its exact mutation retirement factory`).
+    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", empty_presentation_snapshot(), None)).await.expect("valid artifact store fixture");
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
@@ -307,7 +310,10 @@ async fn presentation_deck_materializes() {
 //#region 🔖️DocumentTextTests
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_with_operation_applied() {
-    let mut store = PresentationStore::new(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::default_presentation_snapshot(), None)).await.expect("valid artifact store fixture");
+    // 🔐️ Through the owner-installing constructor: a bare `new` installs no catalog and
+    // `reserve_edit_history_slot` then refuses every `Apply`
+    // (`edit history insertion requires its exact mutation retirement factory`).
+    let mut store = new_presentation_store(create_document_envelope(PRESENTATION_DOCUMENT_SCHEMA, "animate-presentation", crate::default_presentation_snapshot(), None)).await.expect("valid artifact store fixture");
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![PresentationMutation::CreateTile(create_tile::CreateTile { index: 0, tile: crate::FigureTileDraft { id: "t1".into(), name: "A".into(), crop: crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
@@ -319,3 +325,34 @@ async fn document_text_round_trip_with_operation_applied() {
     test_support::assert_document_pack_round_trip(&store).await;
 }
 //#endregion 🔖️DocumentTextTests
+
+/// 🧯️ LAW: a Drop witness must never turn a REPORTED failure into a process abort.
+///
+/// Every owner in this file asserts in `Drop` that the bounded close protocol ran. That witness
+/// exists to catch a leak on a HEALTHY path. If it also fires while the thread is already unwinding
+/// from a test's own failed assertion, the second panic is a `panic in a destructor during cleanup`
+/// — a NON-unwinding abort that kills the whole test binary, so the first, real failure is never
+/// printed and every other test in the binary is lost with it. Guarding each witness with
+/// `std::thread::panicking()` first (the shape `store::ArtifactEnvelope::drop` already uses) is what
+/// keeps a red test red instead of fatal.
+///
+/// This law can only pass when the guard is there: without it the panic below aborts the process
+/// instead of being caught here.
+#[test]
+fn a_live_owner_dropped_during_a_panic_unwinds_instead_of_aborting() {
+    let pack = <PresentationSnapshot as store::ArtifactPack>::encode_pack(&empty_presentation_snapshot());
+    let hex = pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let operation = semio_framework_job::OperationId(9_101);
+    let generation = semio_framework_job::Generation(1);
+    let mut registry = PresentationEnvelopeMaterializeRegistry::new();
+    registry.try_submit(operation, generation, presentation_envelope_test_pages(&hex)).unwrap_or_else(|_| panic!("sealed fixed-page caller"));
+    assert!(!registry.terminal_is_empty(), "the fixture must hold a LIVE caller, or this law proves nothing");
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(Box::new(|_| {}));
+    let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
+        let _live = registry;
+        panic!("a test failure while a retained caller is still live");
+    }));
+    std::panic::set_hook(previous);
+    assert!(outcome.is_err(), "the fixture panic must reach this caller as an unwind");
+}

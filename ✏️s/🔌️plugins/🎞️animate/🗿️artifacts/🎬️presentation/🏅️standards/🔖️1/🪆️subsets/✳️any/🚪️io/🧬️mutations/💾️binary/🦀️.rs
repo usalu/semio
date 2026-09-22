@@ -49,7 +49,13 @@ impl store::ErasedSnapshotRetirement for PresentationFreshSnapshotRetirement {
 
 impl Drop for PresentationFreshSnapshotRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "Presentation fresh snapshot retirement reached Drop before its <=4096-byte admitted root was released");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.value.is_none()), "Presentation fresh snapshot retirement reached Drop before its <=4096-byte admitted root was released");
     }
 }
 
@@ -84,7 +90,13 @@ impl store::ErasedSnapshotRetirement for PresentationUnexpectedMutationRetiremen
 
 impl Drop for PresentationUnexpectedMutationRetirement {
     fn drop(&mut self) {
-        assert!(self.value.is_none(), "fresh Presentation mutation retirement fail-closed with an impossible populated-history owner");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.value.is_none()), "fresh Presentation mutation retirement fail-closed with an impossible populated-history owner");
     }
 }
 
@@ -229,7 +241,13 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<PresentationSnapshot> for Pre
 
 impl Drop for PresentationPackSnapshotAuthority {
     fn drop(&mut self) {
-        assert!(self.owners_terminal_empty(), "Presentation pack snapshot authority reached Drop before publication or bounded retirement");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.owners_terminal_empty()), "Presentation pack snapshot authority reached Drop before publication or bounded retirement");
     }
 }
 
@@ -351,7 +369,13 @@ struct PresentationProjectionCompletionState {
 
 impl Drop for PresentationProjectionCompletionState {
     fn drop(&mut self) {
-        assert!(self.value.is_none() && self.retirement.is_none(), "Presentation projection completion reached Drop before its exact typed result was consumed or retired");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.value.is_none() && self.retirement.is_none()), "Presentation projection completion reached Drop before its exact typed result was consumed or retired");
     }
 }
 
@@ -948,7 +972,13 @@ impl semio_framework_job::InteractiveJob for PresentationEnvelopeMaterializeJob 
 
 impl Drop for PresentationEnvelopeMaterializeJob {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Presentation envelope materialize job reached Drop before every decode/completed owner was terminal empty");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Presentation envelope materialize job reached Drop before every decode/completed owner was terminal empty");
     }
 }
 
@@ -1107,9 +1137,28 @@ impl PresentationEnvelopeMaterializeHandle {
             return PresentationEnvelopeMaterializeHandleStep::Progress;
         }
         match session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)) {
-            semio_framework_job::WorkerJobCloseStep::Blocked => PresentationEnvelopeMaterializeHandleStep::Pending,
+            // 🔁 See `reissue_session_close`: a blocked close step is the session telling us it is not
+            // in its CLOSE phase, and only `begin_close` can put it back there.
+            semio_framework_job::WorkerJobCloseStep::Blocked => match Self::reissue_session_close(session) {
+                semio_framework_job::WorkerJobCloseStep::Blocked => PresentationEnvelopeMaterializeHandleStep::Pending,
+                _ => PresentationEnvelopeMaterializeHandleStep::Progress,
+            },
             semio_framework_job::WorkerJobCloseStep::Pending { .. } | semio_framework_job::WorkerJobCloseStep::Complete => PresentationEnvelopeMaterializeHandleStep::Progress,
         }
+    }
+
+    /// 🔁 Re-requests the session's CLOSE phase. `WorkerJobSession::close_step` only advances a
+    /// session whose phase IS `SESSION_CLOSE`; against any other phase it answers `Blocked` and
+    /// changes nothing. `begin_close` is the only transition into that phase, and while the worker
+    /// holds the session it answers `Blocked` too — it records the request and wakes the worker, and
+    /// the worker then hands the authority back as TERMINAL/OUTCOME, NOT as CLOSE. So a caller that
+    /// issues `begin_close` exactly once and afterwards only calls `close_step` deadlocks the moment
+    /// that first call was blocked: every later step CAS-fails and the retained caller can never be
+    /// reclaimed (the fixture ceiling then trips and this handle's `Drop` assert aborts the process).
+    /// `begin_close` is idempotent — against `SESSION_CLOSE` it is a no-op — so re-issuing it on every
+    /// blocked step is both safe and the only way out.
+    fn reissue_session_close(session: &semio_framework_job::WorkerJobSession<PresentationEnvelopeMaterializeJob>) -> semio_framework_job::WorkerJobCloseStep {
+        session.begin_close()
     }
 
     /// 🪜️ Advances at most one retained worker submission or observation. A stale live
@@ -1282,9 +1331,17 @@ impl PresentationEnvelopeMaterializeHandle {
             }
             return Ok(match session.close_step(maximum_items, maximum_bytes) {
                 semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes },
+                // 🔁 Only `begin_close` moves a session into its CLOSE phase — see
+                // `reissue_session_close`. Without this re-issue a caller whose FIRST `begin_close`
+                // was blocked by the worker stayed `Blocked` for every later step and could never be
+                // reclaimed.
                 semio_framework_job::WorkerJobCloseStep::Blocked => {
                     let _ = pool;
-                    store::SnapshotRetirementStep::Blocked
+                    match Self::reissue_session_close(session) {
+                        semio_framework_job::WorkerJobCloseStep::Blocked => store::SnapshotRetirementStep::Blocked,
+                        semio_framework_job::WorkerJobCloseStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes },
+                        semio_framework_job::WorkerJobCloseStep::Complete => store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 },
+                    }
                 }
                 semio_framework_job::WorkerJobCloseStep::Complete => store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 },
             });
@@ -1308,7 +1365,13 @@ impl PresentationEnvelopeMaterializeHandle {
 
 impl Drop for PresentationEnvelopeMaterializeHandle {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Presentation envelope materialize handle reached Drop before worker, result, and fault owners were terminal empty");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Presentation envelope materialize handle reached Drop before worker, result, and fault owners were terminal empty");
     }
 }
 
@@ -1530,7 +1593,13 @@ impl Default for PresentationEnvelopeMaterializeRegistry {
 
 impl Drop for PresentationEnvelopeMaterializeRegistry {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Presentation envelope materialize registry reached Drop before every retained caller was closed and reclaimed");
+        // 🧯️ `std::thread::panicking()` FIRST, exactly like the framework's own
+        // `store::ArtifactEnvelope::drop`: a Drop witness exists to catch a leak on a HEALTHY path.
+        // Firing it while the thread is ALREADY unwinding turns a reported failure into
+        // `panic in a destructor during cleanup` — a non-unwinding abort that kills the whole test
+        // binary and hides the first, real failure (that is how one red test took this crate's
+        // other 300 with it).
+        assert!(std::thread::panicking() || (self.terminal_is_empty()), "Presentation envelope materialize registry reached Drop before every retained caller was closed and reclaimed");
     }
 }
 //#endregion 🧬️OwnedEnvelopeCatalog
@@ -1548,6 +1617,55 @@ pub fn decode_op(bytes: &[u8]) -> Result<PresentationMutation, protocol::Protoco
 //#region 🔖️Store
 pub type PresentationEnvelope = ArtifactEnvelope<PresentationSnapshot, PresentationMutation>;
 pub type PresentationStore = ArtifactStore<PresentationSnapshot, PresentationMutation>;
+
+/// 🔐️ Opens a Presentation store WITH its exact owner catalog installed. `ArtifactStore::new`
+/// installs no catalog, and `reserve_edit_history_slot` then refuses every `Apply`
+/// (`edit history insertion requires its exact mutation retirement factory`) — a bare
+/// `PresentationStore::new` can be READ but never mutated, undone or closed. The app installs the
+/// same catalog through `ArtifactEditor::build_document_store_owners`; every standalone store goes
+/// through here instead. Mirrors `🕸️dag`'s `new_dag_store`.
+pub async fn new_presentation_store(envelope: PresentationEnvelope) -> Result<OwnedPresentationStore, store::VcsError> {
+    let mut store = PresentationStore::new(envelope).await?;
+    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<PresentationSnapshot, PresentationMutation>());
+    Ok(OwnedPresentationStore(store))
+}
+
+/// 🔚 A standalone Presentation store that retires itself: `ArtifactStore::drop` panics
+/// `artifact store reached Drop without its exact terminal-empty shallow-shell witness` unless the
+/// store walked its bounded close loop first, so the guard runs that loop on drop (skipped while
+/// unwinding, where the original panic is the report worth keeping). Derefs to the bare store for
+/// every read and dispatch.
+pub struct OwnedPresentationStore(PresentationStore);
+
+impl OwnedPresentationStore {
+    /// 🔚 Walks the exact bounded owner close loop to the terminal-empty witness.
+    pub fn close(&mut self) {
+        while !self.0.close_owned_terminal_is_empty() {
+            self.0.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Presentation document store closes through its exact bounded owners");
+        }
+    }
+}
+
+impl std::ops::Deref for OwnedPresentationStore {
+    type Target = PresentationStore;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for OwnedPresentationStore {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Drop for OwnedPresentationStore {
+    fn drop(&mut self) {
+        if !std::thread::panicking() {
+            self.close();
+        }
+    }
+}
 //#endregion 🔖️Store
 
 //#region 🔖️VcsEnvelope

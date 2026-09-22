@@ -37,7 +37,13 @@ const baseUrl = argv[0] ?? "http://127.0.0.1:6071/";
 const census = argv.includes("--census");
 const tagIndex = argv.indexOf("--tag");
 const tag = tagIndex >= 0 ? argv[tagIndex + 1] : "adhoc";
-const wanted = argv.slice(1).filter((value, index) => !value.startsWith("--") && !(tagIndex >= 0 && index === tagIndex));
+const localeIndex = argv.indexOf("--locale");
+/** 🇩🇪️ The shell locale every row of this run is driven in. `en` leaves the shell as it boots; any
+ * other tag is seated through the SETTINGS surface's language control before the first spawn, which
+ * is the lane S10 measured as the only one a headless probe can drive (the palette's `os.setLocale`
+ * row is arg-bearing and its chooser renders nothing headlessly). */
+const locale = localeIndex >= 0 ? argv[localeIndex + 1] : "en";
+const wanted = argv.slice(1).filter((value, index) => !value.startsWith("--") && !(tagIndex >= 0 && index === tagIndex) && !(localeIndex >= 0 && index === localeIndex));
 // 🪧️ preamble rule 24: `new URL(x, import.meta.url).pathname` percent-encodes emoji segments and the
 // capture lands outside the ticket folder. `fileURLToPath` is the only spelling that writes here.
 const generated = fileURLToPath(new URL("./🗑️generated/", import.meta.url));
@@ -66,13 +72,13 @@ const log = (...parts) => console.log("[s6]", ...parts);
  * was wrong (ticket 26/09/18 S10). */
 const DEFAULT_VERBS = {
   animate: "addTile", architect: "setAdjacencyKind", block: "addHandleKind", cad: "addNode", dag: "addNode",
-  demonstrator: "changeSchema", draw: "addLayer", energy: "rename-zone", fem: "addNode", flow: "addWidget",
+  demonstrator: "changeSchema", draw: "addLayer", energy: "create-zone", fem: "addNode", flow: "addWidget",
   forms: "addStep", gis: "addFeature", imperative: "addStep", layout: "addPage", lowpoly: "addPrimitive",
   mathematical: "nodeGraphEdit", norm: "setSnapshot", note: "addBlock", playbook: "addStep",
   "playbook-module-procedural": "importSolidGeometry", procedural: "addWidget", process: "addStep",
   puzzle: "addNode", raster: "addLayer", reasoning: "addNode", remodel: "addStream", sequence: "addStep",
-  shooting: "addShot", sourcing: "curationSetCount", space: "createArtifact", stdio: "paste",
-  trinity: "setParameter", vcs: "incrementCounter", wfc: "change-seed", writer: "paste",
+  shooting: "addShot", sourcing: "curationSetCount", space: "renameArtifact", stdio: "set-cell",
+  trinity: "patchNodes", vcs: "incrementCounter", wfc: "change-seed", writer: "paste",
 };
 const KNOWN_VERBS = process.env.S6_VERBS ? JSON.parse(process.env.S6_VERBS) : DEFAULT_VERBS;
 /** 🩻️ **The third shape: a staged value is DOCUMENT-SPECIFIC and must be read off the LIVE document.**
@@ -144,13 +150,34 @@ const din16798FixtureSnapshot = () => {
 };
 
 const DEFAULT_ARGS = {
+  // 🏘️ `rename-zone` addresses a zone BY ID and the seeded model offers none to harvest, so its
+  // staged form reported `filled: []` on every run of this ticket. `create-zone` is the same
+  // editor's `Artifact`-lane verb (`🔋️model/…/✏️editor/🦀️.rs:1854`) and every one of its four
+  // fields has a declared default (`…:303`), so it round-trips with or without a staged value.
+  // 🔢️ ALL FOUR fields, not just `name`. `create-zone` declares `name` AND `volumeM3` as REQUIRED
+  // (`…/🪟️windows/📊️zones/🦀️.rs:31-34`), and a staged form with an unfilled required control is the
+  // reason S12 §1.1 read `filled: []` with no refusal and no edit: the guest's own defaults are only
+  // reached by a dispatch that happens, and the one this sweep made never carried a volume
+  // (ticket 26/09/18 S13).
+  "energy.create-zone": { name: "ProbeZone", volumeM3: "120", multiplier: "1", conditioned: "true" },
   "energy.rename-zone": { zone: LIVE_ID, newName: "ProbeZone" },
   "fem.addNode": { x: "3.5", y: "4.5" },
   "wfc.change-seed": { seed: "7" },
-  "trinity.setParameter": { parameterId: LIVE_ID, value: "3" },
+  // 🔱️ S11's `setParameter` pin was stale — the jack editor's rail never offers it
+  // (`knownVerbOffered: false`, S12 §1.1). `patchNodes` IS this editor's `Artifact`-lane document
+  // verb (`🔌️jack/…/✏️editor/🦀️.rs:568`), declared `Migrated`, with three REQUIRED arguments
+  // (`…:1145`). `nodeIds` is a live graph id, so it is resolved off the spawned graph window rather
+  // than guessed (ticket 26/09/18 S13).
+  "trinity.patchNodes": { nodeIds: LIVE_ID, field: "name", value: "S13 Node" },
   "sourcing.curationSetCount": { delta: "1" },
+  // 🗄️ `set-cell` is the `TableWindowKit` verb the stdio csv editor composes, and — since S13 —
+  // bridges: it is the ONLY document mutation any 🗄️stdio artifact publishes on a palette row, so it
+  // is this kind's pin rather than a scan candidate. Row 0 of the rendered grid is `records[1]` when
+  // the document carries a header (`grid_row_to_record_index`), which the demo document does.
+  "stdio.set-cell": { row: "0", column: "0", value: "S13 Cell" },
   "norm.setSnapshot": { snapshot: din16798FixtureSnapshot() },
   "space.createArtifact": { name: "S11 Probe Artifact", kindChoice: LIVE_ID },
+  "space.renameArtifact": { name: "S11 Renamed Artifact" },
 };
 const KNOWN_ARGS = process.env.S6_ARGS ? JSON.parse(process.env.S6_ARGS) : DEFAULT_ARGS;
 
@@ -163,7 +190,17 @@ const KNOWN_ARGS = process.env.S6_ARGS ? JSON.parse(process.env.S6_ARGS) : DEFAU
  * a second time as a program (`railRows: 0`, measured 2026-09-22). The space INDEX editor is the one
  * that owns this plugin's document mutations (`createArtifact`, `renameArtifact`, `touchArtifact`)
  * and is the surface the hub-catalog clause of outcome 1 opens documents from, so it is what the
- * sweep drives for this kind. */
+ * sweep drives for this kind.
+ *
+ * ✏️ Its VERB is `renameArtifact`, not `createArtifact`. `createArtifact`'s guest handler creates
+ * nothing itself — it emits `Effect::ReplayShellCommand { action_id: "os.create-space-artifact" }`
+ * and the HOST owns the durable creation saga, whose first gate refuses a space index that was
+ * spawned as a program rather than mounted by the shell's own navigation
+ * (`[os-shell] replayShellCommand: space artifact creation requires one mounted Space index`,
+ * measured 2026-09-22). So no `#s-checkin` count can move for it on this lane, however correct the
+ * payload is. `renameArtifact` is the index's own document mutation and rounds trip cleanly
+ * (`edits [0,1,0,1]`, `Rename Artifact↶`) once the editor declares its document-store retirement
+ * owners (ticket 26/09/18 S11 §3.3/§5.4). */
 const DEFAULT_APPS = { norm: "s.norm.din16798@1/*#editor", space: "s.space.space@1/*#editor" };
 const KNOWN_APPS = process.env.S6_APPS ? JSON.parse(process.env.S6_APPS) : DEFAULT_APPS;
 
@@ -361,13 +398,68 @@ async function spawnProgram(page, pluginId) {
   return { windowIds: [], detail: "no new window after spawn" };
 }
 
-/** 🎛️ The Actions rail is FOLDED inside each window's engagement pane (S5 §4.2a). */
-async function unfoldActionsRail(page) {
-  const toggles = page.locator('[id$=".engagement.toggle"]');
-  const count = await toggles.count();
-  for (let index = 0; index < count; index += 1) await toggles.nth(index).click({ force: true }).catch(() => undefined);
-  await page.waitForTimeout(1_200);
-  return count;
+/** 🎛️ The Actions rail is FOLDED inside each window's engagement pane (S5 §4.2a).
+ *
+ * ⏳️ The settle is WAITED FOR, not slept through. A fixed 1 200 ms was the single largest source of
+ * false FAILs in this sweep: `demonstrator`, `gis`, `layout`, `writer` and `space` each scored
+ * `no Actions rail row after unfolding` in one chunk and a clean PASS in the next, and `writer`'s
+ * rail read 16 rows in one run and 0 in the very next one — on the same build, minutes apart, under
+ * a fleet load that moved between 20 and 290 (ticket 26/09/18 S11 §6.1). Polling until the pane
+ * actually has rows costs nothing when the machine is idle and is the difference between a number
+ * and a coin flip when it is not. */
+async function unfoldActionsRail(page, budgetMs = 25_000) {
+  // 🔁️ The toggle set is RE-DISCOVERED each round, not counted once. A spawned window mounts its
+  // engagement toggle after its first paint, so a single `locator.count()` taken right after the
+  // spawn can see only the STUDIO's toggle and never the program's — measured on 🪐️space, which
+  // reported `railToggles: 1, railRows: 0` twice in a row and `railRows: 24` on the run in between,
+  // with no rebuild between them.
+  // 🧮️ Counted the way `readShell` counts, or the poll can satisfy itself on the pane's CATEGORY
+  // headers while the verb rows are still mounting and hand `mutateUndoRedo` an empty `actions`.
+  const railRowCount = () =>
+    page.evaluate(
+      () =>
+        [...new Set([...document.querySelectorAll('[data-slot="window-action-pane"] [id^="action."]')].map((element) => element.id))].filter(
+          (id) => !id.startsWith("action.category.") && !/\.arg\./u.test(id),
+        ).length,
+    );
+  // 🔀️ The engagement chip is a TOGGLE, not "open" — `Window`'s own handler is
+  // `onFoldToggle={() => setEngagementBarFolded(!actionsFolded)}` (`🪟️Window/🟦️.tsx:374`) and
+  // `actionsFolded` is a CONTROLLED prop the shell persists per window. Pressing every chip blindly
+  // therefore FOLDS a rail that is already open, and the poll then waits out its whole budget for
+  // rows it just closed — which is the `🪐️space` "2 good / 4 empty on the same build" flake S11 §7
+  // measured over six consecutive runs. The pane publishes its own state as `data-folded="true"`
+  // (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:10163`), so press only the chips that are actually folded.
+  const foldedToggleIds = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('[id$=".engagement.toggle"]')]
+        .filter((toggle) => toggle.closest('[data-folded="true"]') !== null)
+        .map((toggle) => toggle.id),
+    );
+  const allToggleIds = () => page.evaluate(() => [...document.querySelectorAll('[id$=".engagement.toggle"]')].map((toggle) => toggle.id));
+  const clicked = new Set();
+  const deadline = Date.now() + budgetMs;
+  // ⏳️ Wait for the chip to EXIST and then let the spawned program's app definition land before the
+  // first press. A spawned window mounts its engagement chip before `activeSpawnedApp` resolves, and
+  // `windowActionPaneNode` returns `undefined` for an app with no resolved actions, so a press in
+  // that window opens a pane with no rows in it.
+  const chipDeadline = Math.min(deadline, Date.now() + 15_000);
+  while (Date.now() < chipDeadline && (await page.locator('[id$=".engagement.toggle"]').count()) === 0) await page.waitForTimeout(500);
+  await page.waitForTimeout(2_500);
+  let rows = await railRowCount();
+  while (rows === 0 && Date.now() < deadline) {
+    let ids = await foldedToggleIds();
+    // 🛟️ A build whose pane does not publish `data-folded` at all must not be left unopenable: fall
+    // back to the old "press what has not been pressed" rule, which is correct for a cold rail.
+    if (ids.length === 0) ids = (await allToggleIds()).filter((id) => !clicked.has(id));
+    for (const id of ids) {
+      clicked.add(id);
+      await page.locator(`[id="${id}"]`).first().click({ force: true }).catch(() => undefined);
+    }
+    await page.waitForTimeout(700);
+    rows = await railRowCount();
+  }
+  await page.waitForTimeout(800);
+  return clicked.size;
 }
 
 const click = async (page, selector) => {
@@ -644,26 +736,63 @@ async function runVerb(page, verbId, args, refusals) {
   };
 }
 
+/** 🇩🇪️ Seats the shell locale through the settings surface's own language control and reports what it
+ * reached. A run that asks for a locale it cannot seat says so in the row rather than reporting
+ * German numbers from an English shell (ticket 26/09/18 S13, lane taken from `🐍️s10-locale-history.mjs`). */
+async function seatLocale(page, wanted) {
+  if (wanted === "en") return "en(boot)";
+  const opened = await click(page, '[id="os.openSettings"], [data-slot="navbar"] [id*="settings" i], button:has-text("Settings")');
+  if (opened === "absent") return `${wanted}:no-settings-control`;
+  await page.waitForTimeout(3_000);
+  const language = page.locator('[role="tab"], [role="button"], button').filter({ hasText: /language|sprache/iu }).first();
+  if ((await language.count()) > 0) {
+    await language.click({ force: true }).catch(() => undefined);
+    await page.waitForTimeout(2_000);
+  }
+  const control = page.locator('select, [role="combobox"]').filter({ hasText: /english|deutsch|german/iu }).first();
+  if ((await control.count()) === 0) return `${wanted}:no-language-control`;
+  if ((await control.evaluate((element) => element.tagName.toLowerCase())) === "select") {
+    await control.selectOption(wanted).catch(() => undefined);
+  } else {
+    await control.click({ force: true }).catch(() => undefined);
+    await page.waitForTimeout(800);
+    await page.locator('[role="option"]').filter({ hasText: /deutsch|german/iu }).first().click({ force: true }).catch(() => undefined);
+  }
+  await page.waitForTimeout(6_000);
+  await page.keyboard.press("Escape").catch(() => undefined);
+  await page.waitForTimeout(2_000);
+  const seated = await page.evaluate(() => document.documentElement.lang || null);
+  return `${wanted}=${seated ?? "unreported"}`;
+}
+
 async function mutateUndoRedo(page, refusals, pluginId) {
   const railToggles = await unfoldActionsRail(page);
   const shell = await readShell(page);
   const ids = shell.actions.map((id) => id.replace(/^action\./u, ""));
-  if (ids.length === 0) return { railToggles, railRows: 0, mutation: null, mutationDetail: "no Actions rail row after unfolding" };
+  if (ids.length === 0) return { railToggles, railRows: 0, railRowIds: [], mutation: null, mutationDetail: "no Actions rail row after unfolding" };
   const known = KNOWN_VERBS[pluginId];
   const scanned = ids.filter((id) => {
+    // 🧱️ The three ids the framework's editable window KITS mint on every app that composes one
+    // (`TableWindowKit`/`TextWindowKit`/`TreeWindowKit`). They are not app verbs, they carry no
+    // arguments, and the framework skips them in its own bridge-conformance check for exactly that
+    // reason (`🧰️framework/…/🔌️plugin/🦀️.rs:7538`). Every app that does not bridge one answers
+    // `unhandled action id set-cell`, and the sweep counted that refusal as the KIND's fault — which
+    // is how 🪐️space scored FAIL on a run whose own verb had already round-tripped cleanly
+    // (`touchArtifact edits [1,2,1,2]`, ticket 26/09/18 S11).
+    if (id === "set-cell" || id === "replace-text" || id === "set-node") return false;
     if (/close|quit|delete|remove|reset|export|checkpoint|alternative|^undo$|^redo$|^commit$|^checkout/iu.test(id)) return false;
     if (/^set[A-Z]|selection|selectall|reorganize|viewport|zoom|^pan|^fit|^focus|^hover|granularity|^open|^toggle|^copy|^cut/iu.test(id)) return false;
     return true;
   });
   const order = known && ids.includes(known) ? [known, ...scanned.filter((id) => id !== known)] : scanned;
-  let best = { railToggles, railRows: ids.length, mutation: null, mutationDetail: `none of ${scanned.length} rail rows moved the ledger`, knownVerbOffered: known !== undefined && ids.includes(known), knownVerb: known ?? null, attempts: [] };
+  let best = { railToggles, railRows: ids.length, railRowIds: ids, mutation: null, mutationDetail: `none of ${scanned.length} rail rows moved the ledger`, knownVerbOffered: known !== undefined && ids.includes(known), knownVerb: known ?? null, attempts: [] };
   const attempts = [];
   for (const verbId of order.slice(0, MAX_ROWS)) {
     const attempt = await runVerb(page, verbId, KNOWN_ARGS[`${pluginId}.${verbId}`] ?? KNOWN_ARGS[verbId], refusals);
     attempts.push({ verbId, mutated: attempt.mutated, undone: attempt.undone, redone: attempt.redone, redoDiffersFromUndo: attempt.redoDiffersFromUndo, undoLane: attempt.undoLane, redoLane: attempt.redoLane, edits: attempt.edits, applied: attempt.applied, refusal: attempt.refusals[0] ?? null });
-    if (best.mutation === null && attempt.mutated) best = { railToggles, railRows: ids.length, mutation: verbId, mutationDetail: "verb dispatched and moved the document; redo/undo pair did not read two different documents", knownVerbOffered: known !== undefined && ids.includes(known), knownVerb: known ?? null, ...attempt };
+    if (best.mutation === null && attempt.mutated) best = { railToggles, railRows: ids.length, railRowIds: ids, mutation: verbId, mutationDetail: "verb dispatched and moved the document; redo/undo pair did not read two different documents", knownVerbOffered: known !== undefined && ids.includes(known), knownVerb: known ?? null, ...attempt };
     if (attempt.mutated && attempt.redoDiffersFromUndo) {
-      return { railToggles, railRows: ids.length, mutation: verbId, mutationDetail: null, knownVerbOffered: known !== undefined && ids.includes(known), knownVerb: known ?? null, attempts, ...attempt };
+      return { railToggles, railRows: ids.length, railRowIds: ids, mutation: verbId, mutationDetail: null, knownVerbOffered: known !== undefined && ids.includes(known), knownVerb: known ?? null, attempts, ...attempt };
     }
   }
   return { ...best, attempts };
@@ -690,7 +819,7 @@ page.on("console", (message) => {
   if (FAULT.test(text) && !NOISE.test(text)) faults.push(`${message.type()}: ${text}`.slice(0, 260));
 });
 
-const result = { baseUrl, tag, beacon: null, signIn: null, studio: null, programs: [], rows: [] };
+const result = { baseUrl, tag, locale, beacon: null, signIn: null, studio: null, programs: [], rows: [] };
 try {
   await page.goto(baseUrl, { waitUntil: "commit", timeout: 300_000 });
   result.beacon = await awaitBeacon(page, Date.now() + 300_000);
@@ -702,6 +831,8 @@ try {
   }
   result.studio = await enterStudio(page);
   log(`studio ${JSON.stringify(result.studio)}`);
+  result.locale = await seatLocale(page, locale);
+  log(`locale ${result.locale}`);
   // 🧾️ The ledger lives in the framework History panel; its rows are absent from the DOM while the
   // panel is closed, and the edit count comes from the space shell's own check-in button.
   result.historyPanel = await click(page, '[data-slot="panel-tab-button"][id="framework.panel.history"], [id="framework.panel.history"]');

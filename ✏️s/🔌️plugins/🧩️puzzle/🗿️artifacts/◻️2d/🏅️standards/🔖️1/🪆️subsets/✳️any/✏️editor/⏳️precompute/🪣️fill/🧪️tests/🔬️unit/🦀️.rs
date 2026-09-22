@@ -64,6 +64,8 @@ fn payload_bytes(payload: &RetainedJobPayload) -> Vec<u8> {
 struct RunLog {
     finals: Vec<(u64, ToolRunVerdict, u16, ToolRunTraceSubject)>,
     tick_finals: Vec<usize>,
+    /// 🪣️ Final `Success` verdicts per tick — a PLACEMENT, which is what one unit of fuel buys.
+    tick_placements: Vec<usize>,
     testing: Vec<u64>,
     retired: Vec<u64>,
     ops: Vec<Vec<u8>>,
@@ -87,11 +89,15 @@ impl RunLog {
             self.entities.truncate(length as usize / FILL_RUN_OPS_PER_PLACEMENT);
         }
         let mut finals = 0;
+        let mut placements = 0;
         for op in tick.trace.into_iter().flat_map(|page| page.ops) {
             match op {
                 ToolRunTraceOp::Upsert { key, verdict: ToolRunVerdict::Testing, .. } => self.testing.push(key),
                 ToolRunTraceOp::Upsert { key, verdict, reason, subject } => {
                     finals += 1;
+                    if verdict == ToolRunVerdict::Success {
+                        placements += 1;
+                    }
                     self.finals.push((key, verdict, reason, subject));
                 }
                 ToolRunTraceOp::Retire { key } => self.retired.push(key),
@@ -99,6 +105,7 @@ impl RunLog {
             }
         }
         self.tick_finals.push(finals);
+        self.tick_placements.push(placements);
         self.ops.extend(tick.append_ops);
         self.entities.extend(tick.append_entities);
         self.steps.extend(tick.steps);
@@ -370,7 +377,17 @@ fn fill_run_job_collision_verdicts_agree_with_the_geo_oracle() {
     assert!(collisions > 0 && fits > 0 && decisive > ambiguous, "the oracle run must decide both collisions and fits ({decisive} decisive, {ambiguous} ambiguous)");
 }
 
-/// 👣️ With one unit of fuel per step every tick carries at most one final verdict, and exactly `tested` ticks carry one.
+/// 👣️ With one unit of fuel per step every tick carries at most one PLACEMENT, and exactly one tick per
+/// placement carries it — and single-stepping still decides exactly what a free run decides.
+///
+/// 🐛️ This law used to demand at most one final VERDICT per tick. `Puzzle2dFillRunJob::decide` has
+/// deliberately spent no fuel since 2026-09-17 (its own docstring: this run's unit IS a placement, and
+/// charging a unit per decided candidate made `Step` burn its single paused-grant unit on a
+/// `host-collision` rejection — "atPause=29 after=29 waitedMs=30131"); only `accept` calls
+/// `context.consume_fuel(1)`. So a one-unit tick legitimately REJECTS dozens of candidates — observed
+/// `[81, 107, 142, …]` — while accepting at most one. Counting verdicts was counting the thing the
+/// engine stopped charging for; counting placements is the contract fuel actually buys, and the
+/// free-run equality below is what the law really proves.
 #[test]
 fn fill_run_job_step_with_one_unit_of_fuel_reaches_exactly_one_candidate_verdict() {
     let document = example(&fixture()["resume"]["document"]);
@@ -379,8 +396,10 @@ fn fill_run_job_step_with_one_unit_of_fuel_reaches_exactly_one_candidate_verdict
     run_to_complete(&mut job, 1, &mut log);
     let tested = log.counters()[0];
     assert!(tested > 0);
-    assert!(log.tick_finals.iter().all(|finals| *finals <= 1), "a single unit of fuel decided more than one candidate: {:?}", log.tick_finals);
-    assert_eq!(log.tick_finals.iter().filter(|finals| **finals == 1).count() as u64, tested);
+    let placements: usize = log.tick_placements.iter().sum();
+    assert!(placements > 0, "a one-unit run still places: {:?}", log.tick_placements);
+    assert!(log.tick_placements.iter().all(|placed| *placed <= 1), "a single unit of fuel placed more than one candidate: {:?}", log.tick_placements);
+    assert_eq!(log.tick_placements.iter().filter(|placed| **placed == 1).count(), placements, "exactly one tick per placement carries it: {:?}", log.tick_placements);
     assert_eq!(log.verdicts(), run(&document, 1, 6).verdicts(), "single-stepping decides exactly what a free run decides");
 }
 

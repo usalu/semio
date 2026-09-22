@@ -51,6 +51,12 @@
           "modifiers": {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "ctrl",
+              "meta",
+              "alt",
+              "shift"
+            ],
             "properties": {
               "ctrl": {
                 "type": "boolean"

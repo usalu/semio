@@ -28,3 +28,34 @@ async fn only_a_registered_example_id_resolves_to_a_document() {
     retire_raster_snapshot(registered);
     retire_raster_snapshot(expected);
 }
+
+/// 🖼️ LAW: the curated demo ships REAL media, and its backdrop layer declares exactly that media's own
+/// pixel size.
+///
+/// The committed emblem used to be a 75-byte 2×2 RGBA swatch while the carrier declared a 1024×1024
+/// backdrop, so even a perfectly working pipeline drew four pixels: the play pane looked identical to
+/// the blank one the missing `paint-2d` lane route produced, which is what kept that defect hidden for
+/// three sessions (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP). A curated example is content
+/// the definition of done names — "VISIBLE correct content" — so both halves are pinned here: the
+/// asset is a real image, and the declaration agrees with it.
+///
+/// The size is read straight out of the PNG's IHDR (bytes 16..24 of any PNG, big-endian) rather than
+/// through a decoder, so this law needs no codec and cannot be satisfied by a re-encode.
+#[semio_framework_async_macros::async_test]
+async fn the_demo_carrier_ships_real_media_sized_exactly_as_its_backdrop_declares() {
+    let asset = crate::examples::art_raster_demo::emblem_image_asset();
+    assert_eq!(asset.mime, "image/png");
+    assert!(asset.data.len() > 8 * 1024, "the curated demo ships real media, not a placeholder swatch: {} bytes", asset.data.len());
+    assert!(asset.data.len() >= 24, "a PNG carries its IHDR in the first 24 bytes");
+    let width = u32::from_be_bytes([asset.data[16], asset.data[17], asset.data[18], asset.data[19]]);
+    let height = u32::from_be_bytes([asset.data[20], asset.data[21], asset.data[22], asset.data[23]]);
+    assert!(width >= 256 && height >= 256, "the curated media is large enough to see: {width}x{height}");
+
+    let document = default_raster_document();
+    let RasterLayerNode::Pixel { width: layer_width, height: layer_height, image_key, .. } = &document.layers[0] else {
+        panic!("the carrier's first layer is the backdrop pixel layer");
+    };
+    assert_eq!(image_key.as_deref(), Some("semio-emblem"));
+    assert_eq!((*layer_width, *layer_height), (Some(width), Some(height)), "the carrier's backdrop declares the committed emblem's own size");
+    retire_raster_snapshot(document);
+}

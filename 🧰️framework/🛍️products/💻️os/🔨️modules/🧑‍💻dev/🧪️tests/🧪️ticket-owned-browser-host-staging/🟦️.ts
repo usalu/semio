@@ -722,12 +722,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           const receipt = convert(vector.value);
           const api = await bridge.namespace.createActorApi("same", receipt.lifetime.activationGeneration);
           context.nextResult = result(receipt, 1);
-          const actual = await api.poll([], undefined, budget);
+          const actual = await api.poll([], undefined, undefined, budget);
           const row = { hex: actual.uiPatchReceipt instanceof Uint8Array ? Buffer.from(actual.uiPatchReceipt).toString("hex") : null, feedback: [] };
           context.nextResult = result(undefined, 0);
           for (const kind of input.fixture.feedback.kinds) {
             const payload = { receipt, surface: { instance: receipt.lifetime.instanceId, surface: input.fixture.feedback.surface }, revision: BigInt(input.fixture.feedback.revision), ...(kind === "rejected" ? { reason: "fixture rejection" } : {}) };
-            await api.poll([{ kind: "patch-" + kind, payload }], undefined, budget);
+            await api.poll([{ kind: "patch-" + kind, payload }], undefined, undefined, budget);
             row.feedback.push(observed.at(-1)[0]);
           }
           rows.push(row);
@@ -737,17 +737,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const pairings = [];
         for (const row of input.fixture.pairing) {
           context.nextResult = result(row.hasReceipt ? receipt : undefined, row.patchCount);
-          try { await api.poll([], undefined, budget); pairings.push(true); } catch { pairings.push(false); }
+          try { await api.poll([], undefined, undefined, budget); pairings.push(true); } catch { pairings.push(false); }
         }
         const malformedResults = [result({ ...receipt, patchSequence: 0n }, 1), result({ ...receipt, lifetime: { ...receipt.lifetime, activationGeneration: 42n } }, 1), { ...result(undefined, 0), uiPatches: undefined }];
         const refusedResults = [];
-        for (const raw of malformedResults) { context.nextResult = raw; try { await api.poll([], undefined, budget); refusedResults.push(false); } catch { refusedResults.push(true); } }
+        for (const raw of malformedResults) { context.nextResult = raw; try { await api.poll([], undefined, undefined, budget); refusedResults.push(false); } catch { refusedResults.push(true); } }
         context.nextResult = result(undefined, 0);
         const refusedEvents = [];
         for (const kind of input.fixture.feedback.kinds) {
           for (const wrong of [undefined, { ...receipt, patchSequence: 0n }, { ...receipt, lifetime: { ...receipt.lifetime, activationGeneration: 42n } }]) {
             const before = observed.length;
-            try { await api.poll([{ kind: "patch-" + kind, payload: { receipt: wrong, surface: { instance: receipt.lifetime.instanceId, surface: input.fixture.feedback.surface }, revision: 1n, reason: "fixture" } }], undefined, budget); refusedEvents.push(false); } catch { refusedEvents.push(observed.length === before); }
+            try { await api.poll([{ kind: "patch-" + kind, payload: { receipt: wrong, surface: { instance: receipt.lifetime.instanceId, surface: input.fixture.feedback.surface }, revision: 1n, reason: "fixture" } }], undefined, undefined, budget); refusedEvents.push(false); } catch { refusedEvents.push(observed.length === before); }
           }
         }
         console.log(JSON.stringify({ rows, pairings, refusedResults, refusedEvents }, (_key, value) => typeof value === "bigint" ? value.toString() : value));
@@ -790,12 +790,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           context.nextReceipt = undefined;
           if (["captured", "accepted", "retired"].includes(value.kind)) {
             context.nextReceipt = { tag: value.kind, val: body(value) };
-            const result = await api.poll([], undefined, budget);
+            const result = await api.poll([], undefined, undefined, budget);
             rows.push({ kind: value.kind, hex: Buffer.from(result.lifecycleReceipt).toString("hex") });
           } else {
             const kind = value.kind === "open" ? "instance-open" : value.kind === "close" ? "instance-close" : "instance-lifecycle-ack";
             const payload = value.kind === "open" ? { instance: value.instanceId, activationGeneration: value.activationGeneration, requestSequence: value.requestSequence, appId: "fixture", actor: "tester", config: [], assets: [], capabilities: [], quotas: [] } : value;
-            await api.poll([{ kind, payload }], undefined, budget);
+            await api.poll([{ kind, payload }], undefined, undefined, budget);
             rows.push({ kind: value.kind, event: observed.at(-1)[0] });
           }
         }
@@ -803,7 +803,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const errors = [];
         for (const receipt of [{ tag: "open", val: {} }, { tag: "captured", val: { lifetime: { activationGeneration: 1n, instanceId: 7, guestLifetime: 13n }, requestSequence: 9007199254740992n } }]) {
           context.nextReceipt = receipt;
-          try { await api.poll([], undefined, budget); errors.push(false); } catch { errors.push(true); }
+          try { await api.poll([], undefined, undefined, budget); errors.push(false); } catch { errors.push(true); }
         }
         console.log(JSON.stringify({ rows, errors }, (_key, value) => typeof value === "bigint" ? value.toString() : value));
       `], { input: JSON.stringify({ source: pluginComponentBridgeSource("component", "component.core.wasm"), vectors: fixture.vectors }), encoding: "utf8", timeout: 10_000 });
@@ -882,7 +882,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(fixtureRoot, "⚡️host-activation.json"), "utf8")) as { activations: Array<{ actorId: string; generation: string; value: string }> };
       const oracle = new Ajv();
-      expect(oracle.validate(JSON.parse(readFileSync(join(fixtureRoot, "🛡️host-activation.schema.json"), "utf8")), fixture)).toBe(true);
+      expect(oracle.validate(JSON.parse(readFileSync(join(fixtureRoot, "../🧬️schema/⚡️host-activation/🔣️.json"), "utf8")), fixture)).toBe(true);
       const component = rewriteJcoComponentAssetUrls(`import { storageRead, emit } from "./${PLUGIN_HOST_SHIM_FILE}";
 export const reactor = { poll: async (events) => { emit(events[0].val); return { value: await storageRead(events[0].val), uiPatches: [], commandIngress: { kind: 0 } }; } };
 export const jobs = {};
@@ -913,7 +913,7 @@ export const describe = {};`);
         await bridge.evaluate();
         const apis = [];
         for (const row of input.activations) apis.push(await bridge.namespace.createActorApi(row.actorId, BigInt(row.generation)));
-        const pending = apis.map((api, index) => api.poll([{ kind: "request", payload: { input: index } }], undefined, { fuel: 1, wallMs: 4, maxEffects: 8, maxPatchBytes: 4096 }));
+        const pending = apis.map((api, index) => api.poll([{ kind: "request", payload: { input: index } }], undefined, undefined, { fuel: 1, wallMs: 4, maxEffects: 8, maxPatchBytes: 4096 }));
         const effects = sent.filter((message) => message.frame.envelope.payload.kind === "effect-request");
         const actual = effects.map((message, index) => ({ actorId: message.actorId, generation: String(message.activationGeneration), value: input.activations[index].value }));
         for (let index = 0; index < effects.length; index += 1) apis[index].resolveEffect(effects[index].frame.envelope.payload.payload.requestId, input.activations[index].value);
@@ -937,7 +937,7 @@ export const describe = {};`);
         const input = JSON.parse(readFileSync(0, "utf8"));
         const replies = [];
         let listener;
-        const context = createContext({ console, WebAssembly: { Suspending() {}, promising() {} }, self: { postMessage() {}, addEventListener: (_kind, callback) => { listener = callback; } }, record: (generation, request, value) => replies.push({ generation: String(generation), request, value }) });
+        const context = createContext({ console, URL, WebAssembly: { Suspending() {}, promising() {} }, self: { location: { href: "https://fixture.invalid/🔌️plugin-modules/🧵️shard-worker.js" }, postMessage() {}, addEventListener: (_kind, callback) => { listener = callback; } }, record: (generation, request, value) => replies.push({ generation: String(generation), request, value }) });
         const bridge = new SourceTextModule("export async function createActorApi(actorId, generation) { return { resolveEffect: (request, value) => record(generation, request, value) }; }", { context });
         await bridge.link(() => { throw new Error("unexpected import"); });
         await bridge.evaluate();
@@ -966,7 +966,7 @@ export const describe = {};`);
         const messages = [];
         const calls = [];
         let listener;
-        const context = createContext({ console, Uint8Array, WebAssembly: { Suspending() {}, promising() {} }, self: { postMessage: (message) => messages.push(message), addEventListener: (_kind, callback) => { listener = callback; } }, record: (name) => calls.push(name) });
+        const context = createContext({ console, URL, Uint8Array, WebAssembly: { Suspending() {}, promising() {} }, self: { location: { href: "https://fixture.invalid/🔌️plugin-modules/🧵️shard-worker.js" }, postMessage: (message) => messages.push(message), addEventListener: (_kind, callback) => { listener = callback; } }, record: (name) => calls.push(name) });
         const bridge = new SourceTextModule("export async function createActorApi() { record('captured'); return { poll: async (events) => { record(events); return { status: { tag: 'idle' } }; } }; }", { context });
         await bridge.link(() => { throw new Error("unexpected import"); });
         await bridge.evaluate();
@@ -996,11 +996,11 @@ export const describe = {};`);
     });
 
     it("propagates a component module rebuild version to every extracted core wasm fetch", () => {
-      const generated = `const module0 = fetchCompile(new URL('./plugin_component.core.wasm', source.url));
-const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url));`;
+      const generated = `const module0 = fetchCompile(new URL('./plugin_component.core.wasm', import.meta.url));
+const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.meta.url));`;
       const rewritten = rewriteJcoComponentAssetUrls(generated);
       expect(rewritten).toContain("function __semioVersionedComponentAssetUrl(path)");
-      expect(rewritten).toContain("const rebuildVersion = new URL(source.url).searchParams.get(\"v\")");
+      expect(rewritten).toContain("const rebuildVersion = new URL(import.meta.url).searchParams.get(\"v\")");
       expect(rewritten).toContain("__semioVersionedComponentAssetUrl('./plugin_component.core.wasm')");
       expect(rewritten).toContain("__semioVersionedComponentAssetUrl('./plugin_component.core2.wasm')");
       expect(rewriteJcoComponentAssetUrls(rewritten)).toBe(rewritten);
@@ -1014,7 +1014,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures");
       const fixture = JSON.parse(readFileSync(join(root, "🏗️component-instantiation.json"), "utf8"));
       const oracle = new Ajv({ strict: true });
-      expect(oracle.validate(JSON.parse(readFileSync(join(root, "📐️component-instantiation.schema.json"), "utf8")), fixture)).toBe(true);
+      expect(oracle.validate(JSON.parse(readFileSync(join(root, "../🧬️schema/🏗️component-instantiation/🔣️.json"), "utf8")), fixture)).toBe(true);
       const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
         import { parse, transpile } from "@bytecodealliance/jco";
         import { SourceTextModule, createContext } from "node:vm";
@@ -1287,10 +1287,10 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
         ${emitted}
         for (const row of fixture.assetCases) {
           const id = join(dirname(process.argv[1]), 'neutral-entry.js');
-          const result = await build({ configFile: false, root: dirname(process.argv[1]), publicDir: false, logLevel: 'silent', define: { 'vitest': row.mode === 'production' ? 'undefined' : 'globalThis.__semioBuildTestMode' }, plugins: [${node && active ? "...(row.mode === 'production' ? [semioProductionTestBoundaryVitePlugin()] : [])," : ""}{ name: 'neutral-asset-entry', resolveId(value) { if (value === id) return id; }, load(value) { if (value === id) return fixture.assetSource; } }], build: { write: false, emptyOutDir: false, target: 'esnext', minify: false, assetsInlineLimit: 0, rollupOptions: { input: id, preserveEntrySignatures: 'strict', output: { format: 'es' } } } });
+          const result = await build({ configFile: false, root: dirname(process.argv[1]), publicDir: false, logLevel: 'silent', define: { 'import.meta.vitest': row.mode === 'production' ? 'undefined' : 'globalThis.__semioBuildTestMode' }, plugins: [${node && active ? "...(row.mode === 'production' ? [semioProductionTestBoundaryVitePlugin()] : [])," : ""}{ name: 'neutral-asset-entry', resolveId(value) { if (value === id) return id; }, load(value) { if (value === id) return fixture.assetSource; } }], build: { write: false, emptyOutDir: false, target: 'esnext', minify: false, assetsInlineLimit: 0, rollupOptions: { input: id, preserveEntrySignatures: 'strict', output: { format: 'es' } } } });
           const chunk = result.output.find(item => item.type === 'chunk');
           globalThis.__semioBuildTestMode = row.mode === 'test';
-          const code = chunk.code.replaceAll('source.url', JSON.stringify('https://example.invalid/app.js'));
+          const code = chunk.code.replaceAll('import.meta.url', JSON.stringify('https://example.invalid/app.js'));
           const runtime = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64') + '#' + row.mode);
           const assets = result.output.filter(item => item.type === 'asset');
           if (!assets.some(item => decodeURIComponent(new URL(runtime.runtimeUrl).pathname) === '/' + item.fileName)) throw new Error('runtime asset URL missing');
@@ -1388,7 +1388,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       const config = ts.createSourceFile("🟦️.ts", readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
       let definition: string | undefined;
       const visit = (node: import("typescript").Node) => {
-        if (ts.isPropertyAssignment(node) && ts.isStringLiteral(node.name) && node.name.text === "vitest" && ts.isStringLiteral(node.initializer)) definition = node.initializer.text;
+        if (ts.isPropertyAssignment(node) && ts.isStringLiteral(node.name) && node.name.text === "import.meta.vitest" && ts.isStringLiteral(node.initializer)) definition = node.initializer.text;
         ts.forEachChild(node, visit);
       };
       visit(config);
@@ -1400,7 +1400,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
         for (const row of fixture.cases) {
           let nodeImports = 0;
           const selected = row.mode === 'production' ? definition : 'globalThis.__semioBuildTestMode';
-          const result = await build({ configFile: false, publicDir: false, logLevel: 'silent', define: selected ? { 'vitest': selected } : {}, plugins: [{ name: 'neutral-test-boundary', enforce: 'pre', resolveId(id) { if (id === 'fixture-entry') return '\\0fixture-entry'; if (id === 'node:fs') { nodeImports++; return '\\0fixture-test-module'; } }, load(id) { if (id === '\\0fixture-entry') return fixture.source; if (id === '\\0fixture-test-module') return fixture.testModule; } }], build: { write: false, emptyOutDir: false, target: 'esnext', minify: false, rollupOptions: { input: 'fixture-entry', preserveEntrySignatures: 'strict', output: { format: 'es', inlineDynamicImports: true } } } });
+          const result = await build({ configFile: false, publicDir: false, logLevel: 'silent', define: selected ? { 'import.meta.vitest': selected } : {}, plugins: [{ name: 'neutral-test-boundary', enforce: 'pre', resolveId(id) { if (id === 'fixture-entry') return '\\0fixture-entry'; if (id === 'node:fs') { nodeImports++; return '\\0fixture-test-module'; } }, load(id) { if (id === '\\0fixture-entry') return fixture.source; if (id === '\\0fixture-test-module') return fixture.testModule; } }], build: { write: false, emptyOutDir: false, target: 'esnext', minify: false, rollupOptions: { input: 'fixture-entry', preserveEntrySignatures: 'strict', output: { format: 'es', inlineDynamicImports: true } } } });
           const code = result.output.find(item => item.type === 'chunk').code;
           globalThis.__semioBuildTestMode = row.mode === 'test';
           const module = await import('data:text/javascript;base64,' + Buffer.from(code).toString('base64') + '#' + row.mode);
@@ -1458,7 +1458,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
     itLong("serves every declared component import and tool-fixed vendor file byte-identically", async () => {
       const ts = await import("typescript"), { PassThrough } = await import("node:stream");
       const { isAbsolute } = await import("node:path");
-      const styling = ts.createSourceFile("styling.ts", readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+      const styling = ts.createSourceFile("styling.ts", readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
       const sourceFunctions = ["contentTypeForStaticDirAsset", "createStaticDirMiddleware", "staticDirVitePlugin"].map((name) => {
         const node = styling.statements.find((entry) => ts.isFunctionDeclaration(entry) && entry.name?.text === name);
         if (!node) throw new Error(`missing production function ${name}`);
@@ -1547,7 +1547,12 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       const manifest = toml.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as any;
       expect(manifest.profile.dev["codegen-units"]).toBeUndefined();
       for (const override of Object.values(manifest.profile.dev.package ?? {})) expect((override as any)["codegen-units"]).toBeUndefined();
-      expect(manifest.profile["wasm-dev"]).toEqual({ inherits: "dev", "codegen-units": 1 });
+      const { package: wasmDevPackageOverrides, ...wasmDevProfile } = manifest.profile["wasm-dev"];
+      expect(wasmDevProfile).toEqual({ inherits: "dev", "codegen-units": 1 });
+      // 🎚️ WASI-only means the single-CGU mitigation belongs to the PROFILE and to no package: a
+      // per-package override may raise `opt-level` or strip symbols, never re-state `codegen-units`.
+      // The exact census of those overrides is `plugin-registry`'s own WASI profile policy law.
+      for (const override of Object.values(wasmDevPackageOverrides ?? {})) expect((override as any)["codegen-units"]).toBeUndefined();
       expect(manifest.profile["wasm-release"]).toMatchObject({ inherits: "release", "opt-level": "s", lto: "thin", "codegen-units": 1, strip: "symbols", incremental: false, "trim-paths": "object" });
     });
   });

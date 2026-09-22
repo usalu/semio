@@ -1110,6 +1110,13 @@ pub fn create_wfc2d_editor() -> semio_framework_plugin::AppDefinition {
         .action_with(wfc2d_action("change-camera", "Change Camera", "Kamera ändern", ActionKind::View))
         .action_with(wfc2d_action("change-active-tile", "Arm Tile", "Kachel aktivieren", ActionKind::View))
         .action_with(wfc2d_action(WFC_2D_NODE_GRAPH_EDIT, "Edit Graph", "Graph bearbeiten", ActionKind::Mutation))
+        // 🪣️ The fill tool's commit verb. It is not a palette row (the tool run owns the gesture), but
+        // it MUST be a declared action: it rides `WFC_2D_RETAINED_TOOL_IDS` and carries a
+        // `bounded_first_step_tool_proofs!` row, and `validate_tool_job_rows` joins those rows to the
+        // MIGRATED action roster (`expected = TOOL_JOB_IDS ∩ migrated`). A proof row for an undeclared
+        // verb is refused `interactive-job.catalog-authority`, a guest `panic!` that aborts the whole
+        // wfc component at app registration and leaves every wfc pane at `data-shell-error`.
+        .action_with(ActionDefinition { in_palette: false, ..wfc2d_action(fill::COMMIT_FILL_ACTION_ID, "Commit Fill", "Füllen übernehmen", ActionKind::Mutation) })
         .action_args("create-tile", vec![
             ActionArgDef::text("id", LocalizedLabel::native("Tile", "Kachel")).required(),
             ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")),

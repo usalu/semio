@@ -20,3 +20,22 @@ Wasm mutex order (`📜️mutex-ordered.sh` stamps): c8 `…110000` → s11 `…
 | M10 | opus | ada87c88a97697963 | 📓️m10-agent-commits-hub-edit.md |
 
 Wave 2 (11:2x): AC1 (agent free-text reply channel in `AgentChatPanel`, serve 6197) and M10 (agent commits a `Commands` frame on a hub document, extension inference roster, serve 6198) from G19's ranked list. G17/G19 done. Held back until load allows: DB4 (document on a Postgres-backed hub), RB1 run 7 (release `s` bundle, last in the mutex).
+| TS1 | opus | ab8ed52a0b58d1b58 | 📓️ts1-os-typescript-zero-and-offline-resilience.md |
+| DB4 | opus | aa292cb2f38169472 | 📓️db4-document-on-postgres-hub.md |
+
+Wave 3 (12:2x): TS1 (os TypeScript 76 → 0, backbone-worker offline resilience 3 reds, six more vitest projects; serve 6199) and DB4 (document + restart re-attach on a Postgres hub 7691, hub suite on Postgres) from G18/G17. Done so far: G17, G19, G18, HT16, AC1.
+| PZ2 | opus | a6fe17fff374b0311 | 📓️pz2-puzzle-describe-under-budget.md |
+| FP12 | opus | a7acfd8e007c8eb0f | 📓️fp12-plugin-lib-zero-red.md |
+| NB1 | opus | a5c551a7e61b4652d | 📓️nb1-norm-describe-under-bound.md |
+| TS2 | opus | a629fbb59693926ea | 📓️ts2-os-typescript-and-vitest-green.md |
+| HC1 | opus | adfeea85d438e74a4 | 📓️hc1-fresh-component-genesis-and-creation.md |
+| WI1 | opus | a7413135b1d870aba | 📓️wi1-wfc-inference-end-to-end.md |
+| FP13 | opus | a95bda0d7be81242a | 📓️fp13-plugin-lib-gate-deterministic.md |
+| FL3 | opus | a7e483af32d3571fb | 📓️fl3-framework-flow-retained-green.md |
+| S12 | opus | ae0b6ccef23eefadf | 📓️s12-thirty-five-of-thirty-five-and-hub-document-inside-s.md |
+| TS3 | opus | a98031319ed2bd326 | 📓️ts3-os-dev-vitest-green.md |
+| PX1 | opus | a8bd3b3f614e66461 | 📓️px1-peer-framework-diffs-landed.md |
+| GJ1 | opus | a07949894cc72b874 | 📓️gj1-guest-inference-job-trap.md |
+| C9 | opus | a9b82ebb825566ea1 | 📓️c9-two-users-ten-steps-on-fresh-hub.md |
+| S13 | opus | a6e760413ccae1c14 | 📓️s13-thirty-five-on-rebuilt-guests.md |
+| TC4 | opus | a3ddc1fa8706c508f | 📓️tc4-codec-sweep-and-published-catalog.md |

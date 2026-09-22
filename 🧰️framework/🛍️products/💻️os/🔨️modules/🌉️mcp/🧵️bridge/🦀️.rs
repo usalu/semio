@@ -1378,7 +1378,22 @@ pub enum GatewayToShell {
     /// inverse of the result's own `isError`, `summary` its first text block (or the gateway error
     /// message), truncated the same way.
     AgentToolResult { invocation_id: String, tool_name: String, ok: bool, summary: String },
+    /// 💬️ One chunk of the connected agent's OWN free-text turn — the channel that lets an agent
+    /// explain, ask a clarifying question, or answer at all, rather than only act. `reply_id`
+    /// identifies the turn (every chunk of one turn repeats it, so a shell appends instead of
+    /// stacking rows); `in_reply_to` is the `message_id` of the `ShellToGateway::AgentMessage` this
+    /// answers, or `None` for a turn the agent opened itself; `complete` marks the last chunk, so a
+    /// shell can show a turn as still arriving without inventing a heuristic. The text carries no
+    /// locale: it is the agent's own words, and the only translated strings on the surface are the
+    /// role nouns around them.
+    AgentReply { reply_id: String, in_reply_to: Option<String>, text: String, complete: bool },
 }
+
+/// 💬️ Tools whose OWN result is already a conversation frame, so `tools/call` must not also publish
+/// an `AgentToolCall`/`AgentToolResult` pair for them: `conversation_reply`'s arguments ARE the
+/// prose the panel is about to render, and a tool-call row would print every sentence the agent says
+/// twice. The audit sink still records the call — this list governs the shell projection only.
+pub const SELF_PUBLISHING_CONVERSATION_TOOLS: &[&str] = &["conversation_reply"];
 
 /// ✂️ The hard cap on every human-readable string the agent-conversation frames carry. The bridge
 /// outbox admits a bounded number of bounded frames, so an agent calling a tool with a megabyte of
@@ -1417,6 +1432,10 @@ impl GatewayToShell {
             }
             GatewayToShell::AgentToolResult { invocation_id, tool_name, summary, .. } => {
                 2usize.checked_add(bridge_wire_field_len(invocation_id.len())?)?.checked_add(bridge_wire_field_len(tool_name.len())?)?.checked_add(bridge_wire_field_len(summary.len())?)
+            }
+            GatewayToShell::AgentReply { reply_id, in_reply_to, text, .. } => {
+                let base = 3usize.checked_add(bridge_wire_field_len(reply_id.len())?)?.checked_add(bridge_wire_field_len(text.len())?)?;
+                in_reply_to.as_ref().map_or(Some(base), |value| base.checked_add(bridge_wire_field_len(value.len())?))
             }
         }
     }
@@ -1474,6 +1493,13 @@ impl GatewayToShell {
                 wire::write_string(&mut buf, tool_name);
                 wire::write_bool(&mut buf, *ok);
                 wire::write_string(&mut buf, summary);
+            }
+            GatewayToShell::AgentReply { reply_id, in_reply_to, text, complete } => {
+                wire::write_u8(&mut buf, 10);
+                wire::write_string(&mut buf, reply_id);
+                wire::write_option_string(&mut buf, in_reply_to);
+                wire::write_string(&mut buf, text);
+                wire::write_bool(&mut buf, *complete);
             }
         }
         buf
@@ -1535,6 +1561,16 @@ impl GatewayToShell {
                 writer.push(&[*ok as u8]);
                 writer.field(summary.as_bytes());
             }
+            Self::AgentReply { reply_id, in_reply_to, text, complete } => {
+                writer.push(&[10]);
+                writer.field(reply_id.as_bytes());
+                writer.push(&[in_reply_to.is_some() as u8]);
+                if let Some(in_reply_to) = in_reply_to {
+                    writer.field(in_reply_to.as_bytes());
+                }
+                writer.field(text.as_bytes());
+                writer.push(&[*complete as u8]);
+            }
         }
         writer.written
     }
@@ -1553,6 +1589,7 @@ impl GatewayToShell {
             7 => GatewayToShell::Bye { reason: reader.read_string()? },
             8 => GatewayToShell::AgentToolCall { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, arguments: reader.read_string()? },
             9 => GatewayToShell::AgentToolResult { invocation_id: reader.read_string()?, tool_name: reader.read_string()?, ok: reader.read_bool()?, summary: reader.read_string()? },
+            10 => GatewayToShell::AgentReply { reply_id: reader.read_string()?, in_reply_to: reader.read_option_string()?, text: reader.read_string()?, complete: reader.read_bool()? },
             other => return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("bridge frame: unknown GatewayToShell tag {other}"))),
         };
         reader.finish()?;
@@ -2150,6 +2187,16 @@ impl BridgeEncodedFrame {
                 encoded.write_u8(*ok as u8);
                 encoded.write_field(summary.as_bytes());
             }
+            GatewayToShell::AgentReply { reply_id, in_reply_to, text, complete } => {
+                encoded.write_u8(10);
+                encoded.write_field(reply_id.as_bytes());
+                encoded.write_u8(in_reply_to.is_some() as u8);
+                if let Some(in_reply_to) = in_reply_to {
+                    encoded.write_field(in_reply_to.as_bytes());
+                }
+                encoded.write_field(text.as_bytes());
+                encoded.write_u8(*complete as u8);
+            }
         }
         assert_eq!(encoded.len, expected, "preflighted bridge frame length changed during encode");
         encoded
@@ -2507,6 +2554,7 @@ impl BridgeHandle {
             let _ = crate::ui::job_registry().request_cancel(invocation_id);
             return;
         }
+        let mut inbox_grew = false;
         let mut connections = self.inner.connections.lock().expect("bridge connections lock poisoned");
         let Some(entry) = connections.get_mut(&id) else { return };
         match frame {
@@ -2520,8 +2568,16 @@ impl BridgeHandle {
                     entry.agent_inbox.pop_front();
                 }
                 entry.agent_inbox.push_back(AgentInboxMessage { message_id, text, received_at_ms: bridge_wall_now_ms() });
+                inbox_grew = true;
             }
             ShellToGateway::Hello { .. } | ShellToGateway::Ping | ShellToGateway::Bye | ShellToGateway::AgentCancel { .. } => {}
+        }
+        // 💬️ Outside the connections lock: the subscription broker takes its own locks, and a human
+        // turn that only becomes visible on the agent's next poll is a channel with a one-poll
+        // latency floor. Subscribed clients are told now; unsubscribed ones still poll as before.
+        drop(connections);
+        if inbox_grew {
+            crate::notify::agent_messages_changed();
         }
     }
 

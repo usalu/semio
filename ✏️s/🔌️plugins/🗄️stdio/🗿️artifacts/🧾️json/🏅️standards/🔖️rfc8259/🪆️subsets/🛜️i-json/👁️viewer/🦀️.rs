@@ -51,6 +51,47 @@ impl ArtifactViewer for JsonIJsonViewer {
     const DIALECT: Dialect = JSON_I_JSON_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_JSON_DOCUMENT_SCHEMA;
 
+    /// 🔐️ The document-store owner catalogue, identical to the sibling editor's: a viewer owns the
+    /// same snapshot envelope and must allocate it the same way.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_owners())
+    }
+
+    /// 🧹️ The four bounded disposers `VcsArtifactApp`'s close ladder drives. The trait default is
+    /// `None`, and `None` faults `interactive-job.close-owned-disposer-missing` the first time this
+    /// surface is closed, which is what the guest codec resolver does to every app it does not return.
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::no_config_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
     fn initial_snapshot() -> JsonSnapshot {
         JsonSnapshot::default()
     }

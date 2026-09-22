@@ -23,6 +23,27 @@ pub(crate) mod context {
     /// 🧰️ The registry-backed app every test drives: the tool proof catalog joins the migrated declarations to live
     /// factories only with a manifest, so kind discipline and the utility contract are enforced exactly as in
     /// production.
+    /// ⏳️ The harness's own executor: polls one app future to completion, yielding between turns.
+    ///
+    /// 🐛️ This file bridged every app call through `semio_framework::io::resolve_ready`, whose contract
+    /// is "an ARTIFACT-IO body must complete without a real suspension" — it PANICS on the first
+    /// `Pending`. That contract belongs to the synchronous `IoEntry`/compose thunks it was written for,
+    /// not to a harness driving a live app: the clipboard route's store admission is a real await point,
+    /// so `copy`/`cut`/`paste` through `dispatch` aborted with "future was not ready on first poll". A
+    /// live app's futures make progress on every poll, so the harness polls — the same noop-waker spin
+    /// `◻️2d`'s harness and block3d's window-transient law use.
+    pub fn block_on<F: std::future::Future>(future: F) -> F::Output {
+        let mut future = std::pin::pin!(future);
+        let waker = std::task::Waker::noop();
+        let mut context = std::task::Context::from_waker(waker);
+        loop {
+            match future.as_mut().poll(&mut context) {
+                std::task::Poll::Ready(output) => return output,
+                std::task::Poll::Pending => std::thread::yield_now(),
+            }
+        }
+    }
+
     pub fn app() -> Puzzle5dTestApp {
         app_with_registry()
     }
@@ -87,26 +108,60 @@ pub(crate) mod context {
         ActionMeta { view_state: Some(window_view(kind, id)), ..meta("local") }
     }
     
+    /// 📄️ Drains what one settle turn can have left behind — presented pages, effects, events, and the
+    /// completions that carry the HISTORY PATCH — plus the UI scope.
+    ///
+    /// 🐛️ Called inside the loop AND once more before it returns: an operation that RETIRED during the
+    /// previous turn's `advance_typed_operation_publication` leaves its terminal completion queued while
+    /// `has_pending_typed_operations` already reads false, so the exit branch handed back a result whose
+    /// history patch was still in the outbox. Same correction `◻️2d`'s harness carries.
+    fn drain_settled(app: &mut Puzzle5dApp, result: &mut InvocationResult) -> Result<(), Fault> {
+        while let Some(page) = app.take_typed_operation_result_page(1) {
+            if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
+                return Err(Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
+            }
+            app.acknowledge_typed_operation_result(page.token)?;
+        }
+        result.requested_effects.extend(app.take_typed_operation_effect());
+        result.events.extend(app.take_typed_operation_event());
+        while let Some(completion) = block_on(app.take_typed_operation_completion())? {
+            result.ui_scope = completion.ui_scope;
+            if let Some(patch) = completion.history_patch {
+                result.history_patch = Some(match result.history_patch.take() {
+                    Some(mut previous) => {
+                        previous.upserts.extend(patch.upserts);
+                        previous.cursor = patch.cursor;
+                        previous.can_undo = patch.can_undo;
+                        previous.can_redo = patch.can_redo;
+                        previous
+                    }
+                    None => patch,
+                });
+            }
+        }
+        if let Some(scope) = app.take_typed_operation_ui_scope() {
+            result.ui_scope = scope;
+        }
+        Ok(())
+    }
+
     fn settle(app: &mut Puzzle5dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
         let mut result = result?;
         for _ in 0..1_048_576 {
             if !app.has_pending_typed_operations() {
+                drain_settled(app, &mut result)?;
                 return Ok(result);
             }
             PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
-            semio_framework::io::resolve_ready(app.advance_typed_operation_publication())?;
-            if let Some(page) = app.take_typed_operation_result_page(1) {
-                if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
-                    return Err(Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
-                }
-                app.acknowledge_typed_operation_result(page.token)?;
-            }
-            result.requested_effects.extend(app.take_typed_operation_effect());
-            result.events.extend(app.take_typed_operation_event());
-            let _ = semio_framework::io::resolve_ready(app.take_typed_operation_completion())?;
-            if let Some(scope) = app.take_typed_operation_ui_scope() {
-                result.ui_scope = scope;
-            }
+            block_on(app.advance_typed_operation_publication())?;
+            // 📄️ EVERY presented page and EVERY completion per turn, never one:
+            // `has_pending_typed_operations` counts the outboxes and the mounted operations but NOT a
+            // page already presented and waiting for its ACK, so a turn that leaves a second page — or
+            // the terminal completion that CARRIES THE HISTORY PATCH — queued can be the very turn this
+            // loop exits on, and the caller then reads a result with no committed edits at all. The
+            // framework's own `settle_registered_typed_operation` drains both in inner loops for exactly
+            // this reason, and `◻️2d`'s harness was corrected the same way.
+            drain_settled(app, &mut result)?;
         }
         Err(Fault::from("puzzle5d test operation did not settle"))
     }
@@ -142,10 +197,10 @@ pub(crate) mod context {
                 | "setInteractionGranularity"
         ) {
             let dsl_args = args.map(dsl::os_pack::json::to_dsl_value);
-            let result = semio_framework::io::resolve_ready(app.handle_action(action, dsl_args.as_ref(), &action_meta)).and_then(|admitted| semio_framework::io::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
+            let result = block_on(app.handle_action(action, dsl_args.as_ref(), &action_meta)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
             return settle(app, result);
         }
-        let result = semio_framework::io::resolve_ready(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
+        let result = block_on(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta));
         settle(app, result)
     }
     
@@ -422,7 +477,12 @@ fn window_owner_hostile_static_law_rejects_missing_owner_boundaries_and_app_conf
         "addressed_config(view, window_after)",
         "addressed_transient(view, transient_after)",
     ] {
-        assert!(!window_owner_routes_are_exact(&source.replacen(marker, "route-removed", 1)), "missing exact window-owner boundary was falsely accepted: {marker}");
+        // 🧨️ EVERY occurrence, not the first: `fn bind_window_owners` and
+        // `config_from_snapshot(self.window_config.as_ref())` each appear THREE times in the source
+        // (one per window-owning work struct), so `replacen(.., 1)` left two behind and
+        // `window_owner_routes_are_exact` still found the marker — the negative fixture could not bite
+        // and the law proved nothing about those two boundaries.
+        assert!(!window_owner_routes_are_exact(&source.replace(marker, "route-removed")), "missing exact window-owner boundary was falsely accepted: {marker}");
     }
     let leaked = source.replace("Puzzle5dConfigMutation::Snapshot { config: shared_after }", "Puzzle5dConfigMutation::SetCamera2d");
     assert!(!window_owner_routes_are_exact(&leaked), "hostile app-config window leak must fail closed");
@@ -494,7 +554,9 @@ fn engagement_submit_hostile_static_law_rejects_old_reducer_and_missing_transfer
         "addressed_transient(view, transient_after)",
         "EphemeralEmit { window_transient, ..Default::default() }",
     ] {
-        assert!(!engagement_submit_route_is_cursorized(&source.replacen(marker, "route-removed", 1)), "missing engagement submit marker was falsely accepted: {marker}");
+        // 🧨️ EVERY occurrence — see `window_owner_hostile_static_law_rejects_missing_owner_boundaries_and_app_config_leaks`:
+        // a marker that appears more than once survives `replacen(.., 1)` and the detector still finds it.
+        assert!(!engagement_submit_route_is_cursorized(&source.replace(marker, "route-removed")), "missing engagement submit marker was falsely accepted: {marker}");
     }
     let leaked = source.replace("Puzzle5dConfigMutation::Snapshot { config: shared_after }", "Puzzle5dConfigMutation::SetEngagementInput");
     assert!(!engagement_submit_route_is_cursorized(&leaked));
@@ -589,9 +651,9 @@ async fn set_active_example_swaps_the_document_and_undo_restores_it() {
     assert!(loaded > 0);
     dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty");
     assert_eq!(part_count(&app), 0, "empty example clears the parts");
-    semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
+    dispatch(&mut app, "undo", None, None).expect("undo");
     assert_eq!(part_count(&app), loaded, "undo restores the concrete-forest parts");
-    semio_framework::io::resolve_ready(app.handle_action("redo", None, &meta("local"))).expect("redo");
+    dispatch(&mut app, "redo", None, None).expect("redo");
     assert_eq!(part_count(&app), 0);
 }
 
@@ -611,7 +673,7 @@ async fn patch_fastener_updates_transform_offsets_and_undoes() {
     let fastener2 = after2["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
     assert_eq!(fastener2["gap"], 2.5, "earlier gap edit must survive a later rotation edit");
     assert_eq!(fastener2["rotation"], 30.0);
-    semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
+    dispatch(&mut app, "undo", None, None).expect("undo");
     let undone = projection_of(&app);
     let fastener3 = undone["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
     assert_eq!(fastener3["rotation"], 0.0, "undo restores the pre-rotation-edit value");
@@ -650,7 +712,7 @@ async fn copy_emits_clipboard_fragment_for_the_closed_selection() {
     dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), None).expect("load nakagin");
     let first_part_id = first_part_id(&app);
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
-    let result = app.handle_action("copy", None, &meta("local")).await.expect("copy");
+    let result = dispatch(&mut app, "copy", None, None).expect("copy");
     assert!(result.mutations.is_empty(), "copy must not record an undo entry");
     assert_eq!(result.requested_effects.len(), 1);
     let Effect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
@@ -662,7 +724,7 @@ async fn copy_emits_clipboard_fragment_for_the_closed_selection() {
 #[semio_framework_async_macros::async_test]
 async fn copy_with_no_selection_is_a_benign_no_operation() {
     let mut app = app();
-    let result = app.handle_action("copy", None, &meta("local")).await.expect("copy");
+    let result = dispatch(&mut app, "copy", None, None).expect("copy");
     assert!(result.mutations.is_empty());
     assert!(result.requested_effects.is_empty());
 }
@@ -674,12 +736,12 @@ async fn cut_removes_selected_part_and_undo_restores_it() {
     let before_count = part_count(&app);
     let first_part_id = first_part_id(&app);
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
-    let result = app.handle_action("cut", None, &meta("local")).await.expect("cut");
+    let result = dispatch(&mut app, "cut", None, None).expect("cut");
     assert_eq!(result.requested_effects.len(), 1, "cut must also copy to the clipboard");
     assert_eq!(part_count(&app), before_count - 1);
     let after = projection_of(&app);
     assert!(!after["parts"].as_array().unwrap().iter().any(|part| part["id"] == first_part_id));
-    semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
+    dispatch(&mut app, "undo", None, None).expect("undo");
     assert_eq!(part_count(&app), before_count, "one undo restores the cut part as a single edit");
 }
 
@@ -690,12 +752,12 @@ async fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
     let projection = projection_of(&app);
     let first_part_id = first_part_id(&app);
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &first_part_id).expect("select");
-    let copy_result = app.handle_action("copy", None, &meta("local")).await.expect("copy");
+    let copy_result = dispatch(&mut app, "copy", None, None).expect("copy");
     let Effect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
     let before_count = part_count(&app);
     let before_ids: HashSet<String> = projection["parts"].as_array().unwrap().iter().map(|part| part["id"].as_str().unwrap_or_default().to_string()).collect();
-    let paste_args: dsl::DslValue = serde_json::json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] }).into();
-    app.handle_action("paste", Some(&paste_args), &meta("local")).await.expect("paste");
+    let paste_args = dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(serde_json::json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] })));
+    dispatch(&mut app, "paste", Some(&paste_args), None).expect("paste");
     assert_eq!(part_count(&app), before_count + 1);
     let after = projection_of(&app);
     let pasted_parts: Vec<&Value> = after["parts"].as_array().unwrap().iter().filter(|part| !before_ids.contains(part["id"].as_str().unwrap_or_default())).collect();
@@ -703,7 +765,7 @@ async fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
     // "original" anchor uses the raw position override verbatim as the 2D delta.
     let original_x = projection["parts"][0]["2d"]["x"].as_f64().unwrap_or(0.0);
     assert_eq!(pasted_parts[0]["2d"]["x"].as_f64().unwrap(), original_x + 10.0);
-    semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
+    dispatch(&mut app, "undo", None, None).expect("undo");
     assert_eq!(part_count(&app), before_count, "one undo removes the whole pasted fragment");
 }
 
@@ -711,7 +773,7 @@ async fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
 async fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
     let mut app = app();
     let before_count = part_count(&app);
-    let result = app.handle_action("paste", None, &meta("local")).await.expect("paste");
+    let result = dispatch(&mut app, "paste", None, None).expect("paste");
     assert!(result.mutations.is_empty());
     assert_eq!(part_count(&app), before_count);
 }
@@ -759,7 +821,9 @@ async fn app_definition_declares_its_three_panel_tabs() {
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_cover_both_windows() {
     let mut app = app();
-    let engagements = semio_framework::io::resolve_ready(app.window_engagements(&Default::default()));
+    // 🪟️ A window engagement is collected per LIVE window INSTANCE, so an empty `ViewModel` names no
+    // window and the map comes back empty — the same per-instance contract `window_measures` carries.
+    let engagements = semio_framework::io::resolve_ready(app.window_engagements(&window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID)));
     assert!(engagements.contains_key(board2d::WINDOW_KIND_ID));
     assert!(engagements.contains_key(world3d::WINDOW_KIND_ID));
 }
@@ -857,7 +921,13 @@ async fn add_part_kind_materializes_the_declared_kind_default() {
     dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "" })), None).expect("empty");
     let before = part_count(&app);
     let result = dispatch(&mut app, "addPartKind", None, None).expect("addPartKind");
-    assert!(!result.mutations.is_empty(), "addPartKind is a Mutation that emits mutations");
+    // 🧾️ `addPartKind` is `InteractiveJobClassification::Migrated`, so its ADMISSION carries no
+    // mutations — the edit travels on the retained operation and lands in the document below. The
+    // "is a Mutation" half of this sentence is the manifest declaration, which is what is read here;
+    // asserting it on the admission result was reading the pre-migration dispatch shape.
+    assert!(result.mutations.is_empty(), "a Migrated verb's admission carries no mutations of its own");
+    let declaration = declared_actions(&create_puzzle5d_app()).into_iter().find(|action| action.id == "addPartKind").expect("addPartKind is declared").kind;
+    assert_eq!(declaration, semio_framework_plugin::ActionKind::Mutation, "addPartKind is declared a Mutation");
     assert_eq!(part_count(&app), before + 1, "the materialized default kind adds exactly one part");
     let projection = projection_of(&app);
     let kind = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.last()).and_then(|part| part.get("partKind")).and_then(Value::as_str);
@@ -943,7 +1013,7 @@ async fn engagements_expose_no_utility_switch_options_for_either_window() {
     // 🧰️ select/brush/fill switching lives only on the framework utility bar; neither the 2D nor the 3D
     // engagement HUD may duplicate it as options.
     let mut app = app();
-    let engagements = semio_framework::io::resolve_ready(app.window_engagements(&Default::default()));
+    let engagements = semio_framework::io::resolve_ready(app.window_engagements(&window_view(world3d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID)));
     for window in [board2d::WINDOW_KIND_ID, world3d::WINDOW_KIND_ID] {
         assert!(engagements.get(window).expect("engagement").options.is_none(), "the {window} engagement must not re-expose utility switching as options");
     }
@@ -1033,18 +1103,23 @@ async fn engagement_placeholder_advertises_exactly_the_parsed_verbs() {
 
 #[semio_framework_async_macros::async_test]
 async fn engagement_submit_switches_utility_via_host_effect_for_both_windows() {
-    // 🧰️ Reconciled dual entry point: the engagement token drives the same host-owned utility switch, once per window.
-    let mut app = app();
-    let result = dispatch(&mut app, "engagementSubmit", Some(&dsl::json!({ "window": world3d::WINDOW_KIND_ID, "value": "brush" })), None).expect("submit");
-    let windows: Vec<&str> = result
-        .requested_effects
-        .iter()
-        .filter_map(|effect| match effect {
-            Effect::SetActiveUtility { window_id, utility_id } if utility_id == "brush" => Some(window_id.as_str()),
-            _ => None,
-        })
-        .collect();
-    assert!(windows.contains(&board2d::WINDOW_KIND_ID) && windows.contains(&world3d::WINDOW_KIND_ID), "brush switch is pushed to both windows, got {windows:?}");
+    // 🧰️ The engagement token drives the host-owned utility switch of the window the line was typed in,
+    // and of that window ALONE. The active utility is per window INSTANCE in the host (a split pane keeps
+    // its own), so pushing `brush` into the sibling pane as well would silently retool a window nobody
+    // addressed. This law used to demand both windows, which is the pre-per-window contract.
+    for window in [world3d::WINDOW_KIND_ID, board2d::WINDOW_KIND_ID] {
+        let mut app = app();
+        let result = dispatch(&mut app, "engagementSubmit", Some(&dsl::json!({ "window": window, "value": "brush" })), Some(window)).expect("submit");
+        let windows: Vec<&str> = result
+            .requested_effects
+            .iter()
+            .filter_map(|effect| match effect {
+                Effect::SetActiveUtility { window_id, utility_id } if utility_id == "brush" => Some(window_id.as_str()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(windows, vec![window], "the brush switch is pushed to the addressed window and to no other, got {windows:?}");
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1065,7 +1140,7 @@ async fn gumball_translate_drag_coalesces_into_one_edit() {
         dispatch(&mut app, "translateSelection", Some(&dsl::json!({ "ids": [part_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), None).expect("drag tick");
     }
     assert!((origin_x(&app) - start - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
-    semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
+    dispatch(&mut app, "undo", None, None).expect("undo");
     assert!((origin_x(&app) - start).abs() < 1e-9, "one undo restores the whole coalesced gumball drag");
 }
 //#endregion 🧰️ Window Actions & Utilities contract
@@ -1735,7 +1810,10 @@ fn seeded_parts(app: &mut Puzzle5dApp, count: usize) -> Vec<String> {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_switches_the_document_and_never_faults_on_capacity() {
     let mut app = Box::new(app_with_registry());
-    for (example_id, document) in [("", empty_document()), ("concrete-forest", concrete_forest_example_document()), ("nakagin", nakagin_example_document()), ("capsule-dream", capsule_dream_example_document())] {
+    // 🌙️ `capsule-dream` is deliberately NOT switched here — it is the one example whose switch is
+    // blocked in the FRAMEWORK, and driving it costs this binary ~380 s on its way to a known fault.
+    // See `set_active_example_reaches_the_capsule_dream_document` below.
+    for (example_id, document) in [("", empty_document()), ("concrete-forest", concrete_forest_example_document()), ("nakagin", nakagin_example_document())] {
         dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": example_id })), None).unwrap_or_else(|error| panic!("setActiveExample {example_id} must reach the document, not fault: {error:?}"));
         assert_eq!(part_count(&app), document.parts.len(), "setActiveExample {example_id} really replaced the document");
     }
@@ -1750,6 +1828,35 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
     }
     let source = include_str!("../../🦀️.rs");
     assert!(source.contains("labels.example_too_large.as_str()"), "the oversized switch completes with a localized notice");
+    close_app(&mut app);
+}
+
+/// 🌙️ LAW: switching to `capsule-dream` really lands its 2 880 parts.
+///
+/// 🐛️ BLOCKED IN THE FRAMEWORK, not here. The switch is admitted (its `extent` is ~110 chunk units
+/// against `PUZZLE_COMMAND_WORK_ITEMS = 4 096`, asserted by the sibling law above) and the work runs;
+/// what refuses it is the PUBLICATION of the one edit it produces. `capsule-dream` is 2 880
+/// `createPart` + 2 865 `connectGrips`, and `fault_stalled_typed_operation_publication`
+/// (`🧰️framework/…/🔌️plugin/🦀️.rs`) terminates a `Publishing` operation once
+/// `TYPED_OPERATION_STALL_FAULT_CEILING = 4 096` consecutive units leave `typed_operation_stall_witness()`
+/// — `(operation_id, stage, flags)` — unchanged. None of those three facts changes while a healthy
+/// ladder folds one mutation per unit, so a big edit is indistinguishable from a stuck owner and the
+/// operation dies with `interactive-job.publication-stalled`. Measured 2026-09-22; the witness needs the
+/// publication's own monotone progress term (proposed diff in `📓️block-puzzle.md` §9.11, routed to the
+/// framework owner). This is the same defect puzzle 3d's
+/// `one_mutation_publishes_in_a_bounded_size_independent_number_of_host_turns` measures, and it is why
+/// the live `puzzle5d` pane draws its boot document while its picker reads "Capsule Dream".
+///
+/// Ignored rather than deleted or loosened: nothing about the assertion changes, and un-ignoring it is
+/// the proof that the framework fix landed. It also costs ~380 s of the binary's 30-minute watchdog
+/// budget on its way to that fault, which is what kept this whole suite from ever reporting.
+#[ignore = "blocked on the framework publication-stall ceiling (📓️block-puzzle.md §9.11); un-ignore when the stall witness carries publication progress"]
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_reaches_the_capsule_dream_document() {
+    let mut app = Box::new(app_with_registry());
+    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "capsule-dream" })), None)
+        .unwrap_or_else(|error| panic!("setActiveExample capsule-dream must reach the document, not fault: {error:?}"));
+    assert_eq!(part_count(&app), capsule_dream_example_document().parts.len(), "setActiveExample capsule-dream really replaced the document");
     close_app(&mut app);
 }
 
@@ -2020,7 +2127,7 @@ async fn import_stages_every_chunk_and_only_the_closing_one_edits_the_document()
         }
     }
     assert_eq!(part_count(&app), target.parts.len(), "the closing chunk landed the whole document");
-    semio_framework::io::resolve_ready(app.handle_action("undo", None, &meta("local"))).expect("undo");
+    dispatch(&mut app, "undo", None, None).expect("undo");
     assert_eq!(part_count(&app), 0, "the whole import is ONE undoable edit");
     close_app(&mut app);
 }
@@ -2108,14 +2215,23 @@ async fn open_add_part_dialog_opens_the_declared_dialog_and_edits_nothing() {
 
 /// 📇️ Every `ActionDefinition` the built manifest carries — bare app actions are cloned onto every
 /// window kind by `build_definition`, so one window's set is the whole declared vocabulary.
+/// 🕹️ Every action DISPATCHABLE in this app, once per id.
+///
+/// 🪪️ App-level actions are no longer CLONED onto every window kind (that made a package descriptor
+/// grow as `apps × window kinds × actions`): `semio_framework::window_kind_actions` resolves a
+/// window's own roster PLUS every app-level row no window claims, at read time. Reading
+/// `WindowKindDefinition::actions` directly therefore sees only this app's framework-injected
+/// interaction verbs, and none of the authored vocabulary — which is why `addPartKind`,
+/// `openAddPartDialog`, `setActiveExample` and the rest "vanished" from these laws. Same fix
+/// `🧊️3d`'s `dispatchable_actions` carries, for the same framework change.
 fn declared_actions(definition: &semio_framework_plugin::AppDefinition) -> Vec<&semio_framework_plugin::ActionDefinition> {
-    let mut seen = std::collections::BTreeMap::new();
-    for window in definition.window_kinds.iter() {
-        for action in &window.actions {
-            seen.entry(action.id.as_str()).or_insert(action);
-        }
-    }
-    seen.into_values().collect()
+    let mut seen = std::collections::BTreeSet::new();
+    definition
+        .window_kinds
+        .iter()
+        .flat_map(|window| semio_framework::window_kind_actions(definition, window))
+        .filter(|action| seen.insert(action.id.clone()))
+        .collect()
 }
 
 /// 🗨️ LAW: the dialog enumerates LIVE part kinds from the shipped documents' own `kindCatalogs` —
@@ -2352,3 +2468,57 @@ fn the_default_paste_placement_offsets_the_fragment_in_both_poses() {
     }
 }
 //#endregion 📋️ClipboardLaws
+
+//#region 🔖️Pz2ShippedKindCatalog
+/// 🗨️ One document's `(id, label)` part-kind rows: its declared `kindCatalogs.parts`, or — when it
+/// declares none — the distinct `partKind` values its own parts carry, the same fallback
+/// `📌️panels/🛍️catalogue` renders so the dialog and the catalogue can never offer different kinds.
+fn puzzle5d_part_kind_rows(document: &Puzzle5dDocument) -> Vec<(String, String)> {
+    let declared: Vec<(String, String)> = document
+        .kind_catalogs
+        .as_ref()
+        .and_then(|catalogs| catalogs.get("parts"))
+        .and_then(serde_json::Value::as_array)
+        .map(|entries| {
+            entries
+                .iter()
+                .filter_map(|entry| {
+                    let id = entry.get("id").and_then(serde_json::Value::as_str)?;
+                    let label = ["label", "name"].iter().find_map(|key| entry.get(*key).and_then(serde_json::Value::as_str)).filter(|label| !label.is_empty()).unwrap_or(id);
+                    Some((id.to_string(), label.to_string()))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    if !declared.is_empty() {
+        return declared;
+    }
+    let mut inferred: Vec<String> = document.parts.iter().map(|part| part.part_kind.clone()).filter(|kind| !kind.is_empty()).collect();
+    inferred.sort();
+    inferred.dedup();
+    inferred.into_iter().map(|kind| (kind.clone(), kind)).collect()
+}
+
+/// 🗂️ The authored [`PUZZLE5D_SHIPPED_PART_KINDS`] IS the two named examples' own catalog rows, in
+/// their own order — the law that lets the `partKind` select be a `const` instead of a parse of
+/// 171 591 B of DSL on the `describe()` path (slice PZ2, 2026-09-22). It pays that parse HERE, once,
+/// where a slow test costs nothing, and fails the moment an example's kinds change without the
+/// authored list following.
+#[semio_framework_async_macros::async_test]
+async fn shipped_part_kinds_are_the_two_named_examples_own_catalog_rows() {
+    let mut derived: Vec<(String, String)> = Vec::new();
+    for document in [&*CONCRETE_FOREST_EXAMPLE_DOCUMENT, &*NAKAGIN_EXAMPLE_DOCUMENT] {
+        for (id, label) in puzzle5d_part_kind_rows(document) {
+            if derived.len() >= PUZZLE5D_PART_KIND_OPTIONS_MAX {
+                break;
+            }
+            if derived.iter().any(|(existing, _)| existing == &id) {
+                continue;
+            }
+            derived.push((id, label));
+        }
+    }
+    let authored: Vec<(String, String)> = PUZZLE5D_SHIPPED_PART_KINDS.iter().map(|(id, label)| ((*id).to_string(), (*label).to_string())).collect();
+    assert_eq!(authored, derived, "PUZZLE5D_SHIPPED_PART_KINDS drifted from the shipped documents — re-author it from `concrete-forest` then `nakagin-capsule-tower`");
+}
+//#endregion 🔖️Pz2ShippedKindCatalog

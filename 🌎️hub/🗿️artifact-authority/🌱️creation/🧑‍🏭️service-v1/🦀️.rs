@@ -130,7 +130,9 @@ impl ArtifactCreationServiceV1 {
         Ok(self.directory.backend().append_artifact_creation_fact(&append).await?.status())
     }
 
-    async fn terminal(&self, intent: &ArtifactCreationIntentV1, cancelled: bool, now_ms: u64) -> DirectoryResult<SpaceArtifactCreationStatusV1> {
+    async fn terminal(&self, intent: &ArtifactCreationIntentV1, cancelled: bool, reason: &str, context: &OperationContext<'_>) -> DirectoryResult<SpaceArtifactCreationStatusV1> {
+        let now_ms = context.now_ms();
+        context.control.fault(&format!("creation {} {}: {reason}", intent.scope.space_id, intent.request.request_id));
         let operation = self.read(&intent.actor.user_id, &intent.scope.space_id, &intent.request.request_id).await?;
         let append = ArtifactCreationFactAppendV1 {
             actor: intent.actor.clone(),
@@ -170,6 +172,19 @@ impl ArtifactCreationServiceV1 {
             Err(error) => return Err(error),
         };
         if expired || revoked {
+            context.control.fault(&format!(
+                "creation {} {}: uncommitted key closed because {}; now={} deadline={} phase={:?}",
+                intent.scope.space_id,
+                intent.request.request_id,
+                match (expired, revoked) {
+                    (true, true) => "the deadline passed and the authority was revoked",
+                    (true, false) => "the deadline passed",
+                    _ => "the authority was revoked",
+                },
+                context.now_ms(),
+                intent.deadline_ms,
+                operation.phase
+            ));
             return Ok(self.directory.backend().artifact_creation_terminate_uncommitted(&intent, context.now_ms()).await?.status());
         }
         if operation.phase == SpaceArtifactCreationPhaseV1::Accepted {
@@ -189,14 +204,14 @@ impl ArtifactCreationServiceV1 {
             return Ok(operation.status());
         }
         if !self.catalog_matches(&intent) {
-            return self.terminal(&intent, false, context.now_ms()).await;
+            return self.terminal(&intent, false, "the selected catalog no longer matches the accepted intent", context).await;
         }
         let mut limits = context.limits();
         limits.max_pair_bytes = limits.max_pair_bytes.min(ARTIFACT_CREATION_PAIR_MAX_BYTES as u64);
-        let bounded = OperationContext::new(intent.deadline_ms, limits, context.control);
+        let bounded = OperationContext::stall_bounded(ARTIFACT_CREATION_STALL_BOUND_MS, limits, context.control).map_err(authority_error)?;
         let candidate = match ValidatingCanonicalArtifactAuthority::new(self.catalog.clone()).materialize_genesis(ArtifactGenesisRequest { scope: intent.scope.clone(), kind_id: intent.request.kind_id.clone() }, &bounded).await {
             Ok(candidate) => candidate,
-            Err(error) => return self.terminal(&intent, matches!(error, AuthorityError::Cancelled), context.now_ms()).await,
+            Err(error) => return self.terminal(&intent, matches!(error, AuthorityError::Cancelled), &format!("genesis materialization failed: {error}"), context).await,
         };
         let prepared = ArtifactCreationPreparedV1 { descriptor: candidate.descriptor, checkpoint: candidate.candidate.checkpoint, pack: candidate.candidate.pair.pack, spr: candidate.candidate.pair.spr };
         prepared.validate(&intent)?;
@@ -221,7 +236,8 @@ impl ArtifactCreationServiceV1 {
         }
         let mut limits = context.limits();
         limits.max_pair_bytes = limits.max_pair_bytes.min(ARTIFACT_CREATION_PAIR_MAX_BYTES as u64);
-        self.publish_prepared(operation, authority, &OperationContext::new(intent.deadline_ms, limits, context.control)).await
+        let bounded = OperationContext::stall_bounded(ARTIFACT_CREATION_STALL_BOUND_MS, limits, context.control).map_err(authority_error)?;
+        self.publish_prepared(operation, authority, &bounded).await
     }
 
     async fn publish_prepared<A: ArtifactCreationCommitAuthorityV1>(&self, operation: ArtifactCreationOperationV1, authority: &A, context: &OperationContext<'_>) -> DirectoryResult<SpaceArtifactCreationStatusV1> {
@@ -230,7 +246,7 @@ impl ArtifactCreationServiceV1 {
         }
         let intent = &operation.intent;
         if !self.catalog_matches(intent) {
-            return self.terminal(intent, false, context.now_ms()).await;
+            return self.terminal(intent, false, "the selected catalog no longer matches the prepared intent", context).await;
         }
         let prepared = operation.prepared.as_ref().ok_or_else(|| DirectoryError::Conflict("creation has no prepared bytes".into()))?;
         prepared.validate(intent)?;
@@ -238,7 +254,12 @@ impl ArtifactCreationServiceV1 {
         let candidate = CheckpointCandidate { checkpoint: prepared.checkpoint.clone(), pair: ArtifactPair { pack: prepared.pack.clone(), spr: prepared.spr.clone() } };
         match CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(self.storage.clone()), publisher).publish_candidate(candidate, context).await {
             Ok(_) => Ok(self.read(&intent.actor.user_id, &intent.scope.space_id, &intent.request.request_id).await?.status()),
-            Err(AuthorityError::Publication(_)) => {
+            Err(AuthorityError::Publication(detail)) => {
+                // 🧯️ Indeterminate is a status, not a reason. This arm is the one route out of a
+                // prepared creation that writes no durable terminal fact, so without the sentence
+                // the operator sees a creation stuck in `preparing` until the recovery sweep closes
+                // it and nothing anywhere says why (ticket 26/09/18 slice HC1, hub 7681).
+                context.control.fault(&format!("creation {} {}: genesis publication is indeterminate: {detail}", intent.scope.space_id, intent.request.request_id));
                 let current = self.read(&intent.actor.user_id, &intent.scope.space_id, &intent.request.request_id).await?;
                 if matches!(current.phase, SpaceArtifactCreationPhaseV1::Ready | SpaceArtifactCreationPhaseV1::Cancelled | SpaceArtifactCreationPhaseV1::Failed) {
                     return Ok(current.status());
@@ -252,7 +273,7 @@ impl ArtifactCreationServiceV1 {
                     ready: None,
                 })
             }
-            Err(error) => self.terminal(intent, matches!(error, AuthorityError::Cancelled), context.now_ms()).await,
+            Err(error) => self.terminal(intent, matches!(error, AuthorityError::Cancelled), &format!("genesis publication failed: {error}"), context).await,
         }
     }
 }

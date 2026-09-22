@@ -226,6 +226,7 @@ async fn artifact_contribution_descriptor_round_trips() {
             policy_version: 1,
             contributor: "aec-building".into(),
             depends_on: vec!["s.cad.building#topology".into()],
+            payload: None,
         }],
     };
     let json = serde_json::to_value(&descriptor).unwrap();

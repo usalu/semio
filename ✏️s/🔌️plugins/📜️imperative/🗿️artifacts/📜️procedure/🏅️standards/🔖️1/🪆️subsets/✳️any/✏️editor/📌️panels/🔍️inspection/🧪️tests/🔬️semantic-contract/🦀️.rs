@@ -26,8 +26,19 @@ fn imperative_semantic_panels_match_the_json_oracle() {
         let node = crate::editor::procedure::modes::edit::windows::main::render(&document, &vectors["runOutput"].to_string(), labels).expect("table");
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("table surface") };
         let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(props).expect("packed table");
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.columns_json).expect("columns oracle"), row["columns"]);
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.rows_json).expect("rows oracle"), vectors["rows"]);
+        // 📊️ `TableWindowKit::render` emits the renderer table contract both hosts read: `columnsJson`
+        // as `{id, label}` records and `rowsJson` as `{id, "<column index>": cell}` records. The
+        // committed oracle spells what the USER reads — the locale-resolved column labels and the cell
+        // text in column order — so the records are projected back to that, rather than the oracle being
+        // rewritten into the renderer's keying.
+        let columns: Vec<serde_json::Value> = serde_json::from_str::<Vec<serde_json::Value>>(&scene.columns_json).expect("columns oracle").into_iter().map(|column| column["label"].clone()).collect();
+        assert_eq!(serde_json::Value::Array(columns.clone()), row["columns"]);
+        let rows: Vec<serde_json::Value> = serde_json::from_str::<Vec<serde_json::Value>>(&scene.rows_json)
+            .expect("rows oracle")
+            .into_iter()
+            .map(|record| serde_json::Value::Array((0..columns.len()).map(|column| record[column.to_string().as_str()].clone()).collect()))
+            .collect();
+        assert_eq!(serde_json::Value::Array(rows), vectors["rows"]);
         project(node);
     }
     for node in [crate::editor::procedure::modes::edit::windows::script::render(&document).expect("editor text"), crate::viewer::procedure::modes::view::windows::script::render(&document).expect("viewer text")] {

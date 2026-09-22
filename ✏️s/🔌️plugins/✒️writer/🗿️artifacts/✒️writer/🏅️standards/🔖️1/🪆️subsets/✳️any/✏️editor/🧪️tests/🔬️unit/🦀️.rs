@@ -1,6 +1,6 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as framework_new_app_with_registry_and_members};
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as framework_new_app_with_registry_and_members, settle_registered_typed_operation};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
     pub const WRITER_TEST_WINDOW_ID: &str = "writer-main-test";
@@ -72,8 +72,26 @@ pub(crate) mod context {
         let (schema, id) = (document.schema.clone(), document.id.clone());
         let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None);
         let files = store::print_document_pack(&envelope).await.expect("print jack document pack");
+        retire_writer_envelope(envelope);
         app.load_document_pack(&files).await.expect("load jack");
         app
+    }
+
+    /// 🧹️ A document envelope a test builds only to print a pack is a TERMINAL SHELL: `ArtifactEnvelope`
+    /// asserts in `Drop` that an app-owned bounded retirement authority detached its nested owners first
+    /// ("artifact envelope terminal shell reached Drop before its app-owned bounded retirement authority
+    /// detached every nested owner"), and only a store ever runs that protocol. No store adopts this one,
+    /// so the artifact's OWN owner catalog retires it here — the same shape `🖨️raster`'s
+    /// `retire_raster_envelope` uses for exactly this fixture pattern.
+    pub fn retire_writer_envelope(envelope: store::ArtifactEnvelope<WriterSnapshot, WriterMutation>) {
+        let mut retirement = crate::spr::writer_document_store_owners().retire_envelope_uninstalled(envelope).expect("an uninstalled writer owner catalog retires one envelope");
+        for _ in 0..1_000_000 {
+            if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) {
+                return;
+            }
+            store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("writer test envelope retires within its exact grant");
+        }
+        panic!("writer test envelope did not reach its terminal-empty shell")
     }
     
     pub async fn dispatch(app: &mut WriterApp, command: WriterCommand) -> InvocationResult {
@@ -100,27 +118,20 @@ pub(crate) mod context {
     }
     
     /// 🚰️ Completes every admitted retained operation and acknowledges its bounded output pages.
+    ///
+    /// 🧹️ Delegates to the FRAMEWORK's own settle helper rather than re-rolling the pump. The
+    /// hand-rolled loop this replaces drained the lane pages, the effects, the events and the ui
+    /// scopes — but never the terminal-witness outbox (`take_typed_operation_completion`), the
+    /// composed-result outbox or the local interaction-query replies, all three of which
+    /// `has_pending_typed_operations` COUNTS. Every writer command whose operation published no
+    /// further lane page therefore spun this loop to its 30 s deadline and failed with "Writer
+    /// retained operations did not finish" (fleet-brief stale-test bucket 6; the same defect
+    /// ticket 26/09/09/PROCEDURAL-3D-END-TO-END fixed inside the helper). It also takes ONE page
+    /// per turn where the helper drains every presented page, so a command publishing an artifact
+    /// AND a config lane reported only one of them.
     pub async fn drain_typed_operations(app: &mut WriterApp) -> Vec<semio_framework_plugin::Effect> {
-        let mut effects = Vec::new();
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-        while app.has_pending_typed_operations() {
-            assert!(std::time::Instant::now() < deadline, "Writer retained operations did not finish");
-            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Writer retained maintenance");
-            app.advance_typed_operation_publication().await.expect("Writer retained publication");
-            if let Some(page) = app.take_typed_operation_result_page(1) {
-                let lane = page.lane;
-                let bytes = page.bytes().to_vec();
-                app.acknowledge_typed_operation_result(page.token).expect("Writer retained output acknowledgement");
-                assert_ne!(lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "Writer retained publication fault: {bytes:?}");
-            }
-            while let Some(effect) = app.take_typed_operation_effect() {
-                effects.push(effect);
-            }
-            app.take_typed_operation_event();
-            app.take_typed_operation_ui_scope();
-            std::thread::yield_now();
-        }
-        effects
+        let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id).await.unwrap_or_else(|fault| panic!("Writer retained operations did not settle: {fault:?}"));
+        receipt.effects
     }
     
     pub async fn render(app: &mut WriterApp, body_key: &str) -> String {
@@ -455,7 +466,11 @@ async fn jack_completions_use_example_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
     let commands = every_command();
-    assert_eq!(commands.len(), 21, "every WriterCommand row must be covered by every_command()");
+    // 🔢️ Counted off the enum itself (`app_commands!` emits one `TOOL_JOB_IDS` entry per row) rather
+    // than a literal: the literal said 21 while the surface has been 19 rows since `ast-hover` and
+    // `text-hover` dissolved into the framework's own `ast` interaction domain, so the law failed on
+    // its own staleness instead of on an uncovered row — which is all it was ever there to catch.
+    assert_eq!(commands.len(), WriterCommand::TOOL_JOB_IDS.len(), "every WriterCommand row must be covered by every_command()");
     let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
@@ -731,8 +746,13 @@ async fn writer_labels_resolve_native_english_by_default_across_every_surface() 
     let mut app = context::new_app().await;
     let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
     let inspection_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(inspection).expect("render JSON");
-    assert!(inspection_json.contains("\"Document\""));
-    assert!(inspection_json.contains("\"Camera\""));
+    // 🗣️ The inspection body renders ONE section, labelled with this app's own `artifact` term —
+    // native English "Artifact" (never the German "Artefakt", which is what "by default" means here).
+    // It asserted "Document"/"Camera": neither is in `WriterPlayLabels` (the artifact term has been
+    // "Artifact" throughout) and the panel has never rendered a camera section, so the law failed on
+    // its own vocabulary rather than on a locale regression.
+    assert!(inspection_json.contains("\"Artifact\""), "{inspection_json}");
+    assert!(!inspection_json.contains("Artefakt"), "{inspection_json}");
     let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
     let catalogue_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(catalogue).expect("render JSON");
     assert!(catalogue_json.contains("\"Language\""));

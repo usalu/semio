@@ -279,7 +279,7 @@ fn context_resolve_handler(catalog: &Catalog, counter: &std::sync::atomic::Atomi
 /// stubs (`artifact.*`, `job.*`, `ui.*`), so this is now purely a census: there is no such thing
 /// as a declared-but-unimplemented tool here any more. A tool's PRESENCE never depends on which
 /// progressive-enhancement tier the server is running in; only a call's RESULT does.
-pub const GATEWAY_TOOL_NAMES: [&str; 27] = [
+pub const GATEWAY_TOOL_NAMES: [&str; 28] = [
     "capabilities_search",
     "capabilities_describe",
     "context_resolve",
@@ -305,6 +305,7 @@ pub const GATEWAY_TOOL_NAMES: [&str; 27] = [
     "inference_approve",
     "ui_focus",
     "ui_reveal",
+    "conversation_reply",
     "job_get",
     "job_cancel",
 ];
@@ -437,13 +438,13 @@ fn history_redo_handler(actions: &ActionAdapter, arguments: serde_json::Value) -
     }
 }
 
-/// 🏗️ Builds the real `ToolRegistry` this crate serves — 26 tools, none of them a stub: the 3 core
+/// 🏗️ Builds the real `ToolRegistry` this crate serves — 28 tools, none of them a stub: the 3 core
 /// gateway tools, the 8 mutation-protocol tools (`P6-actions-policy`, backed by `actions`/
 /// `principal`), the 5 `🗿️artifact` tools, the 2 `💡️inference` discovery tools, the 4 hub-backed
 /// `💡️inference` job tools (`inference_submit`/`inference_events`/`inference_cancel`/
-/// `inference_approve`), and the 4 `🖥️ui` tools
-/// (`ui_focus`/`ui_reveal`/`job_get`/`job_cancel`). Ticket 26/08/29/AI-MCP-END-TO-END retired
-/// the last of these stubs entirely.
+/// `inference_approve`), the 4 `🖥️ui` tools (`ui_focus`/`ui_reveal`/`job_get`/`job_cancel`) and
+/// `conversation_reply` (the agent's own free-text turn, ticket 26/09/18 slice AC1). Ticket
+/// 26/08/29/AI-MCP-END-TO-END retired the last of these stubs entirely.
 ///
 /// `workspace` and `bridge` carry the progressive-enhancement tier: a tool's PRESENCE in
 /// `tools/list` never depends on either being bound — only a call's RESULT does, as a structured,
@@ -456,6 +457,9 @@ pub fn build_tool_registry(
     bridge: Option<BridgeSlot>,
 ) -> InMemoryToolRegistry {
     let mut registry = InMemoryToolRegistry::new();
+    // 💬️ Cloned up front: `principal` is moved into the inference job tools further down, and the
+    // conversation tool is the only other one that gates on it.
+    let (conversation_actions, conversation_principal) = (actions.clone(), principal.clone());
 
     let search_tool = tool_from_capability(catalog.get("capabilities.search").expect("capabilities.search compiled"), "capabilities_search");
     let search_catalog = catalog.clone();
@@ -531,6 +535,11 @@ pub fn build_tool_registry(
     //#region 💡️Inference
     register_inference_job_tools(&mut registry, workspace.clone(), actions.clone(), principal.clone(), default_session());
     //#endregion 💡️Inference
+    //#region 💬️Conversation
+    // 💬️ The agent's own voice. Registered from the SAME principal the mutation tools are gated on,
+    // because it is the one UI tool a scope decides.
+    register_conversation_tools(&mut registry, bridge.clone(), conversation_actions, conversation_principal);
+    //#endregion 💬️Conversation
     register_ui_tools(&mut registry, bridge, workspace);
 
     registry

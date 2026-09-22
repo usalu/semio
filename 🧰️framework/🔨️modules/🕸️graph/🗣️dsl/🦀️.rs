@@ -708,6 +708,9 @@ enum Token {
     Eq,
     Ne,
     Arrow,
+    /// ➖️ A bare `-`, the Cypher spelling of the pattern connector in `(a)-[r]->(b)`. `DashArrow`
+    /// (`--`) is this grammar's own equal-status spelling; both reach the same `PatternEdge`.
+    Dash,
     DashArrow,
     BackArrow,
     At,
@@ -729,7 +732,7 @@ fn token_class(token: &Token) -> TokenClass {
         Token::Ident(_) => TokenClass::Ident,
         Token::Number(_) => TokenClass::Number,
         Token::StringLit(_) => TokenClass::String,
-        Token::Eq | Token::Ne | Token::Arrow | Token::DashArrow | Token::BackArrow | Token::At => TokenClass::Operator,
+        Token::Eq | Token::Ne | Token::Arrow | Token::Dash | Token::DashArrow | Token::BackArrow | Token::At => TokenClass::Operator,
         Token::LParen | Token::RParen | Token::LBracket | Token::RBracket | Token::Colon | Token::Comma | Token::Dot => TokenClass::Punctuation,
         Token::Eof => TokenClass::Punctuation,
     }
@@ -813,6 +816,12 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
             dsl_core::os_dsl::TokenKind::Equals => push_spanned(out, Token::Eq, start, end),
             dsl_core::os_dsl::TokenKind::At => push_spanned(out, Token::At, start, end),
             dsl_core::os_dsl::TokenKind::Arrow => push_spanned(out, Token::Arrow, start, end),
+            // ➖️ A bare `-` is the pattern connector every Cypher-shaped query writes
+            // (`(a)-[r:Kind]->(b)`), which is also what this dialect's own executor parser accepts
+            // and what every committed example query in the repo uses. It used to fall into the
+            // stray-character bucket below and every such query was reported
+            // `unexpected character '-'` by lint/complete/hover/format while running perfectly.
+            dsl_core::os_dsl::TokenKind::Minus => push_spanned(out, Token::Dash, start, end),
             dsl_core::os_dsl::TokenKind::DashArrow => push_spanned(out, Token::DashArrow, start, end),
             dsl_core::os_dsl::TokenKind::BackArrow => push_spanned(out, Token::BackArrow, start, end),
             // Double-quoted text delegated straight through `dsl_core` — unreachable in practice
@@ -829,7 +838,6 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
             | dsl_core::os_dsl::TokenKind::Caret
             | dsl_core::os_dsl::TokenKind::DotDot
             | dsl_core::os_dsl::TokenKind::Plus
-            | dsl_core::os_dsl::TokenKind::Minus
             | dsl_core::os_dsl::TokenKind::Star
             | dsl_core::os_dsl::TokenKind::Slash
             | dsl_core::os_dsl::TokenKind::Fence
@@ -1395,6 +1403,7 @@ fn format_token(tok: &Token) -> String {
         Token::Eq => "=".into(),
         Token::Ne => "!=".into(),
         Token::Arrow => "->".into(),
+        Token::Dash => "-".into(),
         Token::DashArrow => "--".into(),
         Token::BackArrow => "<-".into(),
         Token::At => "@".into(),
@@ -1428,6 +1437,9 @@ pub fn format(source: &str) -> Result<String, GraphDslError> {
             Token::Arrow => {
                 out.push_str("->");
             }
+            Token::Dash => {
+                out.push_str("-");
+            }
             Token::DashArrow => {
                 out.push_str("--");
             }
@@ -1447,7 +1459,7 @@ pub fn format(source: &str) -> Result<String, GraphDslError> {
             _ => {
                 if line_open && !out.ends_with(' ') && !out.ends_with('\n') && !matches!(row.token, Token::RParen | Token::RBracket | Token::Comma | Token::Dot) {
                     let prev = tokens.get(i.saturating_sub(1)).map(|t| &t.token);
-                    if !matches!(prev, Some(Token::LParen | Token::LBracket | Token::Colon | Token::Dot | Token::Arrow | Token::DashArrow | Token::BackArrow)) {
+                    if !matches!(prev, Some(Token::LParen | Token::LBracket | Token::Colon | Token::Dot | Token::Arrow | Token::Dash | Token::DashArrow | Token::BackArrow)) {
                         out.push(' ');
                     }
                 }
@@ -1765,7 +1777,11 @@ impl Parser {
                 let right = self.parse_bracketed_pattern_node()?;
                 Ok(Pattern { nodes: vec![left], edge: Some(PatternEdge { var: None, kind: None, directed: true, right }) })
             }
-            Token::DashArrow => {
+            // ➖️ `-` and `--` are the SAME connector. Cypher (and this dialect's own executor parser,
+            // and every committed example query in the repo) writes `(a)-[r:Kind]->(b)`; `--` is this
+            // grammar's own equal-status spelling. Accepting only `--` made every real query fail
+            // `unexpected character '-'` in lint/complete/hover/format while the executor ran it fine.
+            Token::Dash | Token::DashArrow => {
                 self.bump();
                 if matches!(self.peek(), Token::LBracket) {
                     let (edge_var, edge_kind) = self.parse_edge_label()?;
@@ -1774,11 +1790,11 @@ impl Parser {
                             self.bump();
                             true
                         }
-                        Token::DashArrow => {
+                        Token::Dash | Token::DashArrow => {
                             self.bump();
                             false
                         }
-                        other => return Err(GraphDslError::UnexpectedToken { expected: "-> or --".into(), found: format!("{other:?}") }),
+                        other => return Err(GraphDslError::UnexpectedToken { expected: "->, - or --".into(), found: format!("{other:?}") }),
                     };
                     let right = self.parse_bracketed_pattern_node()?;
                     Ok(Pattern { nodes: vec![left], edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed, right }) })
@@ -1791,7 +1807,12 @@ impl Parser {
                 self.bump();
                 if matches!(self.peek(), Token::LBracket) {
                     let (edge_var, edge_kind) = self.parse_edge_label()?;
-                    self.expect(&Token::DashArrow)?;
+                    match self.peek() {
+                        Token::Dash | Token::DashArrow => {
+                            self.bump();
+                        }
+                        other => return Err(GraphDslError::UnexpectedToken { expected: "- or --".into(), found: format!("{other:?}") }),
+                    }
                     let right = self.parse_bracketed_pattern_node()?;
                     Ok(Pattern { nodes: vec![right], edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed: true, right: left }) })
                 } else {

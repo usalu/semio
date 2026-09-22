@@ -15,7 +15,9 @@ async fn math_document_text_round_trips_through_store() {
     use crate::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::UpdateGraphAlgorithm;
     let initial = EquationSnapshot::default();
     let envelope = store::create_document_envelope(crate::MATH_DOCUMENT_SCHEMA, "math-demo", initial, None);
-    let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    // 🔐️ Owner-installing guard (`🚪️io/📸️snapshot/💾️binary`) — a bare `ArtifactStore::new` refuses
+    // every `Apply` with `edit history insertion requires its exact mutation retirement factory`.
+    let mut store = crate::standards::v1::subsets::any::io::snapshot::binary::new_equation_store(envelope).await.expect("valid artifact store fixture");
     let mutation = UpdateGraphAlgorithm { new_algorithm: "components".into(), new_algorithm_seed: None };
     store.dispatch(store::ArtifactCommand::Apply { mutations: vec![EquationMutation::UpdateGraphAlgorithm(mutation)], description: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;

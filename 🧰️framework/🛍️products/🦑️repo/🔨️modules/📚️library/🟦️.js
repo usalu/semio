@@ -444,7 +444,7 @@ function resolveCliBin(root) {
 /** 🗃️ The MCP server is build output, so it lives in the marked repository cache and never in the tree. */
 function defaultMcpBin(root) {
     var win = process.platform === "win32";
-    return (0, node_path_1.join)(root, ".🧬semio", "🦑️repo", "⚡️cache", "🗃️bin", win ? "semio-repo-mcp.exe" : "semio-repo-mcp");
+    return (0, node_path_1.join)(root, ".🧬semio", "🦑️repo", "⚡️cache", "🗃️bin", win ? "repo.exe" : "repo");
 }
 /** 🔌️Resolves the native repo MCP binary without colliding with the repo CLI executable. */
 function resolveMcpBin(root) {

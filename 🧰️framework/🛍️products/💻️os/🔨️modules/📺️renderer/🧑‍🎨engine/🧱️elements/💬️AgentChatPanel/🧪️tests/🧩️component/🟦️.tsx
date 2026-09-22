@@ -139,3 +139,64 @@ describe("AgentChatPanel composer accessibility", () => {
   });
 });
 //#endregion ♿️ComposerAccessibility
+
+//#region 💬️AgentReply
+/** 🧪️ Ticket `26/09/18` slice AC1, audit `📓️g19-ai-user-experience-audit.md` gap 1: until now a
+ * user could watch an agent act and type at it, but never read a word from it — the panel had no
+ * row kind for the agent's own prose. These laws cover the row's identity, its streaming state, its
+ * accessibility (a live region, announced not interrupted) and that both shipped locales name the
+ * speaker rather than leaving a wire identifier on screen. */
+function agentReply(id: string, text: string, state: "streaming" | "complete", inReplyTo: string | null = null): AgentConversationEntry {
+  return { kind: "agentMessage", id, text, state, inReplyTo, atMs: 0 };
+}
+
+describe("AgentChatPanel agent reply", () => {
+  it("renders the agent's own words as their own row, addressable by reply id", () => {
+    render(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[agentReply("rep_1", "Widening that wall means the 300 mm variant.", "complete", "msg_1")]} onSendMessage={() => true} />);
+    const row = document.querySelector("[data-semio-agent-chat-entry='agentMessage']")!;
+    expect(row.getAttribute("data-agent-chat-state")).toBe("complete");
+    expect(row.id).toBe("framework.chat.entry.agentMessage.rep_1");
+    expect(row.textContent).toContain("Widening that wall means the 300 mm variant.");
+    const prose = document.querySelector("[data-semio-agent-chat-reply='rep_1']")!;
+    expect(prose.getAttribute("data-semio-agent-chat-reply-to")).toBe("msg_1");
+    expect(prose.getAttribute("aria-live")).toBe("polite");
+    expect(prose.getAttribute("aria-busy")).toBe("false");
+  });
+
+  it("says a turn is still arriving while it streams, and stops saying so once it is complete", () => {
+    const view = render(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[agentReply("rep_2", "Checking the", "streaming")]} onSendMessage={() => true} />);
+    const streaming = document.querySelector("[data-semio-agent-chat-entry='agentMessage']")!;
+    expect(streaming.getAttribute("data-agent-chat-state")).toBe("streaming");
+    expect(streaming.textContent).toContain("Still writing…");
+    expect(document.querySelector("[data-semio-agent-chat-reply='rep_2']")!.getAttribute("aria-busy")).toBe("true");
+
+    view.rerender(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[agentReply("rep_2", "Checking the catalog — one moment.", "complete")]} onSendMessage={() => true} />);
+    const settled = document.querySelector("[data-semio-agent-chat-entry='agentMessage']")!;
+    expect(settled.getAttribute("data-agent-chat-state")).toBe("complete");
+    expect(settled.textContent).not.toContain("Still writing…");
+    expect(settled.textContent).toContain("Checking the catalog — one moment.");
+  });
+
+  it("names the speaker in both shipped locales and never falls back to the wire identifier", async () => {
+    for (const [locale, role, streaming] of [
+      ["en", "Agent", "Still writing…"],
+      ["de", "Agent", "Schreibt noch…"],
+    ] as const) {
+      await setUiLocale(locale);
+      const view = render(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[agentReply("rep_3", "…", "streaming")]} onSendMessage={() => true} />);
+      const row = document.querySelector("[data-semio-agent-chat-entry='agentMessage']")!;
+      expect(row.textContent).toContain(role);
+      expect(row.textContent).toContain(streaming);
+      expect(row.textContent).not.toContain("agentMessage");
+      view.unmount();
+    }
+    await setUiLocale("en");
+  });
+
+  it("offers no cancel and no approval control on a prose row — there is nothing to stop or decide", () => {
+    render(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[agentReply("rep_4", "Done.", "complete")]} onSendMessage={() => true} onCancelToolCall={() => true} onResolveApproval={() => undefined} />);
+    expect(document.querySelector("[data-semio-agent-chat-cancel]")).toBeNull();
+    expect(document.querySelector("[data-semio-agent-chat-approval]")).toBeNull();
+  });
+});
+//#endregion 💬️AgentReply

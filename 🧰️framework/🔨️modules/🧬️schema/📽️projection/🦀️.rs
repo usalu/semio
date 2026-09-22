@@ -494,7 +494,26 @@ export type CommandOwnerAddress = "os" | { "plugin": { pluginId: string, } } | {
  * travels over the wire in a manifest), plus `contributor`/`depends_on` for the contribution's own
  * identity and ordering (contract freeze §4: `owner == contributor`, `artifact_kind == target`).
  */
-export type ContributedInferenceMetadata = { owner: string, artifactKind: string, artifactSchema: string, artifactSchemaVersion: number, documentSchema: string, documentSchemaVersion: number, inferenceSchema: string, inferenceSchemaVersion: number, algorithmVersion: number, policyVersion: number, contributor: string, dependsOn: Array<string>, };"####,
+export type ContributedInferenceMetadata = { owner: string, artifactKind: string, artifactSchema: string, artifactSchemaVersion: number, documentSchema: string, documentSchemaVersion: number, inferenceSchema: string, inferenceSchemaVersion: number, algorithmVersion: number, policyVersion: number, contributor: string, dependsOn: Array<string>, payload?: InferencePayloadContract, };"####,
+        },
+        SchemaMetadata {
+            name: "InferencePayloadContract",
+            version: 1,
+            typescript: r####"/**
+ * 📜️ One inference's published payload contract — the schema-first answer to "what do I send?".
+ * `inputSchema`/`outputSchema` are JSON Schema 2020-12 documents as TEXT, authored beside the
+ * inference and carried verbatim. `progressUnit` names what the bounded job counts.
+ */
+export type InferencePayloadContract = { payloadSchemaId: string, inputSchema: string, outputSchema: string, progressUnit?: string, artifactBinding?: InferenceArtifactBinding, };"####,
+        },
+        SchemaMetadata {
+            name: "InferenceArtifactBinding",
+            version: 1,
+            typescript: r####"/**
+ * 🔗️ How one inference's canonical request is BOUND to an artifact document: the payload field the
+ * artifact's own pack/spr pair is written into, and the encoding it is written in.
+ */
+export type InferenceArtifactBinding = { field: string, encoding: string, required: boolean, };"####,
         },
         SchemaMetadata {
             name: "ContributedMutationMetadata",

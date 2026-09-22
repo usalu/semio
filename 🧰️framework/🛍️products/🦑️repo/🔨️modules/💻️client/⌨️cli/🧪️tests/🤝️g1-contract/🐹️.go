@@ -22,9 +22,9 @@ import (
 	command "github.com/usalu/semio/repo/client/internal/command"
 	eventstore "github.com/usalu/semio/repo/client/internal/eventstore"
 	glob "github.com/usalu/semio/repo/client/internal/glob"
-	search "github.com/usalu/semio/repo/client/internal/search"
+	search "github.com/usalu/semio/repo/search"
 	templatefunc "github.com/usalu/semio/repo/client/internal/templatefunc"
-	yaml "github.com/usalu/semio/repo/client/internal/yaml"
+	yaml "github.com/usalu/semio/repo/yaml"
 )
 
 // #region 📜️Fixture

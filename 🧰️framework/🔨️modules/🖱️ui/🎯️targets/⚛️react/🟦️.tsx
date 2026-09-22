@@ -9716,6 +9716,7 @@ import {
   TREE_WINDOW_OVERSCAN_ROWS,
   TREE_WINDOW_PATH_SEPARATOR,
   TREE_WINDOW_ROWS_MAX,
+  TREE_WINDOW_ROW_EXTENTS,
   type CatalogueItem,
   type CatalogueProps,
   type ControlDef,
@@ -9741,6 +9742,7 @@ import {
   type TreeSelectionMode,
   type TreeDataWindow,
   type TreeWindowContainerMeasure,
+  type TreeWindowRowExtent,
   type TreeWindowRowMeasure,
   type TreeWindowDomAttributes,
   type TreeWindowRequest,
@@ -9829,6 +9831,7 @@ export {
   TREE_WINDOW_OVERSCAN_ROWS,
   TREE_WINDOW_PATH_SEPARATOR,
   TREE_WINDOW_ROWS_MAX,
+  TREE_WINDOW_ROW_EXTENTS,
 };
 export type {
   CatalogueItem,
@@ -9856,6 +9859,7 @@ export type {
   TreeSelectionMode,
   TreeDataWindow,
   TreeWindowContainerMeasure,
+  TreeWindowRowExtent,
   TreeWindowRowMeasure,
   TreeWindowDomAttributes,
   TreeWindowRequest,

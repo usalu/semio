@@ -259,6 +259,17 @@ impl ArtifactEditor for SpaceIndexEditor {
         crate::space_core::space_retained_store_preparation::<Self::Config, Self::ConfigMutation>("space-index-config-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
     }
 
+    /// 🗃️ …and once presence stops refusing, the ARTIFACT store's own retirement catalog is the next
+    /// thing missing: `ArtifactStore`'s batch stage (`🧰️framework/…/🏪️store/🦀️.rs:17288`) copies
+    /// `mutation_retirement`/`snapshot_retirement` out of the store and refuses with
+    /// `batched fold lacks exact snapshot or mutation retirement authority` when either is `None`,
+    /// which the trait default is. Measured inside `s` on 2026-09-22 on the rebuilt guest as the
+    /// refusal that replaced the presence one, under BOTH `renameArtifact` and `touchArtifact`.
+    /// `⚙️playbook-module-procedural` hit the identical ladder the same afternoon.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
     /// 🧍 Every durable space-index gesture reads local presence on its ephemeral leg, and
     /// `PresenceStore::local_read` fails closed with `presence local read requires a live exact local
     /// retirement owner` while `local_retirement_factory` is `None` — measured inside `s` on
@@ -437,6 +448,18 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::Migrated)
         .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
         // 👁️ View actions — fold host-pushed state into `Config`, never in the palette.
+        // 📝️ The SAME two arguments, declared on the ACTION as well as on the dialog below.
+        // `actionRequiresStagedForm` (`🛠️ShellHelpers/🟦️.tsx:4169`) reads `action.args` and nothing
+        // else, so a verb whose only form lives in a `DialogDefinition` is fired BARE from the
+        // Actions rail, the command palette and the MCP lane — measured inside `s` on 2026-09-22:
+        // `createArtifact` dispatched with `staged controls []`, no refusal at all, and the space
+        // index still listed zero artifacts, because the guest received an empty payload and
+        // created nothing. The dialog stays: it is the nicer human surface and the rail is the
+        // other lane, and both now carry the same declaration (ticket 26/09/18 S11).
+        .action_args(
+            "createArtifact",
+            vec![ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).required(), ActionArgDef::artifact_kind("kindChoice", LocalizedLabel::native("Kind", "Art"), vec![semio_framework_plugin::AppRole::Editor]).required()],
+        )
         // 🗨️ Dialogs (worker-brief tasks 2–3). `createArtifact`'s submit re-dispatches the real
         // mutation directly (its own payload has no field the staged form can't supply); the delete
         // confirm and the invite form each go through a `request*` opener (see those commands' own

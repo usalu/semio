@@ -2924,6 +2924,27 @@ impl LayoutExportJob {
         PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
     }
 
+    /// 📮️ The ONE publication close slice BOTH close ladders run first. `begin_close` parks the job on
+    /// `LayoutExportCloseStage::Publication`, which `close_export_step` refuses outright — so whichever
+    /// ladder runs has to drain the retained publication payload and advance the stage itself. Only the
+    /// `InteractiveJob` ladder used to do that; `ArtifactReservedJob::close_step` (the reserved media
+    /// export route, `LayoutMediaExportJobFactory`) went straight to `close_export_step` and got the
+    /// refusal on EVERY call, which the caller sees as `Blocked` with nothing released. A close loop that
+    /// keeps stepping until `terminal_is_empty()` therefore spun forever, minting one `Fault` per turn —
+    /// three of this crate's export laws hung exactly there until the 30-minute test-binary watchdog
+    /// SIGKILLed the whole binary and took every other layout result with it.
+    fn close_publication_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+        if let Some(publication) = self.publication.as_mut() {
+            match publication.close_step(maximum_items, maximum_bytes) {
+                JobPayloadCloseStep::Pending { released_items, released_bytes } => return PluginCloseStep::Pending { released_items, released_bytes },
+                JobPayloadCloseStep::Complete if !publication.terminal_is_empty() => return PluginCloseStep::Blocked { reason: "layout export publication awaits its terminal-empty witness" },
+                JobPayloadCloseStep::Complete => self.publication = None,
+            }
+        }
+        self.close_stage = LayoutExportCloseStage::JsonValidation;
+        PluginCloseStep::Pending { released_items: usize::from(maximum_items > 0), released_bytes: 0 }
+    }
+
     fn close_export_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         if maximum_items == 0 {
             return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
@@ -4109,15 +4130,11 @@ impl InteractiveJob for LayoutExportJob {
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> InteractiveJobCloseStep {
         if self.close_stage == LayoutExportCloseStage::Publication {
-            if let Some(publication) = self.publication.as_mut() {
-                match publication.close_step(maximum_items, maximum_bytes) {
-                    JobPayloadCloseStep::Pending { released_items, released_bytes } => return InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                    JobPayloadCloseStep::Complete if !publication.terminal_is_empty() => return InteractiveJobCloseStep::Blocked,
-                    JobPayloadCloseStep::Complete => self.publication = None,
-                }
-            }
-            self.close_stage = LayoutExportCloseStage::JsonValidation;
-            return InteractiveJobCloseStep::Pending { released_items: usize::from(maximum_items > 0), released_bytes: 0 };
+            return match self.close_publication_step(maximum_items, maximum_bytes) {
+                PluginCloseStep::Pending { released_items, released_bytes } => InteractiveJobCloseStep::Pending { released_items, released_bytes },
+                PluginCloseStep::Complete => InteractiveJobCloseStep::Complete,
+                PluginCloseStep::AwaitingInput { .. } | PluginCloseStep::Blocked { .. } => InteractiveJobCloseStep::Blocked,
+            };
         }
         match self.close_export_step(maximum_items, maximum_bytes) {
             Ok(PluginCloseStep::Pending { released_items, released_bytes }) => InteractiveJobCloseStep::Pending { released_items, released_bytes },
@@ -4134,6 +4151,9 @@ impl InteractiveJob for LayoutExportJob {
 
 impl ArtifactReservedJob for LayoutExportJob {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        if self.close_stage == LayoutExportCloseStage::Publication {
+            return Ok(self.close_publication_step(maximum_items, maximum_bytes));
+        }
         self.close_export_step(maximum_items, maximum_bytes)
     }
 

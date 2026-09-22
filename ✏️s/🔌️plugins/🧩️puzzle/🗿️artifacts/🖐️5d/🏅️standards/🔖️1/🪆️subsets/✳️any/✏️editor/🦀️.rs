@@ -470,29 +470,24 @@ fn value_from_document(document: &Puzzle5dDocument) -> Value {
     dsl::os_pack::json::from_dsl_value(&dsl::DslValue::from(&serde_value))
 }
 
-struct Puzzle5dExampleOperations {
-    before: Value,
-    after: Puzzle5dDocument,
-    operations: Vec<Puzzle5dMutation>,
-}
-
-static PUZZLE5D_EXAMPLE_OPERATIONS: LazyLock<Vec<Puzzle5dExampleOperations>> = LazyLock::new(|| {
-    let documents = [empty_document(), concrete_forest_example_document(), nakagin_example_document(), capsule_dream_example_document()];
-    let values: Vec<Value> = documents.iter().map(value_from_document).collect();
-    let mut entries = Vec::new();
-    for before in &values {
-        for (after, after_value) in documents.iter().zip(&values) {
-            entries.push(Puzzle5dExampleOperations { operations: puzzle5d_operations_from_values(before, after_value), before: before.clone(), after: after.clone() });
-        }
-    }
-    entries
-});
-
 /// 🧮️ Document operations for a document mutation through the typed semantic delta vocabulary.
+///
+/// 🐛️ This used to consult `PUZZLE5D_EXAMPLE_OPERATIONS`, a `LazyLock` 4×4 matrix of the PAIRWISE
+/// deltas between all four shipped example documents, and fall back to computing the delta only on a
+/// miss. Every entry of that matrix held a full `before: Value` AND a full `after: Puzzle5dDocument`
+/// clone, and `capsule-dream` is 2 880 parts / ~3.5 MB of JSON — so the FIRST document-changing
+/// command of a process paid: four example documents decoded (3 035 200 B of DSL for capsule-dream
+/// alone), four `Value` projections, sixteen semantic diffs (several of them empty ↔ 2 880 parts),
+/// and thirty-two deep clones. Then EVERY later call linearly scanned those sixteen entries
+/// comparing `before` by DEEP `Value` equality against a multi-megabyte value.
+///
+/// It bought nothing: `entry.operations` was computed by exactly this `puzzle5d_operations_from_values`
+/// call on exactly these two values, so the memo could only ever return what the direct computation
+/// returns. Removing it is bit-identical in output and turns an O(examples²) startup cliff plus an
+/// O(document) per-call scan into one O(document) delta. It is what made every app-creating puzzle5d
+/// law run past 60 s and the whole test binary die to the 30-minute watchdog, and it is the same
+/// cliff on the live `setActiveExample` path.
 pub fn puzzle5d_operations_from_document_change(before: &Value, after_document: &Puzzle5dDocument) -> Vec<Puzzle5dMutation> {
-    if let Some(entry) = PUZZLE5D_EXAMPLE_OPERATIONS.iter().find(|entry| &entry.before == before && &entry.after == after_document) {
-        return entry.operations.clone();
-    }
     let after = value_from_document(after_document);
     puzzle5d_operations_from_values(before, &after)
 }
@@ -1662,7 +1657,16 @@ enum Puzzle5dClipboardStage {
 const PUZZLE5D_JSON_RETIREMENT_KEY_BYTES: usize = 4_096;
 
 fn puzzle5d_retire_vec_backing<T>(owners: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
-    if !owners.is_empty() || owners.capacity() == 0 {
+    // 🐛️ A `Vec` of a ZERO-SIZED element never allocates, and `Vec::capacity` reports `usize::MAX` for
+    // it by definition — so `capacity() == 0` is false forever and this returned
+    // `Pending { released_items: 1 }` on every call for a lane that has no backing at all. `Emit`'s
+    // `draft_mutations` is exactly that: `NoDraftMutation = NoConfigMutation` is the uninhabited
+    // `pub enum NoConfigMutation {}`. That made `puzzle5d_retire_completion_emit_step` answer `Some`
+    // forever, `Puzzle5dPendingCompletionRejection::close_step` never set `emit_closed`, and all four
+    // `*_completion_rejection_*` laws spun 100 000 bounded turns without converging. Captured
+    // 2026-09-22 from the law's own dump: `emit(mutations=0 cap=0 effects=0 cap=0 events=0 children=0
+    // cap=0 …)` with `emit_closed=false`.
+    if !owners.is_empty() || owners.capacity() == 0 || size_of::<T>() == 0 {
         return Ok(None);
     }
     let bytes = owners.capacity().saturating_mul(size_of::<T>());
@@ -7027,11 +7031,21 @@ impl Puzzle5dAddBrushPartWork {
         self.payload.clone().or_else(|| command.args().cloned())
     }
 
+    /// 🗂️ The kind this run adds: the caller's own `partKind`, else THIS tool's own declared select
+    /// default — never a literal.
+    ///
+    /// 🐛️ It used to fall back to the string `"Part"`, the very literal
+    /// `PUZZLE5D_SHIPPED_PART_KINDS` replaced in the select, so a bare `addPartKind` (the arg form
+    /// dispatched with no args, which is what an agent sends) added a part of a kind no catalog
+    /// declares. Measured 2026-09-22 (slice PZ2): `add_part_kind_materializes_the_declared_kind_default`
+    /// read back `"Part"` where the declared default is `"Hexagonal Cut Concrete Forest Left"`.
+    /// `addBrushPart` declares a one-row `"Part"` select of its own, so reading each tool's OWN
+    /// declared default keeps that verb byte-identical while fixing this one.
     fn owned_part_kind(&self, command: &Puzzle5dCommand) -> String {
         self.args(command)
             .and_then(|args| args.get("partKind").or_else(|| args.get("objectKindId")).or_else(|| args.get("nodeKind")).and_then(Value::as_str).map(str::to_string))
             .filter(|kind| !kind.is_empty())
-            .unwrap_or_else(|| "Part".to_string())
+            .unwrap_or_else(|| if self.tool_id == "addPartKind" { puzzle5d_default_part_kind(&puzzle5d_part_kind_options()) } else { "Part".to_string() })
     }
 
     fn catalogs(snapshot: &Puzzle5dPlaySnapshot) -> Vec<Value> {
@@ -8222,11 +8236,29 @@ struct Puzzle5dSetActiveExampleWork {
     admitted: bool,
     mutations: Vec<Puzzle5dMutation>,
     view_state: Option<semio_framework_plugin::ViewModel>,
+    /// 🗂️ The BEFORE document's ids to clear — fastener ids, part ids and compatibility pairs —
+    /// harvested ONCE and then merely indexed by the cursored clearing stages.
+    ///
+    /// 🐛️ `step` used to call `puzzle5d_projection_value(&snapshot.0)` on entry, i.e. re-derive the
+    /// whole document (`serde_json::Value` → `DslValue` → os-pack `Value`) on each of the ~110 chunk
+    /// steps one example switch takes, and then re-walk its arrays. The run's snapshot is an `Arc`
+    /// the retained driver holds FIXED for the whole run (nothing publishes before `Complete`), so
+    /// every one of those derivations produced the same bytes — and leaving `🌙️capsule-dream`
+    /// (2 880 parts, ~3.5 MB of JSON) paid that whole projection ~110 times for one switch.
+    before: Option<std::sync::Arc<Puzzle5dSetActiveExampleBefore>>,
+}
+
+/// 🗂️ Everything the clearing stages need from the BEFORE document, harvested in one pass.
+#[derive(Default)]
+struct Puzzle5dSetActiveExampleBefore {
+    fastener_ids: Vec<String>,
+    part_ids: Vec<String>,
+    compatibility: Vec<(String, String)>,
 }
 
 impl Default for Puzzle5dSetActiveExampleWork {
     fn default() -> Self {
-        Self { stage: Puzzle5dSetActiveExampleStage::ClearFasteners, cursor: 0, admitted: false, mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), view_state: None }
+        Self { stage: Puzzle5dSetActiveExampleStage::ClearFasteners, cursor: 0, admitted: false, mutations: Vec::with_capacity(crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS), view_state: None, before: None }
     }
 }
 
@@ -8315,24 +8347,39 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
-        let projection = puzzle5d_projection_value(&snapshot.0);
-        let Some(target) = Self::target(command) else {
-            self.stage = Puzzle5dSetActiveExampleStage::Complete;
-            return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.example_too_large.as_str())));
-        };
+        if self.before.is_none() {
+            let projection = puzzle5d_projection_value(&snapshot.0);
+            let strings = |rows: Option<&Vec<Value>>, key: &str| -> Vec<String> {
+                rows.map(|rows| rows.iter().filter_map(|row| row.get(key)).filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default()
+            };
+            self.before = Some(std::sync::Arc::new(Puzzle5dSetActiveExampleBefore {
+                fastener_ids: strings(projection.get("fasteners").and_then(Value::as_array), "id"),
+                part_ids: strings(projection.get("parts").and_then(Value::as_array), "id"),
+                compatibility: projection
+                    .get("kindCompatibility")
+                    .and_then(Value::as_array)
+                    .map(|rows| rows.iter().map(|row| (row.get("source").and_then(Value::as_str).unwrap_or("").to_string(), row.get("target").and_then(Value::as_str).unwrap_or("").to_string())).collect())
+                    .unwrap_or_default(),
+            }));
+        }
         if !self.admitted {
             self.admitted = true;
-            if Self::units(command, snapshot).is_none_or(|units| units > crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS) {
+            if Self::target(command).is_none() || Self::units(command, snapshot).is_none_or(|units| units > crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS) {
                 self.stage = Puzzle5dSetActiveExampleStage::Complete;
                 return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.example_too_large.as_str())));
             }
         }
+        // 🔗️ An `Arc` clone, so the cached rows stay readable while the arms below take `&mut self`.
+        let before = self.before.clone().unwrap_or_default();
+        let Some(target) = Self::target(command) else {
+            self.stage = Puzzle5dSetActiveExampleStage::Complete;
+            return Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(puzzle5d_notice_emit(self.view_state.as_ref(), |labels| labels.example_too_large.as_str())));
+        };
         match self.stage {
             Puzzle5dSetActiveExampleStage::ClearFasteners => {
-                let fasteners = projection.get("fasteners").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
-                let range = Self::take_chunk(&mut self.cursor, fasteners.len());
+                let range = Self::take_chunk(&mut self.cursor, before.fastener_ids.len());
                 if !range.is_empty() {
-                    for id in fasteners[range].iter().filter_map(|fastener| fastener.get("id")).filter_map(Value::as_str).map(str::to_string).collect::<Vec<_>>() {
+                    for id in before.fastener_ids[range].to_vec() {
                         self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_grips(id))?;
                     }
                     return Ok(Self::progress("puzzle5d-example-clear-fastener", "Removing old fastener", "Alte Verbindung wird entfernt"));
@@ -8342,10 +8389,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"))
             }
             Puzzle5dSetActiveExampleStage::ClearParts => {
-                let parts = projection.get("parts").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
-                let range = Self::take_chunk(&mut self.cursor, parts.len());
+                let range = Self::take_chunk(&mut self.cursor, before.part_ids.len());
                 if !range.is_empty() {
-                    for id in parts[range].iter().filter_map(|part| part.get("id")).filter_map(Value::as_str).map(str::to_string).collect::<Vec<_>>() {
+                    for id in before.part_ids[range].to_vec() {
                         self.push(crate::standards::v1::subsets::any::schema::mutations::delete_part(id))?;
                     }
                     return Ok(Self::progress("puzzle5d-example-clear-part", "Removing old part", "Altes Teil wird entfernt"));
@@ -8371,14 +8417,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 Ok(Self::progress("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"))
             }
             Puzzle5dSetActiveExampleStage::ClearCompatibility => {
-                let rows = projection.get("kindCompatibility").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
-                let range = Self::take_chunk(&mut self.cursor, rows.len());
+                let range = Self::take_chunk(&mut self.cursor, before.compatibility.len());
                 if !range.is_empty() {
-                    let pairs: Vec<(String, String)> = rows[range]
-                        .iter()
-                        .map(|row| (row.get("source").and_then(Value::as_str).unwrap_or("").to_string(), row.get("target").and_then(Value::as_str).unwrap_or("").to_string()))
-                        .collect();
-                    for (source, target) in pairs {
+                    for (source, target) in before.compatibility[range].to_vec() {
                         self.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(source, target))?;
                     }
                     return Ok(Self::progress("puzzle5d-example-clear-compatibility", "Removing old compatibility", "Alte Kompatibilität wird entfernt"));
@@ -8471,14 +8512,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if self.mutations.pop().is_some() || self.view_state.take().is_some() {
+        if self.mutations.pop().is_some() || self.view_state.take().is_some() || self.before.take().is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle5dSetActiveExampleStage::Closing && self.mutations.is_empty() && self.view_state.is_none()
+        self.stage == Puzzle5dSetActiveExampleStage::Closing && self.mutations.is_empty() && self.view_state.is_none() && self.before.is_none()
     }
 }
 
@@ -9367,7 +9408,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// and retained-import laws ran for over a minute each (the 2026-09-21 test binary was killed by
     /// the 10-minute watchdog). None of it is needed to produce the boot document, and nothing is lost:
     /// each static is a `LazyLock`, and `puzzle5d_operations_from_document_change` already computes the
-    /// ONE pair it needs when the matrix has no entry for it.
+    /// ONE pair it needs. That matrix has since been deleted outright — see
+    /// `puzzle5d_operations_from_document_change`.
     fn initial_snapshot() -> Puzzle5dPlaySnapshot {
         Puzzle5dPlaySnapshot(serde_json::to_value(default_document()).unwrap_or(serde_json::Value::Null))
     }
@@ -9657,49 +9699,37 @@ pub const PUZZLE5D_PART_KIND_OPTIONS_MAX: usize = 64;
 ///    JSON and deserialises it into `Puzzle5dDocument` — inside the owned interpreter, while the
 ///    bundle is assembled, i.e. before `describe()` emits anything. `AppDefinition` is built on the
 ///    describe path, so this one call put `🧩️puzzle` over the 1 800 s guest epoch on its own.
-fn puzzle5d_part_kind_options() -> Vec<ActionArgOption> {
-    let mut options: Vec<ActionArgOption> = Vec::with_capacity(PUZZLE5D_PART_KIND_OPTIONS_MAX);
-    for document in [&*CONCRETE_FOREST_EXAMPLE_DOCUMENT, &*NAKAGIN_EXAMPLE_DOCUMENT] {
-        for (id, label) in puzzle5d_part_kind_rows(document) {
-            if options.len() >= PUZZLE5D_PART_KIND_OPTIONS_MAX {
-                return options;
-            }
-            if options.iter().any(|option| option.value == id) {
-                continue;
-            }
-            options.push(ActionArgOption::new(&id, LocalizedLabel::data(label)));
-        }
-    }
-    options
-}
+///
+/// 🖐️ Those rows are AUTHORED below rather than derived, in the two named examples' own catalog
+/// order, and pinned to the documents by
+/// `shipped_part_kinds_are_the_two_named_examples_own_catalog_rows`.
+///
+/// 🐛️ Deriving it dereferenced `CONCRETE_FOREST_EXAMPLE_DOCUMENT` and `NAKAGIN_EXAMPLE_DOCUMENT`,
+/// i.e. parsed 171 591 B of authored DSL, re-serialised it to 205 896 B of JSON and deserialised
+/// that into two typed `Puzzle5dDocument`s — on the `AppDefinition` path, which is the `describe()`
+/// path AND every actor boot. Measured natively on 2026-09-22 (slice PZ2,
+/// `🗑️generated/pz2-native-profile-*.txt`): `create_puzzle5d_app()` cost 338 ms cold and 1 ms with
+/// those two statics already warm, so ALL of it was this one select. Thirteen authored pairs cost
+/// nothing, and the law below is what keeps them true.
+pub const PUZZLE5D_SHIPPED_PART_KINDS: &[(&str, &str)] = &[
+    ("Hexagonal Cut Concrete Forest Left", "Hexagonal Cut Concrete Forest Left"),
+    ("Base", "Base"),
+    ("Bridge", "Bridge"),
+    ("Capital", "Capital"),
+    ("Capsule With Balcony Backslash", "Capsule With Balcony Backslash"),
+    ("Capsule With Balcony J", "Capsule With Balcony J"),
+    ("Capsule With Balcony L", "Capsule With Balcony L"),
+    ("Capsule With Balcony P", "Capsule With Balcony P"),
+    ("Capsule With Balcony S", "Capsule With Balcony S"),
+    ("Capsule With Balcony Slash", "Capsule With Balcony Slash"),
+    ("First Storey Tambour", "First Storey Tambour"),
+    ("Last Storey Tambour", "Last Storey Tambour"),
+    ("Tambour", "Tambour"),
+];
 
-/// 🗨️ One document's `(id, label)` part-kind rows: its declared `kindCatalogs.parts`, or — when it
-/// declares none — the distinct `partKind` values its own parts carry, the same fallback
-/// `📌️panels/🛍️catalogue` renders so the dialog and the catalogue can never offer different kinds.
-fn puzzle5d_part_kind_rows(document: &Puzzle5dDocument) -> Vec<(String, String)> {
-    let declared: Vec<(String, String)> = document
-        .kind_catalogs
-        .as_ref()
-        .and_then(|catalogs| catalogs.get("parts"))
-        .and_then(serde_json::Value::as_array)
-        .map(|entries| {
-            entries
-                .iter()
-                .filter_map(|entry| {
-                    let id = entry.get("id").and_then(serde_json::Value::as_str)?;
-                    let label = ["label", "name"].iter().find_map(|key| entry.get(*key).and_then(serde_json::Value::as_str)).filter(|label| !label.is_empty()).unwrap_or(id);
-                    Some((id.to_string(), label.to_string()))
-                })
-                .collect()
-        })
-        .unwrap_or_default();
-    if !declared.is_empty() {
-        return declared;
-    }
-    let mut inferred: Vec<String> = document.parts.iter().map(|part| part.part_kind.clone()).filter(|kind| !kind.is_empty()).collect();
-    inferred.sort();
-    inferred.dedup();
-    inferred.into_iter().map(|kind| (kind.clone(), kind)).collect()
+/// 🗂️ The `partKind` select's options, mapped from [`PUZZLE5D_SHIPPED_PART_KINDS`].
+fn puzzle5d_part_kind_options() -> Vec<ActionArgOption> {
+    PUZZLE5D_SHIPPED_PART_KINDS.iter().take(PUZZLE5D_PART_KIND_OPTIONS_MAX).map(|(id, label)| ActionArgOption::new(*id, LocalizedLabel::data(*label))).collect()
 }
 
 /// 🗨️ The kind the `partKind` select stages when nothing is picked — the first catalog row, never a
@@ -9814,6 +9844,7 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).with_category("settings"))
             .action_with(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"), ActionKind::Mutation).with_category("view"))
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
+            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .mutation("engagementRepeatLast", LocalizedLabel::native("Engagement Repeat Last", "Letzte Eingabe wiederholen"))
             .mutation("patchPart", LocalizedLabel::native("Patch Part", "Teil aktualisieren"))
             .mutation("patchGrip", LocalizedLabel::native("Patch Grip", "Griff aktualisieren"))
@@ -9844,7 +9875,9 @@ pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::new("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View, "sun"))
             .action_with(ActionDefinition::new("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View, "sun"))
             .action_with(ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand"))
+            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand"))
+            .action_audience("engagementAbort", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition::new("engagementControlSelect", LocalizedLabel::native("Engagement Control Select", "Eingabesteuerung auswählen"), ActionKind::View, "hand"))
             .view_action("cycleBrushCandidate", LocalizedLabel::native("Cycle Brush Candidate", "Pinselkandidat wechseln"))
             .view_action("cycleBrushCandidateBack", LocalizedLabel::native("Cycle Brush Candidate Back", "Pinselkandidat rückwärts wechseln"))

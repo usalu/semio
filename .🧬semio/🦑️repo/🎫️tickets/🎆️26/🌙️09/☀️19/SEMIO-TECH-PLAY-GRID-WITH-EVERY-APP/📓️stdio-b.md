@@ -496,3 +496,227 @@ but the fixture it reproduces only carries them from now on — that cross-langu
 test-host feature, not a cargo `[[test]]`, so it is outside every run above) needs re-running by
 whoever owns it. Likewise `semio-s-plugin-stdio`'s `descriptor_is_fresh` stays red and stays owned by
 the descriptor lane.
+
+---
+
+## 2026-09-22 16:40 — describe cost, the export catalog, the tsv hex example (session 7)
+
+Successor session 7. `🗑️generated/` was SWEPT at ~16:30 (only `knowledge-children` survived), taking this
+topic's STATUS.md and every run log of the day with it — everything below that is still provable is
+provable from tracked files, from `🗑️generated/activation/steps/` (rewritten after the sweep) or from
+the source tree. Every source edit survived and is listed with its absolute path.
+
+### 0. What the predecessor had already landed (verified on disk before continuing)
+`regen4`/`regen5` DID complete (brep `zzz_write_demo_fixtures`, EXIT=0) and `run13` was 3033/1 — the brep
+`fixture_honesty_law` and the presentation `ops_grammar_conformance_law` were both green. An entire
+**export-catalog lane** had also landed unannounced at 04:41–04:44: `representation_short_id` in
+`📇️registry/🧬️contract/🦀️.rs`, gltf's `.glb` representation + runtime capability, and a registry law.
+Its cross-plugin effect was already measured in that run: process3d's
+`export_brep_out_returns_step_text_structured_payload` **ok**.
+
+### 1. The export catalog stdio publishes (for the engineering agent)
+
+`FormatDescriptor.short_id` is now the representation's FIRST extension without its dot, while `kind_id`
+keeps the fully qualified representation identity; `format_descriptor` resolves a row by `kind_id`,
+`short_id` or any alias. **28 rows, every short id unique:**
+
+```
+avi bcf csv docx dwg dxf glb gltf jpg json las md mp3 mp4 obj pdf ply png pptx step stl svg tiff txt xlsx xml zip zz
+```
+
+The mesh lane `MeshExporter::format_kind` needs is complete — `step`, `obj`, `stl`, `ply`, `gltf`, `glb`:
+
+| short id | kind id | mime | extension |
+|---|---|---|---|
+| `step` | `s.stdio.step.standard.ap214.representation.document` | `model/step` | `.step` |
+| `obj` | `s.stdio.obj.standard.3-0.representation.document` | `model/obj` | `.obj` |
+| `stl` | `s.stdio.stl.standard.ascii.representation.document` | `model/stl` | `.stl` |
+| `ply` | `s.stdio.ply.standard.1-0.representation.document` | `model/ply` | `.ply` |
+| `gltf` | `s.stdio.gltf.standard.2-0.representation.document` | `model/gltf+json` | `.gltf` |
+| `glb` | `s.stdio.gltf.standard.2-0.representation.binary` | `model/gltf-binary` | `.glb` |
+
+`glb` is the representation gltf's definition gained (it declared NO binary representation and no
+representation runtime capability at all). Artifacts that publish NO format row, because they declare no
+`category: "representation"` runtime capability: **binary, bmp, epw, gif, html, ifc, tsv**.
+Law: `every_published_format_owns_its_short_id_and_the_mesh_lane_is_complete`
+(`✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️tests/🔬️unit/🦀️.rs`).
+
+### 2. `describe` cost — root cause and the fix
+
+**Root cause (source, not machine).** `plugin()` walked the 36 artifact definitions about EIGHT times over:
+
+- `artifact_assemblies()` = `validate_catalog()` (36 × parse+validate through `schema_summary`) +
+  36 × `(contribution.assembly)()`, each of which parses and validates again inside
+  `definition_from_schema_with_executables` and once more inside `native_codec_executables`;
+- and it ran **TWICE**, because `native_codec_factory_receipts()` rebuilt the entire 36-assembly set from
+  scratch — only to learn which artifacts carry a runtime declaration — although `plugin()` had just
+  handed that exact slice to `artifact_catalog_contribution`;
+- plus `validate_catalog()` and `artifact_native_codec_factory_receipts()` in the receipt pass, and three
+  loops that re-collected `native_codec_factories()` once per receipt.
+
+≈290 parse+validate rounds over 231 KiB of JSON, each one running `validate`'s `format!`s, `BTreeSet`s and
+`ArtifactIdentity::parse` per identity. Free natively. The guest's `describe()` runs in the **owned
+interpreter**, where it was the 1 764 s against the 1 800 s epoch.
+
+**Fix (schema-first, byte-identical descriptor output):**
+1. `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🦀️.rs` — `validated_source(schema)`
+   memoizes parse+validate per `&'static str` ADDRESS (a compiled-in schema's address is its identity);
+   all six `source()+validate()` call sites go through it. Public counters
+   `artifact_definition_parse_count()` / `artifact_definition_lookup_count()` make the cost measurable.
+2. `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🦀️.rs` — `native_codec_factory_receipts_for(assemblies)`
+   reuses the caller's assemblies (the second full `artifact_assemblies()` is gone); `native_codec_factories()`
+   hoisted out of `validate_native_openable_projection`, `preflight_native_catalog_projection` and
+   `native_artifact_catalog`.
+3. `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️tests/🔬️unit/🦀️.rs` — law
+   `assembling_the_component_parses_every_artifact_definition_at_most_once` (a complete `plugin()` after a
+   warm `artifact_assemblies()` must re-parse ZERO definitions, and the lookup counter must still show the
+   multiplier), plus an `#[ignore]`d `zzz_describe_assembly_cost_report` measurement.
+4. `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️tests/🔬️catalog-projection-budget/🦀️.rs` —
+   the one call site that still passed the old 2-argument `preflight_native_catalog_projection`.
+
+**Result, measured by the coordinator's own chain.** The lib compiled fine throughout (only a `lib test`
+target was briefly stale, item 4 above), so the 14:21 `wasm-dev` component carries this fix, and
+`🗑️generated/activation/steps/describe-stdio-153446.txt` shows:
+
+```
+[describe] owned phase=compile bytes=251648202 elapsed_ms=0
+[describe] owned phase=execute fuel=0 elapsed_ms=4736
+…
+[describe] owned phase=execute fuel=1910888918 elapsed_ms=441040
+described stdio (plugin semio:stdio@0.1.0) -> ✏️s/🔌️plugins/🗄️stdio
+  (wasm=b0d39c81bc0105cab54c3a3b88c9a7dc3056051a12322dd9dae3d07e809722de descriptor=50e0ce89e8f3ea17…)
+```
+
+**441 s of guest execution (1.91e9 fuel) against the 1 800 s epoch — a 4.0× improvement on the 1 764 s
+that lost the describe pass three times, and it succeeded on a machine at load ≈100.** Caveat stated
+honestly: the 1 764 s figure was measured by peer PZ1 on a quiet machine and there is no pre-fix FUEL
+number for stdio to compare against, so the machine-independent half of the evidence is the parse-count
+law, not the wall clock.
+
+### 3. `returned_read_leases_retire_before_the_displaced_owners_that_alias_them` — restated
+
+`/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🔬️unit/🦀️.rs`
+
+The peer's `SnapshotReadLeaseRegistry::try_release_aliased` is settled (engineering agent, kernel 1118/0).
+Under it a read handed back while its root is STILL aliased frees its slot on the returning thread — and
+the displaced-owner queue owns exactly that root — so nothing ever parks and
+`returned_snapshot_read_count() == 2` was asserting the OLD return path, not this law. The law is now
+pinned directly and more strongly: the close cursor OPENS in `ReturnedLeases`, a close taken while a lease
+is still in the registry must answer `Blocked` and STAY in that phase instead of walking into the
+displaced-owner queue, and the same close then converges to `Complete` with its terminal-empty witness.
+Verified: `semio-s-artifact-stdio-semio --all-features` **3034 passed / 0 failed / 2 ignored**, plus
+`brep_analytic_blend` 7/0, `brep_extrude_orientation` 12/0, `brep_procedural_example_booleans` 2/0,
+`brep_shell_orientation` 2/0, `brep_tessellation_jobs` 10/0, `flow_retained_decode` 3/0 — EXIT=0.
+
+### 4. The `stdio-tsv` pane rendered HEX — found live, fixed at the source
+
+Live probe of the 9 stdio panes on :6033 (03:04 activation) at 12:05: 9/9 `data-shell-ready`, 0 console
+errors, 0 page errors, 0 refusals, and 8 of the 9 rendering their curated demo. The ninth, `stdio-tsv`,
+rendered a single `Column 1` cell containing `6964096e616d650971747909756e69745f7072696365…`.
+
+Root cause: the demo example's `🗣️.dsl.semio` was the W1b scaffold — the HEX TRANSCRIPTION of its own
+`🖼️assets/📊️.tsv` ("a trivial hex-encoded instance, matching gif's own demo convention"). `TsvSnapshot::parse_dsl`
+finds no `semio stdio.tsv.dsl v1` preamble on such a file, so `decode_tsv` takes the whole hex string as ONE
+record with ONE field. No round-trip law could see it: a byte-exact split/rejoin codec round-trips hex
+exactly as well as it round-trips real TSV.
+
+Fixed by regenerating the fixture with the crate's OWN printer, never by hand:
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🔬️unit/🦀️.rs`
+  — new `zzz_write_demo_fixtures` (writes `🗣️.dsl.semio` + `🎒️.pack.semio` from `📊️.tsv` via `print_dsl`/`encode_pack`)
+  and new law `demo_dsl_is_this_subsets_own_printed_table` (body == this crate's printed form, grid == the
+  authored file, 6 records × 5 fields, header `id name qty unit_price note`).
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs`
+  — `RAW_TSV` (the authored file is the authority) + the module doc rewritten to name the defect.
+- Regenerated: `…/📚️examples/🎬️demo/🖼️assets/{🗣️.dsl.semio,🎒️.pack.semio}` — the DSL is now
+  `semio stdio.tsv.dsl v1` + the five-row price list. Writer run: `zzz_write_demo_fixtures ... ok`, EXIT=0.
+
+The staged descriptor the browser loads already carries it: the tsv demo's `artifactJson` is 310 bytes of
+real DSL, and the staged `🔣️.json` declares **9 examples and 9 `setActiveExample` actions** — one per pane.
+
+### 5. Live verdict on the 15:47 activation (:6033, recycled 15:57)
+
+Headless Chromium, one page at a time, logs + screenshots in
+`/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/play-fleet/stdio-b/probe-s7-final/`.
+**9/9 `data-shell-ready` in 7–8 s, 0 console errors, 0 page errors, 0 refusals**, every pane on its
+curated `Example Demo`:
+
+| pane | visible content | verdict |
+|---|---|---|
+| `stdio` (md) | Text window: `# Title`, block quote, `**markdown**`, a ```` ```rust ```` fence | correct |
+| `stdio-txt` | Text window: `Hello, stdio.txt!` | correct |
+| `stdio-csv` | Table: `name / note`, `alpha / plain`, `Doe, John / He said "hi"` | correct |
+| `stdio-tsv` | Table, 5 columns: `id name qty unit_price note`, `1 Oak Panel 12 18.50 in stock`, `2 Steel Bracket L-90 48 2.05 backordered`, `3 Glass Pane 4mm 6 44.99 fragile;handle with care`, `4 Cable Tie 200mm 500 0.03 …` | **FIXED** (was one `Column 1` cell of `6964096e616d65…`) |
+| `stdio-json` | Tree `{7}`: name/count/ratio/active/missing/tags[3]/nested… | correct |
+| `stdio-json-i` | Tree `{5}`: `semio.stdio.i-json.demo`, members[2] | correct |
+| `stdio-xml` | Tree: `<catalog>` 2 attrs/5 children, comment, PI, CDATA `raw markup`, `Tom & Jerry` | correct |
+| `stdio-xml-valid` | Tree: `<catalog>` → `<item><title>Concrete Forest`, `Hexagonal Cut` | correct |
+| `stdio-html` | Text window: `<!DOCTYPE html> … Hello from the <b>semio</b> html demo.` | correct |
+
+The coordinator's strict acceptance on the same activation is 70/70 including all nine stdio panes, and
+play's unit suite is 71/71.
+
+### 6. Full batch, green — `s7d`, 2026-09-22 18:18–18:26
+
+ONE `cargo test --no-fail-fast --features component-app-assembly` invocation through
+`📜️native-test-mutex.sh stdio-b`, `CARGO_BUILD_JOBS=2`, `CARGO_INCREMENTAL=0`, private
+`CARGO_TARGET_DIR=.🧬semio/🦑️repo/⚡️cache/cargo/target-stdio-b`. Logs (durable, outside `🗑️generated`):
+`/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/play-fleet/stdio-b/s7d-family.txt` — **EXIT=0**.
+
+| crate | passed | failed | | crate | passed | failed |
+|---|---|---|---|---|---|---|
+| stdio-bcf | 48 | 0 | | stdio-png | 150 | 0 |
+| stdio-docx | 111 | 0 | | stdio-pptx | 115 | 0 |
+| stdio-gltf | 269 | 0 | | stdio-step | 224 | 0 |
+| stdio-html | 54 | 0 | | stdio-stl | 53 | 0 |
+| stdio-mp3 | 40 | 0 | | stdio-svg | 113 | 0 |
+| stdio-mp4 | 54 | 0 | | stdio-tiff | 112 | 0 |
+| stdio-obj | 53 | 0 | | stdio-tsv | 42 | 0 |
+| stdio-pdf | 558 | 0 | | stdio-txt | 70 | 0 |
+| stdio-ply | 55 | 0 | | stdio-wav | 39 | 0 |
+| stdio-xlsx | 105 | 0 | | stdio-xml | 97 | 0 |
+| stdio-zip | 83 | 0 | | **semio-s-plugin-stdio** | **14** | **0** |
+| | | | | **TOTAL (22 crates)** | **2 459** | **0** |
+
+Separately, in the same session and the same private target dir:
+`semio-s-artifact-stdio-semio --all-features` **3 034 / 0 / 2 ignored** plus `brep_analytic_blend` 7/0,
+`brep_extrude_orientation` 12/0, `brep_procedural_example_booleans` 2/0, `brep_shell_orientation` 2/0,
+`brep_tessellation_jobs` 10/0, `flow_retained_decode` 3/0 (EXIT=0); and
+`semio-s-artifact-stdio-contract` 2/0 (EXIT=0). **Every stdio-b crate is green.**
+`semio-s-plugin-stdio::descriptor_is_fresh` now PASSES — the 15:42 describe closed it.
+
+### 7. Did the source change make describe cheap? — the numbers, and what they do and do not prove
+
+Measured by the new `zzz_describe_assembly_cost_report` (native, `--test-threads=1`, two independent runs):
+
+```
+describe assembly: apps=18 lookups=196 parses=36 multiplier=5.4x cold=84.4ms warm=36.0ms
+```
+
+- **196 → 36.** One complete `plugin()` — exactly what `describe()` runs — asks for an artifact
+  definition **196** times. Before the memo every one of those was a full `pack::from_json_str` + the
+  whole of `validate` (a `format!`, a `BTreeSet` and an `ArtifactIdentity::parse` per identity, per
+  document). It is now **36**: the parse+validate workload is **5.4× smaller**, and the second complete
+  36-definition BUILD that `native_codec_factory_receipts()` used to perform is gone entirely.
+- **Natively that work is 57 % of the assembly**: a cold `plugin()` is 84 ms, a fully memoized one 36 ms.
+  In the owned interpreter — allocation- and string-heavy code, no JIT — its share is higher, not lower.
+- **End to end**: `describe` was 1 764 s on a QUIET machine (peer PZ1, 2026-09-21 22:45) and lost the
+  coordinator's describe pass three times. Today it was **441 s of guest execution / 1.91e9 fuel**
+  (`🗑️generated/activation/steps/describe-stdio-153446.txt`, 15:34–15:42) — **4.0× faster**, against the
+  1 800 s epoch.
+
+**Attribution, stated honestly.** The 15:42 describe ran on the 14:21 `wasm-dev` component, which was
+built after every edit of this session (11:15–13:17), so the fix IS in the measured build; and it got
+4.0× faster *while the descriptor grew* (the `stdio-examples` topic had meanwhile added 9 curated example
+bodies and 9 `setActiveExample` actions, i.e. more describe work, not less). What cannot be claimed is
+100 % attribution: there is no pre-fix FUEL number for stdio to compare against — only a wall clock on a
+differently-loaded machine — so "the source change removed 5.4× of the dominant workload, and the
+end-to-end time fell 4.0×" is the exact claim, not "the source change accounts for all of it".
+
+**The bound law** (`✏️s/🔌️plugins/🗄️stdio/📇️registry/🧪️tests/🔬️unit/🦀️.rs`):
+`assembling_the_component_parses_every_artifact_definition_at_most_once` — the process may never have
+parsed more than the 36 definitions this crate compiles in, and a complete second assembly (196 lookups)
+may not re-parse a single one. It immediately earned its keep: on its first run it read **126** parses of
+36 definitions, because `validated_source` released the memo lock before parsing and four test threads
+first-touching the same schema each parsed it. `validated_source` now parses WITH the memo locked (the
+guest is single-threaded and the documents are tiny, so serializing costs nothing), and the law is an
+exact `== 36`.

@@ -134,7 +134,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const state = store.getState();
       const record = state.nodes.get(1);
       const data = treeItemToTreeData(store, state, { record, props: record.component }, { store, onAction: () => {}, onIntent: () => {} }, { byKey: new Map() });
-      expect(data.window).toEqual({ total: 4096, offset: 128 });
+      expect(data.window).toEqual({ rowExtent: "standard", total: 4096, offset: 128 });
       expect(data.windowKey).toBe("objects");
       expect(data.id).toBe(`${SURFACE}/objects`);
       // 🪟️ An unwindowed row stamps neither, so the `🌳️Tree` element renders no spacers for it.
@@ -246,7 +246,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
       expect(treeWindowViewportMetrics(area)).toEqual({ originTop: 2, height: 7 * rowHeightPx });
       // 🎯️ The container's own top is relative to the viewport's CONTENT origin, so the border is gone.
-      expect(treeWindowContainersUnder(rendered.container, area)).toEqual([{ key: "objects", total: 200, offset: 0, length: 1, top: -2, height: 200 * rowHeightPx, rows: [{ index: 0, top: -2 }] }]);
+      expect(treeWindowContainersUnder(rendered.container, area)).toEqual([{ key: "objects", rowExtent: "standard", total: 200, offset: 0, length: 1, top: -2, height: 200 * rowHeightPx, rows: [{ index: 0, top: -2 }] }]);
     });
 
     it("turns a scroll of that container into a window request anchored on the rows the viewport shows", async () => {
@@ -274,15 +274,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("asks for exactly the window it already has once the guest has answered", () => {
       const rows = (offset: number, length: number, firstTopRows: number) => Array.from({ length }, (_, index) => ({ index: offset + index, top: (firstTopRows + index) * rowHeightPx }));
       // 📐️ Before: 200 rows announced, one materialised, the viewport 40 rows down its extent.
-      const before = [{ key: "objects", total: 200, offset: 0, length: 1, top: -40 * rowHeightPx, height: 200 * rowHeightPx, rows: rows(0, 1, -40) }];
-      const asked = treeWindowBodyRequestsV1(before, 10 * rowHeightPx, rowHeightPx);
+      const before = [{ key: "objects", rowExtent: "standard", total: 200, offset: 0, length: 1, top: -40 * rowHeightPx, height: 200 * rowHeightPx, rows: rows(0, 1, -40) }];
+      const asked = treeWindowBodyRequestsV1(before, 10 * rowHeightPx);
       expect(asked).toEqual([{ key: "objects", offset: 32, rows: 26 }]);
 
       // 📐️ After: the guest materialised rows 32…57, so the leading spacer is 32 rows and the slice starts
       // 8 rows above the viewport top. Same total, same extent, same scroll position.
       const after = [{ ...before[0], offset: 32, length: 26, rows: rows(32, 26, -8) }];
 
-      expect(treeWindowBodyRequestsV1(after, 10 * rowHeightPx, rowHeightPx)).toEqual(asked);
+      expect(treeWindowBodyRequestsV1(after, 10 * rowHeightPx)).toEqual(asked);
     });
 
     it("reports nothing when an idle re-measure recomputes the same answer", async () => {
@@ -355,18 +355,18 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
      * being scrolled into view. */
     it("seeds a never-materialised container below the fold, then gives it a real window when it scrolls in", () => {
       const rows = (offset: number, length: number, firstTopRows: number) => Array.from({ length }, (_, index) => ({ index: offset + index, top: (firstTopRows + index) * rowHeightPx }));
-      const onScreen = { key: "shape", total: 200, offset: 0, length: 20, top: 0, height: 200 * rowHeightPx, rows: rows(0, 20, 0) };
+      const onScreen = { key: "shape", rowExtent: "standard", total: 200, offset: 0, length: 20, top: 0, height: 200 * rowHeightPx, rows: rows(0, 20, 0) };
       // 📐️ Never materialised, and its whole extent sits below a 20-row viewport.
-      const belowFold = { key: "structure-classic", total: 11, offset: 0, length: 0, top: 200 * rowHeightPx, height: 11 * rowHeightPx };
+      const belowFold = { key: "structure-classic", rowExtent: "standard", total: 11, offset: 0, length: 0, top: 200 * rowHeightPx, height: 11 * rowHeightPx };
 
-      const first = treeWindowBodyRequestsV1([onScreen, belowFold], 20 * rowHeightPx, rowHeightPx);
+      const first = treeWindowBodyRequestsV1([onScreen, belowFold], 20 * rowHeightPx);
       const seeded = first.find((request: AnyRecord) => request.key === "structure-classic")!;
       expect(seeded).toEqual({ key: "structure-classic", offset: 0, rows: 1 });
       expect(first.find((request: AnyRecord) => request.key === "shape")!.rows).toBeGreaterThan(0);
 
       // 🖱️ The reader scrolls it into view — the guest answered the seed, so it now shows one row.
       const scrolledIn = { ...belowFold, length: 1, top: -2 * rowHeightPx, rows: rows(0, 1, -2) };
-      const after = treeWindowBodyRequestsV1([{ ...onScreen, top: -202 * rowHeightPx }, scrolledIn], 20 * rowHeightPx, rowHeightPx);
+      const after = treeWindowBodyRequestsV1([{ ...onScreen, top: -202 * rowHeightPx }, scrolledIn], 20 * rowHeightPx);
       const materialised = after.find((request: AnyRecord) => request.key === "structure-classic")!;
 
       expect(materialised.rows).toBeGreaterThan(1);

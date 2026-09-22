@@ -173,14 +173,48 @@ fn dec_equation(s: &str) -> Result<EquationExprSnapshot, String> {
     pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 
+/// 🕸️ The live `(graph, geometry)` behind the composed-child triple, hex-encoded first-party JSON —
+/// the same trade `equation=` above already makes for its own payload.
+///
+/// 🐛️ This body used to be the three BARE HANDLES plus `equation=`, and the scene lives only in the
+/// handles' `EquationWorkingScene` local owner, so it did not survive a single `print_dsl`/`parse_dsl`
+/// round trip. `🕸️dag`'s own snapshot module spells the rule: "A codec that persisted only the bare
+/// handle would produce an UNRECOVERABLE snapshot the instant a fresh process parses it." The
+/// committed `🎬️demo` asset was written by that codec and therefore carries no graph at all, which is
+/// exactly why the mathematical play pane rendered an empty grid and a bare cursor (ticket 26/09/19,
+/// `📓️knowledge.md` §4).
+fn enc_graph(graph: &crate::EquationGraph) -> String {
+    enc_str(&pack::json::to_json_string(graph))
+}
+fn dec_graph(s: &str) -> Result<crate::EquationGraph, String> {
+    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
+}
+fn enc_geometry(geometry: &crate::EquationGeometry) -> String {
+    enc_str(&pack::json::to_json_string(geometry))
+}
+fn dec_geometry(s: &str) -> Result<crate::EquationGeometry, String> {
+    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
+}
+
 fn print_equation_snapshot_body(s: &EquationSnapshot) -> String {
-    format!("notation={}\nresults={}\ncomputed={}\nequation={}", enc_child(&s.notation), enc_child(&s.results), enc_child(&s.computed), enc_equation(&s.equation))
+    let scene = crate::equation_scene(s);
+    format!(
+        "notation={}\nresults={}\ncomputed={}\nequation={}\ngraph={}\ngeometry={}",
+        enc_child(&s.notation),
+        enc_child(&s.results),
+        enc_child(&s.computed),
+        enc_equation(&s.equation),
+        enc_graph(&scene.graph),
+        enc_geometry(&scene.geometry)
+    )
 }
 fn parse_equation_snapshot_body(body: &str) -> Result<EquationSnapshot, String> {
     let mut notation = None;
     let mut results = None;
     let mut computed = None;
     let mut equation = None;
+    let mut graph = None;
+    let mut geometry = None;
     for line in body.lines() {
         let line = line.trim();
         if line.is_empty() {
@@ -194,14 +228,26 @@ fn parse_equation_snapshot_body(body: &str) -> Result<EquationSnapshot, String> 
             computed = Some(dec_child(rest)?);
         } else if let Some(rest) = line.strip_prefix("equation=") {
             equation = Some(dec_equation(rest)?);
+        } else if let Some(rest) = line.strip_prefix("graph=") {
+            graph = Some(dec_graph(rest)?);
+        } else if let Some(rest) = line.strip_prefix("geometry=") {
+            geometry = Some(dec_geometry(rest)?);
         } else {
             return Err(format!("equation snapshot: unknown line {line:?}"));
         }
     }
+    // 🏗️ The decoded scene is attached to the exact handles this document names, never to freshly
+    // minted ones: `equation_children_from_state` derives the same ids, but re-minting would silently
+    // discard whatever identity the document actually carried. A body without the two scene lines is
+    // a pre-format document and decodes to the empty scene, exactly as it did before.
+    let owner = std::sync::Arc::new(crate::EquationWorkingScene {
+        graph: graph.unwrap_or(crate::EquationGraph { directed: true, nodes: Vec::new(), edges: Vec::new(), algorithm: String::new(), algorithm_seed: None }),
+        geometry: geometry.unwrap_or(crate::EquationGeometry { points: Vec::new() }),
+    });
     Ok(EquationSnapshot {
-        notation: notation.ok_or_else(|| "equation snapshot: missing notation line".to_string())?,
-        results: results.ok_or_else(|| "equation snapshot: missing results line".to_string())?,
-        computed: computed.ok_or_else(|| "equation snapshot: missing computed line".to_string())?,
+        notation: notation.ok_or_else(|| "equation snapshot: missing notation line".to_string())?.with_local_owner(owner.clone()),
+        results: results.ok_or_else(|| "equation snapshot: missing results line".to_string())?.with_local_owner(owner.clone()),
+        computed: computed.ok_or_else(|| "equation snapshot: missing computed line".to_string())?.with_local_owner(owner),
         equation: equation.ok_or_else(|| "equation snapshot: missing equation line".to_string())?,
     })
 }

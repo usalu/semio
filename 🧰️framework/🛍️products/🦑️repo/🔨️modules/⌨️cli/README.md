@@ -7,7 +7,7 @@ produces the `semio-repo` twin selected by `SEMIO_REPO_IMPLEMENTATION=go`.
 
 ## 📦️ Packages
 
-- `📦️packages/🦀️rust` — `semio-framework-repo-cli` (binaries `semio`, `semio-repo-mcp`)
+- `📦️packages/🦀️rust` — `semio-framework-repo-cli` (binaries `semio`, `repo`)
 - `📦️packages/🐹️go` — `github.com/usalu/semio/repo/cli`, entry point in `📦️packages/🐹️go/🚀️bin`
 - `📦️packages/🟦️typescript` — the binary-resolution and invocation helpers
 

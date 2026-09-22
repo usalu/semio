@@ -348,7 +348,6 @@ struct TaskSlot {
     future: Option<BoxedTask>,
     queued: bool,
     active: bool,
-    #[cfg(test)]
     reserved: bool,
     ready_previous: Option<usize>,
     ready_next: Option<usize>,
@@ -374,7 +373,6 @@ impl Inner {
                 future: None,
                 queued: false,
                 active: false,
-                #[cfg(test)]
                 reserved: false,
                 ready_previous: None,
                 ready_next: None,
@@ -530,7 +528,6 @@ impl ColdFutureExecutor {
             future: Some(future),
             queued: false,
             active: true,
-            #[cfg(test)]
             reserved: false,
             ready_previous: None,
             ready_next: None,

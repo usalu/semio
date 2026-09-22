@@ -42,8 +42,45 @@ fn never() -> Option<u64> {
     Some(0)
 }
 
+/// 🧊️ The scale the planner's own box fallback applies to a mesh identity it must stand in for.
+const PUZZLE5D_FILL_LAW_BOX_SCALE: f32 = 4.0;
+
+/// 🧊️ Derives a collision body for EVERY mesh identity `document` names into the process-wide brush-mesh
+/// store, so the planner's preparation can resolve them.
+///
+/// 🐛️ Without this every candidate of every 5d fill law read `warning:mesh-unavailable` and no run placed
+/// anything. The 5d fill delegates to puzzle 3d's planner through the real `fill_run_job` →
+/// `fill3d::build_run_job`, and that preparation resolves each lane url through `shared_brush_mesh(&url)`
+/// — the PROCESS-WIDE store the browser fills with `registerBrushMesh`'s GLB round trip. A url with no
+/// registered mesh takes the scaled-box substitute ONLY when it is literally `PUZZLE3D_FALLBACK_MESH_KIND`;
+/// every other url is dropped from `FillPreparationRoots::meshes`, and `FillBuilder` then rejects its
+/// candidates `mesh-unavailable`. `🧊️3d`'s own fill laws never meet this because they build
+/// `FillPreparationRoots::new(scene, meshes)` directly and seed a body per lane url; the 5d laws go
+/// through the preparation with an EMPTY store.
+///
+/// The store is a process-global `Mutex` every accessor reaches with `try_lock().ok()?`, so a contended
+/// lock reads as "not resident" — hence the bounded retry rather than one call.
+fn seed_planner_meshes(document: &Puzzle5dDocument) {
+    use semio_s_artifact_puzzle_3d::editor::puzzle3d::precompute::derive_brush_mesh;
+    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle5d::PUZZLE5D_FALLBACK_MESH_KIND);
+    let positions: Vec<f32> = fallback.positions.iter().map(|value| value * PUZZLE5D_FILL_LAW_BOX_SCALE).collect();
+    let mut urls = crate::editor::puzzle5d::collect_mesh_urls(document);
+    urls.push(crate::editor::puzzle5d::PUZZLE5D_FALLBACK_MESH_KIND.to_string());
+    urls.sort();
+    urls.dedup();
+    for url in urls {
+        for _ in 0..4_096 {
+            if derive_brush_mesh(&url, &positions, &fallback.indices).is_some() {
+                break;
+            }
+            std::thread::yield_now();
+        }
+    }
+}
+
 /// 🧵️ A fill run or revalidate job over `document` exactly as the ledger builds it through the app hook.
 fn job(document: &Puzzle5dDocument, requested: u32, purpose: ToolRunJobPurpose, provisional: &[Puzzle5dMutation]) -> Puzzle5dPlannerToolRunJob {
+    seed_planner_meshes(document);
     let definition = run_definition();
     let request = ToolRunJobRequest::<EditorApp<Puzzle5dPlayApp>> {
         tool_id: TOOL_ID,
@@ -412,6 +449,11 @@ pub(crate) fn tool_run_action(app: &mut Puzzle5dApp, action: &str, args: serde_j
 }
 
 fn start(app: &mut Puzzle5dApp) -> serde_json::Value {
+    // 🧊️ The app-driven laws run the planner through the LIVE tool-run ledger, not through `job()`, so they
+    // need the same process-wide mesh identities seeded — see `seed_planner_meshes`. Without them every
+    // candidate reads `mesh-unavailable` and the run completes having placed nothing
+    // (`PresenceToolRun { state: Complete, completed: 0, total: Some(40) }`).
+    seed_planner_meshes(&crate::editor::puzzle5d::default_document());
     tool_run_action(app, TOOL_RUN_START_ACTION_ID, serde_json::json!({ TOOL_RUN_ARG_TOOL_ID: TOOL_ID }))
 }
 

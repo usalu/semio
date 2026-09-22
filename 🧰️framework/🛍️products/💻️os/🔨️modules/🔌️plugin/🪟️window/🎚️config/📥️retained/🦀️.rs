@@ -249,10 +249,36 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         }
     }
 
+    /// 🎯️ The DSL shapes whose VALUE is a [`store::mounted_pack_rt::FieldValue::Tuple`] even though the
+    /// pack's packed-numeric wire form (`TAG_PACKED_F64`/`TAG_PACKED_VARINT`, `🎒️pack/🌱️value/🦀️.rs`
+    /// `encode_seq`) carries no tuple-vs-list marker of its own: a coordinate (`@x,y,z`), a direction,
+    /// a dimension triple and a range are each a small tuple of floats. The whole-pack decoder spells
+    /// exactly this set in its own `is_tuple_shape`; this RETAINED decoder knew only `Shape::Tuple`, so
+    /// a `#[dsl(coord)] [f64; 3]` field was rebuilt as a `FieldValue::List` and the state's
+    /// `DslField::from_value` rejected it — `WindowConfigPackLoadDiagnostic::TypedState`, surfaced as
+    /// `window-config.typed-state`. Every CAD world window config reload died on `CadCamera::position`
+    /// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, cad-content).
+    fn shape_is_tuple_valued(shape: Option<&store::mounted_pack_rt::Shape>) -> bool {
+        matches!(
+            shape,
+            Some(store::mounted_pack_rt::Shape::Tuple(_, _))
+                | Some(store::mounted_pack_rt::Shape::Coord(_))
+                | Some(store::mounted_pack_rt::Shape::Dir)
+                | Some(store::mounted_pack_rt::Shape::Dim(_))
+                | Some(store::mounted_pack_rt::Shape::Range)
+        )
+    }
+
     fn child_element(expected: &ExpectedValue) -> ExpectedValue {
         let shape = match expected.shape.as_ref() {
             Some(store::mounted_pack_rt::Shape::Tuple(inner, _)) | Some(store::mounted_pack_rt::Shape::List(inner)) | Some(store::mounted_pack_rt::Shape::Map(inner)) => Some(inner.as_ref().clone()),
             Some(store::mounted_pack_rt::Shape::Table(spec)) => Some(store::mounted_pack_rt::Shape::Record(*spec)),
+            // 📍️ Coordinate/direction/dimension/range literals are fixed-arity tuples of floats; their
+            // elements carry no element shape of their own, so name it here rather than leave every
+            // component shapeless.
+            Some(store::mounted_pack_rt::Shape::Coord(_)) | Some(store::mounted_pack_rt::Shape::Dir) | Some(store::mounted_pack_rt::Shape::Dim(_)) | Some(store::mounted_pack_rt::Shape::Range) => {
+                Some(store::mounted_pack_rt::Shape::Float)
+            }
             _ => None,
         };
         ExpectedValue { shape, dsl: expected.dsl }
@@ -431,8 +457,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             }
             ValueFrame::Sequence { kind: expected, values, .. } if expected == kind => {
                 let values = values.into_iter().map(Self::into_field).collect::<Result<Vec<_>, _>>()?;
-                let tuple = matches!(kind, store::mounted_pack_rt::RetainedValueContainer::Tuple)
-                    || matches!(self.expected()?.shape, Some(store::mounted_pack_rt::Shape::Tuple(_, _)));
+                let tuple = matches!(kind, store::mounted_pack_rt::RetainedValueContainer::Tuple) || Self::shape_is_tuple_valued(self.expected()?.shape.as_ref());
                 BuiltValue::Field(if tuple { store::mounted_pack_rt::FieldValue::Tuple(values) } else { store::mounted_pack_rt::FieldValue::List(values) })
             }
             ValueFrame::Map { dsl: true, values, key: None, .. } if kind == store::mounted_pack_rt::RetainedValueContainer::Map => {

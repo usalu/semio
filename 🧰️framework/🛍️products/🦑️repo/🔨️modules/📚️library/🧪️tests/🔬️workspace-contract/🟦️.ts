@@ -2823,17 +2823,16 @@ describe("loadTaxonomy", () => {
     expect(Object.keys(taxonomy.areas).length).toBeGreaterThan(0);
   });
 
-  test("closes generator ownership and covers the exact platform-inventoried Ralph surface", () => {
+  test("closes generator ownership and keeps foreign metadata directories out of generator outputs", () => {
     const taxonomy = loadTaxonomy();
-    const tracked = ownedFilePaths(join(getWorkspaceRoot(), ".ralph-tui")).map((path) => `.ralph-tui/${path}`);
-    const setup = taxonomy.generatorContracts["setup-wizard-config"]!;
+    const foreignRoots = Object.values(taxonomy.fixedDirectoryContracts).filter((contract) => contract.scope.kind === "repository-root" && contract.pathPattern.startsWith(".") && !contract.pathPattern.includes("/")).map((contract) => contract.pathPattern);
     expect(Object.values(taxonomy.generatorContracts).every((contract) => contract.ownership === "owned" || contract.ownership === "external")).toBe(true);
     expect(taxonomy.generatorContracts["ownerless-ui-icons"]).toBeUndefined();
     expect(taxonomy.generatorContracts["root-layering-declarations"]).toBeUndefined();
-    expect(setup.ownership).toBe("external");
-    expect(setup.outputRoots.map((output) => output.path)).toEqual(tracked);
-    expect(setup.outputRoots.every((output) => output.inclusion === "tracked")).toBe(true);
-    for (const path of tracked) expect(fixedFilenameContractIdsForPath(path, taxonomy)[0]?.startsWith("ralph-")).toBe(true);
+    expect(taxonomy.generatorContracts["setup-wizard-config"]).toBeUndefined();
+    expect(foreignRoots).toContain(".ralph-tui");
+    for (const contract of Object.values(taxonomy.generatorContracts)) for (const output of contract.outputRoots) for (const root of foreignRoots) expect(output.path === root || output.path.startsWith(`${root}/`)).toBe(false);
+    expect(fixedFilenameContractIdsForPath(".ralph-tui/session.json", taxonomy)[0]).toBe("ralph-session");
     expect(fixedDirectoryContractIdsForPath(".ralph-tui", taxonomy)[0]).toBe("ralph-metadata");
     expect(fixedDirectoryContractIdsForPath(".ralph-tui/prd", taxonomy)[0]).toBe("ralph-prd-root");
     expect(fixedDirectoryContractIdsForPath(".ralph-tui/prd/dynamic-prd-id", taxonomy)[0]).toBe("ralph-prd-identifier");
@@ -2976,9 +2975,9 @@ describe("loadTaxonomy", () => {
   test("rejects missing, external, and non-canonical generator preview targets", () => {
     const taxonomy = loadTaxonomy();
     const actor = taxonomy.generatorContracts["actor-typegen"]!;
-    const setup = taxonomy.generatorContracts["setup-wizard-config"]!;
+    const locks = taxonomy.generatorContracts["external-cargo-locks"]!;
     const missing = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "actor-typegen": { ...actor, previewTarget: undefined } } } as unknown as Taxonomy;
-    const external = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "setup-wizard-config": { ...setup, previewTarget: "workspace:preview-generated" } } } as unknown as Taxonomy;
+    const external = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "external-cargo-locks": { ...locks, previewTarget: "workspace:preview-generated" } } } as unknown as Taxonomy;
     const nonCanonical = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "actor-typegen": { ...actor, previewTarget: "@semio-tech/framework-actor-rs:preview" } } } as unknown as Taxonomy;
     expect(validateTaxonomy(missing).some((problem) => problem.includes("previewTarget is required"))).toBe(true);
     expect(validateTaxonomy(external).some((problem) => problem.includes("previewTarget is forbidden"))).toBe(true);
@@ -3047,16 +3046,16 @@ describe("loadTaxonomy", () => {
     }
   });
 
-  test("rejects unsettled, broad Ralph, incomplete Ralph, and false root generation contracts", () => {
+  test("rejects unsettled, broad foreign, foreign-owning, and false root generation contracts", () => {
     const taxonomy = loadTaxonomy();
-    const setup = taxonomy.generatorContracts["setup-wizard-config"]!;
-    const unsettled = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "setup-wizard-config": { ...setup, ownership: "unknown" } } } as unknown as Taxonomy;
+    const locks = taxonomy.generatorContracts["external-cargo-locks"]!;
+    const unsettled = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "external-cargo-locks": { ...locks, ownership: "unknown" } } } as unknown as Taxonomy;
     expect(validateTaxonomy(unsettled).some((problem) => problem.includes("zero unknown or unsafe"))).toBe(true);
     const broad = { ...taxonomy, fixedDirectoryContracts: { ...taxonomy.fixedDirectoryContracts, "ralph-prd-identifier": { ...taxonomy.fixedDirectoryContracts["ralph-prd-identifier"]!, pathPattern: ".ralph-tui/**" } } };
     expect(validateTaxonomy(broad).some((problem) => problem.includes("recursive wildcard"))).toBe(true);
-    const incomplete = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "setup-wizard-config": { ...setup, outputRoots: setup.outputRoots.slice(1) } } };
-    expect(validateTaxonomy(incomplete).some((problem) => problem.includes("exactly the seven tracked Ralph files"))).toBe(true);
-    const generatedRoot = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "setup-wizard-config": { ...setup, outputRoots: [{ path: "package.json", inclusion: "tracked" as const }] } } };
+    const foreignOutput = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "external-cargo-locks": { ...locks, outputRoots: [{ path: ".ralph-tui/session.json", inclusion: "tracked" as const }] } } };
+    expect(validateTaxonomy(foreignOutput).some((problem) => problem.includes("a foreign tool's own state is never a repository output"))).toBe(true);
+    const generatedRoot = { ...taxonomy, generatorContracts: { ...taxonomy.generatorContracts, "external-cargo-locks": { ...locks, outputRoots: [{ path: "package.json", inclusion: "tracked" as const }] } } };
     expect(validateTaxonomy(generatedRoot).some((problem) => problem.includes("authored fixed contracts"))).toBe(true);
   });
 

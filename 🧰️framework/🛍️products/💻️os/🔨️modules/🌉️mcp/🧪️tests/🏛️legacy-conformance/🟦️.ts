@@ -43,7 +43,7 @@ describe("semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0)", () =>
       expect(response.error).toBeUndefined();
       const result = response.result as { protocolVersion: string; serverInfo: { name: string }; capabilities: Record<string, unknown> };
       expect(result.protocolVersion).toBe("2025-11-25");
-      expect(result.serverInfo.name).toBe("semio-os-mcp");
+      expect(result.serverInfo.name).toBe("semio");
       expect(result.capabilities).toMatchObject({ tools: { listChanged: true }, resources: { listChanged: true, subscribe: true }, prompts: { listChanged: true } });
     } finally {
       await raw.close();
@@ -66,7 +66,7 @@ describe("semio-os-mcp — legacy era (@modelcontextprotocol/sdk 1.30.0)", () =>
   });
 
   it("serverInfo.name and declared capabilities match after a real SDK handshake", () => {
-    expect(client.getServerVersion()?.name).toBe("semio-os-mcp");
+    expect(client.getServerVersion()?.name).toBe("semio");
     expect(client.getServerCapabilities()).toMatchObject({ tools: { listChanged: true }, resources: { listChanged: true, subscribe: true }, prompts: { listChanged: true } });
   });
 

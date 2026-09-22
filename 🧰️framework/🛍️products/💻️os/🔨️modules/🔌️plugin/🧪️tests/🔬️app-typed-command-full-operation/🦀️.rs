@@ -293,6 +293,8 @@ mod typed_command_full_operation_tests {
                 result_page: None,
                 result_page_presented: false,
                 result_sequence: 0,
+                publication_progress: 0,
+                publication_checkpoint: None,
                 publication_attempt: 0,
                 ui_pending: true,
                 published_artifact: false,
@@ -494,6 +496,8 @@ mod typed_command_full_operation_tests {
                     result_page: None,
                     result_page_presented: false,
                     result_sequence: 0,
+                    publication_progress: 0,
+                    publication_checkpoint: None,
                     publication_attempt: 0,
                     ui_pending: true,
                     published_artifact: false,
@@ -884,6 +888,8 @@ mod typed_command_full_operation_tests {
                     result_page: None,
                     result_page_presented: false,
                     result_sequence: 0,
+                    publication_progress: 0,
+                    publication_checkpoint: None,
                     publication_attempt: 0,
                     ui_pending: false,
                     published_artifact: false,
@@ -913,7 +919,19 @@ mod typed_command_full_operation_tests {
         let mut pages: Vec<(u64, TypedOperationResultLane, String)> = Vec::new();
         while let Some(page) = app.take_typed_operation_result_page(7) {
             let code = if page.lane == TypedOperationResultLane::Fault { crate::app::decode_typed_operation_fault_page(page.bytes()).0 .0 } else { String::new() };
-            pages.push((page.token.operation, page.lane, code));
+            let operation = page.token.operation;
+            pages.push((operation, page.lane, code));
+            // 🧹️ The host ACKs the fault page of the operation it just lost, exactly as the shell
+            // does; operation 2's presented page is deliberately left unacknowledged, because the
+            // clauses below are about a presented-but-unACKed page's effect on retirement.
+            if operation == 1 {
+                // 🪪️ Straight at the mounted operation: `acknowledge_typed_operation_result` first
+                // matches the token's receiver against the app's BOUND live instance, and this
+                // fixture app is driven without one (every other clause addresses instance 7 by
+                // hand). The subject here is the operation's own page accounting, not the mount.
+                let acknowledged = app.tool_operations.get_mut(1).expect("the terminated operation stays mounted").acknowledge_result_page(page.token).expect("the terminated operation's own fault page is acknowledgeable");
+                assert!(acknowledged, "a terminated operation must accept the ACK for the page it minted");
+            }
         }
         assert!(
             pages.contains(&(1, TypedOperationResultLane::Fault, "interactive-job.typed-operation-session".to_string())),
@@ -954,6 +972,8 @@ mod typed_command_full_operation_tests {
                     result_page: Some(page),
                     result_page_presented: true,
                     result_sequence: 0,
+                    publication_progress: 0,
+                    publication_checkpoint: None,
                     publication_attempt: 0,
                     ui_pending: false,
                     published_artifact: false,
@@ -989,7 +1009,15 @@ mod typed_command_full_operation_tests {
         assert_eq!(app.tool_cancellations.active_operation_count(), 2);
         app.maintenance_stage = 18;
         app.maintenance_cancellation_cursor = TOOL_CANCELLATION_SLOTS + 1;
-        assert_eq!(app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        // 🎡️ `maintenance_step` ROTATES: a stage that can release nothing hands the call on, so the
+        // step WORD is the rotation's verdict, not stage 18's. What stage 18 owes while the
+        // cancellation state is locked is that it reclaims nothing and leaves its own cursor exactly
+        // where it was — asserted directly below, over the property instead of its proxy.
+        let locked_step = app.maintenance_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
+        assert!(
+            matches!(locked_step, PluginCloseStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES),
+            "a bounded maintenance turn never exceeds its own grant: {locked_step:?}"
+        );
         assert_eq!(app.maintenance_cancellation_cursor, TOOL_CANCELLATION_SLOTS + 1);
         assert_eq!(app.tool_cancellations.active_operation_count(), 2);
         drop(lock);
@@ -1319,7 +1347,15 @@ mod typed_command_full_operation_tests {
         assert!(publisher[..pending_advance].contains("pending.begin_close()"));
         assert!(publisher[..pending_advance].contains("pending.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES)"));
         assert!(!publisher.contains("dispatch_emit_group("));
-        assert!(!publisher.contains(".await"));
+        // 🧵️ The one-page publisher suspends in EXACTLY one place: the task lane's spawn. Every
+        // other lane stays synchronous, so the awaits are enumerated and the one that is allowed is
+        // named by its own call — a new `.await` anywhere in the publisher fails here by name.
+        let publisher_awaits: Vec<&str> = publisher.match_indices(".await").map(|(index, _)| publisher[..index].rsplit('\n').next().unwrap_or_default().trim()).collect();
+        assert_eq!(
+            publisher_awaits,
+            vec!["crate::reactor::spawn_task(mounted.meta.instance_id, &mounted.meta, task)"],
+            "the production one-page publisher may suspend only for the task lane's own bounded spawn"
+        );
         assert!(publisher.contains("typed_effect_outbox.push"));
         assert!(publisher.contains("typed_event_outbox.push"));
         assert!(publisher.contains("typed_ui_outbox.push"));

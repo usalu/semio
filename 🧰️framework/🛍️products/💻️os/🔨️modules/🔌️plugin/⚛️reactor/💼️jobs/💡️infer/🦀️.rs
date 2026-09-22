@@ -411,6 +411,18 @@ impl InteractiveInferenceJob {
         let mut progress = encode_bridge_item(&scheduled);
         let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
         let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
+
+        // 🧵️ ONE transition, and then the pool that owes it its work. `pump_one` only SUBMITS a step
+        // to `semio_framework_async::process_worker_pool`; on wasm that pool has no threads and runs
+        // a submitted step only inside `WorkerPool::pump`, which the reactor turn calls — and NO
+        // reactor turn runs during a `step-job` crossing. So the session answered `Submitted`
+        // forever, the machine stayed in `Pump`, and the host reissued `step-job` for as long as the
+        // client waited: measured on `s.wfc.bitmap.solve` at 907 s and again at 423 s with a
+        // 6 000 000-unit grant (`🗑️generated/gj1-solve-probe-{1,2}.txt`) — the grant is irrelevant to
+        // a step that never runs. This is `📓️…project-wasm-pool-pump-starves-interactive-jobs`'s own
+        // law ("any loop that waits on a cooperative-pool step on wasm must pump the pool itself")
+        // applied to the one lane that still had no pump. Natively the pool has real workers and
+        // `pump_process_worker_pool` is a no-op, so both hosts run the identical code.
         let poll = match self.session.as_mut() {
             Some(session) => session.pump_one(&pool, semio_framework_async::Lane::UserVisible),
             None => return self.fail(super::fault("job.infer.session-missing", "interactive inference lost its mounted worker session before pumping")),
@@ -418,6 +430,19 @@ impl InteractiveInferenceJob {
         let poll = match poll {
             Ok(poll) => poll,
             Err(_) => return self.fail(super::fault("job.infer.worker-pump", "interactive inference mounted worker transition was rejected")),
+        };
+        let poll = if matches!(poll, semio_framework_job::WorkerJobPoll::Submitted) {
+            crate::reactor::turn::pump_process_worker_pool();
+            let repoll = match self.session.as_mut() {
+                Some(session) => session.pump_one(&pool, semio_framework_async::Lane::UserVisible),
+                None => return self.fail(super::fault("job.infer.session-missing", "interactive inference lost its mounted worker session before pumping")),
+            };
+            match repoll {
+                Ok(poll) => poll,
+                Err(_) => return self.fail(super::fault("job.infer.worker-pump", "interactive inference mounted worker transition was rejected")),
+            }
+        } else {
+            poll
         };
         if !matches!(poll, semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) {
             return JobStep::Running(Some(progress));

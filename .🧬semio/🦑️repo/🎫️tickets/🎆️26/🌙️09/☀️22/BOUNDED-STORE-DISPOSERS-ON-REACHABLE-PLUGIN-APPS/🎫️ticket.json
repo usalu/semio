@@ -1,0 +1,10 @@
+{
+  "title": "Declare Bounded Store Disposers On Reachable Plugin Apps",
+  "emoji": "\ud83e\uddf9\ufe0f",
+  "status": "open",
+  "description": "Audit which ArtifactEditor and ArtifactViewer surfaces under s/plugins omit build_document_store_disposer, and declare the bounded store disposers only on the surfaces a live runtime mounts or a staged guest codec constructs and closes.",
+  "goal": "\ud83c\udfafr2602\ud83c\udfafrunningsketchpad\ud83c\udfafrunningsketchpadapps",
+  "sessions": [],
+  "note": "Opened on disk 2026-09-22 because the repo MCP server is not connected in this session (FetchMcpResource: Server repo not found). Goals were read from .\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfaf\ufe0fgoals. Associated with Running Sketchpad Apps, the same goal family as 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END, which handed this sweep off in \ud83d\udcd3\ufe0ftc3e-three-package-hub-and-note-creation.md \u00a77. Audit: \ud83d\udcd3\ufe0freachable-store-disposers.md.",
+  "summary": "Declared bounded store disposers and the NoPresence/NoTransient retirement factories on the 11 viewers the staged stdio and gis components actually close, and the same factories on NoteViewer. Left the other missing surfaces. cargo check of the nine artifact crates is green. The staged codec sweep is red: note reaches print-mirror and loses the minted identity; stdio and gis hit the 120s deadline on pack-schema-hash."
+}

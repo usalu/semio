@@ -40,7 +40,7 @@ describe("gis map inference bridge — neutral fixture and closed wire shapes", 
     expect(report.errors).toBe(11);
     expect(report.visibility).toBe(7);
     expect(report.lifecycle).toBe(9);
-    expect(report.routes).toBe(5);
+    expect(report.routes).toBe(6);
     expect(report.limits).toBe(4);
     expect(report.hostile).toBeGreaterThanOrEqual(29);
   });

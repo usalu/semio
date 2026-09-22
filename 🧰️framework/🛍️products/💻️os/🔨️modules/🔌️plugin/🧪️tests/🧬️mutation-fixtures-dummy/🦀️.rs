@@ -4,7 +4,10 @@ pub(crate) use mutations::{DummyMutation, SetDummyCount};
 
 // 🧪️ Proves each `artifact_app_laws` primitive against a minimal dummy `ArtifactApp` before any real app
 // adopts them.
-use crate::app::artifact_app_laws::{assert_registered_ingest_idempotent, assert_two_registered_instances_converge, assert_undo_redo_round_trip, close_registered_fixture_app, meta, new_app, new_registered_app};
+use crate::app::artifact_app_laws::{
+    assert_registered_ingest_idempotent, assert_registered_ingest_idempotent_with_members, assert_two_registered_instances_converge, assert_two_registered_instances_converge_with_members, assert_undo_redo_round_trip,
+    close_registered_fixture_app, meta, new_app, new_registered_app,
+};
 use crate::app::{
     built_text_to_component_tree, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
     DraftView, Emit, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, UiAssemblyResult,
@@ -382,4 +385,51 @@ async fn assert_two_instances_converge_on_disjoint_edits() {
 #[semio_framework_async_macros::async_test]
 async fn assert_ingest_idempotent_does_not_double_apply() {
     assert_registered_ingest_idempotent::<DummyApp, i32, _, _>(dummy_manifest, DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
+}
+
+//#region 🧬️MembersRoster
+// 🧬️ A non-default member roster over the dummy document shape — a "child" here is a second,
+// independently owned instance of the identical shape, exactly as the plugin-runtime fixture's
+// `TestMembers` is. Its only purpose is to be a roster that is NOT `NoMembers`.
+store::space_members! {
+    pub enum DummyMembers, DummyMembersOpen {
+        Child("s.test.dummy-child", "native", "*", "semio.testkit-child/v1") => (DummySnapshot, DummyMutation),
+    }
+}
+
+impl store::MemberStoreOwner<DummyMutation> for DummySnapshot {
+    // 🚪️ This roster exists to BE a non-default roster, never to open a member: the law that uses it
+    // drives the registered ladder (construct, attach, dispatch, settle, exchange, close) and admits
+    // no child, so the un-openable operation is the honest declaration. `PackMemberSnapshotOpen`
+    // additionally demands `RetireOwned`, which the dummy snapshot does not implement.
+    type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
+
+    fn member_store_owners() -> store::DocumentStoreOwners<Self, DummyMutation> {
+        crate::app::bounded_document_store_owners::<Self, DummyMutation>()
+    }
+}
+//#endregion 🧬️MembersRoster
+
+/// 🧬️ A members-bearing app converges and ingests idempotently through the `_with_members` twins.
+///
+/// The registered fixture constructors were hard-wired to `VcsArtifactApp<A>`, i.e. the DEFAULT
+/// roster, and the roster is a type parameter of the app the helper CONSTRUCTS — so no plugin-side
+/// change could reach it. An app composing a derived child therefore failed construction outright
+/// (`derived child dialect '…' is not declared by this app's member roster`) and every registered
+/// convergence/idempotency law was unreachable for it (mathematical's equation, imperative's
+/// procedure; ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, knowledge). This law drives the
+/// whole registered ladder — paired construction, backbone attach, typed dispatch, settle, exchange,
+/// checkpoint, detach, close — over `DummyMembers` instead of `NoMembers`, so the roster really is
+/// threaded through every rung and not just accepted at the signature.
+#[semio_framework_async_macros::async_test]
+async fn registered_laws_accept_an_explicit_member_roster() {
+    assert_two_registered_instances_converge_with_members::<DummyApp, DummyMembers, i32, _, _>(
+        "mem://testkit-converge-members",
+        dummy_manifest,
+        DummyCommand::Increment,
+        DummyCommand::Increment,
+        |app| app.snapshot().unwrap().count,
+    )
+    .await;
+    assert_registered_ingest_idempotent_with_members::<DummyApp, DummyMembers, i32, _, _>(dummy_manifest, DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
 }

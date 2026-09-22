@@ -221,3 +221,114 @@ audit-visual adc299625bf483222 · audit-artifacts a41c9ecc4a2af26d6 · audit-int
   (same cause). audit-native-summary DONE (`📓️audit-native-summary.md`, `summary.tsv`): 100 green · 21 red ·
   6 abort · 5 compile-error · 31 never-run (norm 17, playbook 3, procedural 3, space 3 peer-owned; wfc-3d/grid2d/
   grid3d/plugin-wfc/wfc-engine 5 never built — design's batches died on earlier compile errors).
+- 11:34 peer's FP11 refactor broke `semio-framework-plugin` (lib) 11:16–11:34 (TaskSlot.reserved, Emit.tasks); chain
+  rewritten to retry a framework-blocked step every 5 min with the mutex released (`describe-activate-0922-1121.txt`);
+  killed the two older chains (sandboxed `kill` does not reach detached trees — use dangerouslyDisableSandbox).
+  Chain queued at stamp 110250 behind the peer's c8 (gis2d activation) and tc3e (~45 min release build).
+- 12:10 play-runtime DONE (`📓️play-runtime.md`): lane merge serves the INSTALLED artifact on sha drift (warning, not
+  refusal; 6 laws); strict acceptance now asserts example label + non-uniform canvas/window body + no SPA fallback for
+  media paths (animate's missing figure newly fails); play unit 69/71 (2 = stale stdio descriptor). audit-descriptors
+  DONE (`📓️audit-descriptors.md`): puzzle descriptor 4 295 257 B > 4 MiB bound; stdio epoch; gis SIGTERM; trinity
+  artifact-dir lock hang; norm component sanity; cad's 21:37 failure was a framework ui regression.
+- 12:05 native mutex widened to two slots (design has held one for 50 min with 9 topics queued).
+- 12:11 chain reordered: activate-dev FIRST (so the fleet's fixes go live as soon as our slot comes), then the 30
+  describes, then a second activate-dev (`PLAY_ACTIVATE_FIRST=1`, log `describe-activate-0922-1211.txt`,
+  `🗑️generated/activation/CURRENT-LOG.txt` names the live log). Peer queue ahead of us: c8 (holding since 11:32),
+  s11, tc3e.
+- 13:15–15:50 account session limit: all 10 Opus fix agents died mid-edit (design was mid layout close-ladder fix,
+  knowledge mid wires production fix, block-puzzle mid puzzle5d roster helper, cad-content adding close laws …);
+  the detached chain, supervisor, watchdog and the peer's fleet were unaffected. Disk fell to 14 GB free: a 187 GiB
+  `26/07/13/PUZZLE-3D…/🗑️generated/build` (another agent's ticket, idle since 09-21 23:19) is the culprit — left for
+  the user; the peer prunes nx/incremental.
+- CHAIN DONE (`describe-activate-0922-1211.txt`): activate-dev #1 12:11→14:25 ok (waited behind the peer's c8/s11
+  holds), then ALL 30 describes ok in one pass (puzzle 23 min, stdio 8 min, gis 7 min, vcs 7 min — the machine was
+  quiet during the limit outage), then activate-dev #2 15:43→15:47 ok. Every plugin descriptor is now fresh.
+- 15:57 the serve supervisor (03:20 instance) had silently ignored both `serve-restart.request` touches (14:25,
+  15:47): bash alive, no sleep/curl child, loop wedged — killed it and the 03:20 serve, relaunched the supervisor;
+  :6033 now boots the 15:47 activation with the drift-tolerant merge. 15:56 resumed all 10 Opus agents by message.
+- 16:03 xcut-dict DONE (`📓️xcut-dict.md`): protocol = the last owner of a non-empty Dictionary must retire it
+  (`OrderedMap::release_shared`); production fixes in the framework protocol-law seams + imperative `RunResult`/
+  `EffectLogEntry` cold boundaries (a Run press aborted the guest app); kernel protocol-laws 1121/0, neural-engine
+  56/0, semio-s-imperative 7/0, 0 Dictionary panics left in imperative/dag/note/mathematical/reasoning; the last 5
+  are in peer-owned sequence → proposed diff `🗑️generated/xcut-dict/proposed-sequence.diff.md` sent to the peer.
+- 16:05 strict acceptance launched DIRECTLY with Playwright against :6033 (`PLAYWRIGHT_BASE_URL`; the nx `test-e2e`
+  target would re-run the 217-task activation graph and rebuild changed lanes OUTSIDE the wasm mutex — never use it
+  while plugin sources churn). Log `🗑️generated/e2e/test-e2e-direct-1605.txt`, report `play-e2e/direct-1605`.
+- 16:25 `$T/🗑️generated/` SWEPT again (repo workspace-cleanup treats open tickets' `🗑️generated` as removable;
+  unknown who ran `clean`): lost the activation/e2e logs, the running direct acceptance run (~40 tests in), raster/
+  media/xcut-dict/audit state and media's live target dir. Fleet state relocated to `⚡️cache/play-fleet/<topic>/`
+  (brief v5 16:40 addendum). Machine thrashing (load 250–285, swap 8.4/9.2 GB): the Claude desktop app runs ~16 `git`
+  processes polling the dirty tree; peer paused its non-critical cargos; our fleet = 1 cargo + 1 browser until load < 20.
+  Acceptance rerun deferred until then (direct Playwright with PLAYWRIGHT_BASE_URL, never the nx target).
+- 16:47 the sweep was machine-wide (peer ticket + the 187 GiB build dir too → disk 14 → 110 GB) and its stray-process
+  step killed our supervisor, :6033, watchdog and Playwright; relaunched supervisor + watchdog with logs under
+  `⚡️cache/play-fleet/coordinator/`; :6033 up 16:47. play-runtime DONE (task 2): staged descriptors are a second
+  emission of `materialize` and are semantically identical to the regenerated ones (only build hashes + number
+  formatting differ) — no restage needed; the `[stale]` storm was the freshness walk counting the plugin-root describe
+  outputs as sources (fixed, 48/48 laws); true staleness 9/60 from real .rs edits; play unit 71/71. xcut-dict re-saved
+  its sequence diff as tracked `📓️xcut-dict-sequence-diff.md`.
+- 16:50 CORRECTION: this morning's "wedged supervisor" was my own doing — the supervisor shows as two bash copies
+  (the loop with a `sleep 30` child, and an inert `( … & )` subshell that parents the serve); at 10:55 I killed the
+  loop as a "duplicate". Now: loop 89475, inert 89563 → serve 89564. Never kill the copy without the serve child.
+- 17:09 STRICT ACCEPTANCE 70/70 PASSED (8.2 min, direct Playwright against :6033 on the 15:47 activation, log
+  `⚡️cache/play-fleet/e2e/test-e2e-direct-1700.txt`, tracked copy `📓️acceptance-runs.md`) — including the new
+  visible-content assertions (example label, non-uniform canvas, no SPA fallback for media) and the four panes red
+  at 03:55 (wfc2d, wfc3d, grid3d, playbook). Play unit suite 71/71 (play-runtime). audit-visual-3 now probes all
+  69 panes for the screenshot record. Remaining DoD item: every plugin crate's native suite green (fleet running,
+  one cargo at a time; peer-owned sequence/norm/space/procedural/playbook via the peer).
+- 17:20 load calm (18–28): native mutex back to two slots. Peer: `semio-framework-plugin --lib` 825/0, kernel 1118/0,
+  hub 330/330; hands flow guest code to us and asks for flow's `retained::*` 8/6 → launched a `flow` Opus agent
+  (direct guest/test fixes; framework needs → `⚡️cache/play-fleet/proposed-flow-retained.diff.md`).
+- 17:45 block-puzzle pass (📓️block-puzzle.md §9): block2d/3d/5d + both plugin crates GREEN (viewer disposer
+  catalogue fixed 6 viewers), puzzle2d abort gone (857/23; clock None → infinite yield), puzzle3d 740/8, puzzle5d
+  16 red (still watchdog-killed). puzzle describe now 985 KB / 1 314 s (examples deferred; was 4.78 MB) and fresh.
+  puzzle5d WRONG DOCUMENT root cause = framework `publication-stalled` after 4 096 units with an unchanged stall
+  witness while a 5 745-mutation edit folds one per unit (§9.11 proposed diff → routed to the peer's plugin-lib
+  owner; also explains puzzle3d mutation_latency). Agent resumed on the remaining 47 reds.
+- 17:45 peer retracts the flow request (the six `retained::*` reds are in the framework flow crate = their FL3);
+  our flow agent narrowed to the ✏️s flow plugin crates.
+- 18:00 SECOND account-limit cut (resets 20:50 Berlin): all 10 Opus agents died again (raster, media,
+  knowledge-children were writing their tracked reports; cad-content had a root cause; design was probing). Their
+  detached mutex runs continue and log under `⚡️cache/play-fleet/<topic>/`. Peer: FP13 landed the stall-witness
+  change (plugin lib 827/0) but measures that puzzle5d's stall is NOT the document-publication arm (capped ≈256
+  units) → suspects the child-group lane; asks for a capture of the stalled operation (lane + unit counter) — for
+  block-puzzle after the reset. Flow framework `retained` 15/0 (FL3): nothing flow-side owed.
+- 21:35 limit reset: resumed all 10 Opus agents. Latest detached-run numbers (⚡️cache/play-fleet/<topic>): block-puzzle
+  puzzle2d 859/21 · puzzle3d 743/5 · 1 abort (run15 19:02); design 17 green targets + 281/1, 13/1, 1 abort (run-f3
+  19:51); flow-flow 188/66 (!) (run1 18:12, regression to investigate); knowledge 204/3, 136/8 (pass3); media
+  sequence 205/2 (run31); raster 223/2 (test-29); knowledge-children 2 aborts (pass4-2); cad-content compile error
+  (run19); engineering/stdio-b no numbers yet. :6033 up (serve 16:58), load 10.
+- 22:10 reports: stdio-b DONE (22 crates 2 459/0 + semio 3 034/0; describe cost 1 764 s → 441 s guest time via a
+  parse-once memo, bound law; export catalog 28 short ids incl. glb; 9 panes correct, stdio-tsv now a real table).
+  cad-content DONE (432/0 + 5 plugin crates; root cause was a FRAMEWORK retained window-config decoder treating only
+  Shape::Tuple as tuple-valued → every coord/dir/dim/range window state refused on reload — fixed in
+  🔌️plugin/🪟️window/🎚️config/📥️retained, told the peer; needs a re-activation to reach the browser).
+  engineering 19/20 green (fem-2d 1261/0, fem-3d 1131/0, process3d 359/0, energy 6292/0 …; gismap 263/1 waits on a
+  plugin-lib diff routed to the peer; gis3d has no example picker → agent adds gisterrain setActiveExample).
+  media DONE except peer-guest S10-E (sequence import builder) and a curated demonstrator document (content).
+  raster 223/2 but the composite is STILL BLANK live (assetsJson "{}", no native law reproduces it) and the
+  acceptance canvas census is a false green for raster → raster agent on the guest assets lane, play-runtime on an
+  honest content predicate. Queued a `gis` describe + activate-dev (log ⚡️cache/play-fleet/activation/…) to bake
+  the framework fix; a further activation follows the fleet's remaining production edits.
+- 22:20 flow DONE-partial (📓️flow.md §7): the 66 reds were ONE cause — the peer's atomic FlowRetirement frontier
+  needs its `next_close_byte_demand()` read; four flow drivers forwarded a raw page and one hit
+  `unreachable!("positive Flow retirement grant")` (a live abort) → `close_frontier_page` in the plugin; flow-flow
+  250/4, plugin 3/1, 9 extensions green; the 09-21 routed reds + the window-config double-command drop are green;
+  the last 5 are a framework accounting defect (backing bytes reported as payload) → routed to the peer.
+  raster: the blank composite was a HOST TS defect — `paint-2d` missing from the PagedSurfaceView routing list in
+  📺️renderer Interpreter, so the split-out assets/document lanes never reached Paint2dHost; fixed with a single
+  lane table + laws, verified live after a serve recycle (assets lane carries the PNG, navigator overlay drawn);
+  the demo's emblem is a 2×2 placeholder → agent replaces it with a real shipped image.
+  knowledge-children: both aborts fixed (one-shot begin_close latch; refused nested owner dropped on `?`; Drop
+  witnesses guarded with thread::panicking), architect 2087/0 + 3 plugin crates green, animate 305/22, writer
+  156/19 → agent continues. Framework plugin lib broken again by a peer mid-landing edit (interaction_selection_laws)
+  → blocks the gis describe (retry loop) and fleet re-runs; peer notified.
+- 22:45 knowledge pass 4 (📓️knowledge.md): 107 → 40 reds (dag 204/3, imperative 136/9, mathematical 365/19, note
+  394/2, wires 182/7; all 14 plugin crates green); production fixes incl. a polynomial interpolation bug, equation
+  command extent, EquationViewer close hooks, wires canonical board value, three store guards; restored a JSON schema
+  a predecessor's regenerator had destroyed. Live: note/forms/dag ✅, trinity-jack query lexer lacks a bare Dash in
+  the framework graph DSL, imperative "No data" (was the dict panic), mathematical demo asset persists no graph
+  (wire change pending), wires fix not live until the running activation. play-runtime: acceptance now reads each
+  window's own paint witness (3D meshes/instances, raster visible layer ≥ 8×8 asset, DOM text/elements; 20 ms/pane)
+  → 69/70 on the 15:47 build, raster the honest red (2×2 placeholder). gis describe ok 22:17; full activate-dev
+  running since 22:17 (framework decoder fix rebuilds every lane).

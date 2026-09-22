@@ -198,6 +198,18 @@ export function preparedComponentReportLines(excluded: readonly PreparedComponen
  * "stale" the moment its own `dist/component-dev/*.wasm` lands. */
 export const UNWATCHED_COMPONENT_SOURCE_DIRECTORIES: readonly string[] = ["dist", "target", "node_modules", "pkg", ".git"];
 
+/** 🛂️ File names at a component's OWNER ROOT that are build output too, even though they sit next to the
+ * sources instead of inside a `dist`: the plugin descriptor pair `🔣️.json` + `🛂️.descriptor.semio`, which
+ * the crate's `describe` target declares as its own `outputs` and rewrites in place (tracked in git, so
+ * they look like authored files to everything that only reads mtimes). Counting them as sources made the
+ * serve report EVERY component `source-newer` seconds after a describe pass — 30 `[stale]` lines on
+ * 2026-09-22 15:57 naming nothing but `✏️s/🔌️plugins/<p>/🔣️.json` — while the staged descriptor was
+ * current: `materialize-<profile>` does not copy this file, it re-emits its own from the built component
+ * (`🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts`), so the two differ only in the `hashes.*` of the
+ * build each was made from. A real source edit still reports, because the `.rs` it lives in is still
+ * walked. ONLY the owner root is exempt: a nested `🔣️.json` is a fixture or a schema, i.e. a real source. */
+export const GENERATED_COMPONENT_OWNER_FILES: readonly string[] = ["🔣️.json", "🛂️.descriptor.semio"];
+
 /** 🔒️ Bound on one component's source walk so a serve-start freshness pass over ~20 crates stays a
  * few milliseconds and can never be turned into an unbounded repository scan by a stray symlink. */
 export const COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES = 20_000;
@@ -275,6 +287,7 @@ export function newestComponentSourceMtime(sourceRoot: string, maximumEntries: n
         continue;
       }
       if (!entry.isFile()) continue;
+      if (directory === sourceRoot && GENERATED_COMPONENT_OWNER_FILES.includes(entry.name)) continue;
       let mtimeMs: number;
       try { mtimeMs = statSync(path).mtimeMs; } catch { continue; }
       if (!newest || mtimeMs > newest.mtimeMs) newest = { mtimeMs, path };

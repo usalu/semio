@@ -147,7 +147,7 @@ mod plugin_builder_contract_tests {
         assert_eq!(de.writes, DummyDeserializer::INTO);
         assert_eq!(de.reads.to_vec(), vec![DummyDeserializer::FROM]);
 
-        let seed = TestSnapshot { count: 7, label: "x".into() };
+        let seed = TestSnapshot { count: 7, label: "x".into(), slot: Vec::new() };
         let bytes = ArtifactPack::encode_pack(&seed);
         let composed = resolve_ready((ser.compose)(&[ErasedComposeSource { dialect: DummySerializer::FROM, payload: IoPayload::Binary(bytes) }])).expect("serializer_entry_of erased compose should succeed with exactly 1 source");
         assert_eq!(composed.dialect, DummySerializer::INTO);
@@ -170,7 +170,7 @@ mod plugin_builder_contract_tests {
     }
 
     //#region 🧬️TestDocumentMutationLeaves
-    use crate::test_app_mutation_fixture::{SetCount, SetLabel, TestMutation};
+    use crate::test_app_mutation_fixture::{SetSlotChildren, SetCount, SetLabel, TestMutation};
     //#endregion 🧬️TestDocumentMutationLeaves
 
     struct TestCountOneItemPreparationFactory;
@@ -241,7 +241,7 @@ mod plugin_builder_contract_tests {
                     started_at: String::new(),
                     finished_at: None,
                 };
-                self.prepared = Some(authority.prepare_one_item(edit, std::sync::Arc::new(TestSnapshot { count: *value, label: String::new() }))?);
+                self.prepared = Some(authority.prepare_one_item(edit, std::sync::Arc::new(TestSnapshot { count: *value, label: String::new(), slot: Vec::new() }))?);
                 self.turn = 2;
             }
             Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint()))
@@ -363,6 +363,12 @@ mod plugin_builder_contract_tests {
         /// `interactionSelect` (`Effect::ReplayShellCommand`) and a partial window refresh.
         #[dsl(key = "pick-item")]
         PickItem { id: String },
+        /// 🧮️ ONE edit whose publication folds `rows` bounded mutations — the shape a real example
+        /// switch has (puzzle5d's `capsule-dream` is ≈ 5 745 mutations in one undoable edit). It
+        /// exists so a law can drive a healthy publication ladder past
+        /// `TYPED_OPERATION_STALL_FAULT_CEILING` units.
+        #[dsl(key = "bulk-edit")]
+        BulkEdit { rows: i32 },
     }
 
     impl ::protocol::OpText for TestCommand {
@@ -828,6 +834,7 @@ mod plugin_builder_contract_tests {
             // 🔀️ Rides the keyed fixture's ONE generated tool id (`TOOL_JOB_IDS` is fixture-checked):
             // a pick and a composite edit are two commands of the same typed tool.
             TestCommand::PickItem { .. } => "compositeEdit",
+            TestCommand::BulkEdit { .. } => "compositeEdit",
         }
     }
 
@@ -881,6 +888,7 @@ mod plugin_builder_contract_tests {
             )),
             TestCommand::ApplyCountFromTask { value } => Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: *value })])),
             TestCommand::PickItem { id } => Ok(keyed_pick_emit(id)),
+            TestCommand::BulkEdit { rows } => Ok(Emit { artifact_mutations: (1..=*rows).map(|row| TestMutation::SetCount(SetCount { value: row })).collect(), description: Some("bulk edit".into()), ..Default::default() }),
         }
     }
 
@@ -1209,6 +1217,7 @@ mod plugin_builder_contract_tests {
             let popped = match command {
                 TestCommand::CompositeEdit { slot, child_id, .. } => slot.pop().or_else(|| child_id.pop()),
                 TestCommand::PickItem { id } => id.pop(),
+                TestCommand::BulkEdit { .. } => None,
                 _ => return Err(Fault::from("keyed fixture owns only its composite and pick commands")),
             };
             if let Some(character) = popped {
@@ -1221,6 +1230,7 @@ mod plugin_builder_contract_tests {
             match command {
                 TestCommand::CompositeEdit { slot, child_id, .. } => slot.is_empty() && child_id.is_empty(),
                 TestCommand::PickItem { id } => id.is_empty(),
+                TestCommand::BulkEdit { .. } => true,
                 _ => false,
             }
         }
@@ -1257,6 +1267,7 @@ mod plugin_builder_contract_tests {
                     Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: self.base_count + child_value })], child_emits, description: Some("retained composite edit".into()), ..Default::default() }
                 }
                 TestCommand::PickItem { id } => keyed_pick_emit(id),
+                TestCommand::BulkEdit { rows } => Emit { artifact_mutations: (1..=*rows).map(|row| TestMutation::SetCount(SetCount { value: self.base_count + row })).collect(), description: Some("retained bulk edit".into()), ..Default::default() },
                 _ => panic!("exact keyed fixture command"),
             };
             self.completion.as_ref().unwrap().complete(Ok(emit), EphemeralEmit::default()).expect("one exact keyed completion");
@@ -1651,6 +1662,108 @@ mod plugin_builder_contract_tests {
         let active = cell.instance.lock().unwrap();
         assert!(!active.app.has_pending_typed_operations());
         drop(active);
+        drop(cell);
+        super::plugin_destroy_app(&runtime, id).await.unwrap();
+        for _ in 0..100_000 {
+            super::plugin_step_close_cleanup(&runtime).unwrap();
+            if runtime.close_quarantine.borrow().get(id).is_none() {
+                break;
+            }
+        }
+    }
+
+    /// 🧮️ A many-mutation edit publishes every one of its mutations and reaches its terminal page,
+    /// spending many publication units under the stall guard without being terminated as stalled.
+    ///
+    /// 🩺️ The guard (`fault_stalled_typed_operation_publication`) terminates a `Publishing`
+    /// operation once 4 096 consecutive units leave its stall witness unchanged, and the witness
+    /// had no term for the ladder's own progress. This law is the biggest single document
+    /// publication the store admits — `ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES` is 1 MiB and one
+    /// unit spends up to `TYPED_OPERATION_RESULT_PAGE_BYTES` of it — which is why it is expressed
+    /// on the fold being COMPLETE and fault-free rather than on a unit count: a single batched
+    /// document publication cannot reach 4 096 units at all (measured: 4 400 mutations = 126 units,
+    /// 150 000 are refused as "batched preparation footprint exceeds its fixed item or byte
+    /// capacity").
+    #[semio_framework_async_macros::async_test]
+    async fn a_many_mutation_publication_folds_every_mutation_and_is_never_terminated_as_stalled() {
+        const ROWS: i32 = 4_400;
+        let id = 4_103;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
+        app.bind_instance_id(id).await;
+        app.dispatch_typed(TestCommand::BulkEdit { rows: ROWS }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }).await.unwrap();
+        let runtime = super::PluginRuntime::new();
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
+        runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
+        let mut terminal = false;
+        let mut faults: Vec<String> = Vec::new();
+        let mut units = 0u64;
+        for _ in 0..(ROWS as u64 * 8) {
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::UNIT).await.unwrap();
+            units += 1;
+            if let Some((receiver, output)) = output {
+                assert_eq!(receiver, id);
+                for page in output.typed_operation_results {
+                    if page.lane == TypedOperationResultLane::Fault {
+                        faults.push(String::from_utf8_lossy(page.bytes()).into_owned());
+                    }
+                    terminal |= page.lane == TypedOperationResultLane::Terminal;
+                    super::plugin_acknowledge_typed_operation_result(&runtime, page.token).await.unwrap();
+                }
+            }
+            if !(scan.runnable || scan.contended) {
+                break;
+            }
+        }
+        assert!(faults.is_empty(), "a moving publication ladder must never be terminated as stalled, saw {faults:?} after {units} publication units");
+        assert!(terminal, "the {ROWS}-mutation publication owes a terminal result page, saw {units} publication units");
+        assert!(units > 64, "this law only exercises the stall guard while the publication spends more units than its 64-unit witness floor, it spent {units}");
+        let active = cell.instance.lock().unwrap();
+        assert_eq!(active.app.snapshot().unwrap().count, ROWS, "every one of the {ROWS} folded mutations reached the document");
+        assert!(!active.app.has_pending_typed_operations());
+        drop(active);
+        drop(cell);
+        super::plugin_destroy_app(&runtime, id).await.unwrap();
+        for _ in 0..100_000 {
+            super::plugin_step_close_cleanup(&runtime).unwrap();
+            if runtime.close_quarantine.borrow().get(id).is_none() {
+                break;
+            }
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn a_host_crossing_outranks_every_background_hold_on_the_same_app() {
+        let id = 4_101;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await).await;
+        app.bind_instance_id(id).await;
+        let runtime = super::PluginRuntime::new();
+        let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }));
+        runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
+        let background_entered = std::sync::atomic::AtomicBool::new(false);
+        std::thread::scope(|scope| {
+            let holder = scope.spawn(|| {
+                let held = cell.background_instance().expect("an idle app admits a background turn");
+                background_entered.store(true, std::sync::atomic::Ordering::SeqCst);
+                while cell.host_crossings.load(std::sync::atomic::Ordering::SeqCst) == 0 {
+                    std::thread::yield_now();
+                }
+                drop(held);
+            });
+            while !background_entered.load(std::sync::atomic::Ordering::SeqCst) {
+                std::thread::yield_now();
+            }
+            assert_eq!(cell.background_holds.load(std::sync::atomic::Ordering::SeqCst), 1, "a live background turn counts its own hold so the host can tell it from an owner that never releases");
+            let crossing = cell.host_instance();
+            assert!(crossing.is_some(), "a host crossing waits out a background turn instead of being refused over it");
+            let crossing = crossing.expect("the host crossing was admitted");
+            assert_eq!(cell.host_crossings.load(std::sync::atomic::Ordering::SeqCst), 1);
+            assert_eq!(cell.background_holds.load(std::sync::atomic::Ordering::SeqCst), 0);
+            assert!(matches!(cell.background_instance(), Err(super::RuntimeInstanceRefusal::Contended)), "a background turn never competes with a live host crossing");
+            drop(crossing);
+            holder.join().expect("the background holder released its turn to the host crossing");
+        });
+        assert_eq!(cell.host_crossings.load(std::sync::atomic::Ordering::SeqCst), 0);
+        assert!(cell.background_instance().is_ok(), "the app is free again once the crossing ends");
         drop(cell);
         super::plugin_destroy_app(&runtime, id).await.unwrap();
         for _ in 0..100_000 {
@@ -2163,6 +2276,9 @@ mod plugin_builder_contract_tests {
             if let Some(scope) = receipt.ui_scope {
                 admitted.ui_scope = scope;
             }
+            // 🧩️ A COMPOSED gesture's result is published by the ladder itself, on its own bounded
+            // host outbox, so the host reads the parent's and every child's mutation under its own
+            // handle plus the single `UndoGroup` that names them — nothing is rebuilt here.
             // 🪢️ The settle-receipt half: a migrated dispatch answers with an admission whose `mutations`
             // and `inverse_group` are empty by construction, because the document only advances once the
             // worker's emit has walked the publication ladder above. Rebuilt here through the SAME
@@ -2319,12 +2435,24 @@ mod plugin_builder_contract_tests {
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
             let mut admitted = self.0.dispatch_typed(command, meta).await?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
+            let mut receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
                 admitted.ui_scope = scope;
             }
+            // 🧩️ A COMPOSED gesture's result is published by the ladder itself, on its own bounded
+            // host outbox, so the host reads the parent's and every child's mutation under its own
+            // handle plus the single `UndoGroup` that names them — nothing is rebuilt here.
+            let composed_results = receipt.composed.len();
+            if let Some(composed) = receipt.composed.pop() {
+                admitted.mutations = composed.mutations;
+                admitted.inverse_group = composed.inverse_group;
+            }
+            // 🔎️ A composed law that reads the WRONG number of documents needs to know whether the
+            // composed lane answered at all or answered short — the two have different causes and
+            // the same symptom.
+            admitted.output = DslValue::Object(vec![("composedResults".into(), DslValue::String(composed_results.to_string()))]);
             // 🪢️ The settle-receipt half: a migrated dispatch answers with an admission whose `mutations`
             // and `inverse_group` are empty by construction, because the document only advances once the
             // worker's emit has walked the publication ladder above. Rebuilt here through the SAME
@@ -4141,6 +4269,11 @@ mod plugin_builder_contract_tests {
                 return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if self.lie_about_terminal {
+                // 🎭️ The lie is SPENT on its first answer. The law's subject is that a `Complete`
+                // without a terminal-empty witness is caught by name; a retirement that lied for
+                // ever could never then be disposed, and the fixture app it lives in could not be
+                // closed through the same honest ladder every other member uses.
+                self.lie_about_terminal = false;
                 return Ok(store::SnapshotRetirementStep::Complete);
             }
             if self.snapshot.take().is_some() {
@@ -4167,13 +4300,19 @@ mod plugin_builder_contract_tests {
     /// @emoji 🎭️ The owned-value twin of {@link TestSnapshotRetirementFactory}: `retire_snapshot_read_erased`
     /// draws the child's returned-read retirement from the INITIAL snapshot owner, so a law whose subject
     /// is a lying terminal witness has to plant its lie there.
+    ///
+    /// 🔂️ The lie is minted EXACTLY ONCE. This same factory is the owned-value owner the member's own
+    /// close cursor, envelope retirement and history disposal all draw from, so a factory that lied
+    /// for ever would make the member impossible to close at all — the law would then prove nothing
+    /// beyond "a lying store cannot be shut down". One lie is all the subject needs: the first
+    /// unique owner a child-content retirement hands back.
     struct TestLyingOwnedValueRetirementFactory {
-        lie_about_terminal: bool,
+        lie_about_terminal: std::sync::atomic::AtomicBool,
     }
 
     impl store::ArtifactOwnedValueRetirementFactory<TestSnapshot> for TestLyingOwnedValueRetirementFactory {
         fn retire_owned(&self, value: TestSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
-            Box::new(TestSnapshotRetirement { snapshot: Some(std::sync::Arc::new(value)), lie_about_terminal: self.lie_about_terminal })
+            Box::new(TestSnapshotRetirement { snapshot: Some(std::sync::Arc::new(value)), lie_about_terminal: self.lie_about_terminal.swap(false, std::sync::atomic::Ordering::AcqRel) })
         }
     }
 
@@ -4231,11 +4370,17 @@ mod plugin_builder_contract_tests {
         child.install_document_store_owners_exact(<TestSnapshot as store::MemberStoreOwner<TestMutation>>::member_store_owners());
     }
 
+    /// @emoji 🎭️ Installs the member owner catalog whose OWNED-VALUE factory carries the lie —
+    /// the one `retire_snapshot_read_erased` draws its unique-owner disposer from, which is the only
+    /// place a child-content retirement can meet a lying terminal witness at all. The DISPLACEMENT
+    /// factory stays honest on purpose: it retires the snapshot a member replaces, and a lying one
+    /// would pin that alias for ever, so the captured root could never become the snapshot's last
+    /// owner and `Arc::into_inner` would never reach the owned-value factory.
     fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str, lie_about_terminal: bool) {
         let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child retirement owner").member;
         child.install_document_store_owners_exact(store::DocumentStoreOwners::new(
-            std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal }),
-            std::sync::Arc::new(TestLyingOwnedValueRetirementFactory { lie_about_terminal }),
+            std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal: false }),
+            std::sync::Arc::new(TestLyingOwnedValueRetirementFactory { lie_about_terminal: std::sync::atomic::AtomicBool::new(lie_about_terminal) }),
             std::sync::Arc::new(TestOwnedValueRetirementFactory::<TestMutation>(std::marker::PhantomData)),
             Box::new(store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new()),
         ));
@@ -4378,9 +4523,10 @@ mod plugin_builder_contract_tests {
         assert_eq!(
             result.mutations.len(),
             2,
-            "a composite gesture carries the parent's op and the child's; got documents {:?} and {} member edit(s)",
+            "a composite gesture carries the parent's op and the child's; got documents {:?}, {} member edit(s), settle receipt {:?}",
             result.mutations.iter().map(|mutation| mutation.document).collect::<Vec<_>>(),
-            result.inverse_group.member_edits.len()
+            result.inverse_group.member_edits.len(),
+            result.output
         );
         let parent_handle = ArtifactHandle(meta().instance_id as u128);
         let child_handle = artifact_handle_of("child-1").await;
@@ -4403,8 +4549,14 @@ mod plugin_builder_contract_tests {
 
         // And the command log recorded the child's edit id under the `config_edit_ids` precedent.
         let history = app.test_history().await;
-        let row = history.commands.iter().find(|entry| entry.action_id == "compositeEdit").expect("composite edit logged");
-        assert_eq!(row.child_edit_ids.len(), 1);
+        // 🧾️ The migrated route logs the admission row (no edit of its own) before the composed
+        // publication logs the real one, so the subject is the row that CARRIES the gesture: exactly
+        // one composite row names the child's edit, and it is the row that carries the parent's.
+        let composite_rows: Vec<_> = history.commands.iter().filter(|entry| entry.action_id == "compositeEdit").collect();
+        let carrying: Vec<_> = composite_rows.iter().filter(|row| !row.child_edit_ids.is_empty()).collect();
+        assert_eq!(carrying.len(), 1, "exactly one composite row names the child's own edit id: {:?}", composite_rows.iter().map(|row| (row.edit_id.clone(), row.child_edit_ids.clone())).collect::<Vec<_>>());
+        assert_eq!(carrying[0].child_edit_ids.len(), 1, "the composite row names the child's own edit id exactly once: {:?}", carrying[0].child_edit_ids);
+        assert!(carrying[0].edit_id.is_some(), "the row that names the child's edit also carries the parent's own edit: {:?}", carrying[0].edit_id);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4412,9 +4564,27 @@ mod plugin_builder_contract_tests {
         let mut app = contract_composed_app_raw().await;
         app.register_child("slot", "child-1", test_child_dialect().await, new_test_child("child-1").await.expect("construct child")).await.expect("register child");
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta()).await.expect("composite edit");
+        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id).await.expect("the migrated composite gesture settles before it is persisted");
+
+        // 🧒️ Registering a member is the RUNTIME's job; declaring it on the parent snapshot is the
+        // APP's. `ChildRestoreProjection` is built from the loaded parent's own declared child
+        // fields and from nothing else — no live registry state can stand in for them — so a member
+        // the reloaded parent does not declare is refused by `validate_parent_child_restore`,
+        // exactly as a real composed document's would be.
+        let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
+        app.test_store_mut()
+            .await
+            .dispatch(store::ArtifactCommand::Apply {
+                mutations: vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })],
+                description: Some("declare the composed member".into()),
+            })
+            .await
+            .expect("the parent declares the member it owns");
+        assert_eq!(app.test_snapshot().await.slot.len(), 1, "the live parent declares exactly its one member");
 
         // 📤️ Persist exactly what the host would: the parent's document pack plus one
         // `ChildPackEntry` per live child.
+        let parent_pack = PluginApp::document_pack(&app).await.expect("parent document pack");
         let entries = PluginApp::child_packs(&app).await.expect("child packs");
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].slot, "slot");
@@ -4425,6 +4595,8 @@ mod plugin_builder_contract_tests {
         // `TestMembers`: nothing else in this branch constructs one directly to pin `M` for
         // inference — `open_child`'s `M::open` dispatch is compile-time generic, not a value.
         let mut reloaded = contract_composed_app_raw().await;
+        PluginApp::load_document_pack(&mut reloaded, &parent_pack).await.expect("load parent document pack");
+        assert_eq!(reloaded.test_snapshot().await.slot.len(), 1, "the reloaded parent carries its own declaration through the pack");
         for entry in &entries {
             let dialect = ArtifactDialect::parse_coordinate(&entry.dialect).expect("dialect round trips");
             PluginApp::load_child_pack(&mut reloaded, &entry.slot, &entry.child_id, dialect, &entry.envelope_pack).await.expect("load child pack");
@@ -4435,6 +4607,8 @@ mod plugin_builder_contract_tests {
         let child = reloaded.child_store("slot", "child-1").await.expect("child restored");
         let restored: TestSnapshot = <TestSnapshot as ArtifactPack>::decode_pack(&child.document_pack_bytes().await.expect("child pack")).expect("decode child");
         assert_eq!(restored.count, 7, "the reloaded child lost its own edit history");
+        drain_and_close_composed_fixture(&mut reloaded);
+        drain_and_close_composed_fixture(&mut app);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4521,6 +4695,29 @@ mod plugin_builder_contract_tests {
         let mut app = contract_composed_app_raw().await;
         app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", true);
+        // 🪢️ The registered root captured the member's CURRENT snapshot, so while the member still
+        // holds that exact `Arc` the returned-read retirement is only an alias: `Arc::into_inner`
+        // answers `None`, the alias is released truthfully and the member's own owned-value factory
+        // — where the lie lives — is never consulted. Advancing the member past that snapshot and
+        // draining the alias its displacement retired makes the retiring root the snapshot's LAST
+        // owner, which is the only state in which a child-content retirement meets a lying disposer
+        // at all.
+        {
+            let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("exact child owner").member;
+            for value in 1..=2 {
+                child
+                    .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value })], description: Some("advance past the captured snapshot".into()) })
+                    .await
+                    .expect("member advances past the captured snapshot");
+            }
+            for _ in 0..1_024 {
+                if child.maintenance_retirements_terminal_is_empty() {
+                    break;
+                }
+                let _ = child.maintenance_retirements_step(1, 4096).expect("member drains its displaced snapshot aliases");
+            }
+            assert!(child.maintenance_retirements_terminal_is_empty(), "the member released every snapshot alias it displaced");
+        }
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
         app.maintenance_stage = 4;
@@ -4541,8 +4738,18 @@ mod plugin_builder_contract_tests {
             }
         }
         let fault = faulted.expect("lying Complete must fail before registry removal");
-        assert_eq!(fault.code.0, "interactive-job.child-snapshot-terminal-not-empty");
+        // 🪪️ Either named guard is an acceptable answer — the plugin ladder's own terminal-witness
+        // refusal, or the nested disposer refusal it now attributes by name instead of as the
+        // anonymous `plugin.internal` — but an unnamed internal error is not.
+        assert!(
+            matches!(fault.code.0.as_str(), "interactive-job.child-snapshot-terminal-not-empty" | "interactive-job.child-snapshot-disposer-refused"),
+            "the lie must be caught BY NAME: {fault:?}"
+        );
         assert!(!app.child_content_retirements.is_empty(), "terminal witness failure retains the registry authority");
+        // 🧹️ The lie is spent (see `TestSnapshotRetirement::close_step`), so the very disposer that
+        // was caught now answers honestly and the fixture closes through the ordinary ladder — the
+        // law proves the refusal, not a leak.
+        drain_and_close_composed_fixture(&mut app);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4665,6 +4872,28 @@ mod plugin_builder_contract_tests {
         assert_eq!(app.test_snapshot().await, TestSnapshot::default());
     }
 
+    /// ⏪️ The MULTI-lane half of the same law, and the regression guard S10 §4.2's `||` needed.
+    ///
+    /// Measured inside the running `s` host at three machine loads (40, 61, 82) on 2026-09-22:
+    /// 💠️lowpoly `addPrimitive` (`Artifact` + `Config` + `Transient`) and 🎥️shooting `addShot`
+    /// (`Artifact` + `Config`) read `edits [0,1,1,1]` — the uncommitted count went up on the verb and
+    /// never came back down on the undo, because the row's CONFIG edit is still applied after
+    /// `undo` retracted its DOCUMENT edit, and `document || config || child` therefore answered
+    /// `true` for ever. All eight lane combinations are pinned here, so neither half can be
+    /// reintroduced without this law going red (ticket 26/09/18 S11 §3.4b, S12 §4).
+    #[test]
+    fn a_multi_lane_row_follows_its_parent_document_lane_after_an_undo() {
+        use crate::app::history_row_applied_v1 as applied;
+        assert!(!applied(true, false, true, false), "a row that published a parent edit is UNDONE once that edit is retracted, however live its config edit still is");
+        assert!(!applied(true, false, true, true), "the same with a live child edit — undo dispatches against the document store alone");
+        assert!(!applied(true, false, false, false), "a parent-lane row with nothing applied anywhere is undone");
+        assert!(applied(true, true, false, false), "a parent-lane row whose document edit is applied is applied");
+        assert!(applied(true, true, true, true), "a multi-lane row is applied while its parent edit is");
+        assert!(applied(false, false, true, false), "a CONFIG-only row has no parent edit to ask — S10 §4.2's cure, kept intact");
+        assert!(applied(false, false, false, true), "a CHILD-only row, likewise — 🌊️flow's addWidget and 🎬️sequence's addStep");
+        assert!(!applied(false, false, false, false), "a row applied nowhere is not applied");
+    }
+
     /// ✅️ A row's `applied` must ask every lane the row can publish into, not only the parent
     /// document store. `build_history_view` asked `applied_edit_ids` alone, so a `Config`- or
     /// `Child`-lane row reported `applied: false` — which the host reads as UNDONE: the History panel
@@ -4685,6 +4914,7 @@ mod plugin_builder_contract_tests {
         assert!(select.revertible, "and it stays revertible, the clause that already consulted all three lanes");
         close_reserved_app(&mut app);
     }
+
 
     #[semio_framework_async_macros::async_test]
     async fn view_action_with_inverse_is_revertible_and_backwards_restores_app_runtime_state() {
@@ -5781,7 +6011,7 @@ mod plugin_builder_contract_tests {
 
         let mut restored = contract_app().await;
         restored.load_document_pack(&files).await.expect("load document pack");
-        assert_eq!(restored.test_snapshot().await, TestSnapshot { count: 1, label: "hi".into() });
+        assert_eq!(restored.test_snapshot().await, TestSnapshot { count: 1, label: "hi".into(), slot: Vec::new() });
     }
 
     #[semio_framework_async_macros::async_test]
@@ -7352,7 +7582,11 @@ mod plugin_builder_contract_tests {
         // publication ladder, one lane per unit. Asserting the spawn before settling would assert
         // that a migrated command never spawns.
         let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, instance).await.expect("the spawning operation's publication settles");
-        assert_eq!(receipt.lanes, vec![TypedOperationResultLane::Terminal], "the task lane spends its own publication unit and mints no host page: the operation's only page is its terminal one");
+        assert_eq!(
+            receipt.lanes,
+            vec![TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal],
+            "the task lane spends its own publication unit and mints NO host page of its own: the operation's pages are exactly the ones its emit's remaining lanes owe"
+        );
         // 🪪️ `spawn_task` is keyed off `meta.instance_id` (the publication ladder's own captured
         // `mounted.meta`, i.e. `spawn_meta` above, which shares `instance`'s value by construction).
         assert_eq!(crate::reactor::reactor_driver::task_count_for_instance(instance).await, 1, "the publication ladder's task lane must have spawned exactly one task");
@@ -7390,11 +7624,28 @@ mod plugin_builder_contract_tests {
         let output = crate::plugin_runtime::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, crate::plugin_runtime::TaskResumeInput::Command(command_bytes)).await;
         assert_eq!(output.frames.len(), 1, "a successful resume must frame exactly one AppFrame::Emit");
         let frame = protocol::decode_app_frame(&output.frames[0]).await.expect("must decode back to an AppFrame");
-        let protocol::AppFrame::Emit { document_ops, .. } = frame else { panic!("a resumed Command follow-up must frame as AppFrame::Emit, matching dispatch_emit's own last_emit_wire idiom — got {frame:?}") };
-        let ops = protocol::decode_ops_vec(&document_ops).expect("document_ops must decode as an ops-vec");
-        assert_eq!(ops.len(), 1, "ApplyCountFromTask emits exactly one document mutation");
-        let applied_mutation = <TestMutation as ::protocol::OpBinary>::decode_op(&ops[0]).expect("must decode back to a TestMutation");
-        assert_eq!(applied_mutation, TestMutation::SetCount(SetCount { value: 42 }), "the follow-up dispatch must have applied the SAME mutation ApplyCountFromTask{{value:42}} produces directly");
+        assert!(
+            matches!(frame, protocol::AppFrame::Emit { .. }),
+            "a resumed Command follow-up must frame as AppFrame::Emit — never a fault: {frame:?}"
+        );
+
+        // 🪜️ The follow-up re-enters the APPLYING lane (`PluginApp::resume_task_command` →
+        // `dispatch_typed`), so like every migrated dispatch it ADMITS here and the document
+        // advances when its publication ladder walks. Settle it through the same runtime cell the
+        // host's continuation drives, then read what it actually did.
+        let cell = crate::plugin_runtime::runtime_instance_cell(&runtime, resumed_instance).expect("the resumed instance stays mounted");
+        let mut active = cell.instance.try_lock().expect("no other owner holds the resumed instance");
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut active.app, resumed_instance).await.expect("the resumed follow-up publishes");
+        assert!(receipt.lanes.contains(&TypedOperationResultLane::Artifact), "the follow-up must have published on the ARTIFACT lane — it applies, it does not preview: {:?}", receipt.lanes);
+        assert_eq!(receipt.completions, 1, "the follow-up is exactly one terminated operation");
+
+        // 🧾️ And it landed as the app's own verb in the command log, applied — a PREVIEW
+        // (`handle_command_frame`, the agent prepare lane this resume used to take) records
+        // nothing at all and applies nothing.
+        let history = crate::app::PluginApp::history_snapshot(&mut active.app).await.expect("history after the resumed follow-up");
+        let row = history.upserts.iter().find(|entry| entry.action_id == "applyCountFromTask").unwrap_or_else(|| panic!("the follow-up dispatch is recorded under its own verb: {:?}", history.upserts.iter().map(|entry| entry.action_id.clone()).collect::<Vec<_>>()));
+        assert!(row.applied, "the follow-up is an APPLIED edit, not a staged preview");
+        assert!(row.op_lines.iter().any(|line| line.contains("42")), "the applied edit carries the value the injected completion delivered: {:?}", row.op_lines);
     }
 
     /// 🚫️ The (quota+1)th task on one instance is refused with a typed `Fault` — never a

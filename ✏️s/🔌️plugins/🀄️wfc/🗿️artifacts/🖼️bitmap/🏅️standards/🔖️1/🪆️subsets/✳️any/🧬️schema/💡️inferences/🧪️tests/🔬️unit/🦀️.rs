@@ -251,7 +251,7 @@ fn an_oversized_checkpoint_request_is_refused_at_admission() {
     let snapshot = stripes();
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
     let checkpoint = vec![0u8; semio_s_plugin_wfc_engine::job::MAX_CHECKPOINT_BYTES.saturating_add(1)];
-    let rejected = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot, checkpoint: Some(checkpoint) });
+    let rejected = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: Some(snapshot), document: None, checkpoint: Some(checkpoint) });
     assert!(rejected.is_err(), "a checkpoint past the engine ceiling is an admission refusal");
 }
 
@@ -259,7 +259,7 @@ fn an_oversized_checkpoint_request_is_refused_at_admission() {
 fn a_within_budget_checkpoint_request_is_admitted_on_the_inference_job() {
     let snapshot = stripes();
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
-    let admitted = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot, checkpoint: Some(vec![0u8; 16]) });
+    let admitted = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: Some(snapshot), document: None, checkpoint: Some(vec![0u8; 16]) });
     assert!(admitted.is_ok(), "a within-budget checkpoint request is a real inference input");
     let mut job = admitted.expect("admitted");
     semio_framework_job::InteractiveJob::begin_close(&mut job);
@@ -267,3 +267,45 @@ fn a_within_budget_checkpoint_request_is_admitted_on_the_inference_job() {
         let _ = semio_framework_job::InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
     }
 }
+
+//#region 📜️PublishedContract
+/// 📜️ The contract this inference PUBLISHES is the contract its request actually decodes: the
+/// binding names `document`, the request carries a `document`, and the schema id is the one the
+/// factory already answered to `payload_schema_id()` and nothing published
+/// (`📓️ce3-four-mcp-gates-green.md` §3.3: "no payload contract is published anywhere an agent can
+/// read it").
+#[test]
+fn the_published_contract_binds_the_field_the_request_decodes() {
+    let contract = bitmap_inference_metadata().payload.expect("the bitmap solve publishes a payload contract");
+    assert_eq!(contract.payload_schema_id, BITMAP_INFERENCE_PAYLOAD_SCHEMA);
+    assert_eq!(contract.progress_unit, "cells");
+    assert!(contract.input_schema.contains("\"document\"") && contract.input_schema.contains("\"snapshot\""), "the request schema names both carriers");
+    assert_eq!(contract.output_schema, include_str!("../../🔣️.json"), "the result schema is the facet leaf, carried verbatim");
+    let binding = contract.artifact_binding.expect("this solve runs ON an artifact");
+    assert_eq!(binding.field, "document");
+    assert_eq!(binding.encoding, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64);
+    assert!(binding.required, "a bitmap solve cannot be stated by hand, so the binding is required");
+
+    let wire = format!("{{\"{}\":{{\"pack\":\"AAAA\",\"spr\":\"AAAA\"}}}}", binding.field);
+    let request: BitmapInferenceRequest = protocol::json::from_json_str(&wire).expect("the field the contract names is the field the request decodes");
+    assert!(request.document.is_some() && request.snapshot.is_none());
+}
+
+/// 🚧️ A request that states neither carrier is refused by NAME, and the refusal says how to fix it
+/// — never a default snapshot and never a panic.
+#[test]
+fn a_request_with_neither_carrier_is_refused_by_name() {
+    let error = BitmapInferenceRequest { snapshot: None, document: None, checkpoint: None }.resolve_snapshot().expect_err("neither carrier is present");
+    assert!(error.contains("inference-no-snapshot") && error.contains("artifactId"), "{error}");
+}
+
+/// 📸️ A stated snapshot still wins and is carried through untouched — the in-shell solve path,
+/// which never had an artifact binding, is unchanged by this route.
+#[test]
+fn a_stated_snapshot_is_resolved_unchanged() {
+    let snapshot = stripes();
+    let resolved = BitmapInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None }.resolve_snapshot().expect("a stated snapshot resolves");
+    assert_eq!(resolved.seed, snapshot.seed);
+    assert_eq!(resolved.output.width, snapshot.output.width);
+}
+//#endregion 📜️PublishedContract

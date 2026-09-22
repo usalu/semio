@@ -44,6 +44,42 @@ pub const BITMAP_INFERENCE_JOB_KIND: &str = "semio.infer";
 pub const BITMAP_INFERENCE_TOOL_ID: &str = "s.wfc.bitmap.solve";
 pub const BITMAP_INFERENCE_PAYLOAD_SCHEMA: &str = "s.wfc.bitmap.inference.request.v1";
 
+
+/// 📜️ The PUBLISHED request schema of `s.wfc.bitmap.solve` — what a client has to send, readable
+/// from `inference_list`/`capabilities_describe` without reading a line of this crate. Authored
+/// here rather than as a facet leaf because the facet leaf beside it (`🔣️.json`) is the RESULT
+/// schema; a request and its result are two schemas, and publishing only one was the gap
+/// (`📓️ce3-four-mcp-gates-green.md` §3.3).
+pub const BITMAP_INFERENCE_REQUEST_SCHEMA: &str = r#"{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/bitmap/1/any/inference.request.json",
+  "title": "BitmapInferenceRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "oneOf": [{ "required": ["document"] }, { "required": ["snapshot"] }],
+  "properties": {
+    "document": {
+      "type": "object",
+      "description": "The artifact this solve runs on, bound by the gateway from `inference_run`'s `artifactId` — a caller names the artifact, never these bytes.",
+      "additionalProperties": false,
+      "required": ["pack", "spr"],
+      "properties": { "pack": { "type": "string", "contentEncoding": "base64" }, "spr": { "type": "string", "contentEncoding": "base64" } }
+    },
+    "snapshot": { "type": "object", "description": "The problem stated in full instead of read from an artifact: the bitmap solve's own document shape." },
+    "checkpoint": { "type": "array", "description": "A previous run's checkpoint bytes, to resume instead of restart.", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+  }
+}"#;
+
+/// 📜️ The whole published contract for `s.wfc.bitmap.solve`: request schema, result schema, the
+/// unit its bounded job counts, and the artifact binding that makes it callable at all.
+pub const BITMAP_INFERENCE_CONTRACT: semio_framework_plugin::ArtifactInferencePayloadContract = semio_framework_plugin::ArtifactInferencePayloadContract {
+    payload_schema_id: BITMAP_INFERENCE_PAYLOAD_SCHEMA,
+    input_schema: BITMAP_INFERENCE_REQUEST_SCHEMA,
+    output_schema: include_str!("🔣️.json"),
+    progress_unit: "cells",
+    artifact_binding: Some(semio_framework_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
+};
+
 /// 🧭️ Stable host roster identity for the ActionBus-owned cold solve route.
 pub const fn bitmap_inference_metadata() -> semio_framework_plugin::ArtifactInferenceServiceMetadata {
     semio_framework_plugin::ArtifactInferenceServiceMetadata {
@@ -55,6 +91,7 @@ pub const fn bitmap_inference_metadata() -> semio_framework_plugin::ArtifactInfe
         inference_schema_version: 1,
         algorithm_version: 1,
         policy_version: 1,
+        payload: Some(BITMAP_INFERENCE_CONTRACT),
     }
 }
 
@@ -106,8 +143,29 @@ const PARENT_PREVIEW_TIME_INTERVAL_MS: u64 = 16;
 //#region 🔖️Protocol
 #[derive(Clone, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct BitmapInferenceRequest {
-    pub snapshot: BitmapSnapshot,
+    /// 📸️ The problem, stated in full by the caller. Mutually exclusive with `document`: exactly one
+    /// of the two says which snapshot this solve runs over.
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub snapshot: Option<BitmapSnapshot>,
+    /// 🔗️ The ARTIFACT this solve runs on, as its own canonical `pack`/`spr` pair. This is the
+    /// field `BITMAP_INFERENCE_CONTRACT`'s artifact binding names, so an agent that calls
+    /// `inference_run` with `artifactId` never has to state a snapshot it could not type: the
+    /// gateway binds the document here and the guest decodes it into its own snapshot below.
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub document: Option<semio_framework_plugin::ArtifactDocumentPayload>,
     pub checkpoint: Option<Vec<u8>>,
+}
+
+impl BitmapInferenceRequest {
+    /// 📸️ The snapshot this request states, from whichever of its two carriers is present — the
+    /// ONE resolution path every caller of this inference takes.
+    pub fn resolve_snapshot(&self) -> Result<BitmapSnapshot, String> {
+        match (&self.snapshot, &self.document) {
+            (Some(snapshot), _) => Ok(snapshot.clone()),
+            (None, Some(document)) => document.settled_snapshot::<BitmapSnapshot, crate::BitmapMutation>(),
+            (None, None) => Err("s.wfc.bitmap-inference-no-snapshot:state `snapshot`, or name the artifact with `artifactId` so `document` is bound".into()),
+        }
+    }
 }
 
 /// 🏁 What one solve concludes with: the output bitmap as base64 palette indices (row-major), the
@@ -206,7 +264,7 @@ pub struct BitmapInferenceJob {
 
 impl BitmapInferenceJob {
     fn new(mut operation: semio_framework_job::Operation, request: BitmapInferenceRequest) -> Result<Self, String> {
-        let snapshot = request.snapshot;
+        let snapshot = request.resolve_snapshot()?;
         let input_cells = (snapshot.input.width as usize).saturating_mul(snapshot.input.height as usize);
         let output_cells = (snapshot.output.width as usize).saturating_mul(snapshot.output.height as usize);
         if input_cells == 0
@@ -788,7 +846,7 @@ pub fn compile_bitmap_collapse(snapshot: &BitmapSnapshot) -> Result<BitmapCollap
 /// 🏁 Explicit headless adapter over the same complete parent job the public factory hands out.
 pub fn solve_with_job(snapshot: &BitmapSnapshot) -> Result<BitmapInferenceCommit, String> {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
-    let job = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: snapshot.clone(), checkpoint: None })?;
+    let job = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
     let params = semio_framework_job::BatchJobParams {
         operation: operation.operation,
         generation: operation.generation,

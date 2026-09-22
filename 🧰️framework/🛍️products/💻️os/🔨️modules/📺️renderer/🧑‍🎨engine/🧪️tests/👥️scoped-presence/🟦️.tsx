@@ -139,16 +139,18 @@ describe("scope-safe Shell presence", () => {
 
     // A document component that answers never is the exact shape that silenced the heartbeat: the
     // beat must still resolve, without a pack, well inside one interval.
-    const wedged = { ephemeralSnapshot: () => new Promise<{ readonly presence?: readonly number[] }>(() => undefined) };
+    const wedged = { ephemeralSnapshot: () => new Promise<{ readonly presence: readonly number[] } | null>(() => undefined) };
     const started = Date.now();
-    await expect(presenceEphemeralSnapshotWithinBoundV1(wedged, "instance-wedged", 30)).resolves.toBeUndefined();
+    await expect(presenceEphemeralSnapshotWithinBoundV1(wedged, 11, 30)).resolves.toBeUndefined();
     expect(Date.now() - started).toBeLessThan(PRESENCE_HEARTBEAT_INTERVAL_MS);
     // A thrown snapshot is the same answer: presence is not where a document fault surfaces.
-    await expect(presenceEphemeralSnapshotWithinBoundV1({ ephemeralSnapshot: () => Promise.reject(new Error("browser actor child: invocation rejected")) }, "instance-faulted", 30)).resolves.toBeUndefined();
+    await expect(presenceEphemeralSnapshotWithinBoundV1({ ephemeralSnapshot: () => Promise.reject(new Error("browser actor child: invocation rejected")) }, 12, 30)).resolves.toBeUndefined();
     // A healthy document still carries its pack.
-    await expect(presenceEphemeralSnapshotWithinBoundV1({ ephemeralSnapshot: () => Promise.resolve({ presence: [7, 7] }) }, "instance-live", 30)).resolves.toEqual({ presence: [7, 7] });
+    await expect(presenceEphemeralSnapshotWithinBoundV1({ ephemeralSnapshot: () => Promise.resolve({ presence: [7, 7] }) }, 13, 30)).resolves.toEqual({ presence: [7, 7] });
+    // The ABI's own "no pack right now" is `null`, which reaches the beat as the same absence.
+    await expect(presenceEphemeralSnapshotWithinBoundV1({ ephemeralSnapshot: () => Promise.resolve(null) }, 15, 30)).resolves.toBeUndefined();
     // A plugin with no snapshot at all beats identity-only rather than throwing.
-    await expect(presenceEphemeralSnapshotWithinBoundV1({}, "instance-packless", 30)).resolves.toBeUndefined();
+    await expect(presenceEphemeralSnapshotWithinBoundV1({}, 14, 30)).resolves.toBeUndefined();
   });
 
   it("decodes missing or mismatched private authority as an empty roster", () => {

@@ -53,7 +53,7 @@ fn every_gateway_to_shell_fixture_round_trips_through_this_codec() {
         assert_eq!(encode_hex(&frame.encode()), hex, "{variant} re-encoded to different bytes");
         seen.push(variant);
     }
-    assert_eq!(distinct_variants(&seen), 10, "the gateway→shell corpus must cover all ten tags, saw {seen:?}");
+    assert_eq!(distinct_variants(&seen), 11, "the gateway→shell corpus must cover all eleven tags — the ten this shell has always modelled plus `AgentReply` (tag 10), saw {seen:?}");
 }
 
 #[test]

@@ -309,10 +309,36 @@ pub fn process3d_take_publication_hostile_observed(operation: semio_framework_jo
 /// `process3d-publication.saturated` — a scheduling artifact of the fixture, never the property under
 /// test. Poisoning is absorbed: a lane is a scheduling device, and the panic that poisoned it is
 /// already the failure being reported.
+///
+/// 🧹️ Taking the lane also DRAINS whatever the previous lane holder left behind. A law that panics
+/// between its `admit` and its `release` (the exact shape of a failing assertion) strands a lease in
+/// a four-slot table that nothing can enumerate, so the NEXT laws report
+/// `process3d-publication.saturated` and one real defect is reported as three or four. Every host
+/// admission in this binary happens under this lane (`🔬️retained-laws`, the editor's production
+/// envelope fixture, the mounted registry laws), so draining here can never take a lease a
+/// concurrently running law still owns.
 #[cfg(test)]
 pub fn process3d_publication_authority_lane() -> std::sync::MutexGuard<'static, ()> {
     static LANE: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    LANE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    let guard = LANE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    // 🔒️ Leases BEFORE admissions — the same order `process3d_admit_publication_authority` and
+    // `process3d_release_publication_authority` take them in, so the drain can never invert a lock pair.
+    if let Ok(mut leases) = process3d_publication_leases().try_lock() {
+        let mut admitted = process3d_publication_test_admissions().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        for key in admitted.drain(..) {
+            leases.take(key);
+        }
+    }
+    guard
+}
+
+/// 🧾️ Every key this test binary admitted into the process-global host table and has not released —
+/// the enumeration `FixedOperationRegistry` does not offer, kept only so the lane above can drain a
+/// stranded lease.
+#[cfg(test)]
+fn process3d_publication_test_admissions() -> &'static std::sync::Mutex<Vec<semio_framework_job::FixedOperationKey>> {
+    static ADMITTED: std::sync::OnceLock<std::sync::Mutex<Vec<semio_framework_job::FixedOperationKey>>> = std::sync::OnceLock::new();
+    ADMITTED.get_or_init(|| std::sync::Mutex::new(Vec::new()))
 }
 
 /// 🧮️ Domain item, output page, and control limits admitted for one publication.
@@ -342,12 +368,16 @@ pub fn process3d_admit_publication_authority(
     if maximum_items == 0 || maximum_items > PROCESS3D_MAXIMUM_DOMAIN_ITEMS || maximum_output_pages != PROCESS3D_MOUNTED_OUTPUT_CHANNELS || maximum_controls != PROCESS3D_MOUNTED_CONTROL_CREDITS {
         return Err("process3d-publication.domain-credits");
     }
+    let key = process3d_publication_key(operation, generation);
     leases
         .admit(
-            process3d_publication_key(operation, generation),
+            key,
             Process3dPublicationLease { operation: operation.0, generation: generation.0, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls, closing: false, terminal: false },
         )
-        .map_err(|_| "process3d-publication.saturated")
+        .map_err(|_| "process3d-publication.saturated")?;
+    #[cfg(test)]
+    process3d_publication_test_admissions().lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(key);
+    Ok(())
 }
 
 /// 🔐️ The ONE lease the app grants ITSELF for a replacement the host began (`Effect::LoadDocument`
@@ -507,7 +537,10 @@ pub fn process3d_publication_item_credit(operation: semio_framework_job::Operati
 
 pub fn process3d_release_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> bool {
     let Ok(mut leases) = process3d_publication_leases().try_lock() else { return false };
-    leases.take(process3d_publication_key(operation, generation)).is_some()
+    let key = process3d_publication_key(operation, generation);
+    #[cfg(test)]
+    process3d_publication_test_admissions().lock().unwrap_or_else(std::sync::PoisonError::into_inner).retain(|held| *held != key);
+    leases.take(key).is_some()
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

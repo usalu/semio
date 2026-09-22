@@ -63,7 +63,7 @@ function ThemePublicationHarness({ importText }: { readonly importText: string }
             label: "Theme",
             control: h(
               Select,
-              { value: themeId, onValueChange: selectTheme },
+              { id: "framework.settings.theme.select", value: themeId, onValueChange: selectTheme },
               h(SelectTrigger, { id: "framework.settings.theme.select", "aria-label": "framework.settings.theme.select" }, h(SelectValue)),
               h(
                 SelectContent,
@@ -85,20 +85,20 @@ function ThemePublicationHarness({ importText }: { readonly importText: string }
           {
             id: "framework.settings.theme.save.action",
             label: "Save",
-            control: h(Button, { id: "framework.settings.theme.save", "aria-label": "framework.settings.theme.save", text: "Save", disabled: saveLabel.trim() === "", onClick: saveTheme }),
+            control: h(Button, { id: "framework.settings.theme.save", "aria-label": "framework.settings.theme.save", icon: "save", text: "Save", disabled: saveLabel.trim() === "", onClick: saveTheme }),
           },
           {
             id: "framework.settings.theme.reset.action",
             label: "Reset",
-            control: h(Button, { id: "framework.settings.theme.reset", "aria-label": "framework.settings.theme.reset", text: "Reset", disabled: !dirty && themeId === "semio", onClick: resetTheme }),
+            control: h(Button, { id: "framework.settings.theme.reset", "aria-label": "framework.settings.theme.reset", icon: "rotate-ccw", text: "Reset", disabled: !dirty && themeId === "semio", onClick: resetTheme }),
           },
           {
             id: "framework.settings.theme.import.action",
             label: "Import",
-            control: h(Button, { id: "framework.settings.theme.import", "aria-label": "framework.settings.theme.import", text: "Import", onClick: () => importTheme(importText) }),
+            control: h(Button, { id: "framework.settings.theme.import", "aria-label": "framework.settings.theme.import", icon: "import", text: "Import", onClick: () => importTheme(importText) }),
           },
           ...(themeId.startsWith("custom.")
-            ? [{ id: "framework.settings.theme.delete.action", label: "Delete", control: h(Button, { id: "framework.settings.theme.delete", "aria-label": "framework.settings.theme.delete", text: "Delete", onClick: deleteTheme }) }]
+            ? [{ id: "framework.settings.theme.delete.action", label: "Delete", control: h(Button, { id: "framework.settings.theme.delete", "aria-label": "framework.settings.theme.delete", icon: "trash-2", text: "Delete", onClick: deleteTheme }) }]
             : []),
         ],
       },

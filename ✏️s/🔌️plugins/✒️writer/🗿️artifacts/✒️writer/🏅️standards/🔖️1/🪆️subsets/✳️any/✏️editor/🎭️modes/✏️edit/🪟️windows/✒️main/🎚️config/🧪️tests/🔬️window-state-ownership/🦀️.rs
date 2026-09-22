@@ -39,32 +39,20 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     let text = text.ok_or_else(|| format!("missing Writer scene field {field}"))?;
                     serde_json::from_str(text).map_err(|error| error.to_string())
                 }
-                async fn drain(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>) -> Result<(usize, usize), String> {
-                    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-                    let (mut config_receipts, mut transient_receipts) = (0, 0);
-                    while app.has_pending_typed_operations() {
-                        if std::time::Instant::now() >= deadline {
-                            return Err("Writer window operations did not finish".into());
-                        }
-                        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
-                        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
-                        if let Some(page) = app.take_typed_operation_result_page(1) {
-                            let lane = page.lane;
-                            let bytes = page.bytes().to_vec();
-                            app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
-                            match lane {
-                                semio_framework_plugin::app::TypedOperationResultLane::WindowConfig => config_receipts += 1,
-                                semio_framework_plugin::app::TypedOperationResultLane::WindowTransient => transient_receipts += 1,
-                                semio_framework_plugin::app::TypedOperationResultLane::Fault => return Err(format!("Writer window publication failed: {bytes:?}")),
-                                _ => {}
-                            }
-                        }
-                        app.take_typed_operation_effect();
-                        app.take_typed_operation_event();
-                        app.take_typed_operation_ui_scope();
-                        std::thread::yield_now();
-                    }
-                    Ok((config_receipts, transient_receipts))
+                /// 🚰️ Settles every admitted retained operation through the FRAMEWORK's own pump and
+                /// counts the window lanes it published.
+                ///
+                /// 🧹️ It used to re-roll that pump and drained the lane pages, effects, events and ui
+                /// scopes — but never the terminal-witness outbox (`take_typed_operation_completion`),
+                /// the composed-result outbox or the interaction-query replies, all three of which
+                /// `has_pending_typed_operations` COUNTS. Any window command that published no further
+                /// lane page therefore spun to the 30 s deadline ("Writer window operations did not
+                /// finish"). It also took ONE page per turn, where the helper drains every presented
+                /// page — so a turn publishing both a config and a transient reported only one of them.
+                async fn drain(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, receiver: u32) -> Result<(usize, usize), String> {
+                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, receiver).await.map_err(|fault| format!("{fault:?}"))?;
+                    let count = |wanted: semio_framework_plugin::app::TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count();
+                    Ok((count(semio_framework_plugin::app::TypedOperationResultLane::WindowConfig), count(semio_framework_plugin::app::TypedOperationResultLane::WindowTransient)))
                 }
 
                 let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-state-ownership/🔣️.json")).unwrap();
@@ -88,9 +76,9 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     ] {
                         app.dispatch_typed(command, &ActionMeta { view_state: Some(context.clone()), ..artifact_app_laws::meta("writer-window-state") }).await.map_err(|error| format!("{error:?}"))?;
                     }
-                    let (mut config_receipts, mut transient_receipts) = drain(&mut app).await?;
+                    let (mut config_receipts, mut transient_receipts) = drain(&mut app, 1).await?;
                     app.dispatch_typed(WriterCommand::LintDocument(lint_document::LintDocument {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("writer-window-state") }).await.map_err(|error| format!("{error:?}"))?;
-                    let (next_config_receipts, next_transient_receipts) = drain(&mut app).await?;
+                    let (next_config_receipts, next_transient_receipts) = drain(&mut app, 1).await?;
                     config_receipts += next_config_receipts;
                     transient_receipts += next_transient_receipts;
                     if (config_receipts, transient_receipts) != (2, 3) {

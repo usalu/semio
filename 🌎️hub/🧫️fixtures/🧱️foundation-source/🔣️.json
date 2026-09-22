@@ -41,6 +41,8 @@
         "hubBinaryPath",
         "HUB_DEV_BINARY_TARGET",
         "hubDevBinaryPath",
+        "HUB_DEV_POSTGRES_BINARY_TARGET",
+        "hubDevPostgresBinaryPath",
         "startLocalHub",
         "localHubReadinessAdmitted",
         "waitForReadiness",
@@ -48,7 +50,7 @@
         "finishLocalHub"
       ],
       "imports": ["🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts", "🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts"],
-      "rootImports": ["finishLocalHub", "freeLoopbackPort", "HUB_DEV_BINARY_TARGET", "hubBinaryPath", "hubDevBinaryPath", "LOCAL_READINESS_STALL_BOUND_MS", "LocalHubRun", "startLocalHub", "waitForChildExit", "waitForReadiness"],
+      "rootImports": ["finishLocalHub", "freeLoopbackPort", "HUB_DEV_BINARY_TARGET", "hubBinaryPath", "hubDevBinaryPath", "hubDevPostgresBinaryPath", "LOCAL_READINESS_STALL_BOUND_MS", "LocalHubRun", "startLocalHub", "waitForChildExit", "waitForReadiness"],
       "contextChain": ["hub-local-bootstrap", "hub-local-bootstrap-execution"]
     },
     {

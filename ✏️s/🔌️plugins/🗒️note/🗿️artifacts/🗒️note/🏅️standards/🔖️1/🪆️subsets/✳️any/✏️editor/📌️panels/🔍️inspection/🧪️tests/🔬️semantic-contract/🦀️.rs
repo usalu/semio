@@ -10,8 +10,23 @@ fn note_semantic_panels_match_the_json_oracle() {
         let inspector = render(&snapshot, fixture["utility"].as_str().expect("utility"), labels).expect("inspector");
         let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(inspector)).expect("project and retire inspector");
         let actual: serde_json::Value = serde_json::from_str(&projection).expect("independent JSON oracle");
-        assert_eq!(actual["component"]["label"], row["heading"]);
-        let lines: Vec<_> = actual["children"].as_array().expect("summary").iter().map(|child| child["component"]["value"].clone()).collect();
+        // 🌳️ `PanelTreeBuilder::build()` returns the PANEL TREE; the headed section is its first
+        // child (the catalogue half of this very law already reads it that way), and each summary row
+        // is a `tree_item_desc` carrying a separate `label` and `description` rather than one composed
+        // `value` string. The committed oracle spells what the user reads — "Utility: pencil" — so the
+        // row is recomposed from those two fields instead of the fixture being bent to the node shape.
+        let section = &actual["children"][0];
+        assert_eq!(section["component"]["label"], row["heading"]);
+        let lines: Vec<_> = section["children"]
+            .as_array()
+            .expect("summary")
+            .iter()
+            .map(|child| {
+                let label = child["component"]["label"].as_str().expect("summary row label");
+                let description = child["component"]["description"].as_str().expect("summary row description");
+                serde_json::Value::String(format!("{label}: {description}"))
+            })
+            .collect();
         assert_eq!(lines, *row["lines"].as_array().expect("summary lines"));
         let catalogue = crate::editor::note::panels::catalogue::render(labels).expect("catalogue");
         let projection = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(catalogue)).expect("project and retire catalogue");

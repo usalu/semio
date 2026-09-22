@@ -237,6 +237,30 @@ fn resolve_plugin_export_formats(plugin_id: &str) -> Result<Vec<String>, Gateway
 //#endregion 🔖️ArtifactMetadata
 
 //#region 🔖️Handlers
+/// 🌎️ Projects the binding `artifact_open` just minted for a HUB document — see
+/// `crate::schema::session_document_shape` for why `writePath` is a fact the agent is owed before it
+/// spends a mutation rather than a detail it discovers when one goes nowhere.
+fn session_document_report(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str) -> Option<serde_json::Value> {
+    let binding = workspace.plugin_artifact_binding(artifact_id)?;
+    #[cfg(not(target_arch = "wasm32"))]
+    let write_path = match (&binding.backbone, &binding.backbone_blocked_by) {
+        (Some(_), _) => "open".to_string(),
+        (None, Some(reason)) => reason.clone(),
+        (None, None) => "this document has no open document actor".to_string(),
+    };
+    #[cfg(target_arch = "wasm32")]
+    let write_path = binding.backbone_blocked_by.clone().unwrap_or_else(|| "this target opens no document actor".to_string());
+    Some(serde_json::json!({
+        "pluginId": binding.plugin_id,
+        "appId": binding.app_id,
+        "surfaceId": binding.surface_id,
+        "packBytes": binding.document.as_ref().map_or(0, |pair| pair.pack.len()),
+        "sprBytes": binding.document.as_ref().map_or(0, |pair| pair.spr.len()),
+        "writePath": write_path,
+        "relayedBatches": binding.relayed.load(std::sync::atomic::Ordering::Relaxed),
+    }))
+}
+
 fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: serde_json::Value) -> CallToolResult {
     let artifact_id = match require_field(&arguments, "artifactId") {
         Ok(value) => value.to_string(),
@@ -262,12 +286,23 @@ fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: 
         Err(error) => CallToolResult::tool_error(&error),
         Ok(None) => CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}"))),
         Ok(Some((pack, spr))) => {
+            // 🌎️ Opening a HUB document is what binds it to the plugin, app and surface the hub's own
+            // execution-target lease names, and hands that binding the canonical pair just read — so
+            // every later `action_prepare` on this session runs the plugin's guest against THIS
+            // document rather than against the plugin's genesis (ticket 26/09/18 slice M10, step 1 of
+            // M8 §5.3's write path). A workspace that is not hub-bound, or a document the hub
+            // authorizes no execution target for, binds nothing and still opens.
+            let bound = match workspace.bind_hub_session_document(&artifact_id, &pack, &spr) {
+                Ok(bound) => bound,
+                Err(error) => return CallToolResult::tool_error(&error),
+            };
             let structured = serde_json::json!({
                 "artifactId": artifact_id,
                 "kind": resolve_artifact_schema_id(workspace, &artifact_id),
                 "artifactKind": resolve_artifact_kind_id(workspace, &artifact_id),
                 "revision": resolve_artifact_revision(workspace, &artifact_id),
                 "sizeBytes": pack.len() + spr.len(),
+                "sessionDocument": bound.then(|| session_document_report(workspace, &artifact_id)).flatten(),
             });
             CallToolResult::ok(vec![ContentBlock::Text { text: format!("opened {artifact_id}") }], Some(structured))
         }

@@ -1,0 +1,41 @@
+# 🔣️ DB4 throwaway stack — a real PostgreSQL and a real Neo4j for the document lane of outcome 2.
+#
+# 🧱️ Named volumes, not a bind mount into 🗑️generated/: Docker Desktop on this host refuses every
+# bind source under /Users/ueli/Documents ("mkdir /host_mnt/Users/ueli/Documents: operation not
+# permitted", measured by DB2 §8.4, unchanged). Credentials are throwaway and deliberately in the
+# clear: this stack is created and destroyed inside one ticket slice and holds only test data.
+#
+# 🔌️ DB4's own ports so nothing collides with DB2's 5433/7688/7475, DB3's 5434/7689/7476 or the
+# stray db2-probe container on 5499.
+name: semio-db4
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: db4
+      POSTGRES_USER: db4
+      POSTGRES_DB: db4
+    ports:
+      - "127.0.0.1:5435:5432"
+    volumes:
+      - db4-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U db4 -d db4"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/db4passwd
+      NEO4J_server_memory_heap_max__size: 512m
+    ports:
+      - "127.0.0.1:7690:7687"
+      - "127.0.0.1:7477:7474"
+    volumes:
+      - db4-neo4j-data:/data
+      - db4-neo4j-logs:/logs
+volumes:
+  db4-postgres:
+  db4-neo4j-data:
+  db4-neo4j-logs:

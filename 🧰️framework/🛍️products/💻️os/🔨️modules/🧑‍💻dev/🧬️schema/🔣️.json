@@ -496,14 +496,19 @@
           "additionalProperties": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "opt-level"
-            ],
+            "minProperties": 1,
             "properties": {
               "opt-level": {
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 3
+              },
+              "strip": {
+                "enum": [
+                  "none",
+                  "debuginfo",
+                  "symbols"
+                ]
               }
             }
           }

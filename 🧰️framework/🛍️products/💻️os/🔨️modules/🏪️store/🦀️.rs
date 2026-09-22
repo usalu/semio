@@ -1611,6 +1611,13 @@ where
     fn terminal_is_empty(&self) -> bool {
         self.envelope.is_none() && self.active.is_none() && matches!(self.phase, ArtifactStoreEnvelopeRetirementPhase::Complete)
     }
+
+    /// 📏️ Forwarded from the nested owner this envelope retirement is currently spending, so a
+    /// driver that only ever sees the ERASED envelope can still pay the innermost owner's physical
+    /// minimum instead of under-granting it forever.
+    fn next_close_byte_demand(&self) -> usize {
+        self.active.as_ref().map_or(1, |active| active.next_close_byte_demand())
+    }
 }
 
 impl<P, Mutation> Drop for ArtifactStoreEnvelopeRetirement<P, Mutation> {
@@ -1622,6 +1629,23 @@ impl<P, Mutation> Drop for ArtifactStoreEnvelopeRetirement<P, Mutation> {
 pub trait ErasedSnapshotRetirement: Send {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
     fn terminal_is_empty(&self) -> bool;
+
+    /// 📏️ The SMALLEST byte grant this retirement's next `close_step` can spend to make physical
+    /// progress. A heap allocation is freed whole or not at all, so a retirement whose next unit is
+    /// one owned buffer legitimately answers that buffer's size and answers `Blocked` (or
+    /// `Pending { 0, 0 }`) below it — which leaves a NESTED driver, holding only a
+    /// `Box<dyn ErasedSnapshotRetirement>`, unable to tell "I under-granted" from "I am waiting on
+    /// someone else". A driver reads this BEFORE it grants, and pays the demand out of its own
+    /// allocation admission rather than out of the caller's payload page.
+    ///
+    /// 🧱️ Defaulted to 1 — the byte-free answer of every retirement that releases owners rather than
+    /// buffers, which is most of them — so no existing implementor changes shape. The inherent
+    /// `next_close_byte_demand` methods that already exist on concrete retirements
+    /// (`🌱️value/🗂️ordered`, `🌊️flow/🧵️retained`) are the same quantity; this is the erased view of
+    /// it, the one a `Box<dyn ErasedSnapshotRetirement>` holder can actually reach.
+    fn next_close_byte_demand(&self) -> usize {
+        1
+    }
 }
 
 pub struct SnapshotRetirementRejected {
@@ -1676,6 +1700,13 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ReturnedSnapshotRead
 
     fn terminal_is_empty(&self) -> bool {
         self.alias.is_none() && self.unique.is_none()
+    }
+
+    /// 📏️ Forwarded from the owner this retirement is currently spending: once `Arc::into_inner`
+    /// has handed the value to its owned-value disposer, THAT disposer's demand is this one's. The
+    /// alias phase itself costs no bytes.
+    fn next_close_byte_demand(&self) -> usize {
+        self.unique.as_ref().map_or(1, |unique| unique.next_close_byte_demand())
     }
 }
 
@@ -10482,6 +10513,78 @@ pub struct ArtifactCodec {
     pub apply_ops_binary: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecApplyFuture<'a>,
 }
 
+//#region 🗃️BoundedArtifactStoreOwners
+/// 🧹️ One retired value of an explicitly bounded store owner, released in exactly one page-sized
+/// step. `ManuallyDrop` because every terminal shell under `ArtifactEnvelope` asserts that its
+/// owners left through a cursor rather than through `Drop`.
+struct BoundedArtifactValueRetirement<T> {
+    value: std::mem::ManuallyDrop<Option<T>>,
+}
+
+impl<T: Send + 'static> ErasedSnapshotRetirement for BoundedArtifactValueRetirement<T> {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if maximum_items == 0 || maximum_bytes < ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(value) = self.value.take() {
+            drop(value);
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES });
+        }
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.value.is_none()
+    }
+}
+
+impl<T> Drop for BoundedArtifactValueRetirement<T> {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.value.is_none(), "bounded artifact value retirement reached Drop before exact terminal emptiness");
+    }
+}
+
+struct BoundedArtifactRetirementFactory<T>(PhantomData<fn() -> T>);
+
+impl<T> BoundedArtifactRetirementFactory<T> {
+    fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<T: Send + 'static> ArtifactOwnedValueRetirementFactory<T> for BoundedArtifactRetirementFactory<T> {
+    fn retire_owned(&self, value: T) -> Box<dyn ErasedSnapshotRetirement> {
+        Box::new(BoundedArtifactValueRetirement { value: std::mem::ManuallyDrop::new(Some(value)) })
+    }
+}
+
+impl<T: Send + Sync + 'static> SnapshotRetirementFactory<T> for BoundedArtifactRetirementFactory<T> {
+    fn retire(&self, snapshot: Arc<T>) -> Box<dyn ErasedSnapshotRetirement> {
+        Box::new(BoundedArtifactValueRetirement { value: std::mem::ManuallyDrop::new(Some(snapshot)) })
+    }
+}
+
+/// 🗃️ The exact one-page retirement catalogue for a store whose owner is the FRAMEWORK rather than a
+/// plugin app: every factory releases one value per page-sized grant and the cursor disposer is the
+/// store's own. `🔌️plugin`'s `bounded_config_store_owners`/`bounded_document_store_owners` are this
+/// function — they delegate here rather than carrying a second copy — and
+/// `ArtifactCodec::apply_ops_binary`'s throwaway reduction store installs it directly, which is the
+/// only catalogue it can have: that thunk is monomorphized over `(P, Mutation)` alone, with no app
+/// type in scope to ask `build_document_store_owners()` of (ticket 26/09/18 slices TC3e §7d, TC4).
+pub fn bounded_artifact_store_owners<P, Mutation>() -> DocumentStoreOwners<P, Mutation>
+where
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+{
+    DocumentStoreOwners::new(
+        Arc::new(BoundedArtifactRetirementFactory::<P>::new()),
+        Arc::new(BoundedArtifactRetirementFactory::<P>::new()),
+        Arc::new(BoundedArtifactRetirementFactory::<Mutation>::new()),
+        Box::new(ArtifactStoreCursorDisposer::<P, Mutation>::new()),
+    )
+}
+//#endregion 🗃️BoundedArtifactStoreOwners
+
 impl ArtifactCodec {
     /// @emoji 🏗️ Monomorphizes three non-capturing bridge functions for `(P, Mutation)` — each a
     /// genuine zero-sized `fn` item, coercible to a bare `fn` pointer — and pairs them with `schema`/
@@ -10566,7 +10669,17 @@ impl ArtifactCodec {
                         None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
                     };
                     envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
-                    let store = ArtifactStore::new(envelope).await?;
+                    let mut store = ArtifactStore::new(envelope).await?;
+                    // 🛂️ The throwaway reduction store gets the framework's own bounded owner
+                    // catalogue. `ArtifactStore::new` installs NONE, and an uninstalled store cannot
+                    // retire: the close cursor below answers `artifact store has no owner-supplied
+                    // bounded disposer` for the first nonempty batch through a LINKED Rust codec —
+                    // the path stdio and gis take on a hub. The guest twin
+                    // (`plugin_runtime::artifact_app_apply_ops`) installs the APP's own catalogue
+                    // there, which this thunk has no app type to ask for; the framework catalogue is
+                    // the exact equivalent for a store that lives only for one reduction (ticket
+                    // 26/09/18 slices TC3e §7d, TC4 §2).
+                    store.install_document_store_owners_exact(bounded_artifact_store_owners::<P, Mutation>());
                     store
                 };
                 store.dispatch_apply_exact(mutations, None).await?;
@@ -11208,6 +11321,18 @@ impl<P, Mutation: self::Mutation<P>> ParsedDocumentText<P, Mutation> {
         let Self { envelope, snapshot } = self;
         retire_replayed_projection::<P, Mutation>(snapshot);
         envelope
+    }
+
+    /// 🔭️ The mirror of [`Self::into_envelope`]: takes the LIVE replayed projection and discards the
+    /// history beside it through the same bounded path a refused parse already uses. For a reader
+    /// that wants to LOOK at a document it will never edit — an inference computing over the
+    /// artifact a caller named, which owns no store to put an envelope in — and which must not let
+    /// the envelope fall out of scope, because every terminal shell below it asserts in `Drop` that
+    /// its owners were retired first.
+    pub fn into_snapshot(self) -> P {
+        let Self { envelope, snapshot } = self;
+        discard_parsed_envelope::<P, Mutation>(envelope);
+        snapshot
     }
 }
 

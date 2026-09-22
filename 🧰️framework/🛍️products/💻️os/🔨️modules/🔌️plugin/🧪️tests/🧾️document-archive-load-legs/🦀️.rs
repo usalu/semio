@@ -29,7 +29,7 @@ impl ArtifactApp for SingleDocumentApp {
     type Command = TestCommand;
 
     async fn initial_snapshot() -> Self::Snapshot {
-        TestSnapshot { count: 0, label: "initial".into() }
+        TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }
     }
 
     async fn handle(
@@ -48,7 +48,7 @@ impl ArtifactApp for SingleDocumentApp {
     /// `encode_pack` plus a bare `store::empty_document_spr` naming the APP, not the live store.
     /// This lane never passed through the runtime's identity stamp.
     async fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
-        let pack = <TestSnapshot as store::ArtifactPack>::encode_pack(&TestSnapshot { count: 42, label: "example".into() });
+        let pack = <TestSnapshot as store::ArtifactPack>::encode_pack(&TestSnapshot { count: 42, label: "example".into(), slot: Vec::new() });
         let spr = resolve_ready(store::empty_document_spr(Self::APP_ID, Self::DOCUMENT_SCHEMA));
         vec![Effect::LoadDocument { pack, spr }]
     }
@@ -160,7 +160,7 @@ fn archive_fault_text(status: &protocol::DocumentArchiveLoadStatus) -> String {
 async fn a_childless_whole_document_archive_replaces_the_live_document() {
     let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp)).await;
     assert_eq!(app.snapshot().expect("initial projection").label, "initial");
-    let archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 42, label: "example".into() })).await;
+    let archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 42, label: "example".into(), slot: Vec::new() })).await;
     PluginApp::begin_document_archive_load(&mut app, 91, archive).expect("whole-document archive admission");
     let status = Box::pin(drive_single_document_archive(&mut app, 91)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "whole-document archive replacement failed: {}", archive_fault_text(&status));
@@ -197,7 +197,7 @@ async fn the_refresh_poll_lane_stamps_the_load_document_it_emits() {
 async fn an_unstamped_whole_document_archive_is_refused_by_parent_hydration() {
     let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp)).await;
     let live_id = app.store.envelope().id.clone();
-    let archive = Box::pin(raw_single_document_archive(&live_id, &TestSnapshot { count: 9, label: "unstamped".into() })).await;
+    let archive = Box::pin(raw_single_document_archive(&live_id, &TestSnapshot { count: 9, label: "unstamped".into(), slot: Vec::new() })).await;
     PluginApp::begin_document_archive_load(&mut app, 93, archive).expect("unstamped archive admission");
     let status = Box::pin(drive_single_document_archive(&mut app, 93)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Fault);
@@ -216,7 +216,7 @@ async fn a_refused_whole_document_archive_names_the_leg_that_refused_it() {
     let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp)).await;
     let envelope_id = app.store.envelope().id.clone();
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
-    let mut archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 7, label: "foreign".into() })).await;
+    let mut archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 7, label: "foreign".into(), slot: Vec::new() })).await;
     let foreign = Box::pin(store::empty_document_spr(&envelope_id, "semio.test.some-other-app/v1")).await;
     archive.parent_spr = Box::pin(store::stamp_document_spr_identity(&foreign, &envelope_id, "semio.test.some-other-app/v1", &dialect, None)).await.expect("foreign stamp");
     PluginApp::begin_document_archive_load(&mut app, 92, archive).expect("foreign-schema archive admission");

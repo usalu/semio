@@ -50,3 +50,4 @@ async fn working_content_is_owned_by_each_exact_child() {
 
     assert_eq!(observed, SerdeJsonProcedureChildOwnerOracle::expected());
 }
+

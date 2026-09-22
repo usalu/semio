@@ -736,11 +736,11 @@ func TestMcpCommandKinds(t *testing.T) {
 		want string
 	}{
 		{McpClientGeneric, "repo"},
-		{McpClientCursor, "repo-cursor"},
-		{McpClientKiro, "repo-kiro"},
-		{McpClientCopilot, "repo-copilot"},
-		{McpClientClaude, "repo-claude"},
-		{McpClientCodex, "repo-codex"},
+		{McpClientCursor, "repo"},
+		{McpClientKiro, "repo"},
+		{McpClientCopilot, "repo"},
+		{McpClientClaude, "repo"},
+		{McpClientCodex, "repo"},
 	}
 	for _, tc := range cases {
 		parsed, err := ParseMcpClientKind(string(tc.kind))

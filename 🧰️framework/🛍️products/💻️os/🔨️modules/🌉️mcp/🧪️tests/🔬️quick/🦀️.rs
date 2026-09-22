@@ -49,15 +49,16 @@ fn http_options_round_trip_without_a_credential_carrier() {
     assert_eq!(options.bind, "127.0.0.1");
 }
 
-/// 🎯️ `tools/list` is 27 tools and every one of them is real: 3 core gateway + 8 mutation-protocol
+/// 🎯️ `tools/list` is 28 tools and every one of them is real: 3 core gateway + 8 mutation-protocol
 /// + 5 `🗿️artifact` + 3 `💡️inference` (discovery pair + the general `inference_run` execution route)
-/// + 4 hub-backed `💡️inference` jobs + 4 `🖥️ui`. Ticket 26/08/29/AI-MCP-END-TO-END retired the last
-/// stub, so there is no longer a "declared but unimplemented" bucket to assert against.
+/// + 4 hub-backed `💡️inference` jobs + 4 `🖥️ui` + `conversation_reply` (ticket 26/09/18 slice AC1,
+/// the agent's own free-text turn). Ticket 26/08/29/AI-MCP-END-TO-END retired the last stub, so
+/// there is no longer a "declared but unimplemented" bucket to assert against.
 #[test]
 fn tools_list_is_the_full_real_gateway_surface() {
     let server = fixture_server();
     let tools = server.tools.list();
-    assert_eq!(tools.len(), 27, "tools: {:?}", tools.iter().map(|tool| &tool.name).collect::<Vec<_>>());
+    assert_eq!(tools.len(), 28, "tools: {:?}", tools.iter().map(|tool| &tool.name).collect::<Vec<_>>());
     for name in GATEWAY_TOOL_NAMES {
         assert!(tools.iter().any(|tool| tool.name == name), "missing tool {name}");
     }

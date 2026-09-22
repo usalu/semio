@@ -1528,8 +1528,8 @@ fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &Sequenc
             let params = dsl::os_pack::from_json_str::<StepParams>(&payload.params_json).ok();
             match (scene.steps.iter().find(|step| step.id == payload.id), params) {
                 (Some(step), Some(params)) if step.params != params => vec![SequenceMutation::EditStepParams(crate::mutations::EditStepParams { id: payload.id.clone(), params })],
-                (_, Some(params)) => {
-                    discarded_params = Some(params.0);
+                (_, Some(mut params)) => {
+                    discarded_params = Some(std::mem::take(&mut params.0));
                     Vec::new()
                 }
                 (_, None) => Vec::new(),
@@ -1593,8 +1593,8 @@ impl SequenceRetainedSceneOwner {
         }
         if let Some(scene) = self.scene.as_mut() {
             if let Some(step) = scene.steps.pop() {
-                let SequenceStep { params, .. } = step;
-                self.retirement.push_dictionary(params.0);
+                let SequenceStep { mut params, .. } = step;
+                self.retirement.push_dictionary(std::mem::take(&mut params.0));
                 return SequencePersistentRelease::Progress(0);
             }
             if scene.edges.pop().is_some() {
@@ -2133,14 +2133,14 @@ impl SequenceNodeGraphState {
             return SequencePersistentRelease::Progress(0);
         }
         let step = self.fixture_steps.pop_front().or_else(|| self.discarded_steps.pop_front()).or_else(|| self.base.as_mut().and_then(|scene| scene.steps.pop())).or_else(|| self.target.as_mut().and_then(|scene| scene.steps.pop()));
-        if let Some(SequenceStep { params, .. }) = step {
-            self.retirement.push_dictionary(params.0);
+        if let Some(SequenceStep { mut params, .. }) = step {
+            self.retirement.push_dictionary(std::mem::take(&mut params.0));
             return SequencePersistentRelease::Progress(0);
         }
         if let Some(mutation) = self.mutations.pop() {
             match mutation {
-                SequenceMutation::CreateStep(value) => self.retirement.push_dictionary(value.step.params.0),
-                SequenceMutation::EditStepParams(value) => self.retirement.push_dictionary(value.params.0),
+                SequenceMutation::CreateStep(mut value) => self.retirement.push_dictionary(std::mem::take(&mut value.step.params.0)),
+                SequenceMutation::EditStepParams(mut value) => self.retirement.push_dictionary(std::mem::take(&mut value.params.0)),
                 SequenceMutation::DeleteStep(_) | SequenceMutation::MoveStep(_) | SequenceMutation::ChangeStepCollapsed(_) | SequenceMutation::ConnectSteps(_) | SequenceMutation::DisconnectSteps(_) | SequenceMutation::DuplicateStep(_) => {}
             }
             return SequencePersistentRelease::Progress(0);
@@ -2317,6 +2317,15 @@ struct SequenceRunFrame {
     while_iterations: usize,
 }
 
+/// 🧊️ Rebinding a live `Dictionary` root by plain assignment drops the PREVIOUS one without
+/// retiring it, which the neural engine refuses in the guest with `final Dictionary ownership must
+/// be explicitly retired or owned by a cold boundary`. `imperative_engine` has carried this exact
+/// helper since its own sweep; `SequenceRunState::advance`'s `self.scope = result.scope` runs on
+/// every executed step of a `run` verb, so it is the hottest of the four rebinds here.
+fn replace_scope_cold(scope: &mut Dictionary, next: Dictionary) {
+    neural_engine::ColdRetire::retire_cold(std::mem::replace(scope, next));
+}
+
 #[derive(Default)]
 struct SequenceRunState {
     initialized: bool,
@@ -2349,7 +2358,7 @@ impl SequenceRunState {
             let (registry, retirement) = SharedRegistry::new(imperative_module_registry());
             self.registry = Some(registry);
             self.registry_retirement = Some(retirement);
-            self.scope = Dictionary::new();
+            replace_scope_cold(&mut self.scope, Dictionary::new());
             self.frames.push(SequenceRunFrame { order: SequenceRunOrder::new(None), cursor: 0, repeat_remaining: 1, repeat_total: 1, while_key: None, while_iterations: 0 });
             self.initialized = true;
             return Ok(SequencePersistentAdvance::Progress("sequence-run-initialize", "{\"en\":\"Preparing execution\",\"de\":\"Ausführung wird vorbereitet\"}".as_bytes()));
@@ -2380,7 +2389,8 @@ impl SequenceRunState {
                 frame.repeat_remaining -= 1;
                 frame.cursor = 0;
                 let index = frame.repeat_total - frame.repeat_remaining;
-                self.scope = self.scope.clone().insert("index", NeuralValue::Atom(neural_engine::Atom::Integer(index as i64)));
+                let next_scope = self.scope.clone().insert("index", NeuralValue::Atom(neural_engine::Atom::Integer(index as i64)));
+                replace_scope_cold(&mut self.scope, next_scope);
                 return Ok(SequencePersistentAdvance::Progress("sequence-run-repeat-cursor", b"{\"en\":\"Continuing bounded repeat body\",\"de\":\"Begrenzter Wiederholungsblock wird fortgesetzt\"}"));
             }
             self.frames.pop();
@@ -2423,7 +2433,8 @@ impl SequenceRunState {
                     }
                     self.effects.push(imperative_engine::EffectLogEntry { step_id: String::new(), kind: "control.depth".into(), input: Dictionary::new(), output: None, error: Some("nesting depth exceeded 64".into()) });
                 } else if count != 0 {
-                    self.scope = self.scope.clone().insert("index", NeuralValue::Atom(neural_engine::Atom::Integer(0)));
+                    let next_scope = self.scope.clone().insert("index", NeuralValue::Atom(neural_engine::Atom::Integer(0)));
+                    replace_scope_cold(&mut self.scope, next_scope);
                     self.frames.push(SequenceRunFrame { order: SequenceRunOrder::new(Some((&step.id, "body"))), cursor: 0, repeat_remaining: count, repeat_total: count, while_key: None, while_iterations: 0 });
                 }
             }
@@ -2452,7 +2463,7 @@ impl SequenceRunState {
                     return Err(Fault::from("sequence-run-effect-capacity"));
                 }
                 let halt_frame = result.effects.iter().any(|effect| effect.error.is_some());
-                self.scope = result.scope;
+                replace_scope_cold(&mut self.scope, result.scope);
                 self.effects.extend(result.effects);
                 if halt_frame {
                     if let Some(frame) = self.frames.last_mut() {
@@ -3161,6 +3172,224 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SequenceRetainedExa
 }
 //#endregion 🧵️RetainedExampleRoutes
 
+//#region 🎞️ReservedImport
+/// 🎞️ The reserved tool id the framework registers for every app's media import.
+const SEQUENCE_IMPORT_TOOL_ID: &str = "import-media";
+
+/// 🎞️ The only media port Sequence declares as an importer (`sequence_io`).
+const SEQUENCE_IMPORT_PORT: &str = "steps:in";
+
+/// 🎞️ The ONE concrete resumable importer this app owns. `VcsArtifactApp::dispatch_import_media`
+/// builds its emit EXCLUSIVELY from the resumable job — `A::import_media` is never reached on a
+/// mounted app — so while this returned the trait default `None` every `steps:in` delivery died
+/// `interactive-job.missing-reserved-builder` although the synchronous importer below was correct
+/// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, media §8, S10-E). Two bounded steps: decode
+/// the payload into the composed Flow child's exact replacement, then publish it through the
+/// completion authority.
+struct SequenceImportJob {
+    port: String,
+    media_json: Option<String>,
+    snapshot: Option<std::sync::Arc<SequenceSnapshot>>,
+    children: Option<semio_framework_plugin::app::ChildContentView>,
+    emit: Option<Emit<SequenceMutation, NoConfigMutation>>,
+    decoded: bool,
+    completed: bool,
+    closing: bool,
+    completion: Option<semio_framework_plugin::ArtifactToolCompletion<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
+    pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
+}
+
+/// 🧾️ Admits one bounded job payload page, answering the empty page when the context refuses it.
+fn sequence_job_payload(cx: &mut semio_framework_job::StepContext<'_>, stream: semio_framework_job::JobPayloadStream, bytes: &[u8]) -> semio_framework_job::RetainedJobPayload {
+    match cx.payload_from_bytes(stream, bytes) {
+        Ok(payload) => payload,
+        Err(rejected) => {
+            drop(rejected.into_source());
+            semio_framework_job::RetainedJobPayload::empty(stream)
+        }
+    }
+}
+
+/// 🧯️ One bounded job fault carrying its own detail page.
+fn sequence_job_fault(cx: &mut semio_framework_job::StepContext<'_>, detail: &str) -> semio_framework_job::StepOutcome {
+    let bytes = detail.as_bytes();
+    let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
+    semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: sequence_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, bounded) })
+}
+
+impl SequenceImportJob {
+    fn new(request: semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<SequencePlayApp>>, port: String, media: Media) -> Self {
+        let media_json = match media.payload {
+            MediaPayload::Structured { json, .. } => Some(json),
+            MediaPayload::Binary { .. } => None,
+        };
+        Self {
+            port,
+            media_json,
+            snapshot: Some(request.snapshot),
+            children: Some(request.children),
+            emit: None,
+            decoded: false,
+            completed: false,
+            closing: false,
+            completion: Some(request.completion),
+            pending_completion_rejection: None,
+        }
+    }
+
+    fn decode(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Option<semio_framework_job::StepOutcome> {
+        if self.port != SEQUENCE_IMPORT_PORT {
+            return Some(sequence_job_fault(cx, "sequence import only implements steps:in"));
+        }
+        let Some(media_json) = self.media_json.as_ref() else {
+            return Some(sequence_job_fault(cx, "sequence steps:in importer only accepts a Structured (JSON) payload"));
+        };
+        let Ok(value) = serde_json::from_str::<Value>(media_json) else {
+            return Some(sequence_job_fault(cx, "sequence steps:in payload is not valid json"));
+        };
+        let params_value = if value.is_object() { value } else { json!({ "value": value }) };
+        let Ok(params) = dsl::os_pack::from_json_str::<StepParams>(&params_value.to_string()) else {
+            return Some(sequence_job_fault(cx, "sequence steps:in payload is not a step parameter record"));
+        };
+        let (Some(snapshot), Some(children)) = (self.snapshot.as_ref(), self.children.as_ref()) else {
+            return Some(sequence_job_fault(cx, "sequence import lost its snapshot authority"));
+        };
+        let Ok(mut live) = sequence_host_snapshot_from_children(snapshot.as_ref(), children) else {
+            return Some(sequence_job_fault(cx, "sequence import could not read its composed flow child"));
+        };
+        let id = format!("step-{}", max_serial_in_snapshot(&live).max(100) + 1);
+        let x = live.steps.iter().map(|step| step.x).fold(0.0_f64, f64::max) + if live.steps.is_empty() { 0.0 } else { 280.0 };
+        live.steps.push(SequenceStep { id, kind: "computation.import".into(), params, x, y: 0.0, slot: None, collapsed: false });
+        self.emit = Some(sequence_child_replace_emit_from_parts(snapshot.as_ref(), &live.steps, &live.edges));
+        self.children = None;
+        self.decoded = true;
+        None
+    }
+}
+
+impl semio_framework_job::InteractiveJob for SequenceImportJob {
+    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        if cx.is_cancelled() {
+            return semio_framework_job::StepOutcome::Cancelled;
+        }
+        if self.pending_completion_rejection.is_some() {
+            return sequence_job_fault(cx, "sequence import completion remains rejected");
+        }
+        if !self.decoded {
+            cx.set_stage("sequence-import-decode");
+            if let Some(outcome) = self.decode(cx) {
+                return outcome;
+            }
+            cx.consume_fuel(1);
+            return semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint {
+                state: sequence_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &[1]),
+                applied_progress: 1,
+            });
+        }
+        cx.set_stage("sequence-import-publish");
+        if !self.completed {
+            let Some(emit) = self.emit.take() else {
+                return sequence_job_fault(cx, "sequence import lost its decoded child publication");
+            };
+            let Some(completion) = self.completion.as_ref() else {
+                return sequence_job_fault(cx, "sequence import lost its completion authority");
+            };
+            if !completion.has_mounted_consumer() {
+                self.emit = Some(emit);
+                return sequence_job_fault(cx, "sequence import completion consumer is absent");
+            }
+            if let Err(rejected) = completion.complete(Ok(emit), semio_framework_plugin::EphemeralEmit::default()) {
+                let message = rejected.fault.message.clone();
+                self.pending_completion_rejection = Some(rejected);
+                return sequence_job_fault(cx, &message);
+            }
+            self.completed = true;
+        }
+        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
+            state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
+            output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
+        })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        match semio_framework_plugin::ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
+            Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+            Ok(semio_framework_plugin::PluginCloseStep::Complete) if semio_framework_plugin::ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
+            Ok(semio_framework_plugin::PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        semio_framework_plugin::ArtifactReservedJob::terminal_is_empty(self)
+    }
+}
+
+impl semio_framework_plugin::ArtifactReservedJob for SequenceImportJob {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        self.closing = true;
+        if maximum_items == 0 {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            if let Ok(emit) = rejected.emit.as_mut() {
+                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
+                    return Ok(step);
+                }
+            }
+            self.pending_completion_rejection = None;
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(emit) = self.emit.as_mut() {
+            if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
+                return Ok(step);
+            }
+            self.emit = None;
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.children.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.media_json.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if !self.port.is_empty() || self.port.capacity() > 0 {
+            self.port = String::new();
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
+            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "sequence import snapshot has no mounted retained authority" });
+        }
+        if self.snapshot.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
+            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "sequence import completion has no mounted consumer authority" });
+        }
+        if self.completion.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(semio_framework_plugin::PluginCloseStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.port.is_empty()
+            && self.port.capacity() == 0
+            && self.media_json.is_none()
+            && self.children.is_none()
+            && self.snapshot.is_none()
+            && self.emit.is_none()
+            && self.completion.is_none()
+            && self.pending_completion_rejection.is_none()
+    }
+}
+//#endregion 🎞️ReservedImport
+
 //#region 🔖️SequencePlayApp
 /// 🧪️ Stateless app shell; exact window owners hold graph preferences and run output.
 #[derive(Default)]
@@ -3352,6 +3581,24 @@ impl ArtifactEditor for SequencePlayApp {
         registry.register(SequencePersistentJobFactory::new(&controller))?;
         registry.register(SequenceRetainedConfigJobFactory::new(&controller))?;
         registry.register(SequenceRetainedExampleJobFactory::new(&controller))
+    }
+
+    /// 🎞️ `import-media` is the only reserved route Sequence owns. The framework registers the
+    /// reserved factory but never a concrete importer, so every inbound `steps:in` delivery is routed
+    /// exclusively through this builder (`dispatch_import_media` → `build_artifact_reserved_media_job`);
+    /// `copy`/`cut`/`paste` stay on the framework's own reserved factories.
+    fn build_reserved_tool_job(request: semio_framework_plugin::ArtifactReservedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework_plugin::ArtifactReservedToolJob>, Fault> {
+        if request.tool_id.as_str() != SEQUENCE_IMPORT_TOOL_ID {
+            return Ok(None);
+        }
+        if !request.raw_wire.is_empty() {
+            return Err(Fault::from("sequence import-media admits a decoded media value, never a wire payload"));
+        }
+        let semio_framework_plugin::ArtifactReservedToolInput::Media { port, media } = &request.input else {
+            return Err(Fault::from("sequence import-media requires media input"));
+        };
+        let (port, media) = (port.clone(), media.clone());
+        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(SequenceImportJob::new(request, port, media))))
     }
 
     fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {

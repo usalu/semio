@@ -5708,6 +5708,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-os-kernel",
  "semio-framework-os-services",
+ "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-schema",
  "semio-framework-ui",

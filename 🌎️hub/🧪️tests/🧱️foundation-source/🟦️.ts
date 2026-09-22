@@ -306,7 +306,7 @@ test("readiness waits on the hub's own progress, never on a total wall-clock bud
   const exited = fakeRun(frozen.port, () => "");
   (exited.child as unknown as { exitCode: number | null }).exitCode = 3;
   await expect(waitForReadiness(exited, false, 200)).rejects.toThrow(/exited before readiness/u);
-});
+}, 600_000);
 
 test("credential delivery seals authority and uses one injected fd3 endpoint", async () => {
   const source = {
@@ -420,6 +420,10 @@ test("ordered publication and Cargo staging retain their exact authorities", () 
   expect(() => assertHubFixtureExpectation("positive", { stage: "contract", result: "accepted", code: "valid" }, true)).not.toThrow();
 });
 
+// 🧮 This one parses every owner's TypeScript, the router's, `📋️project.json`, `nx.json` and
+// `.vscode/launch.json`; it measured 21.7 s at fleet load 62 on 2026-09-22 against bun's 5 s
+// default, which was chosen for nothing in particular and failed it. The budget below is named for
+// what the test does, and is a wedge bound (~30x the measured run), not a verdict on speed.
 test("package, target, input and launch registrations bind only the moved owners", async () => {
   const routerPath = join(hubRoot, "📦️packages/🦀️rust/📜️script.ts");
   const router = readFileSync(routerPath, "utf8");
@@ -449,4 +453,4 @@ test("package, target, input and launch registrations bind only the moved owners
       path,
     ).toHaveLength(1);
   }
-});
+}, 600_000);

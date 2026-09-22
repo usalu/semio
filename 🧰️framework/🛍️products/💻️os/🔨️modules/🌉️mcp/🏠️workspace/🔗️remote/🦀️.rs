@@ -997,6 +997,33 @@ impl NativeHubBindingDriver {
         Ok(bytes)
     }
 
+    /// 🪪️ Fetches the execution-target LEASE the Hub minted for one exact document — the small JSON
+    /// projection (≈3 KB, measured on hub 7621) that carries what the package-keyed catalog snapshot
+    /// deliberately does not: this document's own `surface` (`surfaceId`/`appId`/`windowKindId`),
+    /// its `artifact` kind and schema, and the grant behind them.
+    ///
+    /// 🧭️ `refresh_catalog` deduplicates its selections by PACKAGE identity, so its `scope` names
+    /// whichever document first resolved that package — never necessarily the one a caller is
+    /// opening. A per-document lease is therefore the only honest source for a per-document surface,
+    /// and it is fetched here rather than derived: a surface id assembled host-side from a manifest
+    /// would be this gateway's guess at what the hub authorized, which is exactly the class of
+    /// fabrication `PROBE_SURFACE_ID` already was.
+    pub fn fetch_execution_target_lease(&self, scope: &DocumentScope, client_instance_id: &str) -> Result<semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1, GatewayError> {
+        let intent = DocumentOpenIntentV1 {
+            schema: "semio.hub.document-open-intent/v1".into(),
+            version: 1,
+            scope: scope.clone(),
+            requested_surface_id: None,
+            client_instance_id: client_instance_id.to_string(),
+        };
+        let (ctx, _) = self.operation_context(&self.cancel, HUB_BINDING_OPERATION_TIMEOUT_MS);
+        let lease = self.runtime.block_on(self.client.document_execution_target_manifest(&ctx, &intent)).map_err(|error| binding_error_to_gateway(map_client_error(error)))?;
+        if lease.scope != *scope {
+            return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "hub execution-target lease names a different document scope than the one it was requested for"));
+        }
+        Ok(lease)
+    }
+
     pub fn mount_canonical_pair(
         &self,
         binding: &HubRemoteBinding,

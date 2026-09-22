@@ -41,6 +41,9 @@ pub(super) enum Owner {
 #[derive(Default)]
 pub(super) struct Retirement {
     owners: ManuallyDrop<LinkedList<Owner>>,
+    /// 🎟️ Bytes a typed Flow frontier already freed above the caller's page, still owed to the
+    /// caller's accounting. See `crate::retirement::close_frontier_page`.
+    debt: usize,
 }
 
 impl Drop for Retirement {
@@ -66,7 +69,22 @@ impl Retirement {
     }
 
     pub(super) fn is_empty(&self) -> bool {
-        self.owners.is_empty()
+        self.owners.is_empty() && self.debt == 0
+    }
+
+    /// 📏️ The smallest byte grant `step` can spend to make physical progress, forwarded from the
+    /// typed Flow frontier this retirement is currently driving — that frontier frees an allocation
+    /// WHOLE or not at all and refuses anything smaller. Every other owner is one byte of logical
+    /// progress, and an owed instalment needs only a byte to be paid.
+    pub(super) fn next_close_byte_demand(&self) -> usize {
+        if self.debt > 0 {
+            return 1;
+        }
+        match self.owners.front() {
+            None => 0,
+            Some(Owner::Domain(owner)) => owner.next_close_byte_demand().map_or(1, |bytes| bytes.max(1)),
+            Some(_) => 1,
+        }
     }
 
     pub(super) fn step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
@@ -76,6 +94,11 @@ impl Retirement {
         }
         if maximum_items == 0 || maximum_bytes == 0 {
             return Step::Blocked;
+        }
+        if self.debt > 0 {
+            let paid = self.debt.min(maximum_bytes);
+            self.debt -= paid;
+            return Step::Pending { released_items: 0, released_bytes: paid };
         }
         let mut released_bytes = 0;
         match self.owners.pop_front().expect("nonempty retirement") {
@@ -98,10 +121,18 @@ impl Retirement {
             Owner::Set(value) => self.domain(FlowOwner::Set(value)),
             Owner::Dictionary(value) => self.domain(FlowOwner::Dictionary(value)),
             Owner::Domain(mut owner) => {
-                match owner.close_page(maximum_items, maximum_bytes).expect("typed Flow retirement") {
+                // ⛔️ A typed Flow frontier frees a heap allocation WHOLE or not at all and answers
+                // `Blocked` below the demand it publishes, so this frontier pays that demand out of
+                // its own admission and owes the excess back to its caller's page. Before
+                // 2026-09-22 the arm was an `unreachable!`, which turned a legitimate refusal into
+                // a guest abort the moment an owner outgrew the caller's page.
+                match crate::retirement::close_frontier_page(&mut owner, &mut self.debt, maximum_bytes).expect("typed Flow retirement") {
                     store::SnapshotRetirementStep::Pending { released_bytes: bytes, .. } => released_bytes = bytes,
                     store::SnapshotRetirementStep::Complete => {}
-                    store::SnapshotRetirementStep::Blocked => unreachable!("positive Flow retirement grant"),
+                    store::SnapshotRetirementStep::Blocked => {
+                        self.push(Owner::Domain(owner));
+                        return Step::Blocked;
+                    }
                 }
                 if !owner.is_empty() {
                     self.push(Owner::Domain(owner));
@@ -245,6 +276,9 @@ impl ErasedSnapshotRetirement for Retirement {
     }
     fn terminal_is_empty(&self) -> bool {
         self.is_empty()
+    }
+    fn next_close_byte_demand(&self) -> usize {
+        Retirement::next_close_byte_demand(self).max(1)
     }
 }
 

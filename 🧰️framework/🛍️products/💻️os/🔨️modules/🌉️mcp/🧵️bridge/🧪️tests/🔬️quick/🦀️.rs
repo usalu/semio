@@ -95,6 +95,8 @@ fn sample_gateway_frames() -> Vec<GatewayToShell> {
         GatewayToShell::Bye { reason: "shutdown".into() },
         GatewayToShell::AgentToolCall { invocation_id: "inv_1".into(), tool_name: "action_invoke".into(), arguments: "{\"capabilityId\":\"cad.viewport.translateSelection\"}".into() },
         GatewayToShell::AgentToolResult { invocation_id: "inv_1".into(), tool_name: "action_invoke".into(), ok: true, summary: "moved 1 object".into() },
+        GatewayToShell::AgentReply { reply_id: "rep_1".into(), in_reply_to: Some("msg_1".into()), text: "Widening that wall means".into(), complete: false },
+        GatewayToShell::AgentReply { reply_id: "rep_1".into(), in_reply_to: None, text: " the 300 mm variant — shall I?".into(), complete: true },
     ]
 }
 
@@ -485,7 +487,7 @@ fn every_fixture_round_trips_through_the_rust_codec() {
         }
     }
     assert_eq!(shell_to_gateway_count, 13, "fixtures must cover every ShellToGateway variant instance");
-    assert_eq!(gateway_to_shell_count, 11, "fixtures must cover every GatewayToShell variant instance");
+    assert_eq!(gateway_to_shell_count, 13, "fixtures must cover every GatewayToShell variant instance");
 }
 
 fn encode_hex(bytes: &[u8]) -> String {

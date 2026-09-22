@@ -40,10 +40,15 @@ export default defineConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/framework-os-dev",
-    /** 🎚️Only the level-gated cases touch a DOM (Canvas PNG pixel parity); the `quick` subset is pure
-     * Node helper logic, and paying jsdom's ~7 s environment setup there costs a quarter of the level's
-     * whole wall-clock budget. */
-    environment: process.env.SEMIO_BUILD_INSPECTION_OUTPUT ? "node" : testLevelAtLeast("long") ? "jsdom" : "node",
+    /** 🎚️Every suite this project collects is Node-side build tooling: the staging, staging-root and
+     * config files reach `node:sqlite` / `bun:sqlite` lease stores, Bun's transpiler (`registryStaticImports`),
+     * `node:vm` bridge harnesses and `fileURLToPath`, and NONE of them touches a DOM. The Canvas PNG pixel
+     * parity module (`🧪️tests/⚖️parity/🖼️pixels/🟦️.ts`) that once justified jsdom at `long` declares no
+     * `describe`/`it` at all — it runs inside a real browser page — and is in neither `include` nor
+     * `includeSource`, so the level-gated jsdom only ever told Vite to resolve this graph as a CLIENT one,
+     * where a runtime builtin is refused outright ("Cannot bundle built-in module") and the runner's own
+     * `Bun`/`URL` globals are replaced. That refusal failed the whole 88-law staging FILE and six of its laws. */
+    environment: "node",
     // 🩹️ In-source files belong only in `includeSource`; listing them in BOTH keys made Vitest
     // collect them twice. Dedicated regression files remain ordinary `include` entries.
     include: ["../../🧪️tests/🧹️config/🟦️.ts", "../../🧪️tests/🔌️staging-root/🟦️.ts", "../../🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts"],

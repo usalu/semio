@@ -7,6 +7,9 @@
 
 // #region 🔌️Adapters
 import { ephemeralBox, type TreePresentation, type TreeWindowRowExtent } from "@semio-tech/framework";
+
+/** @emoji 📏️ Re-exported from the UI contract because this element's whole window API is stated in it — a consumer of `TreeDataWindow`/`TreeWindowContainerMeasure` must be able to name the token without reaching past this module. */
+export type { TreeWindowRowExtent };
 import * as React from "react";
 import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -782,6 +785,9 @@ export function treeWindowRowExtentPx(extent: TreeWindowRowExtent): number {
       return exactMetric(uiSpacingPx(STYLING_METRICS.chrome.controlHeightUiSpacing));
   }
 }
+
+/** @emoji 📏️ Every declared closed-row geometry token — the one runtime list a renderer validates a DOM or wire token against before pricing rows with {@link treeWindowRowExtentPx}. A token absent from this list has no pitch, so the container's whole geometry would be `NaN`. */
+export const TREE_WINDOW_ROW_EXTENTS = ["standard", "compactText", "compactSmallControl", "compactControl"] as const satisfies readonly TreeWindowRowExtent[];
 
 /** @emoji 🪟️ Rows requested beyond each edge of the viewport, so a scroll of up to this many rows paints from what is already materialised. */
 export const TREE_WINDOW_OVERSCAN_ROWS = 8;

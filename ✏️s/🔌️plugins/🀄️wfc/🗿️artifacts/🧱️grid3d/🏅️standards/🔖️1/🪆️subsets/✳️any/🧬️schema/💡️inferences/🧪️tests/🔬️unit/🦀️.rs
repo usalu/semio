@@ -157,14 +157,14 @@ fn the_roster_metadata_names_this_artifact_and_its_own_solve_schema() {
 fn an_oversized_request_is_refused_at_admission_rather_than_attempted() {
     let snapshot = Grid3dSnapshot { width: 0, ..Grid3dSnapshot::default() };
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), 0);
-    assert!(Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot, checkpoint: None }).is_err());
+    assert!(Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot: Some(snapshot), document: None, checkpoint: None }).is_err());
 }
 
 #[test]
 fn the_inference_job_publishes_a_twenty_five_byte_preview() {
     let document = two_tile_pair();
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), document.seed);
-    let mut job = Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot: document, checkpoint: None }).expect("admit");
+    let mut job = Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot: Some(document), document: None, checkpoint: None }).expect("admit");
     let (operation_id, generation, cancel) = (job.operation().operation, job.operation().generation, semio_framework_job::root_cancel_token());
     let mut sequence = 0;
     let mut verdict = None;

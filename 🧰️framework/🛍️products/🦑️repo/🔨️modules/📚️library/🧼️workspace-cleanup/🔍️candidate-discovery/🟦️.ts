@@ -14,6 +14,7 @@ import {
   cleanIsMisplacedRepoDir,
   cleanIsMisplacedTicketsDir,
   cleanIsProtected,
+  cleanIsRootTransientName,
   cleanIsSemioRootName,
   cleanIsTicketGeneratedOutputDir,
   cleanIsWindowsIllegalName,
@@ -115,6 +116,23 @@ export function cleanCollectMisplaced(root: string, protectedPrefixes: readonly 
     }
     return "enter";
   });
+  return out;
+}
+
+export function cleanCollectRootTransient(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
+  const out: CleanRemoval[] = [];
+  let names: string[];
+  try {
+    names = readdirSync(root);
+  } catch {
+    return out;
+  }
+  for (const name of names) {
+    if (!cleanIsRootTransientName(name)) continue;
+    const abs = join(root, name);
+    if (cleanIntersectsProtected(abs, protectedPrefixes)) continue;
+    out.push({ kind: "root-transient", path: name, bytes: cleanPathBytes(abs) });
+  }
   return out;
 }
 

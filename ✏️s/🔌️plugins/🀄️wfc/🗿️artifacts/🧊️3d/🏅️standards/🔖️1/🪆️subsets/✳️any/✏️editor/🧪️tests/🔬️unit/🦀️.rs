@@ -377,3 +377,29 @@ fn the_owned_factory_tool_ids_publication_contracts_and_proofs_are_one_exact_ros
     let proofs: std::collections::BTreeSet<&str> = <Wfc3dEditor as semio_framework_plugin::ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect();
     assert_eq!(proofs, tools, "every owned tool carries its owner-local bounded reducer proof");
 }
+
+/// ⚖️ LAW: every retained tool is a DECLARED `Migrated` action of the BUILT manifest. The framework
+/// computes `expected = TOOL_JOB_IDS ∩ migrated_tool_ids(definition)` and refuses any
+/// `bounded_first_step_tool_proofs!` row outside it with `interactive-job.catalog-authority` — a
+/// guest-side `panic!` at app registration that aborts the whole wfc component, so every wfc pane
+/// lands on `data-shell-error`. `commit-fill` reached the roster, the lane contracts and the proofs
+/// without any window kind or app-level action ever declaring it, which is exactly that refusal.
+/// `window_kind_actions` is the same join the live `AppActionRegistry::from_definition` performs
+/// (a window's own rows plus the app-level roster no window claims).
+#[test]
+fn every_retained_tool_is_a_declared_migrated_action_of_the_built_manifest() {
+    let definition = create_wfc3d_editor();
+    let declared: std::collections::BTreeMap<String, semio_framework::InteractiveJobClassification> = definition
+        .window_kinds
+        .iter()
+        .flat_map(|window| semio_framework::window_kind_actions(&definition, window))
+        .map(|action| (action.id.clone(), action.semantics.execution.interactive_job))
+        .collect();
+    for tool_id in WFC_3D_RETAINED_TOOL_IDS {
+        assert_eq!(
+            declared.get(*tool_id),
+            Some(&semio_framework::InteractiveJobClassification::Migrated),
+            "retained tool '{tool_id}' is declared by no window kind and no app action, so the framework refuses its proof row"
+        );
+    }
+}

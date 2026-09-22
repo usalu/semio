@@ -4,11 +4,17 @@ use crate::editor::note::NoteCommand;
 use crate::schema::{block_id, find_block};
 use crate::NoteBlockNode;
 
+/// ➕️ One `addBlock` is ONE semantic document edit and grows the projection by one text block.
+/// `InvocationResult.mutations` is empty on a MOUNTED app (the operation is queued and its mutations
+/// are applied by the settle, never handed back on the invocation), so the edit is counted on the
+/// document's own history instead — the same reading trinity/jack's `history_len` uses.
 #[semio_framework_async_macros::async_test]
 async fn add_block_action_emits_one_op_and_grows_projection() {
+    use semio_framework_plugin::PluginApp;
     let mut app = note_app().await;
-    let result = dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 80.0, y: 80.0 })).await;
-    assert_eq!(result.mutations.len(), 1);
+    let before = app.history_snapshot().await.expect("history").upserts.len();
+    dispatch(&mut app, NoteCommand::AddBlock(AddBlock { kind: "text".into(), x: 80.0, y: 80.0 })).await;
+    assert_eq!(app.history_snapshot().await.expect("history").upserts.len() - before, 1, "addBlock is exactly one document edit");
     let projection = app.snapshot().expect("snapshot");
     assert_eq!(projection.blocks.len(), 1);
     assert_eq!(crate::schema::block_kind(&projection.blocks[0]), "text");

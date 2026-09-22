@@ -47,7 +47,7 @@ export const agentUiLabel = registerUiTranslationBundles({
           chat: {
             panelTitle: { label: { normal: "Chat", beginner: "Chat" } },
             transcriptLabel: { label: { normal: "Agent conversation", beginner: "Agent conversation" } },
-            empty: { label: { normal: "No agent activity yet. Messages you send appear here, along with every tool the agent runs.", beginner: "No agent activity yet. Messages you send appear here, along with every tool the agent runs." } },
+            empty: { label: { normal: "No agent activity yet. Messages you send appear here, along with the agent's replies and every tool it runs.", beginner: "No agent activity yet. Messages you send appear here, along with the agent's replies and every tool it runs." } },
             youRole: { label: { normal: "You", beginner: "You" } },
             toolCallRole: { label: { normal: "Tool call", beginner: "Tool call" } },
             toolResultRole: { label: { normal: "Result", beginner: "Result" } },
@@ -68,6 +68,9 @@ export const agentUiLabel = registerUiTranslationBundles({
             cancel: { label: { normal: "Cancel", beginner: "Stop" } },
             cancelToolCall: { label: { normal: "Cancel {{tool}}", beginner: "Stop {{tool}}" } },
             cancelling: { label: { normal: "Cancelling…", beginner: "Stopping…" } },
+            agentRole: { label: { normal: "Agent", beginner: "Agent" } },
+            replyStreaming: { label: { normal: "Still writing…", beginner: "Still writing…" } },
+            replyTo: { label: { normal: "Answering your message", beginner: "Answering your message" } },
           },
           approvals: {
             trigger: { label: { normal: "Open agent approvals", beginner: "Open agent approvals" } },
@@ -106,7 +109,7 @@ export const agentUiLabel = registerUiTranslationBundles({
           chat: {
             panelTitle: { label: { normal: "Chat", beginner: "Chat" } },
             transcriptLabel: { label: { normal: "Agent-Konversation", beginner: "Agent-Konversation" } },
-            empty: { label: { normal: "Noch keine Agent-Aktivität. Gesendete Nachrichten erscheinen hier, ebenso jedes vom Agent ausgeführte Werkzeug.", beginner: "Noch keine Agent-Aktivität. Gesendete Nachrichten erscheinen hier, ebenso jedes vom Agent ausgeführte Werkzeug." } },
+            empty: { label: { normal: "Noch keine Agent-Aktivität. Gesendete Nachrichten erscheinen hier, ebenso die Antworten des Agents und jedes von ihm ausgeführte Werkzeug.", beginner: "Noch keine Agent-Aktivität. Gesendete Nachrichten erscheinen hier, ebenso die Antworten des Agents und jedes von ihm ausgeführte Werkzeug." } },
             youRole: { label: { normal: "Du", beginner: "Du" } },
             toolCallRole: { label: { normal: "Werkzeugaufruf", beginner: "Werkzeugaufruf" } },
             toolResultRole: { label: { normal: "Ergebnis", beginner: "Ergebnis" } },
@@ -127,6 +130,9 @@ export const agentUiLabel = registerUiTranslationBundles({
             cancel: { label: { normal: "Abbrechen", beginner: "Stopp" } },
             cancelToolCall: { label: { normal: "{{tool}} abbrechen", beginner: "{{tool}} stoppen" } },
             cancelling: { label: { normal: "Wird abgebrochen…", beginner: "Wird gestoppt…" } },
+            agentRole: { label: { normal: "Agent", beginner: "Agent" } },
+            replyStreaming: { label: { normal: "Schreibt noch…", beginner: "Schreibt noch…" } },
+            replyTo: { label: { normal: "Antwortet auf deine Nachricht", beginner: "Antwortet auf deine Nachricht" } },
           },
           approvals: {
             trigger: { label: { normal: "Agent-Freigaben öffnen", beginner: "Agent-Freigaben öffnen" } },
@@ -394,7 +400,11 @@ export type AgentConversationEntry =
    * gateway's real `agentToolResult` landing: cancellation is cooperative, so the call may still
    * succeed, fail, or settle as cancelled — the panel says "asked to stop", never "stopped". */
   | { readonly kind: "toolCall"; readonly id: string; readonly toolName: string; readonly args: string; readonly state: "running" | "cancelling" | "ok" | "failed"; readonly summary: string | null; readonly atMs: number }
-  | { readonly kind: "approval"; readonly id: string; readonly summary: string; readonly state: "pending" | "resolved"; readonly decision: ApprovalDecision | null; readonly atMs: number };
+  | { readonly kind: "approval"; readonly id: string; readonly summary: string; readonly state: "pending" | "resolved"; readonly decision: ApprovalDecision | null; readonly atMs: number }
+  /** 💬️ The agent's own words, from a `GatewayToShell.agentReply` frame. `state` is `"streaming"`
+   * until the chunk marked `complete` lands, so the panel can say a turn is still arriving without
+   * guessing; `text` is the chunks concatenated in arrival order, never re-ordered or re-flowed. */
+  | { readonly kind: "agentMessage"; readonly id: string; readonly text: string; readonly state: "streaming" | "complete"; readonly inReplyTo: string | null; readonly atMs: number };
 
 /** ✂️ How many conversation entries the panel retains. The bridge is a live view, not an archive:
  * an agent running for hours must not grow this array without bound, and the oldest entries are the
@@ -651,6 +661,17 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
         }
         case "agentToolResult": {
           setConversation((current) => updateConversationEntry(current, frame.invocationId, (entry) => (entry.kind === "toolCall" ? { ...entry, state: frame.ok ? "ok" : "failed", summary: frame.summary } : entry)));
+          break;
+        }
+        case "agentReply": {
+          // 💬️ One turn is ONE row: a chunk whose `replyId` is already on screen appends to it, and
+          // only the first chunk of a turn adds a row. An out-of-order or duplicated frame therefore
+          // costs a wrong sentence, never a duplicated turn.
+          setConversation((current) => {
+            const existing = current.find((entry) => entry.kind === "agentMessage" && entry.id === frame.replyId);
+            if (!existing) return appendConversationEntry(current, { kind: "agentMessage", id: frame.replyId, text: frame.text, state: frame.complete ? "complete" : "streaming", inReplyTo: frame.inReplyTo, atMs: Date.now() });
+            return updateConversationEntry(current, frame.replyId, (entry) => (entry.kind === "agentMessage" ? { ...entry, text: `${entry.text}${frame.text}`, state: frame.complete ? "complete" : "streaming" } : entry));
+          });
           break;
         }
         case "agentPresence": {

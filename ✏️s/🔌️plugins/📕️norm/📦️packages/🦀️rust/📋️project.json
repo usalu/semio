@@ -77,6 +77,15 @@
         "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🔣️.json"
       ]
     },
+    "component-budget-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts component-budget-check",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "mutation-leaf-taxonomy-generate": {
       "executor": "nx:run-commands",
       "options": {

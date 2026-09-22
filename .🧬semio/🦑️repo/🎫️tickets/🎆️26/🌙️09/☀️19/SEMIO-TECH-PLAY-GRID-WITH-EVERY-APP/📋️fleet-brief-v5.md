@@ -51,3 +51,30 @@ Read `AGENTS.md`, then `📋️fleet-brief-v2.md` (hard rules, fixing rules, sta
 Play shows EVERY plugin; every pane boots to `data-shell-ready` with its curated default example and VISIBLE correct
 content; no page/console errors, no refused inputs; play unit suite + strict acceptance suite green; every plugin
 crate's native test suite green (real defects fixed in production code, stale tests restated per the v2 buckets).
+
+## 12:05 addendum — native mutex now has TWO slots
+`📜️native-test-mutex.sh` admits the first two queued tickets concurrently (`/tmp/semio-play-native-test.lock` and
+`.lock.2`; `PLAY_NATIVE_SLOTS` to change). Waiters started before 12:05 keep the old one-slot logic until they
+requeue. Nothing else changes: ONE invocation per topic, private CARGO_TARGET_DIR, JOBS=4.
+`📓️play-runtime.md`: the strict acceptance suite now also asserts the curated example LABEL in the pane chrome,
+a non-uniform canvas / non-empty window body, and no `text/html` answer for media-extension paths — probe your
+panes against those three before declaring them green.
+
+## 13:05 addendum — back to ONE native slot, JOBS=2
+Peer request (machine at load 50–90, disk 25 GiB free, their stdio+gis release build starved): the native mutex is
+back to ONE holder (slot 2 parked by the coordinator). Use `CARGO_BUILD_JOBS=2` from now on, keep
+`CARGO_INCREMENTAL=0` and your private target dir. Do source work while queued; do not add a second cargo.
+
+## 16:40 addendum — 🗑️generated is NOT durable: fleet state moves to ⚡️cache/play-fleet
+At ~16:05–16:25 the repo's workspace-cleanup (`clean`; `🧼️workspace-cleanup` removes `ticket-generated` dirs even
+for OPEN tickets) deleted most of `$T/🗑️generated/` (activation, e2e, raster, media incl. its live target dir,
+xcut-dict, audits, serve logs). From now on: `$G = /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/play-fleet/<topic>`
+holds your STATUS.md, run logs, probes and `CARGO_TARGET_DIR="$G/target"`. Re-create STATUS.md from your transcript
+if it was lost; copy anything that still exists under `$T/🗑️generated/<topic>/`. Requests stay in
+`$T/🗑️generated/activate.request|describe.request` (recreated). Never run `clean`/workspace cleanup yourselves.
+Tracked `$T/📓️<topic>.md` reports remain the durable record — append to them at every milestone, not only at the end.
+
+## 17:20 addendum — two native slots again (load < 25)
+`📜️native-test-mutex.sh` admits TWO holders again. A wrapper queued before 17:20 still runs the one-slot loop: if your
+ticket is rank 2 and slot 2 (`/tmp/semio-play-native-test.lock.2`) is free, kill YOUR waiting wrapper + cargo and
+relaunch the same command once. JOBS=2 stays. If the coordinator announces load > 100 again, back to one.

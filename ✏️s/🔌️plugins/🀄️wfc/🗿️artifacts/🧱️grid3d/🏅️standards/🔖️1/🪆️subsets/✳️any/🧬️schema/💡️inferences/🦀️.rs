@@ -35,6 +35,42 @@ pub const GRID3D_INFERENCE_JOB_KIND: &str = "semio.infer";
 pub const GRID3D_INFERENCE_TOOL_ID: &str = "s.wfc.grid3d.solve";
 pub const GRID3D_INFERENCE_PAYLOAD_SCHEMA: &str = "s.wfc.grid3d.inference.request.v1";
 
+
+/// 📜️ The PUBLISHED request schema of `s.wfc.grid3d.solve` — what a client has to send, readable
+/// from `inference_list`/`capabilities_describe` without reading a line of this crate. Authored
+/// here rather than as a facet leaf because the facet leaf beside it (`🔣️.json`) is the RESULT
+/// schema; a request and its result are two schemas, and publishing only one was the gap
+/// (`📓️ce3-four-mcp-gates-green.md` §3.3).
+pub const GRID3D_INFERENCE_REQUEST_SCHEMA: &str = r#"{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid3d/1/any/inference.request.json",
+  "title": "Grid3dInferenceRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "oneOf": [{ "required": ["document"] }, { "required": ["snapshot"] }],
+  "properties": {
+    "document": {
+      "type": "object",
+      "description": "The artifact this solve runs on, bound by the gateway from `inference_run`'s `artifactId` — a caller names the artifact, never these bytes.",
+      "additionalProperties": false,
+      "required": ["pack", "spr"],
+      "properties": { "pack": { "type": "string", "contentEncoding": "base64" }, "spr": { "type": "string", "contentEncoding": "base64" } }
+    },
+    "snapshot": { "type": "object", "description": "The problem stated in full instead of read from an artifact: the grid3d solve's own document shape." },
+    "checkpoint": { "type": "array", "description": "A previous run's checkpoint bytes, to resume instead of restart.", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+  }
+}"#;
+
+/// 📜️ The whole published contract for `s.wfc.grid3d.solve`: request schema, result schema, the
+/// unit its bounded job counts, and the artifact binding that makes it callable at all.
+pub const GRID3D_INFERENCE_CONTRACT: semio_framework_plugin::ArtifactInferencePayloadContract = semio_framework_plugin::ArtifactInferencePayloadContract {
+    payload_schema_id: GRID3D_INFERENCE_PAYLOAD_SCHEMA,
+    input_schema: GRID3D_INFERENCE_REQUEST_SCHEMA,
+    output_schema: include_str!("🔣️.json"),
+    progress_unit: "cells",
+    artifact_binding: Some(semio_framework_plugin::ArtifactInferenceDocumentBinding { field: "document", encoding: semio_framework::INFERENCE_ARTIFACT_PACK_BASE64, required: true }),
+};
+
 /// 🧭️ Stable host roster identity for the ActionBus-owned cold solve route.
 pub const fn grid3d_inference_metadata() -> semio_framework_plugin::ArtifactInferenceServiceMetadata {
     semio_framework_plugin::ArtifactInferenceServiceMetadata {
@@ -46,6 +82,7 @@ pub const fn grid3d_inference_metadata() -> semio_framework_plugin::ArtifactInfe
         inference_schema_version: 1,
         algorithm_version: 1,
         policy_version: 1,
+        payload: Some(GRID3D_INFERENCE_CONTRACT),
     }
 }
 
@@ -67,8 +104,29 @@ const PARENT_PREVIEW_TIME_INTERVAL_MS: u64 = 16;
 
 #[derive(Clone, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct Grid3dInferenceRequest {
-    pub snapshot: Grid3dSnapshot,
+    /// 📸️ The problem, stated in full by the caller. Mutually exclusive with `document`: exactly one
+    /// of the two says which snapshot this solve runs over.
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub snapshot: Option<Grid3dSnapshot>,
+    /// 🔗️ The ARTIFACT this solve runs on, as its own canonical `pack`/`spr` pair. This is the
+    /// field `GRID3D_INFERENCE_CONTRACT`'s artifact binding names, so an agent that calls
+    /// `inference_run` with `artifactId` never has to state a snapshot it could not type: the
+    /// gateway binds the document here and the guest decodes it into its own snapshot below.
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub document: Option<semio_framework_plugin::ArtifactDocumentPayload>,
     pub checkpoint: Option<Vec<u8>>,
+}
+
+impl Grid3dInferenceRequest {
+    /// 📸️ The snapshot this request states, from whichever of its two carriers is present — the
+    /// ONE resolution path every caller of this inference takes.
+    pub fn resolve_snapshot(&self) -> Result<Grid3dSnapshot, String> {
+        match (&self.snapshot, &self.document) {
+            (Some(snapshot), _) => Ok(snapshot.clone()),
+            (None, Some(document)) => document.settled_snapshot::<Grid3dSnapshot, crate::Grid3dMutation>(),
+            (None, None) => Err("s.wfc.grid3d-inference-no-snapshot:state `snapshot`, or name the artifact with `artifactId` so `document` is bound".into()),
+        }
+    }
 }
 
 /// 🏁️ One solved cell. Masked cells never appear, so the row count IS the number of cells the grid
@@ -189,7 +247,7 @@ fn close_owned<T: semio_framework_job::InteractiveJob>(mut job: T) {
 
 impl Grid3dInferenceJob {
     fn new(mut operation: semio_framework_job::Operation, request: Grid3dInferenceRequest) -> Result<Self, String> {
-        let snapshot = request.snapshot;
+        let snapshot = request.resolve_snapshot()?;
         let cells = cell_count(&snapshot);
         if snapshot.tiles.len() > MAX_GRID3D_TILES
             || snapshot.rules.len() > MAX_GRID3D_RULES
@@ -714,7 +772,7 @@ pub fn register_grid3d_inference_factory(bus: &semio_framework::ActionBus) -> Re
 /// 🏁️ Explicit headless adapter over the same complete parent job the public factory hands out.
 pub fn solve_with_job(snapshot: &Grid3dSnapshot) -> Result<Grid3dInferenceCommit, String> {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
-    let job = Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot: snapshot.clone(), checkpoint: None })?;
+    let job = Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
     let params = semio_framework_job::BatchJobParams {
         operation: operation.operation,
         generation: operation.generation,

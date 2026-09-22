@@ -10,7 +10,7 @@ export const CLEAN_CACHE_DIR_NAME = "⚡️cache";
 export const CLEAN_TICKET_GENERATED_OUTPUT_DIRS = new Set(["🗑️generated", TICKET_GENERATED_OUTPUT_DIRECTORY, "🧾️runs", "🧪️runs", "🧾️taxonomy-transaction"]);
 export const CLEAN_TICKET_GENERATED_PROBE_PREFIXES = ["🧪️purity-", "🧪️cli-", "🧪️inventory-"];
 
-export type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact" | "ticket-generated" | "windows-illegal" | "marker-only-folder";
+export type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact" | "ticket-generated" | "windows-illegal" | "root-transient" | "marker-only-folder";
 
 export type CleanRemoval = {
   kind: CleanRemovalKind;
@@ -55,6 +55,10 @@ export function cleanIsCargoTargetDir(abs: string, name: string): boolean {
 
 export function cleanIsSemioRootName(name: string): boolean {
   return name === ".🧬semio" || (name.startsWith(".🧬") && name.endsWith("semio"));
+}
+
+export function cleanIsRootTransientName(name: string): boolean {
+  return /^\.generation3d-.+-link$/u.test(name) || name === ".w-g3-ticket";
 }
 
 export const CLEAN_WINDOWS_RESERVED_DEVICE_NAMES = /^(con|prn|aux|nul|com[1-9¹²³]|lpt[1-9¹²³])(\..*)?$/iu;

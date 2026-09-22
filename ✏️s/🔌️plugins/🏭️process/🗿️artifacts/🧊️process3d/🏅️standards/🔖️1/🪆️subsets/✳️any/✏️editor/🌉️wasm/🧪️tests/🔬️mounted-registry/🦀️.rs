@@ -417,7 +417,14 @@ mod mounted_laws {
         );
         assert!(crate::spr::process3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, crate::spr::Process3dPublicationLimits { maximum_items: PROCESS3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: PROCESS3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_ENVELOPE_CONTROL_CREDITS }).is_ok());
         assert_eq!(crate::spr::process3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
-        assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("process3d-publication.wrong-operation"));
+        // 🪪️ The authority is looked up BY OPERATION (`FixedOperationRegistry::get_operation` matches
+        // `entry.key.operation` exactly), so a FOREIGN operation can never borrow another operation's
+        // lease — it simply has none, and the honest rejection is `authority-missing`. The
+        // `wrong-operation` code this line used to expect is reachable only through the `#[cfg(test)]`
+        // hostile injection (`Process3dPublicationHostile::WrongOperation`), which the fail-closed law
+        // in `🧬️mutations/💾️binary/🧪️tests/🔬️retained-laws` already drives; asserting it here pinned an
+        // outcome the lookup cannot produce.
+        assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("process3d-publication.authority-missing"));
         assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("process3d-publication.wrong-generation"));
         crate::spr::process3d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
         assert_eq!(crate::spr::process3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("process3d-publication.wrong-base"));

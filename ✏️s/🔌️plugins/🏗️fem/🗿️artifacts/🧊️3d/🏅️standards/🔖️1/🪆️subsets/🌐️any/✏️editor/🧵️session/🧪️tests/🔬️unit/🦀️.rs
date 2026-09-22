@@ -39,22 +39,31 @@ fn fem3d_numerical_child_retains_every_outcome_until_bounded_retirement() {
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), cancelled, || Some(0), &mut sequence);
         assert!(child.step(&doc, &mut solver, &mut backing, freshness(19), operation, &mut context).is_err());
         assert_eq!(child.child_outcome.as_ref().expect("cancellation retains outcome") as *const StepOutcome, pointer);
+        // 💳️ `charge_payload_page` (`🧰️framework/🔨️modules/🧵️job/🦀️.rs`) ACCRUES a page's charge
+        // instead of demanding it in one turn — the repair for the never-terminating close spin of
+        // ticket 26/09/18 (the mounted presence capture law). So a turn granted less than a whole
+        // page SPENDS its grant against the page and retains the backing; it does not answer
+        // `released_bytes: 0`, which would be the old all-or-nothing contract. An EMPTY grant still
+        // spends nothing, and the retained pointer below is what states "no page was freed".
         assert_eq!(child.close_child_outcome(0), Some((false, 0, 0)));
-        assert_eq!(child.close_child_outcome(JOB_PAYLOAD_PAGE_BYTES - 1), Some((false, 0, 0)));
-        assert_eq!(child.child_outcome.as_ref().expect("retained without grant") as *const StepOutcome, pointer);
-        let mut released = 0;
+        assert_eq!(child.close_child_outcome(JOB_PAYLOAD_PAGE_BYTES - 1), Some((false, 0, JOB_PAYLOAD_PAGE_BYTES - 1)));
+        assert_eq!(child.child_outcome.as_ref().expect("retained without a page's worth of grant") as *const StepOutcome, pointer);
+        // 🧾️ Accrual means a page is paid for EXACTLY once across however many turns pay it, so the
+        // law is a byte ledger, not a per-turn page count: the sub-page probe above already spent
+        // `JOB_PAYLOAD_PAGE_BYTES - 1` of the first page, and the remaining turns pay the rest.
+        let mut paid_bytes = JOB_PAYLOAD_PAGE_BYTES - 1;
         for _ in 0..8 {
             match child.close_child_outcome(JOB_PAYLOAD_PAGE_BYTES) {
                 Some((false, items, bytes)) => {
                     assert!(items <= 1);
                     assert!(bytes <= JOB_PAYLOAD_PAGE_BYTES);
-                    released += bytes / JOB_PAYLOAD_PAGE_BYTES;
+                    paid_bytes += bytes;
                 }
                 None => break,
                 other => panic!("unexpected child close {other:?}"),
             }
         }
-        assert_eq!(released, row["pages"].as_u64().expect("pages") as usize);
+        assert_eq!(paid_bytes, row["pages"].as_u64().expect("pages") as usize * JOB_PAYLOAD_PAGE_BYTES);
         assert!(child.child_outcome.is_none());
         let mut complete = false;
         for _ in 0..256 {

@@ -1007,3 +1007,44 @@ fn empty_pattern_error_is_reachable_via_pattern_construction() {
     });
 }
 // #endregion 🔖️ParserAndExecutorTests
+
+// #region ➖️CypherDashConnector
+/// ➖️ A bare `-` is the pattern connector every Cypher-shaped query writes, and it parses to exactly
+/// the same `Pattern` as this grammar's own `--` spelling.
+///
+/// 🐛️ `-` used to fall into the lexer's stray-character bucket, so the ONLY spelling this grammar
+/// accepted was `--`. Since `lint`, `complete`, `hover`, `semantic_tokens` and `format` are the
+/// language service every consumer of this dialect delegates to, a perfectly runnable query was
+/// reported `unexpected character '-'` in the editor: measured live on 2026-09-22 in semio-tech play's
+/// `trinity-jack` pane, whose own default query is
+/// `MATCH (a:Piece)-[r:Connection]->(b:Piece) …` and whose executor parses that shape in its own
+/// green unit tests.
+#[test]
+fn a_bare_dash_is_the_same_pattern_connector_as_a_double_dash() {
+    block_on_test(async {
+        let single = parse("MATCH (a:x)-[r:wire]->(b:y) RETURN a.p").unwrap();
+        let double = parse("MATCH (a:x)--[r:wire]->(b:y) RETURN a.p").unwrap();
+        assert_eq!(single, double, "`-` and `--` must reach the same parsed query");
+    });
+}
+
+/// ➖️ The undirected tail and the reversed form take a single dash too.
+#[test]
+fn a_bare_dash_also_spells_the_undirected_and_reversed_connectors() {
+    block_on_test(async {
+        assert_eq!(parse("MATCH (a:x)-[r:wire]-(b:y) RETURN a.p").unwrap(), parse("MATCH (a:x)--[r:wire]--(b:y) RETURN a.p").unwrap());
+        assert_eq!(parse("MATCH (a:x)<-[r:wire]-(b:y) RETURN a.p").unwrap(), parse("MATCH (a:x)<-[r:wire]--(b:y) RETURN a.p").unwrap());
+    });
+}
+
+/// ➖️ Formatting a single-dash query stays idempotent — whichever spelling the formatter settles on,
+/// running it twice must be a fixed point, and the result must still parse.
+#[test]
+fn formatting_a_single_dash_pattern_is_idempotent_and_reparses() {
+    block_on_test(async {
+        let once = format("match(a:x)-[r:wire]->(b:y) return a.p").unwrap();
+        assert_eq!(format(&once).unwrap(), once);
+        parse(&once).unwrap();
+    });
+}
+// #endregion ➖️CypherDashConnector

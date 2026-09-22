@@ -14,7 +14,7 @@ pub(crate) struct SetCount {
 impl MutationKind<TestSnapshot, TestMutation> for SetCount {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "count", kind: "set-count", record: "SetCount" };
     fn diff(&self, _: &TestSnapshot) -> MutationOutcome<TestDiff> {
-        MutationOutcome::new(TestDiff { count: Some(self.value), label: None })
+        MutationOutcome::new(TestDiff { count: Some(self.value), label: None, slot: None })
     }
     fn inverse(&self, base: &TestSnapshot) -> Vec<TestMutation> {
         vec![Self { value: base.count }.into()]

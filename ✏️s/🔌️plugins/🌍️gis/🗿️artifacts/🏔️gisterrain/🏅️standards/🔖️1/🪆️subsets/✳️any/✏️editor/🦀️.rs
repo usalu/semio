@@ -7,7 +7,7 @@
 //! typed media I/O surface (`map:in` overlay, ports, scene media) below in `🔖️Io` — relocated from
 //! the artifact's `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 
-use crate::editor::gis3d::commands::{exaggeration, view};
+use crate::editor::gis3d::commands::{example, exaggeration, view};
 use crate::editor::gis3d::modes::view as view_mode;
 use crate::editor::gis3d::modes::view::windows::terrain;
 use crate::op::GisTerrainMutation;
@@ -107,10 +107,12 @@ semio_framework_plugin::app_commands! {
     pub enum Gis3dCommand for GisTerrainSnapshot, GisTerrainMutation, NoConfig, NoConfigMutation {
         "setExaggeration" as "exaggeration" => set_exaggeration::SetExaggeration,
         "setCamera" as "camera" => set_camera::SetCamera,
+        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier.
+use example::set_active_example;
 use exaggeration::set_exaggeration;
 use view::set_camera;
 //#endregion 🔖️Commands
@@ -129,7 +131,7 @@ const GIS3D_EXAGGERATION_MINIMUM: f64 = 0.5;
 const GIS3D_EXAGGERATION_MAXIMUM: f64 = 5.0;
 const GIS3D_EXAGGERATION_STAGED_DEFAULT: f64 = 2.5;
 
-const GIS3D_RETAINED_TOOL_IDS: &[&str] = &["setExaggeration", "setCamera"];
+const GIS3D_RETAINED_TOOL_IDS: &[&str] = &["setExaggeration", "setCamera", "setActiveExample"];
 const GIS3D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.terrain.tool-command.v1";
 const GIS3D_RETAINED_RAW_BYTES: usize = 8_192;
 const GIS3D_RETAINED_WORK_ITEMS: usize = 1;
@@ -142,6 +144,10 @@ fn gis3d_retained_extent(command: &Gis3dCommand, _snapshot: &GisTerrainSnapshot,
     let bytes = match command {
         Gis3dCommand::SetExaggeration(payload) if payload.exaggeration.is_finite() => 0,
         Gis3dCommand::SetCamera(payload) if serde_json::from_str::<Value>(&payload.camera_json).is_ok_and(|camera| camera.is_object()) => payload.camera_json.len(),
+        // 🎬️ An example id is a catalogue key, not content: the document it resolves to is compiled
+        // into the crate, so the WIRE cost is the id alone and the work is the one reduce step every
+        // other row takes. `example_document` is what rejects an id outside the catalogue.
+        Gis3dCommand::SetActiveExample(payload) => payload.example_id.len(),
         _ => return None,
     };
     (bytes <= GIS3D_RETAINED_RAW_BYTES).then_some(GIS3D_RETAINED_WORK_ITEMS)
@@ -218,7 +224,13 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Gis3dCommandJobFact
     const TOOL_IDS: &'static [&'static str] = GIS3D_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = GIS_3D_TERRAIN_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] =
-        &[ArtifactToolPublicationContract { tool_id: "setExaggeration", lanes: &[ArtifactToolPublicationLane::Artifact] }, ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] }];
+        &[
+            ArtifactToolPublicationContract { tool_id: "setExaggeration", lanes: &[ArtifactToolPublicationLane::Artifact] },
+            ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+            // 🎬️ Terrain's example load touches only the document's own two fields — unlike gismap's,
+            // which also re-frames its map window — so it declares the artifact lane alone.
+            ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ];
 }
 //#endregion 🧵️RetainedCommands
 
@@ -603,6 +615,7 @@ impl ArtifactEditor for Gis3dPlayApp {
                 }
                 Ok(Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json }))
             }
+            "setActiveExample" => Ok(Gis3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -683,6 +696,18 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             .window_kind_interactions(terrain::GIS3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
             .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
             .mutation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
+            // 🎬️ Loading a bundled example replaces document content through this artifact's own
+            // authored leaves (`change-exaggeration`, `change-imported-features`), each with a real
+            // inverse — so it is a Mutation, never a View action. Declaring it is ALSO what makes the
+            // pane's navbar example picker exist: the host's `appSwitchesExamples` gate reads exactly
+            // this action id, and without it `exampleOptions` is empty and `resolveBootExampleId`
+            // announces nothing, so the curated `📚️examples/🎬️demo` facet stayed inert
+            // (ticket 26/09/19, gis3d's empty-picker defect — gismap declared it, terrain did not).
+            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
+            .action_args("setActiveExample", vec![
+                semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example::example_arg_options()).default_value(&example::DEFAULT_EXAMPLE_ID),
+            ])
             // 📝️ Vertical exaggeration is the terrain's ONE editable document property, so its slider
             // is also the only argument schema this app needs — without it the palette staged nothing
             // and `command_from_action` fell back to 1.0, re-applying the value already in the
@@ -692,6 +717,7 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             ])
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setExaggeration", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .config(Gis3dPlayApp::config_spec())

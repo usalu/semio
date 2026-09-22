@@ -91,6 +91,18 @@ impl ArtifactViewer for NoteViewer {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
     fn initial_snapshot() -> NoteSnapshot {
         empty_note_snapshot()
     }

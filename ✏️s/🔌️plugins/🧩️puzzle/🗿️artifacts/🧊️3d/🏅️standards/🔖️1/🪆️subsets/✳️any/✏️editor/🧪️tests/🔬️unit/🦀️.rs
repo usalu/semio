@@ -525,6 +525,18 @@ pub(crate) mod context {
     pub fn history_rows(settled: &Puzzle3dSettled) -> usize {
         settled.completions.iter().filter_map(|completion| completion.history_patch.as_ref()).map(|patch| patch.upserts.len()).sum()
     }
+
+    /// 🧾️ `(seq, action_id, kind, applied)` of every history row one settle recorded — what a row-count
+    /// assertion must print, or "2 vs 1" names neither the extra row nor the verb that wrote it.
+    pub fn history_row_labels(settled: &Puzzle3dSettled) -> Vec<String> {
+        settled
+            .completions
+            .iter()
+            .filter_map(|completion| completion.history_patch.as_ref())
+            .flat_map(|patch| patch.upserts.iter())
+            .map(|entry| format!("#{} {} kind={} applied={} ops={}", entry.seq, entry.action_id, entry.kind, entry.applied, entry.op_lines.len()))
+            .collect()
+    }
     
     /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
     /// (that method is FRAMEWORK-reserved now — an app's own actions go exclusively through the typed
@@ -3309,7 +3321,7 @@ async fn the_popup_search_is_aborted_on_close_and_an_accept_is_one_undoable_plac
     pump_brush_suggestions(&mut app, "the reopened popup's search settles", brush_suggestions_settled).await;
     let (_, settled) = dispatch_reporting(&mut app, "acceptSuggestion", Some(&json!({ "index": 0, "fullId": vortex.as_str() })), None).await;
     assert_eq!(object_count(&app), objects + 1, "an accept places exactly one candidate");
-    assert_eq!(history_rows(&settled), 1, "an accept is one command row");
+    assert_eq!(history_rows(&settled), 1, "an accept is one command row, got {:?}", history_row_labels(&settled));
     dispatch(&mut app, "undo", None, None).await.expect("undo");
     assert_eq!(committed_document(&app), committed, "one undo removes the accepted placement");
 }
@@ -6691,7 +6703,7 @@ async fn a_one_hundred_forty_five_kilobyte_distinct_fixture_imports_inside_one_s
         }));
         let rows = history_rows(&settled);
         if index + 1 < count {
-            assert_eq!(rows, 0, "a STAGED chunk is not a document edit; chunk {index} recorded {rows} history row(s)");
+            assert_eq!(rows, 0, "a STAGED chunk is not a document edit; chunk {index} recorded {rows} history row(s): {:?}", history_row_labels(&settled));
             assert_eq!(object_count(&app), seeded, "a staged chunk must not move the document; chunk {index}");
         }
         settled_rows += rows;
@@ -7359,10 +7371,18 @@ async fn the_settings_panel_is_addressed_at_the_focused_pane_not_the_base_window
             assert_eq!(bindings[0].pointer("/args/windowId").and_then(Value::as_str), Some(focused), "{field} tags the focused pane, never the base window kind: {bindings:?}");
         }
     }
+    // 🪟️ With nothing focused the panel still falls back to the ROSTER — and the roster arm of
+    // `puzzle3d_addressed_window_id` deliberately skips ids that are a window KIND
+    // (`!puzzle3d_window_id_is_kind`), so it lands on the first LIVE pane instance. That is this wave's
+    // whole point: the base kind `puzzle3d-main` is a pane nobody has open, and baking it into a
+    // stepper's args is the defect the wave measured. Pinning the base kind here was pinning the
+    // pre-wave behaviour the same law's own docstring calls the bug.
     let unfocused = render_panel_body(&mut app, settings_panel::BODY_KEY, None).await;
     let control = node_by_key(&unfocused, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-settings.grid-spacing.control")).expect("the grid spacing stepper");
     let bindings = control.get("bindings").and_then(Value::as_array).cloned().unwrap_or_default();
-    assert_eq!(bindings[0].pointer("/args/windowId").and_then(Value::as_str), Some(main::WINDOW_KIND_ID), "with nothing focused the panel falls back to the roster, which is the pre-existing behaviour: {bindings:?}");
+    let addressed = bindings[0].pointer("/args/windowId").and_then(Value::as_str).unwrap_or_default().to_string();
+    assert_ne!(addressed, main::WINDOW_KIND_ID, "with nothing focused the panel addresses a LIVE pane, never the base window kind nobody has open: {bindings:?}");
+    assert!([main::WINDOW_INSTANCE_TOP, main::WINDOW_INSTANCE_PERSPECTIVE].contains(&addressed.as_str()), "and that pane is one this app really has open: {addressed:?} {bindings:?}");
 }
 
 /// ⚙️ A Settings bump reaches the focused pane's own rail and leaves the sibling pane alone — the
@@ -7475,3 +7495,31 @@ fn object_flag(app: &Puzzle3dApp, object_id: &str, flag: &str) -> Option<bool> {
         .and_then(|object| object.get(flag).and_then(Value::as_bool))
 }
 //#endregion 🔬️B23RenderedVsMutatedDocument
+
+//#region 🔖️Pz2ShippedKindCatalog
+/// 🗂️ The authored [`PUZZLE3D_SHIPPED_OBJECT_KINDS`] IS the two shipped examples' own
+/// `meta.kindCatalogs` rows, in their own order — the law that lets the `objectKind` select be a
+/// `const` instead of a parse of 136 395 B of DSL on the `describe()` path (slice PZ2, 2026-09-22).
+/// It pays that parse HERE, once, and fails the moment an example's catalog changes without the
+/// authored list following.
+#[semio_framework_async_macros::async_test]
+async fn shipped_object_kinds_are_the_two_examples_own_catalog_rows() {
+    let mut derived: Vec<(String, String)> = Vec::new();
+    for fixture in [&*CONCRETE_FOREST_EXAMPLE_FIXTURE, &*NAKAGIN_EXAMPLE_FIXTURE] {
+        for entry in puzzle3d_catalog_entries(fixture, "objects") {
+            if derived.len() >= PUZZLE3D_OBJECT_KIND_OPTIONS_MAX {
+                break;
+            }
+            let Some(id) = entry.get("id").and_then(dsl::DslValue::as_str) else {
+                continue;
+            };
+            if derived.iter().any(|(existing, _)| existing == id) {
+                continue;
+            }
+            derived.push((id.to_string(), catalogue::catalog_entry_label(entry)));
+        }
+    }
+    let authored: Vec<(String, String)> = PUZZLE3D_SHIPPED_OBJECT_KINDS.iter().map(|(id, label)| ((*id).to_string(), (*label).to_string())).collect();
+    assert_eq!(authored, derived, "PUZZLE3D_SHIPPED_OBJECT_KINDS drifted from the shipped documents — re-author it from `concrete-forest` then `nakagin-capsule-tower`");
+}
+//#endregion 🔖️Pz2ShippedKindCatalog

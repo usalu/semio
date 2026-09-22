@@ -328,7 +328,7 @@ fn toy_run_job(request: ToolRunJobRequest<'_, ToyRunApp>) -> ToyRunJob {
     let done = request.checkpoint.and_then(|bytes| bytes.try_into().ok()).map_or(0, u32::from_le_bytes);
     let provisional_counts = request.provisional.iter().filter_map(|op| match op {
         TestMutation::SetCount(set) => Some(set.value),
-        TestMutation::SetLabel(_) => None,
+        TestMutation::SetLabel(_) | TestMutation::SetSlotChildren(_) => None,
     });
     ToyRunJob {
         purpose: request.purpose,

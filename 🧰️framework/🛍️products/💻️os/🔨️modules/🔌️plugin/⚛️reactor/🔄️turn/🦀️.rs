@@ -1346,7 +1346,12 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     // answer is "some task is still alive", ready or parked, so it is folded into `more_work` the
     // same way `REACTOR_EXECUTOR`'s is.
     let task_executor_work = TASK_EXECUTOR.with(|executor| executor.run_until_deadline(64, std::time::Instant::now() + std::time::Duration::from_millis(REACTOR_TURN_EXECUTOR_HOLD_MS)));
-    let process_pool_work = !executor_deadline_work && !task_executor_work && pump_process_worker_pool();
+    // 🔁️ The process-pool pump stays gated on the REACTOR executor alone. `TASK_EXECUTOR`'s answer
+    // is "some task is still alive", ready OR PARKED, so folding it in here stopped pumping the
+    // pool for as long as any task was parked on a host round trip — which starved every
+    // interactive job step behind it (measured 2026-09-22: a command page set never reached its
+    // terminal ingress status in 512 turns).
+    let process_pool_work = !executor_deadline_work && pump_process_worker_pool();
     let more_work = executor_deadline_work || task_executor_work || process_pool_work;
     for effect in REGISTRY.with(|registry| registry.drain()) {
         push_admitted_effect(&mut effects, 0, effect);
@@ -1529,7 +1534,7 @@ fn fill_turn_patch_page<PA: crate::app::PluginApp>(
 /// executes when the pool is pumped. Before this the only pump was the cooperative-maintenance cadence,
 /// so every submitted step waited ~170 reactor turns (measured 2026-09-09). Bounded by
 /// [`PROCESS_POOL_PUMPS_PER_TURN`] and [`PROCESS_POOL_WALL_MS`]; returns whether pool work remains.
-fn pump_process_worker_pool() -> bool {
+pub(crate) fn pump_process_worker_pool() -> bool {
     #[cfg(target_arch = "wasm32")]
     {
         PROCESS_POOL.with(|pool| {

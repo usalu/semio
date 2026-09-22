@@ -170,6 +170,7 @@ pub fn gis_map_inference_service() -> semio_framework_plugin::ArtifactInferenceS
             inference_schema_version: 1,
             algorithm_version: 1,
             policy_version: 1,
+            payload: None,
         },
         infer_gis_map,
     )

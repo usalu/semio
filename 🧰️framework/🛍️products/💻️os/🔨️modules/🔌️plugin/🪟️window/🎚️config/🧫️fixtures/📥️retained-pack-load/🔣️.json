@@ -29,7 +29,8 @@
   "savedCamera": {
     "kind": "retained-load-a",
     "windowId": "left",
-    "viewport": {"x": 12.5, "y": -3.25, "zoom": 2.0}
+    "viewport": {"x": 12.5, "y": -3.25, "zoom": 2.0},
+    "eye": [18.75, -4.5, 33.25]
   },
   "candidateProtocol": {
     "phases": [
@@ -70,6 +71,7 @@
     {"id": "saved-camera-round-trip", "phase": "reopen", "outcome": "exact-packs-restored"},
     {"id": "over-bound-pack", "phase": "decode", "outcome": "rejected-before-authority-change"},
     {"id": "turn-bound-exhausted", "phase": "decode", "outcome": "typed-fault-never-ok"},
-    {"id": "app-close", "phase": "close", "outcome": "terminal-empty"}
+    {"id": "app-close", "phase": "close", "outcome": "terminal-empty"},
+    {"id": "coordinate-valued-state", "phase": "reopen", "outcome": "exact-packs-restored"}
   ]
 }

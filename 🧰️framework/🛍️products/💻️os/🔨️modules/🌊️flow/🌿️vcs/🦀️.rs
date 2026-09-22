@@ -839,7 +839,8 @@ impl FlowRetainedVcs {
             return Ok(false);
         }
         if !operation.retirement.terminal_is_empty() {
-            operation.retirement.close_page(1, grant.bytes).map_err(|_| FlowVcsFault::ClosePending)?;
+            let demand = operation.retirement.next_close_byte_demand().map_err(|_| FlowVcsFault::ClosePending)?;
+            operation.retirement.close_page(1, grant.bytes.max(demand)).map_err(|_| FlowVcsFault::ClosePending)?;
             return Ok(false);
         }
         if operation.cursor.phase == FlowVcsCursorPhase::Rollback {
@@ -948,7 +949,8 @@ impl FlowRetainedVcs {
             return Err(FlowVcsFault::ClosePending);
         }
         if !self.retirement.terminal_is_empty() {
-            let step = self.retirement.close_page(1, grant.bytes).map_err(|_| FlowVcsFault::ClosePending)?;
+            let demand = self.retirement.next_close_byte_demand().map_err(|_| FlowVcsFault::ClosePending)?;
+            let step = self.retirement.close_page(1, grant.bytes.max(demand)).map_err(|_| FlowVcsFault::ClosePending)?;
             if matches!(step, SnapshotRetirementStep::Blocked) {
                 return Err(FlowVcsFault::ClosePending);
             }

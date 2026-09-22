@@ -92,7 +92,7 @@ describe("browser keyboard scope", () => {
     document.body.append(root);
     const events: BrowserKeyboardEvent[] = [];
     const projection = [{ windowId: "reopened-world", windowGeneration: 8, nodes: [{ nodeId: 3, key: "world", role: "treeitem", depth: 0, live: "off", focusable: true, focused: true }] }];
-    const mirror = createAccessibilityMirror(root, { enqueueLossless: () => {}, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
+    const mirror = createAccessibilityMirror(root, { enqueueLossless: () => true, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
     cleanups.push(mirror.dispose, wireBrowserKeyboard(root, canvas, event => events.push(event)));
     canvas.focus();
     mirror.refresh();
@@ -120,7 +120,7 @@ describe("browser keyboard scope", () => {
       { nodeId: 1, key: "ui.search.dialog", role: "dialog", depth: 0, live: "off" },
       { nodeId: 2, key: row.retiredNodeKey, role: "combobox", depth: 1, live: "off", focusable: true, focused: true, editable: true },
     ] }];
-    const mirror = createAccessibilityMirror(root, { enqueueLossless: () => {}, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
+    const mirror = createAccessibilityMirror(root, { enqueueLossless: () => true, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
     cleanups.push(mirror.dispose, wireBrowserKeyboard(root, canvas, event => events.push(event)));
     canvas.focus();
     mirror.refresh();
@@ -148,7 +148,7 @@ describe("browser keyboard scope", () => {
       { nodeId: 4, key: "studio.undo", role: "option", depth: 2, live: "off", label: "Undo", selected: true },
       { nodeId: 5, key: "settings.theme.select", role: "combobox", depth: 0, live: "off", focusable: true, valueText: "dark" },
     ] }];
-    const mirror = createAccessibilityMirror(root, { enqueueLossless: () => {}, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
+    const mirror = createAccessibilityMirror(root, { enqueueLossless: () => true, introspect: async () => JSON.stringify({ windows: projection }) }, "en", canvas);
     cleanups.push(mirror.dispose);
     mirror.refresh();
     await vi.runAllTimersAsync();

@@ -14,6 +14,7 @@ import { URL as OracleURL } from "whatwg-url";
 import { describe, expect, it } from "vitest";
 import {
   COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES,
+  GENERATED_COMPONENT_OWNER_FILES,
   UNWATCHED_COMPONENT_SOURCE_DIRECTORIES,
   healthyPreparedComponents,
   newestComponentSourceMtime,
@@ -44,7 +45,7 @@ const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️
   readonly freshness: {
     readonly command: string;
     readonly cases: readonly { readonly name: string; readonly facts: StagedModuleFacts; readonly verdict: StagedModuleVerdict; readonly line: string | null }[];
-    readonly walk: { readonly outputDirectories: readonly string[] };
+    readonly walk: { readonly outputDirectories: readonly string[]; readonly generatedOwnerFiles: readonly string[] };
   };
 };
 
@@ -217,6 +218,48 @@ describe("staged module freshness", () => {
     for (const directory of fixture.freshness.walk.outputDirectories) expect(isOutput(`crate/${directory}/artifact.bin`), directory).toBe(true);
     for (const kept of ["crate/🦀️.rs", "crate/🧬️schema/🔣️.json", "crate/🧪️tests/🟦️.ts"]) expect(isOutput(kept), kept).toBe(false);
     expect(COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES).toBeGreaterThan(0);
+  });
+
+  /** @emoji 🛂️ The describe outputs sit at the owner ROOT, next to the sources, and are tracked in git —
+   * so only a name-and-depth rule can tell them from authored files. The walk must skip exactly those two
+   * at exactly that level: a `🔣️.json` one directory deeper is a schema or a fixture and decides
+   * freshness like any other source. */
+  it("treats the owner root's describe outputs as build output and a nested 🔣️.json as source", () => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-staging-descriptor-"));
+    try {
+      const sourceRoot = join(sandbox, "🗄️stdio");
+      mkdirSync(join(sourceRoot, "🗿️artifacts", "🧬️schema"), { recursive: true });
+      const write = (path: string, mtime: number): string => {
+        writeFileSync(path, "x");
+        utimesSync(path, new Date(mtime), new Date(mtime));
+        return path;
+      };
+      write(join(sourceRoot, "🗿️artifacts", "🦀️.rs"), 1_000_000);
+      for (const name of fixture.freshness.walk.generatedOwnerFiles) write(join(sourceRoot, name), 9_000_000);
+      expect(newestComponentSourceMtime(sourceRoot)?.mtimeMs).toBe(1_000_000);
+
+      const nested = write(join(sourceRoot, "🗿️artifacts", "🧬️schema", fixture.freshness.walk.generatedOwnerFiles[0]!), 3_000_000);
+      const newest = newestComponentSourceMtime(sourceRoot);
+      expect(newest?.mtimeMs).toBe(3_000_000);
+      expect(newest?.path).toBe(nested);
+
+      // 🧯️ The exact live symptom: staged at 14:21, described at 15:42, no source touched — `fresh`.
+      expect(stagedModuleVerdict({ pluginId: "stdio", role: "plugin", activationTracked: false, stagedAtMs: 4_000_000, newestSourceMs: newestComponentSourceMtime(sourceRoot)?.mtimeMs }).kind).toBe("fresh");
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  /** @emoji 🛂️ Pinned to the `describe` target's own file names, read from the module that declares them
+   * (`🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts`) as SOURCE TEXT — importing it would drag the cargo
+   * tool-chain into a filesystem suite, and this module keeps a node-builtin-only import surface because
+   * every dev server's Vite config bundles it. */
+  it("names exactly the two files the describe target declares as its outputs", () => {
+    expect([...GENERATED_COMPONENT_OWNER_FILES].sort()).toEqual([...fixture.freshness.walk.generatedOwnerFiles].sort());
+    const source = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts"), "utf8");
+    const declared = [...source.matchAll(/export const DESCRIPTOR_(?:PACK|JSON)_FILENAME = "([^"]+)";/g)].map((match) => match[1]!);
+    expect(declared.length, "DESCRIPTOR_PACK_FILENAME / DESCRIPTOR_JSON_FILENAME moved — re-derive GENERATED_COMPONENT_OWNER_FILES").toBe(2);
+    expect(declared.sort()).toEqual([...GENERATED_COMPONENT_OWNER_FILES].sort());
   });
 
   it("stops at its declared entry bound instead of walking an unbounded tree", () => {

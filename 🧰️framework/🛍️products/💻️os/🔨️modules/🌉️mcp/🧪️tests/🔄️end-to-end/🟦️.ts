@@ -4,7 +4,7 @@
  * The three sibling suites prove the *protocol* (dual-era handshake, SDK conformance, stdio
  * hygiene). This one proves the *surface and its semantics*:
  *
- * 1. every one of the 26 tools is present, and none of them is a stub any more;
+ * 1. every one of the 28 tools is present, and none of them is a stub any more;
  * 2. `prompts/list` is non-empty and bilingual;
  * 3. `resources/list` + `resources/templates/list` advertise the artifact, inference, UI and job
  *    families regardless of how the server was bound;
@@ -53,12 +53,14 @@ const GATEWAY_TOOL_NAMES = [
   "artifact_export",
   "inference_list",
   "inference_get",
+  "inference_run",
   "inference_submit",
   "inference_events",
   "inference_cancel",
   "inference_approve",
   "ui_focus",
   "ui_reveal",
+  "conversation_reply",
   "job_get",
   "job_cancel",
 ] as const;
@@ -115,7 +117,7 @@ describe("semio-os-mcp — end to end", () => {
   };
 
   //#region 🔖️Surface
-  it("tools/list is the full 26-tool gateway surface", async () => {
+  it("tools/list is the full 28-tool gateway surface", async () => {
     const proc = await openServer();
     const response = await proc.request("tools/list", {});
     expect(response.error).toBeUndefined();

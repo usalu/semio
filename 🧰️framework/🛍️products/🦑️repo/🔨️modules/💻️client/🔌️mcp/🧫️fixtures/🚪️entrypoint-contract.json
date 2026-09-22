@@ -5,11 +5,11 @@
   "protocolVersions": ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05", "2024-10-07"],
   "profiles": [
     { "slug": "client", "kind": "generic", "serverName": "repo" },
-    { "slug": "cursor", "kind": "cursor", "serverName": "repo-cursor" },
-    { "slug": "kiro", "kind": "kiro", "serverName": "repo-kiro" },
-    { "slug": "copilot", "kind": "copilot", "serverName": "repo-copilot" },
-    { "slug": "claude", "kind": "claude", "serverName": "repo-claude" },
-    { "slug": "codex", "kind": "codex", "serverName": "repo-codex" }
+    { "slug": "cursor", "kind": "cursor", "serverName": "repo" },
+    { "slug": "kiro", "kind": "kiro", "serverName": "repo" },
+    { "slug": "copilot", "kind": "copilot", "serverName": "repo" },
+    { "slug": "claude", "kind": "claude", "serverName": "repo" },
+    { "slug": "codex", "kind": "codex", "serverName": "repo" }
   ],
   "flow": [
     "initialize",

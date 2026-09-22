@@ -46,7 +46,7 @@ describe("semio-os-mcp — modern era (2026-07-28, raw JSON-RPC, no SDK)", () =>
       expect(response.error).toBeUndefined();
       const result = response.result as { protocolVersion: string; capabilities: Record<string, unknown>; serverInfo: { name: string } };
       expect(result.protocolVersion).toBe(MODERN_VERSION);
-      expect(result.serverInfo.name).toBe("semio-os-mcp");
+      expect(result.serverInfo.name).toBe("semio");
       expect(result.capabilities).toMatchObject({ tools: { listChanged: true }, resources: { listChanged: true, subscribe: true }, prompts: { listChanged: true } });
     } finally {
       await teardown();

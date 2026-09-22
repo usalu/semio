@@ -1765,7 +1765,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -7462,9 +7462,34 @@
                 },
                 {
                   "claims": [],
+                  "descriptorSha256": "8f6230ad6e09aed6ed3aa903fc09b3eecf49aa63de02b41bd02fc8c77bd9255d",
+                  "executable": false,
+                  "identity": "s.stdio.gltf.standard.2-0.representation.binary",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
                   "descriptorSha256": "5d3f2dca3430813d210d7f467961ca72b37bad92d08a85bb34d9c33ad7cac6ac",
                   "executable": false,
                   "identity": "s.stdio.gltf.standard.2-0.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".glb"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "model/gltf-binary"
+                    }
+                  ],
+                  "descriptorSha256": "14b07dc1b079ce4c70c27242b95f15a60e7f35d1ba0000f57e8a0744a78cbf30",
+                  "executable": false,
+                  "identity": "s.stdio.gltf.standard.2-0.representation.mime-model-gltf-binary-extension-glb",
                   "kind": "representation",
                   "localizations": []
                 },
@@ -16201,9 +16226,34 @@
                 },
                 {
                   "claims": [],
+                  "descriptorSha256": "8f6230ad6e09aed6ed3aa903fc09b3eecf49aa63de02b41bd02fc8c77bd9255d",
+                  "executable": false,
+                  "identity": "s.stdio.gltf.standard.2-0.representation.binary",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [],
                   "descriptorSha256": "5d3f2dca3430813d210d7f467961ca72b37bad92d08a85bb34d9c33ad7cac6ac",
                   "executable": false,
                   "identity": "s.stdio.gltf.standard.2-0.representation.document",
+                  "kind": "representation",
+                  "localizations": []
+                },
+                {
+                  "claims": [
+                    {
+                      "namespace": "extension",
+                      "value": ".glb"
+                    },
+                    {
+                      "namespace": "mime",
+                      "value": "model/gltf-binary"
+                    }
+                  ],
+                  "descriptorSha256": "14b07dc1b079ce4c70c27242b95f15a60e7f35d1ba0000f57e8a0744a78cbf30",
+                  "executable": false,
+                  "identity": "s.stdio.gltf.standard.2-0.representation.mime-model-gltf-binary-extension-glb",
                   "kind": "representation",
                   "localizations": []
                 },
@@ -21483,8 +21533,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "39e5b3663b2afe59402173bfe4e2d0e544a4a8d9a4fee8a29c90a84d6fa711f5",
-    "coreWasmSha256": "9e5b0fbbdf19f65fdc3756201ce2927ae813fdfbf89de4fd294b60fd6b24e278",
-    "descriptorSha256": "77aab5b0d885dcf4ef2dcaa7991dcc829f8e18af2f1a58903816b201a59433ad"
+    "wasmSha256": "25f5a2be169e26190310940c7bb999b2880cadbe9e894fcca100b64d636c5660",
+    "coreWasmSha256": "0cc72a58978751893939dde8cc2d147d6808e9c0d9a796bb53924c53cfb13fa4",
+    "descriptorSha256": "1cc32fa09ce8c1b9364a3e9bbed4daeb11d156ba33ef28666d1567182c64c6ea"
   }
 }

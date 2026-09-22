@@ -9,7 +9,7 @@ Guards (a name-keyed edit without a region guard hit production code on this rep
   * per file the insertions are applied in descending line order so earlier anchors do not move;
   * nothing is written unless every anchor in the plan matches, and a per-file diffstat is printed.
 
-Usage: 🐍️ca1-declare.py [--dry-run]
+Usage: 🐍️ca1-declare.py [--dry-run] [latent]
 """
 import subprocess
 import sys
@@ -46,11 +46,27 @@ PLAN = [
     (editor("🧩️puzzle", "🧊️3d"), 8546, 'ActionDefinition::new("worldPointerDown"', '            .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)'),
 ]
 
+# 🕵️ `--plan latent` — `🧩️puzzle`'s committed descriptor does not decode, so these carry no audit
+# finding today; they become findings the moment a describe of it succeeds (CE3's). Found by
+# 🐍️ca1-source-lexicon-scan.py run per ARTIFACT rather than per plugin, which is what un-masks an id
+# a SIBLING artifact of the same plugin already declares.
+LATENT_PLAN = [
+    (editor("🧩️puzzle", "◻️2d"), 5340, 'bounded_catalog("deleteEdge"', '            .action_destructive("deleteEdge")'),
+    (editor("🧩️puzzle", "◻️2d"), 5356, 'ActionDefinition::new("engagementInput"', '            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)'),
+    (editor("🧩️puzzle", "◻️2d"), 5362, 'puzzle2d_internal_action("engagementSubmit"', '            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)'),
+    (editor("🧩️puzzle", "◻️2d"), 5363, 'ActionDefinition::new("engagementAbort"', '            .action_audience("engagementAbort", semio_framework_plugin::CapabilityAudience::Input)'),
+    (editor("🧩️puzzle", "◻️2d"), 5376, 'bounded_catalog("deleteTargetRegion"', '            .action_destructive("deleteTargetRegion")'),
+    (editor("🧩️puzzle", "🖐️5d"), 9839, '.mutation("engagementSubmit"', '            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)'),
+    (editor("🧩️puzzle", "🖐️5d"), 9869, 'ActionDefinition::new("engagementInput"', '            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)'),
+    (editor("🧩️puzzle", "🖐️5d"), 9870, 'ActionDefinition::new("engagementAbort"', '            .action_audience("engagementAbort", semio_framework_plugin::CapabilityAudience::Input)'),
+]
+
 
 def main() -> int:
     dry = "--dry-run" in sys.argv
+    plan = LATENT_PLAN if "latent" in sys.argv else PLAN
     by_file: dict[str, list[tuple[int, str]]] = {}
-    for relative, line_number, fragment, inserted in PLAN:
+    for relative, line_number, fragment, inserted in plan:
         path = REPO / relative
         if not path.exists():
             print(f"REFUSED {relative}: missing")

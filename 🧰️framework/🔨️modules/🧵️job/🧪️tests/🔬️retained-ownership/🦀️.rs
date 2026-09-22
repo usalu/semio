@@ -193,7 +193,7 @@ fn retained_payload_max_plus_one_zero_grant_nested_and_exact_close_are_owned() {
     let operation = OperationId(90_001);
     let generation = Generation(7);
     let ledger = Arc::new(JobPayloadOperationLedger::new(operation, generation));
-    let process_before = JOB_PAYLOAD_PROCESS_OWNED_BYTES.load(Ordering::Acquire);
+    assert_eq!(ledger.process_share_bytes(), 0, "a fresh ledger holds none of the process budget");
     let mut writer = RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState);
     for index in 0..JOB_PAYLOAD_OPERATION_PAGES {
         let mut preview_sequence = index as u64;
@@ -223,7 +223,7 @@ fn retained_payload_max_plus_one_zero_grant_nested_and_exact_close_are_owned() {
     }
     assert!(payload.terminal_is_empty());
     assert!(ledger.terminal_is_empty());
-    assert_eq!(JOB_PAYLOAD_PROCESS_OWNED_BYTES.load(Ordering::Acquire), process_before);
+    assert_eq!(ledger.process_share_bytes(), 0, "the exact close ladder returns every page this operation took from the process budget");
 }
 
 #[test]

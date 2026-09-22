@@ -5330,6 +5330,38 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
     assert!(document_codec("no-such-schema").await.expect("registry availability").is_none());
 }
 
+/// 🧩️ The NATIVE twin of the guest's `codec.apply-ops`: a LINKED Rust codec reducing a NONEMPTY
+/// batch. `apply_ops_binary` is the path stdio and gis take on a hub — the hub links their codecs
+/// and never asks their components — and it builds a throwaway `ArtifactStore` to reduce into.
+///
+/// 🪦️ `ArtifactStore::new` installs NO owner catalogue, and the close cursor at the end of that
+/// thunk answers `artifact store has no owner-supplied bounded disposer` without one, so the first
+/// nonempty batch through a linked codec could never return. The empty batch returns BEFORE a store
+/// exists, which is why every previous law over this thunk (and the guest twin's, until ticket
+/// 26/09/18 slice TC3e) passed while the real path was dead. This law drives one op through it and
+/// reads the edit back out of the applied history, so a store that cannot close fails here rather
+/// than in a hub's creation log.
+#[semio_framework_async_macros::async_test]
+async fn document_codec_apply_ops_binary_reduces_a_nonempty_batch_and_closes_its_store() {
+    let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.document-codec-apply-ops/v1");
+    let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("test.document-codec-apply-ops/v1", "demo-apply-ops", DemoSnapshot { n: Some(4) }, None);
+    let baseline = print_document_pack(&envelope).await;
+    drop(envelope.into_owners());
+    let baseline = baseline.expect("print document pack");
+
+    let empty = (codec.apply_ops_binary)(&baseline.pack, &baseline.spr, &crate::os_spr::encode_ops_vec(&[])).await.expect("an empty batch returns the baseline");
+    assert!(!empty.0.is_empty() && !empty.1.is_empty(), "an empty apply-ops batch must return the baseline pair, not an empty one");
+
+    let op = <DemoMutation as crate::os_spr::OpBinary>::encode_op(&DemoMutation::SetN(SetN { n: 9 })).expect("encode set-n");
+    let ops = crate::os_spr::encode_ops_vec(&[op]);
+    let applied = (codec.apply_ops_binary)(&baseline.pack, &baseline.spr, &ops).await.expect("a nonempty batch reduces and closes its store");
+    assert!(!applied.0.is_empty() && !applied.1.is_empty(), "apply_ops_binary produced an empty pair");
+    let history = crate::os_spr::decode_history(&applied.1, &crate::os_spr::DecodeOptions::default()).await.expect("applied history");
+    assert_eq!(history.doc_id, "demo-apply-ops");
+    assert_eq!(history.schema, "test.document-codec-apply-ops/v1");
+    assert_eq!(history.edits.len(), 1, "one op in the batch must land exactly one edit, got {}", history.edits.len());
+}
+
 #[semio_framework_async_macros::async_test]
 async fn register_document_codec_rejects_a_duplicate_schema_without_replacing_the_first() {
     let first = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.duplicate-id-probe/v1");
@@ -8384,3 +8416,88 @@ async fn a_refused_reload_returns_its_error_and_retires_the_candidate_it_consume
     close_demo_artifact_store(&mut store);
 }
 //#endregion 🔖️RefusedReloadTests
+
+//#region 🔖️ErasedCloseDemandTests
+/// 🧱️ The ERASED close-byte demand a nested driver reads before it grants.
+struct DemandingBufferRetirement {
+    buffer: Option<Vec<u8>>,
+}
+
+impl ErasedSnapshotRetirement for DemandingBufferRetirement {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        let Some(buffer) = self.buffer.as_ref() else { return Ok(SnapshotRetirementStep::Complete) };
+        if maximum_items == 0 || maximum_bytes < buffer.capacity() {
+            return Ok(SnapshotRetirementStep::Blocked);
+        }
+        let released = self.buffer.take().expect("the physical owner is present").capacity();
+        Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: released })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.buffer.is_none()
+    }
+
+    fn next_close_byte_demand(&self) -> usize {
+        self.buffer.as_ref().map_or(0, Vec::capacity)
+    }
+}
+
+/// 🧱️ A driver that owns nothing but a `Box<dyn ErasedSnapshotRetirement>` and its own allocation
+/// admission — the shape `CopyCursor` and every other nested close ladder has.
+struct NestedErasedDriver {
+    inner: Box<dyn ErasedSnapshotRetirement>,
+    allocation_admission: usize,
+}
+
+impl NestedErasedDriver {
+    fn close(&mut self, payload_grant: usize) -> Result<SnapshotRetirementStep, String> {
+        let demand = self.inner.next_close_byte_demand();
+        let paid = if demand > payload_grant { demand.min(self.allocation_admission) } else { payload_grant };
+        self.allocation_admission = self.allocation_admission.saturating_sub(paid.saturating_sub(payload_grant));
+        self.inner.close_step(1, paid)
+    }
+}
+
+struct DefaultedDemandRetirement(bool);
+
+impl ErasedSnapshotRetirement for DefaultedDemandRetirement {
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        self.0 = true;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.0
+    }
+}
+
+/// ⚖️ LAW: a retirement that owes a physical allocation publishes the SMALLEST grant its next step
+/// can spend, through the erased trait, and a nested driver that reads it pays that demand out of
+/// its OWN allocation admission instead of spinning `Blocked` on the caller's payload page.
+///
+/// 🐛️ Without the erased demand, a `Box<dyn ErasedSnapshotRetirement>` holder had exactly two
+/// answers to choose between and no way to tell them apart: `Blocked` because the inner owner is
+/// waiting on someone else, and `Blocked` because the driver under-granted it. A heap allocation
+/// cannot be freed in pieces, so a cursor driving at a 1-byte payload granule could neither grant
+/// enough nor report truthfully — measured 2026-09-22 as the four `CopyCursor` laws of
+/// `semio-framework-artifact-flow-flow`'s `retained::*` suite, each spinning on
+/// `positive copy close grant blocked` (`📓️fp10-plugin-lib-and-lanes.md` §3).
+#[semio_framework_async_macros::async_test]
+async fn an_erased_retirement_publishes_its_physical_close_demand_and_a_nested_driver_pays_it() {
+    let defaulted = DefaultedDemandRetirement(false);
+    assert_eq!(defaulted.next_close_byte_demand(), 1, "a retirement that releases owners rather than buffers costs no bytes, and the default says exactly that");
+
+    let mut buffer = Vec::with_capacity(8_192);
+    buffer.resize(8_192, 0u8);
+    let capacity = buffer.capacity();
+    let mut nested = NestedErasedDriver { inner: Box::new(DemandingBufferRetirement { buffer: Some(buffer) }), allocation_admission: 16_384 };
+    assert_eq!(nested.inner.next_close_byte_demand(), capacity, "the physical demand is the whole allocation, published through the ERASED view");
+
+    let step = nested.close(1).expect("a nested driver closes its foreign owner");
+    assert_eq!(step, SnapshotRetirementStep::Pending { released_items: 1, released_bytes: capacity }, "one payload byte of grant still frees the whole allocation, paid from the driver's own admission");
+    assert_eq!(nested.allocation_admission, 16_384 - (capacity - 1), "the demand is charged to the DRIVER's allocation admission, never to the caller's payload page");
+    assert!(nested.inner.terminal_is_empty());
+    assert_eq!(nested.close(1).expect("a terminal owner still answers"), SnapshotRetirementStep::Complete);
+    assert_eq!(nested.inner.next_close_byte_demand(), 0, "a terminal owner owes no further physical grant");
+}
+//#endregion 🔖️ErasedCloseDemandTests

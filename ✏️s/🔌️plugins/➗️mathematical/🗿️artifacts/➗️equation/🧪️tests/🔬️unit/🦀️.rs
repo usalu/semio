@@ -110,3 +110,29 @@ async fn scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bou
         }
     }
 }
+
+//#region 🚧️TemporaryExampleRegeneration
+/// 🚧️ [ONE-SHOT, ticket 26/09/19] Rewrites the committed `🎬️demo` asset through THIS crate's own
+/// `ArtifactDsl::print_dsl`. The asset predates the codec carrying its composed children's content:
+/// written by the old body (three bare handles plus `equation=`) it holds no graph and no geometry at
+/// all, so `setActiveExample("demo")` loaded a document whose Graph and Geometry windows had nothing
+/// to draw — the mathematical play pane's empty grid and bare cursor (`📓️knowledge.md` §4). Delete
+/// once the rewritten asset is committed.
+#[test]
+fn temporary_regenerate_demo_asset() {
+    use store::ArtifactDsl;
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio");
+    let document = EquationSnapshot::default();
+    let text = <EquationSnapshot as ArtifactDsl>::print_dsl(&document);
+    // 🔁️ `print_dsl` must be a `parse_dsl` fixpoint before anything is written: an asset that does not
+    // round-trip would be worse than the empty one it replaces.
+    let reparsed = <EquationSnapshot as ArtifactDsl>::parse_dsl(&text).expect("the regenerated demo asset parses");
+    assert_eq!(<EquationSnapshot as ArtifactDsl>::print_dsl(&reparsed), text, "print_dsl is not a parse_dsl fixpoint");
+    let scene = crate::equation_scene(&reparsed);
+    assert!(!scene.graph.nodes.is_empty(), "the regenerated demo asset must carry the default graph");
+    if std::fs::read_to_string(&path).ok().as_deref() != Some(text.as_str()) {
+        std::fs::write(&path, &text).expect("demo asset rewrites");
+        eprintln!("[DEBUG] rewrote {}", path.display());
+    }
+}
+//#endregion 🚧️TemporaryExampleRegeneration

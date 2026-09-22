@@ -3571,7 +3571,7 @@ async fn drive_retained_gis_map_job(owner: RetainedInferenceRunOwnerV1, ready: o
                 last = completed;
                 #[cfg(feature = "integration-fixtures")]
                 if let Some(gate) = owner.runtime.checkpoint_test_gate.lock().ok().and_then(|selected| selected.clone()) {
-                    gate.checkpoint(&owner.control, &owner.job_id, progress_cursor, completed, total)?;
+                    gate.checkpoint(&owner.control, &owner.job_id, _progress_cursor, completed, total)?;
                 }
             } else {
                 owner.runtime.ledger().renew_claim(&owner.job_id, &reader(&owner.identity), owner.claim.run_epoch, now_ms)?;

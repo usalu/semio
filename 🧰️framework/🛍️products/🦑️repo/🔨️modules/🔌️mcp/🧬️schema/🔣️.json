@@ -23,7 +23,7 @@
       "properties": {
         "slug": { "type": "string", "enum": ["client", "generic", "cursor", "kiro", "copilot", "claude", "codex"] },
         "kind": { "type": "string", "enum": ["generic", "cursor", "kiro", "copilot", "claude", "codex"] },
-        "serverName": { "type": "string", "enum": ["repo", "repo-cursor", "repo-kiro", "repo-copilot", "repo-claude", "repo-codex"] }
+        "serverName": { "type": "string", "enum": ["repo"] }
       }
     },
     "ErrorCode": {

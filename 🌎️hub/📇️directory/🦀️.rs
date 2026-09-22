@@ -1785,10 +1785,9 @@ pub(crate) fn validate_document_genesis_append_v1(operation: &ArtifactCreationOp
     if operation.intent != append.intent
         || operation.phase != ::directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1::Preparing
         || operation.revision != 2
-        || append.now_ms >= append.intent.deadline_ms
         || append.now_ms < prepared.checkpoint.published_at_ms
     {
-        return Err(DirectoryError::Conflict("genesis creation identity, phase or deadline changed".into()));
+        return Err(DirectoryError::Conflict("genesis creation identity, phase or order changed".into()));
     }
     let mut canonical = append.checkpoint.clone();
     canonical.pack.storage_key = prepared.checkpoint.pack.storage_key.clone();

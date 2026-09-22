@@ -27,7 +27,10 @@ async fn columns_resolve_from_the_shared_view_locale() {
         let node = render(&document, &semio_framework_plugin::ViewModel { locale, ..Default::default() }).expect("viewer table");
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("table surface") };
         let scene: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).expect("packed table");
-        let columns = serde_json::from_str::<Vec<String>>(&scene.columns_json).expect("columns");
+        // 📊️ `TableWindowKit::render` emits `columnsJson` as `{id, label}` records (position-keyed ids
+        // the row records reuse), not bare label strings — this law is about the LABELS resolving from
+        // the shared view locale, so it reads them out of those records.
+        let columns = serde_json::from_str::<Vec<serde_json::Value>>(&scene.columns_json).expect("columns").into_iter().map(|column| column["label"].as_str().expect("column label").to_string()).collect::<Vec<String>>();
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire table");
         columns
     };

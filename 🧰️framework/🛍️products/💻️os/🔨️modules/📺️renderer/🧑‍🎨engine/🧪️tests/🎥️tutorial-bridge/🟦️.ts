@@ -22,7 +22,7 @@ const project = (snapshot: TutorialUiSnapshot) => ({
   commandPanelOpen: snapshot.commandPanelOpen,
 });
 
-const snapshot = (value: typeof fixture.snapshot): TutorialUiSnapshot => structuredClone(value) as TutorialUiSnapshot;
+const snapshot = (value: typeof fixture.snapshot | typeof fixture.mutated): TutorialUiSnapshot => structuredClone(value) as TutorialUiSnapshot;
 
 const bridge = (read: () => ShellState, dispatch: (action: ShellAction) => void): TutorialUiBridgeContext => ({
   session: null,

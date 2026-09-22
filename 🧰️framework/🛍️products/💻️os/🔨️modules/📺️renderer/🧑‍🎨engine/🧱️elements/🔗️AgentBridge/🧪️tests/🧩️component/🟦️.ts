@@ -430,6 +430,58 @@ describe("useAgentBridge cancelToolCall", () => {
 });
 //#endregion 🔖️CancelToolCall
 
+//#region 💬️AgentReply
+/** 🧪️ Ticket `26/09/18` slice AC1: the agent's own free-text turn, through the real hook. One turn
+ * is ONE row however many chunks it arrives in, the row says it is still arriving until the chunk
+ * marked `complete` lands, and a second turn is a second row — nothing here is synthesised. */
+describe("useAgentBridge agentReply", () => {
+  it("folds every chunk of one turn into one row and settles it on the complete chunk", async () => {
+    const { renderHook, act } = await import("@testing-library/react");
+    let live: { onmessage: ((event: { data: ArrayBuffer }) => void) | null } | null = null;
+    class Socket {
+      static OPEN = 1;
+      readyState = 1;
+      onopen: (() => void) | null = null;
+      onmessage: ((event: { data: ArrayBuffer }) => void) | null = null;
+      onerror: (() => void) | null = null;
+      onclose: (() => void) | null = null;
+      binaryType = "arraybuffer";
+      constructor() {
+        live = this as unknown as { onmessage: ((event: { data: ArrayBuffer }) => void) | null };
+      }
+      send(): void {}
+      close(): void {}
+    }
+    vi.stubGlobal("WebSocket", Socket);
+    const config: AgentBridgeConfig = { url: "ws://127.0.0.1:6300/bridge", admissionProof: "session.v1.reply.proof" };
+    const hook = renderHook(() => useAgentBridge({ config }));
+    const deliver = (frame: GatewayToShell): void => {
+      const wire = encodeGatewayToShell(frame);
+      act(() => live?.onmessage?.({ data: wire.buffer.slice(wire.byteOffset, wire.byteOffset + wire.byteLength) as ArrayBuffer }));
+    };
+    try {
+      deliver({ variant: "agentReply", replyId: "rep_1", inReplyTo: "msg_1", text: "Widening that wall means", complete: false });
+      let entry = hook.result.current.conversation[0]!;
+      expect(hook.result.current.conversation).toHaveLength(1);
+      expect(entry.kind === "agentMessage" && entry.state).toBe("streaming");
+      expect(entry.kind === "agentMessage" && entry.inReplyTo).toBe("msg_1");
+
+      deliver({ variant: "agentReply", replyId: "rep_1", inReplyTo: null, text: " the 300 mm variant.", complete: true });
+      expect(hook.result.current.conversation).toHaveLength(1);
+      entry = hook.result.current.conversation[0]!;
+      expect(entry.kind === "agentMessage" && entry.text).toBe("Widening that wall means the 300 mm variant.");
+      expect(entry.kind === "agentMessage" && entry.state).toBe("complete");
+
+      deliver({ variant: "agentReply", replyId: "rep_2", inReplyTo: null, text: "Anything else?", complete: true });
+      expect(hook.result.current.conversation.map((row) => row.id)).toEqual(["rep_1", "rep_2"]);
+    } finally {
+      hook.unmount();
+      vi.unstubAllGlobals();
+    }
+  });
+});
+//#endregion 💬️AgentReply
+
 //#region 🔖️LiveArtifactRoute
 /** 🧪️ Ticket `26/09/18` slice LB1: the LIVE artifact route — the seam that makes an MCP client's
  * `action_invoke`/`history_undo`/`transaction_*` execute in THIS shell instead of in the gateway's

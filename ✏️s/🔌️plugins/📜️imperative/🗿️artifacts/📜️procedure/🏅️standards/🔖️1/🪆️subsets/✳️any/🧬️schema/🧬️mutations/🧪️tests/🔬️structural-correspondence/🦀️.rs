@@ -4,7 +4,10 @@ use super::*;
 fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
     let mutation_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
     let descriptor_kinds: Vec<_> = <ProcedureMutation as protocol::SemanticMutation<ProcedureSnapshot>>::kinds().iter().map(|descriptor| descriptor.kind).collect();
-    let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔣️oracle.json")).expect("language-neutral oracle catalog");
+    // 🔮️ The subset's language-neutral oracle catalog moved into its own `🔮️oracles/` facet; the flat
+    // `🔣️oracle.json` beside `🧬️schema` is gone, and reading it failed the whole law with a bare
+    // `NotFound`. Path matches trinity/jack's and rewriting's own structural-correspondence laws.
+    let catalog_source = std::fs::read_to_string(mutation_root.join("../../🔮️oracles/🔣️.json")).expect("language-neutral oracle catalog");
     let catalog: serde_json::Value = serde_json::from_str(&catalog_source).expect("valid language-neutral oracle catalog");
     let mutation_catalog = &catalog["mutationCatalogs"][0];
     let catalog_kinds: Vec<_> = mutation_catalog["kinds"].as_array().expect("catalog kinds").iter().map(|kind| kind.as_str().expect("string kind")).collect();

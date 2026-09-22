@@ -56,6 +56,59 @@ impl ArtifactViewer for EquationViewer {
     const DIALECT: Dialect = EQUATION_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
 
+    /// 🔐️ The document-store owner catalogue, identical to the sibling editor's: a viewer owns the
+    /// very same `EquationSnapshot` envelope and must allocate and retire it the same way. Read-only
+    /// says nothing about ownership.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 🧹️ The bounded disposer `VcsArtifactApp`'s close ladder drives for the `document-store` lane.
+    ///
+    /// 🐛️ Left at the trait default (`None`) this surface can NEVER close: every close of a
+    /// `ViewerApp<EquationViewer>` faults `interactive-job.close-owned-disposer-missing` ("app owner
+    /// did not provide the required bounded disposer for document-store") and the store then reaches
+    /// `Drop` without its terminal-empty witness — which on a `panic = "abort"` wasm32 guest is an
+    /// `unreachable` that kills the whole instance. The codec resolver constructs every app of the
+    /// bundle to read its schema and closes the ones it does not return, so a viewer missing this
+    /// disposer faults `codec.*` calls that never touch the viewer at all (the exact defect
+    /// `🗒️note`'s viewer documents for itself, ticket 26/09/18 slices TC3c §5f / TC3d §1 / TC3e).
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 🧹️ The remaining three lanes `VcsArtifactApp`'s close ladder drives. This viewer declares
+    /// `NoConfig`/`NoPresence`/`NoTransient`, so each is the framework's own empty owner — but the
+    /// ladder still demands a disposer per lane, and the trait default `None` faults the close the
+    /// same way `document-store` did. Mirrors `🗒️note`'s viewer, which carries the identical set.
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_owners())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::no_config_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+    }
+
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+    }
+
     /// 🌱️ The derivable `notation`/`results`/`computed` members — see
     /// `crate::genesis_equation_child_pack`.
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {

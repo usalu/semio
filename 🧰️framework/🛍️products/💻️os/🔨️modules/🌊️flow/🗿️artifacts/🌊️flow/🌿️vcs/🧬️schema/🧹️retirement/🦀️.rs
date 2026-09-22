@@ -47,6 +47,10 @@ impl FlowMutationRetirementFrontier {
         self.close_step_with(maximum_items, maximum_bytes, close)
     }
 
+    /// 📏️ A heap allocation is freed WHOLE or not at all, so this frontier READS the demand its
+    /// domain publishes and grants it out of its own allocation currency, then charges the caller's
+    /// payload page only what fits in it. Granting only the caller's page left a five-byte mutation
+    /// id unfreeable at grant 1 forever (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
     fn close_step_with<F>(&mut self, maximum_items: usize, maximum_bytes: usize, close: F) -> Result<SnapshotRetirementStep, String>
     where F: FnOnce(&mut FlowRetirement, usize, usize) -> Result<SnapshotRetirementStep, String> {
         if self.terminal_is_empty() {
@@ -59,11 +63,15 @@ impl FlowMutationRetirementFrontier {
             self.handoff(mutation);
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
-        let step = close(&mut self.frontier, maximum_items, maximum_bytes)?;
+        let demand = self.frontier.next_close_byte_demand().map_err(str::to_owned)?;
+        let step = close(&mut self.frontier, maximum_items, maximum_bytes.max(demand))?;
         if matches!(step, SnapshotRetirementStep::Complete) && !self.terminal_is_empty() {
             return Err("flow mutation retirement frontier reported Complete before terminal-empty".into());
         }
-        Ok(step)
+        Ok(match step {
+            SnapshotRetirementStep::Pending { released_items, released_bytes } => SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes.min(maximum_bytes) },
+            step => step,
+        })
     }
 
     pub(super) fn terminal_is_empty(&self) -> bool {

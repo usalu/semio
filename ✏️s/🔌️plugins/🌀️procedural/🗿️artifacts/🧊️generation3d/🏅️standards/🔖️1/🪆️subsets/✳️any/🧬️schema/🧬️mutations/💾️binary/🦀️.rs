@@ -529,10 +529,10 @@ enum Generation3dReplayDisplaced {
 /// [`semio_framework_artifact_flow_flow::retained::FlowRetirement`] keeps its continuation owners in
 /// a `PagedList` whose pages must be ADMITTED before they can hold anything, so its `close_step`
 /// answers `Blocked` — never an error — for as long as `next_allocation_bytes` still names a page the
-/// current owner's decomposition needs. A driver that only ever closes therefore makes no progress
-/// and raises no fault, forever. The erased [`store::ErasedSnapshotRetirement`] contract every
-/// framework close ladder drives this codec through carries one item and one page and has NO demand
-/// channel at all, so paying that reservation is this codec's own business.
+/// current owner's decomposition needs, and a heap allocation is freed WHOLE or not at all, so it
+/// also answers `Blocked` below the physical demand its `next_close_byte_demand` publishes. This
+/// codec therefore READS that demand and grants it out of its own allocation currency, and charges
+/// the caller's payload page only what fits in it.
 ///
 /// See `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🦀️.rs`
 /// (`FlowRetirement::retire_cold` is the same protocol, cold) and the same fix at the flow host's
@@ -542,7 +542,12 @@ fn generation3d_close_flow_frontier(flow: &mut semio_framework_artifact_flow_flo
     if maximum_items == 0 || maximum_bytes == 0 {
         return Ok(store::SnapshotRetirementStep::Blocked);
     }
-    flow.close_page(maximum_items, maximum_bytes)
+    let demand = flow.next_close_byte_demand().map_err(str::to_owned)?;
+    let step = flow.close_page(maximum_items, maximum_bytes.max(demand))?;
+    Ok(match step {
+        store::SnapshotRetirementStep::Pending { released_items, released_bytes } => store::SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes.min(maximum_bytes) },
+        step => step,
+    })
 }
 
 struct Generation3dReplayRetirement {

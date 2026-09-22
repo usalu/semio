@@ -3522,12 +3522,72 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       return buffer;
     }
 
-    function installVerifiedDocumentBackbonePair(state: ArtifactState): WireFrontierSummary {
-      const frontier = { document_id: state.config.documentId, head_edit_ordinal: 0, head_edit_id: "", last_commit_seq: 0, chain_hash: new Array(32).fill(0) };
-      state.currentPack = new Uint8Array([1]);
-      state.currentSpr = new Uint8Array([1]);
+    /** 🧊️ Puts one hub-bound document into the state production reaches after a verified cold
+     * transfer: the execution-target lease it was admitted under, the published pack/spr pair, the
+     * baseline frontier, and the real `VerifiedColdDocumentPair` minted over all three. The owner is
+     * a nominal class guarded by a private mint token, so no structural stand-in can carry its
+     * retention or page cursor; every law below measures `documentBackboneAdmissionReady`, which
+     * calls `assertCurrent()` on exactly this object. */
+    function installVerifiedDocumentBackbonePair(state: ArtifactState, baseline?: Partial<WireFrontierSummary>): WireFrontierSummary {
+      const binding = hubBinding(state.config);
+      if (!binding) throw new Error("a verified cold pair exists only on a hub-bound document");
+      const digest = "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130";
+      const aggregate = "1".repeat(64);
+      const frontier = { document_id: state.config.documentId, head_edit_ordinal: 0, head_edit_id: "", last_commit_seq: 0, chain_hash: new Array(32).fill(0), ...baseline };
+      const fields = parseDocumentExecutionTargetLeaseFieldsV1({
+        schema: "semio.os.document-execution-target-lease/v1",
+        version: 1,
+        scope: { spaceId: binding.spaceId, documentId: state.config.documentId },
+        descriptorDigestV1: digest,
+        catalog: { generationId: digest },
+        package: { pluginId: "demo", packageId: "semio:demo", version: "0.1.0", componentSha256: digest, componentBlake3: digest, descriptorByteSha256: digest, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } },
+        component: { sha256: digest, blake3: digest, byteLength: 1 },
+        descriptor: { sha256: digest, byteLength: 1 },
+        browserActor: {
+          kind: "closed-browser-actor",
+          schema: "semio.os.closed-browser-actor.v1",
+          codegenPolicy: "semio.os.browser-jco-1.34.0-jspi.v1",
+          byteLength: 3,
+          sha256: digest,
+          sourceComponentSha256: digest,
+          sourceDescriptorByteSha256: digest,
+          policySha256: "4".repeat(64),
+          importInterfaces: ["semio:framework/host-async@1.0.0", "semio:framework/pure@1.0.0"],
+        },
+        artifact: { kind: "s.demo.demo", schema: state.config.schema, packSchemaHash: digest },
+        parentDialect: { artifactKind: "s.demo.demo", standard: "1", subset: "*" },
+        surface: { surfaceId: "main", appId: "demo", windowKindId: "demo-main", role: "editor", rendererTarget: "wasm" },
+        grant: { read: true, write: true, observe: true },
+        checkpoint: {
+          checkpointId: digest, descriptorDigestV1: digest, aggregateSha256: aggregate,
+          baselineFrontier: { documentId: state.config.documentId, headEditOrdinal: 0, headEditId: "", lastCommitSeq: 0, chainHash: Array(32).fill(0) },
+        },
+        revalidation: { directoryRevision: 1, membershipGeneration: 1, sessionGeneration: 1 },
+      });
+      const lease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, fields, binding.baseUrl, new Uint8Array([1]), new Uint8Array([2]));
+      const published = { pack: new Uint8Array([1]), spr: new Uint8Array([1]) };
+      const transferred = { pack: new Uint8Array([1]), spr: new Uint8Array([1]) };
+      const bootstrap: WireArtifactBootstrap = {
+        format_version: 1,
+        descriptor_hash: Array.from(executionTargetBytes(digest)),
+        artifact_schema: fields.artifact.schema,
+        artifact_kind: fields.artifact.kind,
+        pack_schema_hash: Array.from(executionTargetBytes(digest)),
+        baseline_frontier: frontier,
+        pack_hash: Array.from(executionTargetBytes(digest)),
+        spr_hash: Array.from(executionTargetBytes(digest)),
+        pack_length: transferred.pack.byteLength,
+        spr_length: transferred.spr.byteLength,
+        chunk_count: 2,
+        aggregate_hash: Array.from(executionTargetBytes(aggregate)),
+        required_tail_frontier: frontier,
+        inline: null,
+      };
+      state.executionTargetLease = lease;
+      state.currentPack = published.pack;
+      state.currentSpr = published.spr;
       state.frontier = frontier;
-      state.verifiedColdPair = { assertCurrent() {}, drop() {} };
+      state.verifiedColdPair = new VerifiedColdDocumentPair(verifiedColdDocumentPairMintToken, state, lease, bootstrap, transferred, published);
       return frontier;
     }
 
@@ -4028,7 +4088,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           if (row.id === "foreign-plan-scope") plan.scope = { ...plan.scope, spaceId: "foreign-space" };
           FakeHubWebSocket.instances = [];
           clearHubSessionCapability();
-          installHubSessionCapability("a".repeat(64));
+          expect(installHubSessionCapability(WORKER_LAW_CAPABILITY)).toBe(true);
           testSeams.executionTargetStatusObserver = (status) => statuses.push(status);
           testSeams.workerPostTestSink = () => {};
           globalThis.fetch = stubFetch(async (input) => {
@@ -4595,10 +4655,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const originalFetch = globalThis.fetch,
         originalWorker = globalThis.Worker,
         originalSocket = globalThis.WebSocket;
+      /** 🔎️ What the row had reached when a wait ran out — a bare deadline names neither the row nor
+       * the stage it stalled at, which is the whole diagnosis for this law. */
+      const census = { read: () => "no row in flight" };
       const wait = async (done: () => boolean) => {
         const deadline = Date.now() + 3000;
         while (!done()) {
-          if (Date.now() > deadline) throw new Error("session activation test deadline");
+          if (Date.now() > deadline) throw new Error(`session activation test deadline — ${census.read()}`);
           await new Promise((resolve) => setTimeout(resolve, 2));
         }
       };
@@ -4617,6 +4680,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           const requests: { url: string; method: string; body: string }[] = [];
           const statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [];
           const bodyProgress = new Set<string>();
+          census.read = () => JSON.stringify({ name: row.name, bodies, loads, describes, activated, statuses: statuses.map((status) => status.diagnostic ?? status.code ?? status.progress?.stage ?? "?") });
           const describeApi = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts");
           const originalVerify = describeApi.verifyBrowserActorDescribeV1;
           const verifySpy = ["client-change-after-describe", "socket-close-after-describe"].includes(row.name)
@@ -4711,7 +4775,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             if (status.code === "renderer-unavailable") bodyProgress.delete(status.spaceId);
           };
           clearHubSessionCapability();
-          installHubSessionCapability("a".repeat(64));
+          expect(installHubSessionCapability(WORKER_LAW_CAPABILITY)).toBe(true);
           globalThis.fetch = stubFetch(async (input, init) => {
             const url = String(input);
             requests.push({ url, method: String(init?.method ?? "GET"), body: String(init?.body ?? "") });
@@ -5180,7 +5244,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         }
       }
       clearHubSessionCapability();
-      installHubSessionCapability("d".repeat(64));
+      expect(installHubSessionCapability(WORKER_LAW_CAPABILITY_TWO)).toBe(true);
       const authorityFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authority = authorityFixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
       const authorityBody = JSON.stringify(authority);
@@ -5843,14 +5907,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         }),
       });
       try {
-        for (const documentId of ["doc-a", "doc-b"]) {
-          openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller-selected-actor" });
-          installVerifiedDocumentBackbonePair(artifactState(documentId, "space-1")!);
-        }
+        for (const documentId of ["doc-a", "doc-b"]) openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller-selected-actor" });
         await flushSocketGrantTurns();
         const [socketA, socketB] = FakeHubWebSocket.instances;
         socketA!.open();
         socketB!.open();
+        // 🧊️ The cold pair is minted over the socket it was transferred on: `assertCurrent()`
+        // (`🏪️store/👷️worker/🟦️.ts:971`) refuses an owner whose `state.socket` has since changed.
+        for (const documentId of ["doc-a", "doc-b"]) installVerifiedDocumentBackbonePair(artifactState(documentId, "space-1")!);
         await handleHubFrame(artifactState("doc-a", "space-1")!, { Session: { actor: actorA, color: 1 } });
         await handleHubFrame(artifactState("doc-b", "space-1")!, { Session: { actor: actorB, color: 2 } });
         handleTsRequest({ kind: "send", documentId: "doc-a", clientInstanceId: artifactState("doc-a", "space-1")!.openClientInstanceId, message: documentBackbone(envelope("doc-a")) });
@@ -6273,7 +6337,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         openArtifact(config);
         await flushSocketGrantTurns();
         const state = artifactState("doc-hub-flush")!;
-        installVerifiedDocumentBackbonePair(state);
+        // 🧊️ Minted at the baseline this law's `Welcome` confirms below: `assertCurrent()`
+        // (`🏪️store/👷️worker/🟦️.ts:978`) refuses an owner whose frontier the state has moved past.
+        installVerifiedDocumentBackbonePair(state, { head_edit_id: "e0" });
         const socket = FakeHubWebSocket.instances.at(-1)!;
         expect(socket.readyState).toBe(FakeHubWebSocket.CONNECTING);
 

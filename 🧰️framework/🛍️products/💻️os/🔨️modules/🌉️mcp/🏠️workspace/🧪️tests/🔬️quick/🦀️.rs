@@ -318,13 +318,13 @@ fn a_routed_channel_resolves_the_artifact_its_plugin_session_document_is() {
     bound
         .lock()
         .expect("binding map")
-        .insert("journey-note-typed".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string() });
+        .insert("journey-note-typed".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)) });
     assert_eq!(router.session_artifact_for("note").as_deref(), Some("journey-note-typed"));
     assert_eq!(router.session_artifact_for("cad"), None, "a plugin with no bound artifact stays unnamed");
     bound
         .lock()
         .expect("binding map")
-        .insert("journey-note-second".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string() });
+        .insert("journey-note-second".to_string(), PluginArtifactBinding { schema: "s.note.note".to_string(), plugin_id: "note".to_string(), app_id: "note.editor".to_string(), surface_id: None, document: None, backbone: None, backbone_blocked_by: None, relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)) });
     assert_eq!(router.session_artifact_for("note"), None, "two artifacts on one plugin: no single stamp could name either truthfully");
 }
 
@@ -460,4 +460,207 @@ fn base64_encode_matches_a_known_vector() {
 fn find_plugin_entry_reports_a_typed_not_found_for_an_unknown_plugin() {
     let error = find_plugin_entry(&[], "does-not-exist").expect_err("must not fabricate an entry");
     assert_eq!(error.code, GatewayErrorCode::NotFound);
+}
+
+//#region 🧵️DocumentBackboneEgress
+/// 🧵️ ticket 26/09/18 slice M10: a guest's committed envelopes leave the process on the DOCUMENT
+/// BACKBONE, and the only messages this channel may relay are the ones addressed at its own actor
+/// uri — the same ownership fence the wgpu shell's `route_document_backbone_effects` applies. A
+/// shell reply, a topic publish, and another actor's backbone are all three not this document's
+/// egress, and confusing any of them for it would relay one document's bytes into another's socket.
+#[test]
+fn only_a_backbone_effect_addressed_at_this_channel_is_document_egress() {
+    let actor = "agent:test#sess";
+    let backbone = |uri: &str| semio_framework::kernel::Effect::SendMessage {
+        target: semio_framework::kernel::MessageEndpoint::Backbone { uri: uri.to_string() },
+        payload: vec![7, 8, 9],
+    };
+    assert_eq!(document_backbone_payload(actor, &backbone(actor)), Some([7u8, 8, 9].as_slice()));
+    assert_eq!(document_backbone_payload(actor, &backbone("agent:other#sess")), None, "another actor's backbone is another document's egress");
+    let shell = semio_framework::kernel::Effect::SendMessage {
+        target: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId("0".to_string()) },
+        payload: vec![7, 8, 9],
+    };
+    assert_eq!(document_backbone_payload(actor, &shell), None, "the shell reply lane is an answer, never document egress");
+    let topic = semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Topic { name: actor.to_string() }, payload: vec![7, 8, 9] };
+    assert_eq!(document_backbone_payload(actor, &topic), None, "a topic that happens to be named like the actor is not the backbone");
+}
+
+/// 🚧️ …and a committed message that cannot reach the hub is a typed, named fault, never a silent
+/// drop. The guest has already committed by the time these bytes exist, so "the edit went nowhere"
+/// has to be something the agent is told — with the REASON the document actor is missing, which for
+/// a hub document is today the unregistered artifact codec.
+#[test]
+fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() {
+    let bound = unbound_plugin_artifacts();
+    let router = RoutingArtifactChannel::new(note_and_cad_catalog(), None, "agent:test#sess".to_string(), Arc::clone(&bound));
+    let unbound = router.relay_backbone_egress("note", vec![vec![1, 2, 3]]).expect_err("no bound document at all");
+    assert_eq!(unbound.code, "channel.not-wired");
+    assert!(unbound.message.contains("has bound no document to it"), "{}", unbound.message);
+    bound.lock().expect("binding map").insert(
+        "hub-note".to_string(),
+        PluginArtifactBinding {
+            schema: "s.note.note".to_string(),
+            plugin_id: "note".to_string(),
+            app_id: "note.editor".to_string(),
+            surface_id: Some("s.note.note@1/*#editor".to_string()),
+            document: None,
+            backbone: None,
+            backbone_blocked_by: Some("no `store::ArtifactCodec` is registered for artifact schema `s.note.note`".to_string()),
+            relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)),
+        },
+    );
+    let blocked = router.relay_backbone_egress("note", vec![vec![1, 2, 3]]).expect_err("bound, but no document actor");
+    assert_eq!(blocked.code, "channel.not-wired");
+    assert!(blocked.message.contains("hub-note") && blocked.message.contains("no `store::ArtifactCodec` is registered"), "the fault carries the binding's own recorded reason: {}", blocked.message);
+}
+//#endregion 🧵️DocumentBackboneEgress
+
+//#region 🗂️GuestDocumentCodec
+/// 🗂️ ticket 26/09/18 slice M10: `store::ArtifactCodec`'s four operations are bare, non-capturing
+/// `fn` pointers, so a guest-backed codec's thunks resolve their route out of a process-global
+/// table. With NO route registered every one of them must refuse in a typed, countable way — a
+/// thunk that answered anything at all with no component behind it would be fabricating a document.
+#[tokio::test]
+async fn a_guest_backed_codec_with_no_registered_route_refuses_and_counts_its_candidates() {
+    // 🧭️ Reads the live table rather than clearing it: registration is process-global and another
+    // test in this binary may legitimately hold a route. The assertion is on the SHAPE of the
+    // refusal and on the count it reports, both of which hold for any candidate list that cannot
+    // print these bytes — and `b"not-a-pack"` is a pair no real component prints.
+    let refused = guest_print_mirror(b"not-a-pack", b"not-an-spr").await.expect_err("no component prints bytes that are not a pack");
+    let store::VcsError::Deserialize(message) = &refused else { panic!("print-mirror must refuse by decode, got {refused:?}") };
+    assert!(message.contains("no registered guest codec prints this pair") && message.contains("candidate(s)"), "{message}");
+
+    let applied = guest_apply_ops_binary(b"not-a-pack", b"not-an-spr", b"").await.expect_err("no component applies a batch onto bytes that are not a pair");
+    let store::VcsError::Deserialize(message) = &applied else { panic!("apply-ops must refuse by decode, got {applied:?}") };
+    assert!(message.contains("no registered guest codec applies this batch") && message.contains("candidate(s)"), "{message}");
+}
+
+/// 🚫️ …and the two operations `interface codec` does NOT export refuse by naming exactly that,
+/// rather than by inventing text no component ever produced. Both belong to the folder `.dsl`/`.ops`
+/// lane, which a guest-backed codec exists precisely because a hub binding does not have.
+#[tokio::test]
+async fn a_guest_backed_codec_refuses_the_two_operations_the_wit_does_not_export() {
+    let compiled = guest_compile_dsl("", "").await.expect_err("there is no codec.compile-dsl");
+    let store::VcsError::Deserialize(message) = &compiled else { panic!("compile-dsl must refuse by decode, got {compiled:?}") };
+    assert!(message.contains("has no `compile-dsl`") && message.contains("pack-schema-hash, genesis, print-mirror and apply-ops"), "{message}");
+
+    let envelope = store::os_spr::MutationEnvelope {
+        mutation_id: store::os_spr::MutationId("m1".to_string()),
+        document_id: store::os_spr::ArtifactId("doc".to_string()),
+        actor: store::os_spr::ActorId("agent:test#sess".to_string()),
+        dependencies: Vec::new(),
+        diff: store::os_spr::ArtifactDiff { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Vec::new() },
+        inverse: store::os_spr::InverseMutation { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Vec::new() },
+        timestamp: store::os_spr::HybridLogicalTimestamp::new(1, 1),
+    };
+    let printed = guest_edit_text_from_envelope(&envelope).await.expect_err("there is no per-envelope codec printer");
+    let store::VcsError::Deserialize(message) = &printed else { panic!("edit-text must refuse by decode, got {printed:?}") };
+    assert!(message.contains("prints whole pairs, not single edits"), "{message}");
+}
+//#endregion 🗂️GuestDocumentCodec
+
+//#region 🔗️InferenceArtifactBinding
+/// 🧾️ One declared inference row carrying a published contract, for the binding laws below. The
+/// shape is exactly what a re-described `🀄️wfc` commits under
+/// `contributions.inferenceServices[].payload`.
+fn bound_inference_row(required: bool, encoding: &str) -> semio_framework::ContributedInferenceMetadata {
+    semio_framework::ContributedInferenceMetadata {
+        owner: "wfc".into(),
+        artifact_kind: "s.wfc.bitmap".into(),
+        artifact_schema: "s.wfc.bitmap".into(),
+        artifact_schema_version: 1,
+        inference_schema: "s.wfc.bitmap.solve".into(),
+        inference_schema_version: 1,
+        algorithm_version: 1,
+        policy_version: 1,
+        contributor: "wfc".into(),
+        depends_on: Vec::new(),
+        payload: Some(semio_framework::InferencePayloadContract {
+            payload_schema_id: "s.wfc.bitmap.inference.request.v1".into(),
+            input_schema: "{\"type\":\"object\"}".into(),
+            output_schema: "{\"type\":\"object\"}".into(),
+            progress_unit: "cells".into(),
+            artifact_binding: Some(semio_framework::InferenceArtifactBinding { field: "document".into(), encoding: encoding.into(), required }),
+        }),
+    }
+}
+
+fn bound_inference_command(document: Option<crate::actions::ArtifactDocumentBinding>, payload: &[u8]) -> crate::actions::InferCommand {
+    crate::actions::InferCommand { plugin_id: "wfc".into(), artifact_kind: "s.wfc.bitmap".into(), inference_schema: "s.wfc.bitmap.solve".into(), canonical_payload: payload.to_vec(), artifact_document: document, ..crate::actions::InferCommand::default() }
+}
+
+/// 🔗️ The artifact the caller named lands under the field the PLUGIN declared, base64, and nowhere
+/// else — the fix for the gap `📓️pz2-puzzle-describe-under-budget.md` §5.2 named (`InferCommand`
+/// carried no artifact binding at all, so the guest had no document to read a snapshot from).
+#[test]
+fn a_named_artifact_is_bound_under_the_field_the_contract_declares() {
+    let declared = bound_inference_row(true, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64);
+    let command = bound_inference_command(Some(crate::actions::ArtifactDocumentBinding { pack: b"PACK-BYTES".to_vec(), spr: b"SPR".to_vec() }), b"{}");
+    let bound: serde_json::Value = serde_json::from_slice(&bind_inference_document(&declared, &command).expect("a named artifact binds")).expect("the bound body is JSON");
+    assert_eq!(bound["document"]["pack"], serde_json::Value::String(crate::shell_channel::encode_base64(b"PACK-BYTES")));
+    assert_eq!(bound["document"]["spr"], serde_json::Value::String(crate::shell_channel::encode_base64(b"SPR")));
+    // 🔡️ …and what the host wrote is what a guest decodes back, byte for byte — the two halves of
+    //    `artifact-pack-base64` meet here and nowhere else.
+    assert_eq!(crate::shell_channel::decode_base64(bound["document"]["pack"].as_str().expect("a base64 string")), Some(b"PACK-BYTES".to_vec()));
+}
+
+/// ✍️ A caller who authored the bound field keeps it: the binding fills a GAP, it never overwrites a
+/// body the caller wrote.
+#[test]
+fn a_caller_authored_binding_field_is_never_overwritten() {
+    let declared = bound_inference_row(true, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64);
+    let command = bound_inference_command(Some(crate::actions::ArtifactDocumentBinding { pack: b"HOST".to_vec(), spr: b"HOST".to_vec() }), br#"{"document":{"pack":"mine","spr":"mine"}}"#);
+    let bound: serde_json::Value = serde_json::from_slice(&bind_inference_document(&declared, &command).expect("the caller's body survives")).expect("JSON");
+    assert_eq!(bound["document"]["pack"], serde_json::Value::String("mine".to_string()));
+}
+
+/// 🚧️ A REQUIRED binding with no artifact named never reaches a guest: the refusal says which tool
+/// argument fixes it, in milliseconds, instead of a 240 s dispatch that ends in a decode fault.
+#[test]
+fn a_required_binding_without_an_artifact_refuses_by_name() {
+    let declared = bound_inference_row(true, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64);
+    let fault = bind_inference_document(&declared, &bound_inference_command(None, b"{}")).expect_err("a required binding with no artifact is refused");
+    assert!(fault.message.contains("artifactId") && fault.message.contains("payload.document"), "{}", fault.message);
+}
+
+/// 🚧️ An encoding this gateway has no writer for is named, never silently written in the one shape
+/// this host happens to know.
+#[test]
+fn an_unknown_binding_encoding_is_refused_rather_than_guessed() {
+    let declared = bound_inference_row(true, "artifact-dsl-text");
+    let fault = bind_inference_document(&declared, &bound_inference_command(Some(crate::actions::ArtifactDocumentBinding::default()), b"{}")).expect_err("an unwritable encoding is refused");
+    assert!(fault.message.contains("artifact-dsl-text") && fault.message.contains(semio_framework::INFERENCE_ARTIFACT_PACK_BASE64), "{}", fault.message);
+}
+
+/// 🫙 An inference that publishes NO contract keeps the host-opaque behaviour it always had: the
+/// caller's own body travels verbatim.
+#[test]
+fn an_inference_without_a_published_contract_passes_its_payload_through() {
+    let mut declared = bound_inference_row(true, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64);
+    declared.payload = None;
+    let bound = bind_inference_document(&declared, &bound_inference_command(None, br#"{"seed":7}"#)).expect("no contract, no binding");
+    assert_eq!(bound, br#"{"seed":7}"#.to_vec());
+}
+//#endregion 🔗️InferenceArtifactBinding
+
+/// 🔡️ The bound document survives the GUEST's own JSON decoder, byte for byte. The gateway writes
+/// the pair with `serde_json`; the guest reads it with the kernel's DSL JSON parser
+/// (`protocol::json::from_json_str`) and then base64-decodes it. Two different parsers on one
+/// string is exactly the seam where a document silently becomes garbage — and a garbage pack does
+/// not fail cleanly, it traps the guest inside the pack inflater (measured 2026-09-22 21:1x).
+#[test]
+fn a_bound_document_round_trips_through_the_guest_json_decoder() {
+    let pack: Vec<u8> = (0..=255u8).cycle().take(405).collect();
+    let spr: Vec<u8> = (0..=255u8).rev().cycle().take(211).collect();
+    let declared = bound_inference_row(true, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64);
+    let command = bound_inference_command(Some(crate::actions::ArtifactDocumentBinding { pack: pack.clone(), spr: spr.clone() }), b"{}");
+    let bound = bind_inference_document(&declared, &command).expect("a named artifact binds");
+    let text = std::str::from_utf8(&bound).expect("the bound body is UTF-8");
+    let value: store::DslValue = semio_framework_os_kernel::os_pack::json::from_json_str(text).expect("the guest's own JSON decoder reads what serde_json wrote");
+    let document = value.get("document").expect("the declared field survives the decoder");
+    let pack_text = document.get("pack").and_then(store::DslValue::as_str).expect("pack is a string");
+    let spr_text = document.get("spr").and_then(store::DslValue::as_str).expect("spr is a string");
+    assert_eq!(crate::shell_channel::decode_base64(pack_text), Some(pack), "the guest decodes the EXACT pack bytes the host bound");
+    assert_eq!(crate::shell_channel::decode_base64(spr_text), Some(spr), "…and the exact spr bytes");
 }

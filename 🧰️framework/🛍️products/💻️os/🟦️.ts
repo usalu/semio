@@ -905,6 +905,17 @@ function workerWireCreationIdentityV1(value: unknown): string | null {
   return typeof value === "string" && value.length <= 256 && /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/u.test(value) ? value : null;
 }
 
+/** 🪆️ A DIALECT component on the same wire. `subset` is the one component whose canonical value is
+ * not an identity at all: `SubsetId::ANY` is the literal `*` (`🚪️io/🧬️schema/🦀️.rs`), the
+ * unconstrained base subset every standard carries and the subset of every kind this repository
+ * ships. Validating it with `workerWireCreationIdentityV1` therefore rejected EVERY catalog the hub
+ * can send: the main thread threw on decode, the shell kept `null`, and `createArtifact`'s kind
+ * chooser rendered disabled with zero options on every space of every hub (measured 2026-09-22 on
+ * hub 7651, whose own `GET /spaces/{id}/artifact-creations` answers two kinds, both `subset: "*"`). */
+function workerWireDialectComponentV1(value: unknown): string | null {
+  return value === "*" ? value : workerWireCreationIdentityV1(value);
+}
+
 function workerWireCreationRequestIdV1(value: unknown): string | null {
   return typeof value === "string" && /^(?!0{32}$)[0-9a-f]{32}$/u.test(value) ? value : null;
 }
@@ -1006,8 +1017,8 @@ export function parseSpaceArtifactCreationStatusV1(value: unknown): SpaceArtifac
     kindId = workerWireCreationIdentityV1(ready.kindId),
     artifactSchema = workerWireCreationIdentityV1(ready.artifactSchema),
     artifactKind = workerWireCreationIdentityV1(parentDialect.artifactKind),
-    standard = workerWireCreationIdentityV1(parentDialect.standard),
-    subset = workerWireCreationIdentityV1(parentDialect.subset);
+    standard = workerWireDialectComponentV1(parentDialect.standard),
+    subset = workerWireDialectComponentV1(parentDialect.subset);
   if (artifactId === null || kindId === null || artifactSchema === null || artifactKind === null || standard === null || subset === null || artifactKind !== kindId) throw new Error("space artifact creation status: invalid ready identity");
   return { kind: "space-artifact-creation-status", requestId, spaceId, catalogGenerationId, phase, ready: { artifactId, kindId, artifactSchema, parentDialect: { artifactKind, standard, subset } } };
 }
@@ -1033,8 +1044,8 @@ export function parseSpaceArtifactCreationCatalogV1(value: unknown): SpaceArtifa
     const kindId = workerWireCreationIdentityV1(kind.kindId),
       schema = workerWireCreationIdentityV1(kind.schema),
       artifactKind = workerWireCreationIdentityV1(dialect.artifactKind),
-      standard = workerWireCreationIdentityV1(dialect.standard),
-      subset = workerWireCreationIdentityV1(dialect.subset),
+      standard = workerWireDialectComponentV1(dialect.standard),
+      subset = workerWireDialectComponentV1(dialect.subset),
       en = workerWireTextV1(label.en),
       de = workerWireTextV1(label.de);
     if (kindId === null || schema === null || artifactKind !== kindId || standard === null || subset === null || en === null || de === null) throw new Error("space artifact creation catalog: invalid kind identity");

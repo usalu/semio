@@ -210,3 +210,83 @@ fn gis_map_all_twelve_mutation_variants_preserve_catalog_order_and_zero_grant_ow
         drop(retirement);
     }
 }
+
+//#region 🧾️CandidateProjectionLaw
+/// 🧹️ Drives one candidate store to its exact terminal-empty ownership witness.
+fn close_candidate_store(mut store: store::ArtifactStore<GisMapSnapshot, GisMapMutation>) {
+    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<GisMapSnapshot, GisMapMutation>::new();
+    for _ in 0..100_000 {
+        if matches!(
+            semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS candidate store close"),
+            semio_framework_plugin::PluginCloseStep::Complete
+        ) {
+            break;
+        }
+    }
+    assert!(semio_framework_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &store), "the candidate store reaches its terminal ownership witness");
+}
+
+/// 🧾️ LAW: the candidate this crate's OWN store-initialization authority hands the replacement pump
+/// must project into the bounded child authority the pump demands, and no candidate is EVER exposed
+/// before the initializer is terminal.
+///
+/// 🩺️ Why here and not beside the snapshot law: the pump
+/// (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`, `AwaitingMembers`) calls
+/// `store::ChildRestoreProjection::from_snapshot(candidate.snapshot_ref())` and maps EVERY
+/// `ChildRestoreProjectionError` onto the single opaque string `candidate parent child projection is
+/// invalid` — the fault `gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed`
+/// reports (ticket 26/09/19). The sibling law
+/// `every_gis_map_parent_snapshot_projects_its_canonical_child_handles` already pins every snapshot
+/// this crate can CONSTRUCT; this one pins the object the pump actually holds — the candidate the
+/// initializer builds field-by-field out of `GisMapSnapshotCloneAuthority`, whose working value
+/// starts as `empty_child()` placeholders (all five handle fields empty, exactly the shape
+/// `ChildRestoreProjection`'s visitor rejects as `InvalidReference`). If a candidate ever escapes
+/// mid-clone, THIS is the law that names it instead of the pump's erased string.
+#[semio_framework_async_macros::async_test]
+async fn the_initialization_candidate_projects_its_canonical_child_handles() {
+    use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+
+    for (label, snapshot) in [("empty", empty_gis_map_snapshot()), ("default-document", default_document())] {
+        let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-initialization-law", snapshot, None);
+        let operation = semio_framework_job::OperationId(u64::MAX - 401);
+        let generation = semio_framework_job::Generation(61);
+        let mut authority = GisMapStoreInitializationAuthority::new(envelope, operation, generation);
+        let cancel = semio_framework_job::CancelToken::root_now();
+        let mut preview_sequence = 0;
+        let mut complete = false;
+        for _ in 0..200_000 {
+            let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence);
+            match ArtifactStoreInitializationAuthority::step(&mut authority, &mut cx) {
+                semio_framework_job::StepOutcome::Complete(_) => {
+                    complete = true;
+                    break;
+                }
+                semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => {}
+                semio_framework_job::StepOutcome::Cancelled => panic!("{label} initializer cancelled"),
+                semio_framework_job::StepOutcome::Fault(_) => panic!("{label} initializer faulted"),
+            }
+            if let Some(early) = ArtifactStoreInitializationAuthority::take_candidate(&mut authority) {
+                let projection = store::ChildRestoreProjection::from_snapshot(&early.snapshot_root());
+                close_candidate_store(early);
+                panic!("{label}: a candidate was handed over before the initializer reported Complete (it projects {projection:?}) — the pump would see the placeholder handles");
+            }
+        }
+        assert!(complete, "{label} initializer converges");
+
+        let candidate = ArtifactStoreInitializationAuthority::take_candidate(&mut authority).unwrap_or_else(|| panic!("{label} candidate handoff"));
+        let root = candidate.snapshot_root();
+        let projection = store::ChildRestoreProjection::from_snapshot(&root).unwrap_or_else(|error| {
+            panic!("{label} candidate parent is not projectable: {error:?} (drawing {:?}/{:?}, image {:?}, value {:?}/{:?})", root.drawing.child_id, root.drawing.target, root.image, root.value.child_id, root.value.target)
+        });
+        assert_eq!(projection.len(), 2, "{label} candidate declares exactly the drawing and value children");
+        for index in 0..projection.len() {
+            let (slot, fields) = projection.get(index).expect("admitted row");
+            assert_eq!(fields.child_id, fields.artifact_id, "{label} candidate slot {slot}: a composed child's id IS its target artifact id");
+            assert_eq!(fields.artifact_kind, "s.stdio.semio", "{label} candidate slot {slot} kind");
+        }
+        assert!(ArtifactStoreInitializationAuthority::terminal_is_empty(&authority), "{label} initializer is terminal once its candidate is handed over");
+        drop(authority);
+        close_candidate_store(candidate);
+    }
+}
+//#endregion 🧾️CandidateProjectionLaw

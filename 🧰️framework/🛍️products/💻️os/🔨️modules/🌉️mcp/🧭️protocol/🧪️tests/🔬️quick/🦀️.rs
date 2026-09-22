@@ -110,7 +110,7 @@ fn server_discover_shape_carries_protocol_version_capabilities_and_server_info()
     let JsonRpcOutcome::Result { result } = response.outcome else { panic!("expected a result") };
     assert_eq!(result["resultType"], "complete");
     assert_eq!(result["protocolVersion"], "2025-11-25");
-    assert_eq!(result["serverInfo"]["name"], "semio-os-mcp");
+    assert_eq!(result["serverInfo"]["name"], "semio");
     assert!(result["capabilities"]["tools"]["listChanged"].as_bool().unwrap());
 }
 

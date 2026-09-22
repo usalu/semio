@@ -2716,12 +2716,11 @@ impl FlowHostRetirement {
 
     /// 📏️ Advances one host owner with caller byte credit for its byte-backed retirement cursors.
     ///
-    /// ⚠️ The Flow domain frontier is driven through [`crate::retained::FlowRetirement::close_page`],
-    /// which pays both of that frontier's own demands. A bare `close_step` answers `Blocked` — never
-    /// an error — while a page reservation is outstanding AND on any owner whose physical backing is
-    /// larger than the grant (`last_eval_json` and `host_catalogue_json` are routinely over 4 KiB).
-    /// Either one made [`FlowHost::retire_cold`] spin forever
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// ⚠️ The Flow domain frontier reserves its own pages, but a heap allocation is freed WHOLE or
+    /// not at all, so this driver READS `next_close_byte_demand` and grants it out of its own
+    /// allocation currency (`last_eval_json` and `host_catalogue_json` are routinely over 4 KiB).
+    /// Granting only the caller's fixed page made [`FlowHost::retire_cold`] spin forever
+    /// (tickets 26/09/09/PROCEDURAL-3D-END-TO-END, 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
     pub fn close_page(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<bool, FlowHostRetirementFault> {
         use crate::os_store::ErasedSnapshotRetirement;
         use crate::retained::FlowOwner;
@@ -2744,7 +2743,8 @@ impl FlowHostRetirement {
                 }
             }
         } else if !state.domain.is_empty() {
-            if state.domain.close_page(1, maximum_bytes).is_err() {
+            let demand = state.domain.next_close_byte_demand().unwrap_or(maximum_bytes);
+            if state.domain.close_page(1, maximum_bytes.max(demand)).is_err() {
                 state.faulted = true;
             }
         } else if !state.neural.terminal_is_empty() {

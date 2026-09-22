@@ -131,7 +131,7 @@ fn the_inference_descriptor_carries_five_real_leaves() {
 fn the_inference_job_publishes_a_twenty_five_byte_preview() {
     let document = permissive(3, 2);
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), document.seed);
-    let mut job = Grid2dInferenceJob::new(operation, Grid2dInferenceRequest { snapshot: document, checkpoint: None }).expect("admit");
+    let mut job = Grid2dInferenceJob::new(operation, Grid2dInferenceRequest { snapshot: Some(document), document: None, checkpoint: None }).expect("admit");
     let (operation_id, generation, cancel) = (job.operation().operation, job.operation().generation, semio_framework_job::root_cancel_token());
     let mut sequence = 0;
     let mut verdict = None;

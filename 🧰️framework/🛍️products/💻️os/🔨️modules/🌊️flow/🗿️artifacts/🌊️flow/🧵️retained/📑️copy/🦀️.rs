@@ -311,6 +311,29 @@ impl Copy for neural::Value {
 
 
 //#region 🗿️SelectedCopyCursor
+/// ⛔️ How many consecutive close steps a selected copy tolerates without a byte freed and without
+/// an owner moved before it refuses. Every nested retirement is granted the demand it publishes
+/// through [`ErasedSnapshotRetirement::next_close_byte_demand`], so a run of non-progress steps is a
+/// broken owner, not back-pressure, and a driver that kept asking would spin — which is exactly what
+/// a predecessor's doubling-offer workaround did for 21 minutes
+/// (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
+const FLOW_COPY_CLOSE_STALL_BOUND: usize = 64;
+
+/// 🛑️ Counts consecutive close steps that freed nothing and moved nothing, and refuses past
+/// [`FLOW_COPY_CLOSE_STALL_BOUND`] with a named fault instead of handing its caller another
+/// `Blocked` to spin on.
+fn account(stalled: &mut usize, step: SnapshotRetirementStep, owner: &str) -> Result<SnapshotRetirementStep, String> {
+    if matches!(step, SnapshotRetirementStep::Blocked | SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }) {
+        *stalled += 1;
+        if *stalled > FLOW_COPY_CLOSE_STALL_BOUND {
+            return Err(format!("{owner} made no progress at its published close demand"));
+        }
+        return Ok(step);
+    }
+    *stalled = 0;
+    Ok(step)
+}
+
 /// 🎟️ The owning domain admits contiguous uninitialized reservations separately from copied byte work.
 #[derive(Debug)]
 pub struct FlowCopyAllocationBudget {
@@ -318,14 +341,25 @@ pub struct FlowCopyAllocationBudget {
     maximum_total_bytes: usize,
     reserved_bytes: usize,
     reservation_count: usize,
+    returned_bytes: usize,
 }
 
 impl FlowCopyAllocationBudget {
     pub fn new(maximum_single_bytes: usize, maximum_total_bytes: usize) -> Self {
-        Self { maximum_single_bytes, maximum_total_bytes, reserved_bytes: 0, reservation_count: 0 }
+        Self { maximum_single_bytes, maximum_total_bytes, reserved_bytes: 0, reservation_count: 0, returned_bytes: 0 }
     }
     pub fn reserved_bytes(&self) -> usize { self.reserved_bytes }
     pub fn reservation_count(&self) -> usize { self.reservation_count }
+    /// ♻️ Physical bytes this copy freed BEYOND the caller's payload page, out of its own
+    /// allocation admission. A heap allocation is freed whole or not at all, so a nested frontier
+    /// whose published demand is larger than the page is granted the difference here, and the
+    /// caller's page is charged only what fits in it.
+    pub fn returned_bytes(&self) -> usize { self.returned_bytes }
+    fn charge_release(&mut self, step: SnapshotRetirementStep, page_bytes: usize) -> SnapshotRetirementStep {
+        let SnapshotRetirementStep::Pending { released_items, released_bytes } = step else { return step };
+        self.returned_bytes = self.returned_bytes.saturating_add(released_bytes.saturating_sub(page_bytes));
+        SnapshotRetirementStep::Pending { released_items, released_bytes: released_bytes.min(page_bytes) }
+    }
     fn reserve<T>(&mut self, target: &mut Vec<T>, count: usize) -> Result<(), String> {
         if !target.is_empty() || target.capacity() != 0 { return Err("Flow allocation reservation requires an empty unallocated target".into()); }
         let bytes = count.checked_mul(size_of::<T>()).ok_or("Flow allocation size overflow")?;
@@ -352,13 +386,14 @@ struct CopyState<R: Send + Sync + 'static, T: Copy> {
     finished: bool,
     failed: bool,
     closing: bool,
+    stalled_steps: usize,
 }
 
 struct CopyCursor<R: Send + Sync + 'static, T: Copy> { owned: ManuallyDrop<CopyState<R, T>> }
 
 impl<R: Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
     fn new(source: Arc<R>, index: usize, project: for<'a> fn(&'a R, usize) -> Option<&'a T>, root_retirement: Arc<dyn SnapshotRetirementFactory<R>>, allocation: FlowCopyAllocationBudget) -> Self {
-        Self { owned: ManuallyDrop::new(CopyState { tasks: LinkedList::new(), result: None, retirement: Retirement::default(), active_root_retirement: None, source: Some(source), root_retirement: Some(root_retirement), allocation, project, index, started: false, finished: false, failed: false, closing: false }) }
+        Self { owned: ManuallyDrop::new(CopyState { tasks: LinkedList::new(), result: None, retirement: Retirement::default(), active_root_retirement: None, source: Some(source), root_retirement: Some(root_retirement), allocation, project, index, started: false, finished: false, failed: false, closing: false, stalled_steps: 0 }) }
     }
     fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<Option<usize>, String> {
         let state = &mut *self.owned;
@@ -395,29 +430,46 @@ impl<R: Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
         let state = &*self.owned;
         state.closing && state.tasks.is_empty() && state.result.is_none() && state.retirement.terminal_is_empty() && state.active_root_retirement.is_none() && state.source.is_none() && state.root_retirement.is_none()
     }
+    /// 📏️ Every nested frontier is granted the PHYSICAL minimum it publishes, not the caller's
+    /// payload page: the difference is paid out of this copy's own allocation admission
+    /// ([`FlowCopyAllocationBudget::returned_bytes`]) because a heap allocation is freed whole or
+    /// not at all, and the caller's page is charged only what fits in it. A step that frees nothing
+    /// and moves nothing is counted and refused at [`FLOW_COPY_CLOSE_STALL_BOUND`]
+    /// (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END).
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         use SnapshotRetirementStep as Step;
         if self.terminal_is_empty() { return Ok(Step::Complete); }
         let state = &mut *self.owned;
         if !state.closing || maximum_items == 0 || maximum_bytes == 0 { return Ok(Step::Blocked); }
-        if !state.retirement.terminal_is_empty() { return state.retirement.close_page(1, maximum_bytes); }
+        if !state.retirement.terminal_is_empty() {
+            let demand = state.retirement.next_close_byte_demand().map_err(str::to_owned)?;
+            let step = state.retirement.close_page(1, maximum_bytes.max(demand))?;
+            let step = state.allocation.charge_release(step, maximum_bytes);
+            return account(&mut state.stalled_steps, step, "selected Flow copy frontier");
+        }
         if let Some(task) = state.tasks.pop_front() { task.retire(&mut state.retirement); }
         else if let Some(result) = state.result.take() { result.retire(&mut state.retirement); }
-        else if let Some(active) = state.active_root_retirement.as_mut() {
-            let step = active.close_step(1, maximum_bytes)?;
-            if matches!(step, Step::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > maximum_bytes) {
+        else if state.active_root_retirement.is_some() {
+            let active = state.active_root_retirement.as_mut().expect("checked selected Flow root retirement");
+            let granted = maximum_bytes.max(active.next_close_byte_demand());
+            let step = active.close_step(1, granted)?;
+            let terminal = active.terminal_is_empty();
+            if matches!(step, Step::Pending { released_items, released_bytes } if released_items > 1 || released_bytes > granted) {
                 return Err("selected Flow root retirement exceeded its grant".into());
             }
             if matches!(step, Step::Complete) {
-                if !active.terminal_is_empty() { return Err("selected Flow root retirement is not terminal".into()); }
+                if !terminal { return Err("selected Flow root retirement is not terminal".into()); }
                 state.active_root_retirement = None;
+                state.stalled_steps = 0;
                 return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
             }
-            return Ok(step);
+            let step = state.allocation.charge_release(step, maximum_bytes);
+            return account(&mut state.stalled_steps, step, "selected Flow root retirement");
         }
         else if let Some(root) = state.source.take() { state.active_root_retirement = Some(state.root_retirement.as_ref().expect("selected copy retirement factory").retire(root)); }
         else if state.root_retirement.take().is_some() {}
         else { return Ok(Step::Complete); }
+        state.stalled_steps = 0;
         Ok(Step::Pending { released_items: 1, released_bytes: 0 })
     }
 }

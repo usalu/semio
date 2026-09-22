@@ -250,3 +250,153 @@ turnaround from 45–60 min of artifact-lock starvation to ~2 min per run.
   `[WindowConfig, Ui, Terminal]` settles plus one `[WindowTransient, Ui, Terminal]`, and with them **every**
   camera and grid assertion passes. `(2, 1)` was the symptom of the defect in §5.2, not the contract.
 
+
+---
+
+## 7. Session 6 successor — 2026-09-22 17:30 →
+
+Scope this session: peer released `✏️s/🔌️plugins/🌊️flow/**` to this topic (guest edits allowed). Framework
+`🔌️plugin/🦀️.rs`, `🏪️store`, `👷️worker`, ShellHost, browser-bundle, hub, mcp stay peer-owned → proposed diff at
+`/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/play-fleet/proposed-flow-retained.diff.md`.
+Durable scratch moved to `$G = .🧬semio/🦑️repo/⚡️cache/play-fleet/flow` (the 16:05 workspace cleanup deleted
+`$T/🗑️generated/flow/` — every 09-21 log referenced in §1–§6 above is gone; the findings stand, the logs do not).
+
+### 7.1 Play pane `http://127.0.0.1:6033/#flow` — still green (17:40)
+`🧪️probe-console.mjs` against the 15:47 activation / 16:58 serve: shell outcome reached, **0 page errors, 0
+console errors, 0 refused inputs**; renders `[DEBUG] flow surface created surface=1 966x807 dpr=1 present=webgpu`
+and `[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name`. The only warning is the host's repo-wide
+staleness banner, and **flow is not in its stale list** (7 stale modules: cad, playbook, process, puzzle,
+reasoning, sequence, writer) — the served flow guest matches its source. Log `$G/probe/flow.txt`.
+Consistent with `📓️acceptance-runs.md` 17:00 (70/70, `✓ 5 boots Flow (flow) (7.5s)`).
+
+### 7.2 Native run queued
+One mutex invocation for all 11 flow crates (pid 41720, queued 17:34 at rank 9 of 9), log `$G/run1.txt`,
+`CARGO_TARGET_DIR=$G/target`, `CARGO_BUILD_JOBS=2`, `RUST_BACKTRACE=1`, `--lib --tests -- --test-threads=4`.
+
+### 7.3 run1 (18:12) — a 66-red regression with ONE cause, and it was flow-side
+
+`$G/run1.txt`, 11 crates, one mutex invocation, `--lib --tests --no-fail-fast -- --test-threads=4`:
+
+| crate | 09-21 final | run1 18:12 |
+|---|---|---|
+| `semio-s-artifact-flow-flow` | 251 / **2** | 188 / **66** |
+| `semio-s-plugin-flow` | 3 / **1** | 2 / **2** |
+| the 9 `…-extension-*` | green | green (10/30/7/42/10/5/10/6/5) |
+
+Every one of the 66 is the same defect. Panic split: **51** at the framework harness
+`artifact_app_laws::close_registered_fixture_app` (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:7584`)
+with *"registered fixture did not reach its exact terminal-empty witness, last pending close authority: document
+store close awaits a retained reader or owner"*, **15** at flow-side sites, one of them the `unreachable!` at
+`…/✏️editor/🧵️retained/🦀️.rs:104` — *"internal error: entered unreachable code: positive Flow retirement grant"*.
+
+**Root cause.** The peer's FL3 slice rewrote `FlowRetirement` in the FRAMEWORK crate
+`semio-framework-artifact-flow-flow` (`🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🦀️.rs`)
+from a draw-down frontier into an ATOMIC one: `release_root_backing` (:539) frees an owner's backing whole or not
+at all and answers `SnapshotRetirementStep::Blocked` whenever `maximum_bytes` is below the demand the frontier now
+publishes through `next_close_byte_demand()` (:223). The old `root_backing_credit` field and the
+`owner_backing_payload` helper were deleted. **Every driver must now read the demand before it grants** — which is
+exactly what the peer's own `CopyCursor::close_step` does (`🧵️retained/📑️copy/🦀️.rs:439`,
+`let step = state.retirement.close_page(1, maximum_bytes.max(demand))`).
+
+Four drivers in `✏️s/🔌️plugins/🌊️flow` forwarded their caller's fixed page raw and therefore blocked forever on any
+owner whose backing is bigger than that page — which is every Flow document with more than a page of text, and
+hence every registered fixture close (`close_registered_fixture_app` grants
+`store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES` = 4 096). **The 51 framework-harness panics were flow-side after
+all**: the harness only reported the `Blocked` that `crate::retirement`'s own owners were answering.
+
+### 7.4 Fix applied (flow production code, ours since today)
+
+New `pub(crate) fn close_frontier_page(domain: &mut FlowRetirement, debt: &mut usize, maximum_bytes: usize)` in
+`/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/🦀️.rs`: it reads the frontier's
+published demand, grants `maximum_bytes.max(demand)` out of the driver's own admission, and hands the freed bytes
+back to the caller in page-sized instalments through a `debt` counter — so the caller's grant is never exceeded
+AND the total reported over the close still equals the total physically freed (the accounting is amortized, the
+free is not delayed). Applied to all four drivers; each grew a `debt` field that its `terminal_is_empty`/`Drop`
+now includes:
+
+- `…/♻️retirement/🦀️.rs` — `RootRetirement<T>` (scene + mutation owners, `store_owners()`).
+- `…/♻️retirement/📸️snapshot/🦀️.rs` — `SnapshotRetirement` (the document lane; this one caused the 51).
+- `…/✳️any/✏️editor/👥️presence/♻️retirement/🦀️.rs` — `FlowPresenceRetirement`.
+- `…/✳️any/✏️editor/🧵️retained/🦀️.rs` — `Retirement`, whose `unreachable!("positive Flow retirement grant")` is now
+  a `Blocked` propagation that pushes the owner back intact, plus a published
+  `next_close_byte_demand()` (inherent + `ErasedSnapshotRetirement`). **That `unreachable!` was a live production
+  abort**: under the new frontier any guest page smaller than an owner's backing aborted the plugin, not a test.
+
+`🗑️generated/activate.request/{flow,demonstrator}` touched — guest production code changed, so the served lane is
+now behind its source until the coordinator re-activates.
+
+### 7.5 run2 (19:20) — proof
+
+`$G/run2.txt`, same command:
+
+| crate | run1 | run2 |
+|---|---|---|
+| `semio-s-artifact-flow-flow` | 188 / **66** | **250 / 4** |
+| `semio-s-plugin-flow` | 2 / **2** | **3 / 1** |
+| `…-extension-bim` | 10 / 0 | **10 / 0** |
+| `…-extension-brep` | 30 / 0 | **30 / 0** |
+| `…-extension-dictionary` | 7 / 0 | **7 / 0** |
+| `…-extension-draw` | 42 / 0 | **42 / 0** |
+| `…-extension-list` | 10 / 0 | **10 / 0** |
+| `…-extension-logic` | 5 / 0 | **5 / 0** |
+| `…-extension-math` | 10 / 0 | **10 / 0** |
+| `…-extension-primitive` | 6 / 0 | **6 / 0** |
+| `…-extension-text` | 5 / 0 | **5 / 0** |
+
+**The three reds routed to the peer on 09-21 (§5.1, §5.2, §5.3) are GREEN**, and so is the back-to-back
+window-config command drop of §5.2:
+`flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows` ✓,
+`two_instances_converge_on_disjoint_edits` ✓, `flow_viewer_never_mutates` ✓, and the new
+`flow_two_window_config_commands_in_one_turn_both_land` ✓ — two retained window-config commands dispatched in one
+turn both land now, so the silent second-command drop is fixed. `semio-s-plugin-flow`'s close-ladder law reached
+2 051 items / **35 781** bytes released (it was 1 389 bytes on 09-21) after the peer's `maintenance_step` rotation
+fix (`🔌️plugin/🦀️.rs:31018`, which now scans past empty stages inside one call and cites this topic's 09-21
+measurement).
+
+### 7.6 The 5 remaining reds — one framework accounting defect, routed to FL3
+
+All five are the SAME assertion failure and none of them is a flow defect: the frontier now reports **allocation**
+bytes as **released payload** bytes.
+
+| law | expected payload | reported |
+|---|---|---|
+| `retained::artifact::snapshot::tests::child_typed_handoff_preserves_mismatched_owner_then_retires_exact_scene` | 16 388 | 31 868 |
+| `presence::component::retirement::tests::flow_presence_store_owners_preserve_readers_and_retire_neutral_byte_grants` | 16 388 | 37 908 |
+| `retained::artifact::recipe::tests::recipe_cancellation_retires_every_partial_frontier_without_losing_original_root` | 4 849 | 39 361 |
+| `retained::artifact::tests::sixteen_kib_authored_label_copies_and_retires_at_actual_grants` | 14 (a 7-byte scene, twice) | 30 974 |
+| `semio-s-plugin-flow` `plugin::surface_tests::flow_actual_surface_factories_close_all_owners_under_neutral_grants` | complete in 100 000 turns at `bytes=1` | 2 051 items / 35 781 bytes / 62 226 idle turns, not complete |
+
+**Crate / symbol / line.** `semio-framework-artifact-flow-flow`,
+`🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🦀️.rs`:
+`release_root_backing` (:539) returns `RootBackingRelease::Released(owner_backing_bytes(owner))` and
+`ErasedSnapshotRetirement::close_step` (:614) reports that as `Pending { released_bytes }`.
+`owner_backing_bytes` (:60) is `capacity * size_of::<T>()`, and `owner_waits_for_backing_release` (:100) makes it
+apply to every drained element vector (`Strings`/`Widgets`/`Specs`/`Neurons`/`Synapses`/`Previews`/`Layout`), not
+just `Bytes`. The same commit DELETED `owner_backing_payload`, whose own doc comment forbade exactly this: *"its
+remaining `capacity` is an allocation, not payload, and `capacity * size_of::<T>()` is machine-width dependent, so
+it can never be charged against a caller's byte grant (ticket 26/09/09/PROCEDURAL-3D-END-TO-END)"*.
+
+Three consequences, all measured above: retiring a **7-byte** scene now reports **30 974** released bytes; every
+exact-payload byte law in flow (and in any other plugin that owns a `FlowRetirement`) is now unassertable and
+machine-width dependent; and a driver that pages at 1 byte needs ~36 000 accounting turns for one real editor
+surface, which is what keeps the surface law short of its 100 000-turn bound (62 226 of those turns still release
+nothing, i.e. the remaining idle share is the framework close ladder, not this frontier).
+
+Note this contradicts FL3's OWN design elsewhere: `CopyCursor::close_step` deliberately keeps allocation bytes out
+of the caller's page via `FlowCopyAllocationBudget::charge_release`, and their new test asserts
+`cursor.allocation().returned_bytes() > charged`. `release_root_backing` should do the same — release the
+allocation atomically, but report only the payload (`len`, not `capacity`) to the caller. **I did not restate the
+five laws**: their expected numbers are the payload contract, they passed on 09-21 against the previous frontier,
+and rewriting them to accept a `size_of`-dependent number would enshrine a non-portable quantity.
+
+### 7.7 Files changed (absolute) and pane state
+
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/🦀️.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/♻️retirement/📸️snapshot/🦀️.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/♻️retirement/🦀️.rs`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs`
+
+No test was deleted, ignored, weakened or hand-matched; no framework file was touched; no wasm32 / describe /
+activate command was run (the fix is not `cfg(target_arch = "wasm32")` code, so the guest build is unverified by
+me — the activation request covers it). Pane `#flow` on :6033 measured green at 17:47 (§7.1) against the 15:47
+activation, i.e. BEFORE this fix; it needs the requested re-activation to be served.
