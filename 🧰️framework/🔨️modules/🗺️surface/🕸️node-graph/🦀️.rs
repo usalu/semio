@@ -162,9 +162,13 @@ fn port_label(port: &GraphPortRecord) -> String {
     })
 }
 
+fn port_handle_id(port: &GraphPortRecord) -> String {
+    port.id.rsplit_once('@').map(|(_, id)| id.to_string()).unwrap_or_else(|| port.id.clone())
+}
+
 fn port_to_io(port: &GraphPortRecord) -> IoPortSpec {
     let label = port_label(port);
-    let mut spec = IoPortSpec::simple(port.id.clone(), label);
+    let mut spec = IoPortSpec::simple(port_handle_id(port), label);
     if let Some(code) = &port.code {
         spec.code = code.clone();
     }
@@ -347,6 +351,12 @@ pub struct GraphHost {
     /// only rebuilds `dag` when upstream content actually changed. `None` distinguishes the initial
     /// scene attach, whose typed viewport hydrates the live session once, from later scene echoes.
     last_payload_signature: Option<u64>,
+    /// 📐️ (d) runtime wiring — the session viewport `(width, height, dpr)` last given to
+    /// [`GraphHost::set_viewport`]. `dag` is rebuilt wholesale on every content change and a fresh
+    /// `DagHost` starts at `1×1`, so the size is re-applied after every rebuild: without it the
+    /// label overlay, hit testing and wheel anchoring all measured a 1×1 viewport while the GPU
+    /// painted at the real size — every caption sat half a canvas away from its node.
+    viewport_size: (u32, u32, f64),
     /// 🎯️ (c) Preview/Effect — the raw geometric hit-test result of the last completed pick/marquee
     /// gesture, read once by [`GraphHost::take_selection_gather`] so the caller can dispatch it as ONE
     /// batched `interactionSelect` — no merge algebra lives here, `next_selection` owns that.
@@ -365,7 +375,7 @@ impl GraphHost {
     pub fn from_host_snapshot(fixture: DagHostSnapshot) -> Self {
         let dag = DagHost::from_host_snapshot_without_layout(fixture);
         let interaction_projection = dag.bounded_interaction_projection(0).ok();
-        Self { dag, catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: None, pending_gather: None, interaction_revision: 0, interaction_projection }
+        Self { dag, catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: None, viewport_size: (1, 1, 1.0), pending_gather: None, interaction_revision: 0, interaction_projection }
     }
 
     fn refresh_interaction_projection(&mut self) {
@@ -399,6 +409,8 @@ impl GraphHost {
             let viewport = self.last_payload_signature.map(|_| self.viewport()).or(payload.viewport);
             let fixture = fixture_from_node_graph_records(&payload.nodes, &payload.edges, viewport.as_ref());
             self.dag = DagHost::from_host_snapshot_without_layout(fixture);
+            let (width, height, dpr) = self.viewport_size;
+            self.dag.set_viewport(width, height, dpr);
             self.last_payload_signature = Some(signature);
         }
         if let Some(preview_off_json) = &payload.preview_off_json {
@@ -471,6 +483,7 @@ impl GraphHost {
     }
 
     pub fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
+        self.viewport_size = (width, height, dpr);
         self.dag.set_viewport(width, height, dpr);
         self.interaction_revision = self.interaction_revision.wrapping_add(1);
         self.refresh_interaction_projection();
@@ -660,7 +673,7 @@ pub struct GraphHostRetirement {
 
 impl GraphHostRetirement {
     pub fn new(host: GraphHost) -> Self {
-        let GraphHost { dag, catalogue_json, controls_json, capabilities_json, last_payload_signature: _, pending_gather, interaction_revision: _, interaction_projection } = host;
+        let GraphHost { dag, catalogue_json, controls_json, capabilities_json, last_payload_signature: _, viewport_size: _, pending_gather, interaction_revision: _, interaction_projection } = host;
         Self { dag: Some(dag::DagHostRetirement::new(dag)), catalogue_json, controls_json, capabilities_json, pending_gather, interaction_projection, terminal: false }
     }
 

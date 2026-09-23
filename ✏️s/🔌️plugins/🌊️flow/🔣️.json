@@ -4050,6 +4050,50 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Beispiel setzen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Beispiel setzen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "evaluate",
             "label": {
               "native": {
@@ -7170,7 +7214,28 @@
         }
       }
     ],
-    "examples": [],
+    "examples": [
+      {
+        "id": "demo",
+        "label": {
+          "native": {
+            "en": "Demo",
+            "de": "Demo"
+          },
+          "reuse": {
+            "en": "Demo",
+            "de": "Demo"
+          }
+        },
+        "iconId": "file",
+        "artifactJson": "semio flow.flow.dsl v1\nschema=flow.host_snapshot\ncamera {\n  x=0 y=0 zoom=1\n}\nwidgets {\n  input-slider id=slider label=Number value=3 min=0 max=10 step=0.1\n  neuron id=add neuron-kind=math.add preview=true input-ports=[ ] output-ports=[ ]\n  output-preview id=preview expanded=[ ]\n}\nlayout={\n  add=x=120 y=-40 preview=x=240 y=-40 slider=x=40 y=-40\n}\nsynapses [id:TEXT link:WIRE] {\n  s1 slider@number->add@a\n  s2 add@sum->preview\n}\n",
+        "dialect": {
+          "artifactKind": "s.flow.flow",
+          "standard": "1",
+          "subset": "*"
+        }
+      }
+    ],
     "capabilities": [
       {
         "artifact": "document",
@@ -7392,8 +7457,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "42d26dc64bb22b6b5320e3f5e8b2915f4d70778152900a001c0222de7ef41b41",
-    "coreWasmSha256": "b8197a845c3bec1a182f8d17a4354bc380401b88813a4278549750a6e121ca5b",
-    "descriptorSha256": "00203e9607faa96472e5437ea6a4810831716ac6f9aa84772c488c2a53190b34"
+    "wasmSha256": "6a32ea55fddaf19c7083d7efb1e2f99126b41273d35ef542c5cc8b0e6030f607",
+    "coreWasmSha256": "0ff1644f737b65369d51aa8990166a4ff28b66eb3a4cefb376df6db6d47073f3",
+    "descriptorSha256": "1957b0ca6559f997bc9cdc950d368b064b76f0390e184ff6297f52a38dbfebb9"
   }
 }

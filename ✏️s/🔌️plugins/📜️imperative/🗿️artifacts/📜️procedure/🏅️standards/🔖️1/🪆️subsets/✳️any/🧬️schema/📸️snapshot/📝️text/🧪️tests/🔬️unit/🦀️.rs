@@ -86,3 +86,54 @@ async fn dsl_rejects_incomplete_body_missing_required_line() {
     assert!(<ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(text).is_err());
 }
 //#endregion DSL text round trips and error paths
+
+//#region 🛤️ContentLines
+fn seeded_program_snapshot() -> ProcedureSnapshot {
+    let seed = StdBTreeMap::from([("counter".into(), Value::Atom(Atom::Integer(3)))]);
+    crate::procedure_snapshot_with_content("procedure.document", &crate::procedure_working_scene(&crate::schema::default_snapshot()).path, &seed)
+}
+
+/// 🛤️ The `flow` and `text` children's content is the document, so `print_dsl`/`parse_dsl` must carry
+/// it: `assert_dsl_round_trip` compares snapshots whose child handles compare by identity only, which is
+/// exactly how the bare-handle body passed it while losing every step (ticket 26/09/19).
+#[semio_framework_async_macros::async_test]
+async fn the_program_survives_a_text_round_trip() {
+    for document in [crate::schema::default_snapshot(), seeded_program_snapshot()] {
+        let reparsed = parse_dsl(&print_dsl(&document)).expect("reparse");
+        let (before, after) = (crate::procedure_working_scene(&document), crate::procedure_working_scene(&reparsed));
+        assert!(!after.path.steps.is_empty(), "the parsed document owns its program");
+        assert_eq!(after.path, before.path);
+        assert_eq!(after.seed, before.seed);
+    }
+}
+
+/// 🛤️ The pack twin of [`the_program_survives_a_text_round_trip`].
+#[semio_framework_async_macros::async_test]
+async fn the_program_survives_a_pack_round_trip() {
+    use store::ArtifactPack;
+    for document in [crate::schema::default_snapshot(), seeded_program_snapshot()] {
+        let decoded = ProcedureSnapshot::decode_pack(&document.encode_pack()).expect("decode");
+        let (before, after) = (crate::procedure_working_scene(&document), crate::procedure_working_scene(&decoded));
+        assert_eq!(after.path, before.path);
+        assert_eq!(after.seed, before.seed);
+    }
+}
+
+/// 🎬️ The curated `demo` example is what `setActiveExample("demo")` loads into the play pane, so it
+/// must carry the default program the Steps table lists.
+#[semio_framework_async_macros::async_test]
+async fn the_demo_asset_carries_the_default_program() {
+    let parsed = parse_dsl(PROCEDURE_EXAMPLE_TEXT).expect("parse example");
+    assert_eq!(crate::procedure_working_scene(&parsed).path, crate::procedure_working_scene(&crate::schema::default_snapshot()).path);
+}
+
+/// 📖️ `path=` and `seed=` are required lines of `📖️.grammar.semio`.
+#[semio_framework_async_macros::async_test]
+async fn a_body_without_its_content_lines_is_refused() {
+    let printed = print_dsl(&crate::schema::default_snapshot());
+    for line in ["path=", "seed="] {
+        let stripped = printed.lines().filter(|row| !row.starts_with(line)).collect::<Vec<_>>().join("\n");
+        assert!(parse_dsl(&stripped).is_err(), "a body without its {line} line must be refused");
+    }
+}
+//#endregion 🛤️ContentLines

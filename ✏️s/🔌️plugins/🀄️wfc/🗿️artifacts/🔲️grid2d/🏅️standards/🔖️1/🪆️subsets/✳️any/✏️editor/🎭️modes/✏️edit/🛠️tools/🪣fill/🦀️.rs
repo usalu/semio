@@ -26,6 +26,17 @@ pub const PAYLOAD_SCHEMA: &str = include_str!("🧬️schema/🔣️.json");
 //#endregion 🔖️Constants
 
 //#region 🔖️Payload
+/// 🧩 One collapse or discard the preview keeps on screen after the search moves on.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct Grid2dFillTraceEvent {
+    pub x: u32,
+    pub y: u32,
+    pub tile_id: String,
+    pub discarded: bool,
+}
+
 /// 🧩 One cell in a fill tick: `tile_id` is absent while the cell is still open.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -46,6 +57,9 @@ pub struct Grid2dFillPayload {
     pub assignments: Vec<Grid2dFillCell>,
     pub contradiction: bool,
     pub done: bool,
+    #[serde(default)]
+    #[value(default)]
+    pub trace: Vec<Grid2dFillTraceEvent>,
 }
 
 impl Grid2dFillPayload {
@@ -328,6 +342,7 @@ pub struct Grid2dFillRunJob {
     settled: Option<StepOutcome>,
     closing: bool,
     committed: bool,
+    trace: Vec<Grid2dFillTraceEvent>,
 }
 
 impl Grid2dFillRunJob {
@@ -358,6 +373,7 @@ impl Grid2dFillRunJob {
             settled: None,
             closing: false,
             committed: false,
+            trace: Vec::new(),
         }
     }
 
@@ -394,7 +410,7 @@ impl Grid2dFillRunJob {
                 assignments.push(Grid2dFillCell { x, y, tile_id: None });
             }
         }
-        Grid2dFillPayload { assignments, contradiction, done }
+        Grid2dFillPayload { assignments, contradiction, done, trace: Vec::new() }
     }
 
     /// 🏁 Builds the finished payload from the child's dense assignment vector.
@@ -410,37 +426,136 @@ impl Grid2dFillRunJob {
             let tile_id = self.tile_ids.get(*pattern as usize).cloned();
             assignments.push(Grid2dFillCell { x, y, tile_id });
         }
-        Grid2dFillPayload { assignments, contradiction: false, done }
+        Grid2dFillPayload { assignments, contradiction: false, done, trace: Vec::new() }
     }
 
-    /// 👁️ Builds the live payload from `observed()` — never from the truncated `incomplete_grid` publication.
+    /// 👁️ Live singletons. Cells the search has since undone are absent here and stay visible through `trace`.
     fn payload_from_child(&self, contradiction: bool, done: bool) -> Grid2dFillPayload {
         let Some(child) = self.child.as_ref() else {
             return self.empty_payload(contradiction, done);
         };
         let width = self.snapshot.width as usize;
-        let mut decided = BTreeMap::<(u32, u32), String>::new();
-        for (node, pattern) in child.observed() {
-            let index = node.index();
-            let x = (index % width) as u32;
-            let y = (index / width) as u32;
-            if self.is_masked(x, y) {
-                continue;
-            }
-            if let Some(tile) = self.tile_ids.get(pattern.index()) {
-                decided.insert((x, y), tile.clone());
-            }
-        }
+        let mut patterns = Vec::new();
+        child.write_singleton_patterns(&mut patterns);
         let mut assignments = Vec::new();
         for y in 0..self.snapshot.height {
             for x in 0..self.snapshot.width {
                 if self.is_masked(x, y) {
                     continue;
                 }
-                assignments.push(Grid2dFillCell { x, y, tile_id: decided.get(&(x, y)).cloned() });
+                let index = (y as usize).saturating_mul(width).saturating_add(x as usize);
+                let tile_id = patterns.get(index).copied().filter(|pattern| *pattern != u32::MAX).and_then(|pattern| self.tile_ids.get(pattern as usize).cloned());
+                assignments.push(Grid2dFillCell { x, y, tile_id });
             }
         }
-        Grid2dFillPayload { assignments, contradiction, done }
+        Grid2dFillPayload { assignments, contradiction, done, trace: Vec::new() }
+    }
+
+    fn remember(&mut self, event: Grid2dFillTraceEvent) {
+        self.trace.push(event);
+        if self.trace.len() > 512 {
+            let overflow = self.trace.len() - 512;
+            self.trace.drain(0..overflow);
+        }
+    }
+
+    fn note_singleton_change(&mut self, index: usize, previous: u32, next: u32) {
+        let width = self.snapshot.width as usize;
+        if width == 0 {
+            return;
+        }
+        let x = (index % width) as u32;
+        let y = (index / width) as u32;
+        if y >= self.snapshot.height || self.is_masked(x, y) {
+            return;
+        }
+        if previous != u32::MAX {
+            if let Some(tile) = self.tile_ids.get(previous as usize) {
+                self.remember(Grid2dFillTraceEvent { x, y, tile_id: tile.clone(), discarded: true });
+            }
+        }
+        if next != u32::MAX {
+            if let Some(tile) = self.tile_ids.get(next as usize) {
+                self.remember(Grid2dFillTraceEvent { x, y, tile_id: tile.clone(), discarded: false });
+            }
+        }
+    }
+
+    fn drain_child(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if self.child.is_none() {
+            return self.fault(context, "wfc-grid2d-fill-missing-child");
+        }
+        let cells = (self.snapshot.width as usize).saturating_mul(self.snapshot.height as usize);
+        let mut flips = Vec::new();
+        let mut fresh = 0usize;
+        let mut solved = false;
+        let mut unsatisfiable = false;
+        loop {
+            if context.is_cancelled() {
+                return StepOutcome::Cancelled;
+            }
+            if context.fuel_exhausted() || context.deadline_exceeded() {
+                break;
+            }
+            let pulse = self.child.as_mut().expect("child").advance_one();
+            context.consume_fuel(1);
+            self.child.as_mut().expect("child").drain_visible(&mut flips);
+            for flip in flips.drain(..) {
+                if (flip.node as usize) >= cells {
+                    continue;
+                }
+                let before = self.trace.len();
+                if flip.discarded {
+                    self.note_singleton_change(flip.node as usize, flip.pattern, u32::MAX);
+                } else {
+                    self.note_singleton_change(flip.node as usize, u32::MAX, flip.pattern);
+                }
+                fresh += self.trace.len() - before;
+            }
+            let (observations, _, backtracks) = self.child.as_ref().expect("child").metrics();
+            self.observations = observations;
+            self.backtracks = backtracks;
+            match pulse {
+                wfc::job::SearchPulse::Solved => {
+                    solved = true;
+                    break;
+                }
+                wfc::job::SearchPulse::Unsatisfiable => {
+                    unsatisfiable = true;
+                    break;
+                }
+                wfc::job::SearchPulse::Collapsed { .. } | wfc::job::SearchPulse::Discarded { .. } | wfc::job::SearchPulse::Worked => {}
+            }
+            if fresh >= 48 {
+                break;
+            }
+        }
+        if solved {
+            let commit = self.child.as_ref().and_then(|child| child.commit());
+            if let Some(mut child) = self.child.take() {
+                wfc::job::close_job(&mut child);
+            }
+            let contradiction = commit.is_none();
+            let payload = match commit {
+                Some(commit) => self.payload_from_commit(&commit, true),
+                None => self.empty_payload(true, true),
+            };
+            return self.finish_success(context, contradiction, Some(payload));
+        }
+        if unsatisfiable {
+            if let Some(mut child) = self.child.take() {
+                wfc::job::close_job(&mut child);
+            }
+            return self.finish_success(context, true, Some(self.empty_payload(true, true)));
+        }
+        if fresh == 0 {
+            return StepOutcome::Yield;
+        }
+        if let Some(child) = self.child.as_ref() {
+            self.stage = FillStage::of(child.preview(0).stage);
+        }
+        self.last_payload = self.payload_from_child(false, false);
+        self.publish_tick(context, ToolRunState::Running, None)
     }
 
     fn publish_tick(&mut self, context: &mut StepContext<'_>, state: ToolRunState, reason: Option<(FillReason, &[ToolRunStepArg])>) -> StepOutcome {
@@ -464,6 +579,7 @@ impl Grid2dFillRunJob {
             conflicts: 0,
             steps: semio_framework_tool_run::ToolRunStepRing::new(),
         });
+        self.last_payload.trace.clone_from(&self.trace);
         self.writer.payload(self.last_payload.encode());
         match self.writer.finish().and_then(|tick| tick.encode().ok()).and_then(|bytes| context.payload_from_bytes(semio_framework_job::JobPayloadStream::Preview, &bytes).map_err(|rejected| drop(rejected.into_source())).ok()) {
             Some(payload) => StepOutcome::PreviewReady(payload),
@@ -655,54 +771,7 @@ impl InteractiveJob for Grid2dFillRunJob {
             }
             return StepOutcome::Yield;
         }
-        let Some(child) = self.child.as_mut() else {
-            return self.fault(context, "wfc-grid2d-fill-missing-child");
-        };
-        let mut outcome = child.step(context);
-        self.stage = FillStage::of(child.preview(0).stage);
-        let (observations, _, backtracks) = child.metrics();
-        self.observations = observations;
-        self.backtracks = backtracks;
-        match &outcome {
-            StepOutcome::Complete(_) => {
-                let commit = child.take_completed_commit();
-                let contradiction = commit.is_none();
-                let payload = if contradiction {
-                    self.empty_payload(true, true)
-                } else {
-                    self.payload_from_commit(commit.as_ref().expect("completed commit"), true)
-                };
-                wfc::job::retire_outcome(&mut outcome);
-                if let Some(mut child) = self.child.take() {
-                    wfc::job::close_job(&mut child);
-                }
-                self.pending_finish = Some((contradiction, payload));
-                return StepOutcome::Yield;
-            }
-            StepOutcome::Fault(fault) if wfc::job::payload_bytes(&fault.detail) == b"wfc-unsatisfiable" => {
-                wfc::job::retire_outcome(&mut outcome);
-                if let Some(mut child) = self.child.take() {
-                    wfc::job::close_job(&mut child);
-                }
-                self.pending_finish = Some((true, self.empty_payload(true, true)));
-                return StepOutcome::Yield;
-            }
-            StepOutcome::Cancelled => {
-                wfc::job::retire_outcome(&mut outcome);
-                return StepOutcome::Cancelled;
-            }
-            StepOutcome::Fault(_) => {
-                wfc::job::retire_outcome(&mut outcome);
-                return self.fault(context, "wfc-grid2d-fill-child-fault");
-            }
-            StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => {
-                self.last_payload = self.payload_from_child(false, false);
-                wfc::job::retire_outcome(&mut outcome);
-                self.pending_tick = true;
-                StepOutcome::Yield
-            }
-            StepOutcome::Yield => StepOutcome::Yield,
-        }
+        return self.drain_child(context);
     }
 
     fn begin_close(&mut self) {

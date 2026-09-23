@@ -573,3 +573,125 @@ would put this media on the pane. When it lands:
 3. live proof through the assets lane, NOT a canvas census: `node $G/probe7.mjs http://127.0.0.1:6033 <out>`
    should show the decoded payload's IHDR at 512×512 instead of the 2×2 recorded in
    `$G/browser11/probe7.json`, with `atob` still firing twice and 0 console errors.
+
+## 8. Session 7 successor (2026-09-23 02:00) — paint witness published by the host
+
+State on arrival: every §6/§7 edit is in the 00:05 auto-commit `9c641044be` (verified by `git show --stat`:
+Interpreter lane table + law, 512×512 emblem, DSL `[1,512]`, both new Rust laws). The peer's
+`paged_text_carrier` proposal for `ImageWindowKit::render` HAS landed
+(`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` `IMAGE_WINDOW_PIXELS_LANE_KEY`, ~line 33196), and the
+`interaction_selection_laws`/`history_row_applied_v1` compile blockers are resolved (declared at ~22463/22481).
+Native run `test-34` queued behind three peers in the play native mutex (01:56).
+
+### Task 3 — `data-layers-json` / `data-assets-json` on the paint surface (done, law green)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/🟦️.tsx` —
+  `paint2dAssetExtent` (decoded byte length + PNG IHDR extent from the first 32 base64 chars) and
+  `paint2dPaintWitnessDom(documentSyncJson, assetsJson)`; the surface div publishes
+  `data-layers-json` (the layer forest) and `data-assets-json` (`{key: {mime, bytes, width, height}}`),
+  memoized on the two scene fields. Deliberate deviation from play-runtime's proposal: the raw base64 is
+  NOT mirrored into the DOM (a real texture would put megabytes into an attribute on every scene change);
+  the extent is exactly what the witness needs. `parsePaint2dAssets` now also refuses a non-object
+  (`"null"` used to reach `Object.entries(null)`).
+- Language-neutral fixture `…/🖌️Paint2dHost/🧫️fixtures/🔬️paint-witness/🔣️.json` (5 cases incl. the old 2×2
+  swatch, a GIF, undecodable data, the empty strings of a lane-less surface, malformed JSON; plus the
+  committed 512×512 emblem by path).
+- Law `…/🖌️Paint2dHost/🧪️tests/🔬️paint-witness/🟦️.ts`, registered in the renderer vitest config
+  (`elementSuite("🖌️Paint2dHost", "🔬️paint-witness")`); third-party oracle `pngjs` (fully decodes the same
+  bytes and must agree on width/height) — declared as devDependency (`pngjs`, `@types/pngjs`) of
+  `@semio-tech/framework-renderer-react`, `bun install --lockfile-only` (bun.lock gained only those two).
+  `SEMIO_TEST_LEVEL=long bun node_modules/vitest/vitest.mjs run --config …/⚛️react/🧪️tests/🎚️config/🟦️.ts 🖌️Paint2dHost`
+  → **7/7 passed** (`$G/vitest-paint-witness.txt`). `bunx tsc --noEmit -p 🧰️framework/🛍️products/💻️os/tsconfig.json` clean.
+- `🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🟦️.ts` — the React-fiber walk (`hostOf`) and the in-page IHDR
+  peek are gone; a paint surface is read from its two attributes. A `.semio-paint-2d-canvas-surface` that
+  publishes NO witness is an explicit red (not the DOM-body fallback, which would false-green on chrome text).
+
+### Live on the 03:23 activation (serve recycled 03:24:24) — §7's real media is REFUSED by the store
+`node $G/probe7.mjs http://127.0.0.1:6033 $G/browser12` (and `browser13`, with HTTP ≥400 URLs logged):
+both paint surfaces now publish the witness (`data-layers-json="[]"`, `data-assets-json="{}"`), `atob` 0,
+the document is `{"id":"raster","title":"Untitled","layers":[]}` — the demo never loads, because
+
+```
+input #1 setActiveExample refused: dispatch-failed (user window=raster-composite) — typed-operation
+failed: plugin.internalvalidation failed: raster-store.mutation-asset-capacity
+```
+
+Root cause (production, `…/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️.rs`): the bounded candidate refused any
+`add-layer-asset` whose data exceeded ONE 4 KiB owned-field page (`RASTER_OWNED_FIELD_BYTES`), in both
+the candidate prepare step and the digest. That cap existed only because the retirement cursor's
+`RasterRetirementOwner::Bytes` arm answered `Pending { 0, 0 }` for any buffer larger than its grant — the
+exact "refuse instead of page" stall draw fixed on 2026-09-17 (memory: retirement cursor must page
+oversized strings). With the 75-byte 2×2 swatch nothing ever crossed it; §7's 25 039-byte emblem does, so
+the curated demo is refused on EVERY `setActiveExample` and raster could not hold any real image at all
+(an `importMedia` of a photo would be refused the same way). The native law
+`retained_asset_apply_and_snapshot_clone_keep_the_composite_pixels` drives `emblem_image_asset()` through
+the same candidate, so it would have caught this had the crate compiled at 22:20.
+
+Fix:
+- `Bytes` retirement pages from the tail (`truncate` + `shrink_to`), `released_bytes ≤ grant`, full
+  release once the remainder fits.
+- The `add-layer-asset` data bound is the envelope ceiling `RASTER_MAXIMUM_NESTED_BYTES`
+  (`ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES` = 256 KiB) in both the candidate and the digest (the digest
+  already observes the bytes in 256-byte steps; the pixels live in the minted child's `Arc` owner, not in
+  the fixed-capacity arena). The mime string keeps its one-page bound.
+- New law `an_asset_over_one_retirement_grant_applies_and_its_operation_retires_within_every_grant`
+  (`…/💾️binary/🧪️tests/🔬️unit/🦀️.rs`): the real emblem applies through the candidate, its pixels
+  resolve, and the operation retires with every step inside a 4 KiB grant and all bytes released.
+- `describe.request/raster` + `activate.request/raster` touched 03:40 (guest change).
+
+Unrelated to raster, seen on the same page: `404 /🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin`
+(the kernel's typst font shard, `🧰️framework/🔨️modules/🎠️kernel/🟦️.ts:2209`; materialization is supposed
+to dump it). The strict suite tolerates resource 404s; reported, not touched.
+
+### Native test-35 (04:26, `$G/test-35.txt`) — 227 / 1, and the one red is a missing framework hook
+(test-34 died in a fine-grain build-dir lock cycle with flow's cargo — both idle in
+`prebuild_lock_exclusive`, 0 rustc, 13 min; I killed only my own cargo and requeued.)
+- `semio-framework-raster` **3/3**, `semio-s-plugin-raster` **3/3**, `semio-s-artifact-raster-raster`
+  **227 passed / 1 failed**.
+- GREEN now: `an_asset_over_one_retirement_grant_applies_and_its_operation_retires_within_every_grant`,
+  `retained_asset_apply_and_snapshot_clone_keep_the_composite_pixels` (real emblem through the
+  candidate), `mounted_boot_publishes_the_emblem_pixels_on_the_composite_assets_lane`,
+  `the_demo_carrier_ships_real_media_sized_exactly_as_its_backdrop_declares`, and BOTH former
+  peer-frozen viewer laws `viewer::…::{composite,navigator}::…::render_produces_a_scene_node_for_the_default_document`
+  (the peer's `paged_text_carrier` for `ImageWindowKit::render` landed).
+- RED: `raster_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed` —
+  `editor did not declare a loaded-parent child projection`. The framework's `ArtifactEditor` /
+  `ArtifactViewer` gained `child_restore_projection` with a faulting default and the live envelope load
+  now calls it; every composing plugin (gis, animate, cad, flow, …) implements it via
+  `store::ChildRestoreProjection::from_snapshot`, raster did not. Fixed in
+  `…/✳️any/✏️editor/🦀️.rs` and `…/✳️any/👁️viewer/🦀️.rs` the same way (the projection is empty because
+  `RasterSnapshot.assets` declares no `#[child]` slot — the documented schema-introspection gap in
+  `🧬️schema/📸️snapshot/🦀️.rs`; restoring asset children after a document LOAD therefore still relies on
+  the host resolver, as before). Re-run: `$G/test-36.txt`.
+
+### LIVE PROOF — 04:47 activation (serve recycled 04:47:59): the raster pane paints the emblem
+(The coordinator's 04:32 describe was a malformed batched nx target — `@semio-tech/energy flow gis
+mathematical raster -plugin:describe`, "Cannot find project" — so `🔣️.json`/`🛂️.descriptor.semio` were NOT
+re-described; `activate-dev` 04:32–04:47 did rebuild the guest after both Rust edits, and raster is absent
+from the page's own "staged module behind source" list.)
+- `node $G/probe7.mjs http://127.0.0.1:6033 $G/browser14`: decoded IHDR **512×512** (×4 reads), `atob`
+  fires on the full 31 688-character payload twice (plus the witness's 32-char IHDR peeks), both
+  surfaces publish `data-layers-json` = backdrop pixel layer 512×512 → `semio-emblem` + brighten
+  adjustment, `data-assets-json` = `{"semio-emblem":{"mime":"image/png","bytes":23765,"width":512,"height":512}}`
+  (23 765 B: the stdio canonical re-encode of the 25 039 B file). **No refused input, no page error**; the
+  only console error is the framework-wide typst-font 404 the suite tolerates.
+- Strict acceptance, one worker, from the repo root:
+  `PLAYWRIGHT_BASE_URL=http://127.0.0.1:6033 … playwright/cli.js test --config 🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🎚️config/🟦️.ts --grep raster --workers 1`
+  → **1 passed (7.0 s)**, log `$G/e2e-raster.txt`, artifacts `$G/e2e-raster/`. The paint witness read
+  the new attributes (no fiber walk left in the suite).
+
+### Native test-36 (04:51, `$G/test-36.txt`, EXIT=0) — ALL GREEN
+`semio-framework-raster` **3/3**, `semio-s-artifact-raster-raster` **228 passed / 0 failed**,
+`semio-s-plugin-raster` **3/3**. Includes the live-envelope law (now that the hook exists), both former
+peer-frozen viewer laws, the demo-media laws and the new paged-retirement law.
+
+### Topic state at 04:55 — raster is DONE
+- Native green (above); renderer TS law `🖌️Paint2dHost/🧪️tests/🔬️paint-witness` 7/7; strict e2e raster 1/1;
+  live pane loads the curated demo and publishes a 512×512 emblem on both windows.
+- Open, not raster's: (1) `🔣️.json`/`🛂️.descriptor.semio` were not re-described after this session's
+  guest edits (coordinator's 04:32 describe batch was malformed) — `describe.request/raster` should be
+  re-touched by whoever runs the next chain; no descriptor-visible surface changed (no new action, window
+  or schema field), so the served pane is unaffected. (2) framework-wide 404 of
+  `🪞️vendor/🔤️guestslim-typst-fonts.bin`. (3) Asset children are not declared as `#[child]` slots, so
+  `child_restore_projection` is empty and a raster document LOADED from an envelope relies on the host
+  resolver to re-materialize its images (pre-existing, documented in `🧬️schema/📸️snapshot/🦀️.rs`).
+- 04:56: `describe.request/raster` re-touched for (1).

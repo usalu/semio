@@ -20,8 +20,31 @@ pub(crate) const LAYOUT_PLAY_BODY_CATALOGUE: &str = "layout.play.catalogue";
 pub(crate) const LAYOUT_CATALOGUE_ROOT: &str = "layout-catalogue";
 pub(crate) const LAYOUT_CATALOGUE_KINDS_SECTION: &str = "layout-catalogue.kinds";
 
+/// 🛍️ Page and frame tools, then every placeable 2D artifact. The third column is the native artifact kind stored on the link.
+pub(crate) const NATIVE_PLACEMENTS: &[(&str, &str, &str)] = &[
+    ("png", "image", "s.stdio.png"),
+    ("jpg", "image", "s.stdio.jpg"),
+    ("gif", "image", "s.stdio.gif"),
+    ("bmp", "image", "s.stdio.bmp"),
+    ("tiff", "image", "s.stdio.tiff"),
+    ("pdf", "file-text", "s.stdio.pdf"),
+    ("svg", "spline", "s.stdio.svg"),
+    ("drawing", "pen-tool", "s.draw.drawing"),
+    ("dwg", "pen-tool", "s.stdio.dwg"),
+    ("dxf", "pen-tool", "s.stdio.dxf"),
+    ("raster", "image", "s.raster.raster"),
+    ("bitmap", "image", "s.wfc.bitmap"),
+    ("cad", "pen-tool", "s.cad.cad"),
+    ("map", "map", "s.gis.gismap"),
+    ("fem2d", "spline", "s.fem.fem2d"),
+];
+
+pub(crate) fn native_artifact_kind(kind: &str) -> Option<&'static str> {
+    NATIVE_PLACEMENTS.iter().find(|(candidate, _, _)| *candidate == kind).map(|(_, _, artifact_kind)| *artifact_kind)
+}
+
 /// 🛍️ The full creation roster this catalogue windows over — the page item plus every frame kind.
-const LAYOUT_CATALOGUE_ROSTER: &[(&str, &str)] = &[("page", "file"), ("rect", "square"), ("text", "type"), ("image", "image")];
+const LAYOUT_CATALOGUE_ROSTER: &[(&str, &str)] = &[("page", "file"), ("rect", "square"), ("text", "type"), ("image", "image"), ("png", "image"), ("jpg", "image"), ("gif", "image"), ("bmp", "image"), ("tiff", "image"), ("pdf", "file-text"), ("svg", "spline"), ("drawing", "pen-tool"), ("dwg", "pen-tool"), ("dxf", "pen-tool"), ("raster", "image"), ("bitmap", "image"), ("cad", "pen-tool"), ("map", "map"), ("fem2d", "spline")];
 pub(crate) const LAYOUT_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 pub(crate) const LAYOUT_CATALOGUE_KIND_MIME_PREFIX: &str = "application/x-semio-catalogue-kind.";
 

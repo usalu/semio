@@ -1334,6 +1334,29 @@ fn output_port_row_hit_bounds_span_output_channel() {
 }
 
 #[test]
+fn output_only_slider_divider_splits_output_hit_row() {
+    let output = IoPortSpec { id: "out".into(), label: "value".into(), ..Default::default() };
+    let node = DagNodeSpec {
+        id: "slider".into(),
+        name: "Amount".into(),
+        abbreviation: "Amount".into(),
+        icon: "emoji:🎚️".into(),
+        x: 80.0,
+        y: 40.0,
+        width: slider_widget_width("Amount", &output),
+        height: slider_widget_height(),
+        kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 2.0, output },
+        ..Default::default()
+    };
+    let divider_x = computation_column_divider_x(&node).expect("divider");
+    assert!((divider_x - node.x).abs() < 1e-9);
+    let hw = node.width * 0.5;
+    let (x0, _, x1, _) = output_port_row_hit_bounds(&node, 0).expect("output row");
+    assert!((x0 - divider_x).abs() < 1e-9);
+    assert!((x1 - (node.x + hw)).abs() < 1e-9);
+}
+
+#[test]
 fn variadic_plus_hit_maps_insert_index() {
     let inputs = vec![IoPortSpec { id: "0".into(), label: "0".into(), ..Default::default() }, IoPortSpec { id: "1".into(), label: "1".into(), ..Default::default() }];
     let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }];

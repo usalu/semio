@@ -47,3 +47,11 @@ async fn dag_working_scene_is_owned_by_the_exact_snapshot_child() {
     assert_eq!(observed, SerdeJsonDagChildOwnerOracle::expected());
 }
 
+/// 🧬️ The projection names exactly the snapshot's declared child slots — what the live envelope load checks
+/// before a decoded document may replace the store.
+#[test]
+fn the_child_restore_projection_names_every_declared_child_slot() {
+    let snapshot = crate::default_snapshot();
+    let projection = crate::dag_child_restore_projection(&snapshot).expect("the loaded-parent child projection");
+    assert_eq!(projection.len(), <crate::DagSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());
+}

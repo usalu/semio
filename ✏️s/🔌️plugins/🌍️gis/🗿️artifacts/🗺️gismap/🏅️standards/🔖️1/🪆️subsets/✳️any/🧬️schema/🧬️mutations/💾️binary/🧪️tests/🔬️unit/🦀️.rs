@@ -247,6 +247,7 @@ async fn the_initialization_candidate_projects_its_canonical_child_handles() {
     use semio_framework_plugin::ArtifactStoreInitializationAuthority;
 
     for (label, snapshot) in [("empty", empty_gis_map_snapshot()), ("default-document", default_document())] {
+        let expected = snapshot.clone();
         let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-initialization-law", snapshot, None);
         let operation = semio_framework_job::OperationId(u64::MAX - 401);
         let generation = semio_framework_job::Generation(61);
@@ -266,23 +267,28 @@ async fn the_initialization_candidate_projects_its_canonical_child_handles() {
                 semio_framework_job::StepOutcome::Fault(_) => panic!("{label} initializer faulted"),
             }
             if let Some(early) = ArtifactStoreInitializationAuthority::take_candidate(&mut authority) {
-                let projection = store::ChildRestoreProjection::from_snapshot(&early.snapshot_root());
+                let early_root = early.snapshot_root();
+                let projection = format!("{:?}", store::ChildRestoreProjection::from_snapshot(&*early_root));
+                drop(early_root);
                 close_candidate_store(early);
-                panic!("{label}: a candidate was handed over before the initializer reported Complete (it projects {projection:?}) — the pump would see the placeholder handles");
+                panic!("{label}: a candidate was handed over before the initializer reported Complete (it projects {projection}) — the pump would see the placeholder handles");
             }
         }
         assert!(complete, "{label} initializer converges");
 
         let candidate = ArtifactStoreInitializationAuthority::take_candidate(&mut authority).unwrap_or_else(|| panic!("{label} candidate handoff"));
-        let root = candidate.snapshot_root();
-        let projection = store::ChildRestoreProjection::from_snapshot(&root).unwrap_or_else(|error| {
-            panic!("{label} candidate parent is not projectable: {error:?} (drawing {:?}/{:?}, image {:?}, value {:?}/{:?})", root.drawing.child_id, root.drawing.target, root.image, root.value.child_id, root.value.target)
-        });
-        assert_eq!(projection.len(), 2, "{label} candidate declares exactly the drawing and value children");
-        for index in 0..projection.len() {
-            let (slot, fields) = projection.get(index).expect("admitted row");
-            assert_eq!(fields.child_id, fields.artifact_id, "{label} candidate slot {slot}: a composed child's id IS its target artifact id");
-            assert_eq!(fields.artifact_kind, "s.stdio.semio", "{label} candidate slot {slot} kind");
+        {
+            let root = candidate.snapshot_root();
+            let projection = store::ChildRestoreProjection::from_snapshot(&*root).unwrap_or_else(|error| {
+                panic!("{label} candidate parent is not projectable: {error:?} (drawing {:?}/{:?}, image {:?}, value {:?}/{:?})", root.drawing.child_id, root.drawing.target, root.image, root.value.child_id, root.value.target)
+            });
+            assert_eq!(projection.len(), 2, "{label} candidate declares exactly the drawing and value children");
+            for index in 0..projection.len() {
+                let (slot, fields) = projection.get(index).expect("admitted row");
+                assert_eq!(fields.child_id, fields.artifact_id, "{label} candidate slot {slot}: a composed child's id IS its target artifact id");
+                assert_eq!(fields.artifact_kind, "s.stdio.semio", "{label} candidate slot {slot} kind");
+            }
+            assert_eq!(*root, expected, "{label} candidate is the exact field-by-field clone of the loaded snapshot (every feature list and every child handle)");
         }
         assert!(ArtifactStoreInitializationAuthority::terminal_is_empty(&authority), "{label} initializer is terminal once its candidate is handed over");
         drop(authority);

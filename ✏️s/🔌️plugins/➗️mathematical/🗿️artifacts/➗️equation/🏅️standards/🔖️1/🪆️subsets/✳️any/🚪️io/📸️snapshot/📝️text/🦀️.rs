@@ -208,6 +208,9 @@ fn print_equation_snapshot_body(s: &EquationSnapshot) -> String {
         enc_geometry(&scene.geometry)
     )
 }
+/// 🏗️ The decoded scene is attached to the exact handles this document names, never to freshly
+/// minted ones: `equation_children_from_state` derives the same ids, but re-minting would silently
+/// discard whatever identity the document carried. Every line of `📖️.grammar.semio` is required.
 fn parse_equation_snapshot_body(body: &str) -> Result<EquationSnapshot, String> {
     let mut notation = None;
     let mut results = None;
@@ -236,13 +239,9 @@ fn parse_equation_snapshot_body(body: &str) -> Result<EquationSnapshot, String> 
             return Err(format!("equation snapshot: unknown line {line:?}"));
         }
     }
-    // 🏗️ The decoded scene is attached to the exact handles this document names, never to freshly
-    // minted ones: `equation_children_from_state` derives the same ids, but re-minting would silently
-    // discard whatever identity the document actually carried. A body without the two scene lines is
-    // a pre-format document and decodes to the empty scene, exactly as it did before.
     let owner = std::sync::Arc::new(crate::EquationWorkingScene {
-        graph: graph.unwrap_or(crate::EquationGraph { directed: true, nodes: Vec::new(), edges: Vec::new(), algorithm: String::new(), algorithm_seed: None }),
-        geometry: geometry.unwrap_or(crate::EquationGeometry { points: Vec::new() }),
+        graph: graph.ok_or_else(|| "equation snapshot: missing graph line".to_string())?,
+        geometry: geometry.ok_or_else(|| "equation snapshot: missing geometry line".to_string())?,
     });
     Ok(EquationSnapshot {
         notation: notation.ok_or_else(|| "equation snapshot: missing notation line".to_string())?.with_local_owner(owner.clone()),

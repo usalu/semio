@@ -260,7 +260,8 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
         let step = work
             .step(&semio_framework_plugin::retained_command::ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation })
             .expect("maximum retained turn");
-        assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum Equation microturn exceeded 8 ms");
+        let elapsed = started.elapsed();
+        assert!(elapsed < std::time::Duration::from_millis(8), "maximum Equation microturn exceeded 8 ms: {elapsed:?}");
         if matches!(step, ArtifactCommandWorkStep::Complete(_)) {
             break;
         }
@@ -446,6 +447,20 @@ async fn workflow_json_round_trips_node_count() {
     assert_eq!(nodes.len(), graph.nodes.len());
     assert_eq!(edges.len(), graph.edges.len());
 }
+
+/// 🔌️ Every edge endpoint names a port its node declares — the node-graph engine resolves an edge only
+/// through a declared port, so port-less nodes drew no edge at all.
+#[semio_framework_async_macros::async_test]
+async fn workflow_json_edges_end_on_declared_ports() {
+    let (nodes, edges) = workflow_json(&EquationGraph::default());
+    assert!(!edges.is_empty());
+    for edge in &edges {
+        let source = nodes.iter().find(|node| node.id == edge.source_node_id).expect("source node");
+        let target = nodes.iter().find(|node| node.id == edge.target_node_id).expect("target node");
+        assert!(source.outputs.iter().any(|port| port.id == edge.source_port_id), "{} leaves an undeclared port", edge.id);
+        assert!(target.inputs.iter().any(|port| port.id == edge.target_port_id), "{} enters an undeclared port", edge.id);
+    }
+}
 //#endregion 🔖️GraphAlgorithms
 
 //#region 🔖️Geometry
@@ -459,17 +474,18 @@ async fn geometry_layers_include_hull_and_centroid() {
 //#endregion 🔖️Geometry
 
 //#region 🔖️LoadedDocumentDispatch
-/// 🧩️ A document arriving by `Effect::LoadDocument` is DECODED, so it carries no local
-/// `EquationWorkingScene` owner — the ephemeral owner only a same-session mutation mints. Every
-/// document verb used to be measured against that owner and refused with `equation-command-capacity`
-/// on exactly the documents `setActiveExample` had just made loadable (measured live 2026-09-20,
-/// slice PB2). The extent now reads the fail-soft projection, so a decoded snapshot is editable.
+/// 🧩️ A document that reaches the app through the VALUE projection carries no local
+/// `EquationWorkingScene` owner — `to_value` writes the three child handles only (the scene owner law's
+/// `wireOmission` case). Every document verb used to be measured against that owner and refused with
+/// `equation-command-capacity` (measured live 2026-09-20, slice PB2). The extent reads the fail-soft
+/// projection, so an owner-less snapshot stays editable. The text and pack codecs carry the scene since
+/// ticket 26/09/19 and are no longer an owner-less transport.
 #[semio_framework_async_macros::async_test]
 async fn a_decoded_document_without_a_scene_owner_still_admits_its_document_verbs() {
     let authored = crate::equation_snapshot_with_state(&graph_with_shape(4, 3), &EquationGeometry::default());
     assert!(crate::equation_scene_owner(&authored).is_some(), "an authored snapshot mints the live scene owner");
-    let decoded = <crate::EquationSnapshot as ArtifactPack>::decode_pack(&<crate::EquationSnapshot as ArtifactPack>::encode_pack(&authored)).expect("decode");
-    assert!(crate::equation_scene_owner(&decoded).is_none(), "a decoded snapshot carries no local owner");
+    let decoded = <crate::EquationSnapshot as semio_framework_os_kernel::FromValue>::from_value(semio_framework_os_kernel::ToValue::to_value(&authored)).expect("value projection decodes");
+    assert!(crate::equation_scene_owner(&decoded).is_none(), "a value-decoded snapshot carries no local owner");
     let command = EquationCommand::SetDirected(set_directed::SetDirected { directed: false });
     assert!(equation_command_extent(&command, &decoded).is_some(), "a decoded document must still admit its document verbs");
     assert!(EquationRetainedCommandWork::source_scene(&decoded).is_ok(), "the phase machine reads the same fail-soft projection the extent measures");

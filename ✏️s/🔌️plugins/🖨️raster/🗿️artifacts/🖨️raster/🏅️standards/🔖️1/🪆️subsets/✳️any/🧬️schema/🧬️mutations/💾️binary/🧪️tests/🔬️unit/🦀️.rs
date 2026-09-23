@@ -603,6 +603,41 @@ fn retained_asset_apply_and_snapshot_clone_keep_the_composite_pixels() {
     retirement::retire_raster_snapshot(base);
 }
 
+/// 🧾️ LAW: an `add-layer-asset` whose image is larger than one retirement grant applies AND retires.
+/// The byte owner used to answer `Pending { 0, 0 }` for any buffer over the grant, so the store refused
+/// every asset over 4 KiB up front (`raster-store.mutation-asset-capacity`) — the curated demo's real
+/// 512×512 emblem (25 KiB) was refused on every `setActiveExample` in the live pane (ticket
+/// 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, :6033 2026-09-23). The owner now releases from the tail
+/// within each grant, the same contract draw's owned strings follow.
+#[test]
+fn an_asset_over_one_retirement_grant_applies_and_its_operation_retires_within_every_grant() {
+    let asset = crate::examples::art_raster_demo::emblem_image_asset();
+    let bytes = asset.data.len();
+    assert!(bytes > RASTER_OWNED_FIELD_BYTES * 4, "the demo emblem is real media, several grants long: {bytes} B");
+    let base = empty_raster_document();
+    let add = RasterMutation::AddLayerAsset(add_layer_asset::mutation::AddLayerAsset { asset_id: "semio-emblem".into(), asset });
+    let added = drive_raster_candidate(&base, &add, 882);
+    assert!(crate::raster_asset(&added.assets, "semio-emblem").is_some(), "the applied pool resolves the emblem's pixels");
+    let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterMutationRetirementFactory, add);
+    let (mut released, mut idle) = (0_usize, 0_u32);
+    loop {
+        match retirement.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("the operation retires") {
+            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1 && released_bytes <= RASTER_OWNED_FIELD_BYTES, "one step stays inside its grant: {released_items} items, {released_bytes} B");
+                released += released_bytes;
+                idle = if released_items == 0 && released_bytes == 0 { idle + 1 } else { 0 };
+                assert!(idle <= 64, "the operation retirement stalled after releasing {released} of {bytes} B");
+            }
+            store::SnapshotRetirementStep::Complete => break,
+            store::SnapshotRetirementStep::Blocked => panic!("an unshared operation retirement cannot block"),
+        }
+    }
+    assert!(released >= bytes, "every asset byte was released through the grants: {released} of {bytes} B");
+    eprintln!("[DEBUG] add-layer-asset of {bytes} B applied and retired in grants of {RASTER_OWNED_FIELD_BYTES} B");
+    retirement::retire_raster_snapshot(added);
+    retirement::retire_raster_snapshot(base);
+}
+
 #[test]
 fn raster_empty_asset_map_retirement_has_no_hidden_allocation_release() {
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() };

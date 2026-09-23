@@ -290,9 +290,16 @@ fn admit_gis_map_envelope(app: &mut Gis2dApp, wire: &[u8]) -> semio_framework_pl
     handle
 }
 
+/// ⏱️ Turn budget for one live envelope load at the law's minimum grant (one item, one page per
+/// maintenance turn). An accepted load ends by retiring the DISPLACED boot store — the curated Reuse Map
+/// — one item per turn: measured 121 160 turns to `Ready` (2026-09-23, identical with and without the
+/// publication/worker pumps), so the old 100 000 cut a correct load off mid-retirement. The bound
+/// asserts termination, not speed.
+const GIS_MAP_LIVE_LOAD_TURN_BUDGET: usize = 1_000_000;
+
 async fn drive_gis_map_live_load(app: &mut Gis2dApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     let mut last = semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending;
-    for _ in 0..100_000 {
+    for _ in 0..GIS_MAP_LIVE_LOAD_TURN_BUDGET {
         PluginApp::advance_typed_operation_publication(app).await.expect("GIS envelope load reactor turn");
         last = app.advance_artifact_envelope_load(handle).expect("GIS live load advancement");
         if !matches!(last, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Progress) {
@@ -307,10 +314,11 @@ async fn drive_gis_map_live_load(app: &mut Gis2dApp, handle: semio_framework_plu
         std::thread::yield_now();
     }
     panic!(
-        "GIS live envelope load did not reach terminal (last load poll {:?}, decode {:?}, replacement {:?})",
+        "GIS live envelope load did not reach terminal (last load poll {:?}, decode {:?}, replacement {:?}, refusal {:?})",
         last,
         app.poll_artifact_envelope_decode(handle),
-        app.poll_artifact_store_replacement(handle)
+        app.poll_artifact_store_replacement(handle),
+        app.artifact_store_replacement_refusal(handle)
     )
 }
 

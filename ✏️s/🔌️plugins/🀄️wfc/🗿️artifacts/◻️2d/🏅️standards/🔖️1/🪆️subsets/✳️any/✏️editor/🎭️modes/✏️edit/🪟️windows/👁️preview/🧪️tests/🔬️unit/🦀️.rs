@@ -86,7 +86,7 @@ fn a_partial_fill_preview_differs_from_empty_and_finished() {
         }
         assignments.insert(slot_id.clone(), Some(tile_id.clone()));
     }
-    let partial = Wfc2dFillTickPayload { assignments, contradiction: false, done: false };
+    let partial = Wfc2dFillTickPayload { assignments, contradiction: false, done: false , trace: Vec::new() };
     assert!(partial.decided_count() > 0 && partial.decided_count() < oracle.assignments.len());
     let mid = preview_layers_json(&document, &Wfc2dTransient::default(), Some(&partial));
     assert_ne!(mid, empty, "a partial board must not look empty");

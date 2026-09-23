@@ -857,7 +857,7 @@ struct WriterArtifactStorePreparation {
 }
 
 fn writer_snapshot_retained_bytes(snapshot: &WriterSnapshot) -> usize {
-    snapshot.schema.len().saturating_add(snapshot.id.len()).saturating_add(snapshot.language_id.len()).saturating_add(snapshot.uri.len()).saturating_add(writer_text_owner(snapshot).len())
+    snapshot.schema.len().saturating_add(snapshot.id.len()).saturating_add(snapshot.language_id.len()).saturating_add(snapshot.uri.len()).saturating_add(snapshot.text.len())
 }
 
 fn admit_writer_artifact_mutation(mutation: &WriterMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
@@ -1015,6 +1015,13 @@ pub struct WriterPlayApp;
 impl ArtifactEditor for WriterPlayApp {
     /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
+    /// 🧬️ The loaded-parent child projection, read straight off the snapshot's own `#[child]` fields.
+    /// Without it every live envelope load faults with `editor did not declare a loaded-parent child
+    /// projection` before the decoded document can replace the store.
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("writer.child-projection"), error.to_string()))
+    }
+
     type Snapshot = WriterSnapshot;
     type Mutation = WriterMutation;
     type Config = NoConfig;

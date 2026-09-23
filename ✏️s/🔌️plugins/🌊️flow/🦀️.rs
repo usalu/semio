@@ -27,7 +27,7 @@ pub fn plugin() -> Result<Plugin<FlowApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:flow")
         .artifact(crate::artifacts::flow::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::flow::FlowPlayApp>(crate::editor::flow::create_flow_app())
+        .editor_with_examples::<crate::editor::flow::FlowPlayApp>(crate::editor::flow::create_flow_app(), vec![crate::artifacts::flow::examples::demo::source()])
         .editor_mutation_roster::<crate::editor::flow::FlowPlayApp>()
         .viewer::<crate::viewer::flow::FlowViewer>(crate::viewer::flow::create_flow_viewer())
         .viewer_mutation_roster::<crate::viewer::flow::FlowViewer>()

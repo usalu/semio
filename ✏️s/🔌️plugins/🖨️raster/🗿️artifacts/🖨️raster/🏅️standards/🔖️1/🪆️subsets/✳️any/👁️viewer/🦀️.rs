@@ -49,6 +49,14 @@ impl ArtifactViewer for RasterViewer {
     const DIALECT: Dialect = RASTER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;
 
+    /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields.
+    /// Without it every live envelope load faults with `viewer did not declare a loaded-parent child
+    /// projection` before the decoded document can replace the store. `assets` declares no child slot
+    /// (see `🧬️schema/📸️snapshot`), so the projection is honestly empty.
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("raster.child-projection"), error.to_string()))
+    }
+
     /// 📄️ Boots on the constant empty shell `empty_raster_snapshot()`, like the editor: the store's
     /// construction derive-`Clone`s and `encode_pack`s the initial snapshot, and raster admits only
     /// the empty shell to both — see `RasterPlayApp::initial_snapshot`. A viewer instance receives its

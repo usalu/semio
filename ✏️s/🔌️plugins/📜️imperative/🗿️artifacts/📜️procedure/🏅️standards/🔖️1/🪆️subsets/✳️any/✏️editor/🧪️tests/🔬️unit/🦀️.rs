@@ -360,6 +360,9 @@ async fn add_step_at_falls_back_to_root_for_unknown_owner() {
     context::close(&mut app);
 }
 
+/// ⏪️ Every step SETTLES (`assert_undo_redo_round_trip`): a mounted app's `dispatch_typed` only admits
+/// the retained operation and `"undo"`/`"redo"` are framework-reserved jobs, so reading the document
+/// straight after either observes the state before it.
 #[semio_framework_async_macros::async_test]
 async fn undo_after_add_step_restores_original_document_exactly() {
     let mut app = imperative_app().await;
@@ -367,12 +370,7 @@ async fn undo_after_add_step_restores_original_document_exactly() {
     let mut path = crate::procedure_working_scene(&base).path;
     path.steps.push(Step { id: "step-3".into(), kind: "log.print".into(), params: crate::Dictionary::new(), bodies: BTreeMap::new() });
     let expected_after = crate::procedure_snapshot_with_content(&base.schema, &path, &crate::procedure_working_scene(&base).seed);
-    app.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local")).await.expect("apply command");
-    assert_eq!(app.snapshot().expect("projection"), expected_after);
-    app.handle_action("undo", None, &meta("local")).await.expect("undo");
-    assert_eq!(app.snapshot().expect("projection"), default_snapshot());
-    app.handle_action("redo", None, &meta("local")).await.expect("redo");
-    assert_eq!(app.snapshot().expect("projection"), expected_after);
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut *app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), |app| app.snapshot().expect("projection"), default_snapshot(), expected_after).await;
     context::close(&mut app);
 }
 
@@ -397,7 +395,7 @@ async fn remove_step_command_is_exact_inverse_of_add() {
 async fn two_instances_converge_disjoint_edits_via_backbone() {
     let mut params = BTreeMap::new();
     params.insert("key".to_string(), crate::document_dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))));
-    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<ImperativePlayApp>, _, _, _>(
+    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge_with_members::<EditorApp<ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _, _>(
         "mem://imperative-convergence",
         || async { context::imperative_app_manifest_for_tests() },
         ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }),

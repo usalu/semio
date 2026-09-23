@@ -43,6 +43,18 @@ pub(crate) mod context {
         semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
     }
     
+
+    /// 🎯️ Selects `ids` in the framework-owned `graph` domain — the twin of generation3d's helper.
+    /// `interactionSelect` is a `FrameworkInteractionSelectJob`, so a bare `handle_action` only
+    /// admits; settle the reserved tool job before any selection-fed read (context menu, delete).
+    pub async fn select_graph(app: &mut Generation2dApp, granularity: &str, ids: &[&str]) -> InvocationResult {
+        let targets: Vec<semio_framework_plugin::InteractionTarget> = ids.iter().map(|id| semio_framework_plugin::InteractionTarget { granularity: granularity.into(), id: (*id).into() }).collect();
+        let targets_json = serde_json::to_string(&targets).expect("selection targets");
+        let args: dsl::DslValue = serde_json::json!({ "domainId": crate::editor::generation2d::GENERATION2D_INTERACTION_DOMAIN, "targets": targets_json, "merge": "replace", "method": "pick" }).into();
+        let admitted = app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("interaction selection admitted");
+        semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interaction selection settles its reserved tool job")
+    }
+
     pub async fn render(app: &mut Generation2dApp, body_key: &str) -> String {
         render_with_view(app, body_key, &ViewModel::default()).await
     }
@@ -521,7 +533,7 @@ async fn the_preview_eval_run_finalizes_nothing_and_an_abort_leaves_the_document
         if (after.0.pack.as_slice(), after.1.pack.as_slice(), after.2) != (document.pack.as_slice(), config.pack.as_slice(), history) {
             return Err("a finalized read-only run must author no document, config or history entry".into());
         }
-        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
+        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &action_meta).await.map_err(|error| format!("{error:?}"))?;
         let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
         let edited = (app.document_pack().await.map_err(|error| format!("{error:?}"))?, app.artifact_generation_now());
         for effect in &receipt.effects {
@@ -754,7 +766,7 @@ pub(super) fn every_command() -> Vec<Generation2dCommand> {
     vec![
         Generation2dCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }),
         Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }),
-        Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(10.0), y: None }),
+        Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: Some(10.0), y: None }),
         Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "n1".into() }),
         Generation2dCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() }),
         Generation2dCommand::Reorganize(reorganize::Reorganize {}),
@@ -859,7 +871,7 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
     let mut app = app_with_registry().await;
     let result: Result<(usize, usize), String> = async {
         let before = snapshot_read(&app).host_snapshot.widgets.len();
-        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None }), &semio_framework_plugin::artifact_app_laws::meta("local"))
+        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &semio_framework_plugin::artifact_app_laws::meta("local"))
             .await
             .map_err(|error| format!("{error:?}"))?;
         let (artifact, _, _) = drive_preview_operation(&mut app).await?;
@@ -878,7 +890,7 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
 async fn add_widget_undo_redo_round_trip() {
     let mut app = app().await;
     let before = snapshot_read(&app).host_snapshot.widgets.len();
-    assert_undo_redo_round_trip(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: None, y: None }), |app| snapshot_read(app).host_snapshot.widgets.len(), before, before + 1).await;
+    assert_undo_redo_round_trip(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), |app| snapshot_read(app).host_snapshot.widgets.len(), before, before + 1).await;
     close(app);
 }
 
@@ -950,12 +962,7 @@ async fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
 //#endregion 📏️SurfaceBudgetTests
 
 //#region 🔖️ContextMenuTests
-/// 🕹️ `context_menu` no longer has anything to dispatch a selection command WITH (`setSelection`
-/// is deleted — selection is the framework's `graph` interaction domain now) and `context_menu`
-/// itself carries no `InteractionView` to read it back even if it did (ticket
-/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM, same discovered gap as `render`), so the
-/// destructive `delete-selection` row — conditioned on a real selection — never appears; this test
-/// now only pins the disclosure budget.
+/// 🗂️ Grouped disclosure still stays within the row budget when nothing is selected.
 #[semio_framework_async_macros::async_test]
 async fn context_menu_stays_within_disclosure_budget() {
     let mut app = app_with_registry().await;
@@ -963,7 +970,26 @@ async fn context_menu_stays_within_disclosure_budget() {
     let items = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
     close(app);
     assert!(items.len() <= 9, "top-level menu rows (leaves + groups + separator) must stay within disclosure budget, got {}", items.len());
-    assert!(items.iter().all(|item| item.id != "delete-selection"), "no interaction data at context_menu time means delete-selection cannot appear");
+    assert!(items.iter().all(|item| item.id != "delete-selection"), "an empty selection must not offer delete-selection");
+}
+
+/// 🕹️ The runtime funnels every right-click through `context_menu_with_request_context`, so a node
+/// selected through the framework-owned `graph` domain must unfold the destructive delete row that
+/// dispatches `nodeGraphEdit`/`deleteSelection` against that live selection.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_reads_the_framework_owned_graph_selection() {
+    let mut app = app_with_registry().await;
+    let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
+    let ids_of = |menu: &[semio_framework_plugin::ContextMenuItemSpec]| -> Vec<String> {
+        menu.iter().flat_map(|item| std::iter::once(item.id.clone()).chain(item.children.iter().flatten().map(|child| child.id.clone()))).collect()
+    };
+    let unselected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await);
+    assert!(!unselected.iter().any(|id| id.contains("delete")), "an empty selection must not offer delete: {unselected:?}");
+    context::select_graph(&mut app, "node", &["slider"]).await;
+    let selected = ids_of(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await);
+    assert!(selected.iter().any(|id| id.contains("delete")), "a live graph selection must offer the destructive delete row: {selected:?}");
+    eprintln!("[DEBUG] generation2d context menu unfolded {} rows for one framework-owned graph selection", selected.len());
+    close(app);
 }
 //#endregion 🔖️ContextMenuTests
 
@@ -988,7 +1014,7 @@ async fn export_document_out_returns_flow_media() {
 #[semio_framework_async_macros::async_test]
 async fn import_params_in_patches_matching_input_slider() {
     let mut app = app().await;
-    crate::editor::generation2d::unit_tests::context::dispatch(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: None, y: None })).await;
+    crate::editor::generation2d::unit_tests::context::dispatch(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None })).await;
     let slider_id = snapshot_read(&app)
         .host_snapshot
         .widgets

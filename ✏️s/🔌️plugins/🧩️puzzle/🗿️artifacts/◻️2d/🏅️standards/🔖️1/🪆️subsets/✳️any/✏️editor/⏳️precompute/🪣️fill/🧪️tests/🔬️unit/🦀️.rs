@@ -44,7 +44,7 @@ fn example(spec: &Value) -> Arc<Puzzle2dPlaySnapshot> {
     if spec["detachEdges"].as_bool() == Some(true) {
         document["edges"] = json!([]);
     }
-    Arc::new(Puzzle2dPlaySnapshot(document))
+    Arc::new(Puzzle2dPlaySnapshot::new(document))
 }
 
 fn identity(run: u64, generation: u32) -> ToolRunIdentity {
@@ -225,7 +225,7 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         let count = |wanted: ToolRunVerdict| log.finals.iter().filter(|(_, verdict, ..)| *verdict == wanted).count() as u64;
         assert_eq!((log.finals.len() as u64, count(ToolRunVerdict::Success), count(ToolRunVerdict::Danger), count(ToolRunVerdict::Warning)), (counters[0], counters[1], counters[2], counters[3]));
         assert!(log.finals.iter().all(|(key, ..)| log.testing.contains(key)), "every final verdict was announced as testing first");
-        let existing: HashSet<String> = document.0["nodes"].as_array().into_iter().flatten().filter_map(|node| node["id"].as_str().map(str::to_string)).collect();
+        let existing: HashSet<String> = document.value()["nodes"].as_array().into_iter().flatten().filter_map(|node| node["id"].as_str().map(str::to_string)).collect();
         for (placement, pair) in decoded(&log.ops).chunks(FILL_RUN_OPS_PER_PLACEMENT).enumerate() {
             let [Puzzle2dMutation::CreateNode(create), Puzzle2dMutation::ConnectHandles(_)] = pair else { panic!("placement {placement} is not create_node then connect_handles") };
             assert_eq!(log.entities[placement], fill_run_entity(&create.node.id));
@@ -253,14 +253,14 @@ fn fill_run_job_places_only_inside_visible_target_regions() {
     let vector = &fixture["targetRegion"];
     let expected = &vector["expected"];
     let base = example(&vector["document"]);
-    let seed = fixture_nodes(&base.0).first().cloned().expect("the reduced board keeps its seed node");
+    let seed = fixture_nodes(base.value()).first().cloned().expect("the reduced board keeps its seed node");
     let (cx, cy) = (seed["x"].as_f64().expect("seed x"), seed["y"].as_f64().expect("seed y"));
     let half = vector["halfSpan"].as_f64().expect("half span");
     let bounds = [cx - half, cy - half, cx + half, cy + half];
     let painted = |hidden: bool| {
-        let mut document = base.0.clone();
+        let mut document = base.value().clone();
         document["targetRegions"] = json!([{ "id": "region-1", "x": bounds[0], "y": bounds[1], "width": half * 2.0, "height": half * 2.0, "hidden": hidden, "locked": false }]);
-        Arc::new(Puzzle2dPlaySnapshot(document))
+        Arc::new(Puzzle2dPlaySnapshot::new(document))
     };
     let (run_id, requested) = (number(&vector["run"]), number(&vector["requested"]));
     let inside = |log: &RunLog| {
@@ -341,8 +341,8 @@ fn fill_run_job_collision_verdicts_agree_with_the_geo_oracle() {
     let law = &fixture()["geoOracle"];
     let document = example(&law["document"]);
     let log = run(&document, number(&law["run"]), number(&law["requested"]));
-    let hosts: Vec<Rect<f64>> = document.0["nodes"].as_array().expect("nodes").iter().map(oracle_node_rect).collect();
-    let kinds = fill_kind_rows(&document.0);
+    let hosts: Vec<Rect<f64>> = document.value()["nodes"].as_array().expect("nodes").iter().map(oracle_node_rect).collect();
+    let kinds = fill_kind_rows(document.value());
     let mut accepted: Vec<Rect<f64>> = Vec::new();
     let (mut decisive, mut ambiguous, mut disagreements, mut collisions, mut fits) = (0, 0, Vec::new(), 0, 0);
     for (key, _, reason, subject) in &log.finals {
@@ -461,9 +461,9 @@ fn fill_revalidate_job_retracts_conflicting_placements_and_reappends_survivors()
 
     let conflicted = number(&law["conflicted"]) as usize;
     let Puzzle2dMutation::CreateNode(create) = &provisional[conflicted * FILL_RUN_OPS_PER_PLACEMENT] else { panic!("create_node") };
-    let mut head = document.0.clone();
+    let mut head = document.value().clone();
     head["nodes"].as_array_mut().expect("nodes").push(json!({ "id": "intruder", "shape": "circle", "x": create.node.x, "y": create.node.y, "radius": 1.0, "handles": [] }));
-    let mut conflict_job = Puzzle2dFillRevalidateJob::new(identity(1, 3), Arc::new(Puzzle2dPlaySnapshot(head)), &provisional, Some(&checkpoint), 0.0);
+    let mut conflict_job = Puzzle2dFillRevalidateJob::new(identity(1, 3), Arc::new(Puzzle2dPlaySnapshot::new(head)), &provisional, Some(&checkpoint), 0.0);
     let mut conflict = RunLog::continuing(&base.ops);
     run_to_complete(&mut conflict_job, INTERACTIVE_LANE_FUEL, &mut conflict);
     let kept = conflicted * FILL_RUN_OPS_PER_PLACEMENT;
@@ -595,7 +595,7 @@ fn fill_app(spec: &Value, requested: u64) -> Puzzle2dApp {
     let keep = number(&spec["keepNodes"]) as usize;
     let deletes: Vec<String> = fixture_nodes(&fixture_of(&app)).iter().skip(keep).filter_map(|node| node["id"].as_str()).map(|id| protocol::OpText::print_op(&crate::standards::v1::subsets::any::schema::mutations::delete_node(id.to_string()))).collect();
     semio_framework::io::resolve_ready(app.ingest_operations_text(&deletes.join("\n"))).expect("delete the nodes past keepNodes");
-    assert_eq!(fixture_of(&app), example(spec).0, "the app commits exactly the fixture document");
+    assert_eq!(fixture_of(&app), example(spec).value().clone(), "the app commits exactly the fixture document");
     dispatch(&mut app, "setFillCount", Some(&json!({ "count": requested })), None).expect("set fill count");
     app
 }

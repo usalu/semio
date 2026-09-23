@@ -49,6 +49,10 @@ impl ArtifactViewer for NoteViewer {
     type Command = NoteViewCommand;
 
     const DIALECT: Dialect = NOTE_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::note_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::note_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
 
     /// 🔐️ The document-store owner catalogue, identical to the sibling editor's: a viewer owns the

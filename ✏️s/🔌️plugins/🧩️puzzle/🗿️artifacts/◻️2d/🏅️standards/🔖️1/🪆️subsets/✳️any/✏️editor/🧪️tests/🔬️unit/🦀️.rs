@@ -84,10 +84,14 @@ pub(crate) mod context {
     /// predicate already reads false — so the exit branch returned a result whose `history_patch` was
     /// still sitting in the outbox, and every `committed_edits(&result)` read 0 for an edit that really
     /// landed in the document.
-    fn drain_settled(app: &mut Puzzle2dApp, result: &mut InvocationResult) -> Result<(), Fault> {
+    ///
+    /// 🧯️ A `Fault` page is ACKed like every other page — the host ACKs it too — and reported once the
+    /// operation has retired (`settle_registered_typed_operation`'s shape). Returning on it un-ACKed left the
+    /// faulted operation awaiting its ACK for ever, so the NEXT dispatch never settled either.
+    fn drain_settled(app: &mut Puzzle2dApp, result: &mut InvocationResult, fault: &mut Option<Fault>) -> Result<(), Fault> {
         while let Some(page) = app.take_typed_operation_result_page(1) {
             if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
-                return Err(Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
+                fault.get_or_insert_with(|| Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
             }
             app.acknowledge_typed_operation_result(page.token)?;
         }
@@ -122,10 +126,11 @@ pub(crate) mod context {
 
     fn settle(app: &mut Puzzle2dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
         let mut result = result?;
+        let mut fault = None;
         for _ in 0..1_048_576 {
             if !app.has_pending_typed_operations() {
-                drain_settled(app, &mut result)?;
-                return Ok(result);
+                drain_settled(app, &mut result, &mut fault)?;
+                return fault.map_or(Ok(result), Err);
             }
             PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
             block_on(app.advance_typed_operation_publication())?;
@@ -135,7 +140,7 @@ pub(crate) mod context {
             // THE HISTORY PATCH) queued can be the very turn this loop exits on — and the caller then reads
             // a result with no committed edits at all. The framework's own `settle_registered_typed_operation`
             // drains both in inner loops for exactly this reason.
-            drain_settled(app, &mut result)?;
+            drain_settled(app, &mut result, &mut fault)?;
         }
         Err(Fault::from("puzzle2d test operation did not settle"))
     }
@@ -181,14 +186,17 @@ pub(crate) mod context {
     
     /// 🧾 How many DOCUMENT edits one dispatch actually committed. `InvocationResult.mutations` is
     /// the INLINE carrier and the typed/retained ladder never uses it: a migrated verb commits its edits
-    /// inside the operation and reports them as command-log upserts, which `settle` adopts above. Only an
-    /// `"apply"` row is a document edit: a CONFIG apply is logged as `action_id: "configApply"` under the
-    /// same `ActionKind::Mutation` (`🔌️plugin/🦀️.rs:23976` vs `:23993`), so counting bare "mutation"
-    /// rows would make every config-only verb's "must not mutate the document" law red for the wrong
-    /// reason, and every `View`/`Shell` verb logs a command row of its own too.
+    /// inside the operation and reports them as command-log upserts, which `settle` adopts above.
+    ///
+    /// 🐛️ Since 2026-09-20 (`record_typed_operation_lane`, `🧰️framework/…/🔌️plugin/🦀️.rs`) a typed
+    /// operation's document edit is logged under its own VERB (`addNode`, `paste`, …) and its declared
+    /// kind; `action_id: "apply"` is only the backfill of an edit no command claimed. Filtering on
+    /// `"apply"` therefore read 0 for every edit that really landed. The row that IS a document edit is
+    /// the one carrying printed document ops — a config-lane or no-lane row prints none — and it is
+    /// applied; a coalesced gesture re-upserts its ONE row, so rows are counted by `seq`.
     /// Every law that means "this verb edited the document" counts these, never `mutations`.
     pub fn committed_edits(result: &InvocationResult) -> usize {
-        result.history_patch.as_ref().map_or(0, |patch| patch.upserts.iter().filter(|entry| entry.kind == "mutation" && entry.action_id == "apply").count())
+        result.history_patch.as_ref().map_or(0, |patch| patch.upserts.iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).map(|entry| entry.seq).collect::<std::collections::BTreeSet<_>>().len())
     }
 
     /// 🧵️ Drives the same host-owned `DispatchAction` continuation used in production until the example is complete.
@@ -215,9 +223,24 @@ pub(crate) mod context {
         app
     }
     
-    /// 🖼️ The rendered body, serialized — every panel/window assertion greps this string.
+    /// 🪟️ The window kind a canvas body paints, `None` for a panel body.
+    fn body_window_kind(body_key: &str) -> Option<&'static str> {
+        match body_key {
+            overview::BODY_KEY => Some(overview::WINDOW_KIND_ID),
+            detail::BODY_KEY => Some(detail::WINDOW_KIND_ID),
+            selection::BODY_KEY => Some(selection::WINDOW_KIND_ID),
+            _ => None,
+        }
+    }
+
+    /// 🖼️ The rendered body, serialized — every panel/window assertion greps this string. A canvas body
+    /// renders its kind's default instance (`id == kind`), the very window `action_meta` addresses when a
+    /// law names none: per-window state (camera, grid, gumball flags) is captured from the RENDERED
+    /// window's own partition (`window_config_store.capture(Some(view_state))`), so a render with no
+    /// window reads the empty default and never the window the law just published into.
     pub fn render_body(app: &mut Puzzle2dApp, body_key: &str) -> String {
-        render_body_with_view(app, body_key, &ViewModel::default())
+        let view = body_window_kind(body_key).map_or_else(ViewModel::default, |kind| window_view(kind, kind));
+        render_body_with_view(app, body_key, &view)
     }
     
     pub fn render_body_with_view(app: &mut Puzzle2dApp, body_key: &str, view_state: &ViewModel) -> String {
@@ -238,10 +261,17 @@ pub(crate) mod context {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire rendered node")
     }
     
+    /// 🪟️ `body_key` rendered as the window instance `window_id`. The instance travels in the view state
+    /// the framework captures that window's partitions from; a `"{body}:{window}"` key is no body at all
+    /// and rendered `Unknown body`.
     pub fn render_window(app: &mut Puzzle2dApp, body_key: &str, window_id: &str) -> String {
-        render_body(app, &format!("{body_key}:{window_id}"))
+        let kind = body_window_kind(body_key).expect("render_window renders a canvas body");
+        render_body_with_view(app, body_key, &window_view(kind, window_id))
     }
     
+    /// 🧹️ Closes `app` to terminal-empty ownership; `#[track_caller]` so a refusal names WHICH app of a
+    /// two-app law did not get there.
+    #[track_caller]
     pub fn close_app(app: &mut Puzzle2dApp) {
         for _ in 0..1_048_576 {
             if app.close_terminal_is_empty() {
@@ -260,7 +290,7 @@ pub(crate) mod context {
     }
     
     pub fn fixture_of(app: &Puzzle2dApp) -> Value {
-        app.snapshot().expect("projection").0
+        app.snapshot().expect("projection").value().clone()
     }
     
     pub fn first_node_id(app: &Puzzle2dApp) -> String {
@@ -432,7 +462,9 @@ async fn transform_gesture_ticks_coalesce_into_one_undo_step() {
 /// 🧾️ The 64-slot edit ledger (`ARTIFACT_HISTORY_LEDGER_CAPACITY`) is the app's hard interactive
 /// budget: a session of ordinary small edits must reach it and refuse HONESTLY (a named fault the
 /// caller sees), never corrupt the store or die silently. This pins where that wall stands so a
-/// gesture that quietly spends 100 slots (a per-placement fill) cannot creep back in unnoticed.
+/// gesture that quietly spends 100 slots (a per-placement fill) cannot creep back in unnoticed. The refusal
+/// is the store's own `batched publication requires preinstalled fixed applied and revision capacity`
+/// (`🏪️store/🦀️.rs`), the one sentence the batched ledger answers at its wall.
 #[semio_framework_async_macros::async_test]
 async fn sequential_small_edits_honour_the_fixed_edit_ledger_ceiling() {
     let mut app = app_with_registry();
@@ -452,7 +484,7 @@ async fn sequential_small_edits_honour_the_fixed_edit_ledger_ceiling() {
     close_app(&mut app);
     assert!(undone.is_ok(), "the store stays usable at the ceiling: {:?}", undone.err());
     assert!(committed >= 64, "the ledger must admit its full 64 slots, admitted {committed}");
-    assert!(refusal.as_deref().is_none_or(|fault| fault.contains("saturated")), "past the ceiling the refusal must name the saturated ledger, got {refusal:?}");
+    assert!(refusal.as_deref().is_none_or(|fault| fault.contains("applied and revision capacity")), "past the ceiling the refusal must name the exhausted applied ledger, got {refusal:?}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -568,6 +600,7 @@ async fn exact_overview_window_transient_isolates_abort_and_resets_on_reload() {
     assert_eq!(reset.get::<window::Puzzle2dOverviewWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
     assert_eq!(app.window_transient_generation(&view_a).expect("window a transient generation"), Some(5));
     assert_eq!(app.window_transient_generation(&view_b).expect("window b transient generation"), Some(0));
+    drop((transient_a, transient_b, aborted, reset));
     close_app(&mut reopened);
     close_app(&mut app);
     eprintln!("[DEBUG] Puzzle 2D transient engagement stayed exact-window isolated, abort cleared only its owner, reload reset ephemeral state, and both registered apps reached terminal-empty close");
@@ -1063,10 +1096,11 @@ fn first_free_handle_id(fixture: &Value) -> Option<String> {
 
 /// 🐁️ LAW: the framework-owned `"pointer"` hover reaches the board scene for EVERY granularity and in
 /// every pane — the gap the 09-17 audit measured as `hovered_id: None` hardcoded at the scene builder.
+/// Read off Nakagin: concrete-forest is a one-node SEED with no edge, so it cannot name an edge to hover.
 #[test]
 fn hover_id_reaches_the_board_scene_for_every_granularity_and_pane() {
-    let fixture = crate::examples::puzzle2d::concrete_forest::SOURCE.document_json().to_string();
-    let fixture: Value = serde_json::from_str(&fixture).expect("concrete forest json");
+    let fixture = crate::examples::puzzle2d::nakagin_capsule_tower::SOURCE.document_json().to_string();
+    let fixture: Value = serde_json::from_str(&fixture).expect("nakagin json");
     let node_id = fixture_nodes(&fixture)[0].get("id").and_then(Value::as_str).expect("node id").to_string();
     let handle_id = fixture_nodes(&fixture).iter().filter_map(|node| node.get("handles").and_then(Value::as_array)).flatten().filter_map(|handle| handle.get("id").and_then(Value::as_str)).next().expect("handle id").to_string();
     let edge_id = fixture_edges(&fixture)[0].get("id").and_then(Value::as_str).expect("edge id").to_string();

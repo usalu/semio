@@ -17,12 +17,15 @@ export type Canvas2dGumballConfig = {
   readonly scaleUniform: boolean;
 };
 
+export type Canvas2dGumballSpace = "fem2d" | "world";
+
 export type Canvas2dGumballMeta = {
   readonly active: boolean;
   readonly pivotLayer: readonly [number, number];
   readonly pivotModel: readonly [number, number];
   readonly selectionIds: readonly string[];
   readonly config: Canvas2dGumballConfig;
+  readonly space?: Canvas2dGumballSpace;
 };
 
 type GumballHandleKind = "moveX" | "moveY" | "rotate" | "scaleX" | "scaleY" | "scaleUniform";
@@ -38,11 +41,13 @@ export type Canvas2dGumballTransformPayload = {
   readonly args: Record<string, unknown>;
 };
 
-function layerToModel(layerX: number, layerY: number): { readonly x: number; readonly y: number } {
+function layerToModel(layerX: number, layerY: number, space: Canvas2dGumballSpace): { readonly x: number; readonly y: number } {
+  if (space === "world") return { x: layerX, y: layerY };
   return { x: (layerX - FEM2D_ORIGIN) / FEM2D_SCALE, y: -(layerY - FEM2D_ORIGIN) / FEM2D_SCALE };
 }
 
-function modelToLayer(modelX: number, modelY: number): { readonly x: number; readonly y: number } {
+function modelToLayer(modelX: number, modelY: number, space: Canvas2dGumballSpace): { readonly x: number; readonly y: number } {
+  if (space === "world") return { x: modelX, y: modelY };
   return { x: modelX * FEM2D_SCALE + FEM2D_ORIGIN, y: -modelY * FEM2D_SCALE + FEM2D_ORIGIN };
 }
 
@@ -67,15 +72,16 @@ export function canvas2dGumballTransformDelta(
   viewportWidth: number,
   viewportHeight: number,
   selectionIds: readonly string[],
+  space: Canvas2dGumballSpace = "fem2d",
 ): Canvas2dGumballTransformPayload | null {
   const base = { ids: [...selectionIds] };
-  const pivotLayer = modelToLayer(drag.startModelPivot[0], drag.startModelPivot[1]);
+  const pivotLayer = modelToLayer(drag.startModelPivot[0], drag.startModelPivot[1], space);
   const pivotScreen = worldToScreenLogical(pivotLayer.x, pivotLayer.y, camera, viewportWidth, viewportHeight);
   if (kind === "moveX" || kind === "moveY") {
     const before = screenToWorldLogical(drag.startScreen.x, drag.startScreen.y, camera, viewportWidth, viewportHeight);
     const after = screenToWorldLogical(screenX, screenY, camera, viewportWidth, viewportHeight);
-    const beforeModel = layerToModel(before.x, before.y);
-    const afterModel = layerToModel(after.x, after.y);
+    const beforeModel = layerToModel(before.x, before.y, space);
+    const afterModel = layerToModel(after.x, after.y, space);
     const dx = kind === "moveX" ? afterModel.x - beforeModel.x : 0;
     const dy = kind === "moveY" ? afterModel.y - beforeModel.y : 0;
     if (Math.abs(dx) < 1e-9 && Math.abs(dy) < 1e-9) return null;
@@ -112,8 +118,9 @@ export function canvas2dGumballTransformStep(
   viewportHeight: number,
   selectionIds: readonly string[],
   previousTotal: Canvas2dGumballTransformPayload | null,
+  space: Canvas2dGumballSpace = "fem2d",
 ): { readonly dispatch: Canvas2dGumballTransformPayload; readonly total: Canvas2dGumballTransformPayload } | null {
-  const total = canvas2dGumballTransformDelta(kind, drag, screenX, screenY, camera, viewportWidth, viewportHeight, selectionIds);
+  const total = canvas2dGumballTransformDelta(kind, drag, screenX, screenY, camera, viewportWidth, viewportHeight, selectionIds, space);
   if (!total) return null;
   if (!previousTotal || previousTotal.action !== total.action) {
     return { dispatch: total, total };
@@ -162,7 +169,7 @@ export function Canvas2dGumballOverlay({ layersJson, activeUtility, camera, view
     (screenX: number, screenY: number) => {
       const drag = dragRef.current;
       if (!drag || !meta) return;
-      const step = canvas2dGumballTransformStep(drag.kind, drag, screenX, screenY, camera, viewportWidth, viewportHeight, meta.selectionIds, totalRef.current);
+      const step = canvas2dGumballTransformStep(drag.kind, drag, screenX, screenY, camera, viewportWidth, viewportHeight, meta.selectionIds, totalRef.current, meta.space ?? "fem2d");
       if (!step) return;
       totalRef.current = step.total;
       onDispatch(step.dispatch.action, step.dispatch.args);

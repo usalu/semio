@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/styling/static-dir-mounts.json",
+  "title": "Static Dir Mount Table Cases",
+  "$defs": {
+    "Mount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["route", "root", "files"],
+      "properties": {
+        "route": { "type": "string", "pattern": "^/" },
+        "root": { "type": "string", "minLength": 1 },
+        "files": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "status"],
+      "properties": {
+        "url": { "type": "string", "pattern": "^/" },
+        "status": { "enum": [200, 404] }
+      }
+    },
+    "Refusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mounts", "error"],
+      "properties": {
+        "mounts": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/Mount" } },
+        "error": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "mounts", "requests", "refusals"],
+  "properties": {
+    "$schema": { "const": "./🧬️schema/🔣️.json" },
+    "mounts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Mount" } },
+    "requests": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Request" } },
+    "refusals": { "type": "array", "items": { "$ref": "#/$defs/Refusal" } }
+  }
+}

@@ -70,30 +70,57 @@ pub(crate) mod context {
     /// verb in this file was refused before its assertion ever ran.
     pub const WINDOW: &str = "layout-blueprint-1";
 
-    /// 🪟️ The addressed view the shell would send for {@link WINDOW}.
+    /// 👁️ The preview window instance mounted beside {@link WINDOW}; it owns its own camera and config.
+    pub const PREVIEW_WINDOW: &str = "layout-preview-1";
+
+    /// 🪟️ The view the shell would send: both window kinds are mounted, as in the play pane.
     pub fn windowed_view() -> ViewModel {
         ViewModel {
-            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: WINDOW.into(), window_kind_id: LAYOUT_PLAY_WINDOW_BLUEPRINT.into() }],
+            window_instances: vec![
+                semio_framework_plugin::ViewWindowInstance { id: WINDOW.into(), window_kind_id: LAYOUT_PLAY_WINDOW_BLUEPRINT.into() },
+                semio_framework_plugin::ViewWindowInstance { id: PREVIEW_WINDOW.into(), window_kind_id: LAYOUT_PLAY_WINDOW_PREVIEW.into() },
+            ],
             ..Default::default()
         }
     }
 
     /// 🎯️ `meta("local")` bound to {@link WINDOW}, exactly as `ShellHost` binds it.
     pub fn windowed_meta() -> semio_framework_plugin::ActionMeta {
-        semio_framework_plugin::ActionMeta { view_state: windowed_view().for_window_instance(WINDOW), ..meta("local") }
+        window_meta(WINDOW)
+    }
+
+    /// 🎯️ `meta("local")` bound to one mounted window instance of {@link windowed_view}.
+    pub fn window_meta(window: &str) -> semio_framework_plugin::ActionMeta {
+        semio_framework_plugin::ActionMeta { view_state: windowed_view().for_window_instance(window), ..meta("local") }
+    }
+
+    /// 🪟️ The view a body renders under: a window body inside its own window instance, as `ShellHost`
+    /// renders it, so the window's config and transient lanes are the ones it reads; panels unaddressed.
+    pub fn body_view(body_key: &str) -> ViewModel {
+        let window = match body_key {
+            LAYOUT_PLAY_BODY_BLUEPRINT => WINDOW,
+            LAYOUT_PLAY_BODY_PREVIEW => PREVIEW_WINDOW,
+            _ => return ViewModel::default(),
+        };
+        windowed_view().for_window_instance(window).expect("fixture window instance is mounted")
     }
 
     /// 🎯️ Dispatches one typed command through the retained route and settles its typed operation,
     /// so the snapshot a test reads next is the committed one.
     pub async fn dispatch(app: &mut LayoutApp, command: LayoutCommand) -> InvocationResult {
+        dispatch_in(app, command, WINDOW).await
+    }
+
+    /// 🎯️ {@link dispatch} addressed to one mounted window instance.
+    pub async fn dispatch_in(app: &mut LayoutApp, command: LayoutCommand, window: &str) -> InvocationResult {
         let verb = command.command_id().to_string();
-        let result = app.0.dispatch_typed(command, &windowed_meta()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
+        let result = app.0.dispatch_typed(command, &window_meta(window)).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
         settle_registered_typed_operation(&mut app.0, INSTANCE).await.unwrap_or_else(|fault| panic!("{verb} did not settle: {fault:?}"));
         result
     }
 
     pub async fn render(app: &mut LayoutApp, body_key: &str) -> String {
-        render_in(app, body_key, &ViewModel::default()).await
+        render_in(app, body_key, &body_view(body_key)).await
     }
 
     /// 🌐️ The same projection, rendered for one locale — a body's labels are resolved against the
@@ -182,6 +209,9 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
             "exportPackage" => "export-package",
             "engagementSubmit" => "engagement-submit",
             "deleteSelection" => "delete-selection",
+            "translateSelection" => "translate-selection",
+            "rotateSelection" => "rotate-selection",
+            "scaleSelection" => "scale-selection",
             other => panic!("every_command() row {other} missing from this test's expected-keyword table"),
         }
     };
@@ -228,13 +258,16 @@ pub(super) fn every_command() -> Vec<LayoutCommand> {
         LayoutCommand::AddPage(add_page::AddPage {}),
         LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: "width".into(), value: "300".into() }),
         LayoutCommand::PatchFrame(patch_frame::PatchFrame { frame_id: "frame-1".into(), page_id: Some("page-1".into()), field: "fill".into(), value: "0.5, 0.4, 0.3, 1".into() }),
-        LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
+        LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0, artifact_ref: String::new(), proxy_data_url: String::new() }),
         LayoutCommand::ExportPng(export_png::ExportPng { page_id: Some("page-1".into()) }),
         LayoutCommand::ExportSvg(export_svg::ExportSvg { page_id: None }),
         LayoutCommand::ExportPdf(export_pdf::ExportPdf { page_id: None }),
         LayoutCommand::ExportPackage(export_package::ExportPackage {}),
         LayoutCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "export png".into() }),
         LayoutCommand::DeleteSelection(crate::editor::layout::commands::delete_selection::DeleteSelection {}),
+        LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: vec!["frame-1".into()], dx: 3.0, dy: 4.0 }),
+        LayoutCommand::RotateSelection(rotate_selection::RotateSelection { ids: vec!["frame-1".into()], angle: 0.25 }),
+        LayoutCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["frame-1".into()], sx: 1.5, sy: 1.25 }),
     ]
 }
 

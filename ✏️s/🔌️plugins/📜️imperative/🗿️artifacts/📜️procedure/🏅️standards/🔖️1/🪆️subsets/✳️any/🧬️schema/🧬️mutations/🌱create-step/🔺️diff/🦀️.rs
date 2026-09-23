@@ -20,7 +20,7 @@ pub fn diff(payload: &super::CreateStep, base: &ProcedureSnapshot) -> protocol::
     }
     let mut path = crate::procedure_working_scene(base).path;
     if let Some(steps) = crate::mutations::resolve_path_mut(&mut path, &payload.path_ref) {
-        steps.push(payload.step.clone());
+        steps.insert(payload.index.map_or(steps.len(), |index| index.min(steps.len())), payload.step.clone());
     }
     protocol::MutationOutcome::new(crate::diff_replace_flow(&path))
 }

@@ -261,3 +261,43 @@ async fn move_node_diff_is_deterministic() {
     assert_outcome_deterministic(&base, &move_node(id, 7.0, 8.0)).await;
 }
 //#endregion 🔖️OutcomeLaws
+
+/// 🧺️ A retained one-item preparation folds exactly one forward plus one inverse row
+/// (`ArtifactStoreOneItemFootprint::for_one_invertible_item`), so every row the editor's removal verbs
+/// publish must invert to ONE row: `delete-node` on a connected node inverted to the node plus one row
+/// per severed edge and every `removeNode`/`deleteSelection` on it failed `batched item candidate failed
+/// its exact fixed fold contract`. The rows' own inverses, undone tail-first, restore the document
+/// byte-for-byte (content-child identity is a hash over node and edge ORDER).
+#[semio_framework_async_macros::async_test]
+async fn removal_rows_are_point_invertible_and_restore_the_document() {
+    let base = default_snapshot();
+    assert!(!base.edges().is_empty(), "the law needs a connected node");
+    for node in base.nodes() {
+        let rows = crate::schema::remove_nodes_operations(&base, std::slice::from_ref(&node.id));
+        let mut current = base.clone();
+        let mut undo = Vec::new();
+        for row in &rows {
+            let inverse = row.inverse(&current);
+            assert_eq!(inverse.len(), 1, "removal row {row:?} must invert to exactly one row, got {inverse:?}");
+            current = apply_mutation(&current, row).expect("valid removal row").0;
+            undo.extend(inverse);
+        }
+        assert!(!current.nodes().iter().any(|entry| entry.id == node.id));
+        for row in undo.iter().rev() {
+            current = apply_mutation(&current, row).expect("valid inverse row").0;
+        }
+        assert_eq!(current, base, "undoing every removal row of {} restores the document byte-for-byte", node.id);
+    }
+}
+
+/// 📍️ `create-node`/`connect-nodes` insert at their optional `index`; absent, they append.
+#[semio_framework_async_macros::async_test]
+async fn positional_create_and_connect_insert_where_they_are_told() {
+    let base = default_snapshot();
+    let created = apply_mutation(&base, &create_node_at(sample_node("node-first", 0.0, 0.0), 0)).expect("positional create").0;
+    assert_eq!(created.nodes().first().map(|node| node.id.clone()), Some("node-first".into()));
+    let Some(edge) = base.edges().last().cloned() else { return };
+    let disconnected = apply_mutation(&base, &disconnect_nodes(edge.id.clone())).expect("disconnect").0;
+    let reconnected = apply_mutation(&disconnected, &connect_nodes_at(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.route_style, edge.properties.clone(), 0)).expect("positional connect").0;
+    assert_eq!(reconnected.edges().first().map(|entry| entry.id.clone()), Some(edge.id));
+}

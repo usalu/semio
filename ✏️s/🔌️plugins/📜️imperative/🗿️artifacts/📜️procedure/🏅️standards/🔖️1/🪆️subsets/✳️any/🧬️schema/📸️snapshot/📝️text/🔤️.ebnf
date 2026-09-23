@@ -1,3 +1,16 @@
 (* ebnf imperative.procedure.snapshot *)
-document = header, body ;
-header = 'schema', space, 'imperative.procedure.snapshot', newline ;
+(* ISO-14977-style mirror of the normative 📖️.grammar.semio (same production names,
+   kebab-case -> "space case"). *)
+artifact mark = 'semio imperative.imperative.dsl v1' ;
+document = artifact mark, schema line, flow line, text line, path line, seed line ;
+schema line = 'schema', '=', hex ;
+flow line = 'flow', '=', child handle ;
+text line = 'text', '=', child handle ;
+path line = 'path', '=', hex ;
+seed line = 'seed', '=', hex ;
+child handle = '[', hex, ',', hex, ']' ;
+
+(* Framework dialect-primitive terminals, given one concrete definition each for a
+   self-contained mirror (not defined in the .semio itself). *)
+hex = { digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' } ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;

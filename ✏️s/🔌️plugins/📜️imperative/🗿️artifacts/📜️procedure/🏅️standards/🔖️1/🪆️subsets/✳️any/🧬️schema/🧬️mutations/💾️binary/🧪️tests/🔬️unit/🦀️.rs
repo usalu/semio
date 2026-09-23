@@ -4,7 +4,7 @@ use crate::{PathRef, ProcedureSnapshot};
 
 #[test]
 fn direct_wire_records_preserve_keyword_fields_and_tag_order() {
-    let expected = [("create-step", &["owner", "slot", "item"][..]), ("delete-step", &["owner", "slot", "id"][..]), ("reorder-steps", &["owner", "slot", "id", "to"][..]), ("edit-step-params", &["owner", "slot", "id", "params"][..])];
+    let expected = [("create-step", &["owner", "slot", "index", "item"][..]), ("delete-step", &["owner", "slot", "id"][..]), ("reorder-steps", &["owner", "slot", "id", "to"][..]), ("edit-step-params", &["owner", "slot", "id", "params"][..])];
     let variants = <ProcedureMutationDsl as dsl::DslVariants>::variants();
     assert_eq!(variants.len(), expected.len());
     for (index, ((keyword, spec), (expected_keyword, expected_fields))) in variants.iter().zip(expected.iter()).enumerate() {
@@ -23,6 +23,9 @@ async fn op_binary_round_trips_and_agrees_with_text() {
     assert_eq!(decode_op(&bytes).expect("decode"), operation);
 }
 
+/// 🔐️ A bare `ArtifactStore::new` installs no owner catalog, and `reserve_edit_history_slot` refuses
+/// every `Apply` without one (`edit history insertion requires its exact mutation retirement factory`);
+/// the law installs the catalog the app installs and walks the bounded close loop before `Drop`.
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_with_applied_operation() {
     use crate::{Dictionary, Step};
@@ -31,11 +34,15 @@ async fn document_text_round_trip_with_applied_operation() {
     let document = crate::schema::default_snapshot();
     let envelope = store::create_document_envelope::<ProcedureSnapshot, ProcedureMutation>("procedure.document/v1", "test", document, None);
     let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    doc_store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ProcedureSnapshot, ProcedureMutation>());
     let step = Step { id: "step-x".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
     let operation = create_step(PathRef::default(), step);
     doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
+    while !doc_store.close_owned_terminal_is_empty() {
+        doc_store.close_owned_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("the procedure store closes through its exact bounded owners");
+    }
 }
 
 #[semio_framework_async_macros::async_test]

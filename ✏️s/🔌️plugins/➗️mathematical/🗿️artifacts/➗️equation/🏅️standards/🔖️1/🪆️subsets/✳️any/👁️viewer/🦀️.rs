@@ -54,6 +54,10 @@ impl ArtifactViewer for EquationViewer {
     type Command = EquationViewCommand;
 
     const DIALECT: Dialect = EQUATION_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::equation_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::equation_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
 
     /// 🔐️ The document-store owner catalogue, identical to the sibling editor's: a viewer owns the

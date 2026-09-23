@@ -1558,6 +1558,24 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
   ];
 }
 
+/** @emoji 🪜️ Serves several `static-dir` roots as ONE route table. Each mount answers 404 for a file its
+ * root lacks (never the SPA fallback), so two roots on one route shadow each other — the second becomes
+ * unreachable — and a parent route registered before a nested one swallows the nested one's requests.
+ * The table therefore refuses a route claimed twice and orders the halves by nesting: serving
+ * most-specific route first, build copies parent first (a parent copy replaces its destination).
+ * Fixture law: `🧫️fixtures/🗂️static-dir-mounts/🔣️.json`. */
+export function staticDirMountVitePlugins(repoRoot: string, specs: readonly Extract<PlaygroundAssetSpec, { kind: "static-dir" }>[]): OwnedBuildPlugin[] {
+  const routes = specs.map((spec) => spec.route.replace(/\/+$/, ""));
+  const claimed = routes.find((route, index) => routes.indexOf(route) !== index);
+  if (claimed !== undefined) throw new Error(`Two static-dir roots claim one route: ${claimed}`);
+  const depth = (index: number) => routes[index]!.split("/").length;
+  const halves = specs.map((spec, index) => ({ index, plugins: staticDirVitePlugin(repoRoot, spec) }));
+  return [
+    ...[...halves].sort((a, b) => depth(b.index) - depth(a.index)).flatMap((half) => half.plugins.filter((plugin) => plugin.apply !== "build")),
+    ...[...halves].sort((a, b) => depth(a.index) - depth(b.index)).flatMap((half) => half.plugins.filter((plugin) => plugin.apply === "build")),
+  ];
+}
+
 /** @emoji 🌐️ Reference-plane assets every `*-play` static bundle serves unconditionally. */
 export const PLAYGROUND_PLAY_STATIC_ASSETS: readonly Extract<PlaygroundAssetSpec, { kind: "static-dir" }>[] = [
   { kind: "static-dir", route: "/infinite-assets", root: "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets" },

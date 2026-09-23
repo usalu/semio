@@ -2,11 +2,12 @@ import {readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineOwnedBuildConfigFactory, uiReactBuildPlugin, uiTailwindBuildPlugins, type OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin, semioAssetsVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { DEFAULT_HOST_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
+import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
 import { semioAgentBridgeRendezvousVitePlugin, semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
@@ -92,7 +93,7 @@ const resolvedPluginId = PLAYGROUND_BUILD_TARGETS.find((target) => target.varian
 if (!resolvedPluginId) throw new Error(`Unknown playground module identity: ${plugin}`);
 const extensionIds = new Set(EXTENSION_TARGETS.map((target) => target.pluginId));
 const productionComponents = command === "build" ? selectProductionBrowserComponents((await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION, plugin, resolvedPluginId, [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS]) : undefined;
-const pluginModuleDirNames = [MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId))];
+const pluginModuleDirNames = [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId))];
 
 /** @emoji 🔎️ The components the activation-receipt watcher checks for staleness — every declared build
  * target, with the owner tree whose newest source mtime decides whether the staged module is behind
@@ -208,11 +209,11 @@ return {
     semioAgentBridgeRendezvousVitePlugin(),
     ...(command === "serve" ? [...semioSourceFreshnessVitePlugins({ repoRoot }), semioActivationVitePlugin({ receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: activationComponents }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot })] : []),
     ...semioAssetsVitePlugin(repoRoot),
-    ...(productionComponents ? [productionBrowserArtifactsVitePlugin(repoRoot, productionComponents)] : [
-      ...pluginModuleDirNames.flatMap((name) => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
-      staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${MODULE_VENDOR_DIRECTORY}`, root: path.relative(repoRoot, fontsDir) }),
-      staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_EXTENSION_ROUTE, root: path.relative(repoRoot, installedExtensionsDir) }),
-    ]),
+    ...(productionComponents ? [productionBrowserArtifactsVitePlugin(repoRoot, productionComponents)] : staticDirMountVitePlugins(repoRoot, [
+      ...pluginModuleDirNames.map((name) => ({ kind: "static-dir" as const, route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
+      { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${MODULE_VENDOR_DIRECTORY}`, root: path.relative(repoRoot, fontsDir) },
+      { kind: "static-dir", route: MODULE_EXTENSION_ROUTE, root: path.relative(repoRoot, installedExtensionsDir) },
+    ])),
     // 🏷️ A brand's own static assets (e.g. the Aggregator's funding/partner logos) mount at `/<assetsDir>`
     // alongside the shared `framework/ui/asset` mount above.
     ...(brand?.assetsDir ? staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${brand.assetsDir}`, root: brand.assetsDir }) : []),

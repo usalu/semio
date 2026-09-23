@@ -114,3 +114,29 @@ async fn an_owned_empty_scene_is_never_refilled_from_the_persisted_board() {
     assert!(crate::schema::fixture_nodes(&wires_working_board(&emptied)).is_empty(), "an owner that exists is honoured verbatim");
 }
 
+
+/// 🖼️ Every board node of the curated example reaches the canvas as a drawable box and every edge as a
+/// line between two node centres — the framework `Canvas2dScene` contract, not the raw board records the
+/// host silently skipped (the reasoning-wires pane drew only its grid, ticket 26/09/19).
+#[test]
+fn the_curated_example_projects_into_drawable_canvas_layers() {
+    let document = crate::schema::metabolism_wires_example_snapshot().expect("curated example parses");
+    let board = crate::wires_working_board(&document);
+    let layers: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_string(&dsl::os_pack::json::Value::Array(crate::schema::wires_canvas_layers(&board, &document.wires_fixture)))).expect("independent JSON oracle");
+    let layers = layers.as_array().expect("layer list");
+    let boxes = layers.iter().filter(|layer| matches!(layer["kind"].as_str(), Some("circle" | "rect")) && layer["width"].as_f64().is_some_and(|width| width > 0.0) && layer["height"].as_f64().is_some_and(|height| height > 0.0)).count();
+    let lines = layers.iter().filter(|layer| layer["kind"] == "line" && ["x0", "y0", "x1", "y1"].iter().all(|key| layer[*key].as_f64().is_some_and(f64::is_finite))).count();
+    assert_eq!(boxes, crate::schema::fixture_nodes(&board).len());
+    assert!(lines >= crate::schema::fixture_edges(&board).len(), "every board edge is a line; a relationship without one adds its own");
+    assert!(boxes > 0 && lines > 0, "the curated example has content to draw");
+    assert!(layers.iter().all(|layer| !layer["text"].is_string()), "a board `text` string must not shadow the layer record's own `text` object");
+}
+
+/// 🧬️ The projection names exactly the snapshot's declared child slots — what the live envelope load checks
+/// before a decoded document may replace the store.
+#[test]
+fn the_child_restore_projection_names_every_declared_child_slot() {
+    let snapshot = crate::empty_wires_snapshot();
+    let projection = crate::wires_child_restore_projection(&snapshot).expect("the loaded-parent child projection");
+    assert_eq!(projection.len(), <crate::WiresSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());
+}

@@ -7,7 +7,7 @@
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
 use crate::document::NormHost;
-use crate::editor::din4108::commands::{evaluate, selected_check, set_snapshot};
+use crate::editor::din4108::commands::{evaluate, selected_check, set_active_example, set_snapshot};
 use crate::editor::din4108::modes::edit as edit_mode;
 use crate::editor::din4108::modes::edit::windows::{inputs, results};
 use crate::editor::din4108::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -42,6 +42,7 @@ semio_framework_plugin::app_commands! {
         "setSnapshot" as "set-snapshot" => set_snapshot::ReplaceSnapshot,
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
+        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
     }
 }
 //#endregion ðï¸Commands
@@ -90,7 +91,7 @@ impl ArtifactEditor for Din4108PlayApp {
         factory: "Din4108BoundedCommandJobFactory",
         factory_type: Din4108BoundedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-        tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex"]
+        tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"]
     }
 
 
@@ -126,6 +127,13 @@ impl ArtifactEditor for Din4108PlayApp {
         match action {
             "evaluate" => Ok(Din4108Command::Evaluate(evaluate::Evaluate {})),
             "setSelectedCheckIndex" => Ok(Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: crate::app_surface::selected_check_index_arg(args) })),
+            "setActiveExample" => {
+                let example_id = args
+                    .and_then(|value| value.get("exampleId").or_else(|| value.get("example_id")).or_else(|| value.get("value")))
+                    .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+                    .unwrap_or_default();
+                Ok(Din4108Command::SetActiveExample(set_active_example::SetActiveExample { example_id }))
+            }
             "setSnapshot" => {
                 let text = args
                     .and_then(|value| value.get("snapshot"))
@@ -138,7 +146,7 @@ impl ArtifactEditor for Din4108PlayApp {
             other => Err(Fault::new(
                 semio_framework_plugin::FaultOrigin::App,
                 semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
-                format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex)"),
+                format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex/setActiveExample)"),
             )),
         }
     }
@@ -253,6 +261,12 @@ pub fn create_din4108_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("evaluate", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::Migrated)
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left")
+                    .with_args(vec![semio_framework_plugin::ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel"))]),
+            )
+            .action_destructive("setActiveExample")
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder` takes a bare `AppDefinition` — there is no

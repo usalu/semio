@@ -107,6 +107,7 @@ const engineTestSuites = [
   elementSuite("🖥️Board2dHost", "🧩️component"),
   elementSuite("🖥️Board2dHost", "🤏️pinch-gesture", "tsx"),
   elementSuite("🖥️Board2dHost/⏯️tool-run-trace", "🧩️component"),
+  elementSuite("🖌️Paint2dHost", "🔬️paint-witness"),
   elementSuite("📃️UiDocumentStore/📥️intake", "📏️step-ceiling"),
   elementSuite("🔐️HubSignIn", "🧩️component", "tsx"),
   elementSuite("🎓️HubFirstRun", "🧩️component", "tsx"),

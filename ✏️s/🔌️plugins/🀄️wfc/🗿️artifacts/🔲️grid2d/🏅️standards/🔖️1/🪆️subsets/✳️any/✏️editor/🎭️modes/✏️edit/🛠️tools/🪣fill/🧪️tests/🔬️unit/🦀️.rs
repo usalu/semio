@@ -171,3 +171,24 @@ fn the_final_payload_matches_solve_with_job_for_pipes() {
     close(&mut job);
     panic!("fill never produced a done payload");
 }
+
+#[test]
+fn a_full_lane_step_publishes_many_collapses_in_one_tick() {
+    let snapshot = Arc::new(pipes::document());
+    let mut job = Grid2dFillRunJob::new(identity(), snapshot, ToolRunJobPort::default());
+    let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
+    let mut sequence = 0;
+    let mut bursts = Vec::new();
+    for _ in 0..400 {
+        let outcome = drive_once(&mut job, operation, generation, &cancel, &mut sequence, semio_framework_job::INTERACTIVE_LANE_FUEL);
+        if let Some(payload) = tick_payload(outcome) {
+            bursts.push(payload);
+        }
+        if bursts.iter().any(|payload| payload.done) {
+            break;
+        }
+    }
+    close(&mut job);
+    let best = bursts.iter().map(|payload| payload.trace.len()).max().unwrap_or(0);
+    assert!(best > 1, "one host step must carry more than one collapse, best {best} across {} ticks", bursts.len());
+}

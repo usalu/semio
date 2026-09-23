@@ -196,8 +196,9 @@ pub fn preview_layers_json(document: &Wfc2dSnapshot, transient: &Wfc2dTransient,
     let fit = preview_fit(document);
     let mut layers: Vec<String> = Vec::new();
     for slot in &document.slots {
-        let tile_id = fill
-            .and_then(|payload| payload.assignments.get(&slot.id).cloned().flatten())
+        let traced = fill.and_then(|payload| payload.trace.iter().rev().find(|event| event.slot_id == slot.id).map(|event| event.tile_id.clone()));
+        let tile_id = traced
+            .or_else(|| fill.and_then(|payload| payload.assignments.get(&slot.id).cloned().flatten()))
             .or_else(|| assigned_tile(transient, &slot.id).map(str::to_string))
             .or_else(|| slot.pinned_tile_id.clone());
         let tile = tile_id.and_then(|id| document.tiles.iter().find(|tile| tile.id == id));

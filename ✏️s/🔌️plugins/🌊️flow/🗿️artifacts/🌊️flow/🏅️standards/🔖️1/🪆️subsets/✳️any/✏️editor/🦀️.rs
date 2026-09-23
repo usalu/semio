@@ -11,7 +11,7 @@
 
 use crate::editor::flow::commands::{
     add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, duplicate_widget, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, move_media_node, node_graph_edit, node_graph_viewport,
-    open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_catalogue_sections, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_lod_mode,
+    open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_active_example, set_catalogue_sections, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_lod_mode,
     set_preview_off, set_proximity_distance, spotlight_commit, toggle_extension,
 };
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
@@ -207,6 +207,7 @@ semio_framework_plugin::app_commands! {
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
         "spotlightCommit" as "spotlight-commit" => spotlight_commit::SpotlightCommit,
         "runExtensionAction" as "run-extension-action" => run_extension_action::RunExtensionAction,
+        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "focusSelection" as "focus-selection" => focus_selection::FocusSelection,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
@@ -1826,7 +1827,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowHostEffectJobFa
 /// than batch-dispatched, because a `BatchOnlyPendingRewrite` classification on these six is what
 /// faulted the entire app at construction with `interactive-job.catalog-authority` on every host
 /// that instantiates the flow editor (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-const FLOW_GRAPH_OPERATION_TOOL_IDS: &[&str] = &["connectMediaPorts", "reorganize", "renameFlowWidget", "runExtensionAction"];
+const FLOW_GRAPH_OPERATION_TOOL_IDS: &[&str] = &["connectMediaPorts", "reorganize", "renameFlowWidget", "runExtensionAction", "setActiveExample"];
 pub(crate) const FLOW_GRAPH_OPERATION_RAW_BYTES: usize = 16_384;
 /// 🧮️ The ONE capacity this route declares — its survey walks at most every widget of an admitted
 /// scene, plus the single apply step (`📓️work-capacity-2026-09-10.md`).
@@ -1854,6 +1855,7 @@ fn flow_graph_operation_payload_admitted(command: &FlowCommand) -> bool {
     match command {
         FlowCommand::RunExtensionAction(payload) => payload.action_id.len() <= FLOW_STORE_MAX_TEXT_BYTES,
         FlowCommand::ConnectMediaPorts(payload) => payload.source_port_id.len().saturating_add(payload.target_port_id.len()) <= FLOW_STORE_MAX_TEXT_BYTES,
+        FlowCommand::SetActiveExample(payload) => payload.example_id.len() <= FLOW_STORE_MAX_TEXT_BYTES,
         FlowCommand::Reorganize(_) | FlowCommand::RenameFlowWidget(_) => true,
         _ => false,
     }
@@ -1889,6 +1891,7 @@ impl FlowGraphOperationWork {
                 FlowCommand::RenameFlowWidget(payload) if resolved[0] && !resolved[1] => Ok(Emit::mutations(rename_flow_widget::rename_operations(payload, snapshot))),
                 FlowCommand::RenameFlowWidget(_) => Ok(Emit::default()),
                 FlowCommand::RunExtensionAction(payload) => Ok(run_extension_action::extension_action_result(payload, snapshot, config, session)),
+                FlowCommand::SetActiveExample(payload) => Ok(Emit::mutations(set_active_example::set_active_example_operations(payload, snapshot)?)),
                 _ => Err(Fault::from("flow-retained-graph-route-mismatch")),
             })?
         })
@@ -2052,6 +2055,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FlowGraphOperationJ
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "reorganize", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "renameFlowWidget", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "runExtensionAction", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     ];
 }
 
@@ -2066,7 +2070,7 @@ impl FlowGraphOperationJobFactoryProofs {
         factory: "FlowGraphOperationJobFactory",
         factory_type: FlowGraphOperationJobFactory,
         contract: flow_graph_operation_contract(),
-        tools: ["connectMediaPorts", "reorganize", "renameFlowWidget", "runExtensionAction"]
+        tools: ["connectMediaPorts", "reorganize", "renameFlowWidget", "runExtensionAction", "setActiveExample"]
     }
 }
 //#endregion 🧵️GraphOperationRetainedRoute
@@ -2441,6 +2445,7 @@ impl ArtifactEditor for FlowPlayApp {
             "nodeGraphEdit" => Ok(FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: node_graph_edit::operations_from_action(&args)? })),
             "spotlightCommit" => Ok(FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: node_graph_edit::operations_from_action(&args)? })),
             "runExtensionAction" => Ok(FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: str_arg(&["actionId", "action_id", "id"]).unwrap_or_default() })),
+            "setActiveExample" => Ok(FlowCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id"]).unwrap_or_default() })),
             "evaluate" => Ok(FlowCommand::Evaluate(evaluate::Evaluate {})),
             "focusSelection" => Ok(FlowCommand::FocusSelection(focus_selection::FocusSelection {})),
             "nodeGraphViewport" => Ok(FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport {
@@ -2819,6 +2824,7 @@ pub fn create_flow_app() -> AppDefinition {
         .mutation("spotlightCommit", LocalizedLabel::native("Spotlight Commit", "Spotlight bestätigen"))
         // 🧩️ Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
         .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("runExtensionAction", LocalizedLabel::native("Run Extension Action", "Erweiterungsaktion ausführen"), ActionKind::Mutation) })
+        .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"))
         // 👁️ Ephemeral view/config actions — mutate config, emit no document operations. Selection/
         // hover verbs (`setSelection`/`clearSelection`/`selectAll`/`selectNode`/`nodeGraphSelect`/
         // `nodeGraphHover`/`graphPointerDown`) are no longer declared here: framework-owned, injected
@@ -2856,6 +2862,7 @@ pub fn create_flow_app() -> AppDefinition {
         .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("spotlightCommit", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("runExtensionAction", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("evaluate", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("focusSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)

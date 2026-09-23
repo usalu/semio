@@ -15,13 +15,17 @@ FIXTURE = ROOT / "bitmap-fill-oracle-vector.json"
 def main() -> int:
     payload = json.loads(FIXTURE.read_text())
     assert isinstance(payload, dict), "payload must be an object"
-    assert set(payload.keys()) == {"pixels", "decided", "width", "height", "contradiction", "done"}
+    assert set(payload.keys()) == {"pixels", "decided", "width", "height", "contradiction", "done", "trace"}
     assert isinstance(payload["pixels"], str) and payload["pixels"]
     assert isinstance(payload["decided"], str) and payload["decided"]
     assert isinstance(payload["width"], int) and payload["width"] == 2
     assert isinstance(payload["height"], int) and payload["height"] == 2
     assert payload["contradiction"] is False
     assert payload["done"] is False
+    assert payload["trace"] == [
+        {"index": 0, "color": 0, "discarded": False},
+        {"index": 3, "color": 1, "discarded": True},
+    ]
     pixels = base64.b64decode(payload["pixels"])
     decided = base64.b64decode(payload["decided"])
     cells = payload["width"] * payload["height"]

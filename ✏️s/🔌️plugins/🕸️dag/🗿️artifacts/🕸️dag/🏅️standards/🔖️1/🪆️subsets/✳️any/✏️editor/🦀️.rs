@@ -592,6 +592,10 @@ impl ArtifactEditor for DagPlayApp {
     type Command = DagCommand;
 
     const DIALECT: Dialect = crate::DAG_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::dag_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::dag_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = "dag.dag";
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {

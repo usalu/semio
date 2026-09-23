@@ -9,6 +9,15 @@ use super::*;
 const CLOSE_LADDER_SLICE_BUDGET: usize = 100_000;
 
 fn drive_test_job<J: InteractiveJob + 'static>(job: J, params: BatchJobParams) -> StepOutcome {
+    drive_test_job_then(job, params, || ()).0
+}
+
+/// 📤️ {@link drive_test_job} that runs `at_terminal` between the terminal outcome and the session close.
+/// The close ladder DRAINS the job's shared output queue (`LayoutExportCloseStage::OutputChunks`), so a
+/// law that reads a bare job's exported bytes takes them there — exactly where production's download and
+/// media wrappers take ownership of the sealed queue before the job closes.
+fn drive_test_job_then<J: InteractiveJob + 'static, R>(job: J, params: BatchJobParams, at_terminal: impl FnOnce() -> R) -> (StepOutcome, R) {
+    let mut at_terminal = Some(at_terminal);
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
         Ok(session) => session,
         Err(mut rejected) => {
@@ -33,6 +42,7 @@ fn drive_test_job<J: InteractiveJob + 'static>(job: J, params: BatchJobParams) -
             assert!(outcome_slices < CLOSE_LADDER_SLICE_BUDGET, "the step outcome's close ladder never reached terminal-empty");
         }
         if terminal {
+            let taken = (at_terminal.take().expect("one terminal outcome per session"))();
             session.begin_close();
             let mut session_slices = 0usize;
             while !session.terminal_is_empty() {
@@ -43,10 +53,37 @@ fn drive_test_job<J: InteractiveJob + 'static>(job: J, params: BatchJobParams) -
                     "the session's close ladder never reached terminal-empty — it is answering Blocked (or releasing nothing) on every slice"
                 );
             }
-            return outcome;
+            return (outcome, taken);
         }
         session.resume().expect("test oracle resumes exact owner");
     }
+}
+
+/// 🧹️ Closes one step outcome the way the session does: a published payload owns retained pages whose
+/// ordinary `Drop` is a debug refusal, so every outcome a law does not keep is closed, never dropped.
+fn close_outcome(mut outcome: StepOutcome) {
+    let mut slices = 0usize;
+    while !outcome.terminal_is_empty() {
+        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        slices += 1;
+        assert!(slices < CLOSE_LADDER_SLICE_BUDGET, "the step outcome's close ladder never reached terminal-empty");
+    }
+}
+
+/// 🚪️ Closes a hand-driven job to terminal-empty. The export ladder refuses to be the LAST owner of its
+/// snapshot (`layout-export-close-snapshot-unwitnessed`), so the caller keeps the host's witness alive
+/// across the close exactly as the store or the media route's close lease does in production.
+fn close_job(mut job: LayoutExportJob) {
+    let witness = Arc::clone(&job.request.snapshot);
+    InteractiveJob::begin_close(&mut job);
+    let mut slices = 0usize;
+    while !InteractiveJob::terminal_is_empty(&job) {
+        let _ = InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+        slices += 1;
+        assert!(slices < CLOSE_LADDER_SLICE_BUDGET, "the hand-driven job's close ladder never reached terminal-empty");
+    }
+    drop(job);
+    drop(witness);
 }
 
 fn operation() -> Operation {
@@ -258,7 +295,8 @@ fn exact_factory_dispatch_is_deterministic_across_real_one_two_four_and_default_
 
 #[test]
 fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fault_and_success_owners() {
-    fn dispatch(raw_verb: &str, kind: LayoutExportKind) -> semio_framework::ToolJobDispatch {
+    /// 🪪️ Answers the dispatch together with the host's snapshot witness, which must outlive the close.
+    fn dispatch(raw_verb: &str, kind: LayoutExportKind) -> (semio_framework::ToolJobDispatch, Arc<crate::LayoutSnapshot>) {
         let operation = operation();
         let bus = semio_framework::ActionBus::new();
         bus.register(LayoutExportJobFactory::new("layout-retained-test")).expect("retained factory registration");
@@ -276,9 +314,17 @@ fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fau
         }
         input.seal_admitted_prefix().expect("truthful encoded prefix");
         let output_chunks = ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
-        let payload = LayoutExportToolPayload { request: request(kind), output_chunks, completion: None };
+        let request = request(kind);
+        let witness = Arc::clone(&request.snapshot);
+        let payload = LayoutExportToolPayload { request, output_chunks, completion: None };
         let spec = semio_framework::ToolOperationSpec::new("layout-retained-test", kind.tool_id(), LAYOUT_EXPORT_PAYLOAD_SCHEMA, payload, operation);
-        bus.dispatch_wire_retained_with_spec(&admission, input, None, spec).unwrap_or_else(|_| panic!("retained production dispatch"))
+        (bus.dispatch_wire_retained_with_spec(&admission, input, None, spec).unwrap_or_else(|_| panic!("retained production dispatch")), witness)
+    }
+    fn drive(dispatched: (semio_framework::ToolJobDispatch, Arc<crate::LayoutSnapshot>), params: BatchJobParams) -> StepOutcome {
+        let (dispatch, witness) = dispatched;
+        let outcome = drive_test_job(dispatch.job, params);
+        drop(witness);
+        outcome
     }
 
     let params = |cancel: semio_framework_job::CancelToken| BatchJobParams {
@@ -288,11 +334,11 @@ fn production_retained_wire_factory_decodes_before_reducer_and_closes_cancel_fau
         config: BatchDriveConfig { site: "layout.retained-wire.worker-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: semio_framework_job::default_now_us,
     };
-    assert!(matches!(drive_test_job(dispatch("exportSvg", LayoutExportKind::Svg).job, params(semio_framework_job::root_cancel_token())), StepOutcome::Complete(_)));
-    assert!(matches!(drive_test_job(dispatch("exportPdf", LayoutExportKind::Svg).job, params(semio_framework_job::root_cancel_token())), StepOutcome::Fault(_)));
+    assert!(matches!(drive(dispatch("exportSvg", LayoutExportKind::Svg), params(semio_framework_job::root_cancel_token())), StepOutcome::Complete(_)));
+    assert!(matches!(drive(dispatch("exportPdf", LayoutExportKind::Svg), params(semio_framework_job::root_cancel_token())), StepOutcome::Fault(_)));
     let cancel = semio_framework_job::root_cancel_token();
     cancel.cancel_now();
-    assert!(matches!(drive_test_job(dispatch("exportSvg", LayoutExportKind::Svg).job, params(cancel)), StepOutcome::Cancelled));
+    assert!(matches!(drive(dispatch("exportSvg", LayoutExportKind::Svg), params(cancel)), StepOutcome::Cancelled));
 }
 
 #[test]
@@ -440,7 +486,7 @@ fn every_top_level_collection_rejects_its_max_plus_one() {
 
     let mut links = request(LayoutExportKind::Svg);
     Arc::make_mut(&mut links.snapshot).links =
-        (0..=MAX_LAYOUT_EXPORT_LINKS).map(|index| crate::ImageLink { id: format!("link-{index}"), path: "image.png".into(), hash: String::new(), width: 1, height: 1, dpi: 72, color_profile: None, state: None, proxy_data_url: None }).collect();
+        (0..=MAX_LAYOUT_EXPORT_LINKS).map(|index| crate::ImageLink { id: format!("link-{index}"), path: "image.png".into(), hash: String::new(), width: 1, height: 1, dpi: 72, color_profile: None, state: None, proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() }).collect();
     assert!(run_layout_export_headless_batch(operation(), links).expect_err("link max + 1").contains("document-envelope"));
 
     for character_styles in [false, true] {
@@ -590,18 +636,21 @@ fn terminal_candidate_is_empty_and_owned_chunks_never_exceed_four_kibibytes() {
         config: BatchDriveConfig { site: "layout.export.segment-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: semio_framework_job::default_now_us,
     };
-    drop(snapshot_owner);
-    let candidate = match drive_test_job(job, params.clone()) {
+    let (outcome, drained) = drive_test_job_then(job, params.clone(), || {
+        let mut drained = 0;
+        while let Some(chunk) = chunks.take_chunk().expect("sealed chunks") {
+            assert!(!chunk.is_empty());
+            assert!(chunk.len() <= OUTPUT_CHUNK_BYTES);
+            drained += chunk.len();
+        }
+        drained
+    });
+    let candidate = match outcome {
         StepOutcome::Complete(candidate) => candidate,
         outcome => panic!("unexpected terminal outcome: {outcome:?}"),
     };
+    drop(snapshot_owner);
     assert!(candidate.output.is_empty());
-    let mut drained = 0;
-    while let Some(chunk) = chunks.take_chunk().expect("sealed chunks") {
-        assert!(!chunk.is_empty());
-        assert!(chunk.len() <= OUTPUT_CHUNK_BYTES);
-        drained += chunk.len();
-    }
     assert!(drained > 0);
 }
 
@@ -624,7 +673,10 @@ fn one_unit_budget_forces_multiple_yields_and_stale_context_faults() {
         assert_eq!(job.step(&mut context), StepOutcome::Yield);
     }
     let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence);
-    assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
+    let fault = job.step(&mut stale);
+    assert!(matches!(fault, StepOutcome::Fault(_)));
+    close_outcome(fault);
+    close_job(job);
 }
 
 #[test]
@@ -636,8 +688,9 @@ fn checkpoint_is_lossless_bounded_and_authority_qualified() {
     let mut sequence = 0;
     let mut checkpoint = loop {
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence);
-        if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-            break checkpoint;
+        match job.step(&mut context) {
+            StepOutcome::CheckpointReady(checkpoint) => break checkpoint,
+            outcome => close_outcome(outcome),
         }
     };
     assert_eq!(checkpoint.state.len(), MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES);
@@ -645,6 +698,7 @@ fn checkpoint_is_lossless_bounded_and_authority_qualified() {
     while !checkpoint.state.terminal_is_empty() {
         let _ = checkpoint.state.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
     }
+    close_job(job);
     let output_chunks = ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
     let restored = LayoutExportJob::restore(operation, request_value.clone(), &checkpoint_state).expect("matching authority").with_output_chunks(output_chunks.clone());
     let params = BatchJobParams {
@@ -654,11 +708,11 @@ fn checkpoint_is_lossless_bounded_and_authority_qualified() {
         config: BatchDriveConfig { site: "layout.export.restore-test", stage: InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
         now_us: semio_framework_job::default_now_us,
     };
-    match drive_test_job(restored, params.clone()) {
+    let (outcome, resumed) = drive_test_job_then(restored, params.clone(), || LayoutExportCommit::from_chunks(LayoutExportKind::Package, "layout", &output_chunks).expect("drained resumed output").data.into_bytes());
+    match outcome {
         StepOutcome::Complete(candidate) => assert!(candidate.output.is_empty()),
         outcome => panic!("resumed outcome: {outcome:?}"),
     }
-    let resumed = LayoutExportCommit::from_chunks(LayoutExportKind::Package, "layout", &output_chunks).expect("drained resumed output").data.into_bytes();
     let uninterrupted = run_layout_export_headless_batch(operation, request_value).expect("uninterrupted").data.into_bytes();
     assert_eq!(resumed, uninterrupted);
     let stale = Operation::new(semio_framework_job::OperationId(72), RevisionId(9), Generation(3), 17);

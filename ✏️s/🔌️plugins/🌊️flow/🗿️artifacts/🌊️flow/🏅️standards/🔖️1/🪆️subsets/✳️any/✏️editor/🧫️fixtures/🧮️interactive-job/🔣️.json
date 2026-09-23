@@ -59,7 +59,8 @@
         "connectMediaPorts",
         "reorganize",
         "renameFlowWidget",
-        "runExtensionAction"
+        "runExtensionAction",
+        "setActiveExample"
       ]
     }
   ],
@@ -88,6 +89,7 @@
     "replaceImage",
     "runExtensionAction",
     "selectGeneration",
+    "setActiveExample",
     "setCatalogueSections",
     "setGridFactor",
     "setGridSnapEnabled",

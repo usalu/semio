@@ -79,33 +79,44 @@ fn dec_text_child(s: &str) -> Result<ProcedureTextChild, String> {
 //#endregion 🔖️ChildCodecPrimitives
 
 //#region 🔖️TextPrimitives
-fn print_procedure_snapshot_body(s: &ProcedureSnapshot) -> String {
-    format!("schema={}\nflow={}\ntext={}", enc_str(&s.schema), enc_flow_child(&s.flow), enc_text_child(&s.text))
+/// 🛤️ The composed children's CONTENT — the flow child's program and the text child's seed —
+/// hex-encoded first-party JSON beside their handles. The body used to be the two bare handles, and the
+/// program lives only in the handles' local owners, so it did not survive one `print_dsl`/`parse_dsl`
+/// round trip: the committed `🎬️demo` asset carried no steps and the imperative play pane showed an
+/// empty `# / Id / Kind` table (ticket 26/09/19, `📓️knowledge.md` §14). `🕸️dag`'s snapshot module
+/// states the rule: a codec persisting only the bare handle produces an UNRECOVERABLE snapshot.
+fn enc_path(path: &crate::Path) -> String {
+    enc_str(&dsl::os_pack::json::to_json_string(path))
 }
+fn enc_seed(seed: &std::collections::BTreeMap<String, crate::Value>) -> String {
+    enc_str(&dsl::os_pack::json::to_json_string(seed))
+}
+
+fn print_procedure_snapshot_body(s: &ProcedureSnapshot) -> String {
+    let scene = crate::procedure_working_scene(s);
+    format!("schema={}\nflow={}\ntext={}\npath={}\nseed={}", enc_str(&s.schema), enc_flow_child(&s.flow), enc_text_child(&s.text), enc_path(&scene.path), enc_seed(&scene.seed))
+}
+
+/// 🏗️ Every line of `📖️.grammar.semio` is required, and the content lines are decoded only after all
+/// of them are present, straight into the owners of the exact handles the document names (never
+/// re-minted ones, which would discard the identity the document carried).
 fn parse_procedure_snapshot_body(body: &str) -> Result<ProcedureSnapshot, String> {
-    let mut schema = None;
-    let mut flow = None;
-    let mut text = None;
-    for line in body.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-        if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
-        } else if let Some(rest) = line.strip_prefix("flow=") {
-            flow = Some(dec_flow_child(rest)?);
-        } else if let Some(rest) = line.strip_prefix("text=") {
-            text = Some(dec_text_child(rest)?);
-        } else {
-            return Err(format!("imperative snapshot: unknown line {line:?}"));
+    let mut lines: std::collections::BTreeMap<&str, &str> = std::collections::BTreeMap::new();
+    for line in body.lines().map(str::trim).filter(|line| !line.is_empty()) {
+        let (key, value) = line.split_once('=').ok_or_else(|| format!("imperative snapshot: unknown line {line:?}"))?;
+        if !matches!(key, "schema" | "flow" | "text" | "path" | "seed") || lines.insert(key, value).is_some() {
+            return Err(format!("imperative snapshot: unknown or repeated line {line:?}"));
         }
     }
-    Ok(ProcedureSnapshot {
-        schema: schema.ok_or_else(|| "imperative snapshot: missing schema line".to_string())?,
-        flow: flow.ok_or_else(|| "imperative snapshot: missing flow line".to_string())?,
-        text: text.ok_or_else(|| "imperative snapshot: missing text line".to_string())?,
-    })
+    let line = |key: &str| lines.get(key).copied().ok_or_else(|| format!("imperative snapshot: missing {key} line"));
+    let (schema, flow, text, path, seed) = (line("schema")?, line("flow")?, line("text")?, line("path")?, line("seed")?);
+    let (schema, mut flow, mut text) = (dec_str(schema)?, dec_flow_child(flow)?, dec_text_child(text)?);
+    let (path, seed) = (dec_str(path)?, dec_str(seed)?);
+    let seed: std::collections::BTreeMap<String, crate::Value> = dsl::os_pack::json::from_json_str(&seed).map_err(|error| error.to_string())?;
+    text.set_local_owner(std::sync::Arc::new(crate::ProcedureTextWorkingData { seed }));
+    let path: crate::Path = dsl::os_pack::json::from_json_str(&path).map_err(|error| error.to_string())?;
+    flow.set_local_owner(std::sync::Arc::new(crate::ProcedureFlowWorkingData { path }));
+    Ok(ProcedureSnapshot { schema, flow, text })
 }
 //#endregion 🔖️TextPrimitives
 
@@ -149,24 +160,31 @@ fn read_text_child(reader: &mut store::ByteReader<'_>) -> Result<ProcedureTextCh
     Ok(store::ArtifactChild::new(child_id, target))
 }
 
+/// 🔢️ Pack format 2 — format 1 carried the two bare handles and no content (see `enc_path`).
+const PACK_BINARY_FORMAT: u8 = 2;
+
 fn encode_procedure_snapshot_binary(s: &ProcedureSnapshot) -> Vec<u8> {
-    const PACK_BINARY_FORMAT: u8 = 1;
+    let scene = crate::procedure_working_scene(s);
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
     write_flow_child(&mut out, &s.flow);
     write_text_child(&mut out, &s.text);
+    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&scene.path));
+    write_str_lp(&mut out, &dsl::os_pack::json::to_json_string(&scene.seed));
     out
 }
 fn decode_procedure_snapshot_binary(bytes: &[u8]) -> Result<ProcedureSnapshot, String> {
-    const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let schema = read_str_lp(&mut reader)?;
-    let flow = read_flow_child(&mut reader)?;
-    let text = read_text_child(&mut reader)?;
+    let (schema, mut flow, mut text) = (read_str_lp(&mut reader)?, read_flow_child(&mut reader)?, read_text_child(&mut reader)?);
+    let (path, seed) = (read_str_lp(&mut reader)?, read_str_lp(&mut reader)?);
+    let seed: std::collections::BTreeMap<String, crate::Value> = dsl::os_pack::json::from_json_str(&seed).map_err(|error| error.to_string())?;
+    text.set_local_owner(std::sync::Arc::new(crate::ProcedureTextWorkingData { seed }));
+    let path: crate::Path = dsl::os_pack::json::from_json_str(&path).map_err(|error| error.to_string())?;
+    flow.set_local_owner(std::sync::Arc::new(crate::ProcedureFlowWorkingData { path }));
     Ok(ProcedureSnapshot { schema, flow, text })
 }
 //#endregion 🔖️BinaryPrimitives

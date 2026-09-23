@@ -1,0 +1,29 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "mounts": [
+    { "route": "/🔌️plugin-modules/🪞️vendor", "root": "📥️fonts", "files": { "🔤️guestslim-typst-fonts.bin": "completed font producer bytes" } },
+    { "route": "/🔌️plugin-modules/🧩️sample", "root": "📥️staging/🧩️sample", "files": { "🌉️bridge.js": "export const bridge = 1;", "🔣️.json": "{\"pluginId\":\"sample\"}" } },
+    { "route": "/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim", "root": "📥️staging/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim", "files": { "cli.js": "export const cli = 1;", "io.js": "export const io = 1;" } },
+    { "route": "/🔌️plugin-modules/🧵️shard/", "root": "📥️staging/🧵️shard", "files": { "🟨️shard-worker.js": "export const shard = 1;" } }
+  ],
+  "requests": [
+    { "url": "/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin", "status": 200 },
+    { "url": "/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js", "status": 200 },
+    { "url": "/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js?v=1", "status": 200 },
+    { "url": "/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js", "status": 200 },
+    { "url": "/🔌️plugin-modules/🧩️sample/🌉️bridge.js", "status": 200 },
+    { "url": "/🔌️plugin-modules/🧩️sample/🔣️.json", "status": 200 },
+    { "url": "/🔌️plugin-modules/🪞️vendor/missing.bin", "status": 404 },
+    { "url": "/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/🔤️guestslim-typst-fonts.bin", "status": 404 },
+    { "url": "/🔌️plugin-modules/🧩️sample/missing.js", "status": 404 }
+  ],
+  "refusals": [
+    {
+      "mounts": [
+        { "route": "/🔌️plugin-modules/🪞️vendor", "root": "📥️staging/🪞️vendor", "files": {} },
+        { "route": "/🔌️plugin-modules/🪞️vendor/", "root": "📥️fonts", "files": {} }
+      ],
+      "error": "Two static-dir roots claim one route: /🔌️plugin-modules/🪞️vendor"
+    }
+  ]
+}

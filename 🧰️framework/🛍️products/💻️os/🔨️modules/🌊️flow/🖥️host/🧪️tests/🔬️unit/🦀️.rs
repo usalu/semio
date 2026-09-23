@@ -1393,7 +1393,72 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
     host.paint_scene(&mut scene, 1280, 800, 1.0);
     assert!(scene.path_count() > 8, "rich flow graph should paint edges and handles");
     host.retire_cold();
+
+    let wired = FlowHost::from_host_snapshot(FlowHostSnapshot {
+        schema: "flow.host_snapshot".into(),
+        camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+        widgets: vec![
+            Widget::InputSlider { id: "height".into(), label: "Height".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
+            Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: crate::OrderedSet::new() },
+        ],
+        synapses: vec![SynapseSpec { id: "wire-height".into(), from: "height".into(), to: "result".into(), from_port: "out".into(), to_port: "in".into() }],
+        layout: crate::OrderedMap::new(),
+    });
+    assert_eq!(wired.dag.host_snapshot.edges.len(), 1, "legacy out/in synapse becomes one workflow edge");
+    assert_eq!(wired.dag.host_snapshot.edges[0].source, "height@number");
+    assert_eq!(wired.dag.host_snapshot.edges[0].target, "result@");
+    assert_eq!(wired.dag.engine.edges.len(), 1);
+    wired.retire_cold();
+
+    let refused = FlowHost::from_host_snapshot(FlowHostSnapshot {
+        schema: "flow.host_snapshot".into(),
+        camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+        widgets: vec![
+            Widget::InputSlider { id: "height".into(), label: "Height".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
+            Widget::OutputPreview { id: "result".into(), preview: Dictionary::new(), expanded: crate::OrderedSet::new() },
+        ],
+        synapses: vec![SynapseSpec { id: "dangling".into(), from: "height".into(), to: "result".into(), from_port: "out".into(), to_port: "missing".into() }],
+        layout: crate::OrderedMap::new(),
+    });
+    assert!(refused.dag.host_snapshot.edges.is_empty(), "a synapse to a missing port is not a workflow edge");
+    assert_eq!(refused.dag.engine.edges.len(), 0);
+    refused.retire_cold();
 }
+
+#[test]
+fn legacy_out_in_synapse_joins_canonical_ports_and_paints_an_engine_edge() {
+    let mut host = host_with_test_bridge();
+    let mut snapshot = host.host_snapshot.clone();
+    snapshot.synapses.clear();
+    snapshot.synapses.push(SynapseSpec { id: "legacy-wire".into(), from: "slider".into(), to: "add".into(), from_port: "out".into(), to_port: "in".into() });
+    host.replace_host_snapshot(snapshot);
+    let edge = host.dag.host_snapshot.edges.iter().find(|edge| edge.id == "legacy-wire").expect("legacy synapse");
+    assert_eq!(edge.source, "slider@number");
+    assert_eq!(edge.target, "add@a");
+    assert_eq!(host.dag.engine.edges.len(), 1);
+    host.retire_cold();
+}
+
+#[test]
+fn synapse_to_a_missing_port_does_not_create_an_engine_edge() {
+    let mut host = host_with_test_bridge();
+    let mut snapshot = host.host_snapshot.clone();
+    snapshot.synapses.clear();
+    snapshot.synapses.push(SynapseSpec { id: "dangling".into(), from: "slider".into(), to: "add".into(), from_port: "out".into(), to_port: "missing".into() });
+    host.replace_host_snapshot(snapshot);
+    assert!(host.host_snapshot.synapses.iter().any(|synapse| synapse.id == "dangling"), "an unresolved port stays in the document until it can be joined");
+    assert!(host.dag.engine.edges.is_empty());
+    host.retire_cold();
+}
+
+
+#[test]
+fn slider_ghost_descriptor_without_label_parses() {
+    let descriptor: WidgetDescriptor = crate::os_pack::json::from_json_str(r#"{"kind":"inputSlider"}"#).expect("slider ghost");
+    let WidgetDescriptor::InputSlider { label, .. } = descriptor else { panic!("expected a slider"); };
+    assert!(label.is_empty());
+}
+
 
 #[test]
 fn add_widget_and_connect() {
@@ -2126,7 +2191,7 @@ fn delete_selection_removes_selected_edge_from_host_snapshot() {
 fn delete_selection_removes_edge_selected_by_synapse_id_domain() {
     let mut host = host_with_test_bridge();
     let before = host.host_snapshot.synapses.len();
-    host.dag.set_selection_domains_json(r#"{"nodes":[],"edges":["s1"],"🐙️handles":[]}"#);
+    host.dag.set_selection_domains_json(r#"{"nodes":[],"edges":["s1"],"handles":[]}"#);
     assert!(host.has_selection(), "synapse id s1 must map into engine edge selection");
     host.delete_selection().unwrap();
     assert!(host.host_snapshot.synapses.len() < before);

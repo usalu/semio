@@ -39,7 +39,7 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 use store::ArtifactPack;
 use store::EngineHandles;
-use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord};
+use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
 pub const MATH_APP_ID: &str = "equation-play";
@@ -139,6 +139,12 @@ pub fn algorithm_overlay(graph: &EquationGraph) -> std::collections::HashMap<Str
     overlay
 }
 
+/// 🔌️ The one output and one input port every equation node exposes. The edges have always named them,
+/// but the nodes declared no ports at all, so the node-graph engine could resolve no edge endpoint and the
+/// mathematical play pane drew its four nodes without a single edge (measured live 2026-09-23).
+pub const EQUATION_EDGE_SOURCE_PORT: &str = "out";
+pub const EQUATION_EDGE_TARGET_PORT: &str = "in";
+
 pub fn workflow_json(graph: &EquationGraph) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>) {
     let overlay = algorithm_overlay(graph);
     let nodes: Vec<NodeGraphNodeRecord> = graph
@@ -146,11 +152,21 @@ pub fn workflow_json(graph: &EquationGraph) -> (Vec<NodeGraphNodeRecord>, Vec<No
         .iter()
         .map(|node| {
             let suffix = overlay.get(&node.id).cloned().unwrap_or_default();
-            NodeGraphNodeRecord { id: node.id.clone(), label: Some(format!("{}{}", node.label, suffix)), x: node.x, y: node.y, width: 72.0, height: 40.0, inputs: Vec::new(), outputs: Vec::new(), ..Default::default() }
+            NodeGraphNodeRecord {
+                id: node.id.clone(),
+                label: Some(format!("{}{}", node.label, suffix)),
+                x: node.x,
+                y: node.y,
+                width: 72.0,
+                height: 40.0,
+                inputs: vec![NodeGraphPortRecord { id: EQUATION_EDGE_TARGET_PORT.into(), ..Default::default() }],
+                outputs: vec![NodeGraphPortRecord { id: EQUATION_EDGE_SOURCE_PORT.into(), ..Default::default() }],
+                ..Default::default()
+            }
         })
         .collect();
     let edges: Vec<NodeGraphEdgeRecord> =
-        graph.edges.iter().map(|edge| NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id: edge.source.clone(), source_port_id: "out".into(), target_node_id: edge.target.clone(), target_port_id: "in".into(), label: None }).collect();
+        graph.edges.iter().map(|edge| NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id: edge.source.clone(), source_port_id: EQUATION_EDGE_SOURCE_PORT.into(), target_node_id: edge.target.clone(), target_port_id: EQUATION_EDGE_TARGET_PORT.into(), label: None }).collect();
     (nodes, edges)
 }
 //#endregion 🔖️GraphAlgorithms
@@ -1234,6 +1250,10 @@ impl ArtifactEditor for EquationPlayApp {
     type Command = EquationCommand;
 
     const DIALECT: Dialect = EQUATION_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::equation_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::equation_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {

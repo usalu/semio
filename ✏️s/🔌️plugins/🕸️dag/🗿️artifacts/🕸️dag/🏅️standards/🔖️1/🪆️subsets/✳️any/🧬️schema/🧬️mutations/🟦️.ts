@@ -20,7 +20,7 @@ export interface DagNodeSpecFacade {
 }
 
 export type DagMutation =
-  | { mutation: "createNode"; node: DagNodeSpecFacade }
+  | { mutation: "createNode"; node: DagNodeSpecFacade; index?: number }
   | { mutation: "deleteNode"; id: string }
   | { mutation: "renameNode"; id: string; newId: string }
   | { mutation: "changeNodeName"; id: string; newName: string }
@@ -32,5 +32,5 @@ export type DagMutation =
   | { mutation: "replaceNodeKind"; id: string; newKindJson: string }
   | { mutation: "replaceNodeProperties"; id: string; newPropertiesJson: string }
   | { mutation: "reorderNodes"; order: string[] }
-  | { mutation: "connectNodes"; id: string; source: string; target: string; routeStyle: "bezier" | "sharpSz"; propertiesJson: string }
+  | { mutation: "connectNodes"; id: string; source: string; target: string; routeStyle: "bezier" | "sharpSz"; propertiesJson: string; index?: number }
   | { mutation: "disconnectNodes"; id: string };

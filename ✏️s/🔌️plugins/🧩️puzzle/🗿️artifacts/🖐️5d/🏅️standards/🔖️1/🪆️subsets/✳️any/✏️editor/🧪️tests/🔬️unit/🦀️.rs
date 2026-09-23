@@ -115,10 +115,14 @@ pub(crate) mod context {
     /// previous turn's `advance_typed_operation_publication` leaves its terminal completion queued while
     /// `has_pending_typed_operations` already reads false, so the exit branch handed back a result whose
     /// history patch was still in the outbox. Same correction `◻️2d`'s harness carries.
-    fn drain_settled(app: &mut Puzzle5dApp, result: &mut InvocationResult) -> Result<(), Fault> {
+    ///
+    /// 🧯️ A `Fault` page is ACKed like every other page — the host ACKs it too — and reported once the
+    /// operation has retired (`settle_registered_typed_operation`'s shape). Returning on it un-ACKed left the
+    /// faulted operation awaiting its ACK for ever, so the NEXT dispatch never settled either.
+    fn drain_settled(app: &mut Puzzle5dApp, result: &mut InvocationResult, fault: &mut Option<Fault>) -> Result<(), Fault> {
         while let Some(page) = app.take_typed_operation_result_page(1) {
             if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
-                return Err(Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
+                fault.get_or_insert_with(|| Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
             }
             app.acknowledge_typed_operation_result(page.token)?;
         }
@@ -147,10 +151,11 @@ pub(crate) mod context {
 
     fn settle(app: &mut Puzzle5dApp, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
         let mut result = result?;
+        let mut fault = None;
         for _ in 0..1_048_576 {
             if !app.has_pending_typed_operations() {
-                drain_settled(app, &mut result)?;
-                return Ok(result);
+                drain_settled(app, &mut result, &mut fault)?;
+                return fault.map_or(Ok(result), Err);
             }
             PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
             block_on(app.advance_typed_operation_publication())?;
@@ -161,7 +166,7 @@ pub(crate) mod context {
             // loop exits on, and the caller then reads a result with no committed edits at all. The
             // framework's own `settle_registered_typed_operation` drains both in inner loops for exactly
             // this reason, and `◻️2d`'s harness was corrected the same way.
-            drain_settled(app, &mut result)?;
+            drain_settled(app, &mut result, &mut fault)?;
         }
         Err(Fault::from("puzzle5d test operation did not settle"))
     }
@@ -204,6 +209,51 @@ pub(crate) mod context {
         settle(app, result)
     }
     
+    /// 🩺️ `dispatch` for an app command, with the publication ladder's own census traced on stderr: every
+    /// power-of-two turn and every 30 s it prints the turn, wall time, the framework's per-ladder unit census
+    /// since dispatch, and the lanes of every result page presented so far. Temporary `[DEBUG]` capture for
+    /// the `capsule-dream` switch (`📓️block-puzzle.md` §11), which names WHICH lane spends its units.
+    pub fn dispatch_traced(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, window_id: Option<&str>) -> Result<InvocationResult, Fault> {
+        let action_meta = action_meta(action, args, window_id);
+        let base = semio_framework_plugin::app::typed_operation_unit_census();
+        let started = std::time::Instant::now();
+        let mut result = block_on(app.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta))?;
+        let mut fault = None;
+        let mut lanes: std::collections::BTreeMap<String, u64> = std::collections::BTreeMap::new();
+        let mut next_turn = 1_u64;
+        let mut last_print = std::time::Instant::now();
+        let mut last_census = base;
+        for turn in 1..=1_048_576_u64 {
+            if !app.has_pending_typed_operations() {
+                drain_settled(app, &mut result, &mut fault)?;
+                eprintln!("[DEBUG] {action} settled turn={turn} ms={} census={} pages={lanes:?} fault={fault:?}", started.elapsed().as_millis(), semio_framework_plugin::app::typed_operation_unit_census() - base);
+                return fault.map_or(Ok(result), Err);
+            }
+            PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
+            let unit = block_on(app.advance_typed_operation_publication());
+            while let Some(page) = app.take_typed_operation_result_page(1) {
+                *lanes.entry(format!("{:?}", page.lane)).or_default() += 1;
+                if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
+                    eprintln!("[DEBUG] {action} FAULT page operation={} turn={turn} ms={} census={} pages={lanes:?} fault={}", page.token.operation, started.elapsed().as_millis(), semio_framework_plugin::app::typed_operation_unit_census() - base, String::from_utf8_lossy(page.bytes()));
+                    fault.get_or_insert_with(|| Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
+                }
+                app.acknowledge_typed_operation_result(page.token)?;
+            }
+            unit?;
+            drain_settled(app, &mut result, &mut fault)?;
+            if turn == next_turn || last_print.elapsed().as_secs() >= 30 {
+                let now = semio_framework_plugin::app::typed_operation_unit_census();
+                eprintln!("[DEBUG] {action} turn={turn} ms={} total={} window={} pages={lanes:?} pending={}", started.elapsed().as_millis(), now - base, now - last_census, app.has_pending_typed_operations());
+                last_census = now;
+                last_print = std::time::Instant::now();
+                if turn == next_turn {
+                    next_turn = next_turn.saturating_mul(2);
+                }
+            }
+        }
+        Err(Fault::from("puzzle5d traced operation did not settle"))
+    }
+
     /// 🎛️ Dispatches an app command from `window_id` with `utility_id` armed in that window, as a host whose
     /// window instance view state carries the armed utility does.
     pub fn dispatch_armed(app: &mut Puzzle5dApp, action: &str, args: Option<&Value>, window_id: &str, utility_id: &str) -> Result<InvocationResult, Fault> {
@@ -224,7 +274,11 @@ pub(crate) mod context {
     
     /// 🖼️ The rendered body, as a JSON string — every panel/window assertion greps this value.
     pub fn render_body(app: &mut Puzzle5dApp, body_key: &str) -> String {
-        let tree = semio_framework::io::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render");
+        render_body_with_view(app, body_key, &ViewModel::default())
+    }
+
+    pub fn render_body_with_view(app: &mut Puzzle5dApp, body_key: &str, view_state: &ViewModel) -> String {
+        let tree = semio_framework::io::resolve_ready(app.render(body_key, None, view_state)).expect("render");
         let mut scene_json = None;
         let mut stack = vec![&tree.root];
         while let Some(node) = stack.pop() {
@@ -248,10 +302,17 @@ pub(crate) mod context {
         scene_json.unwrap_or(projected)
     }
     
+    /// 🪟️ `body_key` rendered as the window instance `window_id`. The instance travels in the view state
+    /// the framework captures that window's config/transient partitions from; a `"{body}:{window}"` key
+    /// is no body at all.
     pub fn render_window(app: &mut Puzzle5dApp, body_key: &str, window_id: &str) -> String {
-        render_body(app, &format!("{body_key}:{window_id}"))
+        let kind = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
+        render_body_with_view(app, body_key, &window_view(kind, window_id))
     }
     
+    /// 🧹️ Closes `app` to terminal-empty ownership; `#[track_caller]` so a refusal names WHICH app of a
+    /// two-app law did not get there.
+    #[track_caller]
     pub fn close_app(app: &mut Puzzle5dApp) {
         for _ in 0..1_048_576 {
             if app.close_terminal_is_empty() {
@@ -331,7 +392,7 @@ pub(crate) mod context {
     //#endregion 🎚️Measures
 
     pub fn projection_of(app: &Puzzle5dApp) -> Value {
-        parse(&app.snapshot().expect("projection").0.to_string()).expect("snapshot JSON")
+        parse(&app.snapshot().expect("projection").value().to_string()).expect("snapshot JSON")
     }
     
     pub fn part_count(app: &Puzzle5dApp) -> usize {
@@ -1003,6 +1064,7 @@ async fn exact_window_transient_isolated_abort_and_reload_reset_through_register
     assert_eq!(reset.get::<window_ownership::Puzzle5dBoardWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
     assert_eq!(app.window_transient_generation(&view_a).expect("window a transient generation"), Some(5));
     assert_eq!(app.window_transient_generation(&view_b).expect("window b transient generation"), Some(0));
+    drop((transient_a, transient_b, aborted, reset));
     close_app(&mut reopened);
     close_app(&mut app);
     eprintln!("[DEBUG] Puzzle 5D transient engagement stayed exact-window isolated, abort cleared only its owner, reload reset ephemeral state, and both registered apps reached close");
@@ -1189,7 +1251,7 @@ async fn kit_in_retained_import_media_enforces_exact_media_max_plus_one_before_d
     let after_exact = projection_of(&app);
     let plus_one = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: format!("{maximum} ") } };
     let error = app.import_media("kit:in", plus_one, &meta("local")).await.expect_err("media maximum plus one must fail before Serde");
-    assert!(error.message.contains("predecode cap"));
+    assert!(error.message.contains("predecode cap"), "the plus-one refusal must be the predecode cap, got {:?} {:?}", error.code, error.message);
     assert_eq!(projection_of(&app), after_exact, "rejected plus-one media must not mutate the document");
 }
 
@@ -1294,7 +1356,7 @@ fn clipboard_verbs_cover_every_part_of_the_largest_example() {
     let offset = fixture["pasteOffset"].as_array().expect("offset").iter().map(|axis| axis.as_f64().expect("axis")).collect::<Vec<_>>();
     let document = capsule_dream_example_document();
     assert_eq!(document.parts.len() as u64, fixture["parts"].as_u64().expect("parts"));
-    let snapshot = Puzzle5dPlaySnapshot(serde_json::to_value(&document).expect("document serializes"));
+    let snapshot = Puzzle5dPlaySnapshot::new(serde_json::to_value(&document).expect("document serializes"));
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&snapshot, &history);
     let part_ids: Vec<String> = document.parts.iter().map(|part| part.id.clone()).collect();
@@ -1817,7 +1879,7 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
         dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": example_id })), None).unwrap_or_else(|error| panic!("setActiveExample {example_id} must reach the document, not fault: {error:?}"));
         assert_eq!(part_count(&app), document.parts.len(), "setActiveExample {example_id} really replaced the document");
     }
-    let snapshot = Puzzle5dPlaySnapshot(serde_json::to_value(concrete_forest_example_document()).expect("document serializes"));
+    let snapshot = Puzzle5dPlaySnapshot::new(serde_json::to_value(concrete_forest_example_document()).expect("document serializes"));
     let interaction = protocol::InteractionState::default();
     let work = Puzzle5dSetActiveExampleWork::default();
     for example_id in ["", "concrete-forest", "nakagin", "capsule-dream"] {
@@ -1854,7 +1916,7 @@ async fn set_active_example_switches_the_document_and_never_faults_on_capacity()
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_reaches_the_capsule_dream_document() {
     let mut app = Box::new(app_with_registry());
-    dispatch(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "capsule-dream" })), None)
+    dispatch_traced(&mut app, "setActiveExample", Some(&dsl::json!({ "exampleId": "capsule-dream" })), None)
         .unwrap_or_else(|error| panic!("setActiveExample capsule-dream must reach the document, not fault: {error:?}"));
     assert_eq!(part_count(&app), capsule_dream_example_document().parts.len(), "setActiveExample capsule-dream really replaced the document");
     close_app(&mut app);
@@ -2408,7 +2470,7 @@ fn a_cut_copies_a_locked_part_but_never_removes_it() {
     let locked_id = document.parts[0].id.clone();
     let free_id = document.parts[1].id.clone();
     document.parts[0].part_2d.locked = Some(true);
-    let snapshot = Puzzle5dPlaySnapshot(serde_json::to_value(&document).expect("document serializes"));
+    let snapshot = Puzzle5dPlaySnapshot::new(serde_json::to_value(&document).expect("document serializes"));
     let ids = vec![locked_id.clone(), free_id.clone()];
     let fragment = puzzle5d_copy_fragment(&snapshot, &ids, &[]).expect("copy both parts");
     assert!(fragment.dsl_text.contains(locked_id.as_str()), "the locked part is still COPIED");

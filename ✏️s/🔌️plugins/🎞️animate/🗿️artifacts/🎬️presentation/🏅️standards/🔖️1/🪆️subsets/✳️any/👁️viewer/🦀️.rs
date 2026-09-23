@@ -39,6 +39,13 @@ pub struct AnimatePresentationViewer;
 impl ArtifactViewer for AnimatePresentationViewer {
     /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
+    /// 🧬️ The loaded-parent child projection, read straight off the snapshot's own `#[child]` fields.
+    /// Without it every live envelope load faults with `viewer did not declare a loaded-parent child
+    /// projection` before the decoded document can replace the store.
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("animate.child-projection"), error.to_string()))
+    }
+
     type Snapshot = PresentationSnapshot;
     type Mutation = crate::PresentationMutation;
     type Config = NoConfig;

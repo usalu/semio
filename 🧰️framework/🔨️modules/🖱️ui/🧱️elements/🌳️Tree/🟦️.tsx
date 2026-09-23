@@ -2242,6 +2242,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             {...surfaceDragProps}
             onClick={(event) => {
               if (event.detail > 1) return;
+              setOpen(!open);
               onClick?.(event);
             }}
             onDoubleClick={(event) => {
@@ -2314,6 +2315,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           {...surfaceDragProps}
           onClick={(event) => {
             if (event.detail > 1) return;
+            setOpen(!open);
             onClick?.(event);
           }}
           onDoubleClick={(event) => {
@@ -2493,9 +2495,9 @@ export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onR
  * on the puzzle3d serve: the outliner's object rows nest their vortices, which makes every one of them an
  * expandable row, and clicking one selected nothing. The fold chevron, the branch-navigation buttons, the
  * row actions and the drag handles each `stopPropagation`, so they keep owning their own clicks, and
- * `event.detail > 1` still yields the row to `onDoubleClick`. The `property` layout is deliberately
- * different: there an expandable row's label FOLDS rather than selects, because an inspector group heading
- * is not an entity.
+ * `event.detail > 1` still yields the row to `onDoubleClick`. A row with children also folds from that
+ * same shell click — the chevron is the same fold, not the only one — and a declared activation still
+ * fires. The value column stops propagation, so a header slider keeps its own gesture.
  **/
 export const TreeItem: React.FC<TreeItemProps> = ({
   label,
@@ -2666,13 +2668,18 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-highlighted={isHighlighted ? "true" : undefined}
         id={id}
         data-state={open ? "open" : "closed"}
-        className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), isDropReady && dropZoneReadyTextClass, className)}
+        className={cn("min-w-0 w-full", isExpandable ? "cursor-foldable" : "cursor-selectable", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), isDropReady && dropZoneReadyTextClass, className)}
         draggable={effectiveDraggable}
         onDragStart={onDragStart}
         onDragEnd={handleDragEnd}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
+        onClick={(event) => {
+          if (event.detail > 1) return;
+          if (isExpandable) setOpen(!open);
+          onClick?.(event);
+        }}
         onDoubleClick={(event) => {
           if (!onDoubleClick) return;
           event.preventDefault();
@@ -2716,33 +2723,13 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               <span
                 data-slot="tree-label"
                 title={controlHint}
-                className={cn(treeItemLabelSlotClassName, "truncate font-medium transition-colors", isExpandable && !activatable ? "cursor-foldable" : "cursor-selectable", "select-text")}
+                className={cn(treeItemLabelSlotClassName, "truncate font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
                 style={treePresentationLabelStyle}
-                // 🖱️ A row that DECLARES an activation fires it; folding belongs to the chevron button
-                // beside it (which stops propagation), exactly as in the default layout below, where the
-                // row shell carries `onClick` and the label folds nothing. This branch used to swallow
-                // every expandable row's activation into a fold and its own shell carries no `onClick`
-                // at all, so an expandable property row's action was unreachable by any click: the
-                // puzzle3d catalogue's object-kind rows are expandable (their rim-vortex templates are
-                // their children) and bind `activate` to `addObjectKind`, and battery #48 measured
-                // `catalogue-add-object-kind before=1 after=1` with no dispatch in the console while
-                // the drag-and-drop route into the same command passed. A row with no activation of its
-                // own keeps label-click-to-fold, which is the only thing that branch ever bought.
-                onClick={(event) => {
-                  if (event.detail > 1) return;
-                  event.preventDefault();
-                  event.stopPropagation();
-                  if (isExpandable && !activatable) {
-                    setOpen(!open);
-                    return;
-                  }
-                  onClick?.(event);
-                }}
               >
                 {resolvedLabel as React.ReactNode}
               </span>
             </div>
-            <div data-slot="tree-item-control" className={cn(treeItemControlClassName, "gap-double")}>
+            <div data-slot="tree-item-control" className={cn(treeItemControlClassName, "gap-double")} onClick={(event) => event.stopPropagation()}>
               {!isExpandable ? (
                 <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
               ) : headerControl ? (
@@ -2812,6 +2799,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               onDrop={onDrop}
               onClick={(event) => {
                 if (event.detail > 1) return;
+                setOpen(!open);
                 onClick?.(event);
               }}
               onDoubleClick={(event) => {

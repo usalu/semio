@@ -80,3 +80,13 @@ Assertions per pane (since 📓️play-runtime.md, 12:10): data-shell-ready, 2 s
 -   ✓  68 boots Demonstrator (demonstrator) (7.1s)
 -   ✓  69 boots Home (home) (5.9s)
 -   ✓  70 boots Space (space) (5.3s)
+
+## 2026-09-23 03:30 — activation 03:23 (full rebuild from scratch after sweep #3), serve 03:24, load 6
+
+```
+  3 failed
+  67 passed (6.1m)
+```
+-   ✘   4 boots Procedural 2D (generation2d) (4.8s)
+-   ✘   9 boots Raster (raster) (4.7s)
+-   ✘  29 boots Terrain (gis3d) (2.4s)

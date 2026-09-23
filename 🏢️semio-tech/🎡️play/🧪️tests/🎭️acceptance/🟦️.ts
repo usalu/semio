@@ -111,10 +111,10 @@ type PaintWitness = { readonly painted: boolean; readonly detail: string };
  * — a 3D world window publishes its retained geometry on its own surface element
  *   (`data-meshes-json` / `data-instances-json`, written by `🌐️World3dHost`) — it must hold at least one
  *   mesh or instance;
- * — a raster window keeps its document and textures in its host's `scene`
- *   (`documentSyncJson`, `assetsJson` of `🖌️Paint2dHost`) — it must hold at least one VISIBLE pixel layer
- *   whose image asset decodes to a real image, which is what separates a composite that draws from
- *   `raster`'s 1024×1024 layer over a 2×2 placeholder;
+ * — a raster window publishes its layer forest and every texture's decoded extent on its own surface
+ *   element (`data-layers-json` / `data-assets-json`, written by `🖌️Paint2dHost`) — it must hold at
+ *   least one VISIBLE layer whose image asset is at least `minimumEdge` pixels a side, which is what
+ *   separates a composite that draws from a layer over a 2×2 placeholder;
  * — every other window is judged by its own region's text and element count.
  *
  * The pane passes when ANY of its windows paints: `sourcing` and `energy` mount a 3D viewport next to
@@ -128,35 +128,6 @@ async function readPaintWitnesses(page: Page, variant: string): Promise<readonly
     const size = (text: string | null): number => {
       if (typeof text !== "string" || text.length === 0) return 0;
       try { const value = JSON.parse(text); return Array.isArray(value) ? value.length : value && typeof value === "object" ? Object.keys(value).length : 0; } catch { return 0; }
-    };
-    /** 🖼️ A PNG's own IHDR extent, which is in the first bytes of the base64 the scene carries — no decode
-     * of the image data, so an asset of any size costs the same. A non-PNG asset is judged by payload size. */
-    const extent = (asset: { readonly mime?: string; readonly data?: string } | undefined): { readonly w: number; readonly h: number } | null => {
-      const data = asset?.data;
-      if (typeof data !== "string" || data.length === 0) return null;
-      if (!/png/i.test(asset?.mime ?? "")) return data.length >= 1024 ? { w: minimumEdge, h: minimumEdge } : { w: 0, h: 0 };
-      try {
-        const header = atob(data.slice(0, 64));
-        const byte = (index: number): number => header.charCodeAt(index) & 0xff;
-        const read = (offset: number): number => (byte(offset) << 24) | (byte(offset + 1) << 16) | (byte(offset + 2) << 8) | byte(offset + 3);
-        return { w: read(16), h: read(20) };
-      } catch { return null; }
-    };
-    /** ⚛️ The host component that owns a surface, and the retained `scene` it was rendered with. */
-    const hostOf = (element: Element): { readonly host: string | null; readonly scene: Record<string, unknown> | null } => {
-      const key = Object.keys(element).find((name) => name.startsWith("__reactFiber$"));
-      if (!key) return { host: null, scene: null };
-      let fiber = (element as unknown as Record<string, { type?: unknown; memoizedProps?: Record<string, unknown>; return?: unknown }>)[key] as { type?: unknown; memoizedProps?: Record<string, unknown>; return?: unknown } | undefined;
-      let host: string | null = null;
-      for (let depth = 0; fiber && depth < 8; depth += 1, fiber = fiber.return as typeof fiber) {
-        const type = fiber.type as { displayName?: string; name?: string } | undefined;
-        const name = typeof fiber.type === "function" ? (type?.displayName || type?.name || null) : null;
-        if (!name) continue;
-        if (!host) host = name;
-        const scene = fiber.memoizedProps?.scene;
-        if (scene && typeof scene === "object") return { host: name, scene: scene as Record<string, unknown> };
-      }
-      return { host, scene: null };
     };
     // 🪟️ A pane whose windows are plain documents (the `norm` codes, `stdio-json`, `block2d`, `home`)
     // mounts no `[data-surface-id]` host at all — its content is the window body itself.
@@ -174,23 +145,23 @@ async function readPaintWitnesses(page: Page, variant: string): Promise<readonly
       if (meshes !== null || instances !== null) {
         return { surface, kind: "world3d", painted: size(meshes) + size(instances) > 0, detail: `${size(meshes)} meshes, ${size(instances)} instances` };
       }
-      const { host, scene } = hostOf(element);
-      if (host !== null && host.startsWith("Paint2d")) {
-        if (!scene) return { surface, kind: "paint2d", painted: false, detail: `${host} published no readable scene` };
-        const assets = (() => { try { return JSON.parse(String(scene.assetsJson ?? "{}")) as Record<string, { mime?: string; data?: string }>; } catch { return {}; } })();
-        const layers = (() => { try { return (JSON.parse(String(scene.documentSyncJson ?? "null"))?.layers ?? []) as readonly Record<string, unknown>[]; } catch { return []; } })();
+      const layersJson = element.getAttribute("data-layers-json"), assetsJson = element.getAttribute("data-assets-json");
+      if (layersJson !== null || assetsJson !== null || element.classList.contains("semio-paint-2d-canvas-surface")) {
+        if (layersJson === null || assetsJson === null) return { surface, kind: "paint2d", painted: false, detail: "the paint surface published no data-layers-json/data-assets-json witness" };
+        const assets = (() => { try { return JSON.parse(assetsJson ?? "{}") as Record<string, { width?: number | null; height?: number | null }>; } catch { return {}; } })();
+        const layers = (() => { try { const value = JSON.parse(layersJson ?? "[]"); return (Array.isArray(value) ? value : []) as readonly Record<string, unknown>[]; } catch { return []; } })();
         const drawn = layers.filter((layer) => layer.visible !== false && typeof layer.imageKey === "string").map((layer) => {
-          const box = extent(assets[layer.imageKey as string]);
-          return { layer: String(layer.id ?? layer.imageKey), key: String(layer.imageKey), box };
+          const asset = assets[layer.imageKey as string];
+          return { layer: String(layer.id ?? layer.imageKey), key: String(layer.imageKey), w: asset?.width ?? null, h: asset?.height ?? null, present: asset !== undefined };
         });
-        const painted = drawn.filter((row) => row.box !== null && row.box.w >= minimumEdge && row.box.h >= minimumEdge);
-        const shown = drawn.map((row) => `${row.layer}→${row.key} ${row.box ? `${row.box.w}×${row.box.h}` : "(missing asset)"}`).join(", ") || "no visible image layer";
+        const painted = drawn.filter((row) => row.w !== null && row.h !== null && row.w >= minimumEdge && row.h >= minimumEdge);
+        const shown = drawn.map((row) => `${row.layer}→${row.key} ${!row.present ? "(missing asset)" : row.w !== null && row.h !== null ? `${row.w}×${row.h}` : "(no readable extent)"}`).join(", ") || "no visible image layer";
         return { surface, kind: "paint2d", painted: painted.length > 0, detail: `${layers.length} layers, ${Object.keys(assets).length} assets: ${shown}` };
       }
       const region = element.closest('[data-slot="window-body"]') ?? element;
       const text = (region instanceof HTMLElement ? region.innerText : region.textContent ?? "").trim().length;
       const elements = region.querySelectorAll("*").length;
-      return { surface, kind: "dom", painted: text > 0 || elements >= minimumElements, detail: `${host ?? "window"}: ${text} characters, ${elements} elements` };
+      return { surface, kind: "dom", painted: text > 0 || elements >= minimumElements, detail: `window: ${text} characters, ${elements} elements` };
     });
   }, { id: variant, minimumElements: MINIMUM_MAIN_REGION_ELEMENTS, minimumEdge: MINIMUM_IMAGE_ASSET_EDGE });
 }

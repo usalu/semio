@@ -9,7 +9,7 @@
 
 use crate::editor::generation2d::commands::{
     add_generation, add_widget, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, connect_media_ports, enter_generate, flow_eval_resolve, flow_eval_tick, generation, move_media_node, node_graph_edit, node_graph_viewport, remove_generation,
-    remove_widget, rename_generation, reorganize, select_generation, set_contributions, set_eval_outputs, set_show_mode, update_generation_values,
+    remove_widget, rename_generation, reorganize, select_generation, set_active_example, set_contributions, set_eval_outputs, set_show_mode, update_generation_values,
 };
 use crate::editor::generation2d::config::{Generation2dConfig, Generation2dConfigMutation};
 use crate::editor::generation2d::modes::edit::windows::{flow as flow_window, preview as edit_preview};
@@ -37,6 +37,20 @@ use store::EngineHandles;
 /// 🏷️ Plain string tag (NOT a trait const — `ArtifactEditor::DIALECT`+`ROLE` derive the real surface
 /// id now, contract §2.1) reused wherever a window/panel needs a stable controller/action-factory id.
 pub const GENERATION2D_PLAY_APP_ID: &str = "procedural2d-play";
+
+/// 🕹️ The framework interaction domain every generation2d window is bound to: the node graph and
+/// both canvas previews read and write the same `graph` hover/selection.
+pub const GENERATION2D_INTERACTION_DOMAIN: &str = "graph";
+
+/// 🐁️ The channel a pointer hovers on.
+pub const GENERATION2D_INTERACTION_CHANNEL: &str = "pointer";
+
+/// 🎯️ Prefixes the node-graph canvas stamps onto pick targets — the twin of the flow plugin main
+/// window's `NodeGraphInteractionDomain` prefixes.
+pub const GENERATION2D_GRAPH_NODE_TARGET_PREFIX: &str = "generation2d-play-document.widget.";
+pub const GENERATION2D_GRAPH_EDGE_TARGET_PREFIX: &str = "generation2d-play-document.synapse.";
+pub const GENERATION2D_GRAPH_HANDLE_TARGET_PREFIX: &str = "generation2d-play-document.handle.";
+
 
 fn close_flow_session(session: &mut FlowEvalSession) {
     session.begin_close();
@@ -219,7 +233,9 @@ semio_framework_plugin::app_commands! {
         "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
         "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
-        "setContributions" as "set-contributions" => set_contributions::SetContributions}
+        "setContributions" as "set-contributions" => set_contributions::SetContributions,
+        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
+    }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
@@ -230,6 +246,7 @@ semio_framework_plugin::app_commands! {
 const GENERATION2D_BOUNDED_TOOL_IDS: &[&str] = &[
     "nodeGraphViewport",
     "setShowMode",
+    "setActiveExample",
     "generate",
     "canvasPointerDown",
     "canvasPointerMove",
@@ -535,6 +552,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation2dBounded
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
         ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "setShowMode", lanes: &[ArtifactToolPublicationLane::Config] },
+        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "generate", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -702,6 +720,7 @@ impl Generation2dBoundedCommandJobFactoryProofs {
         tools: [
             "nodeGraphViewport",
             "setShowMode",
+            "setActiveExample",
             "generate",
             "canvasPointerDown",
             "canvasPointerMove",
@@ -1551,7 +1570,7 @@ impl ArtifactEditor for Generation2dPlayApp {
                 operations_json: str_arg(&["operationsJson", "operations_json"]).or_else(|| args.get("operations").map(dsl::json::to_json_string)).unwrap_or_else(|| "[]".into()),
             })),
             "moveMediaNode" => Ok(Generation2dCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(), x: f64_arg(&["x"]).unwrap_or(0.0), y: f64_arg(&["y"]).unwrap_or(0.0) })),
-            "addWidget" => Ok(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind", "neuron_kind"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
+            "addWidget" => Ok(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind", "neuron_kind"]), format: str_arg(&["format"]), action: str_arg(&["action"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
             "removeWidget" => Ok(Generation2dCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
             "connectMediaPorts" => Ok(Generation2dCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts {
                 source_node_id: str_arg(&["sourceNodeId", "source_node_id"]).unwrap_or_default(),
@@ -1573,6 +1592,7 @@ impl ArtifactEditor for Generation2dPlayApp {
             }
             "nodeGraphViewport" => Ok(Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: parse_flow_viewport(&args)? })),
             "setShowMode" => Ok(Generation2dCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode"]).unwrap_or_default() })),
+            "setActiveExample" => Ok(Generation2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "id"]).unwrap_or_default() })),
             "generate" => Ok(Generation2dCommand::Generate(enter_generate::Generate {})),
             "setEvalOutputs" => Ok(Generation2dCommand::SetEvalOutputs(set_eval_outputs::SetEvalOutputs { outputs_json: str_arg(&["outputsJson", "outputs_json", "evalJson"]).unwrap_or_else(|| "{}".into()) })),
             "canvasPointerDown" => Ok(Generation2dCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {})),
@@ -1692,11 +1712,13 @@ impl ArtifactEditor for Generation2dPlayApp {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let mut session = FlowEvalSession::new();
-        let rendered = generation2d_render_body(body_key, doc, cfg, view_state, &session);
+        let rendered = generation2d_render_body(body_key, doc, cfg, view_state, &GraphInteractionMarks::default(), &session);
         close_flow_session(&mut session);
         rendered
     }
 
+    /// 🕹️ Resolves the live `graph` hover/selection once per render and threads it into every
+    /// window body — the node graph paints the selected nodes.
     fn render_with_request_context(
         owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
@@ -1704,7 +1726,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         cfg: &ConfigView<'_, Generation2dConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
-        _interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         if body_key == generate_preview::GENERATION2D_PLAY_BODY_GENERATE_PREVIEW {
             let labels = generation2d_labels(view_state);
@@ -1712,40 +1734,36 @@ impl ArtifactEditor for Generation2dPlayApp {
             let node = generate_preview::render(&window_config, transient.snapshot.generation_preview_text.as_deref(), labels)?;
             return Ok(semio_framework_plugin::built_to_component_tree(node));
         }
+        let marks = GraphInteractionMarks::from_interaction(interaction);
         owner
-            .with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation2d_render_body(body_key, doc, cfg, view_state, session)))
+            .with_mut::<Generation2dInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation2d_render_body(body_key, doc, cfg, view_state, &marks, session)))
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("generation2d.eval-session-owner", error.message))?
     }
-    /// 🗂️ Grouped disclosure: `addWidget`/`reorganize`/`generate` stay top-level; the display-mode
-    /// toggle, generation authoring, and generation selection each fold into their own taxonomy group;
-    /// the delete-selection item stays a direct destructive item last.
-    ///
-    /// 🕹️ `context_menu` carries no `InteractionView` either (same gap as `render` — see ticket
-    /// 26/08/14's w3b-summary.md), so the selection-dependent delete row below always takes the
-    /// "nothing selected" branch rather than reading a stale/wrong selection.
+    /// 🗂️ The marks-free entry point the framework still offers — every live right-click goes
+    /// through `context_menu_with_request_context` instead, so this delegate builds the same menu
+    /// against an empty selection.
     fn context_menu(
         request: &semio_framework_plugin::ContextMenuRequest,
-        _doc: &ArtifactView<'_, Generation2dSnapshot>,
-        _cfg: &ConfigView<'_, Generation2dConfig>,
+        doc: &ArtifactView<'_, Generation2dSnapshot>,
+        cfg: &ConfigView<'_, Generation2dConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
-        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+        Self::context_menu_body(request, doc, cfg, view_state, &GraphInteractionMarks::default(), registry)
+    }
 
-        {
-            let labels = semio_framework_plugin::resolve_labels::<Generation2dLabels>(view_state);
-            let is_de = view_state.locale == semio_framework_plugin::Locale::De;
-            let selected: Vec<String> = Vec::new();
-            let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
-            let mut menu = Menu::of(registry).action("addWidget").action("reorganize").action("generate");
-            menu = menu.group("mode", |m| m.action("setShowMode"));
-            menu = menu.group("create", |m| m.action("addGeneration"));
-            menu = menu.group("methods", |m| m.action("selectGeneration"));
-            if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
-                menu = menu.item(spec);
-            }
-            menu.build()
-        }
+    /// 🕹️ `context_menu`'s interaction-aware twin — the one the runtime actually calls.
+    /// `interaction` is the authoritative framework-owned `graph` selection, the same one
+    /// `render_with_request_context` paints from.
+    fn context_menu_with_request_context(
+        request: &semio_framework_plugin::ContextMenuRequest,
+        doc: &ArtifactView<'_, Generation2dSnapshot>,
+        cfg: &ConfigView<'_, Generation2dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        interaction: &InteractionView<'_>,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        Self::context_menu_body(request, doc, cfg, view_state, &GraphInteractionMarks::from_interaction(interaction), registry)
     }
 
     /// 🎞️ Declares `export_media`'s default document schema — pack-encodes `doc.snapshot`, wrapped
@@ -1799,6 +1817,34 @@ impl ArtifactEditor for Generation2dPlayApp {
         Ok(Emit::mutations(operations))
     }
 }
+
+impl Generation2dPlayApp {
+    /// 🗂️ The ONE context-menu implementation — both `ArtifactEditor::context_menu` and
+    /// `context_menu_with_request_context` funnel here.
+    fn context_menu_body(
+        request: &semio_framework_plugin::ContextMenuRequest,
+        doc: &ArtifactView<'_, Generation2dSnapshot>,
+        _cfg: &ConfigView<'_, Generation2dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        marks: &GraphInteractionMarks,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+        let labels = semio_framework_plugin::resolve_labels::<Generation2dLabels>(view_state);
+        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let (selected_nodes, selected_edges) = marks.graph_selection_domains(&doc.snapshot.host_snapshot);
+        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected_nodes, &selected_edges);
+        let mut menu = Menu::of(registry).action("addWidget").action("reorganize").action("generate");
+        menu = menu.group("mode", |m| m.action("setShowMode"));
+        menu = menu.group("create", |m| m.action("addGeneration"));
+        menu = menu.group("methods", |m| m.action("selectGeneration"));
+        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection.as_str(), is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+            menu = menu.item(spec);
+        }
+        menu.build()
+    }
+}
+
 //#endregion 🔖️Generation2dPlayApp
 
 //#region 🔖️Manifest
@@ -1843,6 +1889,7 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         // (`.interaction(...)` below) — the six framework verbs auto-inject.
         .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"), ActionKind::View, "camera"))
         .action_with(categorized_action("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"), ActionKind::View, "mode"))
+        .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"))
         .action_with(categorized_action("generate", LocalizedLabel::native("Generate", "Generieren"), ActionKind::View, "actions"))
         .view_action("setEvalOutputs", LocalizedLabel::native("Set Eval Outputs", "Auswertungsausgaben festlegen"))
         .action_with(ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Canvas-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
@@ -1866,6 +1913,7 @@ pub fn create_generation2d_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("updateGenerationValues", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
         .action_interactive_job("setShowMode", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
         .action_interactive_job("generate", InteractiveJobClassification::Migrated)
         .action_interactive_job("setEvalOutputs", InteractiveJobClassification::Migrated)
         .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
@@ -1961,6 +2009,54 @@ mod generation2d_window_camera_ownership;
 //#endregion 🧪️UnitTests
 
 
+
+//#region 🔖️GraphInteraction
+/// 🕹️ One render's resolved `graph`-domain marks — hover off the ephemeral pointer channel,
+/// selection off the persisted interaction store.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct GraphInteractionMarks {
+    pub hovered: std::collections::BTreeSet<String>,
+    pub selected: std::collections::BTreeSet<String>,
+}
+
+impl GraphInteractionMarks {
+    /// 🕹️ Reads the framework-owned domain.
+    pub fn from_interaction(interaction: &InteractionView<'_>) -> Self {
+        Self {
+            hovered: interaction.hover(GENERATION2D_INTERACTION_DOMAIN, GENERATION2D_INTERACTION_CHANNEL).ids.iter().cloned().collect(),
+            selected: interaction.selection(GENERATION2D_INTERACTION_DOMAIN).ids.iter().cloned().collect(),
+        }
+    }
+
+    /// 🕸️ The widget id behind any interaction id — `{w}`, `{w}@{c}` and `{w}@{c}#{i}` all resolve
+    /// to `{w}`.
+    pub fn widget_of(id: &str) -> &str {
+        let base = id.split('#').next().unwrap_or(id);
+        base.split('@').next().unwrap_or(base)
+    }
+
+    /// 🕸️ The `graph` selection split into the node and edge domains a context menu addresses.
+    pub fn graph_selection_domains(&self, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> (Vec<String>, Vec<String>) {
+        let synapses: std::collections::BTreeSet<&str> = host_snapshot.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+        let mut nodes = std::collections::BTreeSet::new();
+        let mut edges = std::collections::BTreeSet::new();
+        for id in &self.selected {
+            if synapses.contains(id.as_str()) {
+                edges.insert(id.clone());
+            } else {
+                nodes.insert(Self::widget_of(id).to_string());
+            }
+        }
+        (nodes.into_iter().collect(), edges.into_iter().collect())
+    }
+
+    /// 🕸️ The `graph` selection projected onto widget ids — what `NodeGraphScene::selection` paints.
+    pub fn graph_selection_ids(&self) -> Vec<String> {
+        self.selected.iter().map(|id| Self::widget_of(id).to_string()).collect::<std::collections::BTreeSet<String>>().into_iter().collect()
+    }
+}
+//#endregion 🔖️GraphInteraction
+
 /// 🧱️ Every window body of the generation2d editor, rendered against ONE already-resolved evaluation
 /// session — shared by the marks-free `render` (scratch session) and `render_with_request_context`
 /// (the instance's retained session) so there is exactly one body-key match in the app.
@@ -1969,6 +2065,7 @@ fn generation2d_render_body(
     doc: &ArtifactView<'_, Generation2dSnapshot>,
     cfg: &ConfigView<'_, Generation2dConfig>,
     view_state: &semio_framework_plugin::ViewModel,
+    marks: &GraphInteractionMarks,
     session: &FlowEvalSession,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let document = doc.snapshot;
@@ -1977,7 +2074,7 @@ fn generation2d_render_body(
     let rendered = match body_key {
         flow_window::GENERATION2D_PLAY_BODY_MAIN => {
             let window_config = flow_window::config::current(cfg);
-            flow_window::render(document, &window_config, session)
+            flow_window::render(document, &window_config, session, &marks.graph_selection_ids())
         }
         edit_preview::GENERATION2D_PLAY_BODY_PREVIEW => {
             let window_config = edit_preview::config::current(cfg);

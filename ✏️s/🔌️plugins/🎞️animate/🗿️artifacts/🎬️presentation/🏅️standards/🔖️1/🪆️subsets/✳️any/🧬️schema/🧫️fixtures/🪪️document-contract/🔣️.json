@@ -39,6 +39,18 @@
   "diff": {
     "artifact": {
       "schema": "animate.presentation",
+      "source": {
+        "src": "/fixture-deck.png",
+        "kind": "figure",
+        "frame": {
+          "x": 0.0,
+          "y": 0.0,
+          "width": 1.0,
+          "height": 1.0
+        },
+        "sourceAspect": 1.5
+      },
+      "tiles": [],
       "presentation": {
         "childId": "presentation-fixture",
         "target": {
@@ -63,6 +75,29 @@
       }
     },
     "schema": "animate.presentation",
+    "source": {
+      "src": "/fixture-deck.png",
+      "kind": "figure",
+      "frame": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0
+      },
+      "sourceAspect": 1.5
+    },
+    "tiles": [
+      {
+        "id": "t1",
+        "name": "A",
+        "crop": {
+          "x": 0.0,
+          "y": 0.0,
+          "width": 0.5,
+          "height": 0.5
+        }
+      }
+    ],
     "presentation": {
       "childId": "presentation-fixture",
       "target": {
@@ -163,7 +198,11 @@
   ],
   "invalidDiffs": [
     {
-      "tiles": []
+      "tiles": [
+        {
+          "id": "t1"
+        }
+      ]
     },
     {
       "source": {}

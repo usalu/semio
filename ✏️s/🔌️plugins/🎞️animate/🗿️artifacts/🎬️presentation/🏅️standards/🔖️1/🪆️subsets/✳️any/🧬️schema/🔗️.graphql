@@ -1,7 +1,10 @@
-# 🧬️ Presentation durable artifact composed from shared presentation and animation child identities.
+# 🧬️ Presentation durable artifact: one shared figure, its tile crops, and shared presentation and animation child identities.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import FigureTileSource, FigureTileDraft from "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️.graphql"
 type PresentationArtifact {
   schema: String! @state(class: ARTIFACT)
+  source: FigureTileSource! @state(class: ARTIFACT)
+  tiles: [FigureTileDraft!]! @state(class: ARTIFACT)
   presentation: ArtifactChild! @state(class: ARTIFACT)
   animation: ArtifactChild! @state(class: ARTIFACT)
 }

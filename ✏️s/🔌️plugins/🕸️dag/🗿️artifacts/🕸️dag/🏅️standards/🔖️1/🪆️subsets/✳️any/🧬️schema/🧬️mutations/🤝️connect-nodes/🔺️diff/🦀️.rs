@@ -32,7 +32,7 @@ pub fn diff(payload: &super::mutation::ConnectNodes, base: &DagSnapshot) -> prot
     }
     let edge = DagHostSnapshotEdge { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone(), route_style: payload.route_style, properties: payload.properties.clone() };
     let mut edges = scene.edges;
-    edges.push(edge);
+    edges.insert(payload.index.map_or(edges.len(), |index| index.min(edges.len())), edge);
     protocol::MutationOutcome::new(diff_replace_content(scene.nodes, edges))
 }
 

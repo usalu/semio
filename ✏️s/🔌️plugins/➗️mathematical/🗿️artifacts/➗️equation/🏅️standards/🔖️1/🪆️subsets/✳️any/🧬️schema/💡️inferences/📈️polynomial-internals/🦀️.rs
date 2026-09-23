@@ -955,6 +955,11 @@ pub mod finite {
 
     /// 🎯️ Rabin's irreducibility test: `f` (monic, degree `n`) is irreducible over `GF(p)` iff
     /// `x^(p^n) == x (mod f)` and `gcd(x^(p^(n/q)) - x, f) == 1` for every prime `q | n`.
+    ///
+    /// 🐛️ The final congruence is tested as `x^(p^n) - x ≡ 0`, never as `==`: `PolyU::x()` carries
+    /// UNBOUND `ModInt` coefficients (modulus 0) while the reduced power is bound to `p`, and
+    /// `ModInt`'s derived `PartialEq` compares the modulus too, so `==` answered `false` for every
+    /// irreducible `f` (`x² + 2` over `GF(5)`). Subtraction unifies the binding first.
     pub fn is_irreducible(f: &PolyU<ModInt>) -> bool {
         let Some(n) = f.degree() else { return false };
         if n == 0 {
@@ -970,8 +975,7 @@ pub mod finite {
                 return false;
             }
         }
-        let h = poly_mod_pow(&x, p.pow(n as u32), f);
-        h == x
+        poly_mod_pow(&x, p.pow(n as u32), f).sub(&x).is_zero()
     }
     // #endregion 🔖️Irreducibility
 
@@ -1623,7 +1627,8 @@ pub mod algebraic {
         }
 
         /// 🌱️ The `index`-th real root of `f` (ascending order, `0`-based); narrows `f` down to whichever
-        /// irreducible factor actually contains that root. `None` if `index` is out of range.
+        /// irreducible factor actually contains that root — a LINEAR factor is a rational root and comes
+        /// back exact (`is_rational`), never as an isolating interval. `None` if `index` is out of range.
         pub fn root_of(f: &PolyU<Integer>, index: usize) -> Option<Self> {
             let intervals = isolate_real_roots(f);
             let (lo, hi) = intervals.get(index)?.clone();
@@ -1634,6 +1639,10 @@ pub mod algebraic {
                 }
                 let seq = sturm_sequence(factor);
                 if count_roots_in(&seq, &lo, &hi) == 1 {
+                    if factor.degree() == Some(1) {
+                        let coeffs = factor.coeffs();
+                        return Rational::new(coeffs[0].neg(), coeffs[1].clone()).map(|root| Self::from_rational(&root));
+                    }
                     return Some(Self { poly: factor.clone(), lo, hi });
                 }
             }
@@ -1678,8 +1687,18 @@ pub mod algebraic {
             self.lo == self.hi
         }
 
+        /// 🔢️ The nearest `f64`, refined on a copy until the isolating interval is `2⁻⁶⁰` wide.
+        ///
+        /// 🐛️ This used to answer the midpoint of the interval exactly as isolated, which for `√2` from
+        /// `isolate_real_roots(x² − 2)` is a unit-scale bracket: `−√2` read back as `−1.5`, `∛2·∛4` as
+        /// a value 0.2 off `2`. Every numeric reading of an algebraic real goes through here.
         pub fn to_f64(&self) -> f64 {
-            (self.lo.to_f64() + self.hi.to_f64()) / 2.0
+            if self.is_rational() {
+                return self.lo.to_f64();
+            }
+            let mut probe = self.clone();
+            probe.refine(&Rational::from_i64(1, 1_i64 << 60).expect("a positive width"));
+            (probe.lo.to_f64() + probe.hi.to_f64()) / 2.0
         }
 
         /// 🔬️ Bisects the isolating interval down to (at most) `width`.

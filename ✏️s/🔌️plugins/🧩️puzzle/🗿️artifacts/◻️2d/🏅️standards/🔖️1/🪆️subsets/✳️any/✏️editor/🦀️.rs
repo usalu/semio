@@ -1251,6 +1251,23 @@ fn unique_edge_id(fixture: &Value, candidate: String) -> String {
     }
 }
 
+/// 🔖️ The handles of a brush-placed node, each carrying the `"{node}:v{index}"` id the placed edge
+/// already addresses (`apply_brush_place_payload`'s `target`). The engine's `brushPlace` payload
+/// describes handles by kind/angle/radius only; an id-less handle is not a `Puzzle2dHandle` at all, so
+/// the placed node would make the whole board fail to decode.
+fn puzzle2d_placed_handles(node_id: &str, handles: Option<&Value>) -> Value {
+    let rows = handles.and_then(Value::as_array).map(|rows| rows.iter().enumerate().map(|(index, handle)| {
+        let mut handle = handle.clone();
+        if let Some(object) = handle.as_object_mut() {
+            if object.get("id").and_then(Value::as_str).is_none_or(str::is_empty) {
+                object.insert("id".into(), json!(format!("{node_id}:v{index}")));
+            }
+        }
+        handle
+    }).collect::<Vec<_>>()).unwrap_or_default();
+    Value::Array(rows)
+}
+
 /// 🖌️ Splices one brush placement (a node, plus the edge back to its source handle) into the fixture.
 pub fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
     let node_id = unique_node_id(fixture, payload.get("nodeId").and_then(|value| value.as_str()).map_or_else(|| new_node_id("node"), str::to_string));
@@ -1267,7 +1284,7 @@ pub fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
         "x": x,
         "y": y,
         "text": label,
-        "handles": payload.get("handles").cloned().unwrap_or_else(|| json!([])),
+        "handles": puzzle2d_placed_handles(&node_id, payload.get("handles")),
     });
     if shape == "rectangle" {
         node["width"] = json!(payload.get("width").and_then(|value| value.as_f64()).unwrap_or(48.0));
@@ -1470,7 +1487,7 @@ pub fn puzzle2d_cut_operations_from(fixture: &Value, node_ids: &[String]) -> Res
     }
     let mut after = fixture.clone();
     delete_selection_from_host_snapshot(&mut after, node_ids);
-    Ok(puzzle2d_document_delta_operations(fixture, &after))
+    puzzle2d_document_delta_operations(fixture, &after).map_err(ClipboardError::ParseFailed)
 }
 
 /// 📋️ Clones a copied fragment with fresh node, handle and edge ids: the edges between copied nodes
@@ -1528,7 +1545,7 @@ pub fn puzzle2d_paste_operations_on(fixture: &Value, fragment: &ClipboardFragmen
         puzzle2d_push_edge(&mut after, clone);
     }
     puzzle2d_relabel_nodes(&mut after, &pasted);
-    Ok((puzzle2d_document_delta_operations(fixture, &after), pasted))
+    Ok((puzzle2d_document_delta_operations(fixture, &after).map_err(ClipboardError::ParseFailed)?, pasted))
 }
 //#endregion 📋️Clipboard
 
@@ -2028,10 +2045,10 @@ impl Puzzle2dPlayApp {
         window_transient: &Puzzle2dWindowTransient,
         interaction: Puzzle2dInteractionSnapshot,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
-        let document_json = doc.snapshot.0.to_string();
-        let envelope = Self::scene_with(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)), interaction);
+        let document_json = doc.snapshot.value().to_string();
+        let envelope = Self::scene_with(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)), interaction);
         let labels = puzzle2d_labels(view_state);
         // 🪟️ One `TreeWindows` per render, read off the host's `ViewModel::tree_windows` for exactly
         // the body being rendered — every panel container below shares its first-paint row budget.
@@ -2766,11 +2783,11 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
         if self.consumed {
             return Err(Fault::from("puzzle2d-window-work-repeated"));
         }
-        let window_config = window::config_from_snapshot_or_document(self.window_config.as_ref(), &snapshot.0);
+        let window_config = window::config_from_snapshot_or_document(self.window_config.as_ref(), snapshot.value());
         let window_transient = window::transient_from_snapshot(self.window_transient.as_ref());
         let window_kind = self.window_config.as_ref().map(semio_framework_plugin::WindowConfigSnapshot::window_kind_id).or_else(|| self.view_state.as_ref().and_then(window::kind_for_view)).unwrap_or(overview::WINDOW_KIND_ID);
         let selection = interaction.selection.get(PUZZLE2D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
-        let (emit, ephemeral) = puzzle2d_dispatch_emit(command, &snapshot.0, config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, None)?;
+        let (emit, ephemeral) = puzzle2d_dispatch_emit(command, snapshot.value(), config, &window_config, &window_transient, window_kind, self.view_state.as_ref(), puzzle2d_active_utility(self.view_state.as_ref()), &selection, None)?;
         self.consumed = true;
         self.ephemeral = Some(ephemeral);
         Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(emit))
@@ -2807,7 +2824,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             return Err(Fault::from("puzzle2d-export-work-repeated"));
         }
         self.consumed = true;
-        Ok(match export_fixture::puzzle2d_export_publication(&snapshot.0)? {
+        Ok(match export_fixture::puzzle2d_export_publication(snapshot.value())? {
             export_fixture::Puzzle2dExportPublication::Inline(effect) => crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { effects: vec![effect], ui_scope: UiDirtyScope::None, ..Default::default() }),
             export_fixture::Puzzle2dExportPublication::Segmented(download) => crate::retained_command::PuzzleCommandWorkStep::Download(download),
             export_fixture::Puzzle2dExportPublication::Refused(message) => crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { effects: vec![Effect::Notify { message }], ui_scope: UiDirtyScope::None, ..Default::default() }),
@@ -2947,7 +2964,7 @@ fn puzzle2d_dispatch_emit(
         let labels = view_state.map_or_else(|| puzzle2d_labels(&semio_framework_plugin::ViewModel::default()), puzzle2d_labels);
         effects.push(Effect::Notify { message: labels.selection_locked.as_str().to_string() });
     }
-    let mut operations = puzzle2d_document_delta_operations(before, &scene.fixture);
+    let mut operations = puzzle2d_document_delta_operations(before, &scene.fixture).map_err(Fault::from)?;
     operations.append(&mut artifact_mutations);
     // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
     // actual document mutation (would silently desync remote clients' UI from the committed operation).
@@ -3095,9 +3112,9 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
 
     fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
         let target = Self::target(command);
-        let source_nodes = snapshot.0.get("nodes").and_then(Value::as_array).map_or(0, Vec::len);
-        let source_edges = snapshot.0.get("edges").and_then(Value::as_array).map_or(0, Vec::len);
-        let source_compatibility = snapshot.0.get("meta").and_then(|meta| meta.get("kindCompatibility")).and_then(Value::as_array).map_or(0, Vec::len);
+        let source_nodes = snapshot.value().get("nodes").and_then(Value::as_array).map_or(0, Vec::len);
+        let source_edges = snapshot.value().get("edges").and_then(Value::as_array).map_or(0, Vec::len);
+        let source_compatibility = snapshot.value().get("meta").and_then(|meta| meta.get("kindCompatibility")).and_then(Value::as_array).map_or(0, Vec::len);
         let items = source_nodes.checked_add(source_edges)?.checked_add(source_compatibility)?.checked_add(target.nodes.len())?.checked_add(target.edges.len())?.checked_add(target.meta.kind_compatibility.len())?.checked_add(2)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
@@ -3113,7 +3130,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
         let target = Self::target(command);
         match self.stage {
             Puzzle2dExampleStage::ClearEdges => {
-                let source = snapshot.0.get("edges").and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
+                let source = snapshot.value().get("edges").and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
                 if let Some(id) = source.and_then(|row| row.get("id")).and_then(Value::as_str) {
                     self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_handles(id.to_string()));
                     self.source_cursor += 1;
@@ -3124,7 +3141,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                 Ok(Self::progress("puzzle2d-example-clear-node", "Removing existing node", "Bestehender Knoten wird entfernt"))
             }
             Puzzle2dExampleStage::ClearNodes => {
-                let source = snapshot.0.get("nodes").and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
+                let source = snapshot.value().get("nodes").and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
                 if let Some(id) = source.and_then(|row| row.get("id")).and_then(Value::as_str) {
                     self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::delete_node(id.to_string()));
                     self.source_cursor += 1;
@@ -3135,7 +3152,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                 Ok(Self::progress("puzzle2d-example-manifest", "Updating example manifest", "Beispielmanifest wird aktualisiert"))
             }
             Puzzle2dExampleStage::Manifest => {
-                let current = snapshot.0.get("meta").and_then(|meta| meta.get("manifestId")).and_then(Value::as_str);
+                let current = snapshot.value().get("meta").and_then(|meta| meta.get("manifestId")).and_then(Value::as_str);
                 if current != target.meta.manifest_id.as_deref() {
                     self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::change_manifest_id(target.meta.manifest_id.clone()));
                 }
@@ -3143,7 +3160,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                 Ok(Self::progress("puzzle2d-example-clear-compatibility", "Removing kind relation", "Artbeziehung wird entfernt"))
             }
             Puzzle2dExampleStage::ClearCompatibility => {
-                let source = snapshot.0.get("meta").and_then(|meta| meta.get("kindCompatibility")).and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
+                let source = snapshot.value().get("meta").and_then(|meta| meta.get("kindCompatibility")).and_then(Value::as_array).and_then(|rows| rows.get(self.source_cursor));
                 if let Some(source) = source {
                     let row = <crate::Puzzle2dKindCompatibility as dsl::FromValue>::from_value(dsl::DslValue::from(source)).map_err(|_| Fault::from("puzzle2d-example-compatibility-malformed"))?;
                     self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(row.source, row.target));
@@ -3663,11 +3680,11 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
     /// too, so a document that would trip `PUZZLE2D_FORCE_MAX_HANDLES` mid-run is refused at
     /// preflight instead.
     fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        if command.action_id() != self.tool_id || snapshot.0.get("schema").and_then(Value::as_str) != Some(PUZZLE2D_FIXTURE_SCHEMA) {
+        if command.action_id() != self.tool_id || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_FIXTURE_SCHEMA) {
             return None;
         }
-        let nodes = snapshot.0.get("nodes")?.as_array()?;
-        let edges = snapshot.0.get("edges").and_then(Value::as_array).map_or(0, Vec::len);
+        let nodes = snapshot.value().get("nodes")?.as_array()?;
+        let edges = snapshot.value().get("edges").and_then(Value::as_array).map_or(0, Vec::len);
         let handles = nodes.iter().filter_map(|node| node.get("handles")).filter_map(Value::as_array).map(Vec::len).sum::<usize>();
         if nodes.len() > PUZZLE2D_FORCE_MAX_NODES || edges > PUZZLE2D_FORCE_MAX_EDGES || handles > PUZZLE2D_FORCE_MAX_HANDLES {
             return None;
@@ -3697,8 +3714,8 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
-        let nodes = snapshot.0.get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-force-nodes-missing"))?;
-        let edges = snapshot.0.get("edges").and_then(Value::as_array);
+        let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-force-nodes-missing"))?;
+        let edges = snapshot.value().get("edges").and_then(Value::as_array);
         let iterations = puzzle2d_force_iterations(nodes.len(), edges.map_or(0, Vec::len));
         match self.stage {
             Puzzle2dForceStage::Nodes | Puzzle2dForceStage::Handles => {
@@ -4035,11 +4052,11 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
     /// 📐️ One index chunk per [`PUZZLE2D_REDRAW_UNITS_PER_STEP`] node-or-handle records, one chunk
     /// per that many edges, one chunk per that many published handles, plus one stage handover each.
     fn extent(&self, command: &Puzzle2dCommand, snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-        if command.action_id() != "redrawHandles" || snapshot.0.get("schema").and_then(Value::as_str) != Some(PUZZLE2D_FIXTURE_SCHEMA) {
+        if command.action_id() != "redrawHandles" || snapshot.value().get("schema").and_then(Value::as_str) != Some(PUZZLE2D_FIXTURE_SCHEMA) {
             return None;
         }
-        let nodes = snapshot.0.get("nodes")?.as_array()?;
-        let edges = snapshot.0.get("edges").and_then(Value::as_array).map_or(0, Vec::len);
+        let nodes = snapshot.value().get("nodes")?.as_array()?;
+        let edges = snapshot.value().get("edges").and_then(Value::as_array).map_or(0, Vec::len);
         let handles = nodes.iter().filter_map(|node| node.get("handles")).filter_map(Value::as_array).map(Vec::len).sum::<usize>();
         if nodes.len() > PUZZLE2D_REDRAW_MAX_NODES || edges > PUZZLE2D_REDRAW_MAX_EDGES || handles > PUZZLE2D_REDRAW_MAX_HANDLES {
             return None;
@@ -4062,7 +4079,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle2dPlayApp>>, Fault> {
-        let nodes = snapshot.0.get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-redraw-nodes-missing"))?;
+        let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-redraw-nodes-missing"))?;
         match self.stage {
             Puzzle2dRedrawStage::Nodes | Puzzle2dRedrawStage::Handles => {
                 for _ in 0..PUZZLE2D_REDRAW_UNITS_PER_STEP {
@@ -4075,7 +4092,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
                 Ok(Self::progress("puzzle2d-redraw-node", "Indexing board node", "Board-Knoten wird indiziert"))
             }
             Puzzle2dRedrawStage::Edges => {
-                let edges = snapshot.0.get("edges").and_then(Value::as_array);
+                let edges = snapshot.value().get("edges").and_then(Value::as_array);
                 for _ in 0..PUZZLE2D_REDRAW_UNITS_PER_STEP {
                     if self.stage != Puzzle2dRedrawStage::Edges {
                         break;
@@ -4164,20 +4181,27 @@ fn puzzle2d_import_checkpoint(stage: u8, cursor: usize, decoded_items: usize, pr
     StepOutcome::CheckpointReady(Checkpoint { state: puzzle2d_job_payload(cx, JobPayloadStream::CheckpointState, &state), applied_progress: progress })
 }
 
+/// 🧹️ One bounded unit of a retained `String`'s retirement: its content in ONE item (clearing a `String` frees
+/// nothing and drops nothing per char), then its heap backing, shrunk by at most `maximum_bytes` per unit.
+///
+/// 🐛️ This used to pop ONE char per unit and then REFUSE (`Err`) a backing larger than one unit's byte grant.
+/// A `kit:in` label at the `puzzle2d` import media cap (one `JOB_PAYLOAD_PAGE_BYTES` = 16 KiB page) leaves a
+/// backing above that grant, so after ~16 000 single-char units every later unit answered the same `Err`,
+/// the job's close mapped it to `Blocked`, and the close spun for ever — measured 2026-09-23 as
+/// `kit_in_retained_import_media_enforces_exact_media_max_plus_one_before_decode` running past the 30-minute
+/// test watchdog with `Fault::from` the hottest frame of the retirement (`sample`, `📓️block-puzzle.md` §11).
 fn puzzle2d_retire_string_step(owner: &mut String, maximum_bytes: usize) -> Result<Option<PluginCloseStep>, Fault> {
-    if let Some(bytes) = owner.chars().next_back().map(char::len_utf8) {
-        if bytes > maximum_bytes {
-            return Ok(Some(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
-        }
-        owner.pop();
-        return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }));
-    }
-    if owner.capacity() == 0 {
-        return Ok(None);
+    if !owner.is_empty() {
+        owner.clear();
+        return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
     }
     let bytes = owner.capacity();
+    if bytes == 0 {
+        return Ok(None);
+    }
     if bytes > maximum_bytes {
-        return Err(Fault::from("puzzle2d import string backing exceeds its bounded disposal byte slice"));
+        owner.shrink_to(bytes - maximum_bytes);
+        return Ok(Some(PluginCloseStep::Pending { released_items: 0, released_bytes: bytes - owner.capacity() }));
     }
     *owner = String::new();
     Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes }))
@@ -4394,7 +4418,7 @@ impl Puzzle2dImportJob {
     }
 
     fn meta(&self, key: &str) -> Option<&Value> {
-        self.snapshot.as_ref().and_then(|snapshot| snapshot.0.get("meta")).and_then(|meta| meta.get(key)).filter(|value| !value.is_null())
+        self.snapshot.as_ref().and_then(|snapshot| snapshot.value().get("meta")).and_then(|meta| meta.get(key)).filter(|value| !value.is_null())
     }
 
     fn push_mutation(&mut self, mutation: Puzzle2dMutation) -> Result<(), &'static str> {
@@ -4745,7 +4769,7 @@ impl Puzzle2dClipboardJob {
         let Some(ArtifactReservedToolInput::Action { args, interaction, hover }) = self.input.take() else {
             return Emit::default();
         };
-        let fixture = &self.snapshot.0;
+        let fixture = self.snapshot.value();
         let marks = Puzzle2dInteractionSnapshot::from_state(&interaction, &hover);
         let selected = puzzle2d_selected_node_ids(fixture, marks.selected_ids());
         match self.tool_id.as_str() {
@@ -5027,7 +5051,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 
     fn initial_snapshot() -> Puzzle2dPlaySnapshot {
         set_active_example::warm_examples();
-        Puzzle2dPlaySnapshot(serde_json::to_value(default_empty_fixture()).unwrap_or(Value::Null))
+        Puzzle2dPlaySnapshot::new(serde_json::to_value(default_empty_fixture()).unwrap_or(Value::Null))
     }
 
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
@@ -5057,10 +5081,10 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         if action == "setActiveExample" {
             return puzzle2d_active_example_emit(command, doc.snapshot, config);
         }
-        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_transient = Puzzle2dWindowTransient::default();
         let window_kind = view_state.and_then(window::kind_for_view).unwrap_or(overview::WINDOW_KIND_ID);
-        puzzle2d_dispatch_emit(command, &doc.snapshot.0, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned())
+        puzzle2d_dispatch_emit(command, doc.snapshot.value(), config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned())
             .map(|(emit, _)| emit)
     }
 
@@ -5189,20 +5213,20 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 
     fn copy_fragment(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle2dConfig>, interaction: &InteractionView<'_>) -> Result<ClipboardFragment, ClipboardError> {
         let marks = Puzzle2dInteractionSnapshot::from_interaction(interaction);
-        puzzle2d_copy_fragment_from(&doc.snapshot.0, &puzzle2d_selected_node_ids(&doc.snapshot.0, marks.selected_ids()))
+        puzzle2d_copy_fragment_from(doc.snapshot.value(), &puzzle2d_selected_node_ids(doc.snapshot.value(), marks.selected_ids()))
     }
 
     fn cut_operations(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle2dConfig>, interaction: &InteractionView<'_>) -> Vec<Puzzle2dMutation> {
         let marks = Puzzle2dInteractionSnapshot::from_interaction(interaction);
-        let selected = puzzle2d_selected_node_ids(&doc.snapshot.0, marks.selected_ids());
-        if puzzle2d_selection_is_locked(&doc.snapshot.0, &selected) {
+        let selected = puzzle2d_selected_node_ids(doc.snapshot.value(), marks.selected_ids());
+        if puzzle2d_selection_is_locked(doc.snapshot.value(), &selected) {
             return Vec::new();
         }
-        puzzle2d_cut_operations_from(&doc.snapshot.0, &selected).unwrap_or_default()
+        puzzle2d_cut_operations_from(doc.snapshot.value(), &selected).unwrap_or_default()
     }
 
     fn paste_operations(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle2dMutation>, ClipboardError> {
-        puzzle2d_paste_operations_on(&doc.snapshot.0, fragment, placement).map(|(mutations, _)| mutations)
+        puzzle2d_paste_operations_on(doc.snapshot.value(), fragment, placement).map(|(mutations, _)| mutations)
     }
 
     /// 🎞️ The reserved routes puzzle2d owns: `import-media` (the framework registers no importer on an
@@ -5246,9 +5270,9 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     fn window_engagements(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let labels = puzzle2d_labels(view_state);
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
-        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
-        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
+        let envelope = Self::scene_for(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
         HashMap::from([(window_id.to_string(), edit::puzzle2d_engagement(&envelope, &puzzle_board_host(), window_kind, labels))])
     }
 
@@ -5260,19 +5284,19 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         _interaction: &InteractionView<'_>,
     ) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
-        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_transient = window::transient_from_view(transient);
         let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
-        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, &window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
+        let envelope = Self::scene_for(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, &window_transient, Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
         HashMap::from([(window_id.to_string(), edit::puzzle2d_engagement(&envelope, &puzzle_board_host(), window_kind, puzzle2d_labels(view_state)))])
     }
 
     fn window_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = puzzle2d_labels(view_state);
         let Some(window_id) = view_state.window_id.as_deref() else { return HashMap::new() };
-        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
-        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
+        let envelope = Self::scene_for(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
         let measures = match window_kind {
             detail::WINDOW_KIND_ID => detail::window_measures(&envelope, labels),
             selection::WINDOW_KIND_ID => selection::window_measures(&envelope, labels),
@@ -5282,9 +5306,9 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     }
 
     fn tool_measures(doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle2dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        let window_config = window::config_from_view_or_document(cfg, &doc.snapshot.0);
+        let window_config = window::config_from_view_or_document(cfg, doc.snapshot.value());
         let window_kind = window::kind_for_view(view_state).unwrap_or(overview::WINDOW_KIND_ID);
-        let envelope = Self::scene_for(doc.snapshot.0.clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
+        let envelope = Self::scene_for(doc.snapshot.value().clone(), window::runtime(cfg.snapshot, &window_config, &Puzzle2dWindowTransient::default(), Some(window_kind)), puzzle2d_active_utility(Some(view_state)));
         let labels = puzzle2d_labels(view_state);
         HashMap::from([(fill::TOOL_ID.to_string(), vec![fill::measures(&envelope, labels)])])
     }
@@ -5328,7 +5352,7 @@ impl Puzzle2dPlayApp {
         if selected.is_empty() {
             selected = interaction.selected.clone();
         }
-        semio_framework::io::resolve_ready(puzzle2d_context_menu_items(registry, &doc.snapshot.0, &selected, is_de))
+        semio_framework::io::resolve_ready(puzzle2d_context_menu_items(registry, doc.snapshot.value(), &selected, is_de))
     }
 }
 //#endregion 🔖️PlayApp

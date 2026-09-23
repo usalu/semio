@@ -293,3 +293,12 @@ async fn port_key_helpers_handle_malformed_keys() {
     assert_eq!(port_port_id("node@port"), Some("port"));
     assert_eq!(port_key("a", "b"), "a@b");
 }
+
+/// 🧬️ The projection names exactly the snapshot's declared child slots — what the live envelope load checks
+/// before a decoded document may replace the store.
+#[test]
+fn the_child_restore_projection_names_every_declared_child_slot() {
+    let snapshot = crate::empty_trinity_graph_fixture();
+    let projection = crate::jack_child_restore_projection(&snapshot).expect("the loaded-parent child projection");
+    assert_eq!(projection.len(), <crate::JackSnapshot as store::os_schema_composition::ArtifactCompositionFields>::child_slots().len());
+}

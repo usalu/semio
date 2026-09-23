@@ -18,11 +18,20 @@ pub struct ConnectNodes {
     pub target: String,
     pub route_style: EdgeRouteStyle,
     pub properties: PropertyBag,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn connect_nodes(id: String, source: String, target: String, route_style: EdgeRouteStyle, properties: PropertyBag) -> DagMutation {
-    DagMutation::ConnectNodes(ConnectNodes { id, source, target, route_style, properties })
+    DagMutation::ConnectNodes(ConnectNodes { id, source, target, route_style, properties, index: None })
+}
+
+/// 📍️ Builder — inserts the edge at `index` of the edge roster instead of appending it, which is how
+/// `disconnect-nodes`' and `delete-node`'s inverses restore the exact edge order (and therefore the
+/// exact content-child identity, a hash over that order).
+pub fn connect_nodes_at(id: String, source: String, target: String, route_style: EdgeRouteStyle, properties: PropertyBag, index: usize) -> DagMutation {
+    DagMutation::ConnectNodes(ConnectNodes { id, source, target, route_style, properties, index: Some(index) })
 }
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ConnectNodes {

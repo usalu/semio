@@ -5,9 +5,10 @@
 //! consumers it has, because artifacts must never depend on apps.
 
 use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig;
+use crate::editor::layout::modes::edit::windows::blueprint::{select, transform};
 use crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
 use crate::editor::layout::LayoutInteractionSnapshot;
-use crate::editor::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
+use crate::editor::layout::engine::scene::build_interactive_display_list;
 use crate::{LayoutSnapshot, Page};
 use serde_json::{json, Value};
 
@@ -21,13 +22,50 @@ pub fn active_page<'a>(doc: &'a LayoutSnapshot, config: &LayoutWindowConfig) -> 
 
 //#region 🔖️CanvasScene
 fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Value {
+    rotated_rect_segments(x, y, width, height, 0.0)
+}
+
+fn rotated_rect_segments(x: f64, y: f64, width: f64, height: f64, rotation: f64) -> Value {
+    if rotation.abs() < 1.0e-6 {
+        return json!([
+            { "kind": "move", "to": [x, y] },
+            { "kind": "line", "to": [x + width, y] },
+            { "kind": "line", "to": [x + width, y + height] },
+            { "kind": "line", "to": [x, y + height] },
+            { "kind": "close" },
+        ]);
+    }
+    let cx = x + width * 0.5;
+    let cy = y + height * 0.5;
+    let (sin, cos) = rotation.sin_cos();
+    let corners = [(x, y), (x + width, y), (x + width, y + height), (x, y + height)];
+    let mapped: Vec<[f64; 2]> = corners.iter().map(|(px, py)| {
+        let dx = px - cx;
+        let dy = py - cy;
+        [cx + dx * cos - dy * sin, cy + dx * sin + dy * cos]
+    }).collect();
     json!([
-        { "kind": "move", "to": [x, y] },
-        { "kind": "line", "to": [x + width, y] },
-        { "kind": "line", "to": [x + width, y + height] },
-        { "kind": "line", "to": [x, y + height] },
+        { "kind": "move", "to": mapped[0] },
+        { "kind": "line", "to": mapped[1] },
+        { "kind": "line", "to": mapped[2] },
+        { "kind": "line", "to": mapped[3] },
         { "kind": "close" },
     ])
+}
+
+fn rotate_mark_points(mark: &mut Value, cx: f64, cy: f64, rotation: f64) {
+    let (sin, cos) = rotation.sin_cos();
+    let Some(steps) = mark.as_array_mut() else { return };
+    for step in steps {
+        let Some(to) = step.get_mut("to").and_then(Value::as_array_mut) else { continue };
+        if to.len() != 2 { continue }
+        let x = to[0].as_f64().unwrap_or(0.0);
+        let y = to[1].as_f64().unwrap_or(0.0);
+        let dx = x - cx;
+        let dy = y - cy;
+        to[0] = json!(cx + dx * cos - dy * sin);
+        to[1] = json!(cy + dx * sin + dy * cos);
+    }
 }
 
 fn line_segments(x0: f64, y0: f64, x1: f64, y1: f64) -> Value {
@@ -88,7 +126,7 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
     }
 
     for rect in &list.rects {
-        let segments = rect_segments(rect.x as f64, rect.y as f64, rect.width as f64, rect.height as f64);
+        let segments = rotated_rect_segments(rect.x as f64, rect.y as f64, rect.width as f64, rect.height as f64, rect.rotation as f64);
         let fill = rect.fill.as_ref().map(|color| color.0);
         let dash = (blueprint && rect.inherited).then_some([4.0, 3.0]);
         let stroke = if let Some(stroke_color) = &rect.stroke {
@@ -111,10 +149,45 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
     }
 
     for image in &list.images {
+        let rotation = image.rotation as f64;
+        let upright = rotation.abs() < 1.0e-6;
+        if upright {
+            if let Some(data_url) = &image.proxy_data_url {
+                layers.push(json!({
+                    "id": format!("{}.image", image.object_id),
+                    "kind": "image",
+                    "x": image.x,
+                    "y": image.y,
+                    "width": image.width,
+                    "height": image.height,
+                    "dataUrl": data_url,
+                }));
+                continue;
+            }
+        }
         let color = if image.placeholder { [0.92, 0.88, 0.84, 1.0] } else { [0.85, 0.85, 0.85, 1.0] };
-        let segments = rect_segments(image.x as f64, image.y as f64, image.width as f64, image.height as f64);
+        let segments = rotated_rect_segments(image.x as f64, image.y as f64, image.width as f64, image.height as f64, rotation);
         let stroke = image.placeholder.then_some(([0.75, 0.35, 0.2, 1.0], 1.0, None));
         layers.push(host_layer(format!("{}.image", image.object_id), &segments, Some(color), stroke));
+        if !image.preview.is_empty() {
+            let x = image.x as f64;
+            let y = image.y as f64;
+            let w = image.width as f64;
+            let h = image.height as f64;
+            let cx = x + w * 0.5;
+            let cy = y + h * 0.5;
+            let mut mark = match image.preview.as_str() {
+                "page" => json!([{ "kind": "move", "to": [x + 4.0, y + h * 0.35] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.35] }, { "kind": "move", "to": [x + 4.0, y + h * 0.6] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.6] }]),
+                "stroke" => line_segments(x + 4.0, y + h - 4.0, x + w - 4.0, y + 4.0),
+                "map" => json!([{ "kind": "move", "to": [x + w * 0.5, y + 4.0] }, { "kind": "line", "to": [x + w * 0.5, y + h - 4.0] }, { "kind": "move", "to": [x + 4.0, y + h * 0.5] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.5] }]),
+                "curve" => json!([{ "kind": "move", "to": [x + 4.0, y + h - 4.0] }, { "kind": "line", "to": [x + w * 0.5, y + 4.0] }, { "kind": "line", "to": [x + w - 4.0, y + h * 0.6] }]),
+                _ => json!([{ "kind": "move", "to": [x + 4.0, y + 4.0] }, { "kind": "line", "to": [x + w - 4.0, y + h - 4.0] }, { "kind": "move", "to": [x + w - 4.0, y + 4.0] }, { "kind": "line", "to": [x + 4.0, y + h - 4.0] }]),
+            };
+            if !upright {
+                rotate_mark_points(&mut mark, cx, cy, rotation);
+            }
+            layers.push(host_layer(format!("{}.preview", image.object_id), &mark, None, Some(([0.25, 0.25, 0.28, 0.9], 1.0, None))));
+        }
     }
 
     for run in &list.text_runs {
@@ -142,15 +215,50 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
     layers
 }
 
+fn gumball_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, interaction: &LayoutInteractionSnapshot, blueprint: bool) -> Vec<Value> {
+    if !blueprint {
+        return Vec::new();
+    }
+    let utility = if config.active_utility.is_empty() { select::UTILITY_ID } else { config.active_utility.as_str() };
+    let mut layers = vec![json!({ "id": "meta:utility", "role": "meta", "utility": utility })];
+    if utility != transform::UTILITY_ID {
+        return layers;
+    }
+    let options = transform::options();
+    let Some(page) = active_page(doc, config) else { return layers };
+    let Some(id) = interaction.ids.first() else { return layers };
+    let bounds = page.frames.iter().find(|frame| frame.id() == id).map(|frame| frame.bounds()).or_else(|| {
+        let parent = doc.parent_pages.iter().find(|parent| Some(&parent.id) == page.parent_page_id.as_ref())?;
+        parent.frames.iter().find(|frame| frame.id() == id).map(|frame| frame.bounds())
+    });
+    let Some(bounds) = bounds else { return layers };
+    let pivot = [bounds.x + bounds.width * 0.5, bounds.y + bounds.height * 0.5];
+    layers.push(json!({
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+            "active": true,
+            "space": "world",
+            "pivotLayer": pivot,
+            "pivotModel": pivot,
+            "selectionIds": interaction.ids,
+            "config": { "moveAxes": options.move_axes, "rotate": options.rotate, "scaleAxes": options.scale_axes, "scaleUniform": options.scale_uniform }
+        }
+    }));
+    layers
+}
+
 /// 🖼️ Builds the host canvas-2d layer JSON for the given surface (`blueprint` or `preview`) — the
 /// single shared render path both `🎭️modes/✏️edit/🪟️windows/📐️blueprint` and `…/👁️preview` call.
-pub fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutWindowConfig, transient: &LayoutWindowTransient, interaction: &LayoutInteractionSnapshot, blueprint: bool) -> String {
+pub fn canvas_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, transient: &LayoutWindowTransient, interaction: &LayoutInteractionSnapshot, blueprint: bool) -> String {
     let page = match active_page(doc, config) {
         Some(page) => page,
         None => return "[]".into(),
     };
-    let list = build_display_list_for_page(engine, doc, page, &page.id, &interaction.ids, interaction.hovered_id(), blueprint);
-    let layers = display_list_to_host_layers(&list, blueprint, &transient.drop_preview);
+    let camera = &config.camera;
+    let list = build_interactive_display_list(doc, page, &page.id, &interaction.ids, interaction.hovered_id(), blueprint, camera.x, camera.y, camera.zoom);
+    let mut layers = display_list_to_host_layers(&list, blueprint, &transient.drop_preview);
+    layers.extend(gumball_layers(doc, config, interaction, blueprint));
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 //#endregion 🔖️CanvasScene

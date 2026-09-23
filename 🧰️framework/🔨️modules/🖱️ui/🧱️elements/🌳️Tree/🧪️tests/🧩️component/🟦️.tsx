@@ -207,6 +207,44 @@ describe("TreeItem row activation", () => {
     expect(onClick).toHaveBeenCalledTimes(2);
   });
 
+  it("expands a row that has children from the row shell and from its label", () => {
+    const onClick = vi.fn();
+    const { container } = render(
+      <TreeItem id="tree-row-weights" label="Layer Weights" onClick={onClick}>
+        <TreeItem id="tree-row-weight-child" label="Roads" />
+      </TreeItem>,
+    );
+    const row = rowOf(container, "tree-row-weights");
+
+    expect(container.querySelector("#tree-row-weight-child")).toBeNull();
+
+    fireEvent.click(row, { detail: 1 });
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(container.querySelector("#tree-row-weight-child")).not.toBeNull();
+
+    fireEvent.click(row.querySelector('[data-slot="tree-label"]') as HTMLElement, { detail: 1 });
+    expect(onClick).toHaveBeenCalledTimes(2);
+    expect(container.querySelector("#tree-row-weight-child")).toBeNull();
+  });
+
+  it("expands a property group from the row, not only from its chevron", () => {
+    const onClick = vi.fn();
+    const { container } = render(
+      <TreeItem id="tree-row-property-group" label="Layer Weights" layoutKind="property" onClick={onClick}>
+        <TreeItem id="tree-row-property-child" label="Roads" />
+      </TreeItem>,
+    );
+    const row = rowOf(container, "tree-row-property-group");
+
+    expect(container.querySelector("#tree-row-property-child")).toBeNull();
+    fireEvent.click(row.querySelector('[data-slot="tree-label"]') as HTMLElement, { detail: 1 });
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(container.querySelector("#tree-row-property-child")).not.toBeNull();
+    fireEvent.click(row.querySelector("button.cursor-foldable") as HTMLButtonElement);
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(container.querySelector("#tree-row-property-child")).toBeNull();
+  });
+
   it("keeps the fold chevron and the row actions out of row activation", () => {
     const onClick = vi.fn();
     const onAction = vi.fn();

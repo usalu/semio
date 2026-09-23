@@ -51,6 +51,10 @@ impl ArtifactViewer for FormsViewer {
     type Command = FormsViewCommand;
 
     const DIALECT: Dialect = FORMS_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::forms_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::forms_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> FormsSnapshot {

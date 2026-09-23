@@ -1106,9 +1106,9 @@ impl ArtifactEditor for Gis2dPlayApp {
         Self::render_body(body_key, doc, cfg, view_state, &Gis2dInteractionSnapshot::from_interaction(interaction))
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, GisMapSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = &map_config::current(cfg);
-        HashMap::from([(map::GIS2D_PLAY_WINDOW_MAIN.into(), map::window_measures(config, gis2d_labels(view_state)))])
+        HashMap::from([(map::GIS2D_PLAY_WINDOW_MAIN.into(), map::window_measures(doc.snapshot, config, gis2d_labels(view_state)))])
     }
 
     /// 🖱️ Interaction-less twin of [`Self::context_menu_with_request_context`] — an empty `"features"`

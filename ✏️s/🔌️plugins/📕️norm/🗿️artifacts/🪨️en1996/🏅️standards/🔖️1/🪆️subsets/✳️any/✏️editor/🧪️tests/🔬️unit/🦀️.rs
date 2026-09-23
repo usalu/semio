@@ -85,6 +85,7 @@ fn every_command() -> Vec<En1996Command> {
         En1996Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1996Snapshot::default() }),
         En1996Command::Evaluate(evaluate::Evaluate {}),
         En1996Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
+        En1996Command::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
     ]
 }
 
@@ -96,14 +97,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex"]);
+    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"]);
 }
 
 /// ð§·ï¸ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["set-snapshot", "evaluate", "selected-check"];
+    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);

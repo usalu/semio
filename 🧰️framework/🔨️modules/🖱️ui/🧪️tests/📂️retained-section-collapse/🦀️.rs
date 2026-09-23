@@ -322,3 +322,55 @@ fn downward_nested_disclosure_republishes_one_stable_header_and_retires_its_chil
     assert!(!ui.window_hit_targets("fixture").iter().any(|hit| hit.control_id == child_id), "closing retires the child from the published hit generation");
     assert_eq!(nested_child_height(&ui), 0.0, "closing returns the mounted child to zero height");
 }
+
+/// 🖱️ An expandable tree row opens from its label. The chevron is the same fold, not the only one.
+#[test]
+fn a_nested_tree_item_opens_from_its_row_and_keeps_its_action() {
+    let mut branch = UiTreeItemNode::base("branch", Label::data("Layer Weights"));
+    branch.default_open = Some(false);
+    branch.action = Some(ActionDescriptor { controller_id: "gis".into(), action: "pickLayer".into(), args: None });
+    branch.items = Some(vec![UiTreeItemNode::base("child", Label::data("Roads"))]);
+    let tree = UiNode::Stack(UiStackNode {
+        id: Some("panel".into()),
+        direction: "vertical".into(),
+        gap: None,
+        padding: None,
+        presence: UiPresence::default(),
+        activate: None,
+        drop_action: None,
+        drop_overlay: None,
+        menu: None,
+        children: vec![UiNode::Tree(UiTreeNode {
+            presentation: Default::default(),
+            sections: vec![UiTreeSectionNode {
+                id: "section".into(),
+                label: Some(Label::data("Section")),
+                default_open: Some(true),
+                presence: UiPresence::default(),
+                items: vec![branch],
+                window: None,
+            }],
+            presence: UiPresence::default(),
+            drop_action: None,
+            menu: None,
+            interaction_domain: None,
+        })],
+    });
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
+    ui.apply_tree("fixture", &tree);
+    ui.set_window_flow("fixture", ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Top));
+    drive_layout_with(&mut ui, &mut atlas, &pool);
+    drive_frame(&mut ui, &mut atlas);
+
+    let label_id = "tree.label.branch";
+    let child_id = "tree.label.child";
+    let label = ui.window_hit_targets("fixture").iter().find(|hit| hit.control_id == label_id).expect("closed branch row").rect;
+    assert!(!ui.window_hit_targets("fixture").iter().any(|hit| hit.control_id == child_id), "a closed row publishes no child");
+    ui.dispatch_event("fixture", UiEvent::PointerDown { x: label.x + label.w * 0.5, y: label.y + label.h * 0.5, button: PointerButton::Primary, modifiers: EventModifiers::default() });
+    let released = ui.dispatch_event("fixture", UiEvent::PointerUp { x: label.x + label.w * 0.5, y: label.y + label.h * 0.5, button: PointerButton::Primary, modifiers: EventModifiers::default() });
+    let (tree, branch, _) = nested_rows(&ui);
+    assert_eq!(tree.disclosure_open(branch), Some(true), "clicking the row opens its children");
+    assert!(released.iter().any(|command| matches!(command, crate::wgpu::events::UiCommand::App { intent, .. } if intent.action_name() == "pickLayer")), "opening the row still fires its activation");
+}

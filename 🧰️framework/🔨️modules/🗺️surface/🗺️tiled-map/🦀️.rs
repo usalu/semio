@@ -1097,6 +1097,21 @@ pub mod vector_tiles {
         None
     }
 
+    /// 📍️ Tile-local anchor for a label — point geometry first, then the midpoint of the longest line
+    /// (`transportation_name` / `water_name` are line strings, not points).
+    pub fn feature_label_anchor(feature: &VectorFeature, extent: u32) -> (f64, f64) {
+        if let Some(point) = feature.points.first() {
+            return *point;
+        }
+        if let Some(line) = feature.lines.iter().max_by_key(|line| line.len()).filter(|line| !line.is_empty()) {
+            return line[line.len() / 2];
+        }
+        if let Some(ring) = feature.rings.first().and_then(|ring| ring.first()) {
+            return *ring;
+        }
+        (f64::from(extent) / 2.0, f64::from(extent) / 2.0)
+    }
+
     pub fn layer_draw_rank(layer: &str) -> u8 {
         match layer {
             "water" => 0,
@@ -3474,7 +3489,7 @@ impl MapHost {
                     let Some(label) = vector_tiles::feature_label(&feat.properties) else {
                         continue;
                     };
-                    let anchor = feat.points.first().or_else(|| feat.rings.first().and_then(|r| r.first())).copied().unwrap_or((extent as f64 / 2.0, extent as f64 / 2.0));
+                    let anchor = vector_tiles::feature_label_anchor(feat, extent);
                     let s = self.tile_local_to_screen(*tz, *tx, *ty, extent, anchor.0, anchor.1);
                     candidates.push(LabelCandidate { label, screen: s, rank });
                 }

@@ -40,6 +40,7 @@ pub struct DisplayRect {
     pub y: f32,
     pub width: f32,
     pub height: f32,
+    pub rotation: f32,
     pub fill: Option<DisplayColor>,
     pub stroke: Option<DisplayColor>,
     pub inherited: bool,
@@ -70,7 +71,10 @@ pub struct DisplayImage {
     pub y: f32,
     pub width: f32,
     pub height: f32,
+    pub rotation: f32,
     pub placeholder: bool,
+    pub proxy_data_url: Option<String>,
+    pub preview: String,
 }
 
 #[derive(Clone, Debug)]
@@ -100,12 +104,56 @@ impl DisplayList {
     }
 }
 
+/// 👆 Topmost visible frame whose axis-aligned bounds contain `(x, y)`.
+///
+/// Parent frames are tested first and page frames after, matching paint order.
+/// This does not construct a [`LayoutEngine`] and does not shape text.
+pub fn hit_test_page_frames(doc: &LayoutSnapshot, page: &Page, x: f32, y: f32) -> Option<String> {
+    let mut hit = None;
+    let mut consider = |frame: &Frame| {
+        if !frame.visible() {
+            return;
+        }
+        let bounds = frame.bounds();
+        if frame_bounds_contain(bounds, x, y) {
+            hit = Some(frame.id().to_string());
+        }
+    };
+    if let Some(parent_id) = &page.parent_page_id {
+        if let Some(parent) = doc.parent_pages.iter().find(|parent| parent.id == *parent_id) {
+            for frame in &parent.frames {
+                consider(frame);
+            }
+        }
+    }
+    for frame in &page.frames {
+        consider(frame);
+    }
+    hit
+}
+
 pub fn page_margin_guides(page: &Page) -> Vec<DisplayGuide> {
     vec![DisplayGuide { rect: LayoutRect { x: page.margins.left, y: page.margins.top, width: page.width - page.margins.left - page.margins.right, height: page.height - page.margins.top - page.margins.bottom }, kind: "margin".into() }]
 }
 
 pub fn bounds_to_display_rect(object_id: &str, bounds: &LayoutBounds, inherited: bool, selected: bool, hovered: bool, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>) -> DisplayRect {
-    DisplayRect { object_id: object_id.into(), x: bounds.x as f32, y: bounds.y as f32, width: bounds.width as f32, height: bounds.height as f32, fill: fill.map(DisplayColor), stroke: stroke.map(DisplayColor), inherited, selected, hovered }
+    DisplayRect { object_id: object_id.into(), x: bounds.x as f32, y: bounds.y as f32, width: bounds.width as f32, height: bounds.height as f32, rotation: bounds.rotation as f32, fill: fill.map(DisplayColor), stroke: stroke.map(DisplayColor), inherited, selected, hovered }
+}
+
+fn frame_bounds_contain(bounds: &LayoutBounds, x: f32, y: f32) -> bool {
+    let half_w = (bounds.width as f32) * 0.5;
+    let half_h = (bounds.height as f32) * 0.5;
+    let cx = bounds.x as f32 + half_w;
+    let cy = bounds.y as f32 + half_h;
+    let dx = x - cx;
+    let dy = y - cy;
+    let (local_x, local_y) = if bounds.rotation.abs() < 1.0e-6 {
+        (dx, dy)
+    } else {
+        let (sin, cos) = (-bounds.rotation).sin_cos();
+        (dx * cos as f32 - dy * sin as f32, dx * sin as f32 + dy * cos as f32)
+    };
+    local_x.abs() <= half_w && local_y.abs() <= half_h
 }
 //#endregion 🖼️Display
 
@@ -165,7 +213,29 @@ pub fn layout_story_in_frame(engine: &mut LayoutEngine, story: &TextStory, parag
     engine.layout_story(story, paragraph, frame_width, frame_height)
 }
 
+/// 👁️ Live canvas fidelity. Below this zoom the page is a proxy: frame chrome and image
+/// proxies, no story strings. At or above it, stories are emitted as text runs without shaping.
+pub const INTERACTIVE_TEXT_ZOOM: f64 = 0.35;
+
+/// 🖼️ Host-canvas display list. Never shapes paragraphs and never loads a font.
+pub fn build_interactive_display_list(doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool, camera_x: f64, camera_y: f64, zoom: f64) -> DisplayList {
+    assemble_display_list(None, doc, page, active_page_id, selected_ids, hovered_id, chrome_blueprint, zoom < INTERACTIVE_TEXT_ZOOM, camera_x, camera_y, zoom)
+}
+
 pub fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool) -> DisplayList {
+    assemble_display_list(Some(engine), doc, page, active_page_id, selected_ids, hovered_id, chrome_blueprint, false, 0.0, 0.0, 1.0)
+}
+
+const INTERACTIVE_VIEW_SPAN: f64 = 2000.0;
+
+fn outside_interactive_view(bounds: &crate::LayoutBounds, camera_x: f64, camera_y: f64, zoom: f64) -> bool {
+    let span = INTERACTIVE_VIEW_SPAN / zoom.max(0.05);
+    let x1 = bounds.x + bounds.width;
+    let y1 = bounds.y + bounds.height;
+    x1 < camera_x - span || bounds.x > camera_x + span || y1 < camera_y - span || bounds.y > camera_y + span
+}
+
+fn assemble_display_list(mut engine: Option<&mut LayoutEngine>, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool, proxy_band: bool, camera_x: f64, camera_y: f64, zoom: f64) -> DisplayList {
     let resolved = resolve_page(doc, page);
     let mut rects = Vec::new();
     let mut text_runs = Vec::new();
@@ -182,7 +252,7 @@ pub fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapsh
             let x = page.margins.left + (i as f64) * (col_width + page.columns.gutter);
             guides.push(DisplayGuide { rect: LayoutRect { x, y: page.margins.top, width: col_width, height: page.height - page.margins.top - page.margins.bottom }, kind: "column".into() });
         }
-        if doc.grid.snap_to_baseline && doc.grid.baseline_grid > 0.0 {
+        if engine.is_some() && !proxy_band && doc.grid.snap_to_baseline && doc.grid.baseline_grid > 0.0 {
             let mut y = doc.grid.baseline_offset;
             while y < page.height {
                 guides.push(DisplayGuide { rect: LayoutRect { x: 0.0, y, width: page.width, height: 0.0 }, kind: "baseline".into() });
@@ -197,6 +267,9 @@ pub fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapsh
         }
         let selected = selected_ids.iter().any(|id| id == item.frame.id());
         let hovered = hovered_id.is_some_and(|id| id == item.frame.id());
+        if engine.is_none() && !selected && !hovered && outside_interactive_view(item.frame.bounds(), camera_x, camera_y, zoom) {
+            continue;
+        }
         match &item.frame {
             Frame::Rect { id, bounds, fill, stroke, .. } => {
                 rects.push(bounds_to_display_rect(id, bounds, item.inherited, selected, hovered, *fill, stroke.or(if chrome_blueprint && item.inherited { Some([0.4, 0.5, 0.7, 0.8]) } else { None })));
@@ -205,31 +278,62 @@ pub fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapsh
                 if chrome_blueprint {
                     rects.push(bounds_to_display_rect(id, bounds, item.inherited, selected, hovered, None, Some([0.2, 0.55, 0.9, 0.9])));
                 }
-                if let Some(story) = doc.stories.iter().find(|s| s.id == *story_id) {
-                    let paragraph = default_paragraph(doc);
-                    let frame_width = (bounds.width - inset.width - inset.x * 2.0).max(1.0) as f32;
-                    let frame_height = (bounds.height - inset.height - inset.y * 2.0).max(1.0) as f32;
-                    let (shaped, _overset) = layout_story_in_frame(engine, story, &paragraph, frame_width, frame_height);
-                    let base_x = (bounds.x + inset.x) as f32;
-                    let base_y = (bounds.y + inset.y) as f32;
-                    let font_size = paragraph.font_size as f32;
-                    let glyphs: Vec<DisplayGlyph> = shaped.glyphs.iter().map(|glyph| DisplayGlyph { glyph_id: glyph.glyph_id as u32, font_size, x: base_x + glyph.x, y: base_y + glyph.y, color: DisplayColor([0.0, 0.0, 0.0, 1.0]) }).collect();
-                    let (origin_x, origin_y) = glyphs.first().map(|glyph| (glyph.x, glyph.y - font_size)).unwrap_or((base_x, base_y));
-                    text_runs.push(DisplayTextRun { object_id: id.clone(), glyphs, content: story.content.clone(), origin_x, origin_y, font_size });
+                if !proxy_band {
+                    if let Some(story) = doc.stories.iter().find(|s| s.id == *story_id) {
+                        let paragraph = default_paragraph(doc);
+                        let base_x = (bounds.x + inset.x) as f32;
+                        let base_y = (bounds.y + inset.y) as f32;
+                        let font_size = paragraph.font_size as f32;
+                        let glyphs = if let Some(engine) = engine.as_deref_mut() {
+                            let frame_width = (bounds.width - inset.width - inset.x * 2.0).max(1.0) as f32;
+                            let frame_height = (bounds.height - inset.height - inset.y * 2.0).max(1.0) as f32;
+                            let (shaped, _overset) = layout_story_in_frame(engine, story, &paragraph, frame_width, frame_height);
+                            shaped.glyphs.iter().map(|glyph| DisplayGlyph { glyph_id: glyph.glyph_id as u32, font_size, x: base_x + glyph.x, y: base_y + glyph.y, color: DisplayColor([0.0, 0.0, 0.0, 1.0]) }).collect()
+                        } else {
+                            Vec::new()
+                        };
+                        let (origin_x, origin_y) = glyphs.first().map(|glyph| (glyph.x, glyph.y - font_size)).unwrap_or((base_x, base_y));
+                        text_runs.push(DisplayTextRun { object_id: id.clone(), glyphs, content: story.content.clone(), origin_x, origin_y, font_size });
+                    }
                 }
             }
             Frame::Image { id, bounds, link_id, .. } => {
                 let link = doc.links.iter().find(|l| l.id == *link_id);
+                let proxy_data_url = link.and_then(|link| link.proxy_data_url.clone()).filter(|url| !url.is_empty());
                 let placeholder = link.is_none_or(|l| l.state.as_deref() == Some("missing") || l.proxy_data_url.is_none());
                 if chrome_blueprint {
                     rects.push(bounds_to_display_rect(id, bounds, item.inherited, selected, hovered, None, Some([0.85, 0.45, 0.2, 0.9])));
                 }
-                images.push(DisplayImage { object_id: id.clone(), x: bounds.x as f32, y: bounds.y as f32, width: bounds.width as f32, height: bounds.height as f32, placeholder });
+                let preview = if proxy_band || proxy_data_url.is_some() { String::new() } else { link.map(|link| preview_mark(&link.artifact_kind)).unwrap_or_default() };
+                images.push(DisplayImage { object_id: id.clone(), x: bounds.x as f32, y: bounds.y as f32, width: bounds.width as f32, height: bounds.height as f32, rotation: bounds.rotation as f32, placeholder, proxy_data_url: proxy_data_url.clone(), preview });
+                if !proxy_band && proxy_data_url.is_none() {
+                    if let Some(kind) = link.and_then(|link| (!link.artifact_kind.is_empty()).then(|| link.artifact_kind.clone())) {
+                        text_runs.push(DisplayTextRun { object_id: id.clone(), glyphs: Vec::new(), content: kind, origin_x: bounds.x as f32, origin_y: bounds.y as f32, font_size: 12.0 });
+                    }
+                }
             }
         }
     }
 
     DisplayList { page_id: page.id.clone(), page_width: page.width as f32, page_height: page.height as f32, rects, text_runs, images, guides }
+}
+
+fn preview_mark(kind: &str) -> String {
+    if kind.is_empty() {
+        return String::new();
+    }
+    let mark = if kind.contains("pdf") {
+        "page"
+    } else if kind.contains("draw") || kind.contains("dwg") || kind.contains("dxf") || kind.contains("cad") {
+        "stroke"
+    } else if kind.contains("map") || kind.contains("gis") {
+        "map"
+    } else if kind.contains("svg") || kind.contains("fem") {
+        "curve"
+    } else {
+        "grid"
+    };
+    mark.into()
 }
 
 fn color_from(c: &DisplayColor) -> Color {
@@ -353,11 +457,11 @@ pub fn build_scene_from_document_json(engine: &mut LayoutEngine, json: &str, que
 }
 
 pub fn hit_test_document_json(engine: &mut LayoutEngine, json: &str, sx: f64, sy: f64, query: &SceneQuery<'_>) -> Result<Option<String>, LayoutError> {
+    let _ = engine;
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == query.page_id).ok_or_else(|| LayoutError::PageNotFound(query.page_id.to_string()))?;
-    let list = build_display_list_for_page(engine, &doc, page, query.page_id, query.selected_ids, query.hovered_id, true);
     let world = camera::screen_to_world(query.camera, query.viewport, Point::new(sx, sy));
-    Ok(list.hit_test(world.x as f32, world.y as f32))
+    Ok(hit_test_page_frames(&doc, page, world.x as f32, world.y as f32))
 }
 
 pub fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64, sy: f64) -> String {

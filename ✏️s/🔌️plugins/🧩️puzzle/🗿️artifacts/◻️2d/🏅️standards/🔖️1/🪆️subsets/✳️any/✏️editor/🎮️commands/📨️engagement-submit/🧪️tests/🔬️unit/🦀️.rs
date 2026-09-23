@@ -1,7 +1,8 @@
 use crate::editor::puzzle2d::modes::edit::tools::fill;
 use crate::editor::puzzle2d::modes::edit::windows::overview;
 use crate::editor::puzzle2d::unit_tests::context::*;
-use crate::editor::puzzle2d::{fixture_nodes, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
+use crate::editor::puzzle2d::{fixture_nodes, PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID};
+use semio_framework_plugin::InteractionTarget;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{PluginApp, ViewModel, WindowMeasure};
 use serde_json::{json, Value};
@@ -25,7 +26,9 @@ fn rendered_fill_count(app: &mut Puzzle2dApp) -> f64 {
 /// used to PascalCase and squash it (`move 50 25` → `Move5025`), which collapsed every argument into
 /// the verb and made the whole `verb <args>` grammar a silent no-op. Every advertised argument verb of
 /// the placeholder (`move <dx> <dy>`, `rotate <deg>`, `scale <f>`, `fill <n>`) is exercised here with
-/// the exact text a user types.
+/// the exact text a user types. `rotate` and `scale` both act on the selection's LAYOUT about its centroid
+/// (`scaleSelection`: "sizes stay — a node kind's footprint is the kind's"), so both are read off a two-node
+/// selection: a single node neither turns nor grows.
 #[semio_framework_async_macros::async_test]
 async fn engagement_line_carries_its_arguments_verbatim() {
     let mut app = app_with_registry();
@@ -43,16 +46,20 @@ async fn engagement_line_carries_its_arguments_verbatim() {
     // 🔄️ A single-node selection rotates about its own centroid, so the pose is unchanged — the proof
     // that the verb parsed is the radius-preserving handle turn, asserted through a two-node selection.
     let other = fixture_nodes(&fixture_of(&app)).iter().map(|node| node.get("id").and_then(Value::as_str).unwrap_or_default().to_string()).find(|other| other != &id).expect("a second node");
-    select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, &other).expect("select the second node");
+    let pair = serde_json::to_string(&[&id, &other].map(|node| InteractionTarget { granularity: PUZZLE2D_GRANULARITY_NODE.into(), id: node.clone() })).expect("targets");
+    dispatch(&mut app, "interactionSelect", Some(&json!({ "domainId": PUZZLE2D_INTERACTION_DOMAIN, "targets": pair, "merge": "replace", "method": "pick" })), None).expect("select both nodes");
     let pair_before = node_of(&app, &other);
     submit(&mut app, "rotate 45");
     assert_ne!(node_of(&app, &other).get("x").and_then(Value::as_f64), pair_before.get("x").and_then(Value::as_f64), "`rotate 45` must turn the selection");
 
-    select_id(&mut app, PUZZLE2D_GRANULARITY_NODE, &id).expect("reselect the first node");
-    let scaled_before = node_of(&app, &id);
-    let radius = scaled_before.get("radius").and_then(Value::as_f64).expect("radius");
+    let span = |app: &Puzzle2dApp| {
+        let (a, b) = (node_of(app, &id), node_of(app, &other));
+        let axis = |key: &str| a.get(key).and_then(Value::as_f64).expect("coordinate") - b.get(key).and_then(Value::as_f64).expect("coordinate");
+        axis("x").hypot(axis("y"))
+    };
+    let span_before = span(&app);
     submit(&mut app, "scale 1.5");
-    assert_eq!(node_of(&app, &id).get("radius").and_then(Value::as_f64), Some(radius * 1.5), "`scale 1.5` must carry its decimal factor");
+    assert!((span(&app) - span_before * 1.5).abs() < 1e-6, "`scale 1.5` must carry its decimal factor: the pair's span {} → {}", span_before, span(&app));
 
     assert_eq!(rendered_fill_count(&mut app), 100.0);
     let filled = submit(&mut app, "fill 12");

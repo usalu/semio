@@ -927,6 +927,27 @@ fn zoom_host_over_tile(host: &mut super::MapHost, lod_id: &str, tz: u32, tx: u32
 }
 
 #[test]
+fn vector_label_anchor_uses_line_midpoint_for_transportation_names() {
+    use super::vector_tiles::{feature_label_anchor, GeomType, VectorFeature};
+    use std::collections::BTreeMap;
+    let feature = VectorFeature {
+        id: None,
+        geom_type: GeomType::LineString,
+        rings: Vec::new(),
+        lines: vec![vec![(100.0, 100.0), (200.0, 200.0), (300.0, 300.0)]],
+        points: Vec::new(),
+        properties: BTreeMap::from([("ref".into(), "A81".into())]),
+    };
+    let anchor = feature_label_anchor(&feature, 4096);
+    assert_eq!(anchor, (200.0, 200.0), "line labels must not fall back to the tile center");
+    let center = feature_label_anchor(
+        &VectorFeature { lines: Vec::new(), points: Vec::new(), rings: Vec::new(), geom_type: GeomType::Unknown, id: None, properties: BTreeMap::new() },
+        4096,
+    );
+    assert_eq!(center, (2048.0, 2048.0));
+}
+
+#[test]
 fn transportation_name_visible_is_stricter_than_road_geometry_at_city_span() {
     let v = super::vector_tiles::transportation_name_visible;
     assert!(v("primary", 2.0));
@@ -1466,36 +1487,3 @@ fn visible_tile_count_never_exceeds_max_visible_tile_requests() {
     }
 }
 // #endregion 🔖️MercatorOracleFixture
-
-// #region 🔖️W14aTempRepro
-const W14A_GIS2D_FIXTURE: &str = include_str!("/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🗑️generated/w14a-gis2d-map-fixture.json");
-
-#[test]
-fn w14a_gis2d_first_paint_repro() {
-    eprintln!("w14a: new");
-    let mut host = super::MapHost::new();
-    eprintln!("w14a: set_size");
-    host.set_size(1434, 814, 1.0);
-    eprintln!("w14a: sync_map_json bytes={}", W14A_GIS2D_FIXTURE.len());
-    host.sync_map_json(W14A_GIS2D_FIXTURE).expect("fixture parses");
-    eprintln!("w14a: set_render_mode combined");
-    host.set_render_mode("combined");
-    host.set_vector_style("colored");
-    host.set_lod_mode("automatic");
-    eprintln!("w14a: set_camera 0,0,1");
-    host.set_camera(0.0, 0.0, 1.0);
-    eprintln!("w14a: camera={}", host.camera_json());
-    eprintln!("w14a: pick_raster_tile_zoom");
-    let z = host.pick_raster_tile_zoom();
-    eprintln!("w14a: raster z={z}");
-    let vz = host.pick_vector_tile_zoom();
-    eprintln!("w14a: vector z={vz}");
-    eprintln!("w14a: visible raster tiles={}", visible_tiles(&host.camera, &host.viewport, z).len());
-    eprintln!("w14a: prepare_visible_tiles");
-    host.prepare_visible_tiles();
-    eprintln!("w14a: build_vector_scene");
-    let scene = host.build_vector_scene();
-    eprintln!("w14a: scene built, done");
-    drop(scene);
-}
-// #endregion 🔖️W14aTempRepro

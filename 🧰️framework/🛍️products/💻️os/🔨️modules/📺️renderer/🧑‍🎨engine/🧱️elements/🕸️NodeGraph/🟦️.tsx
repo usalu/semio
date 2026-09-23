@@ -1925,6 +1925,11 @@ export function resizeCanvasBackingStore(canvas: HTMLCanvasElement | null | unde
   return changed;
 }
 
+/** @emoji 🏷️ Paints the node captions over the engine canvas. Captions are centred on the MEASURED overlay
+ * size, never on the session's reported `width`/`height`: the overlay is painted when the session is handed
+ * over — before the engine canvas is attached and sized — and on later scene or interaction changes only,
+ * so a static graph kept the 1×1 size the session reported at hand-over and drew every caption half a
+ * canvas away from its node (dag, trinity-jack and mathematical play panes, 2026-09-23). */
 export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number, interaction: DagLabelOverlayInteraction): void {
   let state: { readonly camera?: DagCameraState; readonly width?: number; readonly height?: number; readonly labels?: readonly DagLabelOverlayRow[] };
   try {
@@ -1943,8 +1948,8 @@ export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasEleme
     y: Number(state.camera?.y) || 0,
     zoom,
   };
-  const viewportW = Number(state.width) || logicalW;
-  const viewportH = Number(state.height) || logicalH;
+  const viewportW = logicalW;
+  const viewportH = logicalH;
   const chrome = dagElementInteractionChrome(interaction.selectedIds, interaction.preselect, interaction.highlightIds ?? []);
   const dimmedIds = interaction.dimmedIds ?? [];
   const rows = state.labels ?? parseDagLabelRows(stateJson);

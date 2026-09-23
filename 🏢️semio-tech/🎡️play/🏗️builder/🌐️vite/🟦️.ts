@@ -3,14 +3,14 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import { browserArtifactVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts";
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { playGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts";
-import { playRuntimeAssetSources } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
+import { playDevStaticDirMounts, playRuntimeAssetSources } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
 import { playActivationComponents, playExtensionDirectory, readPlayActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
 import { playUnionReceiptVitePlugin } from "../../🔨️modules/🧩️runtime/♻️activation/🌐️vite/🟦️.ts";
 import { PLAY_HOST, PLAY_RUNTIME_TARGETS, playRuntimeModuleLayout } from "../../🔨️modules/🧩️runtime/🟦️.ts";
@@ -23,7 +23,7 @@ const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-r
 
 /** @emoji 🎡️ Static assets every pane declares (meshes, map tiles, CAD examples). */
 const resolvedPlaygroundAssets = PLAY_RUNTIME_TARGETS.flatMap(target => target.assets);
-const { pluginModuleDirNames, extensionModuleDirNames } = playRuntimeModuleLayout();
+const { extensionModuleDirNames } = playRuntimeModuleLayout();
 
 export default defineConfig(({ command }) => {
   const profile = command === "build" ? "release" : "dev";
@@ -74,11 +74,7 @@ export default defineConfig(({ command }) => {
       development && semioActivationVitePlugin({ receiptDirectory: development.receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: playActivationComponents(repoRoot, development.extensionDirectories) }),
       command === "serve" && semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot }),
       ...semioAssetsVitePlugin(repoRoot),
-      ...(command === "build" ? [browserArtifactVitePlugin(playRuntimeAssetSources(repoRoot, "release"))] : [
-        ...pluginModuleDirNames.flatMap(name => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/${name}`, root: path.relative(repoRoot, path.join(pluginModulesDir, name)) })),
-        ...staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_PLUGIN_ROUTE}/🪞️vendor`, root: path.relative(repoRoot, playRuntimeAssetSources(repoRoot, "dev").find(row => row.owner === "infinite:fonts")!.root) }),
-        ...extensionModuleDirNames.flatMap(name => staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `${MODULE_EXTENSION_ROUTE}/${name}`, root: path.relative(repoRoot, extensionDir(name)) })),
-      ]),
+      ...(command === "build" ? [browserArtifactVitePlugin(playRuntimeAssetSources(repoRoot, "release"))] : staticDirMountVitePlugins(repoRoot, playDevStaticDirMounts(repoRoot, extensionDir))),
       ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, playGisMapTileServeMode(command === "build" ? "build" : "serve")),
       react(),
       tailwindcss(),

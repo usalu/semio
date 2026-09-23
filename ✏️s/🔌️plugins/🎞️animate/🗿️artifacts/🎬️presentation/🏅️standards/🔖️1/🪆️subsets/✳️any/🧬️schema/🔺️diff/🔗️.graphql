@@ -1,8 +1,11 @@
 # 🧬️ Presentation durable diff composed from shared presentation and animation child identities.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 # import PresentationArtifact from "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
+# import FigureTileSource, FigureTileDraft from "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️.graphql"
 type PresentationDiff {
   artifact: PresentationArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
+  source: FigureTileSource @state(class: ARTIFACT)
+  tiles: [FigureTileDraft!] @state(class: ARTIFACT)
   presentation: ArtifactChild @state(class: ARTIFACT)
 }

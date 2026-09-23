@@ -489,3 +489,142 @@ instead of a whole crate.
   load, green otherwise). None were loosened.
 - **`remodel-remodeling` needs a calm machine**: 1301 passed / 0 failed in 867 s on an idle box (run-f3),
   watchdog SIGKILL under fleet load (runs e1, g1) because ten reconstruction lanes each exceed 60 s.
+
+## Session 7b (successor after the 00:00 coordinator restart, 2026-09-23 02:00–)
+
+### 8.1 run-h2 died with the process; what it did read
+
+`⚡️cache/play-fleet/design/run-h2.txt` (started 23:58) was cut at 00:00 while remodel's reconstruction lanes
+ran, so remodel and every wfc crate have no h2 numbers. It did read: draw-drawing **279 / 3**, layout-layout
+**370 / 6**, lowpoly-lowpoly 299 / 0. All nine reds are diagnosed below; four fixes are test-side and on disk,
+two draw reds are a FRAMEWORK regression in a peer-owned file (proposed diffs, §8.3).
+
+### 8.2 Test-side fixes (on disk, not yet proven — run-i1 queued 02:04)
+
+- **layout render laws ×2** (`set_camera_preview_surface_updates_independently_of_blueprint`,
+  `drag_over_emits_ghost_and_leave_clears`). Two stale assumptions: (a) the fixture rendered every body with
+  `ViewModel::default()`, i.e. OUTSIDE any window, while the camera (window config) and the drop ghost (window
+  transient) are owned per window instance — so the render read an empty window; (b) the laws grepped the
+  projection JSON for `"cameraX":3.0` / `layout.drop-preview`, but a built surface carries its scene packed
+  inside `SurfaceProps.doc`, so those strings are never in the JSON. The test context
+  (`✏️editor/🧪️tests/🔬️unit/🦀️.rs`) now mounts BOTH window kinds (`layout-blueprint-1`, `layout-preview-1`),
+  renders a window body inside its own instance (`body_view`), and adds `dispatch_in(app, command, window)`;
+  the camera law dispatches `setCamera` in the preview window and compares decoded scene cameras, the ghost
+  law reads the decoded `layers_json`.
+- **layout export laws ×4.** `one_unit_budget_forces_multiple_yields_and_stale_context_faults` and
+  `checkpoint_is_lossless_bounded_and_authority_qualified` dropped published `StepOutcome`s (a `Fault` detail, a
+  `PreviewReady` payload) whose `RetainedJobPayload` debug-refuses an ordinary `Drop`
+  (`🧵️job/🦀️.rs:713`). `production_retained_wire_factory_…` and
+  `terminal_candidate_is_empty_and_owned_chunks_never_exceed_four_kibibytes` left the job as the SOLE owner of
+  its snapshot, which the close ladder refuses by contract (`layout-export-close-snapshot-unwitnessed`, itself
+  pinned by `reserved_close_disposes_every_export_buffer_…_rejects_an_unwitnessed_snapshot`). New helpers
+  `close_outcome` / `close_job` close every unkept outcome and every hand-driven job with the host's witness
+  alive; the retained-wire dispatch returns its witness and the terminal law drops its witness AFTER the close.
+  No ladder bound or production contract changed.
+- **draw `retained_drawing_depth_plus_one_and_hostile_fields_fault_then_close_terminal_empty`** — "owned
+  Drawing candidate close cannot block". `return_arena_owner` hands the arena back to a PROCESS-global pool
+  under `try_lock` and answers `Blocked` when a parallel law holds it; that is contention, not a stuck ladder
+  (green in every earlier run, red only when two retained-authority laws overlap). `close_candidate` now
+  yields and retries a `Blocked` slice inside the same 100 000-slice bound.
+
+### 8.3 Framework regression found — proposed diffs (peer-owned `🔌️plugin/🦀️.rs`, NOT applied)
+
+**(A) Every childless app now faults a live document replacement.** Peer slice PX1 (ticket
+26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END, `📓️px1-peer-framework-diffs-landed.md` §2, 22:53) landed this
+fleet's engineering §9 proposal: the store-replacement pump's `AwaitingMembers` arm now calls
+`A::child_restore_projection(candidate.snapshot_ref())?`. That trait method's DEFAULT (`ArtifactApp` :12040,
+`ArtifactEditor` :33398, `ArtifactViewer` :33979) is `Err("… did not declare a loaded-parent child
+projection")`, and only five composing apps (flow, cad, sequence, gismap, energy — editor + viewer) declare
+it. So every other app — draw, layout, lowpoly, remodel, all wfc variants and ~45 more — faults the first
+maintenance turn that reaches `AwaitingMembers`. Measured: draw's
+`drawing_live_envelope_submit_recursive_clone_swap_displaced_store_and_exact_ack_succeed` now fails with
+exactly `plugin.internal: editor did not declare a loaded-parent child projection` (it passed in every run
+before 22:53). Production exposure: the archive-load lane's own comment says a childless candidate is sealed
+BY THIS ARM, so every example/document load of a childless app can hit it once an activation bakes the 22:53
+framework. The engineering proposal only meant to name the error and let composing apps answer; the minimal
+fix keeps that and restores childless apps:
+
+```rust
+// 🧩️ A parent that composes nothing projects structurally (empty); a composing parent answers for itself,
+// so its own diagnostic names the refused row (engineering §9) without refusing every childless app.
+let structural = store::ChildRestoreProjection::from_snapshot(candidate.snapshot_ref())
+    .map_err(|error| plugin_sdk_fault(format!("candidate parent child projection is invalid: {error}")))?;
+let projection = if structural.get(0).is_none() { structural } else { A::child_restore_projection(candidate.snapshot_ref())? };
+```
+
+PX1's own law (`retained_composed_replacement_candidate_projection_is_the_apps_own_answer`) keeps passing:
+its parent composes children, so the app's answer is still consulted. **Priority: before the next
+activation ships.**
+
+**(B) Ready-then-cancelled decode faults the caller** — unchanged from §7.6 (draw's
+`drawing_live_initializer_candidate_container_commit_ack_cancel_stale_…`,
+`artifact-store.replacement-output-not-ready`). Same minimal diff as §7.6 in `advance_artifact_envelope_load`.
+
+**(C) Unverified production hazard, for the layout owner.** The app-owned export route
+(`layout_build_export_tool_job`) hands the job a plain `Arc` clone of the store snapshot with no
+`ArtifactSnapshotCloseLease`, while the store drops a displaced snapshot `Arc` whenever it is shared
+(`🏪️store/🦀️.rs:17448`). An edit during a running export can therefore make the job the last owner, and its
+close ladder then refuses forever (`snapshot-unwitnessed` → `InteractiveJobCloseStep::Blocked`). The media
+route installs the lease; the owned route should too (framework: add `snapshot_close` to
+`ArtifactOwnedToolJobRequest`). Not reproduced live; recorded from reading.
+
+### 8.4 All nine design panes re-probed on the 03:23 activation (03:46–03:48)
+
+`⚡️cache/play-fleet/design/probe5-<pane>.txt`, one page at a time after the coordinator's strict run finished.
+Every pane reaches `data-shell-ready` with its curated example: draw (Demo), layout, lowpoly, remodel
+(Synthetic Orbit), wfc2d (Terrain Ring), wfc3d (Tower With A Cantilever), grid3d (3D Pipes), grid2d (Pipes),
+bitmap (Flowers 24). This activation carries PX1's 22:53 framework, so §8.3 (A) does NOT break pane boot: the
+archive-load lane registers its (empty) member ingress before the replacement lane reaches the faulting arm, so
+the fault stays confined to the live envelope-ingress route the draw law exercises. It is still a real defect
+(ordering-dependent on the maintenance rotation).
+Each pane now logs exactly ONE console error that probe4 (17:40) did not have — a 404 for
+`🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin` (shell-level vendor asset, the same URL on all nine
+panes, not design code). Reported to the coordinator for the play-runtime/vendor owner.
+
+### 8.5 run-i3 — the first complete 17-crate result since session 7 (04:27–04:52)
+
+`⚡️cache/play-fleet/design/run-i3.txt`, one invocation through `📜️native-test-mutex.sh design` (run-i1 was lost to
+someone wiping the shared `⚡️cache/cargo/build/debug` at ~02:08; run-i2 to a two-party `prebuild_lock_exclusive`
+flock cycle with the flow cargo, proven with `sample`, broken by killing only my own cargo).
+
+| crate | run-i3 | note |
+| --- | --- | --- |
+| draw-drawing | 280 / 2 | retained-authority fix proven; both reds are §8.3 (A)/(B), framework |
+| plugin-draw · draw-fsm · draw-fsm-macros | 3/0 · 26/0 · 9/0 | |
+| layout-layout | 378 / 16 | 2 export (§8.6) + 14 from the peer's in-flight rotation/gumball feature (§8.6) |
+| plugin-layout | 2 / 1 | `descriptor_is_fresh` — the peer's new verbs; `describe.request/layout` touched |
+| lowpoly-lowpoly · plugin-lowpoly | 299/0 · 3/0 | |
+| remodel-remodeling · plugin-remodel | **1301 / 0** (10 ignored, 1124 s) · 3/0 | every 8 ms law green at load ~10–20 |
+| wfc-2d · wfc-3d · wfc-bitmap | 203/0 · 257/0 · 208/0 | bitmap's two solve laws green |
+| wfc-grid2d · wfc-grid3d | 225/0 · 218/0 | |
+| plugin-wfc | 14/0 lib + 1/0 + 11/0 close-ladder + 2/0 | close-cost law green |
+| plugin-wfc-engine | 301/0 | watchdog law green |
+
+Proven by this run: both layout render laws (§8.2), `production_retained_wire_factory_…`,
+`one_unit_budget_…`, and the draw retained-authority law.
+
+### 8.6 The layout reds run-i3 still showed, and their fixes (on disk)
+
+- **`terminal_candidate_is_empty_…` (`drained > 0`) and `checkpoint_is_lossless_…` (`resumed == []`).** With the
+  close now completing, the laws finally reached their byte assertions — and read an EMPTY queue, because the
+  job's close ladder drains its shared `ArtifactOutputChunks` (`LayoutExportCloseStage::OutputChunks`). Production
+  never loses the bytes: the download/media wrappers `mem::replace` the sealed queue out of the job at `Complete`,
+  before any close. The bare-job laws skipped that hand-off. New `drive_test_job_then(job, params, at_terminal)`
+  runs a closure between the terminal outcome and `begin_close`; both laws drain their bytes there.
+- **12 × mutation diff fixtures** (`committed_diff_is_canonical` + `produces_committed_diff` for move-frame,
+  resize-frame, change-frame-fill/-stroke/-columns/-wrap-mode). The peer ticket 26/09/23 LAYOUT-FEATURE-COMPLETE
+  added `FramePatch.rotation` (for its new `rotate-frame` verb); `LayoutDiff` puts every field on the wire, so the
+  six committed diffs were missing exactly one `"rotation": null` inside `frame_patched.patch` — the only
+  difference in every assertion. Added to those six files (a scan found no other `frame_patched` fixture).
+- **`layout_window_ownership_mutations_match_neutral_fixture_and_codecs`** — `missing field activeUtility`: the
+  peer added `LayoutWindowConfig.active_utility` (gumball `transform` utility); the neutral fixture's three config
+  records now carry `"activeUtility": "select"` (the type's default).
+- **`semantic_kinds_cover_every_variant`** — 25 → 26 (`rotate-frame`). The peer's `rotate-frame` has no
+  committed fixture quartet yet; that belongs to their feature, not to this restatement.
+- **`plugin-layout` `descriptor_is_fresh`** — needs a wasm `describe`; requested via
+  `🗑️generated/describe.request/layout` + `activate.request/layout` (04:55).
+
+### 8.7 run-i4 — layout-layout is green
+
+`⚡️cache/play-fleet/design/run-i4.txt` (~05:01, layout-layout + draw-drawing only, to validate §8.6 before
+spending a full run): **layout-layout 394 / 0**. draw-drawing 280 / 2 — exactly the two §8.3 framework reds.

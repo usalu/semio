@@ -497,6 +497,10 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
     type Command = WiresCommand;
 
     const DIALECT: Dialect = crate::WIRES_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::wires_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::wires_child_restore_projection(snapshot)
+    }
 
     const DOCUMENT_SCHEMA: &'static str = crate::MINDMAP_WIRES_SCHEMA;
 

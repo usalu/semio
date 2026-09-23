@@ -9,7 +9,7 @@ op-line = create-node | delete-node | rename-node | change-node-name | move-node
         | change-node-icon | change-node-abbreviation | change-node-operator-kind
         | replace-node-kind | replace-node-properties | reorder-nodes | connect-nodes | disconnect-nodes
 
-create-node = "create-node" "node" "=" JSON
+create-node = "create-node" "node" "=" JSON ("index" "=" INT)?
 delete-node = "delete-node" "id" "=" IDENT
 rename-node = "rename-node" "id" "=" IDENT "new-id" "=" IDENT
 change-node-name = "change-node-name" "id" "=" IDENT "new-name" "=" TEXT
@@ -21,7 +21,7 @@ change-node-operator-kind = "change-node-operator-kind" "id" "=" IDENT ("new-ope
 replace-node-kind = "replace-node-kind" "id" "=" IDENT "new-kind" "=" JSON
 replace-node-properties = "replace-node-properties" "id" "=" IDENT "new-properties" "=" JSON
 reorder-nodes = "reorder-nodes" "order" "=" "[" IDENT* "]"
-connect-nodes = "connect-nodes" "id" "=" IDENT "source" "=" wire-endpoint "target" "=" wire-endpoint route-style edge-props?
+connect-nodes = "connect-nodes" "id" "=" IDENT "source" "=" wire-endpoint "target" "=" wire-endpoint route-style edge-props? ("index" "=" INT)?
 disconnect-nodes = "disconnect-nodes" "id" "=" IDENT
 
 wire-endpoint = IDENT

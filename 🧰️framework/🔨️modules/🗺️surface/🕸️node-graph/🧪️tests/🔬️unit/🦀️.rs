@@ -153,6 +153,43 @@ fn fixture_from_node_graph_records_builds_composite_edge_endpoints() {
 }
 
 #[test]
+fn graph_host_joins_node_prefixed_port_ids_onto_one_engine_edge() {
+    let nodes = r#"[{"id":"a","outputs":[{"id":"a@number"}]},{"id":"b","inputs":[{"id":"b@"}]}]"#;
+    let edges = r#"[{"id":"wire","sourceNodeId":"a","sourcePortId":"number","targetNodeId":"b","targetPortId":""}]"#;
+    let nodes: Vec<GraphNodeRecord> = serde_json::from_str(nodes).expect("independent node oracle");
+    let edges: Vec<GraphEdgeRecord> = serde_json::from_str(edges).expect("independent edge oracle");
+    let mut host = GraphHost::default();
+    host.sync_from_payload(&NodeGraphScenePayload {
+        nodes,
+        edges,
+        viewport: Some(Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 }),
+        ..Default::default()
+    })
+    .expect("sync");
+    assert_eq!(host.dag.host_snapshot.edges.len(), 1);
+    assert_eq!(host.dag.host_snapshot.edges[0].source, "a@number");
+    assert_eq!(host.dag.host_snapshot.edges[0].target, "b@");
+    assert_eq!(host.dag.engine.edges.len(), 1, "prefixed scene port ids must still create an engine edge");
+}
+
+#[test]
+fn graph_host_refuses_a_synapse_whose_port_is_missing_on_the_widget() {
+    let nodes = r#"[{"id":"a","outputs":[{"id":"a@number"}]},{"id":"b","inputs":[{"id":"b@"}]}]"#;
+    let edges = r#"[{"id":"dangling","sourceNodeId":"a","sourcePortId":"number","targetNodeId":"b","targetPortId":"missing"}]"#;
+    let nodes: Vec<GraphNodeRecord> = serde_json::from_str(nodes).expect("independent node oracle");
+    let edges: Vec<GraphEdgeRecord> = serde_json::from_str(edges).expect("independent edge oracle");
+    let mut host = GraphHost::default();
+    host.sync_from_payload(&NodeGraphScenePayload {
+        nodes,
+        edges,
+        viewport: Some(Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 }),
+        ..Default::default()
+    })
+    .expect("sync");
+    assert_eq!(host.dag.engine.edges.len(), 0, "missing target port must not paint a dangling wire");
+}
+
+#[test]
 fn node_graph_scene_payload_rejects_an_invalid_typed_viewport() {
     let err = NodeGraphScenePayload::from_json(&serde_json::json!({ "viewport": { "x": 0.0, "y": 0.0, "zoom": 0.0 } })).unwrap_err();
     assert!(matches!(err, NodeGraphError::Json(_)));
@@ -547,3 +584,18 @@ fn graph_host_label_overlay_paint_state_json_includes_camera() {
     assert!(json.contains("\"camera\""));
 }
 //#endregion 🔖️GraphHostQueries
+
+/// 📐️ The label overlay is painted by the host from `label_overlay_paint_state_json`'s own
+/// `width`/`height`, while the GPU paints at the session size. A content change rebuilds `dag` from
+/// scratch, and a fresh `DagHost` starts at `1×1`: every caption of the dag, trinity-jack and
+/// mathematical play panes was drawn half a canvas away from its node (measured live 2026-09-23 —
+/// the overlay state read `"width":1,"height":1` beside an 852×807 canvas).
+#[test]
+fn a_content_rebuild_keeps_the_session_viewport() {
+    let mut host = GraphHost::default();
+    host.set_viewport(852, 807, 2.0);
+    host.sync_from_payload(&payload_with_node("a")).expect("sync");
+    host.sync_from_payload(&payload_with_node("b")).expect("content change rebuilds the dag");
+    let state: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().expect("label state")).expect("independent JSON oracle");
+    assert_eq!((state["width"].as_u64(), state["height"].as_u64()), (Some(852), Some(807)));
+}

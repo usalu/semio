@@ -65,7 +65,7 @@ impl ArtifactViewer for FlowViewer {
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
-        Some(semio_framework_plugin::bounded_config_store_owners::<NoConfig, NoConfigMutation>())
+        Some(semio_framework_plugin::no_config_store_owners())
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -73,7 +73,7 @@ impl ArtifactViewer for FlowViewer {
     }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::bounded_config_store_disposer::<NoConfig, NoConfigMutation>())
+        Some(semio_framework_plugin::no_config_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {

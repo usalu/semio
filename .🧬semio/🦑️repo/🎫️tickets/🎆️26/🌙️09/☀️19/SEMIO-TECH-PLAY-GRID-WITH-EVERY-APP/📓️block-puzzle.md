@@ -1049,3 +1049,274 @@ in this crate**, so it cannot be regenerated without writing one — the one rem
 rule 9 forbids touching the JSON by hand.
 
 `run17` carries §10.15's ZST fix plus the final-drain correction of §10.10 and is queued at 23:26.
+
+# 📅️ 2026-09-23 §11 — session 8 (successor, from 01:55)
+
+## 11.1 Starting truth
+- `run17.txt` (23:26 → 23:31) produced **no test numbers**: it died compiling `semio-framework-plugin` at a peer's
+  in-flight edit of `🔌️plugin/👥️presence/♻️retirement/🦀️.rs:37` (`Result::expect` on `Err(Arc<P>)` demanded
+  `P: Debug`). The peer has since rewritten it as a `match` (file mtime 23:31), so it compiles again. The §10.15 ZST
+  fix and §10.10 final-drain correction are therefore still UNMEASURED.
+- The 00:05 auto-commit `9c641044be` swallowed every §10 edit: `git diff HEAD` over `🧱️block` + `🧩️puzzle` is empty,
+  and `git log -1 --stat` shows the five editor/test files of §10 plus the ZST guard (`size_of::<T>() == 0`) at
+  `🖐️5d/…/✏️editor/🦀️.rs:1669` and `◻️2d/…/✏️editor/🦀️.rs:4194`. Nothing was lost.
+- `run18.txt` queued 01:55 (same command as run17: 8 crates, JOBS=2, mutex, private target), load 23.
+
+## 11.2 puzzle3d's two history-row reds are ONE framework ordering defect (+ one design question) — routed
+
+run16 named the extra rows (§10.3's `history_row_labels`):
+- accept law: `["#4 acceptSuggestion kind=mutation applied=true ops=2", "#3 openVortexSuggestions kind=view applied=false ops=0"]`
+- import law: chunk 1 carries `["#4 importFixture kind=mutation applied=false ops=0"]` — i.e. chunk **0**'s row.
+
+Mechanism, read in `🧰️framework/…/🔌️plugin/🦀️.rs` (peer no-touch file, so a PROPOSED diff):
+1. Since `48b9d63cf6` (2026-09-20) a typed operation that published NO durable lane gets its history row from
+   `record_settled_typed_operation_command` (≈ l. 24606), which runs from `retire_typed_operation_unit` —
+   i.e. at RETIREMENT.
+2. The completion witness that carries the history patch is pushed much earlier, in
+   `publish_mounted_typed_operation_unit`'s terminal arm (≈ l. 29075, `typed_completion_outbox.push(…)`
+   together with the `Terminal` page). The host takes it (`take_typed_operation_completion` →
+   `history_patch(false)` over `history_dirty_sequences`) BEFORE the retirement turn runs.
+3. So a no-lane row is inserted into `history_dirty_sequences` after its own completion was taken, and rides
+   the NEXT command's completion: `openVortexSuggestions` (#3) surfaces in `acceptSuggestion`'s patch, and
+   staged chunk 0's `importFixture` row (#4) in chunk 1's. This is the B21 "one-command lag" again, for the
+   no-lane kind only; in the browser the History panel shows every View/no-op row one command late.
+
+Proposed framework diff (terminal arm, before the witness push; `mounted` is out of `tool_operations`
+there, so the row is recorded from `mounted` itself and `command_logged` keeps retirement idempotent):
+```rust
+() => {
+    if !mounted.command_logged && mounted.terminal_fault.is_none() && !mounted.published_artifact && !mounted.published_config {
+        mounted.command_logged = true;
+        let kind = self.typed_operation_command_kind(&mounted.verb, false);
+        let verb = mounted.verb.clone();
+        self.record_command(&verb, kind, None, None, None, None);
+    }
+    if self.typed_completion_outbox.push(TypedOperationCompletionWitness { … }).is_err() { … }
+    TypedOperationResultPage::try_new(token, TypedOperationResultLane::Terminal, b"typed-operation-complete")?
+}
+```
+With it, the accept law is green as written (the reopen's row lands on the reopen's own settle).
+The import law is NOT: every staged chunk would then show its own `importFixture kind=mutation applied=false`
+row on its own settle, which is exactly what the 09-20 rule asks for ("a settled typed operation that
+published NO durable lane still owes the history panel one row") and exactly what the law (written 09-13,
+from the browser's witness "one history row per import, on the sealing chunk") forbids. That is a framework
+DESIGN decision, not a plugin defect: the app has no per-invocation way to say "this unit is staging, not a
+command" (`invocation_kind` is framework-set only). Routed with the question; the law is left as the product
+statement.
+
+## 11.3 puzzle2d — two stale harness predicates behind most of the 20 (source landed 02:10–02:40, unmeasured)
+
+Both read directly off the framework as it is on disk, and both date from the 2026-09-20 framework wave
+(`48b9d63cf6`):
+1. **`committed_edits` filtered `action_id == "apply"`.** Since `record_typed_operation_lane` (09-20) a typed
+   operation's document edit is logged under its own VERB (`addNode`, `rotateSelection`, `paste`, …) and its
+   declared kind; `"apply"` is only `backfill_command_log`'s row for an edit no command claimed. So every
+   "must commit exactly one document edit" read 0 for an edit that really landed (addNode, paste, rotate
+   commit, example load, the gesture-tick law). Restated to what IS a document edit in the patch: an applied
+   row that carries printed document ops (a config-lane or no-lane row prints none), counted by `seq` because
+   a coalesced gesture re-upserts its one row. (§10.10's diagnosis — "the PATCH is not arriving" — was wrong:
+   the patch arrives, the filter never matched it.)
+2. **`render_window(body, window)` rendered the body key `"{body}:{window}"`**, which no app parses — puzzle2d
+   answers `Unknown body`, so `cameraJson` was absent and the camera read 0.0. The framework captures a window's
+   config/transient partitions from the VIEW STATE (`window_config_store.capture(Some(view_state))`), so the
+   helper now renders the bare body with `window_view(kind, window)`; `render_body` renders a canvas body as
+   its kind's default instance (`id == kind`), the very window `action_meta` addresses when a law names none.
+   Same stale helper fixed in puzzle5d (`render_window` → `render_body_with_view`).
+Plus three law restatements, each with its reason in the docstring:
+- `hover_id_reaches_the_board_scene_for_every_granularity_and_pane` indexed `fixture_edges(concrete-forest)[0]`,
+  but concrete-forest is a one-node SEED with no edge → reads Nakagin (180 nodes / 179 edges).
+- `engagement_line_carries_its_arguments_verbatim`: its own comment says the rotate is "asserted through a
+  two-node selection", but it `select_id`-REPLACED the selection with the second node alone, which rotates
+  about its own centroid and cannot move → selects both nodes in one `interactionSelect`.
+- `close_app` (2d and 5d) is `#[track_caller]`, so the two two-app laws that end with "registered app close
+  did not reach terminal-empty ownership" name WHICH app (the reopened one only READ a window transient).
+
+Not yet explained (need a binary; the shared build dir was wiped at ~02:09, §11.5): the board-engine brush
+family (`board_fill_*`: "fill job faulted: None" is `StepOutcome::Fault` with the job not checked out, so the
+code is unreadable by that helper), `board_host_minimap_preselect_matches_selected_chrome`,
+`open_hover_accept_places_one_node…` (0 nodes placed), `fill_run_job_places_only_inside_visible_target_regions`,
+and `sequential_small_edits_honour_the_fixed_edit_ledger_ceiling` (the undo after the 64-edit wall does not
+settle).
+Two more harness defects found by reading the framework against the failing messages (2d AND 5d harness):
+- **`drain_settled` returned on a `Fault` page WITHOUT ACKing it.** The faulted operation then waited for its
+  ACK for ever, so the NEXT dispatch could never settle — exactly `sequential_small_edits_honour_the_fixed_
+  edit_ledger_ceiling`'s "the store stays usable at the ceiling: … did not settle" (the 65th `addNode` faults
+  at the 64-edit wall, the `undo` after it spins). Now the page is ACKed like the host ACKs it and the fault is
+  reported after the operation retires — `settle_registered_typed_operation`'s own shape.
+- **The two-app window-transient laws held their captured snapshots across `close_app`.** Every
+  `window_transient_snapshot` is a READ LEASE on its window partition's store
+  (`🪟️window/🫧️transient/🦀️.rs` answers `AwaitingInput "window transient retirement awaits its returned read"`),
+  so a close run while the law still owns `transient_a/_b/aborted/reset` can never retire those partitions —
+  "registered app close did not reach terminal-empty ownership" in both 2d and 5d. The laws now drop them
+  before closing (puzzle3d's twin law and block3d/trinity already did).
+
+## 11.4 Re-checked on the 22:46–22:49 binaries (run directly, no cargo)
+- puzzle3d `window_options_are_local_to_the_window_instance_not_shared_across_split_panes`: **passes** — the
+  21:30 framework decoder fix (coord/dir/dim/range tuple shapes) closed the `window-config.typed-state`
+  pack-reload rejection of §10.11.2 for puzzle3d. The 2d/5d members of that "family" were never the pack codec:
+  they are the `render_window` key and the held-lease close above.
+
+## 11.5 `run18` (queued 02:23, slot 03:58 → 04:38) — the first measured run since run16
+Two earlier run18 attempts died under us (one wrapper vanished at ~02:03; one hit the shared build dir being wiped
+at ~02:09 — `extern location for autocfg does not exist`; logs `run18-killed.txt`, `run18-wiped.txt`), then the fleet
+queued behind the coordinator's wasm rebuild. Log: `⚡️cache/play-fleet/block-puzzle/run18.txt`.
+
+| crate | run16 | run18 |
+|---|---|---|
+| block-2d / block-3d / block-5d | 262/0 · 352/0 · 366/0 | **262/0 · 352/0 · 366/0 GREEN** |
+| plugin-block / plugin-puzzle | 8/0 · 7/0 | **8/0 · 7/0 GREEN** |
+| puzzle-2d | 860 / 20 | 869 / **11** |
+| puzzle-3d | 744 / 4 | 744 / 4 (all four routed, §11.2 / §10.11 / §10.14) |
+| puzzle-5d | SIGKILL, 7 red | SIGKILL, **1 red + 1 hung**: 581 ok of 587 |
+
+puzzle5d: the four retirement-convergence laws (§10.15 ZST fix), the two window laws (§11.3 render/lease) and the
+abort-fill law are GREEN. Left: the fixture law (printer, §10.16 — run next) and
+`kit_in_retained_import_media_enforces_exact_media_max_plus_one_before_decode`, which is NOT "inherently slow"
+(§10.6 was wrong): `sample` of the live binary at 29 min shows the retirement's hottest frame is `Fault::from` inside
+`puzzle5d_retire_string_step` — the helper popped ONE char per unit and then answered `Err` for a backing larger than
+one unit's byte grant (16 KiB `JOB_PAYLOAD_PAGE_BYTES`); the job close maps `Err` to `Blocked`, so the close of a
+16 KiB `kit:in` label spun for ever. Fixed in 5d AND 2d (`puzzle2d_retire_string_step` is the same code): content
+cleared in one item, backing shrunk by at most the grant per unit — a production close-ladder defect.
+puzzle2d's 11: rotate/hover/camera/window-transient/close-lease/committed_edits families are green; left and handled
+since: `scale 1.5` (production scales LAYOUT, "sizes stay" — law now reads the two-node span), the ledger law's
+refusal wording (the store's real sentence), `an_oversized_outliner…` (the root's `interactionSelect` args map was
+admitted AFTER the rows had spent the UI arena → `.interaction_domain` bound first, in 2d, 3d and 5d's artifact
+panels). Routed: `transform_gesture_ticks_coalesce_into_one_undo_step` (an AMENDED edit never re-dirties its history
+row — `record_typed_operation_lane`'s `already_logged` branch returns without `history_dirty_sequences.insert`; same in
+`dispatch_emit`'s `amended_same_edit`; proposed: insert the row's seq + bump `log_generation` there). Still open:
+the board-engine brush family (5), minimap preselect, open→hover→accept, region-constrained fill.
+
+## 11.6 PEER REQUEST — the puzzle5d `setActiveExample` capture (full write-up: `⚡️cache/play-fleet/block-puzzle/puzzle5d-stall-capture.md`, "Session 8" sections)
+- **Live pane, 03:23 activation, diagnostics armed** (`probe-capture.mjs`, `probe-progress.mjs`): the boot
+  capsule-dream switch no longer retires silently — it RUNS for the whole observation (480 s undisturbed), no
+  stall line, no fault, document unchanged, and the guest's per-turn cost climbs 66 → 227 ms (guest busy ≈100 %).
+- **Native traced run** (`dispatch_traced`, framework census per ladder): worker 21 units / 1.4 s, then **only
+  `Store` units** — 29 004 in 17 min, 0 result pages, 0 child pages, 0 faults. **Lane = the DOCUMENT store
+  publication**; no operation faults, so there is no fault-time id/stage/flags to report — the answer to the
+  peer's question is that the 19 000 units are the document lane itself, each unit O(document).
+- **Root cause, by `sample`** (plugin-owned): `Puzzle5dStorePreparation::advance` → the
+  `Mutation<Puzzle5dPlaySnapshot>` JSON bridge decoding the whole document 3× per folded mutation
+  (`Puzzle5dPlaySnapshot(pub Value)`). **Fixed** by porting 3d's typed-authority/lazy-JSON play snapshot to 5d
+  (`🖐️5d/…/🧬️schema/🧬️mutations/🦀️.rs` + 61 reader sites `snapshot.value()`); measured by `run19`.
+- Interaction side effect on the pane: a pick made while the boot switch runs is admitted ~105 s later and then
+  refused with `typed-operation pending publication rejected a stale immutable document root` ×3.
+- The same port landed in puzzle2d (`◻️2d/…/🧬️schema/🧬️mutations/🦀️.rs`: `Puzzle2dPlaySnapshot` = typed authority +
+  lazy `value()`; ~45 reader sites incl. the fill run's `document`/`head` fields), so all three puzzle play
+  snapshots now share one shape (3d already had it) and no folded mutation decodes the document any more.
+- `run19` (queued 04:47, rank 7) carries: both ports, the string-retirement fix, the 2d/5d harness fixes of §11.3,
+  the fixture reprint (`🎞️fill-run.json`: index 8 `success:fits` → `danger:solid-overlap`, `tested` 12 → 15, `placed`
+  unchanged 8 — printed by the new `zzz_write_fill_run_fixture`, checked by the law's 3d-planner oracle),
+  the `interaction_domain`-first panel order and the restated scale/ledger laws.
+
+## 11.7 `run19` (slot 04:55 → 05:00) — **puzzle5d completes for the first time** (no watchdog)
+| crate | run18 | run19 |
+|---|---|---|
+| block-2d / 3d / 5d, plugin-block / puzzle | GREEN | **GREEN** (262/352/366/8/7) |
+| puzzle-2d | 869 / 11 | 872 / **8** |
+| puzzle-3d | 744 / 4 | 744 / 4 (routed) |
+| puzzle-5d | SIGKILL (1 red + 1 hung) | **578 / 5, 4 ignored — the whole binary in 45 s** |
+- puzzle5d's 5d play-snapshot port + string-retirement fix: the binary that never finished inside 30 minutes now
+  runs in 45 s. The fixture law is GREEN with the reprinted fixture (so the 3d-planner oracle agrees with it).
+- The 5 puzzle5d reds are consequences of the string fix, both handled for `run20`: four retirement laws asserted
+  `close turns > 100` — a proxy for the old one-char-per-unit popping — restated to their stated invariant (every
+  retained string retires in its own bounded units, never one owner drop: turns ≥ the owner's string count); and
+  the import-media law, which now REACHES its plus-one assertion (it hung before) — its assertion now prints the
+  actual refusal so `run20` shows whether the refusal is the plugin's predecode cap or an earlier framework guard.
+- The run19 2d binary was linked 04:56:55, BEFORE the 2d play-snapshot port landed (04:57–04:58): run20 measures it.
+- puzzle2d's 8: `transform_gesture…` (routed, §11.5), the board-engine brush family (4 — `run20` carries sharper
+  failure messages: stage + fault code + counts; the zero-count law now resumes YIELDs, which a multi-step empty
+  commit legitimately publishes), `board_host_minimap_preselect…`, `open_hover_accept…` (accept leaves the document
+  with ZERO nodes — the seed node disappears; next to diagnose), `fill_run_job_places_only_inside_visible_target_regions`.
+
+## 11.8 `run20` (slot 05:03 → 05:07) — state at the end of session 8
+Log `⚡️cache/play-fleet/block-puzzle/run20.txt`. The whole 8-crate batch now finishes in ~4 minutes (puzzle5d 49 s).
+
+| crate | run20 |
+|---|---|
+| semio-s-artifact-block-2d / -3d / -5d | **262/0 · 352/0 · 366/0 GREEN** |
+| semio-s-plugin-block / semio-s-plugin-puzzle | **8/0 · 7/0 GREEN** |
+| semio-s-artifact-puzzle-2d | 873 / **7** (includes the 2d play-snapshot port — nothing regressed) |
+| semio-s-artifact-puzzle-3d | 744 / 4 (all routed) |
+| semio-s-artifact-puzzle-5d | **582 / 1**, 4 ignored (was: SIGKILL every run) |
+
+Left, with the reason:
+- **puzzle5d `kit_in_retained_import_media_enforces_exact_media_max_plus_one_before_decode`** — the plus-one IS refused
+  and the document is unchanged, but the refusal reaches the caller as `interactive-job.fault` "framework route
+  'import-media' returned a retained fault": `🔌️plugin/🦀️.rs` ≈ l. 22669 (`terminal_kind == 3`) drops the job's
+  bounded fault DETAIL, so no caller can tell the plugin's predecode cap from any other fault. Proposed (peer
+  no-touch file): keep the retained fault page's bytes when the checked-out outcome is `StepOutcome::Fault` and
+  append them to that message (`… returned a retained fault: {detail}`). Law left as the product statement.
+- **puzzle3d** ×4 — routed: history-row lag + staging-row design question (§11.2), coalesced-edit row never
+  re-dirtied (same seam as 2d's gesture law, §11.5), `mutation_latency` (store units scale with the document —
+  the one-item preparation; 3d already has the typed snapshot, so its remaining per-item cost is the typed
+  `apply` clone — peer's publication lane), and the peer's `fill…ceiling_for_nakagin` (below).
+- **peer `fill…ceiling_for_nakagin`, re-measured alone at load 8 (05:08), twice: 3.191 ms at turn 2 490/2 548 and
+  2.620 ms at turn 2 494/2 553.** The worst step sits at the SAME late turn in both runs and in run15 (2 548/2 607):
+  that is a deterministic expensive step near the end of the run, not machine load. Bound untouched.
+- **puzzle2d** ×7: `transform_gesture_ticks…` (routed, §11.5); the framework board-engine fill family now fails
+  with names — `field cursor job terminated before checkpoint: complete fault=None seen=[all false]` (the job
+  completes WITHOUT ever reaching an accept stage: no candidate on the frontier host) and `fill job faulted:
+  (stage, code)=Some((AcceptCandidate, None))` (a `StepOutcome::Fault` with NO job code at `AcceptCandidate`, which
+  in `BoardFillJob::step` is only the `context.next_preview_sequence()` refusal path) — both inside
+  `🧰️framework/…/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🦀️.rs` (changed 09-19/09-20), next to diagnose;
+  `board_host_minimap_preselect…` (same engine); `open_hover_accept…` (after accept the document holds ZERO nodes;
+  a `[DEBUG] accept law` line — before/hovered/after node counts + the accept's history rows — is in the law for
+  the next run; it missed run20 by two minutes); `fill_run_job_places_only_inside_visible_target_regions` (places
+  nothing — likely the same empty-candidate root as the engine family).
+
+## 11.9 Files changed this session (absolute)
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` — typed/lazy `Puzzle5dPlaySnapshot` (the O(n²) capsule-dream fix)
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` — same port for 2d
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs` — `snapshot.value()` readers, `puzzle5d_retire_string_step`
+- `/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs` — readers, `puzzle2d_retire_string_step`
+- `…/🖐️5d/…/✏️editor/🧠️precompute/🦀️.rs`, `…/🧠️precompute/🖌️brush/🦀️.rs`, `…/🧠️precompute/🪣️fill/🦀️.rs`, `…/◻️2d/…/✏️editor/⏳️precompute/🪣️fill/🦀️.rs` — readers
+- `…/{◻️2d,🧊️3d,🖐️5d}/…/✏️editor/📌️panels/🗿️artifact/🦀️.rs` — root `interactionSelect` binding admitted first
+- `…/🖐️5d/…/✏️editor/🧠️precompute/🪣️fill/🧫️fixtures/🎞️fill-run.json` — reprinted by `zzz_write_fill_run_fixture`
+- tests: `…/◻️2d/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs` (committed_edits, render_body/window, drain fault ACK, hover law on
+  Nakagin, ledger wording, lease drop, track_caller, `[DEBUG]` accept line), `…/◻️2d/…/🎮️commands/📨️engagement-submit/🧪️tests/🔬️unit/🦀️.rs`,
+  `…/◻️2d/…/⚙️engine/🖌️brush/🧪️tests/🔬️unit/🦀️.rs`, `…/🖐️5d/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs` (dispatch_traced,
+  render_window, drain fault ACK, lease drop, track_caller, predecode message), `…/🖐️5d/…/🧪️tests/🔬️puzzle5d-retained-retirement-laws/🦀️.rs`,
+  `…/🖐️5d/…/🧠️precompute/🪣️fill/🧪️tests/🔬️unit/🦀️.rs` (`measure_case`, `zzz_write_fill_run_fixture`),
+  `…/🖐️5d/…/🎮️commands/📡️proximity-connect/🧪️tests/🔬️unit/🦀️.rs`, `…/◻️2d/…/⏳️precompute/🪣️fill/🧪️tests/🔬️unit/🦀️.rs`.
+
+## 11.10 `run21`–`run23` (05:09 → 05:24) — puzzle2d `acceptSuggestion` WIPED the document (fixed)
+A `[DEBUG]` capture in the law and in `accept_suggestion` (both removed again) showed: the scene fixture really
+gains the placed node (1 → 2), yet the committed edit was `delete-node seed-left-001`, `change-manifest-id` and
+`disconnect-kind-compatibility` × 17 — the whole document. Cause, two defects in one line of play:
+1. `apply_brush_place_payload` copied the engine's `brushPlace` handles verbatim, and the engine describes them
+   by kind/angle/radius only — no `id`, which `Puzzle2dHandle` requires;
+2. `puzzle2d_document_delta_operations` decoded both sides with `unwrap_or_default()`, so the undecodable `after`
+   became the EMPTY board and the delta deleted everything.
+Fixed at both: placed handles get the `"{node}:v{index}"` ids the placed edge already addresses
+(`puzzle2d_placed_handles`), and the delta returns `Result` — an undecodable side is a fault (`dispatch_emit`),
+a `ClipboardError::ParseFailed` (cut/paste), never an empty document. In the live pane this is "accept a suggestion
+→ the board goes blank". `open_hover_accept_places_one_node_on_concrete_forest_and_reselects_it` is GREEN.
+(3d/5d's `puzzle{3,5}d_document_delta_operations` still `unwrap_or_default()` — same latent hazard, not yet hit.)
+
+`run23`: block 2d/3d/5d + plugins GREEN; puzzle2d **874 / 6**; puzzle3d 744 / 4; puzzle5d 582 / 1.
+
+## 11.11 End of session 8 (05:35) — final numbers and what is left
+`run24` (05:26 → 05:31, log `⚡️cache/play-fleet/block-puzzle/run24.txt`) = `run23`:
+
+| crate | session start (run16) | **now (run23/run24)** |
+|---|---|---|
+| block-2d / block-3d / block-5d | 262/0 · 352/0 · 366/0 | **262/0 · 352/0 · 366/0** |
+| plugin-block / plugin-puzzle | 8/0 · 7/0 | **8/0 · 7/0** |
+| puzzle-2d | 860 / 20 | **874 / 6** |
+| puzzle-3d | 744 / 4 | **744 / 4** (all four routed) |
+| puzzle-5d | SIGKILL (watchdog), 7 red | **582 / 1** in ~46 s |
+
+Left:
+- puzzle5d ×1 — framework drops the import-media job's fault detail (§11.8, proposed diff).
+- puzzle3d ×4 — routed (§11.2 history-row lag + staging-row design, coalesced-row re-dirty, `mutation_latency`,
+  peer's nakagin ceiling: deterministic late-turn spike, 2.6–3.2 ms at load 8).
+- puzzle2d ×6 — `transform_gesture…` (routed, coalesced-row re-dirty); `board_host_minimap_preselect…`; the
+  board-engine fill family ×3 + `fill_run_job_places_only_inside_visible_target_regions`. What the sharper
+  messages now say: the frontier fixture's job COMPLETES without ever reaching an accept stage (no candidate at
+  all), and the large-host job faults at `AcceptCandidate` with no job code (i.e. a fault raised by the session,
+  not by `BoardFillJob::fault_outcome`). One observation while reading the engine (not the cause — tried in run24,
+  no change, reverted): `BoardFillJob::scan_compatibility` treats an EMPTY rule set as "nothing compatible", while
+  `BoardHost::link_compat_rules` is documented and used as "empty = unrestricted".
+- The 5d `dispatch_traced` helper and its `[DEBUG]` lines stay on purpose: it is the capture harness of the
+  `#[ignore]`d capsule-dream law (un-ignore once the switch finishes inside the watchdog — with the typed snapshot
+  it should; not re-measured this session).

@@ -202,11 +202,11 @@ mod tests {
                             panic!("fill job unexpectedly cancelled");
                         }
                         StepOutcome::Fault(_) => {
+                            let code = session.checked_out_job_mut().map(|job| (job.stage(), job.take_fault()));
                             while !outcome.terminal_is_empty() {
                                 let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
                             }
-                            let code = session.checked_out_job_mut().and_then(BoardFillJob::take_fault);
-                            panic!("fill job faulted: {code:?}");
+                            panic!("fill job faulted: (stage, code)={code:?} previews={} placements={}", previews.len(), placements.len());
                         }
                     }
                 }
@@ -773,7 +773,15 @@ mod tests {
                     terminal = true;
                     break;
                 }
-                WorkerJobPoll::Outcome => panic!("zero-count fill published a nonterminal outcome"),
+                WorkerJobPoll::Outcome => {
+                    let mut outcome = complete.take_checked_out_outcome().expect("zero-count fill outcome");
+                    let yielded = matches!(outcome, StepOutcome::Yield);
+                    while !outcome.terminal_is_empty() {
+                        let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+                    }
+                    assert!(yielded, "a zero-count fill may only YIELD while it streams its empty commit, never publish a preview or checkpoint");
+                    complete.resume().expect("zero-count fill yield resume");
+                }
                 WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty | WorkerJobPoll::CheckedOut => {
                     panic!("unclaimed completion entered invalid phase")
                 }
@@ -989,10 +997,16 @@ mod tests {
                         }
                         StepOutcome::Yield => session.resume().expect("field cursor yield resume"),
                         StepOutcome::Complete(_) | StepOutcome::Cancelled | StepOutcome::Fault(_) => {
+                            let ended = match &outcome {
+                                StepOutcome::Complete(_) => "complete",
+                                StepOutcome::Cancelled => "cancelled",
+                                _ => "fault",
+                            };
+                            let fault = session.checked_out_job_mut().and_then(BoardFillJob::take_fault);
                             while !outcome.terminal_is_empty() {
                                 let _ = outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
                             }
-                            panic!("field cursor job terminated before checkpoint");
+                            panic!("field cursor job terminated before checkpoint: {ended} fault={fault:?} seen={seen:?}");
                         }
                     }
                 }

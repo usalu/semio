@@ -195,11 +195,11 @@ fn target_region_row(region: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResul
 pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let fixture = &envelope.fixture;
     PanelTreeBuilder::new(ROOT)?
+        .interaction_domain(PUZZLE2D_PLAY_CONTROLLER_ID, PUZZLE2D_INTERACTION_DOMAIN)?
         .window_section_or_placeholder(windows, NODES_SECTION, Some(ui_label(labels.nodes.as_str())?), true, fixture_nodes(fixture), |node| node_row(node, fixture, labels), ui_label(labels.none.as_str())?)?
         .window_section_or_placeholder(windows, EDGES_SECTION, Some(ui_label(labels.edges.as_str())?), false, fixture_edges(fixture), |edge| edge_row(edge, fixture), ui_label(labels.none.as_str())?)?
         // 🎯️ Slice 2F's own section — collapsed by default, exactly as puzzle3d collapses its target volumes.
         .window_section_or_placeholder(windows, TARGET_REGIONS_SECTION, Some(ui_label(labels.target_regions.as_str())?), false, fixture_target_regions(fixture), |region| target_region_row(region, labels), ui_label(labels.none.as_str())?)?
-        .interaction_domain(PUZZLE2D_PLAY_CONTROLLER_ID, PUZZLE2D_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render

@@ -12,7 +12,7 @@ import { dialectCoordinate } from "../../../../../../🔨️modules/🚪️io/�
 import { exampleBodyAssetPrefix, examplesForApp, normalizeManifestExamples, type PluginManifest } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 
 /** 🎛️ Playground owners that legitimately ship without a navbar example picker (library shells, aggregators, flow hosts). */
-export const NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS = new Set(["demonstrator", "flow", "norm", "stdio"]);
+export const NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS = new Set(["demonstrator", "stdio"]);
 
 /** 📚️ Every editor/viewer dialect in a published manifest must offer at least one example row for `NavbarExampleSelect`. */
 export function auditNavbarExamplePickerCoverage(manifest: PluginManifest): readonly string[] {

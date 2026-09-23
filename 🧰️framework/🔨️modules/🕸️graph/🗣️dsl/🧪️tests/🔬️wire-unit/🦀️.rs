@@ -56,8 +56,9 @@ mod tests {
             let nodes = vec![WireNode { id: "n".into(), kind: "slider".into(), port: None, properties: props }];
             let text = wire_literal_from_dag(&nodes, &[]);
             // 🩹️ unified syntax: `key=value` (never `key: value`), space-padded braces when glued
-            // onto a preceding atom, per `dsl_core::Writer`'s canonical spacing law.
-            assert!(text.contains("{ value=3 }"), "expected unified {{ value=3 }} properties, got: {text}");
+            // onto a preceding atom, per `dsl_core::Writer`'s canonical spacing law; a
+            // `PropertyValue::Number` is an f64 and prints in the canonical float form `3.0`.
+            assert!(text.contains("{ value=3.0 }"), "expected unified {{ value=3.0 }} properties, got: {text}");
         });
     }
 
@@ -72,7 +73,7 @@ mod tests {
             let nodes = vec![WireNode { id: "n".into(), kind: "slider".into(), port: None, properties: props }];
             let text = wire_literal_from_dag(&nodes, &[]);
             assert!(text.contains("obj={ y=true }"), "expected unified obj={{ y=true }}, got: {text}");
-            assert!(text.contains("arr=[ 1 null ]"), "expected unified arr=[ 1 null ], got: {text}");
+            assert!(text.contains("arr=[ 1.0 null ]"), "expected unified arr=[ 1.0 null ], got: {text}");
         });
     }
 

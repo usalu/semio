@@ -39,9 +39,15 @@ pub fn definition() -> WindowKindDefinition {
 /// 🎚️ Collects this window's chrome from its own `🎚️options/*` nodes rather than re-listing them —
 /// measures are config-derived per frame by `ArtifactEditor::window_measures`, never frozen into the
 /// manifest.
-pub fn window_measures(cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(document: &GisMapSnapshot, cfg: &MapWindowConfig, labels: &Gis2dPlayLabels) -> Vec<WindowMeasure> {
     use crate::editor::gis2d::modes::edit::windows::map::options;
-    vec![options::render_mode::measure(cfg, labels), options::vector_style::measure(cfg, labels), options::lod_mode::measure(cfg, labels), options::layers::measure(cfg, labels), options::layer_weights::measure(cfg, labels)]
+    vec![
+        options::render_mode::measure(cfg, labels),
+        options::vector_style::measure(cfg, labels),
+        options::lod_mode::measure(document, cfg, labels),
+        options::layers::measure(cfg, labels),
+        options::layer_weights::measure(cfg, labels),
+    ]
 }
 //#endregion 🔖️Definition
 

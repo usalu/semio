@@ -1472,3 +1472,13 @@ pub mod viewer {
         }
     }
 }
+
+//#region 🧬️ChildRestoreProjection
+/// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields — the ONE
+/// definition the editor and the viewer both declare. The `ArtifactEditor`/`ArtifactViewer` trait default
+/// refuses it (`… did not declare a loaded-parent child projection`), and since PX1 the live envelope load
+/// asks for it before the decoded document may replace the store, so an undeclared app fails every live load.
+pub fn jack_child_restore_projection(snapshot: &crate::JackSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("jack.child-projection"), error.to_string()))
+}
+//#endregion 🧬️ChildRestoreProjection

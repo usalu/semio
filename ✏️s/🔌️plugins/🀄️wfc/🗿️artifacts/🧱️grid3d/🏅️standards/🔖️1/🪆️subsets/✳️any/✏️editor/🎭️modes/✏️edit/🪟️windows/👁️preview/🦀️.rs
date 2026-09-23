@@ -121,7 +121,12 @@ pub fn live_fill_payload(tool_run: Option<&ToolRunView>) -> Option<Grid3dFillPay
 /// 👁️ Assignments the pane paints: live fill payload first, else a fresh solve.
 pub fn paint_assignments(document: &Grid3dSnapshot, tool_run: Option<&ToolRunView>) -> (Vec<Grid3dAssignment>, bool) {
     if let Some(payload) = live_fill_payload(tool_run) {
-        return (payload.decided_assignments(), !payload.contradiction);
+        let mut assignments = payload.decided_assignments();
+        for event in &payload.trace {
+            assignments.retain(|cell| cell.x != event.x || cell.y != event.y || cell.z != event.z);
+            assignments.push(Grid3dAssignment { x: event.x, y: event.y, z: event.z, tile_id: event.tile_id.clone() });
+        }
+        return (assignments, !payload.contradiction);
     }
     let solved = solve(document).unwrap_or_default();
     (solved.assignments, solved.satisfiable)

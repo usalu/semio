@@ -36,30 +36,8 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 }
 
                 async fn drain(app: &mut MathApp) -> Result<usize, String> {
-                    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-                    let mut receipts = 0;
-                    while app.has_pending_typed_operations() {
-                        if std::time::Instant::now() >= deadline {
-                            return Err("Equation window operations did not finish".into());
-                        }
-                        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
-                        app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
-                        if let Some(page) = app.take_typed_operation_result_page(1) {
-                            let lane = page.lane;
-                            let bytes = page.bytes().to_vec();
-                            app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
-                            match lane {
-                                semio_framework_plugin::app::TypedOperationResultLane::WindowConfig => receipts += 1,
-                                semio_framework_plugin::app::TypedOperationResultLane::Fault => return Err(format!("Equation window publication failed: {bytes:?}")),
-                                _ => {}
-                            }
-                        }
-                        app.take_typed_operation_effect();
-                        app.take_typed_operation_event();
-                        app.take_typed_operation_ui_scope();
-                        std::thread::yield_now();
-                    }
-                    Ok(receipts)
+                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, 1).await.map_err(|error| format!("Equation window publication failed: {error:?}"))?;
+                    Ok(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count())
                 }
 
                 let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();

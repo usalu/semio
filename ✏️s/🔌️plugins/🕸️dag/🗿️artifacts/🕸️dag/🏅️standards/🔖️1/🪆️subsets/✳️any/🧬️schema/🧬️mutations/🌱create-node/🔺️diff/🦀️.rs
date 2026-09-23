@@ -11,7 +11,7 @@ pub fn diff(payload: &super::mutation::CreateNode, base: &DagSnapshot) -> protoc
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A node with id \"{}\" already exists.", payload.node.id), [payload.node.id.clone()]);
     }
     let mut nodes = scene.nodes;
-    nodes.push(payload.node.clone());
+    nodes.insert(payload.index.map_or(nodes.len(), |index| index.min(nodes.len())), payload.node.clone());
     protocol::MutationOutcome::new(diff_replace_content(nodes, scene.edges))
 }
 //#endregion 🔖️Diff

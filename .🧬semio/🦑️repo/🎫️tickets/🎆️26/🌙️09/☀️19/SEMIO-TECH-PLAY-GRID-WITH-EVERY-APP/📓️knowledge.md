@@ -668,3 +668,239 @@ persisted inline board authoritative, makes the §3 recovery correct in every ca
 loaded document, and fixes the mounted reads and the pane at once. It changes the emitted `WiresDiff` shape, so it
 must go with a regeneration of the committed `🔺️diff` vectors through the crate's own printer — i.e. exactly the
 two-run cycle the wires and imperative vectors just went through, and it needs a build between the two.
+
+## 14. Successor session 7b (2026-09-23 01:55 →) — pass8 read, the two wire changes finished
+
+`pass8` (23:32–23:40, log `⚡️cache/play-fleet/knowledge/pass8.txt`): graph 186/2, dag 204/3, imperative 138/6,
+mathematical-equation 365/20, note 395/1, wires 182/7, every other target green. Against pass4 it closed imperative's
+two rewritten vectors and note's `note_apply_ops_reduces_a_nonempty_batch…`, and opened three NEW reds, all stale laws
+of this topic's own changes (no production regression):
+
+- `semio-framework-graph` `dsl::wire::tests::wire_literal_{with_properties,nested_object_and_array_properties}` —
+  `PropertyValue::Number` is an f64 and `dsl_core` prints the canonical float form (`value=3.0`, `arr=[ 1.0 null ]`);
+  the laws still expected `3`/`1`. First time this crate's lib test compiled in this topic (pass6 died on the
+  `Handle.value_types` E0063), so this is not caused by the `-` connector change. Restated.
+- `…equation…::a_decoded_document_without_a_scene_owner_still_admits_its_document_verbs` — it built its owner-less
+  document through the PACK codec, which since §13.1 carries the scene. Restated through the VALUE projection
+  (`to_value`/`from_value`), the one transport that still omits the owner (the scene-owner law's `wireOmission`).
+
+Landed 02:00 (measured by `pass9`, queued 02:03, log `pass9.txt`, which now also runs
+`semio-s-artifact-trinity-{jack,rewriting}` — never in this topic's runs before):
+
+1. `➗️mathematical` wire change finished schema-first: `📖️.grammar.semio` (+ `🔤️.ebnf`, `🅰️.g4` mirrors) of
+   `🚪️io/📸️snapshot/📝️text` now declare the real body — `notation`/`results`/`computed` child handles plus
+   `equation`/`graph`/`geometry` hex lines — instead of an opaque `payload = OCTET+`; the text parser REQUIRES
+   `graph=`/`geometry=` (the "pre-format body decodes to the empty scene" fallback was legacy support and is gone);
+   the one-shot `temporary_regenerate_demo_asset` did its job at 23:39 (asset committed 00:05) and is deleted.
+   New laws: `the_scene_survives_a_text_round_trip`, `the_demo_asset_carries_the_default_scene`,
+   `a_body_without_its_scene_lines_is_refused` (text) and `the_scene_survives_a_pack_round_trip` (binary) — the
+   existing `assert_dsl_round_trip`/`assert_dsl_pack_equivalence` laws compare snapshots whose child handles are blind
+   to the owner, which is exactly how the bare-handle codec passed them.
+2. `🔱️trinity` jack: `every_shipped_query_lints_clean_and_runs_on_the_curated_example` (jack editor tests) lints
+   `TRINITY_JACK_DEFAULT_QUERY` and the branch-chain preset through `core::lint` (= the framework graph DSL) over the
+   curated Nakagin example and runs both through jack's executor.
+3. Requests touched: `describe.request/mathematical`, `activate.request/{mathematical,trinity-jack,reasoning-wires}`.
+
+### 14.1 02:10–02:45 — the remaining reds, root-caused and edited (all measured by the relaunched `pass9`)
+
+`pass9` #1 died at LINK (02:08): the shared build-dir `⚡️cache/cargo/build` was emptied under it (not by this topic;
+clang "no such file" for every rlib). Log kept as `pass9-linkfail.txt`; relaunched 02:10 (full rebuild).
+
+Four families explain almost every red left in the seven trees:
+
+1. **Inverses that re-append instead of re-inserting** (dag ×3, imperative `delete_step_inverse_law`, equation's
+   granular graph laws). Every composed child is content-addressed over node/edge/step ORDER, so an inverse that
+   re-creates an entity at the END restores the content but not the handle. `create-node`/`connect-nodes` (dag,
+   equation) and `create-step` (imperative) gain an optional `index` (JSON `skip_serializing_if = None`, so no
+   committed vector changes; text `index=`, binary option byte, JSON Schema, grammar, TS all carry it); the
+   `disconnect-*`/`delete-*` inverses now re-insert at the captured position. Equation's delete-node(s) inverses
+   were ALSO in the wrong order for the store, which consumes one operation's inverse TAIL-first
+   (`replay_mutations`): they listed `create` first, so the store tried the reconnections before the node existed.
+2. **Rows that are not point-invertible** (dag `remove_node…`, `node_graph_edit_batches…`): a retained one-item
+   preparation folds exactly one forward + one inverse row, and dag's `delete-node` inverted to
+   `create + reorder + disconnect×E + connect×E`. `remove_nodes_operations` (removeNode/deleteSelection) and
+   `dag_snapshot_mutations` now disconnect incident edges first; with (1) every row inverts to ONE row. Law
+   `removal_rows_are_point_invertible_and_restore_the_document`.
+3. **Stale mounted-app laws** (wires ×6, note gesture, imperative undo, equation window config): `"undo"`/`"redo"`
+   are framework-reserved jobs that `handle_action` only ADMITS, `dispatch_typed` only admits a retained
+   operation, and the hand-written pump loops never drained the completion/composed outboxes (so they spun to their
+   30 s deadline). All now settle through `artifact_app_laws::{settle_registered_typed_operation,
+   settle_history_verb, assert_undo_redo_round_trip}` + `settle_framework_reserved_admission`. Wires canvas gestures
+   also need the canvas window as view state and one `nodeGraphViewport` first (their `extent` measures the window
+   config) — the recipe the green `pointer_down_selects_the_hit_node_inline` already used. `addRelationship` on the
+   EMPTY initial board is a correct `target-missing` (it wires node-1→node-2): the law now adds both nodes.
+   `handle_alone_deletes_nothing…`: `addNode` now selects its node and the retained route reads the live
+   selection, so the law measures the reducer on an empty selection directly.
+4. **Production defects**: wires `set-node-root false` wrote `"root": false` instead of clearing the flag (so
+   set→unset minted a different content child; `remove_node_field`); equation `AlgebraicReal::to_f64` answered the
+   midpoint of the RAW isolating interval (`−√2` read `−1.5`) — now refined to 2⁻⁶⁰, and `root_of` returns a
+   linear factor's root as an exact rational; `finite::is_irreducible` compared `x^(p^n)` with `PolyU::x()` by `==`
+   although `ModInt`'s derived `PartialEq` compares the (unbound vs bound) modulus — every irreducible answered
+   `false`; `limits::is_determinate` only checked the ROOT for `zoo`, so `(zoo+1)/(zoo+3)` was returned as a limit.
+
+Also: the peer landed the members-aware `artifact_app_laws::*_with_members` twins (`📓️knowledge-plugin-lib-diff.md`
+is DONE); equation's `ingest_operations_is_idempotent…`/`two_instances_converge…` and imperative's
+`two_instances_converge…` now use them with `SemioMembers`. Imperative's bare-store binary law installs the owner
+catalog and walks the close loop. One-shot `temporary_regenerate_edit_step_params_vector` (retires the decoded
+`Dictionary` cold, which is what killed the generic one) — DELETE after the rewrite is committed.
+
+### 14.2 03:46–04:00 — live panes on the 03:23 activation, and three more root causes
+
+The coordinator's full activation landed 03:23 (all lanes rebuilt from current sources); probes one page at a
+time (`⚡️cache/play-fleet/knowledge/panes-post{4,5,6}.json`, `wires-panel-post4.json`, `labels-trinity.json`,
+`canvas2d-wires.json`, PNGs beside them). Every pane reaches `data-shell-ready`; the only console error on every
+pane is one shared `404` resource (not pane-specific).
+
+| pane | verdict | evidence |
+| --- | --- | --- |
+| mathematical | ✅ content (⚠️ labels) | Graph window shows the a/b/c/d nodes, Geometry window the hull polygon with points — the §13.1 codec change works live. Node captions are offset from their boxes (the node-graph label bug below). |
+| trinity-jack | ✅ lint fixed (⚠️ labels) | Jack Query shows the default query with NO `unexpected character '-'` status (the §13.2 grammar change works live); graph paints nodes AND edges; captions offset. Results "No data" until the query is run (by design). |
+| dag | ⚠️ labels | boxes paint, captions sit at the canvas's top-left (same bug). |
+| note | ✅ | "Welcome to semio note" in Canvas and Navigator. |
+| forms | ✅ | the full Blueprint form. |
+| reasoning-wires | ❌ blank | root-caused below, fixed in code. |
+| imperative | ❌ empty table | root-caused below, fixed in code. |
+
+Three more root causes, all fixed in code (need `pass10` + an activation):
+
+1. **Node-graph captions half a canvas away from their nodes** (dag, trinity-jack, mathematical — every
+   `NodeGraph` surface). Measured in the page: the label overlay's paint state reads `"width":1,"height":1` beside
+   an 852×807 canvas. `🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs` `GraphHost::sync_from_payload`
+   rebuilds `self.dag = DagHost::from_host_snapshot_without_layout(..)` on every content change and a fresh
+   `DagHost` starts at 1×1; the GPU paints from the session's own size (correct), but the caption overlay, hit
+   testing and wheel anchoring all read `dag.width/height`. `GraphHost` now remembers the viewport given to
+   `set_viewport` and re-applies it after every rebuild. Law `a_content_rebuild_keeps_the_session_viewport`.
+2. **reasoning-wires draws nothing although its board is loaded.** Hooking `CanvasRenderingContext2D` in the page:
+   the host parses seven node layers and draws zero shapes — both wires canvases (editor and viewer) handed
+   `Canvas2dScene` the RAW board records (circles with only `radius`, edges with only `source`/`target` ids), while
+   the host draws boxes from `kind`+`x/y/width/height` and lines from `x0/y0/x1/y1`. New
+   `schema::wires_canvas_layers` (shared by both canvases, replacing their two duplicated relationship helpers)
+   projects into that contract, keeping every original field so hit ids/positions read unchanged. Law
+   `the_curated_example_projects_into_drawable_canvas_layers`. (So §3/§13.3's owner recovery was never the
+   pane's problem: the board WAS there.)
+3. **imperative's empty Steps table is the mathematical bug again, not XCUT-DICT.** The procedure codecs persisted
+   the two bare `flow`/`text` handles and the committed `🎬️demo` asset carries no program. Same schema-first
+   treatment as §13.1: required `path=`/`seed=` hex-JSON lines (grammar + ebnf + g4), pack format 1→2 with two
+   length-prefixed blocks, content decoded only after every line is present, straight into the named handles'
+   owners; laws `the_program_survives_a_{text,pack}_round_trip`, `the_demo_asset_carries_the_default_program`,
+   `a_body_without_its_content_lines_is_refused`; one-shot `temporary_regenerate_demo_asset` (writes the asset from
+   `schema::default_snapshot()` through the crate's own printer — `the_demo_asset_carries_…` can only pass on the
+   run AFTER the rewrite, since the asset is `include_str!`'d).
+
+### 14.3 pass10 (04:38–04:43, log `⚡️cache/play-fleet/knowledge/pass10.txt`)
+
+| crate | pass8 | **pass10** |
+| --- | --- | --- |
+| `semio-framework-graph` | 186/2 | **188/0 ✅** |
+| `semio-framework-surface` (new in this run) | — | 247/1 (`paint::append_layer_node_draws_enabled_mask` — `🎨️paint` untouched since 09-20, not this topic; the new viewport law is green) |
+| `semio-s-artifact-dag-dag` | 204/3 | 208/1 (the stale one-row-per-node law, restated below) |
+| `semio-s-artifact-forms-forms` | 198/0 | **198/0 ✅** |
+| `semio-s-artifact-imperative-procedure` | 138/6 | 144/6 (all expected: 4 read the demo asset the SAME run rewrote — `include_str!`; `committed_json_is_canonical` read the vector the same run rewrote; `run_command_expands_scope…` reads the demo too) |
+| `semio-s-artifact-mathematical-equation` | 365/20 | 386/2 (`integrate_simple_partial_fraction`, the 8 ms microturn law) |
+| `semio-s-artifact-note-note` | 395/1 | **396/0 ✅** |
+| `semio-s-artifact-reasoning-wires` | 182/7 | **190/0 ✅** |
+| `semio-s-artifact-trinity-jack` (new) | — | 210/1 (`jack_live_envelope_submit_pump…`: `editor did not declare a loaded-parent child projection`) |
+| `semio-s-artifact-trinity-rewriting` (new) | — | **157/0 ✅** |
+| `semio-s-plugin-mathematical` | 4/0 | 3/1 (`descriptor_is_fresh` — the new snapshot grammar is in the descriptor; describe requested) |
+| the other 13 plugin crates | ✅ | **✅** |
+
+Across the seven trees: pass8 40 reds → pass10 13, of which 6 are same-run include_str artefacts and 1 a descriptor.
+Both one-shot writers did their job (demo asset: `path=`/`seed=` lines; edit-step-params vector: explicit
+`pathRef` slots) and are deleted; the imperative grammar mark now reads the printer's real preamble
+`semio imperative.imperative.dsl v1`.
+
+Fixed after pass10 (pass11 queued 04:46):
+- dag `remove_nodes_operations_returns_one_delete_node…` restated as
+  `remove_nodes_operations_disconnects_incident_edges_before_deleting_the_node` (exact row list).
+- CAS `diff`: `ln|u|` differentiates to `u′/u` (the generic chain gave `sign(u)·u′/|u|`, which no rational cancel
+  can match with `1/u`; the `[DEBUG]` probe showed it). Probe removed.
+- `child_restore_projection` declared for all 16 editor/viewer impls of the seven plugins
+  (`store::ChildRestoreProjection::from_snapshot`), exactly as raster/flow/cad/process3d/sequence already do — the
+  trait default refuses every live envelope load (`jack_live_envelope_submit_pump…` measured it).
+- Activation requested for all seven lanes (renderer viewport fix, wires layers, imperative asset, projection).
+
+### 14.4 pass11 (04:52–04:55, log `pass11.txt`) — the seven trees are green but for one law and two descriptors
+
+| crate | pass1 | pass8 | **pass11** |
+| --- | --- | --- | --- |
+| `semio-s-artifact-dag-dag` | 199/9 | 204/3 | **209/0 ✅** |
+| `semio-s-artifact-forms-forms` | 198/0 | 198/0 | **198/0 ✅** |
+| `semio-s-artifact-imperative-procedure` | 125/19 | 138/6 | 147/1 |
+| `semio-s-artifact-mathematical-equation` | 356/28 | 365/20 | **388/0 ✅** (incl. the 8 ms microturn law — green, i.e. pass4/8/10 were load flakes as reported) |
+| `semio-s-artifact-note-note` | 364/32 | 395/1 | **396/0 ✅** |
+| `semio-s-artifact-reasoning-wires` | 169/18 | 182/7 | **190/0 ✅** |
+| `semio-s-artifact-trinity-jack` | — | — | **211/0 ✅** |
+| `semio-s-artifact-trinity-rewriting` | — | — | **157/0 ✅** |
+| `semio-framework-graph` | — | 186/2 | **188/0 ✅** |
+| `semio-s-plugin-imperative` / `-mathematical` | ✅ | ✅ | 2/1, 3/1 — `descriptor_is_fresh` only (the snapshot grammars changed; `describe.request/{imperative,mathematical}` touched; the 04:42 chain describes mathematical) |
+| the other 12 plugin crates | ✅ | ✅ | **✅** |
+| `semio-framework-surface` | — | — | 247/1 — `paint::append_layer_node_draws_enabled_mask`, `🎨️paint` untouched since 09-20: NOT this topic |
+
+The last imperative red, `run_command_expands_scope_into_readable_rows_without_truncation`, is a stale law of the
+binary retained wire (the table's rows ride the packed scene's `rowsJson`, not the projected spine); restated to
+decode the `TableScene` and to assert BOTH the program rows and the run-output rows. `pass12` (queued 04:56) is the
+verification run.
+
+### 14.5 pass12 (04:59, log `pass12.txt`) — every artifact crate of the seven trees is green
+
+dag 209/0, forms 198/0, imperative-procedure **148/0**, mathematical-equation 388/0, note 396/0, reasoning-wires 190/0,
+trinity-jack 211/0, trinity-rewriting 157/0, framework-graph 188/0; 12 of 14 plugin crates green. Open:
+`semio-s-plugin-{imperative,mathematical}::descriptor_is_fresh` (need the describe the requests ask for — never run
+here) and `semio-framework-surface::paint::append_layer_node_draws_enabled_mask` (raster's `RasterHost`, not this
+topic). Totals across the seven trees: pass1 107 → pass8 40 → **pass12 2 (both descriptors)**.
+
+### 14.6 Live on the 05:13 activation (chain `describe-activate-0923-0442-b`, `activate-dev rc=0`)
+
+- **imperative ✅** — the Steps table lists `1 step-1 state.set` / `2 step-2 log.print` (the regenerated asset with
+  `path=`/`seed=` lines; `panes-post10.json`).
+- **mathematical ✅ content**, **note ✅**, **forms ✅**, **dag ✅ boxes** (`panes-post11.json`); every pane
+  `data-shell-ready`. The single console error on EVERY pane is one shared 404:
+  `/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin` — a vendored typst font asset missing from staging,
+  not a topic defect (for play-runtime/media).
+- **reasoning-wires ⚠️ half-fixed** — the canvas now draws the demo's nine relationship LINES
+  (`panes-post7-reasoning-wires.png`), but no node circles: the in-page draw-call hook shows the layers arrive
+  with `kind:"circle"` yet the host routes them to its scene-node painter, because the board's own `text` STRING
+  collides with the layer record's `text: {content, size}` object. Fixed in code
+  (`CANVAS_LAYER_RESERVED_KEYS` stripped from the carried board fields; the node's text rides as `name`; the law
+  now also asserts no layer carries a string `text`).
+- **captions still offset** on dag/trinity-jack/mathematical — the Rust viewport fix is live but was not the
+  whole story: the overlay is painted ONCE at session hand-over (before the engine canvas is attached/sized) and
+  otherwise only on scene/interaction changes, so a static graph keeps the 1×1 paint. Fixed in the renderer:
+  `NodeGraph/🟦️.tsx` `paintDagLabelOverlays` centres on the measured overlay size (the canvas it paints into)
+  instead of the session's reported size. TS law `centres captions on the measured overlay, not on a stale session
+  size` + the three existing caption laws: vitest 4/4 green (`⚡️cache/play-fleet/knowledge/vitest-captions.txt`).
+  The frozen :6033 bundle needs a re-activation to show it; requested.
+
+### 14.7 PX1 child-restore projection (coordinator request 05:20) and pass13/pass14
+
+All eight artifact crates of the topic (note, forms, equation, wires, dag, jack, rewriting, procedure) now carry
+ONE crate-root `…_child_restore_projection(snapshot)` over `store::ChildRestoreProjection::from_snapshot`
+(engineering fix 31's recipe), and all 16 `ArtifactEditor`/`ArtifactViewer` impls delegate to it. Laws: the jack
+live-envelope maintenance-swap law (`jack_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed`,
+which loads an envelope into a running app and was the red that exposed PX1 here) is green since pass11, and every
+crate with a root test module has `the_child_restore_projection_names_every_declared_child_slot` (projection length ==
+the snapshot's declared `ArtifactCompositionFields::child_slots()`).
+
+`pass14` (05:27): dag 210/0, forms 199/0, imperative-procedure 149/0, equation 388/1, note 397/0, wires 191/0,
+jack 212/0, rewriting 157/0, graph 188/0; plugins green except `semio-s-plugin-imperative::descriptor_is_fresh`
+(describe requested). The equation red is `retained_maximum_microturns_stay_below_eight_milliseconds` — green in
+pass11/pass12, red in pass4/8/10/13/14, every red run sharing the machine with a second fleet cargo in the other
+mutex slot; per rule 5 it is being re-measured ALONE (`microturn-alone.txt`), bound untouched.
+
+### 14.8 Live on the 05:27 activation — four more panes visibly correct
+
+- **reasoning-wires ✅** — seven coloured, named circles on the diagonal the demo lays out, joined by the relationship
+  lines (`panes-post12-reasoning-wires.png`): the reserved-key fix took.
+- **trinity-jack ✅** — every caption (B, TF0BC0, TF0BC1, JackPrune, JackOrphan, JackSpare, …) sits on its node, edges
+  drawn, no lint status (`panes-post12-trinity-jack.png`): the measured-overlay caption fix took.
+- **dag ✅** — Amount/Scale/Mode/Combine/Preview captioned on their boxes with all four edges (`panes-post13-dag.png`).
+- **mathematical ⚠️→fix** — captions now on their boxes (A#0, B#1, C#2) but the Graph window drew NO edges: the
+  equation nodes declared no ports while every edge names `out`→`in`, and the engine resolves an edge only through
+  a declared port. `workflow_json` now declares one `in` and one `out` port per node
+  (`EQUATION_EDGE_{SOURCE,TARGET}_PORT`); law `workflow_json_edges_end_on_declared_ports`. pass15 queued,
+  `activate.request/mathematical` touched. Cosmetic, left as is: node D and the geometry hull sit partly beyond the
+  right edge at the default camera (0,0,1) — the renderer only auto-fits below 85 % content coverage and this graph
+  shows 89 %.
+- The 8 ms equation microturn law re-measured ALONE (only this test, `--test-threads=1`, one fleet cargo in the
+  other slot, load ≈ 10): red once, green once (`microturn-alone.txt`) — a load-sensitive wall-clock flake, bound
+  untouched; the assertion message now reports the measured duration.

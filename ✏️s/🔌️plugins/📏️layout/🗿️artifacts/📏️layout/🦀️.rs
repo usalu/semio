@@ -363,6 +363,12 @@ pub struct ImageLink {
     #[cfg_attr(test, serde(rename = "proxyDataUrl"))]
     #[value(rename = "proxyDataUrl")]
     pub proxy_data_url: Option<String>,
+    #[cfg_attr(test, serde(rename = "artifactKind", default))]
+    #[value(rename = "artifactKind", default, skip_serializing_if = "String::is_empty")]
+    pub artifact_kind: String,
+    #[cfg_attr(test, serde(rename = "artifactRef", default))]
+    #[value(rename = "artifactRef", default, skip_serializing_if = "String::is_empty")]
+    pub artifact_ref: String,
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
@@ -683,6 +689,9 @@ fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
         if let Some(value) = patch.height {
             bounds.height = value;
         }
+        if let Some(value) = patch.rotation {
+            bounds.rotation = value;
+        }
     }
     match frame {
         Frame::Rect { fill, stroke, .. } => {
@@ -853,6 +862,8 @@ pub struct FramePatch {
     pub y: Option<f64>,
     pub width: Option<f64>,
     pub height: Option<f64>,
+    #[value(default)]
+    pub rotation: Option<f64>,
     pub fill: Option<Option<[f32; 4]>>,
     pub stroke: Option<Option<[f32; 4]>>,
     pub wrap_mode: Option<String>,
@@ -1113,6 +1124,12 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏resize-frame/🧪️tests/📐️resizes-the-rect-frame/🦀️.rs"]
                             mod tests_resizes_the_rect_frame;
+                        }
+                        #[path = "."]
+                        pub mod rotate_frame {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-frame/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
                         }
                         #[path = "."]
                         pub mod change_frame_fill {
@@ -1443,6 +1460,12 @@ pub mod editor {
             pub mod set_active_page;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
             pub mod set_camera;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️gumball/🦀️.rs"]
+            pub mod gumball;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/🦀️.rs"]
+            pub mod rotate_selection;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏scale-selection/🦀️.rs"]
+            pub mod scale_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️.rs"]
             pub mod delete_selection;
         }

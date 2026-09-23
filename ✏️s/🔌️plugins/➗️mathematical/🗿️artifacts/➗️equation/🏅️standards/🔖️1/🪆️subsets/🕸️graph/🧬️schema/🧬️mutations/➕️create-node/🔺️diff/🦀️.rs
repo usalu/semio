@@ -10,7 +10,7 @@ pub fn diff(payload: &super::CreateNode, base: &EquationSnapshot) -> protocol::M
     if graph.nodes.iter().any(|node| node.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A node with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
-    graph.nodes.push(EquationNode { id: payload.id.clone(), label: payload.label.clone(), x: payload.x, y: payload.y });
+    graph.nodes.insert(payload.index.map_or(graph.nodes.len(), |index| index.min(graph.nodes.len())), EquationNode { id: payload.id.clone(), label: payload.label.clone(), x: payload.x, y: payload.y });
     let (notation, results, computed) = equation_children_from_state(&graph, &equation_geometry(base));
     protocol::MutationOutcome::new(EquationDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() })
 }

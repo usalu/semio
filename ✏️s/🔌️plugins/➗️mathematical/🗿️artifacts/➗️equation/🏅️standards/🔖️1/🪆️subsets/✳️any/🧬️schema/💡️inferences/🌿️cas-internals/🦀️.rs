@@ -3204,8 +3204,15 @@ pub mod diff {
     // #endregion 🔖️PowRule
 
     // #region 🔖️FnChainRule
+    /// 📉️ Per-function chain rule. `ln|u|` differentiates to `u′/u` directly: the generic chain gives the
+    /// equal `sign(u)·u′/|u|`, which no rational simplification can cancel against `1/u`, so every
+    /// logarithmic antiderivative (`∫ 1/((x−1)(x+1))`) failed its own derivative check.
     fn diff_fn(kind: &FnKind, args: &[Expr], x: &Expr) -> Option<Expr> {
         match kind {
+            FnKind::Ln if args.len() == 1 && matches!(args[0].kind(), Kind::Fn(FnKind::Abs, inner) if inner.len() == 1) => {
+                let Kind::Fn(_, inner) = args[0].kind() else { return None };
+                Some(Expr::mul(vec![diff(&inner[0], x)?, Expr::pow(inner[0].clone(), Expr::integer(-1))]))
+            }
             FnKind::UserFn(_) | FnKind::Zeta => None,
             FnKind::BesselJ | FnKind::BesselY | FnKind::BesselI | FnKind::BesselK => diff_bessel(kind, args, x),
             FnKind::LegendreP => diff_legendre(args, x),
@@ -3481,8 +3488,13 @@ pub mod limits {
     // #region 🔖️Limit
     const MAX_LHOPITAL_DEPTH: u32 = 8;
 
+    /// 🎯️ A substituted value is a limit only when NO part of it is undefined or complex infinity.
+    ///
+    /// 🐛️ Only the ROOT used to be checked, so `(2x + 1)/(x + 3)` at `x → ∞` — reduced to `t → 0` —
+    /// substituted to `(zoo + 1)/(zoo + 3)` and was returned as the limit instead of reaching the series
+    /// path, which reads `2` off the leading terms.
     fn is_determinate(e: &Expr) -> bool {
-        !matches!(e.kind(), Kind::Constant(Constant::Undefined))
+        [Constant::Undefined, Constant::ComplexInf].into_iter().all(|constant| !crate::cas::visit::contains_symbol(e, &Expr::constant(constant)))
     }
 
     fn is_infinite(e: &Expr) -> bool {
@@ -4454,8 +4466,14 @@ pub mod integrate {
     // #region 🔖️Substitution
     /// 🔄️ `u`-substitution: for `e = f(inner) * rest`, if `rest / inner'` is free of `x` (a constant
     /// multiplier), the integral is that constant times `F(inner)` (`F` from a small antiderivative table).
+    /// A lone `f(inner)` is the case `rest = 1`: `∫ cos(kx) dx`, `∫ e^(−x) dx` — which every Fourier
+    /// coefficient and every linear first-order ODE's integrating-factor integral reduces to, and which
+    /// used to fall through to a by-parts loop that could only fail.
     fn integrate_by_substitution(e: &Expr, x: &Expr) -> Option<Expr> {
-        let Kind::Mul(factors) = e.kind() else { return None };
+        let factors: Vec<Expr> = match e.kind() {
+            Kind::Mul(factors) => factors.clone(),
+            _ => vec![e.clone()],
+        };
         for (i, f) in factors.iter().enumerate() {
             let Kind::Fn(kind, args) = f.kind() else { continue };
             if args.len() != 1 {
@@ -4739,12 +4757,40 @@ pub mod ode {
         }
         let p = Expr::integer(-1) * coeff;
         let integral_p = crate::cas::integrate::integrate(&p, x)?;
-        let mu = Expr::func(FnKind::Exp, vec![integral_p]);
+        let mu = integrating_factor(&integral_p);
         let integrand = crate::cas::simplify::cancel(&(mu.clone() * q));
         let integral_mu_q = crate::cas::integrate::integrate(&integrand, x)?;
         let c1 = Expr::symbol("§C1");
         let y_sol = crate::cas::simplify::cancel(&((integral_mu_q + c1.clone()) * Expr::pow(mu, Expr::integer(-1))));
         Some(OdeSolution { rhs: y_sol, constants: vec![c1] })
+    }
+
+    /// 🧮️ `μ = e^(∫p)`, determined only up to a nonzero constant factor — so `ln|w|` may drop its absolute
+    /// value (`sign(w)` is locally constant) and `e^(c·ln w)` folds to `w^c`. Without this `∫ 1/x` gave
+    /// `μ = e^(ln|x|)`, and `∫ μ q` could never be taken (the Bernoulli `y' = y/x − y²` reduction).
+    fn integrating_factor(integral_p: &Expr) -> Expr {
+        let exponent = strip_log_abs(integral_p);
+        match exponent.kind() {
+            Kind::Fn(FnKind::Ln, args) if args.len() == 1 => args[0].clone(),
+            Kind::Mul(factors) if factors.len() == 2 => match (factors[0].kind(), factors[1].kind()) {
+                (Kind::Integer(_) | Kind::Rational(_), Kind::Fn(FnKind::Ln, args)) if args.len() == 1 => Expr::pow(args[0].clone(), factors[0].clone()),
+                _ => Expr::func(FnKind::Exp, vec![exponent.clone()]),
+            },
+            _ => Expr::func(FnKind::Exp, vec![exponent.clone()]),
+        }
+    }
+
+    fn strip_log_abs(e: &Expr) -> Expr {
+        match e.kind() {
+            Kind::Fn(FnKind::Ln, args) if args.len() == 1 => match args[0].kind() {
+                Kind::Fn(FnKind::Abs, inner) if inner.len() == 1 => Expr::func(FnKind::Ln, vec![strip_log_abs(&inner[0])]),
+                _ => Expr::func(FnKind::Ln, vec![strip_log_abs(&args[0])]),
+            },
+            Kind::Add(terms) => Expr::add(terms.iter().map(strip_log_abs).collect()),
+            Kind::Mul(factors) => Expr::mul(factors.iter().map(strip_log_abs).collect()),
+            Kind::Pow(base, exp) => Expr::pow(strip_log_abs(base), strip_log_abs(exp)),
+            _ => e.clone(),
+        }
     }
 
     fn try_bernoulli(f: &Expr, x: &Expr, y: &Expr) -> Option<OdeSolution> {

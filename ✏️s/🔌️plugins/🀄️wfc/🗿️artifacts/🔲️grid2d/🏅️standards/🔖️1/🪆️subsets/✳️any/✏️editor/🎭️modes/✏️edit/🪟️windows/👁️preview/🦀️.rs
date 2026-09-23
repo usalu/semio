@@ -248,9 +248,18 @@ pub fn live_fill_payload(tool_run: Option<&ToolRunView>) -> Option<Grid2dFillPay
 }
 
 /// 👁️ The commit the pane paints: live fill payload first, else `solve_json`.
+fn commit_with_trace(payload: Grid2dFillPayload) -> Grid2dInferenceCommit {
+    let mut commit = payload.as_commit();
+    for event in payload.trace {
+        commit.assignments.retain(|(x, y, _)| *x != event.x || *y != event.y);
+        commit.assignments.push((event.x, event.y, event.tile_id));
+    }
+    commit
+}
+
 pub fn paint_commit(document: &Grid2dSnapshot, config: &Grid2dWindowConfig, tool_run: Option<&ToolRunView>) -> Option<Grid2dInferenceCommit> {
     if let Some(payload) = live_fill_payload(tool_run) {
-        return Some(payload.as_commit());
+        return Some(commit_with_trace(payload));
     }
     cached_commit(document, config)
 }

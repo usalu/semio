@@ -607,12 +607,18 @@ impl RasterOwnedRetirement {
                 Ok(RasterRetirementAction::Pop)
             }
             RasterRetirementOwner::Bytes(value) => {
-                if value.capacity() > maximum_bytes {
+                let capacity = value.capacity();
+                if capacity <= maximum_bytes {
+                    drop(frame.owner.take());
+                    return Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: capacity });
+                }
+                if maximum_bytes == 0 {
                     return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
                 }
-                let bytes = value.capacity();
-                drop(frame.owner.take());
-                Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: bytes })
+                let keep = capacity - maximum_bytes;
+                value.truncate(keep);
+                value.shrink_to(keep);
+                Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: capacity.saturating_sub(value.capacity()) })
             }
         }
     }
@@ -2579,7 +2585,7 @@ impl RasterMutationDigestAuthority {
                 1 => string_phase!(&value.asset_id, 2),
                 2 => string_phase!(&value.asset.mime, 3),
                 3 => {
-                    if value.asset.data.capacity() > RASTER_OWNED_FIELD_BYTES {
+                    if value.asset.data.len() > RASTER_MAXIMUM_NESTED_BYTES {
                         return Err("raster-store.digest-asset-byte-capacity");
                     }
                     let end = self.offset.saturating_add(256).min(value.asset.data.len());
@@ -3104,7 +3110,7 @@ impl RasterMutationCandidateAuthority {
                         *self.retirement = Self::replace_string(adjustment_kind, &value.new_adjustment_kind)?;
                     }
                     RasterMutation::AddLayerAsset(value) => {
-                        if value.asset.mime.capacity() > RASTER_OWNED_FIELD_BYTES || value.asset.data.capacity() > RASTER_OWNED_FIELD_BYTES {
+                        if value.asset.mime.capacity() > RASTER_OWNED_FIELD_BYTES || value.asset.data.len() > RASTER_MAXIMUM_NESTED_BYTES {
                             return Err("raster-store.mutation-asset-capacity");
                         }
                         self.asset_field = 0;

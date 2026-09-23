@@ -433,6 +433,10 @@ impl ArtifactEditor for NotePlayApp {
     /// practice — mirrors trinity/jack's `TrinityJackPlayApp`, the first real W2 packet to confirm
     /// `ArtifactEditor::ROLE` is NOT restated per-impl) via `surface_app_id`.
     const DIALECT: Dialect = crate::NOTE_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::note_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::note_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = NOTE_DOCUMENT_SCHEMA;
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {

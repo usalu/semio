@@ -447,9 +447,10 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
         // (`setSelection`/`clearSelection`/`selectAll`/`selectNode`/`nodeGraphSelect`/
         // `nodeGraphHover`/`graphPointerDown`) were deleted (framework-injected now), a real,
         // documented wire-format break (row order IS the ordinal — deleting from the middle is not
-        // the safe "append only" case the row-order doc comment calls out).
-        (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: None }), "set-grid-visible", "01120000"),
-        (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(true) }), "set-grid-visible pressed=true", "011200010002"),
+        // the safe "append only" case the row-order doc comment calls out). Adding `setActiveExample`
+        // ahead of it later bumped the ordinal once more to 19 (0x13).
+        (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: None }), "set-grid-visible", "01130000"),
+        (FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(true) }), "set-grid-visible pressed=true", "011300010002"),
     ];
     for (command, text, hex) in cases {
         let encoded = protocol::OpBinary::encode_op(&command).expect("encode").iter().map(|b| format!("{b:02x}")).collect::<String>();
@@ -482,6 +483,7 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
         }),
         FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: vec![spotlight_commit::FlowNodeGraphEditOp::DeleteSelection] }),
         FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
+        FlowCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }),
         FlowCommand::Evaluate(evaluate::Evaluate {}),
         FlowCommand::FocusSelection(focus_selection::FocusSelection {}),
         FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),

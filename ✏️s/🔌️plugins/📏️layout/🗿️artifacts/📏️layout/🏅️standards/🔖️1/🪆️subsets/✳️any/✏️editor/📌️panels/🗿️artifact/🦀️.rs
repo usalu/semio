@@ -235,7 +235,8 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutWindowConfig, labels: &Layou
                 }
             }
             let action = if referencing_ids.is_empty() { None } else { Some(layout_action(INTERACTION_SELECT_ACTION_ID, Some(selection_args(referencing_ids, "replace")?))?) };
-            layout_tree_item(link_row_id(&link.id), Label::data(link.path.clone()), Some(link.state.clone().unwrap_or_else(|| "ok".into())), Some("link".into()), action, None)
+            let title = if link.artifact_kind.is_empty() { link.path.clone() } else { format!("{} {}", link.artifact_kind, link.artifact_ref) };
+            layout_tree_item(link_row_id(&link.id), Label::data(title), Some(link.state.clone().unwrap_or_else(|| "ok".into())), Some("link".into()), action, None)
         })?
         .window_section(windows, LAYOUT_DOCUMENT_SECTIONS[8], Some(crate::editor::layout::ui_label(labels.styles.as_str())?), false, &styles, |style| {
             layout_tree_item(style_row_id(&style.id), Label::data(style.name.clone()), Some(style.description.clone()), Some("type".into()), None, None)

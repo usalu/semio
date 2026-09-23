@@ -498,7 +498,17 @@ fn validate_dag_host_snapshot_node_kinds(nodes: &[DagNodeSpec]) -> Result<(), Da
 }
 
 fn uses_computation_layout(kind: &DagNodeKind) -> bool {
-    matches!(kind, DagNodeKind::Computation { .. } | DagNodeKind::Cluster { .. })
+    matches!(
+        kind,
+        DagNodeKind::Computation { .. }
+            | DagNodeKind::Cluster { .. }
+            | DagNodeKind::Slider { .. }
+            | DagNodeKind::Note { .. }
+            | DagNodeKind::Image { .. }
+            | DagNodeKind::Preview { .. }
+            | DagNodeKind::Action { .. }
+            | DagNodeKind::Export { .. }
+    )
 }
 
 pub const DAG_CLUSTER_EXPLODE_HIT_SIZE: f64 = 14.0;
@@ -536,12 +546,31 @@ pub fn slider_track_center(node: &DagNodeSpec) -> Option<(f64, f64)> {
     }
 }
 
-fn slider_track_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
+/// 📐️ Horizontal span of the side that carries ports. A one-sided widget keeps its track in that half.
+fn occupied_half_x(node: &DagNodeSpec) -> (f64, f64) {
     let hw = node.width * 0.5;
+    let left = node.x - hw;
+    let right = node.x + hw;
+    let Some(divider) = computation_column_divider_x(node) else {
+        return (left, right);
+    };
+    let has_inputs = !node.inputs().is_empty();
+    let has_outputs = !node.outputs().is_empty();
+    if has_outputs && !has_inputs {
+        (divider, right)
+    } else if has_inputs && !has_outputs {
+        (left, divider)
+    } else {
+        (left, right)
+    }
+}
+
+fn slider_track_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
+    let (left, right) = occupied_half_x(node);
     let pad = DAG_NODE_EDGE_INSET;
     let track_y = node.y;
     let hit_h = 8.0;
-    (node.x - hw + pad, track_y - hit_h * 0.5, node.x + hw - pad, track_y + hit_h * 0.5)
+    (left + pad, track_y - hit_h * 0.5, right - pad, track_y + hit_h * 0.5)
 }
 
 fn select_control_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
@@ -559,7 +588,8 @@ fn preview_content_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
     let hw = node.width * 0.5;
     let hh = node.height * 0.5;
     let pad = DAG_PREVIEW_PAD;
-    (node.x - hw + pad, node.y - hh + pad, node.x + hw - pad, node.y + hh - pad)
+    let (left, right) = if matches!(node.kind, DagNodeKind::Preview { .. }) { occupied_half_x(node) } else { (node.x - hw, node.x + hw) };
+    (left + pad, node.y - hh + pad, right - pad, node.y + hh - pad)
 }
 
 fn action_control_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
@@ -605,8 +635,11 @@ fn computation_output_label_x(node: &DagNodeSpec, label: &str, px: f64) -> f64 {
 fn computation_column_divider_x(node: &DagNodeSpec) -> Option<f64> {
     let inputs = node.inputs();
     let outputs = node.outputs();
-    if inputs.is_empty() || outputs.is_empty() {
+    if inputs.is_empty() && outputs.is_empty() {
         return None;
+    }
+    if inputs.is_empty() || outputs.is_empty() {
+        return Some(node.x);
     }
     let hw = node.width * 0.5;
     let port_px = DAG_LABEL_COMPACT_SCREEN_PX;
@@ -6332,6 +6365,20 @@ impl DagHost {
         scene.fill(FillRule::NonZero, *aff, fill, None, &rect);
     }
 
+    /// 📐️ Center divider and channel-row chrome for a one-sided or two-sided widget.
+    #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
+    fn paint_sided_widget_columns(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, lod: DagDrawLod, node: &DagNodeSpec, theme: &CanvasPalette, chrome: &DagNodePaintChrome, chrome_stroke: f64, internal_stroke: canvas::Color, body_stroke: canvas::Color, label_fill: canvas::Color) {
+        if !lod.shows_computation_layout() {
+            return;
+        }
+        let channel_row_pick = lod.uses_channel_row_pick();
+        if channel_row_pick {
+            self.paint_computation_channel_row_highlights(scene, aff, node, theme, chrome.is_dimmed);
+        }
+        Self::paint_computation_column_divider(scene, *aff, node, chrome_stroke, internal_stroke);
+        self.paint_computation_channel_row_dividers(scene, *aff, node, chrome_stroke, internal_stroke, body_stroke, label_fill, channel_row_pick);
+    }
+
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
     fn paint_node_visual(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, lod: DagDrawLod, lod_index: usize, node: &DagNodeSpec, chrome: DagNodePaintChrome) {
         use canvas::camera::world_to_screen;
@@ -6401,6 +6448,7 @@ impl DagHost {
                     }
                 }
                 DagNodeKind::Slider { .. } => {
+                    self.paint_sided_widget_columns(scene, aff, lod, node, theme, &chrome, chrome_stroke, internal_chrome_stroke, stroke, label_fill);
                     if let Some(label) = label_text.filter(|_| lod.shows_controls() && !caption_on_overlay) {
                         Self::paint_slider_name(scene, cam, viewport, node, label, paint_px, label_fill, label_halo);
                     }
@@ -6458,6 +6506,7 @@ impl DagHost {
                     }
                 }
                 DagNodeKind::Note { text, .. } => {
+                    self.paint_sided_widget_columns(scene, aff, lod, node, theme, &chrome, chrome_stroke, internal_chrome_stroke, stroke, label_fill);
                     if lod.shows_detail_text() || lod.shows_controls() {
                         let (x0, y0, x1, y1) = preview_content_bounds(node);
                         let font_px = paint_px * 1.05;
@@ -6475,6 +6524,7 @@ impl DagHost {
                     }
                 }
                 DagNodeKind::Image { src, .. } => {
+                    self.paint_sided_widget_columns(scene, aff, lod, node, theme, &chrome, chrome_stroke, internal_chrome_stroke, stroke, label_fill);
                     if lod.shows_controls() {
                         Self::paint_io_widget_channel_borders(scene, *aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
                     }
@@ -6491,11 +6541,13 @@ impl DagHost {
                     }
                 }
                 DagNodeKind::Preview { content, expanded, .. } => {
+                    self.paint_sided_widget_columns(scene, aff, lod, node, theme, &chrome, chrome_stroke, internal_chrome_stroke, stroke, label_fill);
                     if lod.shows_detail_text() || lod.shows_controls() {
                         self.paint_preview_content(scene, cam, viewport, node, content, expanded, paint_px, label_fill, label_halo, theme.raster_clear);
                     }
                 }
                 DagNodeKind::Action { label, .. } => {
+                    self.paint_sided_widget_columns(scene, aff, lod, node, theme, &chrome, chrome_stroke, internal_chrome_stroke, stroke, label_fill);
                     if lod.shows_controls() {
                         Self::paint_io_widget_channel_borders(scene, *aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
                     }
@@ -6513,6 +6565,7 @@ impl DagHost {
                     }
                 }
                 DagNodeKind::Export { format, .. } => {
+                    self.paint_sided_widget_columns(scene, aff, lod, node, theme, &chrome, chrome_stroke, internal_chrome_stroke, stroke, label_fill);
                     if lod.shows_controls() {
                         Self::paint_io_widget_channel_borders(scene, *aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
                     }

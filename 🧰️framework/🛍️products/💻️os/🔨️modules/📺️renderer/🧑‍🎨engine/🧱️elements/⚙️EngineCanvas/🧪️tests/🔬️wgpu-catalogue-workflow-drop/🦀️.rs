@@ -60,3 +60,20 @@ fn catalogue_drop_ignores_pointer_outside_node_graph_and_wrong_mime() {
     flow.insert(FLOW_WIDGET_DRAG_MIME.into(), r#"{"kind":"inputSlider"}"#.into());
     assert!(node_graph_catalogue_drop_action(140.0, 90.0, &flow, &[("s.play.workflow", bounds, "s-play")],).is_none());
 }
+
+#[test]
+fn flow_widget_drop_args_forward_format_and_action() {
+    let export: Value = serde_json::from_str(r#"{"kind":"outputExport","format":"svg"}"#).unwrap();
+    let args = flow_widget_drop_args(&export, 12.0, 34.0).expect("export args");
+    assert_eq!(args.get("kind").and_then(semio_framework::DslValue::as_str), Some("outputExport"));
+    assert_eq!(args.get("format").and_then(semio_framework::DslValue::as_str), Some("svg"));
+    assert!(args.get("action").and_then(semio_framework::DslValue::as_str).is_none());
+    assert_eq!(args.get("x").and_then(semio_framework::DslValue::as_f64), Some(12.0));
+    assert_eq!(args.get("y").and_then(semio_framework::DslValue::as_f64), Some(34.0));
+    let action: Value = serde_json::from_str(r#"{"kind":"outputAction","action":"log"}"#).unwrap();
+    let args = flow_widget_drop_args(&action, 1.0, 2.0).expect("action args");
+    assert_eq!(args.get("action").and_then(semio_framework::DslValue::as_str), Some("log"));
+    let neuron: Value = serde_json::from_str(r#"{"kind":"neuron","neuronKind":"math.add"}"#).unwrap();
+    let args = flow_widget_drop_args(&neuron, 0.0, 0.0).expect("neuron args");
+    assert_eq!(args.get("neuronKind").and_then(semio_framework::DslValue::as_str), Some("math.add"));
+}

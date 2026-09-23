@@ -254,6 +254,14 @@ pub fn genesis_catalog_pack(document: &CurationSnapshot, slot: &str, child_id: &
     let stock = stock_of(document);
     (catalog_child_handle(&stock).child_id == child_id).then(|| <SemioKitSnapshot as store::ArtifactPack>::encode_pack(&catalog_snapshot_from_stock(&stock)))
 }
+
+/// 🧬️ The bounded projection of the curation's composed `catalog` handle, as both surfaces hand it to
+/// the framework's replacement pump (`ArtifactEditor::child_restore_projection` /
+/// `ArtifactViewer::child_restore_projection`). The trait default grants no restore authority, so
+/// without it every live envelope load faults `editor did not declare a loaded-parent child projection`.
+pub fn curation_child_restore_projection(document: &CurationSnapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    store::ChildRestoreProjection::from_snapshot(document).map_err(|error| semio_framework_plugin::Fault::from(format!("sourcing curation child projection failed: {error}")))
+}
 //#endregion 🔖️CatalogComposition
 
 //#region 🔖️ArtifactKind

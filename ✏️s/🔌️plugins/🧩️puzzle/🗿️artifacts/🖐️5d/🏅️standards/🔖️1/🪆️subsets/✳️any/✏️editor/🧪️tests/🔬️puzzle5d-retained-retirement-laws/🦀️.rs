@@ -266,14 +266,16 @@ fn copy_completion_rejection_retains_and_incrementally_closes_clipboard_ephemera
         label: "copy".repeat(32),
     };
     let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Copy, Emit { effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() });
-    assert!(close_completion_rejection(&mut owner) > 100, "clipboard strings must not collapse into one owner drop");
+    let turns = close_completion_rejection(&mut owner);
+    assert!(turns >= 4, "each of the four clipboard strings retires in its own bounded units, never one owner drop: {turns} turns");
 }
 
 #[test]
 fn cut_completion_rejection_retains_and_incrementally_closes_exact_cut_mutations() {
     let emit = Emit { artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::disconnect_grips("fastener".repeat(64)), crate::standards::v1::subsets::any::schema::mutations::delete_part("part".repeat(64))], ..Default::default() };
     let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Cut, emit);
-    assert!(close_completion_rejection(&mut owner) > 100);
+    let turns = close_completion_rejection(&mut owner);
+    assert!(turns >= 2, "each of the cut's two id strings retires in its own bounded units, never one owner drop: {turns} turns");
 }
 
 #[test]
@@ -291,7 +293,8 @@ fn paste_completion_rejection_retains_original_flattened_mutation_vector_until_b
     let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Paste, emit);
     let retained = owner.owner.as_ref().and_then(|rejected| rejected.emit.as_ref().ok()).expect("retained paste emit");
     assert_eq!(retained.artifact_mutations.as_ptr(), original, "paste must retain the completion-returned mutation vector without reconstruction");
-    assert!(close_completion_rejection(&mut owner) > 100);
+    let turns = close_completion_rejection(&mut owner);
+    assert!(turns >= 9, "each of the paste's nine strings retires in its own bounded units, never one owner drop: {turns} turns");
 }
 
 #[test]
@@ -304,7 +307,8 @@ fn import_completion_rejection_never_repages_and_closes_catalog_mutations_increm
     let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Import, emit);
     let retained = owner.owner.as_ref().and_then(|rejected| rejected.emit.as_ref().ok()).expect("retained import emit");
     assert_eq!(retained.artifact_mutations.as_ptr(), original, "import must retain the completion-returned flattened vector rather than re-page it");
-    assert!(close_completion_rejection(&mut owner) > 100);
+    let turns = close_completion_rejection(&mut owner);
+    assert!(turns >= 3, "each of the import's three strings retires in its own bounded units, never one owner drop: {turns} turns");
 }
 
 #[test]

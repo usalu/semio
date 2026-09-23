@@ -1004,6 +1004,14 @@ impl ArtifactEditor for RasterPlayApp {
     const DIALECT: Dialect = crate::RASTER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = RASTER_DOCUMENT_SCHEMA;
 
+    /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields.
+    /// Without it every live envelope load faults with `editor did not declare a loaded-parent child
+    /// projection` before the decoded document can replace the store. `assets` declares no child slot
+    /// (see `🧬️schema/📸️snapshot`), so the projection is honestly empty.
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("raster.child-projection"), error.to_string()))
+    }
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(RasterStorePreparationFactory))
     }

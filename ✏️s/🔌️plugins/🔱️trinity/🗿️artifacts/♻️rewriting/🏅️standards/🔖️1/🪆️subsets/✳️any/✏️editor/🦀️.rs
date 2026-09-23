@@ -700,6 +700,10 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
     type Command = TrinityRewritingCommand;
 
     const DIALECT: Dialect = TRINITY_REWRITING_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::rewriting_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::rewriting_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = REWRITE_RULE_SCHEMA;
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {

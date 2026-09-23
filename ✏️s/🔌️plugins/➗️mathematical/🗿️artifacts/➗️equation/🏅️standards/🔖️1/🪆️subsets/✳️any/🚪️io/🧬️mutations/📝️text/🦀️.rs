@@ -74,6 +74,27 @@ fn enc_usize(v: usize) -> String {
 fn dec_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
+/// 📍️ The optional roster position of `create-node`/`connect-nodes`: absent appends, so the key is
+/// printed only when present.
+fn enc_index(index: Option<usize>) -> String {
+    index.map(|value| format!(" index={}", enc_usize(value))).unwrap_or_default()
+}
+fn write_opt_usize_bin(out: &mut Vec<u8>, index: Option<usize>) {
+    match index {
+        Some(value) => {
+            out.push(1);
+            store::pack_rt::write_varint_u64(out, value as u64);
+        }
+        None => out.push(0),
+    }
+}
+fn read_opt_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<usize>, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(None),
+        1 => Ok(Some(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)),
+        other => Err(format!("bad option tag {other}")),
+    }
+}
 fn enc_bool(v: bool) -> String {
     v.to_string()
 }
@@ -159,12 +180,12 @@ fn print_equation_mutation(mutation: &EquationMutation) -> String {
         EquationMutation::ChangeGraphDirected(p) => format!("change-graph-directed new-directed={}", enc_bool(p.new_directed)),
         EquationMutation::UpdateGraphAlgorithm(p) => format!("update-graph-algorithm new-algorithm={} new-algorithm-seed={}", enc_str(&p.new_algorithm), enc_opt_str(&p.new_algorithm_seed)),
         EquationMutation::ReplaceGraph(p) => format!("replace-graph graph={}", enc_graph(&p.graph)),
-        EquationMutation::CreateNode(p) => format!("create-node id={} label={} x={} y={}", enc_str(&p.id), enc_str(&p.label), enc_f64(p.x), enc_f64(p.y)),
+        EquationMutation::CreateNode(p) => format!("create-node id={} label={} x={} y={}{}", enc_str(&p.id), enc_str(&p.label), enc_f64(p.x), enc_f64(p.y), enc_index(p.index)),
         EquationMutation::DeleteNode(p) => format!("delete-node id={}", enc_str(&p.id)),
         EquationMutation::DeleteNodes(p) => format!("delete-nodes ids={}", enc_str(&p.ids.join(","))),
         EquationMutation::ChangeNodeLabel(p) => format!("change-node-label id={} new-label={}", enc_str(&p.id), enc_str(&p.new_label)),
         EquationMutation::MoveNode(p) => format!("move-node id={} x={} y={}", enc_str(&p.id), enc_f64(p.x), enc_f64(p.y)),
-        EquationMutation::ConnectNodes(p) => format!("connect-nodes id={} source={} target={}", enc_str(&p.id), enc_str(&p.source), enc_str(&p.target)),
+        EquationMutation::ConnectNodes(p) => format!("connect-nodes id={} source={} target={}{}", enc_str(&p.id), enc_str(&p.source), enc_str(&p.target), enc_index(p.index)),
         EquationMutation::DisconnectNodes(p) => format!("disconnect-nodes id={}", enc_str(&p.id)),
         EquationMutation::ReplacePoints(p) => format!("replace-points points={}", enc_points(&p.points)),
         EquationMutation::InsertPoint(p) => format!("insert-point index={} x={} y={}", enc_usize(p.index), enc_f64(p.x), enc_f64(p.y)),
@@ -182,12 +203,12 @@ fn parse_equation_mutation(line: &str) -> Result<EquationMutation, String> {
         "change-graph-directed" => Ok(EquationMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: dec_bool(&arg("new-directed")?)? })),
         "update-graph-algorithm" => Ok(EquationMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: dec_str(&arg("new-algorithm")?)?, new_algorithm_seed: dec_opt_str(&arg("new-algorithm-seed")?)? })),
         "replace-graph" => Ok(EquationMutation::ReplaceGraph(ReplaceGraph { graph: dec_graph(&arg("graph")?)? })),
-        "create-node" => Ok(EquationMutation::CreateNode(CreateNode { id: dec_str(&arg("id")?)?, label: dec_str(&arg("label")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
+        "create-node" => Ok(EquationMutation::CreateNode(CreateNode { id: dec_str(&arg("id")?)?, label: dec_str(&arg("label")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)?, index: args.get("index").map(|value| dec_usize(value)).transpose()? })),
         "delete-node" => Ok(EquationMutation::DeleteNode(DeleteNode { id: dec_str(&arg("id")?)? })),
         "delete-nodes" => Ok(EquationMutation::DeleteNodes(DeleteNodes { ids: dec_str(&arg("ids")?)?.split(',').filter(|s| !s.is_empty()).map(str::to_string).collect() })),
         "change-node-label" => Ok(EquationMutation::ChangeNodeLabel(ChangeNodeLabel { id: dec_str(&arg("id")?)?, new_label: dec_str(&arg("new-label")?)? })),
         "move-node" => Ok(EquationMutation::MoveNode(MoveNode { id: dec_str(&arg("id")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
-        "connect-nodes" => Ok(EquationMutation::ConnectNodes(ConnectNodes { id: dec_str(&arg("id")?)?, source: dec_str(&arg("source")?)?, target: dec_str(&arg("target")?)? })),
+        "connect-nodes" => Ok(EquationMutation::ConnectNodes(ConnectNodes { id: dec_str(&arg("id")?)?, source: dec_str(&arg("source")?)?, target: dec_str(&arg("target")?)?, index: args.get("index").map(|value| dec_usize(value)).transpose()? })),
         "disconnect-nodes" => Ok(EquationMutation::DisconnectNodes(DisconnectNodes { id: dec_str(&arg("id")?)? })),
         "replace-points" => Ok(EquationMutation::ReplacePoints(ReplacePoints { points: dec_points(&arg("points")?)? })),
         "insert-point" => Ok(EquationMutation::InsertPoint(InsertPoint { index: dec_usize(&arg("index")?)?, x: dec_f64(&arg("x")?)?, y: dec_f64(&arg("y")?)? })),
@@ -278,6 +299,7 @@ impl protocol::OpBinary for EquationMutation {
                 write_str_bin(&mut out, &p.label);
                 out.extend_from_slice(&p.x.to_le_bytes());
                 out.extend_from_slice(&p.y.to_le_bytes());
+                write_opt_usize_bin(&mut out, p.index);
             }
             EquationMutation::DeleteNode(p) => write_str_bin(&mut out, &p.id),
             EquationMutation::DeleteNodes(p) => {
@@ -299,6 +321,7 @@ impl protocol::OpBinary for EquationMutation {
                 write_str_bin(&mut out, &p.id);
                 write_str_bin(&mut out, &p.source);
                 write_str_bin(&mut out, &p.target);
+                write_opt_usize_bin(&mut out, p.index);
             }
             EquationMutation::DisconnectNodes(p) => write_str_bin(&mut out, &p.id),
             EquationMutation::ReplacePoints(p) => write_points_bin(&mut out, &p.points),
@@ -343,7 +366,8 @@ impl protocol::OpBinary for EquationMutation {
                 let label = read_str_bin(&mut reader).map_err(|e| malformed("label", reader.position(), e))?;
                 let x = reader.read_f64_le().map_err(|e| malformed("x", reader.position(), e.to_string()))?;
                 let y = reader.read_f64_le().map_err(|e| malformed("y", reader.position(), e.to_string()))?;
-                Ok(EquationMutation::CreateNode(CreateNode { id, label, x, y }))
+                let index = read_opt_usize_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(EquationMutation::CreateNode(CreateNode { id, label, x, y, index }))
             }
             4 => Ok(EquationMutation::DeleteNode(DeleteNode { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
             5 => {
@@ -366,7 +390,8 @@ impl protocol::OpBinary for EquationMutation {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let source = read_str_bin(&mut reader).map_err(|e| malformed("source", reader.position(), e))?;
                 let target = read_str_bin(&mut reader).map_err(|e| malformed("target", reader.position(), e))?;
-                Ok(EquationMutation::ConnectNodes(ConnectNodes { id, source, target }))
+                let index = read_opt_usize_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(EquationMutation::ConnectNodes(ConnectNodes { id, source, target, index }))
             }
             9 => Ok(EquationMutation::DisconnectNodes(DisconnectNodes { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
             10 => Ok(EquationMutation::ReplacePoints(ReplacePoints { points: read_points_bin(&mut reader).map_err(|e| malformed("points", reader.position(), e))? })),
@@ -406,12 +431,14 @@ pub(crate) fn demo_mutation_cases() -> Vec<EquationMutation> {
         EquationMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: false }),
         EquationMutation::UpdateGraphAlgorithm(UpdateGraphAlgorithm { new_algorithm: "bfs".into(), new_algorithm_seed: Some("a b".into()) }),
         EquationMutation::ReplaceGraph(ReplaceGraph { graph: EquationGraph::default() }),
-        EquationMutation::CreateNode(CreateNode { id: "z".into(), label: "Node Z".into(), x: 1.5, y: -2.5 }),
+        EquationMutation::CreateNode(CreateNode { id: "z".into(), label: "Node Z".into(), x: 1.5, y: -2.5, index: None }),
+        EquationMutation::CreateNode(CreateNode { id: "y".into(), label: "Node Y".into(), x: 0.5, y: 2.0, index: Some(1) }),
         EquationMutation::DeleteNode(DeleteNode { id: "a".into() }),
         EquationMutation::DeleteNodes(DeleteNodes { ids: vec!["a".into(), "b".into()] }),
         EquationMutation::ChangeNodeLabel(ChangeNodeLabel { id: "a".into(), new_label: "New Label".into() }),
         EquationMutation::MoveNode(MoveNode { id: "a".into(), x: 10.0, y: 20.0 }),
-        EquationMutation::ConnectNodes(ConnectNodes { id: "e9".into(), source: "a".into(), target: "d".into() }),
+        EquationMutation::ConnectNodes(ConnectNodes { id: "e9".into(), source: "a".into(), target: "d".into(), index: None }),
+        EquationMutation::ConnectNodes(ConnectNodes { id: "e8".into(), source: "b".into(), target: "c".into(), index: Some(0) }),
         EquationMutation::DisconnectNodes(DisconnectNodes { id: "e1".into() }),
         EquationMutation::ReplacePoints(ReplacePoints { points: vec![EquationPoint { x: 1.0, y: 2.0 }] }),
         EquationMutation::InsertPoint(InsertPoint { index: 0, x: 3.0, y: 4.0 }),

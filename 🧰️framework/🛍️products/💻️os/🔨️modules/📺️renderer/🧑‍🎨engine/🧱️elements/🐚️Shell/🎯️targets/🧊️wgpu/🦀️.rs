@@ -5861,6 +5861,16 @@ impl ShellState {
         self.tree_open_states.insert(id.to_string(), open);
     }
 
+    /// 🖱️ Folds one immediate-mode tree row. The chevron and the row share this, so a row with
+    /// children opens from its label.
+    fn toggle_immediate_tree_item(&mut self, item_id: &str) {
+        let key = format!("tree.{item_id}");
+        let collapsed = self.collapsed_sections.get(&key).copied().unwrap_or(false);
+        let next_open = !self.canonical_tree_open(item_id, !collapsed);
+        self.collapsed_sections.insert(key, !next_open);
+        self.set_canonical_tree_open(item_id, next_open);
+    }
+
     fn set_search_open(&mut self, open: bool) {
         self.search_open = open;
         if open {
@@ -12337,6 +12347,12 @@ fn tree_hit_item_id(control_id: &str) -> Option<&str> {
     control_id.strip_prefix("tree.label.").or_else(|| tree_drag_handle_item_id(control_id))
 }
 
+/// 🌳️ Whether this frame painted a fold chevron for `item_id` — the row has children.
+fn tree_row_has_chevron(input: &InputState<ActionDescriptor>, item_id: &str) -> bool {
+    let chevron = format!("tree.chevron.{item_id}");
+    input.hits().iter().chain(input.staged_hits().iter()).any(|hit| hit.control_id.as_deref() == Some(chevron.as_str()))
+}
+
 /// 🌳️ Retained controls whose complete pointer gesture belongs to `EventRouter`.
 fn retained_router_owns_pointer(kind: HitKind) -> bool {
     matches!(kind, HitKind::Button | HitKind::Input | HitKind::Select | HitKind::Toggle | HitKind::Slider | HitKind::NumberStepper | HitKind::Ring | HitKind::IconSelect | HitKind::TreeItem | HitKind::TreeDragHandle | HitKind::ComponentScene)
@@ -12479,6 +12495,9 @@ impl ShellState {
             } else if let Some((item_id, _)) = self.pending_tree_drag.take() {
                 if let Some(hit) = input.hit_at(x, y) {
                     if hit.control_id.as_deref().and_then(|id| id.strip_prefix("tree.label.")) == Some(item_id.as_str()) {
+                        if tree_row_has_chevron(input, &item_id) {
+                            self.toggle_immediate_tree_item(&item_id);
+                        }
                         self.dispatch_tree_selection(&item_id);
                         if let Some(action) = hit.event.clone() {
                             self.dispatch_action(action).await?;
@@ -12642,7 +12661,7 @@ impl ShellState {
                 self.pending_chrome_release = hit.control_id.clone();
                 return Ok(());
             }
-            if self.handle_shell_hit(&hit).await? {
+            if self.handle_shell_hit(&hit, input).await? {
                 if let Some(kind) = hit.control_id.as_deref().and_then(ShellPaletteKind::from_input_id) {
                     self.set_palette_query(kind, self.palette_query(kind).to_string(), input);
                 } else if hit.control_id.as_deref().is_some_and(|id| matches!(id, "ui.search.toggle" | "ui.find.toggle")) {
@@ -13619,7 +13638,7 @@ impl ShellState {
                 }
             }
             ui_render::AccessibilityEvent::Activate => {
-                if self.handle_shell_hit(&hit).await? {
+                if self.handle_shell_hit(&hit, input).await? {
                     if matches!(target.node_key.as_str(), "ui.search.toggle" | "ui.find.toggle") {
                         if let Some(kind) = match self.overlay_state {
                             OverlayState::Search => Some(ShellPaletteKind::Search),
@@ -13663,7 +13682,7 @@ impl ShellState {
         Ok(true)
     }
 
-    async fn handle_shell_hit(&mut self, hit: &HitTarget<ActionDescriptor>) -> Result<bool, String> {
+    async fn handle_shell_hit(&mut self, hit: &HitTarget<ActionDescriptor>, input: &InputState<ActionDescriptor>) -> Result<bool, String> {
         let Some(id) = hit.control_id.as_deref() else {
             return Ok(false);
         };
@@ -14015,11 +14034,7 @@ impl ShellState {
             }
             id if id.starts_with("tree.chevron.") => {
                 let item_id = id.trim_start_matches("tree.chevron.");
-                let key = format!("tree.{item_id}");
-                let collapsed = self.collapsed_sections.get(&key).copied().unwrap_or(false);
-                let next_open = !self.canonical_tree_open(item_id, !collapsed);
-                self.collapsed_sections.insert(key, !next_open);
-                self.set_canonical_tree_open(item_id, next_open);
+                self.toggle_immediate_tree_item(item_id);
                 return Ok(true);
             }
             id if id.contains(".vfs.chevron.") => {
@@ -14071,6 +14086,9 @@ impl ShellState {
                 let item_id = id.trim_start_matches("tree.label.");
                 if hit.drag_data.is_some() {
                     return Ok(true);
+                }
+                if tree_row_has_chevron(input, item_id) {
+                    self.toggle_immediate_tree_item(item_id);
                 }
                 self.queue_tree_selection(item_id);
                 return Ok(false);

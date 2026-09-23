@@ -400,3 +400,149 @@ No test was deleted, ignored, weakened or hand-matched; no framework file was to
 activate command was run (the fix is not `cfg(target_arch = "wasm32")` code, so the guest build is unverified by
 me — the activation request covers it). Pane `#flow` on :6033 measured green at 17:47 (§7.1) against the 15:47
 activation, i.e. BEFORE this fix; it needs the requested re-activation to be served.
+
+---
+
+## 8. Session 7 successor — 2026-09-23 01:55 →
+
+### 8.1 Baseline run4 (02:02, `⚡️cache/play-fleet/flow/run4.txt`, before any edit of mine)
+FL3's payload-only accounting correction is in: every one of the five §7.6 accounting reds is GREEN
+(run3b 23:36 already showed `semio-s-artifact-flow-flow` 254/0). run4 then shows NEW reds from another session's
+in-flight `setActiveExample` rollout (staged 01:26–01:33, 27 plugins): `semio-s-artifact-flow-flow` 251/**4**
+(fixture/route/wire-keyword/host-wire-ordinal drift), `semio-s-plugin-flow` 2/**2** (`descriptor_is_fresh` + the
+surface law), 9 extensions green (10/30/7/42/10/5/10/6/5).
+
+### 8.2 The surface-law red: it was never the 26-stage rotation
+`flow_actual_surface_factories_close_all_owners_under_neutral_grants` reports EXACTLY the 09-21 numbers
+(`2051 items / 1389 bytes, 96588 of 100000 turns idle` at `bytes=1`) although the peer's `maintenance_step`
+rotation fix has landed — `PluginApp::close_step` never calls `maintenance_step`, so §2.1.3/§5.1's diagnosis was
+wrong. Measured with lldb on the copied test binary (debug info is off; breakpoint hit counts + lane string in x0):
+after the document store (656 turns) every remaining turn lands in
+`drive_artifact_owned_disposer("config-store", ArtifactStore<NoConfig, NoConfigMutation>)` (19 345 hits by turn
+~20 000, still climbing). Root cause, 🏪️store/🦀️.rs `BoundedArtifactValueRetirement::close_step`:
+`if maximum_items == 0 || maximum_bytes < ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES { return Pending { 0, 0 } }` — a
+permanent idle answer to every sub-page grant while `next_close_byte_demand` publishes the default 1, and
+`ArtifactStoreCursorDisposer` never reads demand anyway. `no_config_store_owners()` (documented as "exact store
+owners for the zero-payload configuration lane") delegated to exactly these page-charged owners, and
+`ViewerApp::build_draft_store_owners` (🔌️plugin/🦀️.rs:34637) installs them for every viewer's NoDraft lane.
+
+### 8.3 Fixes (framework-general + flow; the flow framework crate and 🔌️plugin/🦀️.rs untouched)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs` `BoundedArtifactValueRetirement`: frees the value on the
+  first POSITIVE grant and carries the rest of its one-page charge as `debt`, reported in grant-sized instalments
+  (the §7 `close_frontier_page` shape): no turn exceeds its grant, the total is still exactly one page per value,
+  `terminal_is_empty`/`Drop` include `debt == 0`. Identical behaviour for grants >= 4096. New law
+  `bounded_value_retirement_is_live_and_conserves_one_page_under_every_grant` + fixture
+  `🏪️store/🧫️fixtures/♻️bounded-value-retirement/🔣️.json` (grants 1/64/4096/10000).
+- `🔌️plugin/📝️draft/🚫️none/♻️retirement/🦀️.rs`: the NoDraft retirement becomes the shared
+  `zero_payload_store_owners::<P, M>()` (one owner, zero bytes, any positive grant);
+  `🔌️plugin/🎚️config/🚫️none/♻️retirement/🦀️.rs`: `no_config_store_owners()` now uses it — NoConfig holds no payload.
+- flow viewer (`…/✳️any/👁️viewer/🦀️.rs`): `no_config_store_owners()`/`no_config_store_disposer()` instead of the
+  page-charged `bounded_config_store_*::<NoConfig, …>`.
+- Completed the in-flight flow `setActiveExample` wiring (kept the author's mid-table ordinal, which they already
+  restated in the SetGridVisible bytes law): wire keyword `set-active-example` (the kebab-of-id law), interactive-job
+  fixture no longer lists it as a direct-store tool (the code routes it through the graph-operation factory), the
+  graph-operation probe law probes it (`demo`), host-wire fixture ordinals +1 after ordinal 13.
+  `🛂️.descriptor.semio` is stale by construction → `describe.request/flow` touched (describe is forbidden to me).
+
+### 8.4 Pane `#flow` on :6033 (03:46, activation 03:23) — boots, but the canvas is EMPTY
+One page, `🧪️probe-console.mjs` + `⚡️cache/play-fleet/flow/probe/probe-flow-404.mjs` (logs failing URLs, shell
+state, screenshot `probe/s7/flow.png`): `data-shell-ready` reached, chrome shows the curated example label
+**Demo**, 0 page errors, 0 refused inputs, `[DEBUG] flow surface created … webgpu`, `dag draw lod=normal`.
+ONE console error: HTTP 404 on `🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin` (a staged vendor asset
+missing from the activation — not flow code; routed to the coordinator). The screenshot shows only the grid: no
+widget, no wire, empty DSL window.
+**Cause (flow-side):** the other session's `setActiveExample` rollout made `demo` the curated default
+(`plugin().editor_with_examples(…, [demo::source()])`), but `🖼️assets/🎬️demo/🗣️.dsl.semio` is a 2026-09-09 JSON
+document that holds only a composed `content` REFERENCE (`flow-content-877ad0c8ad49fb9b`) and no scene. The
+JSON parse path of `FlowSnapshot::parse_dsl` caches no working scene, so `flow_genesis_content_pack` answers `None`
+and the `content` child opens empty. The rollout's own law passed only because an empty graph "changes the widget
+count". **Fix:** the demo asset is now WRITTEN (never hand-edited) by `zzz_write_demo_example_asset` from
+`demo_host_snapshot()` = the default slider → add → preview graph with layout (40/120/240, −40, the same layout the
+generation2d demo paints with) in the host grammar that `parse_dsl` caches as the child's genesis scene. New laws:
+`demo_example_ships_the_laid_out_default_graph_as_its_content_genesis` (asset == writer output, 3 widgets,
+2 resolvable synapses, layout for all, genesis pack `Some`) and the restated
+`set_active_example_demo_loads_the_published_demo_graph` (live document == demo graph, incl. layout).
+
+### 8.5 run6 (04:46, `⚡️cache/play-fleet/flow/run6.txt`) — proof of §8.3/§8.4
+Writer `zzz_write_demo_example_asset` wrote `🖼️assets/🎬️demo/🗣️.dsl.semio` (host grammar: `slider`/`add`/`preview`,
+`s1 slider@number->add@a`, `s2 add@sum->preview`, layout 40/120/240 × −40). Then the suite:
+
+| crate | run4 (baseline) | run6 |
+|---|---|---|
+| `semio-s-artifact-flow-flow` | 251 / **4** | **256 / 0** (1 ignored = the writer) |
+| `semio-s-plugin-flow` | 2 / **2** | 2 / **2** (`descriptor_is_fresh`, surface law) |
+| 9 `…-extension-*` | green | **green** (10/30/7/42/10/5/10/6/5) |
+| kernel `bounded_value_retirement_is_live_and_conserves_one_page_under_every_grant` | — | **1 / 0** |
+
+The surface law now gets past the config lane (2 153 items / 1 483 bytes vs 2 051 / 1 389) and stalls at a
+SECOND gate: a `[DEBUG]` probe after the stall shows 64 turns at 2 or 4 bytes release nothing, 64 turns at
+4 096 bytes release 64 items / 1 214 bytes — so it is neither a UTF-8-scalar gate nor a livelock, it is another
+stage that refuses grants below some constant in (4, 4096]. lldb is no longer usable (Developer mode is disabled;
+every new attach now waits on a GUI authorization), so run7 bisects the threshold from inside the law.
+`descriptor_is_fresh` needs `describe` (requested, forbidden to me).
+
+### 8.6 The last surface-law red: `AppActionRegistry::close_step` — framework, 🔌️plugin/🦀️.rs (routed, not mine)
+run7 (`⚡️cache/play-fleet/flow/run7.txt`, bisection from inside the law, `[DEBUG]` probe since removed): after the
+stall at `bytes=1`, grants 8…64 release nothing; the first productive grant is **128**; the next 12 steps at 128
+each release ONE item of 4/15/9/18/14/16/16/10/13/3/14/16 bytes — one catalogue key per turn. The owner is
+`AppActionRegistry::close_step` (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` ≈ :13304–:13412, reached
+from `close_retained_fields_step` via `self.registry.close_step(maximum_items.min(1), maximum_bytes)`): every branch
+(`actions`, `window_actions` rows/owners, `mode_commands` rows/owners, `app_commands`, `tool_runs`, `interactions`,
+`window_body_keys`, `interaction_window_bodies`, `controller_id`) does
+`if bytes > maximum_bytes { return Pending { 0, 0 } }` — a key longer than the grant is never released. Every app
+has catalogue keys longer than 1 byte, so NO app can finish a neutral 1-byte close, and window-action keys
+(owner + row, 65–128 B here) block even 64-byte closes. `🔌️plugin/🦀️.rs` is on the peer's do-not-edit list, so this
+is a PROPOSED DIFF for the peer, in the same `debt` shape as §7.4 / `📓️flow-driver-debt-shape.md` /
+§8.3's `BoundedArtifactValueRetirement`:
+
+```rust
+pub struct AppActionRegistry {
+    …
+    /// 🎟️ Key bytes already removed but not yet reported to a sub-key grant.
+    close_debt: usize,
+}
+
+pub(crate) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+    if maximum_items == 0 || maximum_bytes == 0 {
+        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+    }
+    if self.close_debt > 0 {
+        let paid = self.close_debt.min(maximum_bytes);
+        self.close_debt -= paid;
+        return PluginCloseStep::Pending { released_items: 0, released_bytes: paid };
+    }
+    // every branch: remove the entry unconditionally, then
+    //     return self.charge(bytes);
+    …
+}
+
+fn charge(&mut self, bytes: usize, maximum_bytes: usize) -> PluginCloseStep {
+    let paid = bytes.min(maximum_bytes);
+    self.close_debt = bytes - paid;
+    PluginCloseStep::Pending { released_items: 1, released_bytes: paid }
+}
+
+pub(crate) fn terminal_is_empty(&self) -> bool { … && self.close_debt == 0 }
+```
+
+Delete the nine `if bytes > maximum_bytes { return Pending { 0, 0 } }` guards. Grants ≥ the key length behave
+exactly as today (debt stays 0). Law to add next to it: close a registry holding a 100-byte window-action key at
+`bytes=1` → completes, `Σ released_bytes ==` total key bytes, no `Pending { 0, 0 }` turn.
+The same "atomic item priced against one grant" shape still exists (not exercised by this law) at
+`🔌️plugin/🦀️.rs` :15203 (`BoundedConfigValueRetirement`, a verbatim duplicate of 🏪️store's
+`BoundedArtifactValueRetirement` that should delegate to it) and :15883 (bounded store initializer close), and in
+🏪️store/🦀️.rs :8924/:9040/:9102 (envelope decode record retirement below a page).
+
+### 8.7 Final proof run8 (05:00, `⚡️cache/play-fleet/flow/run8.txt`, `[DEBUG]` probe removed)
+
+| crate | run4 baseline | run8 final |
+|---|---|---|
+| `semio-s-artifact-flow-flow` | 251 / 4 | **256 / 0** (+1 ignored writer) |
+| `semio-s-plugin-flow` | 2 / 2 | **3 / 1** (`descriptor_is_fresh` green after the coordinator's 04:52 describe) |
+| 9 `…-extension-*` | green | **green** (bim 10, brep 30, dictionary 7, draw 42, list 10, logic 5, math 10, primitive 6, text 5) |
+| kernel bounded-value law | — | **1 / 0** |
+
+Only red: `flow_actual_surface_factories_close_all_owners_under_neutral_grants` = §8.6 (`AppActionRegistry`,
+🔌️plugin/🦀️.rs, peer). Pane: `activate.request/flow` + `describe.request/flow` re-touched 04:57 (the demo asset
+changed at 04:43, after the 03:23 activation) — until that activation lands `#flow` boots green but paints an
+empty canvas (§8.4). No process of others was touched; lldb copies of the test binary deleted.

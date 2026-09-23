@@ -25,7 +25,7 @@ pub(crate) fn fill_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle5dPlay
     if request.tool_id != TOOL_ID {
         return Ok(None);
     }
-    let document: Puzzle5dDocument = serde_json::from_value(request.snapshot.0.clone()).map_err(|error| Fault::from(format!("puzzle5d-fill-run-document: {error}")))?;
+    let document: Puzzle5dDocument = serde_json::from_value(request.snapshot.value().clone()).map_err(|error| Fault::from(format!("puzzle5d-fill-run-document: {error}")))?;
     let provisional = puzzle3d_ops(request.provisional)?;
     let board = Puzzle5dPlannerBoard::new(&document, request.provisional)?;
     let snapshot = Arc::new(puzzle3d_snapshot(&document, puzzle5d_authored_kind_catalogs(&request.snapshot)?)?);

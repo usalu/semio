@@ -675,6 +675,10 @@ impl ArtifactEditor for TrinityJackPlayApp {
     type Command = TrinityJackCommand;
 
     const DIALECT: Dialect = TRINITY_JACK_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::jack_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::jack_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = TRINITY_GRAPH_SCHEMA;
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {

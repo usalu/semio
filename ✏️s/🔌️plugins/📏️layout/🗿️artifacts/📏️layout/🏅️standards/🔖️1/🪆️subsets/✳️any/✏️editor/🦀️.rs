@@ -38,7 +38,6 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 use store::EngineHandles;
 
-use crate::editor::layout::engine::scene::LayoutEngine;
 
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_APP_ID: &str = "s.layout.layout@1/*#editor";
@@ -370,6 +369,9 @@ semio_framework_plugin::app_commands! {
         "exportPackage" as "export-package" => export_package::ExportPackage,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
+        "translateSelection" as "translate-selection" => gumball::TranslateSelection,
+        "rotateSelection" as "rotate-selection" => rotate_selection::RotateSelection,
+        "scaleSelection" as "scale-selection" => scale_selection::ScaleSelection,
     }
 }
 
@@ -377,7 +379,7 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use crate::editor::layout::commands::{
     add_frame, add_page, canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, delete_selection, engagement_input, engagement_submit, export_package, export_pdf, export_png, export_svg, focus_preflight_issue,
-    patch_frame, patch_page, set_active_page, set_camera,
+    patch_frame, patch_page, rotate_selection, scale_selection, set_active_page, set_camera, gumball,
 };
 //#endregion 🔖️Commands
 
@@ -505,9 +507,28 @@ mod args_bridge {
             let Some(DslValue::String(raw)) = field("drag_data") else { return Err(invalid()) };
             let value = dsl::json::from_json_str::<DslValue>(raw).map_err(|_| invalid())?;
             let DslValue::Object(payload) = value else { return Err(invalid()) };
-            let [(key, DslValue::String(kind))] = payload.as_slice() else { return Err(invalid()) };
-            if key != "kind" { return Err(invalid()); }
-            catalogue_kind(kind).ok_or_else(invalid)?
+            let mut kind = None;
+            let mut artifact_ref = None;
+            let mut proxy_data_url = None;
+            for (key, item) in payload {
+                let DslValue::String(text) = item else { return Err(invalid()) };
+                match key.as_str() {
+                    "kind" => kind = Some(catalogue_kind(&text).ok_or_else(invalid)?),
+                    "artifactRef" | "artifact_ref" => artifact_ref = Some(text.clone()),
+                    "proxyDataUrl" | "proxy_data_url" => proxy_data_url = Some(text.clone()),
+                    _ => return Err(invalid()),
+                }
+            }
+            let kind = kind.ok_or_else(invalid)?;
+            entries.retain(|(key, _)| !matches!(key.as_str(), "types" | "drag_data"));
+            put(entries, "kind", DslValue::String(kind.into()));
+            if let Some(reference) = artifact_ref {
+                put(entries, "artifact_ref", DslValue::String(reference));
+            }
+            if let Some(proxy) = proxy_data_url {
+                put(entries, "proxy_data_url", DslValue::String(proxy));
+            }
+            return Ok(folded);
         };
         entries.retain(|(key, _)| !matches!(key.as_str(), "types" | "drag_data"));
         put(entries, "kind", DslValue::String(kind.into()));
@@ -540,6 +561,9 @@ mod args_bridge {
             "exportPackage" => LayoutCommand::ExportPackage(decode(action, plain())?),
             "engagementSubmit" => LayoutCommand::EngagementSubmit(decode(action, with_text_value(fold(args, TEXT, &[("value", text(""))])))?),
             "deleteSelection" => LayoutCommand::DeleteSelection(decode(action, plain())?),
+            "translateSelection" => LayoutCommand::TranslateSelection(decode(action, plain())?),
+            "rotateSelection" => LayoutCommand::RotateSelection(decode(action, plain())?),
+            "scaleSelection" => LayoutCommand::ScaleSelection(decode(action, plain())?),
             _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the layout editor has no command for action '{action}'"))),
         })
     }
@@ -552,7 +576,7 @@ mod args_bridge {
 /// that stayed `BatchOnlyPendingRewrite` (`addFrame`/`addPage`/`patchPage`/`patchFrame` and the pointer
 /// down/move gestures) were dead in the running app. Exports keep their own resumable factory.
 const LAYOUT_RETAINED_TOOL_IDS: &[&str] = &[
-    "setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop",
+    "setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop", "translateSelection", "rotateSelection", "scaleSelection",
 ];
 const LAYOUT_RETAINED_PAYLOAD_SCHEMA: &str = "layout.layout.tool-command.v1";
 const LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 16_384;
@@ -659,7 +683,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
                     }
                 }
             }
-            LayoutCommand::AddFrame(_) | LayoutCommand::PatchPage(_) | LayoutCommand::PatchFrame(_) | LayoutCommand::DeleteSelection(_) | LayoutCommand::CanvasPointerDown(_) | LayoutCommand::CanvasPointerMove(_) | LayoutCommand::CanvasPointerUp(_) | LayoutCommand::EngagementSubmit(_) => {}
+            LayoutCommand::AddFrame(_) | LayoutCommand::PatchPage(_) | LayoutCommand::PatchFrame(_) | LayoutCommand::DeleteSelection(_) | LayoutCommand::CanvasPointerDown(_) | LayoutCommand::CanvasPointerMove(_) | LayoutCommand::CanvasPointerUp(_) | LayoutCommand::EngagementSubmit(_) | LayoutCommand::TranslateSelection(_) | LayoutCommand::RotateSelection(_) | LayoutCommand::ScaleSelection(_) => {}
             _ => return Err(Fault::from("layout-window-work-route-rejected")),
         }
         if let Some(mutation) = window_config { emit.window_config_mutations.push(mutation); }
@@ -743,6 +767,9 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedComma
         ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "canvasDrop", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ];
 }
 //#region 🧾️ProofCatalogs
@@ -756,7 +783,7 @@ impl LayoutRetainedProofs {
         factory: "LayoutRetainedCommandJobFactory",
         factory_type: LayoutRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-        tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop"]
+        tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop", "translateSelection", "rotateSelection", "scaleSelection"]
     }
 }
 
@@ -1043,12 +1070,16 @@ impl LayoutPlayApp {
         interaction: &LayoutInteractionSnapshot,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
-        let config = blueprint::config::current(cfg);
+        let mut config = blueprint::config::current(cfg);
+        if body_key == LAYOUT_PLAY_BODY_BLUEPRINT {
+            if let Some(utility) = view_state.active_utility_id.as_deref().filter(|utility| !utility.is_empty()) {
+                config.active_utility = utility.to_string();
+            }
+        }
         let labels = layout_labels(view_state);
-        let mut engine = LayoutEngine::new();
         match body_key {
-            LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(&mut engine, document, &config, transient, interaction),
-            LAYOUT_PLAY_BODY_PREVIEW => preview::render(&mut engine, document, &config, transient, interaction),
+            LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(document, &config, transient, interaction),
+            LAYOUT_PLAY_BODY_PREVIEW => preview::render(document, &config, transient, interaction),
             LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
             LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
             LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, interaction, labels),
@@ -1378,6 +1409,8 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .default_mode_id(edit::LAYOUT_PLAY_MODE_EDIT)
             .window_kind_def(blueprint::definition())
             .window_kind_def(preview::definition())
+            .utility(blueprint::select::definition())
+            .utility(blueprint::transform::definition())
             .default_layout(edit::layout())
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
@@ -1466,13 +1499,19 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("canvasDrop", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
+            .action_with(layout_internal_action("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation))
+            .action_with(layout_internal_action("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation))
+            .action_with(layout_internal_action("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Mutation))
+            .action_interactive_job("translateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("rotateSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("scaleSelection", InteractiveJobClassification::Migrated)
             // 📇️ Per-window action scoping — the content-authoring operations only make sense on the
             // interactive Blueprint surface; the read-only Preview surface renders output and never
             // creates or edits frames/pages. Exports, camera, pointer/drag, selection and hover are
             // surface-discriminated (via `surfaceId`) or global, so they stay unscoped orphans and
             // appear on both windows.
             .window_kind_action_refs(LAYOUT_PLAY_WINDOW_BLUEPRINT, vec![
-                "addFrame".into(), "addPage".into(), "patchPage".into(), "patchFrame".into(),
+                "addFrame".into(), "addPage".into(), "patchPage".into(), "patchFrame".into(), "translateSelection".into(), "rotateSelection".into(), "scaleSelection".into(),
             ])
             // 🕹️ Domain "elements": frames on the Blueprint canvas (pages are never targets — canvas
             // hit-testing only ever resolves frame ids). Flat: layout has no real parent/child

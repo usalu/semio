@@ -105,8 +105,12 @@ pub fn writer_text(snapshot: &WriterSnapshot) -> String {
 }
 
 /// 🧵️ Retains the immutable child-text owner for bounded worker jobs without cloning its bytes.
+/// The persisted `text` body and the composed `document` handle's local owner are minted together
+/// ([`writer_snapshot_with_text`], [`attach_writer_document_text`]), so a body that still agrees with
+/// its handle shares that handle's owner; only a body whose handle carries no or other text gets one
+/// fresh owner.
 pub fn writer_text_owner(snapshot: &WriterSnapshot) -> Arc<str> {
-    Arc::<str>::from(snapshot.text.as_str())
+    snapshot.document.local_text_owner().filter(|owner| **owner == *snapshot.text).unwrap_or_else(|| Arc::<str>::from(snapshot.text.as_str()))
 }
 
 /// 🏗️ Mints a content-addressed handle carrying its artifact-instance text owner.

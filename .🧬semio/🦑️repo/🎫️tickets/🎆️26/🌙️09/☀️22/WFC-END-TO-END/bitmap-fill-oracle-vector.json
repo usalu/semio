@@ -4,5 +4,9 @@
   "width": 2,
   "height": 2,
   "contradiction": false,
-  "done": false
+  "done": false,
+  "trace": [
+    { "index": 0, "color": 0, "discarded": false },
+    { "index": 3, "color": 1, "discarded": true }
+  ]
 }

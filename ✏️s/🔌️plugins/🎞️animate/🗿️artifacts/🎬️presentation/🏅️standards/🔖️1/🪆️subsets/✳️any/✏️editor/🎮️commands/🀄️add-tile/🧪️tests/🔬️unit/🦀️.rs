@@ -104,11 +104,14 @@ async fn patch_tile_crops_targeting_no_existing_tile_is_a_no_op() {
     assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
 }
 
+/// 🪪️ App-level actions are resolved into each window at read time (`semio_framework::window_kind_actions`),
+/// not cloned into `WindowKindDefinition::actions`, which holds only a window's OWN declarations.
 #[semio_framework_async_macros::async_test]
 async fn app_manifest_declares_expected_operations() {
     use semio_framework_plugin::ActionKind;
     let definition = crate::editor::animate::create_animate_presentation_app();
-    let operation_ids: Vec<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
+    let actions: Vec<&semio_framework_plugin::ActionDefinition> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
+    let operation_ids: Vec<&str> = actions.iter().filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
     for expected in ["addTile", "deleteTile", "deleteSelection", "renameTiles", "patchTileCrops"] {
         assert!(operation_ids.contains(&expected), "missing declared operation {expected}");
     }

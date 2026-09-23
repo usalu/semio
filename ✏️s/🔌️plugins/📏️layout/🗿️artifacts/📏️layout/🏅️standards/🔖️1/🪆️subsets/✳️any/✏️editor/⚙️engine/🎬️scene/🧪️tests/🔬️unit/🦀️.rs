@@ -68,11 +68,61 @@ async fn display_list_hit_test_matches_image_bounds_and_misses_elsewhere() {
         page_height: 100.0,
         rects: Vec::new(),
         text_runs: Vec::new(),
-        images: vec![DisplayImage { object_id: "img-1".into(), x: 10.0, y: 10.0, width: 20.0, height: 20.0, placeholder: false }],
+        images: vec![DisplayImage { object_id: "img-1".into(), x: 10.0, y: 10.0, width: 20.0, height: 20.0, rotation: 0.0, placeholder: false, proxy_data_url: None, preview: String::new() }],
         guides: Vec::new(),
     };
     assert_eq!(list.hit_test(15.0, 15.0).as_deref(), Some("img-1"));
     assert!(list.hit_test(90.0, 90.0).is_none());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn bounds_hit_test_finds_a_text_frame_without_shaping() {
+    let doc = crate::standards::v1::subsets::any::schema::default_document();
+    let page = doc.pages.iter().find(|page| page.id == "page-1").expect("page");
+    assert_eq!(hit_test_page_frames(&doc, page, 160.0, 230.0).as_deref(), Some("frame-text-1"));
+    assert!(hit_test_page_frames(&doc, page, 1.0, 1.0).is_none());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn hit_test_uses_frame_rotation() {
+    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    let frame = doc.pages[0].frames.iter_mut().find(|frame| frame.id() == "frame-1").expect("frame");
+    let crate::Frame::Rect { bounds, .. } = frame else { panic!("rect") };
+    *bounds = crate::LayoutBounds { x: 0.0, y: 0.0, width: 100.0, height: 20.0, rotation: std::f64::consts::FRAC_PI_2 };
+    let page = doc.pages.first().expect("page");
+    assert_eq!(hit_test_page_frames(&doc, page, 50.0, 50.0).as_deref(), Some("frame-1"), "a point on the rotated long axis hits");
+    assert!(hit_test_page_frames(&doc, page, 0.0, 80.0).is_none(), "a point outside the rotated frame misses");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn interactive_display_skips_frames_outside_the_view_and_keeps_the_selection() {
+    let mut doc = crate::standards::v1::subsets::any::schema::default_document();
+    doc.pages[0].frames.push(crate::Frame::Rect {
+        id: "far".into(),
+        layer_id: "layer-1".into(),
+        bounds: crate::LayoutBounds { x: 100_000.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 },
+        locked: None,
+        visible: None,
+        fill: None,
+        stroke: None,
+    });
+    let page = doc.pages.first().expect("page");
+    let culled = build_interactive_display_list(&doc, page, &page.id, &[], None, true, 0.0, 0.0, 1.0);
+    assert!(culled.rects.iter().any(|rect| rect.object_id == "frame-1"));
+    assert!(culled.rects.iter().all(|rect| rect.object_id != "far"));
+    let kept = build_interactive_display_list(&doc, page, &page.id, &["far".into()], None, true, 0.0, 0.0, 1.0);
+    assert!(kept.rects.iter().any(|rect| rect.object_id == "far"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn interactive_display_omits_the_baseline_lattice() {
+    let doc = crate::standards::v1::subsets::any::schema::default_document();
+    let page = doc.pages.first().expect("page");
+    let interactive = build_interactive_display_list(&doc, page, &page.id, &[], None, true, 0.0, 0.0, 1.0);
+    assert!(interactive.guides.iter().all(|guide| guide.kind != "baseline"));
+    let mut engine = LayoutEngine::new();
+    let accurate = build_display_list_for_page(&mut engine, &doc, page, &page.id, &[], None, true);
+    assert!(accurate.guides.iter().any(|guide| guide.kind == "baseline"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -138,17 +188,18 @@ async fn display_list_to_scene_handles_drop_preview_variants_and_rect_styles() {
                 y: 0.0,
                 width: 10.0,
                 height: 10.0,
+                rotation: 0.0,
                 fill: Some(DisplayColor([1.0, 1.0, 1.0, 1.0])),
                 stroke: Some(DisplayColor([0.0, 0.0, 0.0, 1.0])),
                 inherited: false,
                 selected: true,
                 hovered: false,
             },
-            DisplayRect { object_id: "r-implicit-hover".into(), x: 20.0, y: 0.0, width: 10.0, height: 10.0, fill: None, stroke: None, inherited: false, selected: false, hovered: true },
-            DisplayRect { object_id: "r-implicit-select".into(), x: 40.0, y: 0.0, width: 10.0, height: 10.0, fill: None, stroke: None, inherited: false, selected: true, hovered: false },
+            DisplayRect { object_id: "r-implicit-hover".into(), x: 20.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, fill: None, stroke: None, inherited: false, selected: false, hovered: true },
+            DisplayRect { object_id: "r-implicit-select".into(), x: 40.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, fill: None, stroke: None, inherited: false, selected: true, hovered: false },
         ],
         text_runs: vec![DisplayTextRun { object_id: "text-1".into(), glyphs: vec![DisplayGlyph { glyph_id: 1, font_size: 12.0, x: 0.0, y: 12.0, color: DisplayColor([0.0, 0.0, 0.0, 1.0]) }], content: "Hi".into(), origin_x: 0.0, origin_y: 0.0, font_size: 12.0 }],
-        images: vec![DisplayImage { object_id: "img-1".into(), x: 0.0, y: 60.0, width: 10.0, height: 10.0, placeholder: true }],
+        images: vec![DisplayImage { object_id: "img-1".into(), x: 0.0, y: 60.0, width: 10.0, height: 10.0, rotation: 0.0, placeholder: true, proxy_data_url: None, preview: String::new() }],
         guides: vec![DisplayGuide { rect: LayoutRect { x: 0.0, y: 0.0, width: 10.0, height: 0.0 }, kind: "unrecognized".into() }],
     };
     for kind in ["page", "rect", "text", "image", "unrecognized"] {

@@ -1,6 +1,7 @@
-//! 🌡 Bitmap fill — non-mutating framework tool run that collapses the overlapping model one
-//! engine step at a time. The output window paints each tick's payload (`decided` mask keeps palette
-//! index 0 a real colour); `SetSolve` is published only when the run commits.
+//! 🌡 Bitmap fill — non-mutating framework tool run. The solver drains headlessly for the step's
+//! own time budget. One tick carries the live grid plus every collapse and discard in that burst,
+//! so the output window can show choices the search later undoes. `SetSolve` is published only when
+//! the run commits.
 
 use crate::editor::bitmap::modes::edit::windows::output;
 use crate::editor::bitmap::transient::SetSolve;
@@ -21,9 +22,21 @@ pub const PAYLOAD_SCHEMA_ID: &str = "s.wfc.bitmap.fill.tick.payload.v1";
 pub const COMMIT_SOLVE_ACTION_ID: &str = "commit-fill-solve";
 const COMMIT_SOLVE_REQUEST: u64 = 0xbf11_5001;
 const FILL_PAYLOAD_SCHEMA: &str = include_str!("🧬️schema/🔣️.json");
+/// 👁️ Visible collapses and discards published together, so one paint shows a burst of thinking
+/// instead of a single cell after a round trip.
+const FILL_VISIBLE_BURST: usize = 48;
+const FILL_TRACE_RETAIN: usize = 512;
 //#endregion 🔖️Constants
 
 //#region 🎞Payload
+/// 👁️ One cell the search tried during a burst. `discarded` marks a collapse the search undid.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct BitmapFillTraceEvent {
+    pub index: u32,
+    pub color: u32,
+    pub discarded: bool,
+}
+
 /// 🎞 Partial or finished bitmap collapse carried in `ToolRunTick::payload`.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct BitmapFillPayload {
@@ -33,6 +46,7 @@ pub struct BitmapFillPayload {
     pub height: u32,
     pub contradiction: bool,
     pub done: bool,
+    pub trace: Vec<BitmapFillTraceEvent>,
 }
 
 impl BitmapFillPayload {
@@ -44,13 +58,14 @@ impl BitmapFillPayload {
     /// 📤 Encode as the normative JSON object.
     pub fn encode_json(&self) -> String {
         format!(
-            "{{\"pixels\":{},\"decided\":{},\"width\":{},\"height\":{},\"contradiction\":{},\"done\":{}}}",
+            "{{\"pixels\":{},\"decided\":{},\"width\":{},\"height\":{},\"contradiction\":{},\"done\":{},\"trace\":{}}}",
             protocol::json::to_json_string(&self.pixels),
             protocol::json::to_json_string(&self.decided),
             self.width,
             self.height,
             if self.contradiction { "true" } else { "false" },
             if self.done { "true" } else { "false" },
+            trace_json(&self.trace),
         )
     }
 
@@ -65,6 +80,7 @@ impl BitmapFillPayload {
             height: object.get("height")?.as_u64()? as u32,
             contradiction: object.get("contradiction")?.as_bool()?,
             done: object.get("done")?.as_bool()?,
+            trace: decode_trace(object.get("trace")),
         })
     }
 
@@ -112,7 +128,27 @@ pub fn payload_from_assignment(width: u32, height: u32, cells: &[(usize, u8)], c
             decided[index] = 1;
         }
     }
-    BitmapFillPayload { pixels: encode_base64(&pixels), decided: encode_base64(&decided), width, height, contradiction, done }
+    BitmapFillPayload { pixels: encode_base64(&pixels), decided: encode_base64(&decided), width, height, contradiction, done, trace: Vec::new() }
+}
+
+fn trace_json(trace: &[BitmapFillTraceEvent]) -> String {
+    let mut out = String::from("[");
+    for (index, event) in trace.iter().enumerate() {
+        if index > 0 {
+            out.push(',');
+        }
+        out.push_str(&format!("{{\"index\":{},\"color\":{},\"discarded\":{}}}", event.index, event.color, if event.discarded { "true" } else { "false" }));
+    }
+    out.push(']');
+    out
+}
+
+fn decode_trace(value: Option<&protocol::json::Value>) -> Vec<BitmapFillTraceEvent> {
+    let Some(items) = value.and_then(|value| value.as_array()) else { return Vec::new() };
+    items.iter().filter_map(|item| {
+        let item = item.as_object()?;
+        Some(BitmapFillTraceEvent { index: item.get("index")?.as_u64()? as u32, color: item.get("color")?.as_u64()? as u32, discarded: item.get("discarded")?.as_bool()? })
+    }).collect()
 }
 //#endregion 🎞Payload
 
@@ -325,6 +361,7 @@ pub struct BitmapFillRunJob {
     pending_tick: bool,
     pending_finish: Option<(bool, BitmapFillPayload)>,
     closing: bool,
+    trace: Vec<BitmapFillTraceEvent>,
 }
 
 impl BitmapFillRunJob {
@@ -349,6 +386,15 @@ impl BitmapFillRunJob {
             pending_tick: false,
             pending_finish: None,
             closing: false,
+            trace: Vec::new(),
+        }
+    }
+
+    fn remember(&mut self, event: BitmapFillTraceEvent) {
+        self.trace.push(event);
+        if self.trace.len() > FILL_TRACE_RETAIN {
+            let overflow = self.trace.len() - FILL_TRACE_RETAIN;
+            self.trace.drain(0..overflow);
         }
     }
 
@@ -403,6 +449,12 @@ impl BitmapFillRunJob {
         }
     }
 
+    fn color_of(&self, pattern: u32) -> Option<u32> {
+        let parts = self.parts.as_ref()?;
+        Some(parts.decoder.anchor_tile(engine::ids::PatternId(pattern)).get())
+    }
+
+    /// 🖼 Cells that are singleton right now. Undone collapses are absent here and live only in the trace.
     fn payload_from_child(&self, contradiction: bool, done: bool) -> Option<BitmapFillPayload> {
         let child = self.child.as_ref()?;
         let parts = self.parts.as_ref()?;
@@ -419,11 +471,11 @@ impl BitmapFillRunJob {
                 return Some(payload_from_assignment(width, height, &assignment, false, true));
             }
         }
-        for &(node, pattern) in child.observed() {
-            let index = node.index();
-            if index < cells {
-                let color = parts.decoder.anchor_tile(pattern).get() as u8;
-                assignment.push((index, color));
+        for (index, domain) in child.domain_masks().iter().enumerate().take(cells) {
+            if domain.count_ones() == 1 {
+                if let Some(pattern) = domain.first_set() {
+                    assignment.push((index, parts.decoder.anchor_tile(pattern).get() as u8));
+                }
             }
         }
         Some(payload_from_assignment(width, height, &assignment, contradiction, done))
@@ -439,6 +491,90 @@ impl BitmapFillRunJob {
             ("height".to_string(), f64::from(solve.output_height).into()),
         ]));
         self.port.dispatch(Effect::DispatchAction { req: RequestId(COMMIT_SOLVE_REQUEST), action: COMMIT_SOLVE_ACTION_ID.into(), args: Some(args), delay_ms: 0 });
+    }
+
+    fn drain_child(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if self.child.is_none() {
+            return self.fault(context, "bitmap-fill-child-missing");
+        }
+        let cells = (self.snapshot.output.width as usize).saturating_mul(self.snapshot.output.height as usize);
+        let mut flips = Vec::new();
+        let mut trace = 0usize;
+        let mut solved = false;
+        let mut unsatisfiable = false;
+        loop {
+            if context.is_cancelled() {
+                self.committed_solve = None;
+                return StepOutcome::Cancelled;
+            }
+            if context.fuel_exhausted() || context.deadline_exceeded() {
+                break;
+            }
+            let pulse = self.child.as_mut().expect("child").advance_one();
+            context.consume_fuel(1);
+            self.child.as_mut().expect("child").drain_visible(&mut flips);
+            for flip in flips.drain(..) {
+                let index = flip.node as usize;
+                if index >= cells {
+                    continue;
+                }
+                if let Some(color) = self.color_of(flip.pattern) {
+                    self.remember(BitmapFillTraceEvent { index: flip.node, color, discarded: flip.discarded });
+                    trace += 1;
+                }
+            }
+            match pulse {
+                engine::job::SearchPulse::Solved => {
+                    solved = true;
+                    break;
+                }
+                engine::job::SearchPulse::Unsatisfiable => {
+                    unsatisfiable = true;
+                    break;
+                }
+                engine::job::SearchPulse::Collapsed { .. } | engine::job::SearchPulse::Discarded { .. } | engine::job::SearchPulse::Worked => {}
+            }
+            if trace >= FILL_VISIBLE_BURST {
+                break;
+            }
+        }
+        if solved || unsatisfiable {
+            let width = self.snapshot.output.width;
+            let height = self.snapshot.output.height;
+            let payload = if unsatisfiable {
+                BitmapFillPayload {
+                    pixels: String::new(),
+                    decided: encode_base64(&vec![0u8; (width as usize).saturating_mul(height as usize)]),
+                    width,
+                    height,
+                    contradiction: true,
+                    done: true,
+                    trace: self.trace.clone(),
+                }
+            } else {
+                let mut payload = self.payload_from_child(false, true).unwrap_or_else(|| payload_from_assignment(width, height, &[], false, true));
+                payload.trace = self.trace.clone();
+                payload
+            };
+            if !unsatisfiable {
+                self.commit_solve(&payload);
+            }
+            if let Some(mut child) = self.child.take() {
+                engine::job::close_job(&mut child);
+            }
+            self.prep = PrepStage::Done;
+            let reason = if unsatisfiable { FillReason::Contradiction } else { FillReason::Collapsed };
+            return self.publish_tick(context, payload, FillStage::Complete, reason, ToolRunState::Complete);
+        }
+        if trace == 0 {
+            return StepOutcome::Yield;
+        }
+        let width = self.snapshot.output.width;
+        let height = self.snapshot.output.height;
+        let mut payload = self.payload_from_child(false, false).unwrap_or_else(|| payload_from_assignment(width, height, &[], false, false));
+        payload.trace = self.trace.clone();
+        let stage = self.child.as_ref().map(|job| FillStage::of(job.preview(0).stage)).unwrap_or(FillStage::ChooseCandidate);
+        self.publish_tick(context, payload, stage, FillReason::Collapsed, ToolRunState::Running)
     }
 
     fn fault(&mut self, context: &mut StepContext<'_>, message: &str) -> StepOutcome {
@@ -486,85 +622,12 @@ impl InteractiveJob for BitmapFillRunJob {
                         self.operation = operation;
                         self.child = Some(engine::job::WfcJob::new(operation, model, topology, engine::job::WfcJobConfig::default(), None, fixed));
                         self.prep = PrepStage::Child;
-                        if let Some(payload) = self.payload_from_child(false, false) {
-                            self.last_payload = Some(payload.clone());
-                            return self.publish_tick(context, payload, FillStage::InitializeDomains, FillReason::Collapsed, ToolRunState::Running);
-                        }
                         StepOutcome::Yield
                     }
                     Err(error) => self.fault(context, &error),
                 }
             }
-            PrepStage::Child => {
-                let Some(child) = self.child.as_mut() else {
-                    return self.fault(context, "bitmap-fill-child-missing");
-                };
-                let mut outcome = child.step(context);
-                match &outcome {
-                    StepOutcome::Yield => StepOutcome::Yield,
-                    StepOutcome::Cancelled => {
-                        engine::job::retire_outcome(&mut outcome);
-                        self.committed_solve = None;
-                        StepOutcome::Cancelled
-                    }
-                    StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => {
-                        if let Some(payload) = self.payload_from_child(false, false) {
-                            self.last_payload = Some(payload);
-                        }
-                        engine::job::retire_outcome(&mut outcome);
-                        self.pending_tick = true;
-                        StepOutcome::Yield
-                    }
-                    StepOutcome::Complete(_) => {
-                        let commit = child.take_completed_commit();
-                        let contradiction = commit.is_none();
-                        let payload = if contradiction {
-                            BitmapFillPayload {
-                                pixels: String::new(),
-                                decided: encode_base64(&vec![0u8; (self.snapshot.output.width as usize).saturating_mul(self.snapshot.output.height as usize)]),
-                                width: self.snapshot.output.width,
-                                height: self.snapshot.output.height,
-                                contradiction: true,
-                                done: true,
-                            }
-                        } else {
-                            self.payload_from_child(false, true).unwrap_or_else(|| {
-                                payload_from_assignment(self.snapshot.output.width, self.snapshot.output.height, &[], false, true)
-                            })
-                        };
-                        engine::job::retire_outcome(&mut outcome);
-                        if let Some(mut child) = self.child.take() {
-                            engine::job::close_job(&mut child);
-                        }
-                        self.pending_finish = Some((contradiction, payload));
-                        StepOutcome::Yield
-                    }
-                    StepOutcome::Fault(fault) if engine::job::payload_bytes(&fault.detail) == b"wfc-unsatisfiable" => {
-                        engine::job::retire_outcome(&mut outcome);
-                        if let Some(mut child) = self.child.take() {
-                            engine::job::close_job(&mut child);
-                        }
-                        let payload = BitmapFillPayload {
-                            pixels: String::new(),
-                            decided: encode_base64(&vec![0u8; (self.snapshot.output.width as usize).saturating_mul(self.snapshot.output.height as usize)]),
-                            width: self.snapshot.output.width,
-                            height: self.snapshot.output.height,
-                            contradiction: true,
-                            done: true,
-                        };
-                        self.pending_finish = Some((true, payload));
-                        StepOutcome::Yield
-                    }
-                    StepOutcome::Fault(_) => {
-                        let detail = String::from_utf8_lossy(&engine::job::payload_bytes(match &outcome {
-                            StepOutcome::Fault(fault) => &fault.detail,
-                            _ => unreachable!(),
-                        })).into_owned();
-                        engine::job::retire_outcome(&mut outcome);
-                        self.fault(context, &detail)
-                    }
-                }
-            }
+            PrepStage::Child => self.drain_child(context),
             PrepStage::Done => StepOutcome::Complete(semio_framework_job::CommitCandidate {
                 state: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitState),
                 output: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitOutput),

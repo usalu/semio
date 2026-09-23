@@ -37,6 +37,18 @@ pub struct Grid3dFillCell {
     pub tile_id: Option<String>,
 }
 
+/// 🧩 One collapse or discard the preview keeps after the search moves on.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub struct Grid3dFillTraceEvent {
+    pub x: u32,
+    pub y: u32,
+    pub z: u32,
+    pub tile_id: String,
+    pub discarded: bool,
+}
+
 /// 📦 The preview payload every fill tick publishes — partial cell assignments plus terminal flags.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -45,6 +57,9 @@ pub struct Grid3dFillPayload {
     pub assignments: Vec<Grid3dFillCell>,
     pub contradiction: bool,
     pub done: bool,
+    #[serde(default)]
+    #[value(default)]
+    pub trace: Vec<Grid3dFillTraceEvent>,
 }
 
 impl Grid3dFillPayload {
@@ -306,6 +321,7 @@ pub struct Grid3dFillRunJob {
     committed: bool,
     needs_tick: bool,
     pending_finish: Option<(bool, Grid3dFillPayload)>,
+    trace: Vec<Grid3dFillTraceEvent>,
 }
 
 impl Grid3dFillRunJob {
@@ -336,6 +352,7 @@ impl Grid3dFillRunJob {
             committed: false,
             needs_tick: false,
             pending_finish: None,
+            trace: Vec::new(),
         }
     }
 
@@ -376,7 +393,7 @@ impl Grid3dFillRunJob {
                 }
             }
         }
-        Grid3dFillPayload { assignments, contradiction, done }
+        Grid3dFillPayload { assignments, contradiction, done, trace: Vec::new() }
     }
 
     fn payload_from_commit(&self, commit: &wfc::job::WfcCommit, done: bool) -> Grid3dFillPayload {
@@ -389,42 +406,18 @@ impl Grid3dFillRunJob {
             let tile_id = self.tile_ids.get(*pattern as usize).cloned();
             assignments.push(Grid3dFillCell { x, y, z, tile_id });
         }
-        Grid3dFillPayload { assignments, contradiction: false, done }
+        Grid3dFillPayload { assignments, contradiction: false, done, trace: Vec::new() }
     }
 
     /// 👁️ Builds the live payload from `domain_masks` (full, not the truncated `incomplete_grid`) after reading `preview()`.
     /// 👁️ Builds the live payload from `observed()` after reading `preview()` — full in-process state, not the truncated published `incomplete_grid`.
+    /// 👁️ Live singletons. Undone collapses stay visible through `trace`.
     fn payload_from_child(&self, contradiction: bool, done: bool) -> Grid3dFillPayload {
         let Some(child) = self.child.as_ref() else {
             return self.empty_payload(contradiction, done);
         };
-        let _preview = child.preview(0);
-        let mut decided = BTreeMap::<(u32, u32, u32), String>::new();
-        for (node, pattern) in child.observed() {
-            let (x, y, z) = Self::xyz(&self.snapshot, node.index());
-            if self.is_masked(x, y, z) {
-                continue;
-            }
-            if let Some(tile) = self.tile_ids.get(pattern.index()) {
-                decided.insert((x, y, z), tile.clone());
-            }
-        }
-        for (index, domain) in child.domain_masks().iter().enumerate() {
-            if domain.count_ones() != 1 {
-                continue;
-            }
-            let Some(pattern) = domain.first_set() else { continue };
-            let (x, y, z) = Self::xyz(&self.snapshot, index);
-            if self.is_masked(x, y, z) {
-                continue;
-            }
-            if decided.contains_key(&(x, y, z)) {
-                continue;
-            }
-            if let Some(tile) = self.tile_ids.get(pattern.index()) {
-                decided.insert((x, y, z), tile.clone());
-            }
-        }
+        let mut patterns = Vec::new();
+        child.write_singleton_patterns(&mut patterns);
         let mut assignments = Vec::new();
         for z in 0..self.snapshot.depth {
             for y in 0..self.snapshot.height {
@@ -432,11 +425,117 @@ impl Grid3dFillRunJob {
                     if self.is_masked(x, y, z) {
                         continue;
                     }
-                    assignments.push(Grid3dFillCell { x, y, z, tile_id: decided.get(&(x, y, z)).cloned() });
+                    let width = self.snapshot.width as usize;
+                    let height = self.snapshot.height as usize;
+                    let cell = ((z as usize) * height + y as usize) * width + x as usize;
+                    let tile_id = patterns.get(cell).copied().filter(|pattern| *pattern != u32::MAX).and_then(|pattern| self.tile_ids.get(pattern as usize).cloned());
+                    assignments.push(Grid3dFillCell { x, y, z, tile_id });
                 }
             }
         }
-        Grid3dFillPayload { assignments, contradiction, done }
+        Grid3dFillPayload { assignments, contradiction, done, trace: Vec::new() }
+    }
+
+    fn remember(&mut self, event: Grid3dFillTraceEvent) {
+        self.trace.push(event);
+        if self.trace.len() > 512 {
+            let overflow = self.trace.len() - 512;
+            self.trace.drain(0..overflow);
+        }
+    }
+
+    fn note_singleton_change(&mut self, index: usize, previous: u32, next: u32) {
+        let (x, y, z) = Self::xyz(&self.snapshot, index);
+        if z >= self.snapshot.depth || self.is_masked(x, y, z) {
+            return;
+        }
+        if previous != u32::MAX {
+            if let Some(tile) = self.tile_ids.get(previous as usize) {
+                self.remember(Grid3dFillTraceEvent { x, y, z, tile_id: tile.clone(), discarded: true });
+            }
+        }
+        if next != u32::MAX {
+            if let Some(tile) = self.tile_ids.get(next as usize) {
+                self.remember(Grid3dFillTraceEvent { x, y, z, tile_id: tile.clone(), discarded: false });
+            }
+        }
+    }
+
+    fn drain_child(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if self.child.is_none() {
+            return self.fault(context, "wfc-grid3d-fill-missing-child");
+        }
+        let cells = Self::cell_count(&self.snapshot);
+        let mut flips = Vec::new();
+        let mut fresh = 0usize;
+        let mut solved = false;
+        let mut unsatisfiable = false;
+        loop {
+            if context.is_cancelled() {
+                return StepOutcome::Cancelled;
+            }
+            if context.fuel_exhausted() || context.deadline_exceeded() {
+                break;
+            }
+            let pulse = self.child.as_mut().expect("child").advance_one();
+            context.consume_fuel(1);
+            self.child.as_mut().expect("child").drain_visible(&mut flips);
+            for flip in flips.drain(..) {
+                if (flip.node as usize) >= cells {
+                    continue;
+                }
+                let before = self.trace.len();
+                if flip.discarded {
+                    self.note_singleton_change(flip.node as usize, flip.pattern, u32::MAX);
+                } else {
+                    self.note_singleton_change(flip.node as usize, u32::MAX, flip.pattern);
+                }
+                fresh += self.trace.len() - before;
+            }
+            let (observations, _, backtracks) = self.child.as_ref().expect("child").metrics();
+            self.observations = observations;
+            self.backtracks = backtracks;
+            match pulse {
+                wfc::job::SearchPulse::Solved => {
+                    solved = true;
+                    break;
+                }
+                wfc::job::SearchPulse::Unsatisfiable => {
+                    unsatisfiable = true;
+                    break;
+                }
+                wfc::job::SearchPulse::Collapsed { .. } | wfc::job::SearchPulse::Discarded { .. } | wfc::job::SearchPulse::Worked => {}
+            }
+            if fresh >= 48 {
+                break;
+            }
+        }
+        if solved {
+            let commit = self.child.as_ref().and_then(|child| child.commit());
+            if let Some(mut child) = self.child.take() {
+                wfc::job::close_job(&mut child);
+            }
+            let contradiction = commit.is_none();
+            let payload = match commit {
+                Some(commit) => self.payload_from_commit(&commit, true),
+                None => self.empty_payload(true, true),
+            };
+            return self.finish_success(context, contradiction, Some(payload));
+        }
+        if unsatisfiable {
+            if let Some(mut child) = self.child.take() {
+                wfc::job::close_job(&mut child);
+            }
+            return self.finish_success(context, true, Some(self.empty_payload(true, true)));
+        }
+        if fresh == 0 {
+            return StepOutcome::Yield;
+        }
+        if let Some(child) = self.child.as_ref() {
+            self.stage = FillStage::of(child.preview(0).stage);
+        }
+        self.last_payload = self.payload_from_child(false, false);
+        self.publish_tick(context, ToolRunState::Running, None)
     }
 
     fn publish_tick(&mut self, context: &mut StepContext<'_>, state: ToolRunState, reason: Option<(FillReason, &[ToolRunStepArg])>) -> StepOutcome {
@@ -460,6 +559,7 @@ impl Grid3dFillRunJob {
             conflicts: 0,
             steps: semio_framework_tool_run::ToolRunStepRing::new(),
         });
+        self.last_payload.trace.clone_from(&self.trace);
         self.writer.payload(self.last_payload.encode());
         match self.writer.finish().and_then(|tick| tick.encode().ok()).and_then(|bytes| context.payload_from_bytes(semio_framework_job::JobPayloadStream::Preview, &bytes).map_err(|rejected| drop(rejected.into_source())).ok()) {
             Some(payload) => StepOutcome::PreviewReady(payload),
@@ -642,60 +742,7 @@ impl InteractiveJob for Grid3dFillRunJob {
             context.consume_fuel(1);
             return self.publish_tick(context, ToolRunState::Running, None);
         }
-        let Some(child) = self.child.as_mut() else {
-            return self.fault(context, "wfc-grid3d-fill-missing-child");
-        };
-        let mut outcome = child.step(context);
-        self.stage = FillStage::of(child.preview(0).stage);
-        let (observations, _, backtracks) = child.metrics();
-        self.observations = observations;
-        self.backtracks = backtracks;
-        match &outcome {
-            StepOutcome::Complete(_) => {
-                let commit = child.take_completed_commit();
-                let contradiction = commit.is_none();
-                let payload = if contradiction {
-                    self.empty_payload(true, true)
-                } else {
-                    self.payload_from_commit(commit.as_ref().expect("completed commit"), true)
-                };
-                wfc::job::retire_outcome(&mut outcome);
-                if let Some(mut child) = self.child.take() {
-                    wfc::job::close_job(&mut child);
-                }
-                self.last_payload = payload.clone();
-                self.pending_finish = Some((contradiction, payload));
-                return StepOutcome::Yield;
-            }
-            StepOutcome::Fault(fault) if wfc::job::payload_bytes(&fault.detail) == b"wfc-unsatisfiable" => {
-                wfc::job::retire_outcome(&mut outcome);
-                if let Some(mut child) = self.child.take() {
-                    wfc::job::close_job(&mut child);
-                }
-                let payload = self.empty_payload(true, true);
-                self.last_payload = payload.clone();
-                self.pending_finish = Some((true, payload));
-                return StepOutcome::Yield;
-            }
-            StepOutcome::Cancelled => {
-                wfc::job::retire_outcome(&mut outcome);
-                return StepOutcome::Cancelled;
-            }
-            StepOutcome::Fault(_) => {
-                wfc::job::retire_outcome(&mut outcome);
-                return self.fault(context, "wfc-grid3d-fill-child-fault");
-            }
-            StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => {
-                wfc::job::retire_outcome(&mut outcome);
-                self.last_payload = self.payload_from_child(false, false);
-                self.needs_tick = true;
-                return StepOutcome::Yield;
-            }
-            StepOutcome::Yield => {}
-        }
-        self.last_payload = self.payload_from_child(false, false);
-        context.consume_fuel(1);
-        self.publish_tick(context, ToolRunState::Running, None)
+        return self.drain_child(context);
     }
 
     fn begin_close(&mut self) {

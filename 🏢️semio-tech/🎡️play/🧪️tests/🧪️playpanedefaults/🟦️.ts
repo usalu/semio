@@ -17,7 +17,7 @@ function pluginDescriptorReader(repoRoot: string): (cratePath: string) => any | 
  * default document: the framework's own `NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS`. `stdio` used to be
  * exempt there because only one of its nine shipped editor apps published an example; all nine publish
  * one now (ticket 26/09/19 `📓️stdio-examples.md`), so it is exempt nowhere. */
-const EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS: readonly string[] = ["demonstrator", "flow", "norm"];
+const EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS: readonly string[] = ["demonstrator"];
 
 /** @emoji 🕳️ The only plugins that commit no descriptor at all, so no manifest states which examples
  * their apps publish and a pane of theirs can only be checked against the example DIRECTORIES on disk —
@@ -75,7 +75,6 @@ function declaresSetActiveExampleInRust(repoRoot: string, pluginRoot: string): b
  * Asserted as an UPPER BOUND, never an equality, so a plugin declaring the action shrinks the set
  * without breaking this gate — while a pane newly losing it fails here. */
 const PANES_WHOSE_APP_CANNOT_SWITCH_EXAMPLES: Readonly<Record<string, string>> = {
-  generation2d: "procedural — generation2d editor declares no setActiveExample",
   lowpoly: "lowpoly — lowpoly editor declares no setActiveExample",
   layout: "layout — layout editor declares no setActiveExample",
   gis3d: "gis — gisterrain editor declares no setActiveExample",

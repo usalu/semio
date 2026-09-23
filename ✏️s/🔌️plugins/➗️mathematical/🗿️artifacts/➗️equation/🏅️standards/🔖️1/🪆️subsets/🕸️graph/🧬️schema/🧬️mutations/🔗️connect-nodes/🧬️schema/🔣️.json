@@ -18,6 +18,11 @@
     },
     "target": {
       "type": "string"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Roster position to insert at; absent appends. Inverses restore exact order with it."
     }
   }
 }

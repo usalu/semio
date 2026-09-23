@@ -55,6 +55,10 @@ impl ArtifactViewer for ImperativeViewer {
     type Command = ImperativeViewCommand;
 
     const DIALECT: semio_framework_plugin::app::Dialect = PROCEDURE_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::procedure_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::procedure_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> ProcedureSnapshot {

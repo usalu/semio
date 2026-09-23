@@ -176,11 +176,11 @@ fn attraction_row(attraction: &Puzzle3dAttraction) -> UiAssemblyResult<BuiltNode
 /// 🌳️ The four document sections, each windowed against the host's own open/scroll state for this body.
 pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     PanelTreeBuilder::new(ROOT)?
+        .interaction_domain(PUZZLE3D_PLAY_CONTROLLER_ID, PUZZLE3D_INTERACTION_DOMAIN)?
         .window_section(windows, &format!("{ROOT}.objects"), Some(ui_label(labels.objects.as_str())?), true, &fixture.objects, |object| object_row(object, fixture, labels, windows))?
         .window_section(windows, &format!("{ROOT}.references"), Some(ui_label(labels.references.as_str())?), false, &fixture.references, |reference| reference_row(reference, labels))?
         .window_section(windows, &format!("{ROOT}.target-volumes"), Some(ui_label(labels.target_volumes.as_str())?), false, &fixture.target_volumes, |volume| target_volume_row(volume, labels))?
         .window_section(windows, &format!("{ROOT}.attractions"), Some(ui_label(labels.attractions.as_str())?), false, &fixture.attractions, attraction_row)?
-        .interaction_domain(PUZZLE3D_PLAY_CONTROLLER_ID, PUZZLE3D_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render

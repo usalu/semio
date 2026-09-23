@@ -7,7 +7,7 @@
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
 use crate::document::NormHost;
-use crate::editor::iso16757::commands::{evaluate, selected_check, set_snapshot};
+use crate::editor::iso16757::commands::{evaluate, selected_check, set_active_example, set_snapshot};
 use crate::editor::iso16757::modes::edit as edit_mode;
 use crate::editor::iso16757::modes::edit::windows::{inputs, results};
 use crate::editor::iso16757::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -42,6 +42,7 @@ semio_framework_plugin::app_commands! {
         "setSnapshot" as "set-snapshot" => set_snapshot::ReplaceSnapshot,
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
+        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
     }
 }
 //#endregion 🔖️Commands
@@ -90,7 +91,7 @@ impl ArtifactEditor for Iso16757PlayApp {
         factory: "Iso16757BoundedCommandJobFactory",
         factory_type: Iso16757BoundedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-        tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex"]
+        tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"]
     }
 
 
@@ -228,6 +229,12 @@ pub fn create_iso16757_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("evaluate", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::Migrated)
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left")
+                    .with_args(vec![semio_framework_plugin::ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel"))]),
+            )
+            .action_destructive("setActiveExample")
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder` takes a bare `AppDefinition` — there is no

@@ -78,3 +78,14 @@ Tracked `$T/📓️<topic>.md` reports remain the durable record — append to t
 `📜️native-test-mutex.sh` admits TWO holders again. A wrapper queued before 17:20 still runs the one-slot loop: if your
 ticket is rank 2 and slot 2 (`/tmp/semio-play-native-test.lock.2`) is free, kill YOUR waiting wrapper + cargo and
 relaunch the same command once. JOBS=2 stays. If the coordinator announces load > 100 again, back to one.
+
+## 2026-09-23 02:00 addendum — session 7 (coordinator process restarted ~00:00; all agents are successors)
+State: strict acceptance 70/70 on the 15:47 activation (📓️acceptance-runs.md); play unit 71/71; play-runtime
+replaced the canvas census with per-window paint witnesses (raster is the honest red until its real emblem lands).
+DONE topics: stdio-b, cad-content, media (except peer S10-E), xcut-dict, play-runtime. The 22:17 full activation
+(framework decoder fix baked) died with the process at 00:00; a new chain (describe animate + raster → activate-dev)
+is queued now; :6033 is being restarted onto the current staging by the supervisor. Everything in
+`⚡️cache/play-fleet/<topic>/` survived; `$T/📓️<topic>.md` are the durable reports — read yours FIRST and continue
+from its last dated section. Rules unchanged: two native mutex slots, JOBS=2, private target dir under $G, no
+wasm32/describe/activate, requests via touch files, no sub-agents, no git writes, never kill others' processes,
+never `clean`, append to the tracked report at every milestone (the session limit kills agents without warning).

@@ -663,7 +663,6 @@ impl GisMapSnapshotCloneAuthority {
                     cx.consume_fuel(encoded.len().max(1) as u64);
                     return Ok(false);
                 }
-                self.phase += 1;
                 self.index = 0;
                 &[]
             }

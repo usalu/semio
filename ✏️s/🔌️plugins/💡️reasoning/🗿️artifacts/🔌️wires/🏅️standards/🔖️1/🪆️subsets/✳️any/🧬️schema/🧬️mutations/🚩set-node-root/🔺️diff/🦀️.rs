@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `SetNodeRoot`.
 
 use crate::diff::{diff_board_fixture, WiresDiff};
-use crate::mutations::set_node_field;
+use crate::mutations::{remove_node_field, set_node_field};
 use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::WiresSnapshot;
 use dsl::DslValue;
@@ -15,7 +15,11 @@ pub fn diff(payload: &super::SetNodeRoot, base: &WiresSnapshot) -> protocol::Mut
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" root is already {}.", payload.node_id, payload.new_root));
     }
     let mut board = crate::wires_working_board(base);
-    set_node_field(&mut board, &payload.node_id, "root", DslValue::Bool(payload.new_root));
+    if payload.new_root {
+        set_node_field(&mut board, &payload.node_id, "root", DslValue::Bool(true));
+    } else {
+        remove_node_field(&mut board, &payload.node_id, "root");
+    }
     protocol::MutationOutcome::new(diff_board_fixture(&board))
 }
 //#endregion 🔖️Diff

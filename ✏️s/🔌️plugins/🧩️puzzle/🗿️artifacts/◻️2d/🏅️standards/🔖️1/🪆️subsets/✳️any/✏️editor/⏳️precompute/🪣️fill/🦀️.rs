@@ -1107,8 +1107,8 @@ impl Puzzle2dFillRunJob {
             None => Vec::new(),
         };
         let provisional_placements = expected.len() / FILL_RUN_OPS_PER_PLACEMENT;
-        let kinds = fill_kind_rows(&document.0);
-        let target_regions = fill_visible_region_bounds(&document.0);
+        let kinds = fill_kind_rows(document.value());
+        let target_regions = fill_visible_region_bounds(document.value());
         let mut job = Self {
             kinds,
             open_handles: 0,
@@ -1424,7 +1424,7 @@ impl InteractiveJob for Puzzle2dFillRunJob {
                 return self.flush(context).unwrap_or(StepOutcome::Yield);
             }
             if let Some(capture) = self.capture.as_mut() {
-                match capture.advance(&self.document.0, &self.kinds, FILL_RUN_CAPTURE_UNITS) {
+                match capture.advance(self.document.value(), &self.kinds, FILL_RUN_CAPTURE_UNITS) {
                     Ok(None) => {}
                     Ok(Some(snapshot)) => {
                         let serial = capture.serial;
@@ -1556,7 +1556,7 @@ impl Puzzle2dFillRevalidateJob {
     }
 
     fn prepare_head_one(&mut self) -> bool {
-        let Some(node) = self.head.0.get("nodes").and_then(Value::as_array).and_then(|nodes| nodes.get(self.head_cursor)) else { return false };
+        let Some(node) = self.head.value().get("nodes").and_then(Value::as_array).and_then(|nodes| nodes.get(self.head_cursor)) else { return false };
         self.head_cursor += 1;
         let rectangle = node.get("shape").and_then(Value::as_str) == Some("rectangle");
         let number = |key: &str| node.get(key).and_then(Value::as_f64);

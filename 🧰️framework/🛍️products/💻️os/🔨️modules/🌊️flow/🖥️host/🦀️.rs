@@ -1961,8 +1961,14 @@ impl FlowHost {
             .host_snapshot
             .synapses
             .iter()
-            .filter(|syn| !would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to))
-            .map(|syn| DagHostSnapshotEdge { id: syn.id.clone(), source: format!("{}@{}", syn.from, syn.from_port), target: format!("{}@{}", syn.to, syn.to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
+            .filter_map(|syn| {
+                if would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to) {
+                    return None;
+                }
+                let from_port = resolve_synapse_port(&syn.from, &syn.from_port, PortSide::Output, &self.host_snapshot.widgets, &self.host_snapshot.synapses, &self.kind_infos).unwrap_or_else(|| syn.from_port.clone());
+                let to_port = resolve_synapse_port(&syn.to, &syn.to_port, PortSide::Input, &self.host_snapshot.widgets, &self.host_snapshot.synapses, &self.kind_infos).unwrap_or_else(|| syn.to_port.clone());
+                Some(DagHostSnapshotEdge { id: syn.id.clone(), source: format!("{}@{}", syn.from, from_port), target: format!("{}@{}", syn.to, to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
+            })
             .collect();
         DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom }, nodes, edges }
     }
@@ -4750,6 +4756,24 @@ pub fn port_value_types_compatible(source: &[String], target: &[String]) -> bool
 
 fn widget_has_output(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> bool {
     widgets.iter().any(|w| widget_id_for(w) == widget_id && !widget_io_ports(w, synapses, kind_infos).1.is_empty())
+}
+
+/// 🔌️ Maps a synapse endpoint onto the `IoPortSpec.id` the board keys its handles with.
+/// An exact id is kept. Legacy `out` / `in` and an empty id select the first port on that side.
+/// A missing widget or an unknown port stays unresolved so the canvas draws no wire.
+fn resolve_synapse_port(widget_id: &str, port_id: &str, side: PortSide, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> Option<String> {
+    let widget = widgets.iter().find(|widget| widget_id_for(widget) == widget_id)?;
+    let (inputs, outputs, _, _) = widget_io_ports(widget, synapses, kind_infos);
+    let ports: Vec<String> = match side {
+        PortSide::Output => outputs.iter().map(|port| port.id.clone()).collect(),
+        PortSide::Input if inputs.is_empty() && matches!(widget, Widget::OutputPreview { .. } | Widget::OutputAction { .. } | Widget::OutputExport { .. }) => vec![String::new()],
+        PortSide::Input => inputs.iter().map(|port| port.id.clone()).collect(),
+    };
+    if ports.iter().any(|id| id == port_id) {
+        return Some(port_id.to_string());
+    }
+    let legacy = matches!((side, port_id), (PortSide::Output, "" | "out") | (PortSide::Input, "" | "in"));
+    if legacy { ports.first().cloned() } else { None }
 }
 
 fn first_output_port(widget_id: &str, widgets: &[Widget], synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> String {

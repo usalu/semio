@@ -6,18 +6,34 @@ use crate::standards::v1::subsets::any::schema::inferences::find_board_node;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{artifact_app_laws, PluginApp, INTERACTION_SELECT_ACTION_ID};
 
+/// 🖱️ A drag is a CANVAS gesture: `WiresWindowDragWork::extent` measures it against the dispatching
+/// canvas window's transient and config owners, so the gesture carries that window as its view state
+/// and one `nodeGraphViewport` mints the window config first (the recipe of
+/// `pointer_down_selects_the_hit_node_inline`). The move is a window-transient preview; the release
+/// publishes the ONE durable `move-node`, and one settled framework undo restores the origin.
 #[semio_framework_async_macros::async_test]
 async fn pointer_drag_translates_node_by_screen_delta() {
+    use crate::editor::wires::commands::node_graph_viewport::NodeGraphViewport;
+    use crate::editor::wires::unit_tests::context::settle;
+    use crate::editor::wires::WIRES_PLAY_WINDOW_CANVAS;
+    use semio_framework_plugin::{ActionMeta, ViewModel, ViewWindowInstance};
     let mut app = new_app().await;
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..Default::default() };
+    let meta = ActionMeta { view_state: view.for_window_instance("left"), ..artifact_app_laws::meta("local") };
     dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() })).await;
-    dispatch(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 100.0, y: 100.0 })).await;
-    dispatch(&mut app, WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 140.0, y: 130.0, samples: Vec::new() })).await;
+    for command in [
+        WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }),
+        WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 100.0, y: 100.0 }),
+        WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 140.0, y: 130.0, samples: Vec::new() }),
+        WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
+    ] {
+        app.dispatch_typed(command, &meta).await.expect("dispatch");
+        settle(&mut app).await;
+    }
     let node = find_board_node(&app.snapshot().expect("snapshot"), "node-1").expect("node-1").clone();
     assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(40.0));
     assert_eq!(node.get("y").and_then(|value| value.as_f64()), Some(30.0));
-    dispatch(&mut app, WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false })).await;
-    // A coalesced drag collapses to a single undo step restoring the origin.
-    app.handle_action("undo", None, &artifact_app_laws::meta("local")).await.expect("undo");
+    artifact_app_laws::settle_history_verb(&mut *app, "undo", artifact_app_laws::meta("local").instance_id).await;
     let node = find_board_node(&app.snapshot().expect("snapshot"), "node-1").expect("node-1").clone();
     assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(0.0));
 }
@@ -70,10 +86,21 @@ async fn pointer_down_selects_the_hit_node_inline() {
     result.expect("inline pick");
 }
 
+/// 🖱️ A press on empty canvas clears the drag: no document publication and no `interactionSelect`.
 #[semio_framework_async_macros::async_test]
 async fn pointer_down_on_empty_space_requests_no_select_effect() {
+    use crate::editor::wires::commands::node_graph_viewport::NodeGraphViewport;
+    use crate::editor::wires::unit_tests::context::settle;
+    use crate::editor::wires::{WIRES_INTERACTION_GRAPH, WIRES_PLAY_WINDOW_CANVAS};
+    use semio_framework_plugin::{ActionMeta, ViewModel, ViewWindowInstance};
     let mut app = new_app().await;
-    let result = dispatch(&mut app, WiresCommand::CanvasPointerDown(CanvasPointerDown { id: None, x: 0.0, y: 0.0 })).await;
-    assert!(result.requested_effects.is_empty());
-    assert!(result.mutations.is_empty());
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..Default::default() };
+    let meta = ActionMeta { view_state: view.for_window_instance("left"), ..artifact_app_laws::meta("local") };
+    app.dispatch_typed(WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await.expect("viewport");
+    settle(&mut app).await;
+    app.dispatch_typed(WiresCommand::CanvasPointerDown(CanvasPointerDown { id: None, x: 0.0, y: 0.0 }), &meta).await.expect("pointer down");
+    let receipt = settle(&mut app).await;
+    assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "an empty-space press never publishes the document");
+    assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)));
+    assert!(app.interaction_state().await.selection.get(WIRES_INTERACTION_GRAPH).is_none_or(|selection| selection.ids.is_empty()));
 }

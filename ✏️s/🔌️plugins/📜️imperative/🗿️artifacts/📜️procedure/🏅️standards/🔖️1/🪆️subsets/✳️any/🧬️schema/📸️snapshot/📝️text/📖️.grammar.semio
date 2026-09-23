@@ -1,9 +1,24 @@
 dialect grammar
 grammar procedure.snapshot
 extension procedure
+use family-scene
 start document
 
-document = header body
-header = "schema" SP "imperative.procedure.snapshot" NL
-body = payload NL?
-payload = OCTET+
+# Grammar for `ProcedureSnapshot::print_dsl`/`parse_dsl` (`🧬️schema/📸️snapshot/🦀️.rs`
+# `print_procedure_snapshot_body`/`parse_procedure_snapshot_body`): a hex/bracket `key=value` line
+# codec, one required line per field. `path` and `seed` carry the content of the `flow` and `text`
+# composed children; the handles alone name the children but never their content.
+artifact-mark = "semio imperative.imperative.dsl v1"
+document = artifact-mark schema-line flow-line text-line path-line seed-line
+
+schema-line = "schema" "=" hex
+flow-line = "flow" "=" child-handle
+text-line = "text" "=" child-handle
+path-line = "path" "=" hex
+seed-line = "seed" "=" hex
+
+child-handle = "[" hex "," hex "]"
+
+# `hex` is the framework's built-in macro: lowercase-hex UTF-8 bytes. `path` and `seed` hex-encode
+# first-party JSON of the imperative `Path` (ordered, nested steps) and the seed dictionary; a child
+# handle hex-encodes its `child_id` and its target `ArtifactRef` URI.

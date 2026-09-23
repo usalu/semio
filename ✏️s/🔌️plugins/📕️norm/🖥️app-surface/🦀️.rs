@@ -430,8 +430,8 @@ pub fn selected_check_index_arg(args: Option<&dsl::DslValue>) -> Option<u32> {
     args.and_then(|value| value.get("index")).and_then(dsl::DslValue::as_u64).map(|value| value as u32)
 }
 
-/// 🌉️ Installs the `{action, args}` → typed-`Command` bridge every norm editor needs, for the three
-/// verbs all fifteen declare (`setSnapshot`/`evaluate`/`setSelectedCheckIndex`).
+/// 🌉️ Installs the `{action, args}` → typed-`Command` bridge every norm editor needs, for the four
+/// verbs all fifteen declare (`setSnapshot`/`evaluate`/`setSelectedCheckIndex`/`setActiveExample`).
 ///
 /// 🩹️ `ArtifactEditor::command_from_action`'s default refuses EVERY id — `app.command.unsupported:
 /// action '…' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand)`
@@ -468,6 +468,13 @@ macro_rules! norm_command_from_action {
             match action {
                 "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
                 "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),
+                "setActiveExample" => {
+                    let example_id = args
+                        .and_then(|value| value.get("exampleId").or_else(|| value.get("example_id")).or_else(|| value.get("value")))
+                        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+                        .unwrap_or_default();
+                    Ok($command::SetActiveExample(set_active_example::SetActiveExample { example_id }))
+                }
                 "setSnapshot" => {
                     let text = args
                         .and_then(|value| value.get("text").or_else(|| value.get("snapshot")))
@@ -478,7 +485,7 @@ macro_rules! norm_command_from_action {
                 other => Err(semio_framework_plugin::Fault::new(
                     semio_framework_plugin::FaultOrigin::App,
                     semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
-                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex)"),
+                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex/setActiveExample)"),
                 )),
             }
         }
@@ -491,6 +498,13 @@ macro_rules! norm_command_from_action {
             match action {
                 "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
                 "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),
+                "setActiveExample" => {
+                    let example_id = args
+                        .and_then(|value| value.get("exampleId").or_else(|| value.get("example_id")).or_else(|| value.get("value")))
+                        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+                        .unwrap_or_default();
+                    Ok($command::SetActiveExample(set_active_example::SetActiveExample { example_id }))
+                }
                 "setSnapshot" => {
                     let text = args
                         .and_then(|value| value.get("snapshot"))
@@ -502,7 +516,7 @@ macro_rules! norm_command_from_action {
                 other => Err(semio_framework_plugin::Fault::new(
                     semio_framework_plugin::FaultOrigin::App,
                     semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
-                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex)"),
+                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex/setActiveExample)"),
                 )),
             }
         }
@@ -521,8 +535,8 @@ pub fn snapshot<'a, D>(doc: &'a ArtifactView<'_, D>) -> &'a D {
 //#region 🧵️RetainedCommands
 /// 🧾️ Every norm tool id, in `app_commands!` row order. All fifteen apps declare exactly this set, so
 /// the list, [`NORM_PUBLICATION_CONTRACTS`], every factory key set and every `bounded_first_step_tool_proofs!`
-/// block are driven from this one constant.
-pub const NORM_RETAINED_TOOL_IDS: &[&str] = &["setSnapshot", "evaluate", "setSelectedCheckIndex"];
+/// block are driven from this one constant (including `setActiveExample`).
+pub const NORM_RETAINED_TOOL_IDS: &[&str] = &["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"];
 /// 🧬️ The payload schema id every norm retained command job is admitted under.
 pub const NORM_RETAINED_PAYLOAD_SCHEMA: &str = "norm.tool-command.v1";
 /// 🎒️ Wire ceiling for one norm tool dispatch: the largest payload is `setSnapshot`'s whole compliance
@@ -538,6 +552,7 @@ pub const NORM_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "evaluate", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "setSelectedCheckIndex", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
 /// 🛣️ Stable language-neutral identifier for one live publication lane.

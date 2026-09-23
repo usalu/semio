@@ -61,11 +61,57 @@ fn close_presentation_pages(mut pages: store::OwnedSchemaDecodePages) {
     drop(pages);
 }
 
+/// 🏁️ Drives one retained caller until `done` accepts a step. The pool is the NATIVE multi-thread
+/// pool, so every `Pending` is the worker thread still owning the turn: the caller yields its OS
+/// thread instead of burning a fixed spin count (a 10 000-iteration busy loop finishes in well under
+/// a millisecond, long before a condvar-parked worker is even scheduled under a loaded test run). The
+/// bound is liveness, not speed, and a stall reports the handle's exact retained state.
+/// See [`crate::standards::v1::subsets::any::io::mutations::binary::PresentationEnvelopeMaterializeHandle::maintenance_step`].
+fn drive_presentation_caller(
+    registry: &mut PresentationEnvelopeMaterializeRegistry,
+    operation: semio_framework_job::OperationId,
+    generation: semio_framework_job::Generation,
+    live_generation: semio_framework_job::Generation,
+    pool: &semio_framework_job::WorkerPool,
+    done: impl Fn(PresentationEnvelopeMaterializeHandleStep) -> bool,
+) -> PresentationEnvelopeMaterializeHandleStep {
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+    let (mut pending, mut progress) = (0usize, 0usize);
+    loop {
+        let step = registry.maintenance_step(operation, generation, live_generation, pool).expect("exact live caller");
+        if done(step) {
+            return step;
+        }
+        match step {
+            PresentationEnvelopeMaterializeHandleStep::Pending => {
+                pending += 1;
+                std::thread::yield_now();
+            }
+            PresentationEnvelopeMaterializeHandleStep::Progress => progress += 1,
+            _ => {}
+        }
+        if std::time::Instant::now() >= deadline {
+            let handle = registry.get_mut(operation, generation).expect("exact live caller");
+            panic!(
+                "retained Presentation caller stalled at {step:?} after {progress} progress / {pending} pending steps: state {:?}, ticket pending {}, close started {}, fault {:?}",
+                handle.state,
+                handle.pending.is_some(),
+                handle.close_started,
+                handle.fault().map(String::from_utf8_lossy)
+            );
+        }
+    }
+}
+
 fn close_presentation_registry(registry: &mut PresentationEnvelopeMaterializeRegistry, pool: &semio_framework_job::WorkerPool) {
     for _ in 0..100_000 {
-        if registry.close_next_step(pool, 1, PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES).expect("bounded registry close") == store::SnapshotRetirementStep::Complete {
-            assert!(registry.terminal_is_empty());
-            return;
+        match registry.close_next_step(pool, 1, PRESENTATION_ENVELOPE_SNAPSHOT_PACK_BYTES).expect("bounded registry close") {
+            store::SnapshotRetirementStep::Complete => {
+                assert!(registry.terminal_is_empty());
+                return;
+            }
+            store::SnapshotRetirementStep::Blocked => std::thread::yield_now(),
+            _ => {}
         }
     }
     panic!("Presentation registry did not reach terminal empty within the fixed fixture ceiling");
@@ -90,16 +136,9 @@ async fn envelope_helpers_round_trip() {
     registry.try_submit(operation, generation, presentation_envelope_test_pages(&hex)).unwrap_or_else(|_| panic!("sealed fixed-page caller"));
     let pool = semio_framework_job::WorkerPool::new(semio_framework_job::WorkerPoolConfig::new(semio_framework_job::ProcessKind::InteractiveNative, 1));
     let mut target = PresentationProjectionFixtureTarget { value: None };
-    for _ in 0..10_000 {
-        match registry.maintenance_step(operation, generation, generation, &pool).expect("exact live caller") {
-            PresentationEnvelopeMaterializeHandleStep::Pending | PresentationEnvelopeMaterializeHandleStep::Progress => {}
-            PresentationEnvelopeMaterializeHandleStep::Ready => {
-                assert!(registry.try_publish_to(operation, generation, &mut target).expect("completion lock is uncontended"));
-                break;
-            }
-            outcome => panic!("valid Presentation envelope caller produced {outcome:?}"),
-        }
-    }
+    let outcome = drive_presentation_caller(&mut registry, operation, generation, generation, &pool, |step| !matches!(step, PresentationEnvelopeMaterializeHandleStep::Pending | PresentationEnvelopeMaterializeHandleStep::Progress));
+    assert_eq!(outcome, PresentationEnvelopeMaterializeHandleStep::Ready, "valid Presentation envelope caller produced {outcome:?} (fault {:?})", registry.fault(operation, generation).ok().flatten().map(String::from_utf8_lossy));
+    assert!(registry.try_publish_to(operation, generation, &mut target).expect("completion lock is uncontended"));
     // 🔚 A published retained caller still owns its pages until the bounded close loop reclaims it — without this the registry is not terminal-empty and its Drop panics on top of the failed assert (a double panic aborts the whole test binary).
     close_presentation_registry(&mut registry, &pool);
     assert!(registry.terminal_is_empty());
@@ -126,16 +165,9 @@ async fn retained_presentation_envelope_materializes_populated_history_in_order(
     registry.try_submit(operation, generation, presentation_envelope_json_test_pages(&json)).unwrap_or_else(|_| panic!("populated retained caller was pre-admitted"));
     let pool = semio_framework_job::WorkerPool::new(semio_framework_job::WorkerPoolConfig::new(semio_framework_job::ProcessKind::InteractiveNative, 1));
     let mut target = PresentationProjectionFixtureTarget { value: None };
-    for _ in 0..20_000 {
-        match registry.maintenance_step(operation, generation, generation, &pool).expect("exact populated caller") {
-            PresentationEnvelopeMaterializeHandleStep::Pending | PresentationEnvelopeMaterializeHandleStep::Progress => {}
-            PresentationEnvelopeMaterializeHandleStep::Ready => {
-                assert!(registry.try_publish_to(operation, generation, &mut target).expect("populated output publication"));
-                break;
-            }
-            outcome => panic!("populated Presentation history produced {outcome:?}"),
-        }
-    }
+    let outcome = drive_presentation_caller(&mut registry, operation, generation, generation, &pool, |step| !matches!(step, PresentationEnvelopeMaterializeHandleStep::Pending | PresentationEnvelopeMaterializeHandleStep::Progress));
+    assert_eq!(outcome, PresentationEnvelopeMaterializeHandleStep::Ready, "populated Presentation history produced {outcome:?} (fault {:?})", registry.fault(operation, generation).ok().flatten().map(String::from_utf8_lossy));
+    assert!(registry.try_publish_to(operation, generation, &mut target).expect("populated output publication"));
     // 🔚 A published retained caller still owns its pages until the bounded close loop reclaims it — without this the registry is not terminal-empty and its Drop panics on top of the failed assert (a double panic aborts the whole test binary).
     close_presentation_registry(&mut registry, &pool);
     assert!(registry.terminal_is_empty());
@@ -152,11 +184,7 @@ async fn retained_presentation_envelope_caller_faults_and_zero_grant_closes_malf
     let mut registry = PresentationEnvelopeMaterializeRegistry::new();
     registry.try_submit(operation, generation, presentation_envelope_test_pages("00")).unwrap_or_else(|_| panic!("sealed malformed pages remain retained"));
     let pool = semio_framework_job::WorkerPool::new(semio_framework_job::WorkerPoolConfig::new(semio_framework_job::ProcessKind::InteractiveNative, 1));
-    for _ in 0..10_000 {
-        if registry.maintenance_step(operation, generation, generation, &pool).expect("exact live caller") == PresentationEnvelopeMaterializeHandleStep::Fault {
-            break;
-        }
-    }
+    drive_presentation_caller(&mut registry, operation, generation, generation, &pool, |step| step == PresentationEnvelopeMaterializeHandleStep::Fault);
     assert!(registry.fault(operation, generation).expect("exact fault owner").is_some());
     assert_eq!(registry.close_step(operation, generation, &pool, 0, 0).expect("zero grant preserves the exact fault owner"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
     close_presentation_registry(&mut registry, &pool);
@@ -174,11 +202,7 @@ async fn retained_presentation_envelope_caller_cancels_and_zero_grant_closes_wit
     registry.try_submit(operation, generation, presentation_envelope_test_pages(&hex)).unwrap_or_else(|_| panic!("sealed fixed-page caller"));
     let pool = semio_framework_job::WorkerPool::new(semio_framework_job::WorkerPoolConfig::new(semio_framework_job::ProcessKind::InteractiveNative, 1));
     registry.cancel(operation, generation).expect("exact live caller");
-    for _ in 0..10_000 {
-        if registry.maintenance_step(operation, generation, generation, &pool).expect("exact live caller") == PresentationEnvelopeMaterializeHandleStep::Cancelled {
-            break;
-        }
-    }
+    drive_presentation_caller(&mut registry, operation, generation, generation, &pool, |step| step == PresentationEnvelopeMaterializeHandleStep::Cancelled);
     assert_eq!(registry.close_step(operation, generation, &pool, 0, 0).expect("zero grant preserves the exact cancelled job"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
     close_presentation_registry(&mut registry, &pool);
     assert!(registry.terminal_is_empty());
@@ -245,11 +269,7 @@ async fn retained_presentation_envelope_publication_retries_backpressure_exactly
     let mut registry = PresentationEnvelopeMaterializeRegistry::new();
     registry.try_submit(operation, generation, presentation_envelope_test_pages(&hex)).unwrap_or_else(|_| panic!("sealed fixed-page caller"));
     let pool = semio_framework_job::WorkerPool::new(semio_framework_job::WorkerPoolConfig::new(semio_framework_job::ProcessKind::InteractiveNative, 1));
-    for _ in 0..10_000 {
-        if registry.maintenance_step(operation, generation, generation, &pool).expect("exact live caller") == PresentationEnvelopeMaterializeHandleStep::Ready {
-            break;
-        }
-    }
+    drive_presentation_caller(&mut registry, operation, generation, generation, &pool, |step| step == PresentationEnvelopeMaterializeHandleStep::Ready);
     let mut target = PresentationProjectionBackpressureTarget { reject_once: true, value: None };
     assert!(!registry.try_publish_to(operation, generation, &mut target).expect("first publication preserves backpressure owner"));
     assert_eq!(registry.maintenance_step(operation, generation, generation, &pool).expect("backpressured caller remains exact"), PresentationEnvelopeMaterializeHandleStep::Ready);
@@ -268,12 +288,7 @@ async fn retained_presentation_envelope_stale_generation_cancels_and_unpublished
     let mut registry = PresentationEnvelopeMaterializeRegistry::new();
     registry.try_submit(operation, generation, presentation_envelope_test_pages(&hex)).unwrap_or_else(|_| panic!("sealed fixed-page caller"));
     let pool = semio_framework_job::WorkerPool::new(semio_framework_job::WorkerPoolConfig::new(semio_framework_job::ProcessKind::InteractiveNative, 1));
-    for _ in 0..10_000 {
-        let step = registry.maintenance_step(operation, generation, semio_framework_job::Generation(12), &pool).expect("exact stale caller remains retained");
-        if matches!(step, PresentationEnvelopeMaterializeHandleStep::Cancelled | PresentationEnvelopeMaterializeHandleStep::Fault) {
-            break;
-        }
-    }
+    drive_presentation_caller(&mut registry, operation, generation, semio_framework_job::Generation(12), &pool, |step| matches!(step, PresentationEnvelopeMaterializeHandleStep::Cancelled | PresentationEnvelopeMaterializeHandleStep::Fault));
     close_presentation_registry(&mut registry, &pool);
     assert!(registry.terminal_is_empty());
     drop(registry);
@@ -281,11 +296,7 @@ async fn retained_presentation_envelope_stale_generation_cancels_and_unpublished
     let operation = semio_framework_job::OperationId(8_201);
     let mut registry = PresentationEnvelopeMaterializeRegistry::new();
     registry.try_submit(operation, generation, presentation_envelope_test_pages(&hex)).unwrap_or_else(|_| panic!("second sealed fixed-page caller"));
-    for _ in 0..10_000 {
-        if registry.maintenance_step(operation, generation, generation, &pool).expect("exact live caller") == PresentationEnvelopeMaterializeHandleStep::Ready {
-            break;
-        }
-    }
+    drive_presentation_caller(&mut registry, operation, generation, generation, &pool, |step| step == PresentationEnvelopeMaterializeHandleStep::Ready);
     close_presentation_registry(&mut registry, &pool);
     assert!(registry.terminal_is_empty());
     drop(registry);

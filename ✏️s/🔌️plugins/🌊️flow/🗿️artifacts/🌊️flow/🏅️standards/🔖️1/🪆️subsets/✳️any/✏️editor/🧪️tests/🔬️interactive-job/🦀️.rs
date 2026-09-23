@@ -163,6 +163,7 @@ async fn every_graph_operation_route_is_admitted_by_its_own_retained_factory() {
         FlowCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: widget_id.clone(), source_port_id: String::new(), target_node_id: widget_id.clone(), target_port_id: String::new() }),
         FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: widget_id.clone(), value: widget_id.clone() }),
         FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
+        FlowCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
     ];
     assert_eq!(commands.len(), FLOW_GRAPH_OPERATION_TOOL_IDS.len(), "one probe per graph-operation route");
     for command in commands {

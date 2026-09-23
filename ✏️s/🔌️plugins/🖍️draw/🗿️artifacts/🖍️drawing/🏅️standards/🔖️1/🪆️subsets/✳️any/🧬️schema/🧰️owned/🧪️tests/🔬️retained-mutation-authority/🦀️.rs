@@ -144,6 +144,9 @@ fn drain_mutation(value: DrawingMutation) {
     panic!("Drawing mutation retirement did not terminate")
 }
 
+/// 🚪️ Drives one candidate close to terminal. The arena pool is PROCESS-global and returned under
+/// `try_lock`, so a concurrent law holding it makes one slice answer `Blocked` — contention, not a
+/// stuck ladder; the slice is retried inside the same bound, which still fails a ladder that never ends.
 fn close_candidate(authority: &mut DrawingMutationCandidateAuthority, mut source: Option<&mut DrawingSnapshot>) {
     for _ in 0..100_000 {
         match authority.close_step(source.as_deref_mut(), DRAWING_OWNED_FIELD_BYTES).expect("Drawing candidate close") {
@@ -155,7 +158,7 @@ fn close_candidate(authority: &mut DrawingMutationCandidateAuthority, mut source
                 assert!(released_items <= 1);
                 assert!(released_bytes <= DRAWING_OWNED_FIELD_BYTES);
             }
-            store::SnapshotRetirementStep::Blocked => panic!("owned Drawing candidate close cannot block"),
+            store::SnapshotRetirementStep::Blocked => std::thread::yield_now(),
         }
     }
     panic!("Drawing candidate close did not terminate")

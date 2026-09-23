@@ -35,6 +35,14 @@ pub fn set_node_field(board: &mut DslValue, node_id: &str, key: &str, value: Dsl
         }
     }
 }
+/// 🧹️ Removes one field from the node with id `node_id`. A flag whose canonical "off" is its ABSENCE
+/// (`root`) is cleared this way, so setting it and clearing it again restores the exact node — and the
+/// content child, a hash over the node values — the flag was set on.
+pub fn remove_node_field(board: &mut DslValue, node_id: &str, key: &str) {
+    if let Some(DslValue::Object(entries)) = array_mut(board, "nodes").iter_mut().find(|node| entity_id(node, "id") == Some(node_id)) {
+        entries.retain(|(entry_key, _)| entry_key.as_str() != key);
+    }
+}
 //#endregion 🔖️NodeFieldHelpers
 
 //#region 🔖️Mutations

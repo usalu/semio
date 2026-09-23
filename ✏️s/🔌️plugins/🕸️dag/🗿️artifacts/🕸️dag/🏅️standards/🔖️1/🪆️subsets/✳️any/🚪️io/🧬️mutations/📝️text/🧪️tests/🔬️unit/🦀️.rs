@@ -1,4 +1,5 @@
 use super::*;
+use crate::mutations::{connect_nodes, connect_nodes_at, create_node, create_node_at};
 
 fn sample_node(id: &str) -> DagNodeSpec {
     crate::schema::default_node_for_kind("note", id, 0.0, 0.0)
@@ -45,5 +46,7 @@ fn every_mutation() -> Vec<DagMutation> {
         reorder_nodes(vec!["node-2".into(), "node-1".into()]),
         connect_nodes("edge-1".into(), "node-1@out".into(), "node-2@in".into(), EdgeRouteStyle::default(), PropertyBag::default()),
         disconnect_nodes("edge-1".into()),
+        create_node_at(sample_node("node-3"), 1),
+        connect_nodes_at("edge-2".into(), "node-1@out".into(), "node-3@in".into(), EdgeRouteStyle::default(), PropertyBag::default(), 0),
     ]
 }

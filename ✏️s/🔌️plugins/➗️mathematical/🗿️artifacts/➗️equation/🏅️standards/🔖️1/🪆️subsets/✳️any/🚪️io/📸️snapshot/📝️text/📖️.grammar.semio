@@ -1,9 +1,25 @@
 dialect grammar
 grammar equation.snapshot
 extension equation
+use family-scene
 start document
 
-document = header body
-header = "schema" SP "mathematical.equation.snapshot" NL
-body = payload NL?
-payload = OCTET+
+# Grammar for `EquationSnapshot::print_dsl`/`parse_dsl` (🦀️.rs `print_equation_snapshot_body`/
+# `parse_equation_snapshot_body`): a hex/bracket `key=value` line codec, one required line per field.
+# `graph` and `geometry` carry the content of the three composed children (their shared
+# `EquationWorkingScene`); the handles alone name the children but never their content.
+artifact-mark = "semio mathematical.equation.dsl v1"
+document = artifact-mark notation-line results-line computed-line equation-line graph-line geometry-line
+
+notation-line = "notation" "=" child-handle
+results-line = "results" "=" child-handle
+computed-line = "computed" "=" child-handle
+equation-line = "equation" "=" hex
+graph-line = "graph" "=" hex
+geometry-line = "geometry" "=" hex
+
+child-handle = "[" hex "," hex "]"
+
+# `hex` is the framework's built-in macro: lowercase-hex UTF-8 bytes. `equation`, `graph` and
+# `geometry` hex-encode first-party JSON of `EquationExprSnapshot`, `EquationGraph` and
+# `EquationGeometry`; a child handle hex-encodes its `child_id` and its target `ArtifactRef` URI.

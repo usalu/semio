@@ -1,6 +1,6 @@
 //! 🧬️ DAG artifact schema — every field of the artifact with its state class.
 
-use crate::mutations::delete_node;
+use crate::mutations::{delete_node, disconnect_nodes};
 use crate::op::DagMutation;
 use crate::{DagContentChild, DagNodeKind, DagNodePatch, DagPreviewContent, DagSnapshot, IoPortSpec};
 use framework_schema::ArtifactSchema;
@@ -278,11 +278,18 @@ pub fn node_patch_for_field(node: &DagNodeSpec, field: &str, raw_value: Option<&
 /// 🗑️ Operations removing `node_ids`, for delete-node / delete-selection. Two app-level consumers
 /// (`🎮️commands/➕️add-node::remove_node` and `🎮️commands/🕸️set-algorithm::{delete_selection, node_graph_edit}`)
 /// — takes only `DagSnapshot`, no app-only config type, so per the DocumentHelpers placement rule it
-/// lives here rather than being duplicated per consumer. `delete-node`'s own diff/inverse already
-/// captures the cascade (every edge touching the node), so this is one mutation per node, not one
-/// per node PLUS one per severed edge.
+/// lives here rather than being duplicated per consumer.
+///
+/// 🧺️ Every incident edge is disconnected BEFORE its node is deleted, so each published row is
+/// point-invertible: a retained one-item preparation declares exactly one forward plus one inverse row
+/// (`ArtifactStoreOneItemFootprint::for_one_invertible_item`), while `delete-node` on a connected node
+/// inverts to the node plus one row per severed edge and failed the fold with `batched item candidate
+/// failed its exact fixed fold contract`. `delete-node`'s own cascade stays for non-retained callers.
 pub fn remove_nodes_operations(document: &DagSnapshot, node_ids: &[String]) -> Vec<DagMutation> {
-    document.nodes().iter().filter(|node| node_ids.contains(&node.id)).map(|node| delete_node(node.id.clone())).collect()
+    let removed: Vec<_> = document.nodes().into_iter().filter(|node| node_ids.contains(&node.id)).map(|node| node.id).collect();
+    let mut operations: Vec<DagMutation> = document.edges().into_iter().filter(|edge| removed.contains(&split_endpoint(&edge.source).0) || removed.contains(&split_endpoint(&edge.target).0)).map(|edge| disconnect_nodes(edge.id)).collect();
+    operations.extend(removed.into_iter().map(delete_node));
+    operations
 }
 //#endregion 🔖️DocumentHelpers
 

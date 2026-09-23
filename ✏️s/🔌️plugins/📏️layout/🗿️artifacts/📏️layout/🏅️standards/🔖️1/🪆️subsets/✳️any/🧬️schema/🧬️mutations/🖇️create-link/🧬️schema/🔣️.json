@@ -50,6 +50,12 @@
         },
         "proxyDataUrl": {
           "type": "string"
+        },
+        "artifactKind": {
+          "type": "string"
+        },
+        "artifactRef": {
+          "type": "string"
         }
       }
     },

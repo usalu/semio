@@ -6,4 +6,6 @@ message PresentationDiff {
   optional semio.s.animate.presentation.PresentationArtifact artifact = 1;
   optional string schema = 2;
   optional semio.os.store.ArtifactChild presentation = 3;
+  optional semio.s.animate.presentation.FigureTileSource source = 4;
+  optional semio.s.animate.presentation.FigureTileDraftList tiles = 5;
 }

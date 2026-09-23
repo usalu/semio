@@ -2,6 +2,17 @@ use super::*;
 use crate::{equation_geometry, equation_graph, EquationGraph, EquationPoint};
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 
+/// ↩️ Applies an operation's inverse the way the store does: TAIL-first (`replay_mutations` reverses
+/// one operation's inverse), each step diffed against the CURRENT state. The composed children are
+/// whole-replace handles, so a step diffed against the pre-mutation base would re-mint the base's own
+/// scene, not undo anything.
+fn undo_tail_first(mut state: EquationSnapshot, undo: &[EquationMutation]) -> EquationSnapshot {
+    for step in undo.iter().rev() {
+        state = step.diff(&state).diff().apply(&state).expect("valid inverse step");
+    }
+    state
+}
+
 #[semio_framework_async_macros::async_test]
 async fn replace_graph_diff_carries_the_whole_derived_triple() {
     // 🔎️ `notation`/`results`/`computed` are three co-derived projections of the SAME
@@ -22,16 +33,13 @@ async fn replace_graph_diff_carries_the_whole_derived_triple() {
 #[semio_framework_async_macros::async_test]
 async fn create_then_delete_node_round_trips() {
     let base = EquationSnapshot::default();
-    let create = EquationMutation::CreateNode(create_node::CreateNode { id: "z".into(), label: "Z".into(), x: 1.0, y: 2.0 });
+    let create = EquationMutation::CreateNode(create_node::CreateNode { id: "z".into(), label: "Z".into(), x: 1.0, y: 2.0, index: None });
     let after_create = create.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert!(equation_graph(&after_create).nodes.iter().any(|node| node.id == "z"));
 
     let undo = create.inverse(&base);
     assert_eq!(undo, vec![EquationMutation::DeleteNode(delete_node::DeleteNode { id: "z".into() })]);
-    let mut state = after_create.clone();
-    for step in &undo {
-        state = step.diff(&after_create).diff().apply(&state).expect("valid mutation diff");
-    }
+    let state = undo_tail_first(after_create, &undo);
     assert_eq!(equation_graph(&state), equation_graph(&base));
     assert_eq!(equation_geometry(&state), equation_geometry(&base));
 }
@@ -49,32 +57,28 @@ async fn delete_node_inverse_recreates_node_and_severed_edges() {
     // a wrong-field bug in a pure round-trip check.
     let base_graph = equation_graph(&base);
     let original_node = base_graph.nodes.iter().find(|node| node.id == "a").expect("fixture has node a");
-    let first_step = delete.inverse(&base).into_iter().next().expect("inverse has at least a create step");
-    match &first_step {
+    let undo = delete.inverse(&base);
+    let (create, reconnects) = undo.split_last().expect("inverse has at least a create step");
+    match create {
         EquationMutation::CreateNode(payload) => {
             assert_eq!(payload.id, original_node.id);
             assert_eq!(payload.label, original_node.label);
             assert_eq!((payload.x, payload.y), (original_node.x, original_node.y));
+            assert_eq!(payload.index, base_graph.nodes.iter().position(|node| node.id == "a"));
         }
-        other => panic!("expected CreateNode as the first inverse step, got {other:?}"),
+        other => panic!("expected CreateNode as the first inverse step applied (the list's tail), got {other:?}"),
     }
     let severed_edge_ids: Vec<String> = base_graph.edges.iter().filter(|edge| edge.source == "a" || edge.target == "a").map(|edge| edge.id.clone()).collect();
-    let reconnected_ids: Vec<String> = delete
-        .inverse(&base)
-        .into_iter()
-        .skip(1)
+    let reconnected_ids: Vec<String> = reconnects
+        .iter()
+        .rev()
         .map(|mutation| match mutation {
-            EquationMutation::ConnectNodes(payload) => payload.id,
+            EquationMutation::ConnectNodes(payload) => payload.id.clone(),
             other => panic!("expected ConnectNodes for every severed edge, got {other:?}"),
         })
         .collect();
     assert_eq!(reconnected_ids, severed_edge_ids);
-
-    let undo = delete.inverse(&base);
-    let mut state = after_delete;
-    for step in &undo {
-        state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
-    }
+    let state = undo_tail_first(after_delete, &undo);
     assert_eq!(equation_graph(&state), base_graph, "delete-node's inverse must restore the node and every severed edge");
 }
 
@@ -86,11 +90,7 @@ async fn move_point_inverse_restores_old_position() {
     let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert_eq!(equation_geometry(&after).points[0], EquationPoint { x: 999.0, y: 999.0 });
 
-    let undo = mutation.inverse(&base);
-    let mut state = after;
-    for step in &undo {
-        state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
-    }
+    let state = undo_tail_first(after, &mutation.inverse(&base));
     assert_eq!(equation_geometry(&state).points[0], original);
 }
 
@@ -101,11 +101,7 @@ async fn insert_point_inverse_is_remove_point_at_same_index() {
     let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert_eq!(equation_geometry(&after).points.len(), equation_geometry(&base).points.len() + 1);
 
-    let undo = mutation.inverse(&base);
-    let mut state = after;
-    for step in &undo {
-        state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
-    }
+    let state = undo_tail_first(after, &mutation.inverse(&base));
     assert_eq!(equation_geometry(&state), equation_geometry(&base));
 }
 
@@ -118,11 +114,7 @@ async fn delete_nodes_plural_cascades_like_the_singular_form() {
     assert!(equation_graph(&after).nodes.iter().all(|node| !ids.contains(&node.id)));
     assert!(equation_graph(&after).edges.iter().all(|edge| !ids.contains(&edge.source) && !ids.contains(&edge.target)));
 
-    let undo = mutation.inverse(&base);
-    let mut state = after;
-    for step in &undo {
-        state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
-    }
+    let state = undo_tail_first(after, &mutation.inverse(&base));
     assert_eq!(equation_graph(&state), equation_graph(&base));
 }
 
@@ -137,15 +129,11 @@ async fn semantic_kinds_cover_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn connect_then_disconnect_nodes_round_trips() {
     let base = EquationSnapshot::default();
-    let connect = EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: "e-new".into(), source: "a".into(), target: "d".into() });
+    let connect = EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: "e-new".into(), source: "a".into(), target: "d".into(), index: None });
     let after_connect = connect.diff(&base).diff().apply(&base).expect("valid mutation diff");
     assert!(equation_graph(&after_connect).edges.iter().any(|edge| edge.id == "e-new"));
 
-    let undo = connect.inverse(&base);
-    let mut state = after_connect;
-    for step in &undo {
-        state = step.diff(&base).diff().apply(&state).expect("valid mutation diff");
-    }
+    let state = undo_tail_first(after_connect, &connect.inverse(&base));
     assert_eq!(equation_graph(&state), equation_graph(&base));
 }
 
@@ -261,7 +249,7 @@ async fn change_node_label_missing_target_is_error() {
 #[semio_framework_async_macros::async_test]
 async fn connect_nodes_missing_target_is_error() {
     let base = EquationSnapshot::default();
-    let mutation = EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: "e-new".into(), source: "nonexistent".into(), target: "a".into() });
+    let mutation = EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: "e-new".into(), source: "nonexistent".into(), target: "a".into(), index: None });
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &mutation).await;
 }
 
@@ -276,7 +264,7 @@ async fn disconnect_nodes_missing_target_is_error() {
 async fn create_node_duplicate_id_fatal_never_applies() {
     let base = EquationSnapshot::default();
     let existing_id = equation_graph(&base).nodes[0].id.clone();
-    let mutation = EquationMutation::CreateNode(create_node::CreateNode { id: existing_id, label: "dup".into(), x: 0.0, y: 0.0 });
+    let mutation = EquationMutation::CreateNode(create_node::CreateNode { id: existing_id, label: "dup".into(), x: 0.0, y: 0.0, index: None });
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
 }
 
@@ -284,7 +272,7 @@ async fn create_node_duplicate_id_fatal_never_applies() {
 async fn connect_nodes_duplicate_id_fatal_never_applies() {
     let base = EquationSnapshot::default();
     let existing_edge_id = equation_graph(&base).edges[0].id.clone();
-    let mutation = EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: existing_edge_id, source: "a".into(), target: "d".into() });
+    let mutation = EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: existing_edge_id, source: "a".into(), target: "d".into(), index: None });
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&Mutation::diff(&mutation, &base)).await;
 }
 

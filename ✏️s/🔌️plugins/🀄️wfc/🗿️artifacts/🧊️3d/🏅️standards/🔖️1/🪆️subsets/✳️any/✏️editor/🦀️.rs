@@ -767,7 +767,14 @@ pub fn render_body(body_key: &str, document: &Wfc3dSnapshot, config: &Wfc3dConfi
         }
         preview::WFC_3D_PREVIEW_BODY => {
             let fill = preview::live_fill_payload(tool_run);
-            let paint = fill.as_ref().map(|payload| payload.clone().into_transient()).unwrap_or_else(|| transient.clone());
+            let paint = fill.as_ref().map(|payload| {
+                let mut paint = payload.clone().into_transient();
+                for event in &payload.trace {
+                    paint.assignments.retain(|assignment| assignment.slot_id != event.slot_id);
+                    paint.assignments.push(crate::editor::wfc3d::transient::Wfc3dAssignment { slot_id: event.slot_id.clone(), tile_id: event.tile_id.clone() });
+                }
+                paint
+            }).unwrap_or_else(|| transient.clone());
             preview::render(document, &paint, 1.0).map(semio_framework_plugin::built_to_component_tree)
         }
         _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

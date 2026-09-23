@@ -4,7 +4,7 @@
   "title": "WFC Bitmap Fill Tick Payload",
   "type": "object",
   "additionalProperties": false,
-  "required": ["pixels", "decided", "width", "height", "contradiction", "done"],
+  "required": ["pixels", "decided", "width", "height", "contradiction", "done", "trace"],
   "properties": {
     "pixels": {
       "type": "string",
@@ -17,6 +17,20 @@
     "width": { "type": "integer", "minimum": 0 },
     "height": { "type": "integer", "minimum": 0 },
     "contradiction": { "type": "boolean" },
-    "done": { "type": "boolean" }
+    "done": { "type": "boolean" },
+    "trace": {
+      "type": "array",
+      "description": "Collapses and discards observed during this burst, in order. A discarded event is a cell the search tried and then undid.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["index", "color", "discarded"],
+        "properties": {
+          "index": { "type": "integer", "minimum": 0 },
+          "color": { "type": "integer", "minimum": 0 },
+          "discarded": { "type": "boolean" }
+        }
+      }
+    }
   }
 }

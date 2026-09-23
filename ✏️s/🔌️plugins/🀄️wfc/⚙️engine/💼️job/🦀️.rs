@@ -104,6 +104,25 @@ pub enum WfcSampler {
     Uniform,
 }
 
+/// 👁️ What one headless [`WfcJob::advance_one`] unit did. `Collapsed` and `Discarded` are the
+/// events a fill preview paints, including choices the search later undoes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SearchPulse {
+    Worked,
+    Collapsed { node: u32, pattern: u32 },
+    Discarded { node: u32, pattern: u32 },
+    Solved,
+    Unsatisfiable,
+}
+
+/// 👁 One cell that became a singleton or stopped being one during `advance_one`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct VisibleCell {
+    pub node: u32,
+    pub pattern: u32,
+    pub discarded: bool,
+}
+
 #[derive(Clone, Copy, Debug, Default)]
 pub struct WfcJobConfig {
     pub sampler: WfcSampler,
@@ -432,6 +451,7 @@ pub struct WfcJob<T> {
     last_preview_ms: Option<u64>,
     publication: Option<Box<Publication>>,
     closing: bool,
+    visible: Vec<VisibleCell>,
 }
 
 impl<T: Topology + Clone> WfcJob<T> {
@@ -477,7 +497,7 @@ impl<T: Topology + Clone> WfcJob<T> {
             backtracks: 0,
             observed: Vec::new(),
         };
-        Self { operation, model, topology, config, initial_domains, fixed, state, checkpoint_build: None, final_checkpoint: None, commit_build: None, completed_commit: None, preview_units: 0, last_preview_ms: None, publication: None, closing: false }
+        Self { operation, model, topology, config, initial_domains, fixed, state, checkpoint_build: None, final_checkpoint: None, commit_build: None, completed_commit: None, preview_units: 0, last_preview_ms: None, publication: None, closing: false, visible: Vec::new() }
     }
 
     pub fn from_checkpoint(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<Vec<PatternSet>>, fixed: Vec<(NodeId, PatternId)>, bytes: &[u8]) -> Result<Self, String>
@@ -620,12 +640,65 @@ impl<T: Topology + Clone> WfcJob<T> {
         self.state.domains.clone()
     }
 
+    /// 👁 Writes one pattern id per node. `u32::MAX` means the domain is not a singleton.
+    pub fn write_singleton_patterns(&self, into: &mut Vec<u32>) {
+        into.clear();
+        into.reserve(self.state.domain_counts.len());
+        for (index, domain) in self.state.domains.iter().enumerate() {
+            let pattern = if self.state.domain_counts[index] == 1 { domain.first_set().map(|pattern| pattern.get()).unwrap_or(u32::MAX) } else { u32::MAX };
+            into.push(pattern);
+        }
+    }
+
     pub fn metrics(&self) -> (u64, u64, u64) {
         (self.state.observations, self.state.compatibility_edges, self.state.backtracks)
     }
 
     pub fn observed(&self) -> &[(NodeId, PatternId)] {
         &self.state.observed
+    }
+
+    /// 👁️ One solver unit with no payload admission, so a fill run can drain headlessly and
+    /// publish a single trace of the collapses and discards that happened in the burst.
+    pub fn advance_one(&mut self) -> SearchPulse {
+        if self.state.stage == WfcStage::Complete {
+            return self.terminal_pulse();
+        }
+        let observations = self.state.observations;
+        let backtracks = self.state.backtracks;
+        let observed_len = self.state.observed.len();
+        match self.state.stage {
+            WfcStage::InitializeDomains => self.initialize_one(),
+            WfcStage::FindMinimumEntropySlot => self.find_slot(),
+            WfcStage::ChooseCandidate => self.choose_one(),
+            WfcStage::PropagateCompatibilityEdge => self.propagate_one(),
+            WfcStage::DetectContradiction => self.detect(),
+            WfcStage::BacktrackTrailEntry => self.backtrack_one(),
+            WfcStage::CommitSlot => self.state.stage = WfcStage::FindMinimumEntropySlot,
+            WfcStage::MaterializeCheckpoint | WfcStage::MaterializeCommit | WfcStage::Complete => {}
+        }
+        if self.state.observations > observations {
+            if let Some((node, pattern)) = self.state.observed.get(observed_len) {
+                return SearchPulse::Collapsed { node: node.get(), pattern: pattern.get() };
+            }
+        }
+        if self.state.backtracks > backtracks {
+            if let Some(frame) = self.state.backtrack_frame {
+                return SearchPulse::Discarded { node: frame.node.get(), pattern: frame.candidate.get() };
+            }
+        }
+        if self.state.stage == WfcStage::Complete {
+            return self.terminal_pulse();
+        }
+        SearchPulse::Worked
+    }
+
+    fn terminal_pulse(&self) -> SearchPulse {
+        if self.state.contradiction.is_some() || self.state.empty_count > 0 || self.state.singleton_count != self.state.domains.len() {
+            SearchPulse::Unsatisfiable
+        } else {
+            SearchPulse::Solved
+        }
     }
 
     fn reset_queue(&mut self) {
@@ -668,12 +741,23 @@ impl<T: Topology + Clone> WfcJob<T> {
         self.state.domain_counts[node.index()] = new;
     }
 
+    fn note_visible(&mut self, node: NodeId, pattern: PatternId, discarded: bool) {
+        self.visible.push(VisibleCell { node: node.get(), pattern: pattern.get(), discarded });
+    }
+
+    /// 👁 Moves the collapses and discards recorded since the last drain into `into`.
+    pub fn drain_visible(&mut self, into: &mut Vec<VisibleCell>) {
+        if !self.visible.is_empty() {
+            into.append(&mut self.visible);
+        }
+    }
+
     fn remove_pattern(&mut self, node: NodeId, pattern: PatternId, record: bool) {
         if !self.state.domains[node.index()].get(pattern) {
             return;
         }
-        self.state.domains[node.index()].set(pattern, false);
         let old = self.state.domain_counts[node.index()];
+        self.state.domains[node.index()].set(pattern, false);
         self.change_count(node, old, old - 1);
         let weight = self.model.weights().w(pattern);
         self.state.domain_weight_sums[node.index()] -= weight;
@@ -681,18 +765,32 @@ impl<T: Topology + Clone> WfcJob<T> {
         if record {
             self.state.trail.push(Removal { node, pattern });
         }
+        if old == 1 {
+            self.note_visible(node, pattern, true);
+        } else if old == 2 {
+            if let Some(remaining) = self.state.domains[node.index()].first_set() {
+                self.note_visible(node, remaining, false);
+            }
+        }
     }
 
     fn add_pattern(&mut self, node: NodeId, pattern: PatternId) {
         if self.state.domains[node.index()].get(pattern) {
             return;
         }
-        self.state.domains[node.index()].set(pattern, true);
         let old = self.state.domain_counts[node.index()];
+        let previous = if old == 1 { self.state.domains[node.index()].first_set() } else { None };
+        self.state.domains[node.index()].set(pattern, true);
         self.change_count(node, old, old + 1);
         let weight = self.model.weights().w(pattern);
         self.state.domain_weight_sums[node.index()] += weight;
         self.state.domain_weighted_log_sums[node.index()] += self.model.weights().w_ln_w(pattern);
+        if let Some(previous) = previous {
+            self.note_visible(node, previous, true);
+        }
+        if old == 0 {
+            self.note_visible(node, pattern, false);
+        }
     }
 
     fn initialize_one(&mut self) {
@@ -758,6 +856,11 @@ impl<T: Topology + Clone> WfcJob<T> {
                 } else {
                     let cursor = std::mem::take(&mut self.state.init_cursor);
                     self.state.domains.push(cursor.domain.expect("measured domain"));
+                    if cursor.count == 1 {
+                        if let Some(pattern) = self.state.domains.last().and_then(|domain| domain.first_set()) {
+                            self.note_visible(node, pattern, false);
+                        }
+                    }
                     self.state.domain_counts.push(cursor.count);
                     self.state.domain_weight_sums.push(cursor.weight_sum);
                     self.state.domain_weighted_log_sums.push(cursor.weighted_log_sum);
@@ -1544,6 +1647,7 @@ impl<T: Topology + Clone> WfcRestore<T> {
             last_preview_ms: None,
             publication: None,
             closing: false,
+            visible: Vec::new(),
         });
     }
 

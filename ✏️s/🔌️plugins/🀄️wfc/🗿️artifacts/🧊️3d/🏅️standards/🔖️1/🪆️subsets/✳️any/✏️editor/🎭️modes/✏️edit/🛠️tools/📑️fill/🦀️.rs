@@ -190,6 +190,14 @@ impl FillRunReason {
 //#endregion 🔖️Vocabulary
 
 //#region 🧱️Payload
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct Wfc3dFillTraceEvent {
+    pub slot_id: String,
+    pub tile_id: String,
+    pub discarded: bool,
+}
+
 /// 🧱️ Partial slot assignments the preview paints while a fill run is live.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
@@ -197,6 +205,8 @@ pub struct Wfc3dFillTickPayload {
     pub assignments: BTreeMap<String, Option<String>>,
     pub contradiction: bool,
     pub done: bool,
+    #[value(default)]
+    pub trace: Vec<Wfc3dFillTraceEvent>,
 }
 
 impl Wfc3dFillTickPayload {
@@ -295,7 +305,7 @@ pub fn payload_from_commit(snapshot: &Wfc3dSnapshot, commit: &crate::inferences:
         .iter()
         .map(|slot| (slot.id.clone(), commit.assignments.get(&slot.id).cloned()))
         .collect();
-    Wfc3dFillTickPayload { assignments, contradiction: false, done: true }
+    Wfc3dFillTickPayload { assignments, contradiction: false, done: true , trace: Vec::new() }
 }
 //#endregion 🧱️Payload
 
@@ -512,6 +522,7 @@ pub struct Wfc3dFillRunJob {
     settled: Option<StepOutcome>,
     closing: bool,
     steps: u64,
+    trace: Vec<Wfc3dFillTraceEvent>,
 }
 
 impl Wfc3dFillRunJob {
@@ -528,6 +539,7 @@ impl Wfc3dFillRunJob {
             settled: None,
             closing: false,
             steps: 0,
+            trace: Vec::new(),
         }
     }
 
@@ -556,6 +568,7 @@ impl Wfc3dFillRunJob {
             assignments: snapshot.slots.iter().map(|slot| (slot.id.clone(), None)).collect(),
             contradiction: false,
             done: false,
+            trace: Vec::new(),
         }
     }
 
@@ -592,6 +605,8 @@ impl Wfc3dFillRunJob {
             conflicts: 0,
             steps: ToolRunStepRing::new(),
         });
+        let mut payload = payload;
+        payload.trace.clone_from(&self.trace);
         self.writer.payload(encode_fill_payload(&payload));
         match self.writer.finish().and_then(|tick| tick.encode().ok()).and_then(|bytes| cx.payload_from_bytes(JobPayloadStream::Preview, &bytes).map_err(|rejected| drop(rejected.into_source())).ok()) {
             Some(payload) => StepOutcome::PreviewReady(payload),
@@ -610,6 +625,93 @@ impl Wfc3dFillRunJob {
         }));
         self.phase = FillPhase::Settled;
         tick
+    }
+
+    fn remember(&mut self, event: Wfc3dFillTraceEvent) {
+        self.trace.push(event);
+        if self.trace.len() > 512 {
+            let overflow = self.trace.len() - 512;
+            self.trace.drain(0..overflow);
+        }
+    }
+
+    fn drain_child(&mut self, cx: &mut StepContext<'_>, snapshot: Wfc3dSnapshot, tile_ids: Vec<String>, mut child: Box<WfcJob<semio_s_plugin_wfc_engine::topology::GraphTopology>>) -> StepOutcome {
+        let cells = snapshot.slots.len();
+        let mut flips = Vec::new();
+        let mut fresh = 0usize;
+        let mut solved = false;
+        let mut unsatisfiable = false;
+        loop {
+            if cx.is_cancelled() {
+                if let FillPhase::Run { child: slot, .. } = &mut self.phase {
+                    *slot = Some(child);
+                }
+                return StepOutcome::Cancelled;
+            }
+            if cx.fuel_exhausted() || cx.deadline_exceeded() {
+                break;
+            }
+            let pulse = child.advance_one();
+            cx.consume_fuel(1);
+            child.drain_visible(&mut flips);
+            for flip in flips.drain(..) {
+                let Some(slot) = snapshot.slots.get(flip.node as usize) else { continue };
+                if let Some(tile) = tile_ids.get(flip.pattern as usize) {
+                    self.remember(Wfc3dFillTraceEvent { slot_id: slot.id.clone(), tile_id: tile.clone(), discarded: flip.discarded });
+                    fresh += 1;
+                }
+            }
+            match pulse {
+                semio_s_plugin_wfc_engine::job::SearchPulse::Solved => {
+                    solved = true;
+                    break;
+                }
+                semio_s_plugin_wfc_engine::job::SearchPulse::Unsatisfiable => {
+                    unsatisfiable = true;
+                    break;
+                }
+                semio_s_plugin_wfc_engine::job::SearchPulse::Collapsed { .. } | semio_s_plugin_wfc_engine::job::SearchPulse::Discarded { .. } | semio_s_plugin_wfc_engine::job::SearchPulse::Worked => {}
+            }
+            if fresh >= 48 {
+                break;
+            }
+        }
+        if solved || unsatisfiable {
+            let commit = if solved { child.commit() } else { None };
+            close_job(child.as_mut());
+            self.phase = FillPhase::Settled;
+            let payload = if let Some(commit) = commit {
+                let assignments = snapshot.slots.iter().enumerate().map(|(index, slot)| {
+                    let tile = commit.assignment.get(index).and_then(|pattern| tile_ids.get(*pattern as usize).cloned());
+                    (slot.id.clone(), tile)
+                }).collect();
+                Wfc3dFillTickPayload { assignments, contradiction: false, done: true, trace: Vec::new() }
+            } else {
+                Wfc3dFillTickPayload {
+                    assignments: snapshot.slots.iter().map(|slot| (slot.id.clone(), None)).collect(),
+                    contradiction: true,
+                    done: true,
+                    trace: Vec::new(),
+                }
+            };
+            self.pending_finish = Some(payload);
+            return StepOutcome::Yield;
+        }
+        let stage = FillRunStage::from_engine(child.preview(0).stage);
+        let mut patterns = Vec::new();
+        child.write_singleton_patterns(&mut patterns);
+        if let FillPhase::Run { child: slot, .. } = &mut self.phase {
+            *slot = Some(child);
+        }
+        if fresh == 0 {
+            return StepOutcome::Yield;
+        }
+        let assignments = snapshot.slots.iter().enumerate().map(|(index, slot)| {
+            let tile = patterns.get(index).copied().filter(|pattern| *pattern != u32::MAX).and_then(|pattern| tile_ids.get(pattern as usize).cloned());
+            (slot.id.clone(), tile)
+        }).collect();
+        let payload = Wfc3dFillTickPayload { assignments, contradiction: false, done: false, trace: Vec::new() };
+        self.publish(cx, payload, stage, ToolRunState::Running, None)
     }
 
     fn finish_fault(&mut self, cx: &mut StepContext<'_>, snapshot: &Wfc3dSnapshot, _detail: &str) -> StepOutcome {
@@ -673,84 +775,11 @@ impl InteractiveJob for Wfc3dFillRunJob {
                 }
             }
             FillPhase::Run { .. } => {
-                let (snapshot, tile_ids, mut child) = match &mut self.phase {
+                let (snapshot, tile_ids, child) = match &mut self.phase {
                     FillPhase::Run { snapshot, tile_ids, child } => (snapshot.clone(), tile_ids.clone(), child.take().expect("fill child")),
                     _ => unreachable!(),
                 };
-                let mut outcome = child.step(cx);
-                match &outcome {
-                    StepOutcome::Complete(_) => {
-                        let commit = child.take_completed_commit().or_else(|| child.commit());
-                        let payload = match commit.as_ref() {
-                            Some(commit) => {
-                                let assignments = snapshot
-                                    .slots
-                                    .iter()
-                                    .enumerate()
-                                    .map(|(index, slot)| {
-                                        let tile = commit.assignment.get(index).and_then(|pattern| tile_ids.get(*pattern as usize).cloned());
-                                        (slot.id.clone(), tile)
-                                    })
-                                    .collect();
-                                Wfc3dFillTickPayload { assignments, contradiction: false, done: true }
-                            }
-                            None => Wfc3dFillTickPayload {
-                                assignments: snapshot.slots.iter().map(|slot| (slot.id.clone(), None)).collect(),
-                                contradiction: true,
-                                done: true,
-                            },
-                        };
-                        semio_s_plugin_wfc_engine::job::retire_outcome(&mut outcome);
-                        close_job(child.as_mut());
-                        self.phase = FillPhase::Settled;
-                        self.pending_finish = Some(payload);
-                        return StepOutcome::Yield;
-                    }
-                    StepOutcome::Fault(fault) if semio_s_plugin_wfc_engine::job::payload_bytes(&fault.detail) == b"wfc-unsatisfiable" => {
-                        semio_s_plugin_wfc_engine::job::retire_outcome(&mut outcome);
-                        close_job(child.as_mut());
-                        self.phase = FillPhase::Settled;
-                        self.pending_finish = Some(Wfc3dFillTickPayload {
-                            assignments: snapshot.slots.iter().map(|slot| (slot.id.clone(), None)).collect(),
-                            contradiction: true,
-                            done: true,
-                        });
-                        return StepOutcome::Yield;
-                    }
-                    StepOutcome::Fault(fault) => {
-                        let detail = String::from_utf8_lossy(&semio_s_plugin_wfc_engine::job::payload_bytes(&fault.detail)).into_owned();
-                        semio_s_plugin_wfc_engine::job::retire_outcome(&mut outcome);
-                        close_job(child.as_mut());
-                        self.phase = FillPhase::Settled;
-                        return self.finish_fault(cx, &snapshot, &detail);
-                    }
-                    StepOutcome::Cancelled => {
-                        semio_s_plugin_wfc_engine::job::retire_outcome(&mut outcome);
-                        close_job(child.as_mut());
-                        self.phase = FillPhase::Settled;
-                        return StepOutcome::Cancelled;
-                    }
-                    StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => {
-                        let payload = Wfc3dFillTickPayload {
-                            assignments: assignments_from_job(&child, &tile_ids, &snapshot),
-                            contradiction: false,
-                            done: false,
-                        };
-                        let stage = FillRunStage::from_engine(child.preview(0).stage);
-                        semio_s_plugin_wfc_engine::job::retire_outcome(&mut outcome);
-                        if let FillPhase::Run { child: slot, .. } = &mut self.phase {
-                            *slot = Some(child);
-                        }
-                        self.pending_tick = Some((payload, stage));
-                        return StepOutcome::Yield;
-                    }
-                    StepOutcome::Yield => {
-                        if let FillPhase::Run { child: slot, .. } = &mut self.phase {
-                            *slot = Some(child);
-                        }
-                        return StepOutcome::Yield;
-                    }
-                }
+                self.drain_child(cx, snapshot, tile_ids, child)
             }
             FillPhase::Settled | FillPhase::Closed => StepOutcome::Cancelled,
         }

@@ -24,6 +24,12 @@
       "lanes": [
         "window-config"
       ]
+    },
+    {
+      "toolId": "setActiveExample",
+      "lanes": [
+        "artifact"
+      ]
     }
   ],
   "routes": [
@@ -60,6 +66,18 @@
       "execution": "bounded",
       "admission": "migrated",
       "reducer": "🎮️commands/☑️selected-check — exact Results WindowConfigMutation::ChangeSelectedCheckIndex"
+    },
+    {
+      "id": "setActiveExample",
+      "emittedLanes": [
+        "artifact"
+      ],
+      "publicationLanes": [
+        "artifact"
+      ],
+      "execution": "bounded",
+      "admission": "migrated",
+      "reducer": "🎮️commands/🎨️set-active-example — loads PRIMARY_TEXT via set-snapshot decomposition"
     }
   ],
   "apps": [
@@ -141,9 +159,9 @@
   ],
   "expected": {
     "apps": 15,
-    "routesPerApp": 3,
-    "identities": 45,
-    "retained": 45,
+    "routesPerApp": 4,
+    "identities": 60,
+    "retained": 60,
     "batchOnlyPendingRewrite": 0
   },
   "oracle": {

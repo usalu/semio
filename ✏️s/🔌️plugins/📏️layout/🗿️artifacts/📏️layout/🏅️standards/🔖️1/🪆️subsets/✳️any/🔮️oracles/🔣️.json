@@ -381,6 +381,7 @@
         "delete-frame",
         "move-frame",
         "resize-frame",
+        "rotate-frame",
         "change-frame-fill",
         "change-frame-stroke",
         "change-frame-wrap-mode",

@@ -222,6 +222,29 @@ pub fn presentation_working_scene(snapshot: &PresentationSnapshot) -> (FigureTil
     (snapshot.source.clone(), snapshot.tiles.clone())
 }
 
+/// 🌐️ World units per normalized figure unit on every Presentation canvas (editor and viewer alike).
+pub const PRESENTATION_CANVAS_SCALE: f64 = 1000.0;
+
+/// 🎥️ The world extent a Presentation canvas frames at first paint: the narrowest window pane the
+/// play grid measures (469 px, see `🏛️architect`'s graph-fit law) less a margin, so the whole deck is in
+/// view in every host before anyone pans.
+pub const PRESENTATION_CANVAS_FIT_EXTENT: f64 = 420.0;
+
+/// 🎥️ The first-paint camera `(x, y, zoom)` of a Presentation canvas. A Canvas2d camera names the VIEW
+/// CENTRE (`Canvas2dHost`'s `worldToScreen`), so a fixed `(0, 0)` put the deck's top-left corner at the
+/// middle of the pane and clipped everything past it. This centres the union of the source frame and
+/// every tile crop and zooms it down to [`PRESENTATION_CANVAS_FIT_EXTENT`], never magnifying past 1:1.
+pub fn presentation_canvas_camera(snapshot: &PresentationSnapshot) -> (f64, f64, f64) {
+    let frames = std::iter::once(&snapshot.source.frame).chain(snapshot.tiles.iter().map(|tile| &tile.crop));
+    let (min_x, min_y, max_x, max_y) = frames.fold((f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY), |(min_x, min_y, max_x, max_y), frame| {
+        let (x, y) = (frame.x * PRESENTATION_CANVAS_SCALE, frame.y * PRESENTATION_CANVAS_SCALE);
+        (min_x.min(x), min_y.min(y), max_x.max(x + frame.width * PRESENTATION_CANVAS_SCALE), max_y.max(y + frame.height * PRESENTATION_CANVAS_SCALE))
+    });
+    let extent = (max_x - min_x).max(max_y - min_y);
+    let zoom = if extent > PRESENTATION_CANVAS_FIT_EXTENT { PRESENTATION_CANVAS_FIT_EXTENT / extent } else { 1.0 };
+    ((min_x + max_x) * 0.5, (min_y + max_y) * 0.5, zoom)
+}
+
 /// 🏗️ Builds a full `PresentationSnapshot` from literal `(source, tiles)` — the standard
 /// fixture/import constructor: it persists the payload AND mints the content-addressed `presentation`
 /// handle that payload derives, so the two can never drift apart.

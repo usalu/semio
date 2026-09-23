@@ -348,6 +348,10 @@ impl ArtifactEditor for ImperativePlayApp {
     type Command = ImperativeCommand;
 
     const DIALECT: semio_framework_plugin::app::Dialect = crate::PROCEDURE_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::procedure_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::procedure_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;
 
     /// 📬️ The ARTIFACT lane's publication authority — a retained tool whose contract states `Artifact`

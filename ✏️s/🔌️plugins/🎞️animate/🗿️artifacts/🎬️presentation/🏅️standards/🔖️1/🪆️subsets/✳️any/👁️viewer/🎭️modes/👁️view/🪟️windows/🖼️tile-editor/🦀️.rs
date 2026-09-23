@@ -69,7 +69,7 @@ fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) 
 /// 👁️ Pure `PresentationSnapshot -> layers JSON` read: the same source-figure-plus-crop-tiles content the
 /// editor's own canvas renders, with no selection/engagement overlay (a viewer has neither).
 fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
-    const SCALE: f64 = 1000.0;
+    const SCALE: f64 = crate::PRESENTATION_CANVAS_SCALE;
     let (source, tiles) = crate::presentation_working_scene(deck);
     let mut layers = Vec::new();
     let (sx, sy, sw, sh) = frame_to_canvas(&source.frame, SCALE);
@@ -94,7 +94,8 @@ fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
 
 //#region 🔖️Render
 pub fn render(deck: &PresentationSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let scene = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck), snapshot: None, tool_run_trace: None, lanes: Vec::new() };
+    let (camera_x, camera_y, zoom) = crate::presentation_canvas_camera(deck);
+    let scene = Canvas2dScene { camera_x, camera_y, zoom, layers_json: deck_to_canvas_layers(deck), snapshot: None, tool_run_trace: None, lanes: Vec::new() };
     semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)
 }
 //#endregion 🔖️Render

@@ -9,7 +9,7 @@ use crate::editor::layout::canvas::active_page;
 use crate::editor::layout::modes::edit::windows::blueprint::config::{current, LayoutWindowConfig};
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::editor::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
+use crate::editor::layout::engine::scene::hit_test_page_frames;
 use crate::mutations::LayoutMutation;
 use crate::LayoutSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -34,11 +34,7 @@ fn screen_to_world_for_surface(config: &LayoutWindowConfig, sx: f64, sy: f64, wi
 fn hit_test_at(doc: &LayoutSnapshot, config: &LayoutWindowConfig, sx: f64, sy: f64, width: f64, height: f64) -> Option<String> {
     let page = active_page(doc, config)?;
     let (wx, wy) = screen_to_world_for_surface(config, sx, sy, width, height);
-    let mut engine = LayoutEngine::new();
-    // 🕹️ `selected_ids`/`hovered_id` only feed `DisplayRect.selected`/`.hovered` chrome flags, never
-    // hit-test correctness — `&[]`/`None` here are harmless (selection/hover are framework-owned now).
-    let list = build_display_list_for_page(&mut engine, doc, page, &page.id, &[], None, true);
-    list.hit_test(wx as f32, wy as f32)
+    hit_test_page_frames(doc, page, wx as f32, wy as f32)
 }
 //#endregion 🔖️Shared
 

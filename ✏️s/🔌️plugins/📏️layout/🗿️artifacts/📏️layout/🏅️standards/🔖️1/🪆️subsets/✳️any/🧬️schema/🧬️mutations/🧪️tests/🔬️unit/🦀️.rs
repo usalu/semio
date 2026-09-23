@@ -134,7 +134,7 @@ async fn stories_create_edit_delete_round_trip() {
 async fn links_create_change_path_delete_round_trip() {
     let doc = sample_doc();
     let create = LayoutMutation::CreateLink(create_link::CreateLink {
-        link: crate::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None },
+        link: crate::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() },
         index: Some(1),
     });
     let with_link = round_trip(&doc, &create);
@@ -323,7 +323,7 @@ async fn edit_story_and_create_link_obey_the_inverse_law() {
     let edit = LayoutMutation::EditStory(edit_story::EditStory { id: "story-1".into(), new_content: "Edited.".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &edit).await;
     let link = LayoutMutation::CreateLink(create_link::CreateLink {
-        link: crate::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None },
+        link: crate::ImageLink { id: "link-2".into(), path: "b.png".into(), hash: "h2".into(), width: 5, height: 5, dpi: 72, color_profile: None, state: None, proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() },
         index: None,
     });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &link).await;
@@ -332,7 +332,7 @@ async fn edit_story_and_create_link_obey_the_inverse_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(LayoutMutation::kinds().len(), 25);
+    assert_eq!(LayoutMutation::kinds().len(), 26, "25 verbs plus rotate-frame");
     let mutation = LayoutMutation::RenameLayout(rename_layout::RenameLayout { new_name: "x".into() });
     assert_eq!(mutation.semantics().kind, "rename-layout");
     assert_eq!(mutation.semantics().record, "RenamedLayout");

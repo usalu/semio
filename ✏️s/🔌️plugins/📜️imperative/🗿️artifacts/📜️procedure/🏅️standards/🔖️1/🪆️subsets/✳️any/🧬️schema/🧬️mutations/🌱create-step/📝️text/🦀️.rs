@@ -13,13 +13,14 @@ pub const TEXT_OPCODE: &str = "create-step";
 pub(crate) struct CreateStepText {
     owner: Option<String>,
     slot: Option<String>,
+    index: Option<usize>,
     #[dsl(statements)]
     item: Box<StepNodeDsl>,
 }
 
 pub(crate) fn to_dsl(operation: &ProcedureMutation) -> Option<ProcedureMutationDsl> {
     if let ProcedureMutation::CreateStep(payload) = operation {
-        Some(ProcedureMutationDsl::CreateStep(CreateStepText { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), item: Box::new(step_to_step_node_dsl(&payload.step)) }))
+        Some(ProcedureMutationDsl::CreateStep(CreateStepText { owner: payload.path_ref.owner.clone(), slot: payload.path_ref.slot.clone(), index: payload.index, item: Box::new(step_to_step_node_dsl(&payload.step)) }))
     } else {
         None
     }
@@ -27,7 +28,7 @@ pub(crate) fn to_dsl(operation: &ProcedureMutation) -> Option<ProcedureMutationD
 
 pub(crate) fn from_dsl(operation: ProcedureMutationDsl) -> Result<ProcedureMutation, ProcedureMutationDsl> {
     if let ProcedureMutationDsl::CreateStep(payload) = operation {
-        Ok(super::create_step(PathRef { owner: payload.owner, slot: payload.slot }, step_node_dsl_to_step(*payload.item)))
+        Ok(ProcedureMutation::CreateStep(super::CreateStep { path_ref: PathRef { owner: payload.owner, slot: payload.slot }, step: step_node_dsl_to_step(*payload.item), index: payload.index }))
     } else {
         Err(operation)
     }

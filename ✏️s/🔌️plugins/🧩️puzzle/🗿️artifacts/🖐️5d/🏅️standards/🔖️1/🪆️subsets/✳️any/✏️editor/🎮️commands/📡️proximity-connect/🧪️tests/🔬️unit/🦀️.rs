@@ -65,7 +65,7 @@ fn proximity_search_matches_the_scan_and_stays_below_the_interactive_ceiling_at_
     assert_eq!(radius, PUZZLE5D_PROXIMITY_RADIUS);
     let budget = Duration::from_micros(fixture["budgetUs"].as_u64().expect("budget"));
     let rounds = fixture["rounds"].as_u64().expect("rounds") as usize;
-    let snapshot = Puzzle5dPlaySnapshot(serde_json::Value::Null);
+    let snapshot = Puzzle5dPlaySnapshot::new(serde_json::Value::Null);
     let selection = protocol::DomainSelection::default();
     let peers = |document: &Puzzle5dDocument, part_id: &str, gated: bool| puzzle5d_proximity_peers(document, part_id, radius, gated).map(|(_, peers)| peers.into_iter().map(|peer| peer.grip).collect::<Vec<_>>()).unwrap_or_default();
     for case in fixture["cases"].as_array().expect("cases") {

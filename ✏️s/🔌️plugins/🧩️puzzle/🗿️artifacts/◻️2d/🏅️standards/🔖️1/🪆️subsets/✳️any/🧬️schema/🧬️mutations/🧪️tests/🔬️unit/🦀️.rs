@@ -10,7 +10,7 @@ fn puzzle2d_delta_ops_are_granular_and_round_trip() {
     let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n1", "anchor": "fixed", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "anchor": "fixed", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
     let after = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n2", "anchor": "fixed", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "anchor": "fixed", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
     let canonical = |value: &Value| serde_json::to_value(serde_json::from_value::<Puzzle2dSnapshot>(value.clone()).expect("typed puzzle2d fixture")).expect("canonical puzzle2d JSON");
-    let operations = puzzle2d_document_delta_operations(&before, &after);
+    let operations = puzzle2d_document_delta_operations(&before, &after).expect("both sides decode");
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::MoveNode(_))));
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::CreateNode(_))));
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::DeleteNode(_))));
@@ -37,7 +37,7 @@ fn sparse_node_without_anchor_still_emits_create_node() {
         "nodes": [{ "id": "n1", "nodeKind": "seed", "shape": "circle", "x": 0.0, "y": 0.0, "text": "n1", "handles": [], "radius": 24.0 }],
         "edges": []
     });
-    let operations = puzzle2d_document_delta_operations(&before, &after);
+    let operations = puzzle2d_document_delta_operations(&before, &after).expect("both sides decode");
     assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dMutation::CreateNode(_))), "sparse add must stay granular");
 }
 

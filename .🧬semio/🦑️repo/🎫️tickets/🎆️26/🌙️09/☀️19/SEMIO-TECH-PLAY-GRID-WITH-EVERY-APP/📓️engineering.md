@@ -622,3 +622,184 @@ work there is untouched.
 Evidence: `…/⚡️cache/play-fleet/engineering/probe-act1547/results.ndjson` plus the per-pane console dumps.
 Six of seven boot their curated example with visible content and a clean console; gis3d renders terrain from
 the genesis document because the gisterrain editor declares no `setActiveExample` (§6).
+
+## 2026-09-23 (session 7b, successor after the 00:00 coordinator restart)
+
+### 11. gisterrain `setActiveExample` — landed, blocked only by gismap test compile errors
+
+The predecessor's gis3d picker fix is on disk and was COMMITTED by the 00:05 auto-commit: a schema-first
+`set_active_example` command (`🏔️gisterrain/…/✳️any/✏️editor/🎮️commands/🎨️example/🦀️.rs`, catalogue read off the
+subset's own `📚️examples/*` facets, emitting the authored `change-exaggeration` / `change-imported-features`
+leaves — never a snapshot swap), the `app_commands!` row `"setActiveExample" as "active-example"`, the retained
+tool id + `Artifact`-lane publication contract + `🧫️retained-command-limits` fixture, the manifest row (Mutation,
+destructive, `exampleId` select staged from the catalogue, `InteractiveJobClassification::Migrated`) and five
+unit laws. Chain18's eight attempts (21:55–23:59) never produced a gisterrain result because the SAME cargo
+invocation also compiles gismap's lib-test target, which failed:
+
+- **fix 27** `🗺️gismap/…/🧬️schema/🧬️mutations/💾️binary/🧪️tests/🔬️unit/🦀️.rs:269,278` — the predecessor's
+  candidate-projection law passed `&Arc<GisMapSnapshot>` (what `snapshot_root()` returns) to
+  `ChildRestoreProjection::from_snapshot`; now `&*root`, with the early-handoff arm binding the `Arc` first
+  (E0716 otherwise).
+- **fix 28** `🗺️gismap/…/🪟️windows/🗺️map/☑️options/🔽️lod-mode/🧪️tests/🔬️unit/🦀️.rs:36,48` — peer ticket
+  26/09/23 GIS-2D-LOD-MODE-AUTOMATIC-SUFFIX (finished 00:58, its summary says the crate tests were never run)
+  compared `MeasureSelectItem.label: String` against `Gis2dPlayLabels.lod_automatic: LabelText` and formatted it
+  with `{}`. Restated with `.as_str()` exactly as the production `lod_automatic_label` reads it.
+
+### 12. PX1 landed
+
+`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:23695` now reads
+`let projection = A::child_restore_projection(candidate.snapshot_ref())?;` (committed 00:05) — the §9 proposal.
+The gismap live-load red will therefore now name its `ChildRestoreProjectionError` through gismap's own
+`gis map child projection failed: {error}`.
+
+### 13. Build-dir incidents this session
+
+- 02:08 plugin-gis: torn read of the shared `⚡️cache/cargo/build` (`extern location for semio_s_artifact_stdio_dwg
+  does not exist`, `found possibly newer version of crate cfg_if`) — that dir was wiped (363 MB at 02:40) and
+  every lane was rebuilding it concurrently.
+- 02:20–02:58: my cargo and knowledge-children's cargo both idled at 0 % CPU with no rustc child, each holding
+  per-unit `.lock`s under `cargo/build/debug/build/…` — a fine-grain flock cycle. Killed MY wrapper/cargo only
+  (rule 4); the other lanes resumed compiling within seconds. Requeued as the final full batch `s8b`.
+
+### 14. gis3d boot red on the 03:23 activation — real defect in the setActiveExample landing (fix 29)
+
+The 03:23 activation rebuilt the gis guest from the sources on disk while its descriptor stayed the 22:17 one
+(gisterrain editor actions there: `setCamera`, `setExaggeration` + framework verbs — no `setActiveExample`).
+Probe `…/⚡️cache/play-fleet/engineering/probe-act0323/` (03:45): gis3d `outcome=error`; the guest panics while
+registering the terrain app at `🔌️plugin/🦀️.rs:22853`:
+`tool proof catalog must exactly join migrated generated declarations to live concrete factories` →
+`interactive-job.catalog-incomplete: a migrated generated command lacks its exact owner-local bounded reducer proof`.
+The command row, `GIS3D_RETAINED_TOOL_IDS`, the publication contract and `.action_interactive_job(…, Migrated)`
+were all added, but the `bounded_first_step_tool_proofs!` table was not. **fix 29**
+`🏔️gisterrain/…/✳️any/✏️editor/🦀️.rs:507` adds
+`"setActiveExample" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500)` (the same contract as
+its two siblings; `retained_command_factory_matches_the_language_neutral_maximum_oracle` pins that value). The
+native laws never caught it only because they never ran: every one that calls `app()` registers through this
+same join. gis2d on the same activation is `ready`, Reuse Map, content. `describe.request/gis` +
+`activate.request/gis3d` touched (03:29, re-touched 03:46 while still unconsumed).
+
+### 15. Final full batch s8b (04:08–04:18, one mutex hold) and fixes 30–31
+
+Logs `.🧬semio/🦑️repo/⚡️cache/play-fleet/engineering/s8b-assembly.txt` / `s8b-plain.txt`.
+
+| crate | result |
+| --- | --- |
+| `semio-s-artifact-fem-2d` | **ok 1261 / 0** |
+| `semio-s-artifact-fem-3d` | **ok 1131 / 0** |
+| `semio-s-artifact-gis-gismap` | 265 / 2 → fix 30 |
+| `semio-s-artifact-gis-gisterrain` | **ok 97 / 0** (92 + five `setActiveExample` laws; fix 29 proven natively) |
+| `semio-s-artifact-energy-model` | **ok 6292 / 0** |
+| `semio-s-artifact-process-process3d` | 358 / 1 → fix 31 |
+| `semio-s-artifact-sourcing-curation` | **ok 152 / 0** |
+| `semio-s-plugin-energy` | 3 / 1 `descriptor_is_fresh` (describe requested) |
+| `semio-s-plugin-gis` | 5 / 1 `descriptor_is_fresh` (describe requested) |
+| gis native-codecs, plugin-fem, plugin-process{,-concrete,-metal,-robotic,-wood}, plugin-sourcing{,-beams,-slabs,-windows} | **all ok** |
+
+**fix 30 — the gismap red of sessions 5–7 was a real production defect, not the pump.**
+`🗺️gismap/…/🧬️schema/🧬️mutations/💾️binary/🦀️.rs` `GisMapSnapshotCloneAuthority::step`: when a vector phase
+(positions / routes / regions) ran out, the arm did `self.phase += 1` AND the common tail did `value + 1`, so the
+phase advanced by two. Consequences: `routes` were never copied into the store-initialization candidate (silent
+loss of every route on a live document load) and phase 3 — `drawing.child_id` — was skipped, leaving the
+placeholder `""`, which the projection visitor rejects as `InvalidReference`. With PX1 in place the pump reported
+`gis map child projection failed: child restore projection: InvalidReference`, and the candidate law pinned the
+exact field (`drawing ""/ArtifactRef { artifact_id: "gismap-drawing", … }`). The in-arm increment is removed.
+
+**fix 31 — PX1's other half.** The pump now asks `A::child_restore_projection`, whose trait default is
+`Err("editor did not declare a loaded-parent child projection")` by design (an undeclared owner grants no
+restore authority). process3d composes `SemioMembers` children but never declared it →
+`vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_closed` red. Added
+`process3d_child_restore_projection` (crate root `🧊️process3d/🦀️.rs`, beside `genesis_process3d_child_pack`) and the
+editor + viewer overrides; the same for sourcing-curation (`curation_child_restore_projection` in
+`🗂️curation/🦀️.rs`, editor + viewer), which has no live-envelope law and so was green while latently broken.
+**Fleet-wide note for the coordinator:** every other app with `type Members = SemioMembers` and no projection
+has the same latent fault on a live envelope load — writer, equation, presentation, architect program,
+reasoning wires, playbook, imperative procedure, trinity jack, dag (flow, sequence, cad, energy, gismap,
+process3d, sourcing declare it).
+
+`plugin-energy descriptor_is_fresh`: the energy descriptor is the 15:57 one; nothing in this topic changed the
+energy manifest since (the 00:05 energy edit is the `nodeId` args-bridge alias), so framework manifest drift
+re-staled it. `describe.request/energy` + `activate.request/energy` + `activate.request/gis2d` touched 04:22.
+
+### 16. Live panes on the 03:23 activation (probe-act0323, 03:45–04:35, one page at a time)
+
+fem2d / fem3d / energy / process3d / sourcing / gis2d: `ready` in 2.2–3.4 s, `verdict=content`, curated example
+checked (Demo, Concrete Forest, BESTEST 600, Concrete Forest, Demo, Reuse Map), 0 page errors, 0 refused/panic.
+Each pane has exactly ONE console error, the same shell-wide 404:
+`/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin` (not engineering-owned; new on this activation).
+gis3d: `outcome=error` — fix 29 (§14), awaiting the requested describe + activation.
+
+### 17. Re-verification s8c (04:46–04:51) and s8d (04:56)
+
+- process3d **ok 359 / 0**, sourcing-curation **ok 152 / 0**, plugin-process ok 1/0, plugin-sourcing ok 3/0 —
+  fix 31 green; `activate.request/process3d` + `sourcing` touched.
+- gismap 266 / 1 (s8d): the candidate law is GREEN after scoping its own `Arc` alias of the candidate root
+  across `close_candidate_store`, and it now also asserts `*root == expected` (exact field-by-field clone
+  fidelity — the assertion that would have caught fix 30's skipped `routes` and `drawing.child_id` directly).
+- The remaining gismap red has CHANGED character: `gis_map_live_envelope_submit_pump_swap…` now passes the
+  projection, is accepted (`artifact_store_replacement_refusal == None`) and commits, but stays in a
+  `Progress` leg (RetiringCommittedMembers / RetiringCommittedStore — `drive_retained_store` answers
+  `Blocked` while the displaced root `Arc` is still aliased) for all 100 000 turns. Running a `[DEBUG]`
+  two-variant experiment (maintenance-only vs the law's publication+maintenance+pump loop, 1 000 000 turns
+  each) to separate "budget" from "alias".
+
+### 18. gismap stall attributed — a turn budget, not an alias (fix 32)
+
+`[DEBUG]` experiment (s8e, since removed): both loop variants reach `Ready` with `refusal None` at turn
+**121 160** (first `Progress` at turn 995, 120 164 `Progress` turns) — identical with and without the
+publication/worker pumps. The accepted load ends by retiring the DISPLACED boot store (the curated Reuse Map)
+one item per turn at the law's minimum grant; the law's 100 000-turn cut had never been exercised because the
+load used to die at the projection. **fix 32** `🗺️gismap/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs`: the drive loop bound
+is the documented `GIS_MAP_LIVE_LOAD_TURN_BUDGET = 1_000_000` (termination, not speed). Observation for a
+later perf pass, not a defect: ~120 k one-item retirement turns for a 160 KB curated map means the displaced
+store retires at very fine granularity.
+
+### 19. FINAL full batch s8f — 05:00:58–05:04:37, one mutex hold
+
+Logs `.🧬semio/🦑️repo/⚡️cache/play-fleet/engineering/s8f-assembly.txt` / `s8f-plain.txt` (JOBS=2, INCREMENTAL=0,
+private target, `--test-threads=4`, load 11–13).
+
+| crate | result |
+| --- | --- |
+| `semio-s-artifact-fem-2d` | 1260 / 1 — `mesh_job_large_boundary_never_runs_to_completion_in_one_step` 13.8 ms vs 8 ms; **re-measured alone (s8g, `--test-threads=1`, load 13–15): ok**, with `assembly_job_one_fuel_steps…` also ok → load flake, bound unchanged |
+| `semio-s-artifact-fem-3d` | **ok 1131 / 0** |
+| `semio-s-artifact-gis-gismap` | **ok 267 / 0** (was 263/1 since session 5) |
+| `semio-s-artifact-gis-gisterrain` | **ok 97 / 0** |
+| `semio-s-artifact-energy-model` | **ok 6292 / 0** |
+| `semio-s-artifact-process-process3d` | **ok 359 / 0** |
+| `semio-s-artifact-sourcing-curation` | **ok 152 / 0** |
+| `semio-s-plugin-energy` | **ok 4 / 0** (descriptor re-described 04:51) |
+| `semio-s-plugin-fem` | **ok 5 / 0** |
+| `semio-s-plugin-gis` + native-codecs | **ok 6 / 0**, **ok 3 / 0** (descriptor re-described 05:01, includes setActiveExample) |
+| `semio-s-plugin-process{,-concrete,-metal,-robotic,-wood}` | **ok 1 / 5 / 5 / 5 / 6** |
+| `semio-s-plugin-sourcing{,-beams,-slabs,-windows}` | **ok 3 / 2 / 2 / 2** |
+
+All twenty crates green (fem-2d's one red is the documented wall-clock load flake, green alone).
+
+### 20. Live panes on the 05:13 activation (gis + energy re-described 04:51/05:01; :6033 recycled 05:14)
+
+`…/⚡️cache/play-fleet/engineering/probe-act0513/results.ndjson`, one page at a time, fresh context each:
+
+| pane | outcome | ready | canvas | cropVar | page errors | refused/panic | example |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| gis3d | ready | 3.1 s | 1 | 89.7 | 0 | 0 | **Demo ✅** (picker: No example / Demo) |
+| gis2d | ready | 2.9 s | 1 | 1521.9 | 0 | 0 | Reuse Map ✅ |
+| energy | ready | 3.2 s | 1 | 43.3 | 0 | 0 | BESTEST 600 ✅ |
+| process3d | ready | 2.5 s | 1 | 34.7 | 0 | 0 | Concrete Forest ✅ |
+| sourcing | ready | 2.5 s | 1 | 23.2 | 0 | 0 | Demo ✅ |
+| fem2d | ready | 2.9 s | 2 | 70.4 | 0 | 0 | Demo ✅ |
+| fem3d | ready | 2.3 s | 2 | 33.8 | 0 | 0 | Concrete Forest ✅ |
+
+All seven engineering panes boot their curated example with visible content. gis3d's navbar picker now exists
+and checks `demo` (the §6 gap is closed; the canvas was already the curated terrain — `initial_snapshot()` is
+`default_terrain_document()` — the missing piece was the action the host's `appSwitchesExamples` gate reads).
+Every pane still logs ONE console error, the shell-wide 404 for
+`/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin` — not engineering-owned.
+
+### 21. What remains (not this topic's to close)
+
+- Shell-wide `guestslim-typst-fonts.bin` 404 on every pane (vendor asset staging).
+- Latent live-envelope-load fault for every `SemioMembers` app without `child_restore_projection` since PX1:
+  writer, equation, presentation, architect program, reasoning wires, playbook, imperative procedure,
+  trinity jack, dag. Crate-side recipe = fix 31 (one crate-root fn over `ChildRestoreProjection::from_snapshot`
+  + editor/viewer overrides).
+- fem-2d's two 8 ms wall-clock laws stay load-sensitive under `--test-threads=4` in a busy fleet; green alone.

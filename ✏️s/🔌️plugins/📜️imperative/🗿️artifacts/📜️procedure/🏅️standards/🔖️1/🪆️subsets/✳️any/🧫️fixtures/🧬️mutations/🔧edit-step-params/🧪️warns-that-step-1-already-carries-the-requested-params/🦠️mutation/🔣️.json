@@ -1,8 +1,11 @@
 {
-  "mutation": "editStepParams",
-  "pathRef": {},
   "id": "step-1",
+  "mutation": "editStepParams",
   "newParams": {
     "message": "Guten Tag"
+  },
+  "pathRef": {
+    "owner": null,
+    "slot": null
   }
 }

@@ -47,8 +47,8 @@ pub use super::change_node_abbreviation::mutation::{change_node_abbreviation, Ch
 pub use super::change_node_icon::mutation::{change_node_icon, ChangeNodeIcon};
 pub use super::change_node_name::mutation::{change_node_name, ChangeNodeName};
 pub use super::change_node_operator_kind::mutation::{change_node_operator_kind, ChangeNodeOperatorKind};
-pub use super::connect_nodes::mutation::{connect_nodes, ConnectNodes};
-pub use super::create_node::mutation::{create_node, CreateNode};
+pub use super::connect_nodes::mutation::{connect_nodes, connect_nodes_at, ConnectNodes};
+pub use super::create_node::mutation::{create_node, create_node_at, CreateNode};
 pub use super::delete_node::mutation::{delete_node, DeleteNode};
 pub use super::disconnect_nodes::mutation::{disconnect_nodes, DisconnectNodes};
 pub use super::move_node::mutation::{move_node, MoveNode};
@@ -146,7 +146,8 @@ pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<
     let after_nodes = after.nodes();
     let before_edges = before.edges();
     let after_edges = after.edges();
-    let mut mutations = Vec::new();
+    let changed = |edge: &crate::DagHostSnapshotEdge| after_edges.iter().find(|entry| entry.id == edge.id).is_none_or(|entry| entry.source != edge.source || entry.target != edge.target || entry.route_style != edge.route_style || entry.properties != edge.properties);
+    let mut mutations: Vec<DagMutation> = before_edges.iter().filter(|edge| changed(edge)).map(|edge| disconnect_nodes(edge.id.clone())).collect();
     for node in &before_nodes {
         if !after_nodes.iter().any(|entry| entry.id == node.id) {
             mutations.push(delete_node(node.id.clone()));
@@ -183,19 +184,9 @@ pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<
             }
         }
     }
-    for edge in &before_edges {
-        if !after_edges.iter().any(|entry| entry.id == edge.id) {
-            mutations.push(disconnect_nodes(edge.id.clone()));
-        }
-    }
     for edge in &after_edges {
-        match before_edges.iter().find(|entry| entry.id == edge.id) {
-            None => mutations.push(connect_nodes(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.route_style, edge.properties.clone())),
-            Some(prior) if prior.source != edge.source || prior.target != edge.target || prior.route_style != edge.route_style || prior.properties != edge.properties => {
-                mutations.push(disconnect_nodes(edge.id.clone()));
-                mutations.push(connect_nodes(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.route_style, edge.properties.clone()));
-            }
-            Some(_) => {}
+        if before_edges.iter().find(|entry| entry.id == edge.id).is_none_or(|prior| changed(prior)) {
+            mutations.push(connect_nodes(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.route_style, edge.properties.clone()));
         }
     }
     mutations

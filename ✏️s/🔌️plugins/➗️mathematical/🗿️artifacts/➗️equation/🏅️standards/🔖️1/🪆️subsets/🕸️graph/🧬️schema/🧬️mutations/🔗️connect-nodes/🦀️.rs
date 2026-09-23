@@ -11,6 +11,8 @@ pub struct ConnectNodes {
     pub id: String,
     pub source: String,
     pub target: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<EquationSnapshot, EquationMutation> for ConnectNodes {

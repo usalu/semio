@@ -1,0 +1,10 @@
+{
+  "contract": "semio.store.bounded-value-retirement/v1",
+  "pageBytes": 4096,
+  "cases": [
+    { "name": "one-byte grant pays the page in instalments", "grant": 1, "turns": 4096, "firstTurnBytes": 1 },
+    { "name": "sub-page grant pays the page in instalments", "grant": 64, "turns": 64, "firstTurnBytes": 64 },
+    { "name": "exact page grant releases in one turn", "grant": 4096, "turns": 1, "firstTurnBytes": 4096 },
+    { "name": "super-page grant is charged exactly one page", "grant": 10000, "turns": 1, "firstTurnBytes": 4096 }
+  ]
+}

@@ -5720,6 +5720,84 @@
             }
           },
           {
+            "id": "setActiveExample",
+            "label": {
+              "native": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Example",
+                "de": "Aktives Beispiel festlegen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "panel-left",
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false,
+                "default": "demo"
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": true,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "undo",
             "label": {
               "native": {
@@ -25956,8 +26034,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "3845bb19491a322d8934dc3c4d264ee0a09596cc4a5f649a7e9afdfd4353ee89",
-    "coreWasmSha256": "2f0e1b37c6d820c81c78cf48ca7ec62783c7cd8177f84734f619402846f639d4",
-    "descriptorSha256": "e2978713e7a1c9ae9e8006956a9310b7861cc37513c91a686d858c16c68fa860"
+    "wasmSha256": "93ab98ba7e42f8117d7a7747bd00a900b48d435a4d359e2df7a41a979e09f9f0",
+    "coreWasmSha256": "0168158e3241aeea482c427b7cdd51bcc142761056834e8d65f94c5092ad6714",
+    "descriptorSha256": "9fe8e82b7514b85d30d579eab9cbd4e2f54fe675d07c533c3536dc83946a7c18"
   }
 }

@@ -87,7 +87,7 @@ fn job(document: &Puzzle5dDocument, requested: u32, purpose: ToolRunJobPurpose, 
         definition: &definition,
         purpose,
         identity: identity(),
-        snapshot: Arc::new(Puzzle5dPlaySnapshot(serde_json::to_value(document).expect("document serializes"))),
+        snapshot: Arc::new(Puzzle5dPlaySnapshot::new(serde_json::to_value(document).expect("document serializes"))),
         config: Arc::new(Puzzle5dConfig { fill_count: requested, ..Puzzle5dConfig::default() }),
         window_id: None,
         window_config: None,
@@ -196,6 +196,51 @@ fn verdict_id(verdict: ToolRunVerdict) -> &'static str {
     verdict.as_str()
 }
 
+/// 📏️ One fixture case as the law reads it: the run, its final `verdict:reasonId` records in order, the
+/// `testing` record count, the placement count and the last warning step's reason id.
+fn measure_case(document: &Puzzle5dDocument, requested: u32) -> (Mirror, Vec<String>, usize, usize, Option<String>) {
+    let run = run_to_completion(job(document, requested, ToolRunJobPurpose::Run, &[]));
+    let primaries = run.primaries();
+    let finals = primaries.iter().filter(|(_, verdict, _, _)| *verdict != ToolRunVerdict::Testing).map(|(_, verdict, reason, _)| format!("{}:{}", verdict_id(*verdict), reason_id(*reason))).collect();
+    let tested = primaries.iter().filter(|(_, verdict, _, _)| *verdict == ToolRunVerdict::Testing).count();
+    let placed = run.ops.len() / PUZZLE5D_PLACEMENT_OPS;
+    let stall = run.steps.iter().rev().find(|step| step.kind == semio_framework_tool_run::ToolRunStepKind::Warning).map(|step| reason_id(step.reason));
+    (run, finals, tested, placed, stall)
+}
+
+/// 🖨️ Reprints `🎞️fill-run.json`'s `cases` from the live run — each case keeps its id, example, request and
+/// verdict-prefix LENGTH, and takes the run's own verdicts, counts and stall. The fixture is never
+/// hand-edited: run this deliberately after a planner change —
+/// `cargo test -p semio-s-artifact-puzzle-5d --lib -- --ignored zzz_write_fill_run_fixture` — then re-run
+/// `fill_run_job_matches_the_language_neutral_fill_run_fixture`, whose puzzle 3d planner oracle is what
+/// keeps the reprinted verdicts honest.
+#[test]
+#[ignore]
+fn zzz_write_fill_run_fixture() {
+    let fixture = fixture();
+    let cases: Vec<String> = fixture["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .map(|case| {
+            let requested = case["requested"].as_u64().expect("requested") as u32;
+            let (_, finals, tested, placed, stall) = measure_case(&example(case["example"].as_str().expect("example")), requested);
+            let prefix = &finals[..case["verdictPrefix"].as_array().expect("verdict prefix").len().min(finals.len())];
+            let prefix = if prefix.is_empty() { "[]".to_string() } else { format!("[\n{}\n      ]", prefix.iter().map(|verdict| format!("        {}", serde_json::Value::from(verdict.as_str()))).collect::<Vec<_>>().join(",\n")) };
+            format!(
+                "    {{\n      \"id\": {},\n      \"example\": {},\n      \"requested\": {requested},\n      \"verdictPrefix\": {prefix},\n      \"tested\": {tested},\n      \"placed\": {placed},\n      \"stall\": {}\n    }}",
+                case["id"],
+                case["example"],
+                stall.map_or(serde_json::Value::Null, serde_json::Value::from)
+            )
+        })
+        .collect();
+    let (head, rest) = FILL_RUN_FIXTURE.split_once("  \"cases\": [").expect("the fixture has a cases array");
+    let (_, tail) = rest.split_once("\n  ],\n  \"laws\"").expect("the cases array precedes the laws");
+    let printed = format!("{head}  \"cases\": [\n{}\n  ],\n  \"laws\"{tail}", cases.join(",\n"));
+    std::fs::write(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️precompute/🪣️fill/🧫️fixtures/🎞️fill-run.json"), printed).expect("write 🎞️fill-run.json");
+}
+
 /// ⚖️ LAW (language-neutral fixture): every seeded example run reaches the fixture's exact verdict prefix,
 /// tested and placed counts and stall; it appends one `create-part` and one `connect-grips` per placement with
 /// the part's entity; every `instance3d` record is followed by its `placement2d` twin under the twin key with
@@ -212,12 +257,8 @@ fn fill_run_job_matches_the_language_neutral_fill_run_fixture() {
         let id = case["id"].as_str().expect("case id");
         let document = example(case["example"].as_str().expect("example"));
         let requested = case["requested"].as_u64().expect("requested") as u32;
-        let run = run_to_completion(job(&document, requested, ToolRunJobPurpose::Run, &[]));
+        let (run, finals, tested, placed, stall) = measure_case(&document, requested);
         let primaries = run.primaries();
-        let finals: Vec<String> = primaries.iter().filter(|(_, verdict, _, _)| *verdict != ToolRunVerdict::Testing).map(|(_, verdict, reason, _)| format!("{}:{}", verdict_id(*verdict), reason_id(*reason))).collect();
-        let tested = primaries.iter().filter(|(_, verdict, _, _)| *verdict == ToolRunVerdict::Testing).count();
-        let placed = run.ops.len() / PUZZLE5D_PLACEMENT_OPS;
-        let stall = run.steps.iter().rev().find(|step| step.kind == semio_framework_tool_run::ToolRunStepKind::Warning).map(|step| reason_id(step.reason));
         let expected: Vec<String> = case["verdictPrefix"].as_array().expect("verdict prefix").iter().map(|entry| entry.as_str().expect("verdict entry").to_string()).collect();
         assert_eq!(&finals[..expected.len().min(finals.len())], &expected[..], "{id}: verdict prefix");
         assert_eq!(tested as u64, case["tested"].as_u64().expect("tested"), "{id}: tested");

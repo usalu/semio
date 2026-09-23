@@ -626,7 +626,9 @@ pub fn widget_io_ports(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &H
             let (inputs, outputs) = variable_io_ports(name, schema);
             (inputs, outputs, false, false)
         }
-        Widget::OutputPreview { .. } | Widget::OutputAction { .. } | Widget::OutputExport { .. } => (vec![], vec![], false, false),
+        Widget::OutputPreview { .. } => (vec![IoPortSpec::named("", "", "", "PreviewInput")], vec![], false, false),
+        Widget::OutputAction { .. } => (vec![IoPortSpec::named("", "", "", "ActionInput")], vec![], false, false),
+        Widget::OutputExport { .. } => (vec![IoPortSpec::named("", "", "", "ExportInput")], vec![], false, false),
         Widget::Cluster { id, name, tree, .. } => {
             let (inputs, outputs) = cluster_io_layout(id, name, tree, synapses);
             (inputs, outputs, false, false)
@@ -994,6 +996,8 @@ pub enum WidgetDescriptor {
         id: Option<String>,
     },
     InputSlider {
+        #[serde(default)]
+        #[value(default)]
         label: String,
         #[serde(default)]
         #[value(default)]
@@ -1213,3 +1217,9 @@ impl FlowHostSnapshot {
 #[path = "🧪️tests/🔬️slider-label/🦀️.rs"]
 mod slider_label_tests;
 //#endregion 🧪️AuthoredSliderLabels
+
+//#region 🧪️SinkPorts
+#[cfg(test)]
+#[path = "🧪️tests/🔬️sink-ports/🦀️.rs"]
+mod sink_port_tests;
+//#endregion 🧪️SinkPorts

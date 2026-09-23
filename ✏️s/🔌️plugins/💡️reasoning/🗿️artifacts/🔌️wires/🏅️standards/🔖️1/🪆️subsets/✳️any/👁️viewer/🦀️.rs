@@ -50,6 +50,10 @@ impl ArtifactViewer for WiresViewer {
     type Command = WiresViewCommand;
 
     const DIALECT: Dialect = WIRES_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::wires_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::wires_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = MINDMAP_WIRES_SCHEMA;
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {

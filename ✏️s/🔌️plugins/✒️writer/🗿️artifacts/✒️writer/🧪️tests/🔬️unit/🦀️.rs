@@ -20,6 +20,9 @@ async fn writer_child_restore_projection_accepts_the_exact_owned_document() {
     assert_eq!(snapshot.document.child_id, snapshot.document.target.artifact_id);
 }
 
+/// 🧵️ `cloneIdentity`: a cloned snapshot SHARES its handle's one local text owner
+/// (`ArtifactChild::clone` is shallow), so the body lives exactly once — that owner plus the two
+/// retained handles make a strong count of 3, and both retained handles are the same allocation.
 #[semio_framework_async_macros::async_test]
 async fn child_local_text_fixture_proves_bounded_identity_isolation_aba_and_wire_omission() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚖️writer-child-local-text-law.json")).expect("language-neutral writer child fixture");
@@ -41,7 +44,7 @@ async fn child_local_text_fixture_proves_bounded_identity_isolation_aba_and_wire
                 let cloned_owner = writer_text_owner(&cloned);
                 assert!(Arc::ptr_eq(&retained, &cloned_owner));
                 assert_eq!(&*cloned_owner, expected);
-                assert_eq!(Arc::strong_count(&retained), 4);
+                assert_eq!(Arc::strong_count(&retained), 3);
             }
             "instanceIsolation" => {
                 let mut left = document_child_handle("collision", "", "plaintext");

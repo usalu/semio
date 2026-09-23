@@ -11,6 +11,8 @@ pub struct CreateNode {
     pub label: String,
     pub x: f64,
     pub y: f64,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<EquationSnapshot, EquationMutation> for CreateNode {

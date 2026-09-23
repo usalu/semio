@@ -18,6 +18,18 @@ fn stripes() -> BitmapSnapshot {
     }
 }
 
+fn odd_checkerboard(seed: u64) -> BitmapSnapshot {
+    let indices: Vec<u8> = (0..16u32).map(|cell| ((cell % 4 + cell / 4) % 2) as u8).collect();
+    BitmapSnapshot {
+        seed,
+        input: BitmapInput { width: 4, height: 4, palette: vec![BitmapColor::opaque(0, 0, 0), BitmapColor::opaque(255, 255, 255)], pixels: encode_base64(&indices) },
+        output: BitmapOutputSpec { width: 5, height: 5, periodic: true },
+        model: BitmapOverlappingModel { pattern_size: 2, symmetry: 1, periodic_input: true, ground: None },
+        pinned: Vec::new(),
+        ..BitmapSnapshot::default()
+    }
+}
+
 fn identity() -> ToolRunIdentity {
     ToolRunIdentity::new(ToolRunId { app_instance_id: 1, run: 7 }, [0; 32])
 }
@@ -182,4 +194,91 @@ fn aborting_mid_run_does_not_publish_set_solve() {
     close(&mut job);
     assert!(!port.has_effects(), "close after abort still must not publish SetSolve");
     assert!(job.committed_solve().is_none());
+}
+
+#[test]
+fn a_full_lane_step_publishes_a_burst_of_collapses_and_keeps_discards() {
+    let snapshot = stripes();
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), Generation(0), snapshot.seed);
+    let (operation_id, generation) = (operation.operation, operation.generation);
+    let mut job = BitmapFillRunJob::new(identity(), ToolRunJobPort::default(), snapshot.clone(), operation);
+    let cancel = semio_framework_job::root_cancel_token();
+    let mut sequence = 0;
+    let mut bursts = Vec::new();
+    for _ in 0..20 {
+        let outcome = drive_once(&mut job, operation_id, generation, &cancel, &mut sequence, semio_framework_job::INTERACTIVE_LANE_FUEL);
+        if let Some(payload) = tick_payload(outcome) {
+            bursts.push(payload);
+        }
+        if bursts.iter().any(|payload| payload.done) {
+            break;
+        }
+    }
+    close(&mut job);
+    assert!(bursts.iter().any(|payload| payload.trace.len() > 1), "one host step must carry more than one collapse");
+    let mut discarded = None;
+    for seed in 1..6 {
+        let snapshot = odd_checkerboard(seed);
+        let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), Generation(0), snapshot.seed);
+        let (operation_id, generation) = (operation.operation, operation.generation);
+        let mut job = BitmapFillRunJob::new(identity(), ToolRunJobPort::default(), snapshot.clone(), operation);
+        let mut sequence = 0u64;
+        let mut found = None;
+        for _ in 0..40 {
+            let outcome = drive_once(&mut job, operation_id, generation, &cancel, &mut sequence, semio_framework_job::INTERACTIVE_LANE_FUEL);
+            if let Some(payload) = tick_payload(outcome) {
+                if payload.trace.iter().any(|event| event.discarded) {
+                    found = Some((snapshot, payload));
+                    break;
+                }
+            }
+        }
+        close(&mut job);
+        if found.is_some() {
+            discarded = found;
+            break;
+        }
+    }
+    let (document, payload) = discarded.expect("an odd periodic checkerboard must discard a collapsed cell");
+    let painted = crate::editor::bitmap::modes::edit::windows::output::layers_from_fill_payload(&document, &payload, &[]);
+    let mut silent = payload.clone();
+    silent.trace.clear();
+    let bare = crate::editor::bitmap::modes::edit::windows::output::layers_from_fill_payload(&document, &silent, &[]);
+    assert_ne!(painted, bare, "a discarded cell must stay on the canvas");
+    assert!(bursts.iter().any(|payload| payload.trace.iter().any(|event| !event.discarded)), "a collapse must be in the trace");
+    let document = snapshot;
+    let with_trace = bursts.iter().find(|payload| payload.trace.iter().any(|event| event.discarded)).or_else(|| bursts.first());
+    let payload = with_trace.expect("a burst");
+    let painted = crate::editor::bitmap::modes::edit::windows::output::layers_from_fill_payload(&document, payload, &[]);
+    let mut silent = payload.clone();
+    silent.trace.clear();
+    let bare = crate::editor::bitmap::modes::edit::windows::output::layers_from_fill_payload(&document, &silent, &[]);
+    if payload.trace.iter().any(|event| event.discarded) {
+        assert_ne!(painted, bare, "a discarded cell must change the paint");
+    }
+}
+
+#[test]
+fn rooms_16_paints_several_new_cells_in_one_host_step() {
+    let snapshot = crate::examples::rooms_16::snapshot();
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), Generation(0), snapshot.seed);
+    let (operation_id, generation) = (operation.operation, operation.generation);
+    let mut job = BitmapFillRunJob::new(identity(), ToolRunJobPort::default(), snapshot, operation);
+    let cancel = semio_framework_job::root_cancel_token();
+    let mut sequence = 0;
+    let mut previous = 0usize;
+    let mut best_delta = 0usize;
+    for _ in 0..48 {
+        let outcome = drive_once(&mut job, operation_id, generation, &cancel, &mut sequence, semio_framework_job::INTERACTIVE_LANE_FUEL);
+        if let Some(payload) = tick_payload(outcome) {
+            let len = payload.trace.len();
+            best_delta = best_delta.max(len.saturating_sub(previous));
+            previous = len;
+            if payload.done {
+                break;
+            }
+        }
+    }
+    close(&mut job);
+    assert!(best_delta > 1, "one host step on rooms-16 must paint more than one new cell, best {best_delta}");
 }

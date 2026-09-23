@@ -84,7 +84,7 @@ pub fn puzzle3d_snapshot(document: &Puzzle5dDocument, catalogs: Option<crate::Pu
 /// 🗂️ The authored kind catalogs of a 5d play snapshot (`kindCatalogs` child plus its `kindCatalogsExtra` rows),
 /// or `None` when it authors none.
 pub fn puzzle5d_authored_kind_catalogs(snapshot: &Puzzle5dPlaySnapshot) -> Result<Option<crate::Puzzle5dKindCatalogs>, Fault> {
-    let typed: crate::Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(&snapshot.0)).map_err(|error: dsl::ValueError| Fault::from(format!("puzzle5d-planner-snapshot: {error}")))?;
+    let typed: crate::Puzzle5dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(snapshot.value())).map_err(|error: dsl::ValueError| Fault::from(format!("puzzle5d-planner-snapshot: {error}")))?;
     Ok(crate::kind_catalogs_of(&typed.kind_catalogs, &typed.kind_catalogs_extra).filter(|catalogs| !catalogs.parts.is_empty()))
 }
 

@@ -59,10 +59,9 @@ fn retire_writer_edit_authority(authority: &mut dyn store::ArtifactOwnedHistoryE
 
 fn drive_writer_edit(bytes: &[u8], cancel: semio_framework_job::CancelToken) -> Result<protocol::Edit<WriterMutation>, store::OwnedSchemaDecodeDiagnostic> {
     let mut source = writer_edit_source(bytes);
-    let catalog: std::sync::Arc<dyn store::ArtifactEnvelopeOwnedFieldCatalog<WriterSnapshot, WriterMutation>> = std::sync::Arc::new(WriterEnvelopeOwnedFieldCatalog);
-    let decoder = WriterEditHistoryDecoder { catalog };
+    let decoder = store::ArtifactEnvelopeOwnedFieldCatalog::<WriterSnapshot, WriterMutation>::edit_history_decoder(&WriterEnvelopeOwnedFieldCatalog);
     let mut authority = store::ArtifactOwnedHistoryEntryDecoder::begin_entry(
-        &decoder,
+        decoder.as_ref(),
         semio_framework_job::OperationId(1),
         semio_framework_job::Generation(1),
         store::OwnedSchemaPath::field("value").expect("bounded Writer test path"),
@@ -196,9 +195,23 @@ fn writer_store_initializer_cancel_and_stale_generation_return_every_owner_termi
     drop(cancelled);
 
     let mut stale = empty_writer_initializer(operation, generation);
-    assert!(matches!(drive_writer_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1)), semio_framework_job::StepOutcome::Fault(_)));
+    let fault = drive_writer_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1));
+    assert!(matches!(fault, semio_framework_job::StepOutcome::Fault(_)));
     assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
     drop(stale);
+    close_writer_step_outcome(fault);
+}
+
+/// 🧹️ A `Fault` outcome carries its detail as a retained job payload, which has no implicit Drop
+/// release: it leaves only through its own one-page close ladder to the terminal-empty witness.
+fn close_writer_step_outcome(mut outcome: semio_framework_job::StepOutcome) {
+    for _ in 0..10_000 {
+        if outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) == semio_framework_job::JobPayloadCloseStep::Complete {
+            assert!(outcome.terminal_is_empty());
+            return;
+        }
+    }
+    panic!("Writer initializer outcome did not reach its terminal-empty witness")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -236,7 +249,7 @@ async fn writer_document_text_round_trips_through_the_store() {
     // 🔐️ Through the owner-installing constructor: a bare `ArtifactStore::new` installs no catalog
     // and `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
-    let mut store = super::new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
     store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
@@ -254,7 +267,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // 🔐️ Through the owner-installing constructor: a bare `ArtifactStore::new` installs no catalog
     // and `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
-    let mut store = super::new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
     store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).await.expect("apply");
     let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
@@ -272,10 +285,9 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 /// instead of being caught here.
 #[semio_framework_async_macros::async_test]
 async fn a_live_owner_dropped_during_a_panic_unwinds_instead_of_aborting() {
-    let catalog: std::sync::Arc<dyn store::ArtifactEnvelopeOwnedFieldCatalog<WriterSnapshot, WriterMutation>> = std::sync::Arc::new(WriterEnvelopeOwnedFieldCatalog);
-    let decoder = WriterEditHistoryDecoder { catalog };
+    let decoder = store::ArtifactEnvelopeOwnedFieldCatalog::<WriterSnapshot, WriterMutation>::edit_history_decoder(&WriterEnvelopeOwnedFieldCatalog);
     let authority = store::ArtifactOwnedHistoryEntryDecoder::begin_entry(
-        &decoder,
+        decoder.as_ref(),
         semio_framework_job::OperationId(1),
         semio_framework_job::Generation(1),
         store::OwnedSchemaPath::field("value").expect("bounded Writer test path"),

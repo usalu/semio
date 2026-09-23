@@ -387,54 +387,94 @@ impl Mutation<Value> for Puzzle2dMutation {
 /// not read here: it is session-only `Puzzle2dPlayRuntime` state (see `setCamera`'s
 /// `ActionKind::View`), never persisted on the document, so a fixture must never carry a top-level
 /// `"camera"` key at all — `Puzzle2dSnapshot::camera` simply defaults when absent.
-pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle2dMutation> {
+///
+/// 🐛️ A side that does not decode is an ERROR, never an empty document: this used to
+/// `unwrap_or_default()` both sides, so one malformed row in `after` (a brush-placed node whose handles
+/// carried no `id`) decoded as the EMPTY board and the delta deleted every node, the manifest and every
+/// compatibility row of the real document — `acceptSuggestion` on concrete-forest committed exactly that
+/// (measured 2026-09-23, `📓️block-puzzle.md` §11).
+pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Result<Vec<Puzzle2dMutation>, String> {
     if before == after {
-        return Vec::new();
+        return Ok(Vec::new());
     }
-    let before_snapshot: Puzzle2dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(before)).unwrap_or_default();
-    let after_snapshot: Puzzle2dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(after)).unwrap_or_default();
+    let before_snapshot: Puzzle2dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(before)).map_err(|error| format!("puzzle2d delta base does not decode: {error}"))?;
+    let after_snapshot: Puzzle2dSnapshot = dsl::FromValue::from_value(dsl::DslValue::from(after)).map_err(|error| format!("puzzle2d delta result does not decode: {error}"))?;
     if before_snapshot == after_snapshot {
-        return Vec::new();
+        return Ok(Vec::new());
     }
-    puzzle2d_snapshot_mutations(&before_snapshot, &after_snapshot)
+    Ok(puzzle2d_snapshot_mutations(&before_snapshot, &after_snapshot))
 }
 //#endregion 🔖️ValueBridge
 
 //#region 🔖️PlaySnapshot
-/// 🌱️ The `Puzzle2dPlayApp` predates the typed `Puzzle2dSnapshot` above and stays on this ad-hoc
-/// `serde_json::Value` fixture shape for its hundreds of Value-manipulating scene-mutation
-/// helpers (see the app's own module docs) — out of scope to retrofit onto the typed struct.
-/// This newtype exists only to satisfy `ArtifactApp::Snapshot: store::ArtifactDsl + store::ArtifactPack`
-/// post the repo-wide `store::ArtifactDsl for serde_json::Value` bridge's removal (final DSL-syntax
-/// convergence gate); `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip
-/// straight through the still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack
-/// encoding respectively), same local-bridge shape as `semio_compose_rs`'s `KitSnapshot`. `Mutation`/
-/// `MutationDiff` delegate straight through to the `Value` impls above too.
-#[derive(Clone, Debug)]
-pub struct Puzzle2dPlaySnapshot(pub Value);
+/// 🌱️ The `Puzzle2dPlayApp` scene helpers still read the ad-hoc `serde_json::Value` fixture shape, while every
+/// Store mutation is TYPED. This snapshot keeps the typed `Puzzle2dSnapshot` as the one authority and
+/// materializes the legacy `Value` projection lazily, at most once per immutable root — the shape `🧊️3d`'s
+/// `Puzzle3dPlaySnapshot` and `🖐️5d`'s `Puzzle5dPlaySnapshot` have, kept identical on purpose.
+///
+/// 🐛️ It used to BE the `Value`, so every one-item Store preparation decoded the whole document into
+/// `Puzzle2dSnapshot` for `inverse`, again for `diff`, again inside `apply`, and re-encoded the post root:
+/// O(document) per folded mutation, O(n²) per example switch. Measured on 5d's twin bridge (capsule-dream,
+/// `📓️block-puzzle.md` §11.6); 2d's bridge was byte-for-byte the same.
+#[derive(Debug)]
+pub struct Puzzle2dPlaySnapshot {
+    typed: std::sync::Arc<Puzzle2dSnapshot>,
+    value: std::sync::OnceLock<std::sync::Arc<Value>>,
+}
 
-impl PartialEq for Puzzle2dPlaySnapshot {
-    fn eq(&self, other: &Self) -> bool {
-        store::pack_rt::json_values_equal(&self.0, &other.0)
+impl Puzzle2dPlaySnapshot {
+    /// 🎯️ Builds the typed authority once from a legacy projection and retains that projection.
+    pub fn new(value: Value) -> Self {
+        let typed = dsl::FromValue::from_value(dsl::DslValue::from(&value)).unwrap_or_default();
+        let projected = std::sync::OnceLock::new();
+        let _ = projected.set(std::sync::Arc::new(value));
+        Self { typed: std::sync::Arc::new(typed), value: projected }
+    }
+
+    /// 🧬️ A root produced by typed mutation application; its `Value` projection is deferred.
+    fn from_typed(typed: Puzzle2dSnapshot) -> Self {
+        Self { typed: std::sync::Arc::new(typed), value: std::sync::OnceLock::new() }
+    }
+
+    /// 👁️ The legacy play projection, materialized at most once per immutable snapshot.
+    pub fn value(&self) -> &Value {
+        self.value.get_or_init(|| std::sync::Arc::new(Value::from(dsl::ToValue::to_value(self.typed.as_ref())))).as_ref()
+    }
+
+    /// 🧬️ The typed authority, without materializing the legacy projection.
+    pub fn typed(&self) -> &Puzzle2dSnapshot {
+        self.typed.as_ref()
     }
 }
 
-/// 🩹️ Hand-written, not derived (ticket
-/// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): `#[derive(ToValue,
-/// FromValue)]` on a `Value` (`serde_json::Value`) field would require `serde_json::Value:
-/// ToValue + FromValue`, which does not exist anywhere in this codebase — `ArtifactEditor::Snapshot`
-/// (this type's own trait bound, see `✏️editor/🦀️.rs`'s `type Snapshot = Puzzle2dPlaySnapshot`)
-/// still needs both traits, so this bridges through `dsl::DslValue`'s own `serde_json::Value`
-/// conversions instead.
+impl Clone for Puzzle2dPlaySnapshot {
+    fn clone(&self) -> Self {
+        let value = std::sync::OnceLock::new();
+        if let Some(projected) = self.value.get() {
+            let _ = value.set(std::sync::Arc::clone(projected));
+        }
+        Self { typed: std::sync::Arc::clone(&self.typed), value }
+    }
+}
+
+impl PartialEq for Puzzle2dPlaySnapshot {
+    fn eq(&self, other: &Self) -> bool {
+        self.typed == other.typed
+    }
+}
+
+/// 🩹️ Hand-written: `ArtifactEditor::Snapshot` needs `ToValue + FromValue`, and this struct's typed/lazy
+/// split has no field-wise derive shape, so both bridge through the `Value` projection `value()`/`new()`
+/// maintain.
 impl dsl::ToValue for Puzzle2dPlaySnapshot {
     fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::from(&self.0)
+        dsl::DslValue::from(self.value())
     }
 }
 
 impl dsl::FromValue for Puzzle2dPlaySnapshot {
     fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
-        Ok(Puzzle2dPlaySnapshot(Value::from(value)))
+        Ok(Self::new(Value::from(value)))
     }
 }
 
@@ -442,11 +482,11 @@ impl store::ArtifactDsl for Puzzle2dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle2d-play";
 
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(text).map(Puzzle2dPlaySnapshot).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+        serde_json::from_str(text).map(Self::new).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        serde_json::to_string_pretty(&self.0).unwrap_or_default()
+        serde_json::to_string_pretty(self.value()).unwrap_or_default()
     }
 }
 
@@ -458,24 +498,19 @@ impl semio_framework_schema::ArtifactCompositionFields for Puzzle2dPlaySnapshot 
 }
 
 impl store::ArtifactPack for Puzzle2dPlaySnapshot {
-    // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: the former
-    // `dsl::to_dsl_value(&self.0)`/`dsl::from_dsl_value(value).map(Puzzle2dPlaySnapshot)` calls
-    // required `Value` (`serde_json::Value`) to implement `ToValue`/`FromValue`, which it never has
-    // anywhere in this codebase — routes through `dsl::DslValue`'s own `serde_json::Value` `From`
-    // bridges directly instead.
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        dsl::DslValue::from(&self.0).encode_pack_with(options)
+        dsl::DslValue::from(self.value()).encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
-        Ok(Puzzle2dPlaySnapshot(Value::from(value)))
+        Ok(Self::new(Value::from(value)))
     }
 }
 
 impl MutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
     fn apply(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle2dPlaySnapshot> {
-        MutationDiff::<Value>::apply(self, &projection.0).map(Puzzle2dPlaySnapshot)
+        MutationDiff::<Puzzle2dSnapshot>::apply(self, projection.typed()).map(Puzzle2dPlaySnapshot::from_typed).map_err(|error| error.under(["document"]))
     }
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle2dSnapshot>::absorb(self, other);
@@ -485,9 +520,9 @@ impl MutationDiff<Puzzle2dPlaySnapshot> for Puzzle2dDiff {
 impl Mutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
     type Diff = Puzzle2dDiff;
 
-    /// 🧷️ Same rationale as the `Mutation<Value>` bridge above: forwards to the
-    /// derive-generated `Mutation<Puzzle2dSnapshot>` impl's own descriptors rather than
-    /// duplicating them for this second bridging projection.
+    /// 🧷️ Not hand-written — see the identical note on `impl Mutation<Value>` above. The metadata
+    /// is projection-independent, so this forwards to the derive's own table too, same as
+    /// `may_emit_foreign_steps` already does immediately below.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <Self as Mutation<Puzzle2dSnapshot>>::DESCRIPTORS;
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -495,11 +530,11 @@ impl Mutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
     }
 
     fn diff(&self, projection: &Puzzle2dPlaySnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
-        Mutation::<Value>::diff(self, &projection.0)
+        Mutation::<Puzzle2dSnapshot>::diff(self, projection.typed())
     }
 
     fn inverse(&self, projection: &Puzzle2dPlaySnapshot) -> Vec<Puzzle2dMutation> {
-        Mutation::<Value>::inverse(self, &projection.0)
+        Mutation::<Puzzle2dSnapshot>::inverse(self, projection.typed())
     }
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle2dSnapshot>::may_emit_foreign_steps(self)

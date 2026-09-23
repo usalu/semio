@@ -22,6 +22,16 @@ describe("canvas2dGumballTransformStep", () => {
     expect(second?.total.args.dx).toBeCloseTo(totalOnly?.args.dx as number, 9);
   });
 
+  it("world space translate is the raw screen delta, not the fem2d scale", () => {
+    const world = canvas2dGumballTransformDelta("moveX", drag, 120, 100, camera, 800, 600, ["f1"], "world");
+    const fem = canvas2dGumballTransformDelta("moveX", drag, 120, 100, camera, 800, 600, ["f1"]);
+    expect(world?.args.dy).toBe(0);
+    expect(world?.args.dx).toBeCloseTo((fem?.args.dx as number) * 20, 6);
+    const worldY = canvas2dGumballTransformDelta("moveY", { ...drag, kind: "moveY" }, 100, 120, camera, 800, 600, ["f1"], "world");
+    const femY = canvas2dGumballTransformDelta("moveY", { ...drag, kind: "moveY" }, 100, 120, camera, 800, 600, ["f1"]);
+    expect(worldY?.args.dy).toBeCloseTo(-((femY?.args.dy as number) * 20), 6);
+  });
+
   it("turns cumulative rotation into per-step angle deltas", () => {
     const rotateDrag = { kind: "rotate" as const, startScreen: { x: 200, y: 100 }, startModelPivot: [0, 0] as const };
     const first = canvas2dGumballTransformStep("rotate", rotateDrag, 200, 120, camera, 800, 600, ["n1"], null);

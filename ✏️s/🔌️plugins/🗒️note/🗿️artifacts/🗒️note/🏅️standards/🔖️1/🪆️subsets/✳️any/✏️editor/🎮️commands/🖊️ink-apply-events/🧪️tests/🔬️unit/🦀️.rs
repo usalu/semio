@@ -33,6 +33,9 @@ async fn malformed_ink_event_batches_fault_instead_of_vanishing() {
     assert_eq!(decode_canvas_events("[{\"operation\":\"removeBlock\",\"blockId\":\"b1\"}]").expect("host batch").len(), 1);
 }
 
+/// ⏪️ The whole begin+live gesture coalesces into ONE undoable edit. `"undo"` is a framework-reserved
+/// job: `handle_action` only ADMITS it, so the law settles it the way a shell does
+/// (`artifact_app_laws::settle_history_verb`) before reading the document.
 #[semio_framework_async_macros::async_test]
 async fn gesture_begin_live_commit_produces_single_undo_step() {
     let mut app = note_app().await;
@@ -65,8 +68,7 @@ async fn gesture_begin_live_commit_produces_single_undo_step() {
     assert!(commit.mutations.is_empty(), "a no-operation commit must not create an edit");
     assert_eq!(app.snapshot().expect("snapshot").blocks.len(), 1);
 
-    // The whole begin+live gesture coalesced into ONE undoable edit.
-    app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", 1).await;
     assert!(app.snapshot().expect("snapshot").blocks.is_empty(), "a single undo should erase the whole gesture");
 }
 

@@ -62,3 +62,28 @@ async fn deck_to_canvas_layers_treats_pdf_kind_as_non_image() {
     let source_layer = layers.first().expect("source layer presentation");
     assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("source"));
 }
+
+/// 🎥️ LAW: the first-paint camera frames the whole deck. A Canvas2d camera names the view centre
+/// (`Canvas2dHost`'s `worldToScreen`: `(world - camera) * zoom + viewport / 2`), so every layer of the
+/// default and the `demo` deck must land inside the narrowest pane the play grid measures (469 px
+/// square) without panning — the fixed `(0, 0, 1)` camera started the deck at the pane's centre and
+/// clipped the rest.
+#[test]
+fn the_first_paint_camera_frames_every_layer_inside_the_narrowest_pane() {
+    const PANE: f64 = 469.0;
+    for deck in [crate::default_presentation_snapshot(), crate::demo_presentation_snapshot()] {
+        let node = render(&deck).expect("tile editor canvas");
+        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
+        let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
+        assert!(scene.zoom > 0.0 && scene.zoom <= 1.0, "zoom {} must fit, never magnify", scene.zoom);
+        let layers: Vec<Value> = dsl::os_pack::json::parse(&scene.layers_json).expect("layers JSON").as_array().cloned().unwrap_or_default();
+        assert!(!layers.is_empty());
+        for layer in &layers {
+            let field = |key: &str| layer.get(key).and_then(|value| value.as_f64()).expect("numeric layer bound");
+            let screen = |world: f64, camera: f64| (world - camera) * scene.zoom + PANE * 0.5;
+            let (left, top) = (screen(field("x"), scene.camera_x), screen(field("y"), scene.camera_y));
+            let (right, bottom) = (screen(field("x") + field("width"), scene.camera_x), screen(field("y") + field("height"), scene.camera_y));
+            assert!(left >= 0.0 && top >= 0.0 && right <= PANE && bottom <= PANE, "layer {:?} lands at [{left}, {top}]–[{right}, {bottom}] outside a {PANE} px pane", layer.get("id"));
+        }
+    }
+}

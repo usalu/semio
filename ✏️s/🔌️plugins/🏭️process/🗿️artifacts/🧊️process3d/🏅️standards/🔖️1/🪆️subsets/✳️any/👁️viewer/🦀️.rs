@@ -50,6 +50,10 @@ impl ArtifactViewer for Process3dViewer {
     const DIALECT: Dialect = PROCESS3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCESS_3D_SCHEMA;
 
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::process3d_child_restore_projection(snapshot)
+    }
+
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
         crate::genesis_process3d_child_pack(snapshot, slot, child_id)
     }

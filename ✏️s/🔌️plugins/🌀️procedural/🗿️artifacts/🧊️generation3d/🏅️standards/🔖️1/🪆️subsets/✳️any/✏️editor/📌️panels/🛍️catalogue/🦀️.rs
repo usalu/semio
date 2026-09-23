@@ -14,13 +14,14 @@ use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
 use semio_framework_plugin::{
-    tree_item_with_action, tree_window_item, ActionFactory, HasBase, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    tree_item_with_action_draggable, tree_window_item, ActionFactory, HasBase, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_BODY_CATALOGUE: &str = "procedural.play.catalogue";
 pub const GENERATION_3D_PLAY_CATALOGUE_SECTION: &str = "procedural-play-catalogue.widgets";
+const GENERATION_3D_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -43,15 +44,32 @@ fn catalogue_error(scope: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new("ui.catalogue", scope)
 }
 
+/// 🖱️ Drag payload the flow canvas already accepts: MIME `application/x-flow-widget` whose value is the widget descriptor JSON.
+fn widget_drag_json(item: &semio_framework_os_flow::CatalogueItem) -> dsl::os_pack::json::Value {
+    let mut pairs = vec![("kind".to_string(), dsl::os_pack::json::Value::String(item.kind.clone()))];
+    if let Some(neuron_kind) = &item.neuron_kind {
+        pairs.push(("neuronKind".to_string(), dsl::os_pack::json::Value::String(neuron_kind.clone())));
+    }
+    if let Some(action) = &item.action {
+        pairs.push(("action".to_string(), dsl::os_pack::json::Value::String(action.clone())));
+    }
+    if let Some(format) = &item.format {
+        pairs.push(("format".to_string(), dsl::os_pack::json::Value::String(format.clone())));
+    }
+    let descriptor = dsl::os_pack::json::object(pairs);
+    dsl::os_pack::json::object([(GENERATION_3D_WIDGET_DRAG_MIME.to_string(), dsl::os_pack::json::Value::String(descriptor.to_string()))])
+}
+
 fn catalogue_row(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let action_kind = if item.kind == "neuron" { format!("neuron|{}", item.neuron_kind.as_deref().unwrap_or("math.add")) } else { item.kind.clone() };
     let icon = if item.icon.starts_with("emoji:") { "box" } else { item.icon.as_str() };
     let args = crate::ui_value_map([("kind", crate::ui_value_text(&action_kind)?)])?;
-    let mut node = tree_item_with_action(
+    let mut node = tree_item_with_action_draggable(
         identity::item_key(&item.kind, item.neuron_kind.as_deref(), item.format.as_deref(), item.action.as_deref()),
         item.name.clone(),
         None,
         ActionFactory::new(GENERATION_3D_PLAY_APP_ID).action("addWidget", Some(args))?,
+        &widget_drag_json(item),
     )?;
     if let Component::TreeItem(props) = &mut node.component {
         props.icon = Some(crate::ui_text(icon)?);

@@ -206,10 +206,10 @@ fn fastener_row(document: &Puzzle5dDocument, fastener: &Puzzle5dFastener) -> UiA
 pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let document = &envelope.document;
     PanelTreeBuilder::new(ROOT)?
+        .interaction_domain(PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_INTERACTION_DOMAIN)?
         .window_section_or_placeholder(windows, PARTS_SECTION, Some(ui_label(labels.parts.as_str())?), true, &document.parts, |part| part_row(windows, document, part, labels), ui_label(labels.none.as_str())?)?
         .window_section_or_placeholder(windows, TARGET_VOLUMES_SECTION, Some(ui_label(labels.target_volumes.as_str())?), false, &document.target_volumes, |volume| target_volume_row(volume, labels), ui_label(labels.none.as_str())?)?
         .window_section_or_placeholder(windows, FASTENERS_SECTION, Some(ui_label(labels.fasteners.as_str())?), false, &document.fasteners, |fastener| fastener_row(document, fastener), ui_label(labels.none.as_str())?)?
-        .interaction_domain(PUZZLE5D_PLAY_CONTROLLER_ID, PUZZLE5D_INTERACTION_DOMAIN)?
         .build()
 }
 //#endregion 🔖️Render

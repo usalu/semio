@@ -12,11 +12,19 @@ use crate::{DagNodeSpec, DagSnapshot};
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateNode {
     pub node: DagNodeSpec,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn create_node(node: DagNodeSpec) -> DagMutation {
-    DagMutation::CreateNode(CreateNode { node })
+    DagMutation::CreateNode(CreateNode { node, index: None })
+}
+
+/// 📍️ Builder — inserts the node at `index` of the node roster instead of appending it, which is how
+/// `delete-node`'s inverse restores a node to its exact position in ONE row.
+pub fn create_node_at(node: DagNodeSpec, index: usize) -> DagMutation {
+    DagMutation::CreateNode(CreateNode { node, index: Some(index) })
 }
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for CreateNode {

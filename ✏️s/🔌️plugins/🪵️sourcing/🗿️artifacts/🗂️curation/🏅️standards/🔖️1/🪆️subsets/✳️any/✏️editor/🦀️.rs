@@ -964,6 +964,10 @@ impl ArtifactEditor for SourcingCurationApp {
     const DIALECT: Dialect = crate::SOURCING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;
 
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::curation_child_restore_projection(snapshot)
+    }
+
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
         crate::genesis_catalog_pack(snapshot, slot, child_id)
     }

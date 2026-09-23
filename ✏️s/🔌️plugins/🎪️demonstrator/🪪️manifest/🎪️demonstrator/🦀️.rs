@@ -58,7 +58,7 @@ pub fn plugin() -> Result<Plugin<DemonstratorApps>, PluginAssemblyError> {
         .depends_on("puzzle", VersionReq::Any)
         .depends_on("sourcing", VersionReq::Any)
         .artifact(crate::artifacts::playground::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<crate::editor::playground::PlaygroundEditor>(crate::editor::playground::create_playground_editor())
+        .editor_with_examples::<crate::editor::playground::PlaygroundEditor>(crate::editor::playground::create_playground_editor(), vec![crate::artifacts::playground::examples::demo::source()])
         .editor_mutation_roster::<crate::editor::playground::PlaygroundEditor>()
         .viewer::<crate::viewer::playground::PlaygroundViewer>(crate::viewer::playground::create_playground_viewer())
         .viewer_mutation_roster::<crate::viewer::playground::PlaygroundViewer>()

@@ -191,16 +191,19 @@ async fn render_unknown_body_key_reports_it_by_name() {
     assert!(debug_str.contains("Unknown body: some.unknown.body"));
 }
 
+/// 🪪️ App-level actions are resolved into each window at read time (`semio_framework::window_kind_actions`),
+/// not cloned into `WindowKindDefinition::actions`, which holds only a window's OWN declarations.
 #[semio_framework_async_macros::async_test]
 async fn app_manifest_declares_expected_operations_and_shell_actions() {
     use semio_framework_plugin::ActionKind;
     let definition = create_animate_presentation_app();
-    let operation_ids: Vec<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
+    let actions: Vec<&semio_framework_plugin::ActionDefinition> = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).collect();
+    let operation_ids: Vec<&str> = actions.iter().filter(|action| matches!(action.kind, ActionKind::Mutation)).map(|action| action.id.as_str()).collect();
     for expected in ["seedGrid", "addTile", "deleteTile", "deleteSelection", "renameTiles", "patchTileCrops", "setSource", "setFrame", "setActiveExample", "clearTiles", "engagementSubmit"] {
         assert!(operation_ids.contains(&expected), "missing declared operation {expected}");
     }
-    assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == "exportVideoFromDeck" && matches!(action.kind, ActionKind::Shell)));
-    assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == "engagementInput" && matches!(action.kind, ActionKind::View)));
+    assert!(actions.iter().any(|action| action.id == "exportVideoFromDeck" && matches!(action.kind, ActionKind::Shell)));
+    assert!(actions.iter().any(|action| action.id == "engagementInput" && matches!(action.kind, ActionKind::View)));
 }
 
 //#region 🔖️ManifestSanity

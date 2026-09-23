@@ -18,7 +18,7 @@ pub fn diff(payload: &super::ConnectNodes, base: &EquationSnapshot) -> protocol:
     if graph.edges.iter().any(|edge| edge.source == payload.source && edge.target == payload.target) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("An edge from \"{}\" to \"{}\" already exists; parallel edges are not allowed.", payload.source, payload.target));
     }
-    graph.edges.push(EquationEdge { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone() });
+    graph.edges.insert(payload.index.map_or(graph.edges.len(), |index| index.min(graph.edges.len())), EquationEdge { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone() });
     let (notation, results, computed) = equation_children_from_state(&graph, &equation_geometry(base));
     protocol::MutationOutcome::new(EquationDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() })
 }

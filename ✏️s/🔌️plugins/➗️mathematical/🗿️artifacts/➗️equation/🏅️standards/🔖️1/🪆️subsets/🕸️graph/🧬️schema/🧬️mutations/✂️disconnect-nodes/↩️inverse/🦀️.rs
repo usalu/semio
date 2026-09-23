@@ -7,8 +7,11 @@ use crate::{EquationMutation, EquationSnapshot};
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DisconnectNodes, base: &EquationSnapshot) -> Vec<EquationMutation> {
     let graph = crate::equation_graph(base);
-    match graph.edges.iter().find(|edge| edge.id == payload.id) {
-        Some(edge) => vec![EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: edge.id.clone(), source: edge.source.clone(), target: edge.target.clone() })],
+    match graph.edges.iter().position(|edge| edge.id == payload.id) {
+        Some(index) => {
+            let edge = &graph.edges[index];
+            vec![EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: edge.id.clone(), source: edge.source.clone(), target: edge.target.clone(), index: Some(index) })]
+        }
         None => Vec::new(),
     }
 }

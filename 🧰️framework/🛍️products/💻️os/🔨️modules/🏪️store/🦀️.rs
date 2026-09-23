@@ -10514,33 +10514,58 @@ pub struct ArtifactCodec {
 }
 
 //#region 🗃️BoundedArtifactStoreOwners
-/// 🧹️ One retired value of an explicitly bounded store owner, released in exactly one page-sized
-/// step. `ManuallyDrop` because every terminal shell under `ArtifactEnvelope` asserts that its
-/// owners left through a cursor rather than through `Drop`.
+#[cfg(test)]
+#[path = "🧪️tests/♻️bounded-value-retirement/🦀️.rs"]
+mod bounded_value_retirement_tests;
+
+/// 🧹️ One retired value of an explicitly bounded store owner, charged exactly one page. `ManuallyDrop`
+/// because every terminal shell under `ArtifactEnvelope` asserts that its owners left through a
+/// cursor rather than through `Drop`.
+///
+/// 🎟️ The value is freed on the first positive grant; `debt` carries the part of its page charge that
+/// did not fit the caller's grant and is reported in grant-sized instalments, so no turn exceeds its
+/// grant and the close still reports exactly one page per value. A sub-page grant used to answer
+/// `Pending { 0, 0 }` forever while `next_close_byte_demand` published 1 — the livelock that kept a
+/// neutral 1-byte close of any app with a bounded config or draft lane from finishing
+/// (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, `📓️flow.md` §8).
 struct BoundedArtifactValueRetirement<T> {
     value: std::mem::ManuallyDrop<Option<T>>,
+    debt: usize,
+}
+
+impl<T> BoundedArtifactValueRetirement<T> {
+    fn new(value: T) -> Self {
+        Self { value: std::mem::ManuallyDrop::new(Some(value)), debt: 0 }
+    }
 }
 
 impl<T: Send + 'static> ErasedSnapshotRetirement for BoundedArtifactValueRetirement<T> {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
-        if maximum_items == 0 || maximum_bytes < ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+        if maximum_items == 0 || maximum_bytes == 0 {
             return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.debt > 0 {
+            let paid = self.debt.min(maximum_bytes);
+            self.debt -= paid;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: paid });
         }
         if let Some(value) = self.value.take() {
             drop(value);
-            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES });
+            let paid = ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES.min(maximum_bytes);
+            self.debt = ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES - paid;
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: paid });
         }
         Ok(SnapshotRetirementStep::Complete)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.value.is_none()
+        self.value.is_none() && self.debt == 0
     }
 }
 
 impl<T> Drop for BoundedArtifactValueRetirement<T> {
     fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.value.is_none(), "bounded artifact value retirement reached Drop before exact terminal emptiness");
+        assert!(std::thread::panicking() || (self.value.is_none() && self.debt == 0), "bounded artifact value retirement reached Drop before exact terminal emptiness");
     }
 }
 
@@ -10554,13 +10579,13 @@ impl<T> BoundedArtifactRetirementFactory<T> {
 
 impl<T: Send + 'static> ArtifactOwnedValueRetirementFactory<T> for BoundedArtifactRetirementFactory<T> {
     fn retire_owned(&self, value: T) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(BoundedArtifactValueRetirement { value: std::mem::ManuallyDrop::new(Some(value)) })
+        Box::new(BoundedArtifactValueRetirement::new(value))
     }
 }
 
 impl<T: Send + Sync + 'static> SnapshotRetirementFactory<T> for BoundedArtifactRetirementFactory<T> {
     fn retire(&self, snapshot: Arc<T>) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(BoundedArtifactValueRetirement { value: std::mem::ManuallyDrop::new(Some(snapshot)) })
+        Box::new(BoundedArtifactValueRetirement::new(snapshot))
     }
 }
 

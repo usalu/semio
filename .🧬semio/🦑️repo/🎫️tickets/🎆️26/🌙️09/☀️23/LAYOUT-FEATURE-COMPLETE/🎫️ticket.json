@@ -1,0 +1,9 @@
+{
+  "title": "Layout Feature Complete",
+  "emoji": "📏️",
+  "status": "open",
+  "description": "Make layout feature-complete end to end: instant frame hover, native placement and linked display of 2D artifacts with fast preview on huge sheets, and a blueprint transform gumball.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": [],
+  "note": "Opened on disk 2026-09-23 because the repo MCP server is not connected (FetchMcpResource: Server repo not found). Goals were read from .🧬semio/🦑️repo/🎯️goals. Closest open goal is R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-DESIGN-APP. Execution contract: 📓️contract.md."
+}

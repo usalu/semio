@@ -7,15 +7,22 @@ use crate::{EquationMutation, EquationSnapshot};
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DeleteNodes, base: &EquationSnapshot) -> Vec<EquationMutation> {
     let graph = crate::equation_graph(base);
-    let mut steps: Vec<EquationMutation> =
-        graph.nodes.iter().filter(|node| payload.ids.contains(&node.id)).map(|node| EquationMutation::CreateNode(create_node::CreateNode { id: node.id.clone(), label: node.label.clone(), x: node.x, y: node.y })).collect();
+    let mut steps: Vec<EquationMutation> = graph
+        .nodes
+        .iter()
+        .enumerate()
+        .filter(|(_, node)| payload.ids.contains(&node.id))
+        .map(|(index, node)| EquationMutation::CreateNode(create_node::CreateNode { id: node.id.clone(), label: node.label.clone(), x: node.x, y: node.y, index: Some(index) }))
+        .collect();
     steps.extend(
         graph
             .edges
             .iter()
-            .filter(|edge| payload.ids.contains(&edge.source) || payload.ids.contains(&edge.target))
-            .map(|edge| EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: edge.id.clone(), source: edge.source.clone(), target: edge.target.clone() })),
+            .enumerate()
+            .filter(|(_, edge)| payload.ids.contains(&edge.source) || payload.ids.contains(&edge.target))
+            .map(|(index, edge)| EquationMutation::ConnectNodes(connect_nodes::ConnectNodes { id: edge.id.clone(), source: edge.source.clone(), target: edge.target.clone(), index: Some(index) })),
     );
+    steps.reverse();
     steps
 }
 //#endregion 🔖️Inverse

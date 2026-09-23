@@ -332,3 +332,74 @@ audit-visual adc299625bf483222 · audit-artifacts a41c9ecc4a2af26d6 · audit-int
   window's own paint witness (3D meshes/instances, raster visible layer ≥ 8×8 asset, DOM text/elements; 20 ms/pane)
   → 69/70 on the 15:47 build, raster the honest red (2×2 placeholder). gis describe ok 22:17; full activate-dev
   running since 22:17 (framework decoder fix rebuilds every lane).
+
+## 2026-09-23 01:55 — session 7 (coordinator process restarted ~00:00; third account-limit cut at ~23:40)
+- Found: :6033 down, supervisor/watchdog/chain dead (all detached processes gone again), mutexes empty, load 24,
+  32 GB disk, swap 6.6/7 GB. Auto-commit 00:05 landed the day's work. Activation try 2 (23:37) died at 00:00 with
+  72/218 tasks after one lane failed to compile (see step log). Relaunched supervisor + watchdog, queued a new chain
+  (describe animate/raster → activate-dev). Latest fleet logs: knowledge pass8 (dag 186/2? · 204/3 · imperative 138/6
+  · mathematical 365/20 · note 395/1 · wires 182/7), design run-h2 (279/3, 370/6), flow run3b (3/1), block-puzzle
+  run17, knowledge-children pass7-1, engineering 23:59. Relaunching successors for block-puzzle, knowledge-children,
+  flow, knowledge, engineering, design, raster; audit-visual-3 after the activation.
+- 02:05 :6033 cannot start: the killed 23:37 activation left the flow component re-staged (sha cb16…) with NEITHER
+  lane receipt matching it (demonstrator ccd0…, flow f1df…) → the drift-tolerant merge refuses correctly (no lane
+  matches disk). Only the chain's activate-dev (queued behind describe animate + raster, framework rebuild → ~1–2 h)
+  repairs it; supervisor crash-loops harmlessly until then. Agents do native work meanwhile.
+- 02:07 SWEEP #3 (same external cleanup): deleted the ticket 🗑️generated, play/dist, ALL staged activation lanes
+  (`🧑‍💻dev/…/dist/runtime/react/dev`), and the `build/` folders inside packages of the nx tooling trees
+  (`⚡️cache/tools/nx-tooling/<digest>/node_modules`, `.nx/installation/node_modules`) → every `bun nx` failed
+  (`Cannot find module 'nx/bin/nx.js'` = the bootstrap's fallback after the tooling copy broke). It also killed our
+  supervisor/watchdog/chain again (02:03). `⚡️cache/play-fleet` and root node_modules survived. Repair: `bun install
+  --force` in both tooling trees (frozen install reports "no changes" — it trusts bun tags). Helpers now launch via
+  `📜️daemonize.py` (setsid double fork). 02:38: chain relaunched (describe raster → activate-dev: full 28-lane rebuild
+  from scratch, ~3 h). Peer session vanished from ListAgents (their socket stale) — no coordination possible until it
+  returns. Native mutex at ONE slot while the wasm rebuild runs.
+- 03:23 FULL ACTIVATION from scratch DONE (rc=0, 02:42→03:23, 218 tasks; framework decoder fix, raster real emblem,
+  flow drivers, gis descriptor etc. all baked); :6033 up on it. Strict acceptance launched (direct Playwright,
+  daemonized, log ⚡️cache/play-fleet/e2e/test-e2e-direct-0330.txt).
+- 03:37 strict acceptance on the 03:23 activation: 67/70 (📓️acceptance-runs.md). Reds: raster — `setActiveExample
+  refused … raster-store.mutation-asset-capacity` (the real 25 KB emblem exceeds the store's asset bound; raster
+  agent fixes the bound schema-first); gis3d — shell error at boot (gisterrain lane caught mid-edit of the
+  setActiveExample action; engineering agent); generation2d — `setActiveExample refused … generation2d-config-
+  unsupported-mutation` (PEER-OWNED procedural guest: the regenerated descriptor now publishes the action the guest
+  refuses → to route to the peer when their session is back; ListAgents shows no peer). audit-visual-3 launched.
+- 03:55 audit-visual-3 DONE (📓️audit-visual-3.md): 69 panes on the 03:23 activation, same 3 reds as the suite, 0
+  disagreements. Fixed live vs audit-2: architect, mathematical, wfc2d/wfc3d/grid3d, playbook. Still broken:
+  puzzle5d (wrong document; framework lane stall — peer), reasoning-wires (canvas empty; the suite's DOM fallback
+  counts chrome text → blind spot to close in the witness). Regressed: raster (asset capacity), gis3d (wasm trap
+  `interactive-job.catalog-incomplete`, gisterrain action mid-edit), generation2d (peer guest refuses the new
+  action). Pending requests: activate dag gis3d imperative mathematical raster reasoning-wires trinity-jack;
+  describe flow gis mathematical raster → one chain after the agents report their fixes landed.
+- 04:32 chain queued: describe energy flow gis mathematical raster  → activate-dev (log describe-activate-0923-0432.txt)
+- 04:42 (zsh did not split the plugin list: the 04:32 chain skipped its describes and went straight to activate-dev) → second chain queued: describe energy flow gis mathematical raster → activate-dev (describe-activate-0923-0442-b.txt)
+- 05:05 raster DONE (📓️raster.md §8): 228/0 + 3/3 + 3/3; the real emblem was refused by a 4 KiB asset cap whose only
+  reason was a chunked-release stall (now 256 KiB, envelope max; any real image import was refused before); missing
+  `child_restore_projection` hook added; Paint2dHost publishes `data-layers-json`/`data-assets-json` (mime/bytes/
+  size, not base64) with a language-neutral fixture + pngjs oracle; live: 512×512 emblem painted, raster 1/1 in the
+  strict suite on the 04:47 activation. knowledge-children DONE (§8): all six crates green (architect 2087/0, animate
+  328/0, writer 175/0); writer's stale 554-line edit-history decoder replaced by the framework's; animate frames:in
+  importer, schema drift (source/tiles) closed across JSON/TS/proto/GraphQL, canvas camera fit. flow (§8): flow-flow
+  256/0, 9 extensions green, plugin-flow 3/1 (last red = `AppActionRegistry::close_step` refusing keys longer than
+  the grant — proposed `close_debt` diff for the peer, §8.6); fixed a store-wide close stall (`Bounded
+  ArtifactValueRetirement` under-page grants — 🏪️store edit, peer to be told) + a shared zero-payload NoConfig
+  owner catalogue (≈85 call sites now report 0 bytes); the flow demo asset was an empty child reference → real
+  laid-out graph via a writer. NOTE: another session is rolling `setActiveExample` out across plugins (staged
+  01:26–01:33) — cause of generation2d's refusal and of flow's transient reds.
+- 05:06 third chain queued: describe architect animate writer flow → activate-dev (…-c.txt), behind the second.
+- 05:25 engineering DONE (📓️engineering.md §11–§21): all 20 crates green (fem-2d 1260/1 = 8 ms law that passes
+  alone); real bugs: gis3d wasm trap = gisterrain `setActiveExample` missing from the tool-proof table; gismap's
+  snapshot-clone step counter advanced twice → routes dropped + empty drawing child id (the long-standing red);
+  process3d + sourcing lacked `child_restore_projection` after the peer's PX1; live: all 7 engineering panes boot
+  their curated examples on the 05:13 activation, gis3d has its picker. CROSS-CUTTING: writer/equation/presentation/
+  architect/wires/playbook/imperative/trinity-jack/dag also lack the projection (knowledge-children did its three;
+  knowledge told for its five; playbook = peer). Every pane logs a 404 for
+  `🪞️vendor/🔤️guestslim-typst-fonts.bin` → `host-vendor` Opus agent launched (📓️host-vendor.md).
+- 05:13 activation #2 of the night landed (mathematical/raster/flow/gis/energy descriptors); chains c (architect/
+  animate/writer/flow) and d (imperative/layout) follow; strict suite after d.
+- 05:40 block-puzzle (📓️block-puzzle.md §11): puzzle5d's "stall" was neither a stall nor the child-group lane —
+  `Puzzle5dStorePreparation::advance` decoded/re-encoded the whole JSON document 3× per mutation (29 004 store units
+  for the capsule-dream switch); ported puzzle3d's typed snapshot + lazy JSON view to 5d and 2d. puzzle5d 582/1 (was
+  watchdog-killed), puzzle2d 874/6 (acceptSuggestion wiped whole documents: handles without ids → empty board
+  fallback; >16 KiB string retirement refused forever), puzzle3d 744/4 (all routed: history rows one command late,
+  coalesced edit re-mark, publication lane, a real 3.2 ms fill step vs the 2 ms bound), block crates green. Live
+  capsule-dream check waits for the next activation. Peer capture written (`puzzle5d-stall-capture.md`).

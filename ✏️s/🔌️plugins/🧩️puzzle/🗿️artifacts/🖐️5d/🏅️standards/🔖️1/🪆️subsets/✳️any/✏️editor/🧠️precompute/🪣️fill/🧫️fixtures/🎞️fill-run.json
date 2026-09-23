@@ -22,9 +22,9 @@
         "danger:solid-overlap",
         "danger:vortex-exhausted",
         "success:fits",
-        "success:fits"
+        "danger:solid-overlap"
       ],
-      "tested": 12,
+      "tested": 15,
       "placed": 8,
       "stall": null
     },

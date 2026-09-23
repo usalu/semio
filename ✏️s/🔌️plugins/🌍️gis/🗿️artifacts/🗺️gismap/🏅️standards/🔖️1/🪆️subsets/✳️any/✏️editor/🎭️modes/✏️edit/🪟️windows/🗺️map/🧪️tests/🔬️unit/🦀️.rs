@@ -2,6 +2,7 @@ use super::*;
 use crate::editor::gis2d::terminology::gis2d_labels;
 use crate::editor::gis2d::unit_tests::context::{app, close, main_window_measures, render as render_body, render_tiled_map_scene, Gis2dApp};
 use crate::editor::gis2d::{GIS2D_FEATURE_GRANULARITY, GIS2D_INTERACTION_DOMAIN};
+use crate::GisMapSnapshot;
 use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{PluginApp, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID};
 
@@ -73,7 +74,8 @@ async fn render_canvas_uses_absolute_tile_urls_when_env_set() {
 #[semio_framework_async_macros::async_test]
 async fn the_window_collects_every_option_node_exactly_once() {
     let config = MapWindowConfig::default();
-    let measures = window_measures(&config, gis2d_labels(&semio_framework_plugin::ViewModel::default()));
+    let document = GisMapSnapshot::default();
+    let measures = window_measures(&document, &config, gis2d_labels(&semio_framework_plugin::ViewModel::default()));
     assert_eq!(measures.len(), 5, "3 selects + the layers and layer-weights groups");
     let mut app = app().await;
     assert_eq!(main_window_measures(&mut app).await.len(), measures.len(), "the app routes the same set under the window id");

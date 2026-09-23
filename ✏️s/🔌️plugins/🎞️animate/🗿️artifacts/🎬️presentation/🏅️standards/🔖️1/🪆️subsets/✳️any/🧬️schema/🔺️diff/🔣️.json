@@ -23,6 +23,118 @@
       ],
       "x-semio-state": "artifact"
     },
+    "source": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "title": "FigureTileSource",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "frame",
+            "kind",
+            "src"
+          ],
+          "properties": {
+            "src": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "frame": {
+              "title": "FigureTileFrame",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "height",
+                "width",
+                "x",
+                "y"
+              ],
+              "properties": {
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                }
+              }
+            },
+            "sourceAspect": {
+              "type": "number"
+            },
+            "pdfPage": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "tiles": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "title": "FigureTileDraft",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "crop",
+              "id",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "crop": {
+                "title": "FigureTileFrame",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "height",
+                  "width",
+                  "x",
+                  "y"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
     "presentation": {
       "anyOf": [
         {

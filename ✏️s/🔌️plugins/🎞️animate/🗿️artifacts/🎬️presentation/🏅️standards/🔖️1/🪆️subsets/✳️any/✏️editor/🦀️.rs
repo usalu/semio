@@ -30,7 +30,10 @@ use crate::op::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::build_tile_morph_prompt;
 use crate::{default_presentation_snapshot, FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadStream, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::app::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion};
+use semio_framework_plugin::ArtifactReservedJob;
 // 🚧️ SDK GAP (contract §2.4): `EditorBuilder`/`.editor::<E>(def: AppDefinition)` take a bare
 // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
 // `.workflow(...)` on this builder (see `🔖️Manifest` below for what got dropped, not silently).
@@ -639,6 +642,201 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
 }
 //#endregion 📬️ConfigStorePreparation
 
+//#region 🎞️ReservedImport
+/// 🎞️ The framework registers the reserved `import-media` factory for every app but never a concrete
+/// job, so `VcsArtifactApp::import_media` fails closed with `interactive-job.missing-reserved-builder`
+/// until the app hands one back from [`ArtifactEditor::build_reserved_tool_job`]. Presentation's one
+/// inbound port is `frames:in`. Same shape as `📏️layout`'s `LayoutImportJob`.
+const PRESENTATION_IMPORT_TOOL_ID: &str = "import-media";
+const PRESENTATION_IMPORT_PORT: &str = "frames:in";
+
+/// 🎞️ Presentation's ONE concrete resumable importer. Two bounded steps: decode the `frames:in` frame
+/// through [`AnimatePresentationPlayApp::import_media`] — the single decoding authority, shared with
+/// every non-interactive caller — then publish its tile mutation through the completion authority.
+struct PresentationImportJob {
+    port: String,
+    media: Option<Media>,
+    snapshot: Option<std::sync::Arc<PresentationSnapshot>>,
+    history: Option<std::sync::Arc<semio_framework_plugin::HistoryView>>,
+    mutations: Vec<PresentationMutation>,
+    decoded: bool,
+    completed: bool,
+    closing: bool,
+    completion: Option<ArtifactToolCompletion<EditorApp<AnimatePresentationPlayApp>>>,
+    pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<EditorApp<AnimatePresentationPlayApp>>>,
+}
+
+fn presentation_job_payload(cx: &mut StepContext<'_>, stream: JobPayloadStream, bytes: &[u8]) -> RetainedJobPayload {
+    match cx.payload_from_bytes(stream, bytes) {
+        Ok(payload) => payload,
+        Err(rejected) => {
+            drop(rejected.into_source());
+            RetainedJobPayload::empty(stream)
+        }
+    }
+}
+
+fn presentation_job_fault(cx: &mut StepContext<'_>, detail: &str) -> StepOutcome {
+    let bytes = detail.as_bytes();
+    let bounded = &bytes[..bytes.len().min(semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)];
+    StepOutcome::Fault(JobFault { detail: presentation_job_payload(cx, JobPayloadStream::Fault, bounded) })
+}
+
+impl PresentationImportJob {
+    fn new(request: ArtifactReservedToolJobRequest<EditorApp<AnimatePresentationPlayApp>>, port: String, media: Media) -> Self {
+        Self {
+            port,
+            media: Some(media),
+            snapshot: Some(request.snapshot),
+            history: Some(request.history),
+            mutations: Vec::new(),
+            decoded: false,
+            completed: false,
+            closing: false,
+            completion: Some(request.completion),
+            pending_completion_rejection: None,
+        }
+    }
+
+    fn decode(&mut self, cx: &mut StepContext<'_>) -> Option<StepOutcome> {
+        if self.port != PRESENTATION_IMPORT_PORT {
+            return Some(presentation_job_fault(cx, "presentation import only implements frames:in"));
+        }
+        let decoded = {
+            let (Some(media), Some(snapshot), Some(history)) = (self.media.as_ref(), self.snapshot.as_ref(), self.history.as_ref()) else {
+                return Some(presentation_job_fault(cx, "presentation import lost its media, snapshot or history authority"));
+            };
+            let doc = ArtifactView::new(snapshot.as_ref(), history.as_ref());
+            AnimatePresentationPlayApp::import_media(PRESENTATION_IMPORT_PORT, media, &doc)
+        };
+        match decoded {
+            Ok(emit) => {
+                self.mutations = emit.artifact_mutations;
+                self.decoded = true;
+                None
+            }
+            Err(error) => Some(presentation_job_fault(cx, &error.to_string())),
+        }
+    }
+}
+
+impl InteractiveJob for PresentationImportJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if self.pending_completion_rejection.is_some() {
+            return presentation_job_fault(cx, "presentation import completion remains rejected");
+        }
+        if !self.decoded {
+            cx.set_stage("presentation-import-decode");
+            if let Some(outcome) = self.decode(cx) {
+                return outcome;
+            }
+            cx.consume_fuel(1);
+            return StepOutcome::CheckpointReady(Checkpoint { state: presentation_job_payload(cx, JobPayloadStream::CheckpointState, &[1]), applied_progress: 1 });
+        }
+        cx.set_stage("presentation-import-publish");
+        if !self.completed {
+            let mutations = std::mem::take(&mut self.mutations);
+            let Some(completion) = self.completion.as_ref() else {
+                return presentation_job_fault(cx, "presentation import lost its completion authority");
+            };
+            if !completion.has_mounted_consumer() {
+                return presentation_job_fault(cx, "presentation import completion consumer is absent");
+            }
+            if let Err(rejected) = completion.complete(Ok(Emit { artifact_mutations: mutations, ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }), semio_framework_plugin::EphemeralEmit::default()) {
+                let message = rejected.fault.message.clone();
+                self.pending_completion_rejection = Some(rejected);
+                return presentation_job_fault(cx, &message);
+            }
+            self.completed = true;
+        }
+        StepOutcome::Complete(CommitCandidate { state: RetainedJobPayload::empty(JobPayloadStream::CommitState), output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        match ArtifactReservedJob::close_step(self, maximum_items, maximum_bytes) {
+            Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }) => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
+            Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. }) | Err(_) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+            Ok(semio_framework_plugin::PluginCloseStep::Complete) if ArtifactReservedJob::terminal_is_empty(self) => semio_framework_job::InteractiveJobCloseStep::Complete,
+            Ok(semio_framework_plugin::PluginCloseStep::Complete) => semio_framework_job::InteractiveJobCloseStep::Blocked,
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        ArtifactReservedJob::terminal_is_empty(self)
+    }
+}
+
+impl ArtifactReservedJob for PresentationImportJob {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<semio_framework_plugin::PluginCloseStep, Fault> {
+        self.closing = true;
+        if maximum_items == 0 {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+            if let Ok(emit) = rejected.emit.as_mut() {
+                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
+                    return Ok(step);
+                }
+            }
+            self.pending_completion_rejection = None;
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        // 🧊️ An imported frame only ever yields `CreateTile`, whose draft is plain owned text and
+        // floats, so a popped mutation closes on drop.
+        if self.mutations.pop().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.mutations.capacity() > 0 {
+            self.mutations = Vec::new();
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.media.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if !self.port.is_empty() || self.port.capacity() > 0 {
+            self.port = String::new();
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.history.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.snapshot.as_ref().is_some_and(|snapshot| std::sync::Arc::strong_count(snapshot) == 1) {
+            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "presentation import snapshot has no mounted retained authority" });
+        }
+        if self.snapshot.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.completion.as_ref().is_some_and(|completion| !completion.has_mounted_consumer()) {
+            return Ok(semio_framework_plugin::PluginCloseStep::Blocked { reason: "presentation import completion has no mounted consumer authority" });
+        }
+        if self.completion.take().is_some() {
+            return Ok(semio_framework_plugin::PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(semio_framework_plugin::PluginCloseStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.port.is_empty()
+            && self.port.capacity() == 0
+            && self.media.is_none()
+            && self.snapshot.is_none()
+            && self.history.is_none()
+            && self.mutations.is_empty()
+            && self.mutations.capacity() == 0
+            && self.completion.is_none()
+            && self.pending_completion_rejection.is_none()
+    }
+}
+//#endregion 🎞️ReservedImport
+
 //#region 🔖️AnimatePresentationPlayApp
 /// 🧪️ B1: unit struct — every former `AnimatePresentationPlayRuntime` field now lives in
 /// `crate::editor::animate::config::PresentationConfig` (see `ArtifactApp::Config`), written through
@@ -649,6 +847,13 @@ pub struct AnimatePresentationPlayApp;
 impl ArtifactEditor for AnimatePresentationPlayApp {
     /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
+    /// 🧬️ The loaded-parent child projection, read straight off the snapshot's own `#[child]` fields.
+    /// Without it every live envelope load faults with `editor did not declare a loaded-parent child
+    /// projection` before the decoded document can replace the store.
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("animate.child-projection"), error.to_string()))
+    }
+
     type Snapshot = PresentationSnapshot;
     type Mutation = PresentationMutation;
     type Config = PresentationConfig;
@@ -818,6 +1023,22 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
             work,
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    /// 🎞️ `import-media` is the only reserved route presentation owns: every inbound `frames:in`
+    /// delivery is routed through this builder (`dispatch_import_media` → `build_artifact_reserved_media_job`).
+    fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+        if request.tool_id.as_str() != PRESENTATION_IMPORT_TOOL_ID {
+            return Ok(None);
+        }
+        if !request.raw_wire.is_empty() {
+            return Err(Fault::from("presentation import-media admits a decoded media value, never a wire payload"));
+        }
+        let ArtifactReservedToolInput::Media { port, media } = &request.input else {
+            return Err(Fault::from("presentation import-media requires media input"));
+        };
+        let (port, media) = (port.clone(), media.clone());
+        Ok(Some(ArtifactReservedToolJob::new(PresentationImportJob::new(request, port, media))))
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {

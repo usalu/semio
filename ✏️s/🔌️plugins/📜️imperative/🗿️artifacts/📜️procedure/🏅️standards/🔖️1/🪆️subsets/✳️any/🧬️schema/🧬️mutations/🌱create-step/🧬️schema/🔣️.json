@@ -14,6 +14,11 @@
     },
     "step": {
       "$ref": "#/$defs/Step"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Step-list position to insert at; absent appends. delete-step's inverse restores exact order with it."
     }
   },
   "$defs": {

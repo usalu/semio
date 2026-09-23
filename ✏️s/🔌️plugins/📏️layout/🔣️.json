@@ -402,6 +402,138 @@
                 }
               },
               {
+                "id": "translateSelection",
+                "label": {
+                  "native": {
+                    "en": "Translate Selection",
+                    "de": "Auswahl verschieben"
+                  },
+                  "reuse": {
+                    "en": "Translate Selection",
+                    "de": "Auswahl verschieben"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "rotateSelection",
+                "label": {
+                  "native": {
+                    "en": "Rotate Selection",
+                    "de": "Auswahl drehen"
+                  },
+                  "reuse": {
+                    "en": "Rotate Selection",
+                    "de": "Auswahl drehen"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "scaleSelection",
+                "label": {
+                  "native": {
+                    "en": "Scale Selection",
+                    "de": "Auswahl skalieren"
+                  },
+                  "reuse": {
+                    "en": "Scale Selection",
+                    "de": "Auswahl skalieren"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
                 "id": "interactionSelect",
                 "label": {
                   "native": {
@@ -1001,7 +1133,10 @@
                 }
               }
             ],
-            "utilities": [],
+            "utilities": [
+              "select",
+              "transform"
+            ],
             "interactions": [
               "elements"
             ],
@@ -3102,6 +3237,86 @@
             }
           },
           {
+            "id": "setActiveUtility",
+            "label": {
+              "native": {
+                "en": "Set Active Utility",
+                "de": "Aktives Hilfsmittel festlegen"
+              },
+              "reuse": {
+                "en": "Set Active Utility",
+                "de": "Aktives Hilfsmittel festlegen"
+              }
+            },
+            "kind": "view",
+            "iconId": "wrench",
+            "args": [
+              {
+                "id": "utilityId",
+                "label": {
+                  "native": {
+                    "en": "Utility",
+                    "de": "Hilfsmittel"
+                  },
+                  "reuse": {
+                    "en": "Utility",
+                    "de": "Hilfsmittel"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "windowKindId",
+                "label": {
+                  "native": {
+                    "en": "Window",
+                    "de": "Fenster"
+                  },
+                  "reuse": {
+                    "en": "Window",
+                    "de": "Fenster"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "recordTutorial",
             "label": {
               "native": {
@@ -3494,7 +3709,39 @@
             }
           }
         ],
-        "utilities": [],
+        "utilities": [
+          {
+            "id": "select",
+            "label": {
+              "native": {
+                "en": "Select",
+                "de": "Auswählen"
+              },
+              "reuse": {
+                "en": "Select",
+                "de": "Auswählen"
+              }
+            },
+            "iconId": "mouse-pointer",
+            "category": "selection",
+            "allowsActionsWhileActive": true
+          },
+          {
+            "id": "transform",
+            "label": {
+              "native": {
+                "en": "Transform",
+                "de": "Transformieren"
+              },
+              "reuse": {
+                "en": "Transform",
+                "de": "Transformieren"
+              }
+            },
+            "iconId": "move",
+            "allowsActionsWhileActive": true
+          }
+        ],
         "tools": [],
         "commands": [],
         "interactions": [
@@ -5051,8 +5298,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "7a40b798ecebbdb44f5f0c43d6ec8f306299275b696fcc11d2dac9ddbc7d4215",
-    "coreWasmSha256": "5553a392f89589cb89a0f322be559f9ef41ebb747a429581ca3c74d4cc707ace",
-    "descriptorSha256": "d44a65ec457c3336050676eb6506db6ddc8b5c2b1e42ab856c9d07c415feff48"
+    "wasmSha256": "61e1bd929e02d22145e0bfac327e8aef3e0102f24e0f66ecfada58a56b55dc86",
+    "coreWasmSha256": "5a3dad14426a765be7dd177beb826cd5f924bdb8d06a252872cd2ff597baca11",
+    "descriptorSha256": "0b493328b1187b34e52f7678d38ab81944acc5b0de6ee7a69c39bc18bbe1e8a4"
   }
 }

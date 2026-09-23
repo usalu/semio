@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useCallback, useContext, useEffect, useRef, useState, type MouseEvent, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import {
   ContextMenuController,
   registerIntroductionSurfaceResolver,
@@ -85,7 +85,8 @@ type Paint2dAssetRecord = { readonly mime?: string; readonly data: string };
 
 function parsePaint2dAssets(json: string | undefined): Record<string, Paint2dAssetRecord> {
   try {
-    return JSON.parse(json ?? "{}") as Record<string, Paint2dAssetRecord>;
+    const parsed = JSON.parse(json ?? "{}") as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Record<string, Paint2dAssetRecord>) : {};
   } catch {
     return {};
   }
@@ -97,7 +98,53 @@ export function base64ToBytes(base64: string): Uint8Array {
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
   return bytes;
 }
+//#endregion Paint2dParsing
 
+//#region Paint2dPaintWitness
+/** 📐️ What one scene asset would hand the compositor, without the pixels: decoded byte length and,
+ * for a PNG, the extent its own IHDR declares (`null` when the payload is not a readable PNG). */
+export type Paint2dAssetExtent = { readonly mime: string | null; readonly bytes: number; readonly width: number | null; readonly height: number | null };
+
+const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] as const;
+const PNG_IHDR_BASE64_PREFIX_CHARS = 32;
+
+/** 📐️ Reads an asset's extent from the first 24 bytes of its base64 payload (signature + IHDR), so a
+ * multi-megabyte texture costs the same as a swatch.
+ * @see https://www.w3.org/TR/png-3/#11IHDR */
+export function paint2dAssetExtent(asset: Paint2dAssetRecord | undefined): Paint2dAssetExtent {
+  const data = typeof asset?.data === "string" ? asset.data : "";
+  const padding = data.endsWith("==") ? 2 : data.endsWith("=") ? 1 : 0;
+  const extent = { mime: typeof asset?.mime === "string" ? asset.mime : null, bytes: Math.max(0, Math.floor((data.length * 3) / 4) - padding), width: null, height: null };
+  try {
+    const head = atob(data.slice(0, PNG_IHDR_BASE64_PREFIX_CHARS));
+    if (head.length < 24 || PNG_SIGNATURE.some((byte, index) => head.charCodeAt(index) !== byte) || head.slice(12, 16) !== "IHDR") return extent;
+    const read = (offset: number): number => ((head.charCodeAt(offset) << 24) | (head.charCodeAt(offset + 1) << 16) | (head.charCodeAt(offset + 2) << 8) | head.charCodeAt(offset + 3)) >>> 0;
+    return { ...extent, width: read(16), height: read(20) };
+  } catch {
+    return extent;
+  }
+}
+
+/** 🔬️ The paint witness a raster surface publishes on its own element, the `paint-2d` twin of
+ * `World3dHost`'s `data-meshes-json`/`data-instances-json`: `layersJson` is the layer forest the
+ * compositor draws, `assetsJson` maps every image key to its {@link Paint2dAssetExtent}. The raw base64
+ * never reaches the DOM — only its extent — so a real texture adds a few dozen bytes, not megabytes.
+ * Unparseable input publishes `[]`/`{}`, the same verdict the compositor reaches. */
+export function paint2dPaintWitnessDom(documentSyncJson: string | undefined, assetsJson: string | undefined): { readonly layersJson: string; readonly assetsJson: string } {
+  const layers = (() => {
+    try {
+      const parsed = JSON.parse(documentSyncJson || "null") as { readonly layers?: unknown } | null;
+      return Array.isArray(parsed?.layers) ? parsed.layers : [];
+    } catch {
+      return [];
+    }
+  })();
+  const extents = Object.fromEntries(Object.entries(parsePaint2dAssets(assetsJson || "{}")).map(([key, asset]) => [key, paint2dAssetExtent(asset)]));
+  return { layersJson: JSON.stringify(layers), assetsJson: JSON.stringify(extents) };
+}
+//#endregion Paint2dPaintWitness
+
+//#region Paint2dUtilities
 function paint2dSelectionMethod(activeUtility: string): SelectionMarqueeMethod | null {
   if (activeUtility === "selectMarquee") return "rectangle";
   if (activeUtility === "selectLasso") return "lasso";
@@ -107,7 +154,7 @@ function paint2dSelectionMethod(activeUtility: string): SelectionMarqueeMethod |
 function isPaint2dSelectionUtility(activeUtility: string): boolean {
   return activeUtility === "selectMarquee" || activeUtility === "selectLasso" || activeUtility === "selectWand";
 }
-//#endregion Paint2dParsing
+//#endregion Paint2dUtilities
 
 //#region Paint2dNoopSession
 function noopPaint2dSession(): RasterWasmSession {
@@ -181,6 +228,7 @@ function Paint2dCanvasSurface({
   const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.paint");
   const canvasUnavailableLabel = useLabel("ui.host.canvasUnavailable");
+  const paintWitness = useMemo(() => paint2dPaintWitnessDom(scene.documentSyncJson, scene.assetsJson), [scene.documentSyncJson, scene.assetsJson]);
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -597,7 +645,7 @@ function Paint2dCanvasSurface({
   //#endregion Pointer
 
   return (
-    <div ref={containerRef} className="semio-paint-2d-canvas-surface relative h-full min-h-[24rem] w-full ui-surface" data-level="base" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode}>
+    <div ref={containerRef} className="semio-paint-2d-canvas-surface relative h-full min-h-[24rem] w-full ui-surface" data-level="base" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode} data-layers-json={paintWitness.layersJson} data-assets-json={paintWitness.assetsJson}>
       <Paint2dWasmCanvas sessionFactory={sessionFactory} onSessionReady={onSessionReady} />
       {attachError ? (
         <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">

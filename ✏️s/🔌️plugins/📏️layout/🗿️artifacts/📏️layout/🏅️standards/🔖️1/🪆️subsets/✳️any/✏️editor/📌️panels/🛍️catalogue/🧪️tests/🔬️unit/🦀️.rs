@@ -26,6 +26,13 @@ async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
 }
 
 #[test]
+fn catalogue_roster_offers_every_native_artifact() {
+    for (kind, _, _) in NATIVE_PLACEMENTS {
+        assert!(LAYOUT_CATALOGUE_ROSTER.iter().any(|(candidate, _)| candidate == kind), "{kind} is placeable but missing from the catalogue");
+    }
+}
+
+#[test]
 fn catalogue_declares_the_neutral_kind_witness_and_drop_payload() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../🧫️fixtures/🛍️canvas-catalogue/🔣️.json" )).expect("neutral catalogue producer");
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case| case["action"] == "canvasDrop" && case["kind"].is_string()) {

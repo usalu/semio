@@ -7,7 +7,7 @@
 //! framework's `NoConfig`/`NoPresence`/`NoTransient` — a single-field metadata document needs no
 //! persisted per-session view state.
 
-use crate::editor::playground::commands::change_schema;
+use crate::editor::playground::commands::{change_schema, set_active_example};
 use crate::editor::playground::modes::edit;
 use crate::editor::playground::modes::edit::windows::main;
 use crate::standards::v1::subsets::any::schema::empty_playground_snapshot;
@@ -30,6 +30,7 @@ semio_framework_plugin::app_commands! {
     /// 🎯️ `PlaygroundEditor::Command` — one row, the document's one mutation kind.
     pub enum PlaygroundCommand for PlaygroundSnapshot, PlaygroundMutation, NoConfig, NoConfigMutation {
         "changeSchema" as "change-schema" => change_schema::ChangeSchema,
+        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
     }
 }
 //#endregion 🔖️Commands
@@ -39,7 +40,7 @@ semio_framework_plugin::app_commands! {
 pub struct PlaygroundEditor;
 
 //#region 🧵️RetainedCommands
-const PLAYGROUND_RETAINED_TOOL_IDS: &[&str] = &["changeSchema"];
+const PLAYGROUND_RETAINED_TOOL_IDS: &[&str] = &["changeSchema", "setActiveExample"];
 const PLAYGROUND_RETAINED_PAYLOAD_SCHEMA: &str = "playground.playground.tool-command.v1";
 const PLAYGROUND_RETAINED_RAW_BYTES: usize = 8_192;
 const PLAYGROUND_RETAINED_WORK_ITEMS: usize = 1;
@@ -52,6 +53,7 @@ fn playground_retained_extent(command: &PlaygroundCommand, _snapshot: &Playgroun
     match command {
         PlaygroundCommand::ChangeSchema(payload) if payload.new_schema.len() <= PLAYGROUND_RETAINED_RAW_BYTES => Some(1),
         PlaygroundCommand::ChangeSchema(_) => None,
+        PlaygroundCommand::SetActiveExample(_) => Some(1),
     }
 }
 
@@ -121,7 +123,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for PlaygroundCommandJo
     type Owner = EditorApp<PlaygroundEditor>;
     const TOOL_IDS: &'static [&'static str] = PLAYGROUND_RETAINED_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "changeSchema", lanes: &[ArtifactToolPublicationLane::Artifact] }];
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "changeSchema", lanes: &[ArtifactToolPublicationLane::Artifact] }, ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] }];
 }
 //#endregion 🧵️RetainedCommands
 
@@ -373,6 +375,7 @@ impl ArtifactEditor for PlaygroundEditor {
         factory_type: PlaygroundCommandJobFactory,
         tools: {
             "changeSchema" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setActiveExample" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
 
@@ -440,6 +443,10 @@ impl ArtifactEditor for PlaygroundEditor {
                 }
                 Ok(PlaygroundCommand::ChangeSchema(change_schema::ChangeSchema { new_schema: new_schema.to_string() }))
             }
+            "setActiveExample" => {
+                let example_id = args.get("exampleId").or_else(|| args.get("example_id")).and_then(dsl::DslValue::as_str).unwrap_or_default();
+                Ok(PlaygroundCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.to_string() }))
+            }
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
                  app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
@@ -482,6 +489,8 @@ pub fn create_playground_editor() -> semio_framework_plugin::AppDefinition {
         .default_layout(edit::layout())
         .mutation("changeSchema", LocalizedLabel::native("Change Schema", "Schema ändern"))
         .action_interactive_job("changeSchema", InteractiveJobClassification::Migrated)
+        .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"))
+        .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
         .build_definition()
 }
 //#endregion 🔖️Manifest

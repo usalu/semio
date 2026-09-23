@@ -8,13 +8,15 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(id = "s.layout.layout.windowconfig", extension = "layoutwindowcfg", layout = "lines")]
 pub struct LayoutWindowConfig {
     pub active_page_id: String,
+    /// 🧰️ Host utility bar id. `select` is the pointer; `transform` arms the gumball.
+    pub active_utility: String,
     #[dsl(block)]
     pub camera: LayoutCamera,
 }
 
 impl Default for LayoutWindowConfig {
     fn default() -> Self {
-        Self { active_page_id: "page-1".into(), camera: LayoutCamera::default() }
+        Self { active_page_id: "page-1".into(), active_utility: "select".into(), camera: LayoutCamera::default() }
     }
 }
 

@@ -47,8 +47,8 @@
     }
   },
   "canvas": {
-    "cameraX": 0,
-    "cameraY": 0,
-    "zoom": 1
+    "cameraX": 500.0,
+    "cameraY": 475.0,
+    "zoom": 0.56
   }
 }

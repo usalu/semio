@@ -674,3 +674,22 @@ async fn set_active_example_resolves_every_id_the_shell_can_send() {
         .collect();
     assert!(offered.contains(&crate::examples::demo::ID.to_string()), "the staged form must offer the registered example, offered {offered:?}");
 }
+
+/// ➖️ The Jack Query editor lints its buffer through the framework graph DSL
+/// (`core::lint` → `semio_framework_graph::dsl::lint`), and the pane opens on
+/// `TRINITY_JACK_DEFAULT_QUERY` over the curated Nakagin example. That query writes the Cypher connector
+/// `(a:Piece)-[r:Connection]->(b:Piece)`, which the framework lexer used to refuse, so the live
+/// trinity-jack pane reported `unexpected character '-'` on a query its own executor runs (ticket
+/// 26/09/19, `📓️knowledge.md` §6, §13.2). Every query the editor ships must lint clean on the example it
+/// ships with, and must run there.
+#[semio_framework_async_macros::async_test]
+async fn every_shipped_query_lints_clean_and_runs_on_the_curated_example() {
+    let example = <crate::JackSnapshot as store::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_FIXTURE_DSL).expect("curated example parses");
+    for query in [crate::editor::jack::TRINITY_JACK_DEFAULT_QUERY, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b"] {
+        let graph = crate::editor::jack::graph_from_snapshot_or_default(&example);
+        let diagnostics = crate::core::lint(&graph, query);
+        assert!(diagnostics.is_empty(), "{query} must lint clean on the curated example, got {diagnostics:?}");
+        let mut graph = graph;
+        crate::executor::run(&mut graph, query).unwrap_or_else(|error| panic!("{query} must run on the curated example: {error}"));
+    }
+}

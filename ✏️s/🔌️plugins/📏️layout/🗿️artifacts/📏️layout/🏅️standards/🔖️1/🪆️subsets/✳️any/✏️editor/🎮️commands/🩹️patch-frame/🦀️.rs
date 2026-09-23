@@ -10,6 +10,7 @@ use crate::mutations::change_link_path::ChangeLinkPath;
 use crate::mutations::edit_story::EditStory;
 use crate::mutations::move_frame::MoveFrame;
 use crate::mutations::resize_frame::ResizeFrame;
+use crate::mutations::rotate_frame::RotateFrame;
 use crate::mutations::LayoutMutation;
 use crate::standards::v1::subsets::any::schema::text_to_rgba;
 use crate::{Frame, LayoutSnapshot};
@@ -58,6 +59,10 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
         "fill" => Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameFill(ChangeFrameFill { page_id, frame_id, new_fill: text_to_rgba(&payload.value) })])),
         "stroke" => Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameStroke(ChangeFrameStroke { page_id, frame_id, new_stroke: text_to_rgba(&payload.value) })])),
         "wrapMode" => Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameWrapMode(ChangeFrameWrapMode { page_id, frame_id, new_wrap_mode: payload.value.clone() })])),
+        "rotation" => match payload.value.parse::<f64>() {
+            Ok(number) => Ok(Emit::mutations(vec![LayoutMutation::RotateFrame(RotateFrame { page_id, frame_id, new_rotation: number })])),
+            Err(_) => Ok(Emit::default()),
+        },
         "columns" => match payload.value.parse::<f64>() {
             Ok(count) => Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameColumns(ChangeFrameColumns { page_id, frame_id, new_columns: count.max(0.0) as u32 })])),
             Err(_) => Ok(Emit::default()),

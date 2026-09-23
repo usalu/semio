@@ -21,12 +21,12 @@ line = change-graph-directed
 change-graph-directed = "change-graph-directed" SP boolean
 update-graph-algorithm = "update-graph-algorithm" SP text SP text?
 replace-graph = "replace-graph" SP block
-create-node = "create-node" SP id SP text SP number SP number
+create-node = "create-node" SP id SP text SP number SP number (SP index)?
 delete-node = "delete-node" SP id
 delete-nodes = "delete-nodes" SP block
 change-node-label = "change-node-label" SP id SP text
 move-node = "move-node" SP id SP number SP number
-connect-nodes = "connect-nodes" SP id SP text SP text
+connect-nodes = "connect-nodes" SP id SP text SP text (SP index)?
 disconnect-nodes = "disconnect-nodes" SP id
 replace-points = "replace-points" SP block
 insert-point = "insert-point" SP number SP number SP number
@@ -35,6 +35,7 @@ move-point = "move-point" SP number SP number SP number
 
 id = OCTET+
 number = OCTET+
+index = "index=" number
 text = OCTET+
 boolean = "true" / "false"
 block = "{" NL OCTET+ "}"

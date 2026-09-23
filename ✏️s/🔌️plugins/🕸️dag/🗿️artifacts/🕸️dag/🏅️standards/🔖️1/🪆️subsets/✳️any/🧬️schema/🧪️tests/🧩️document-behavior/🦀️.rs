@@ -51,32 +51,28 @@ async fn node_patch_for_field_returns_none_for_an_unknown_field() {
     assert!(node_patch_for_field(&node, "nonsense", Some("x")).is_none());
 }
 
-/// 🐛️ Pre-existing bug fix (unrelated to composition — traced via `git log --date=iso` to
-/// commit `31209e7a`, 2026-08-13 00:13:16, the ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES
-/// relocation that introduced both `remove_nodes_operations` and this test together): the
-/// assertion contradicted the function's OWN doc comment ("one mutation per node, not one per
-/// node PLUS one per severed edge" — `delete-node`'s own diff/inverse already captures the edge
-/// cascade internally). `remove_nodes_operations` returns exactly one `delete-node` mutation per
-/// targeted node id, regardless of how many edges touch it.
+/// 🧺️ `remove_nodes_operations` disconnects every edge touching a targeted node and THEN deletes the
+/// node — one `disconnect-nodes` per incident edge followed by one `delete-node` per node — so every
+/// published row is point-invertible for the retained one-item preparation
+/// (`ArtifactStoreOneItemFootprint::for_one_invertible_item`). The former one-row-per-node contract
+/// relied on `delete-node`'s internal cascade, whose inverse is one row per severed edge plus the node
+/// and failed the fold with `batched item candidate failed its exact fixed fold contract` (ticket
+/// 26/09/19, `📓️knowledge.md` §14.1).
 #[semio_framework_async_macros::async_test]
-async fn remove_nodes_operations_returns_one_delete_node_mutation_per_targeted_node() {
+async fn remove_nodes_operations_disconnects_incident_edges_before_deleting_the_node() {
     let document = crate::default_snapshot();
-    let nodes = document.nodes();
-    let edges = document.edges();
-    let node_id = nodes.first().expect("fixture has a node").id.clone();
-    let touching_edges = edges
-        .iter()
-        .filter(|edge| {
-            let (from, _) = split_endpoint(&edge.source);
-            let (to, _) = split_endpoint(&edge.target);
-            from == node_id || to == node_id
-        })
-        .count();
-    assert!(touching_edges > 0, "fixture must exercise the cascade-capturing case");
+    let node_id = document.nodes().first().expect("fixture has a node").id.clone();
+    let touching: Vec<String> = document
+        .edges()
+        .into_iter()
+        .filter(|edge| split_endpoint(&edge.source).0 == node_id || split_endpoint(&edge.target).0 == node_id)
+        .map(|edge| edge.id)
+        .collect();
+    assert!(!touching.is_empty(), "fixture must exercise the cascade case");
     let operations = remove_nodes_operations(&document, std::slice::from_ref(&node_id));
-    assert_eq!(operations.len(), 1, "delete-node's own diff/inverse captures the edge cascade internally");
-    let remaining: Vec<DagNodeSpec> = nodes.into_iter().filter(|node| node.id != node_id).collect();
-    assert!(remaining.iter().all(|node| node.id != node_id));
+    let mut expected: Vec<DagMutation> = touching.into_iter().map(crate::mutations::disconnect_nodes).collect();
+    expected.push(crate::mutations::delete_node(node_id));
+    assert_eq!(operations, expected);
 }
 
 #[semio_framework_async_macros::async_test]

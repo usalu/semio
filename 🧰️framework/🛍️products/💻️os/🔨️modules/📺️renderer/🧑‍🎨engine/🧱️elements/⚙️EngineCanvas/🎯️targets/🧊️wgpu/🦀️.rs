@@ -3292,6 +3292,18 @@ pub fn node_graph_sync_flow_widget_ghost(x: f32, y: f32, drag_data: &HashMap<Str
     }
 }
 
+/// 🖱️ `addWidget` args for a flow-widget drop, including format and action when the descriptor has them.
+fn flow_widget_drop_args(descriptor: &Value, x: f64, y: f64) -> Option<semio_framework::DslValue> {
+    crate::action_args_json!({
+        "kind": descriptor.get("kind").and_then(|value| value.as_str()).unwrap_or("inputSlider"),
+        "neuronKind": descriptor.get("neuronKind").and_then(|value| value.as_str()),
+        "format": descriptor.get("format").and_then(|value| value.as_str()),
+        "action": descriptor.get("action").and_then(|value| value.as_str()),
+        "x": x,
+        "y": y,
+    })
+}
+
 pub fn node_graph_flow_widget_drop_action(x: f32, y: f32, drag_data: &HashMap<String, String>, surfaces: &[(&str, Rect, &str)]) -> Option<ActionDescriptor> {
     let raw = drag_data.get(FLOW_WIDGET_DRAG_MIME)?;
     let descriptor: Value = serde_json::from_str(raw).ok()?;
@@ -3303,12 +3315,7 @@ pub fn node_graph_flow_widget_drop_action(x: f32, y: f32, drag_data: &HashMap<St
         return Some(ActionDescriptor {
             controller_id: (*controller_id).to_string(),
             action: "addWidget".into(),
-            args: crate::action_args_json!({
-                "kind": descriptor.get("kind").and_then(|value| value.as_str()).unwrap_or("inputSlider"),
-                "neuronKind": descriptor.get("neuronKind").and_then(|value| value.as_str()),
-                "x": world.0,
-                "y": world.1,
-            }),
+            args: flow_widget_drop_args(&descriptor, world.0, world.1),
         });
     }
     None

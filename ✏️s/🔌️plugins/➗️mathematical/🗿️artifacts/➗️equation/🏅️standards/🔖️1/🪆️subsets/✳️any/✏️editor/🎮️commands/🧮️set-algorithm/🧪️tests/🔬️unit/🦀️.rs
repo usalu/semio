@@ -107,7 +107,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 /// instance faults in the `interactive-job.catalog-authority` proof join before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, _, _, _>(
+    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge_with_members::<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _, _>(
         "mem://equation-convergence",
         || async { crate::editor::equation::unit_tests::context::equation_app_manifest_for_tests() },
         node_graph_edit(json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(9.0)), ("y".to_string(), Value::from(9.0))])),
@@ -123,7 +123,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 /// 🔁️ The REGISTERED idempotency law — same reason as the registered convergence pair above.
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent_for_equation() {
-    semio_framework_plugin::artifact_app_laws::assert_registered_ingest_idempotent::<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, _, _, _>(
+    semio_framework_plugin::artifact_app_laws::assert_registered_ingest_idempotent_with_members::<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _, _>(
         || async { crate::editor::equation::unit_tests::context::equation_app_manifest_for_tests() },
         node_graph_edit(json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(3.0)), ("y".to_string(), Value::from(4.0))])),
         |app| equation_graph(&app.snapshot().expect("projection")).nodes.len(),

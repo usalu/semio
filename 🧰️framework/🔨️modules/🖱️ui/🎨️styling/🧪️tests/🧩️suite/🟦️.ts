@@ -33,7 +33,7 @@ import {
   WCAG_AAA_CONTRAST,
   type Rgba8,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { meshCollectionVitePlugin, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirVitePlugin, tileProxyVitePlugin, type PlaygroundAssetSpec } from "../../🏗️builder/🌐️vite/🟦️.ts";
+import { meshCollectionVitePlugin, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirMountVitePlugins, staticDirVitePlugin, tileProxyVitePlugin, type PlaygroundAssetSpec } from "../../🏗️builder/🌐️vite/🟦️.ts";
 import { fontCatalogSources, parseFontCatalog, parseGoogleFontWoff2Map, resolveFontFaceUrl, resolveFontSource } from "../../🔤️fonts/🟦️.ts";
 import type { OwnedBuildMiddleware } from "../../../🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { MESH_DELIVERY_CATALOG, parseMeshDeliveryCatalog, meshAssetTransportUrl, resolveMeshAsset } from "../../../../🖼️assets/🥽️mesh/🟦️.ts";
@@ -239,6 +239,42 @@ describe("build output write authority", () => {
       console.log("[DEBUG] verified seven build adapters across no-write, write and default modes");
     } finally { rmSync(sandbox, { recursive: true, force: true }); }
   });
+});
+
+describe("static-dir mount table", () => {
+  it("serves nested and overlaid roots with native Vite publicDir parity and refuses a route claimed twice", async () => {
+    const root = resolve(import.meta.dir, "../../🧫️fixtures/🗂️static-dir-mounts");
+    const fixture = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
+    const { default: Ajv } = await import("ajv"), { createServer: createViteServer } = await import("vite"), { default: glob } = await import("fast-glob");
+    expect(new Ajv({ strict: true }).compile(JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8")))(fixture)).toBe(true);
+    const sandbox = realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "static-dir-mounts-")));
+    const put = (path: string, content: string) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, content); };
+    const snapshot = async (tree: string) => Object.fromEntries((await glob("**/*", { cwd: tree, onlyFiles: true })).sort().map(path => [path, readFileSync(resolve(tree, path), "utf8")]));
+    const specs = (mounts: { route: string; root: string }[]) => mounts.map(mount => ({ kind: "static-dir" as const, route: mount.route, root: mount.root }));
+    const union = join(sandbox, "📤️union"), copied = "📤️copied";
+    for (const mount of fixture.mounts) for (const [file, content] of Object.entries(mount.files as Record<string, string>)) {
+      put(join(sandbox, mount.root, file), content);
+      put(join(union, mount.route, file), content);
+    }
+    const plugins = staticDirMountVitePlugins(sandbox, specs(fixture.mounts));
+    for (const plugin of plugins.filter(item => item.apply === "build")) { plugin.configResolved?.({ root: sandbox, build: { outDir: copied } }); await plugin.closeBundle?.(); }
+    expect(await snapshot(join(sandbox, copied))).toEqual(await snapshot(union));
+    const freePort = () => new Promise<number>((done, reject) => { const probe = createServer(); probe.once("error", reject); probe.listen(0, "127.0.0.1", () => { const address = probe.address(); probe.close(() => done(typeof address === "object" && address ? address.port : 0)); }); });
+    const ours = await createViteServer({ configFile: false, root: sandbox, publicDir: false, plugins: plugins as import("vite").Plugin[], server: { host: "127.0.0.1", port: await freePort(), strictPort: true, watch: null }, optimizeDeps: { noDiscovery: true, include: [] }, logLevel: "silent" });
+    const oracle = await createViteServer({ configFile: false, root: sandbox, publicDir: union, server: { host: "127.0.0.1", port: await freePort(), strictPort: true, watch: null }, optimizeDeps: { noDiscovery: true, include: [] }, logLevel: "silent" });
+    try {
+      await ours.listen(); await oracle.listen();
+      const origin = (server: typeof ours) => { const address = server.httpServer!.address(); if (!address || typeof address === "string") throw new Error("Missing Vite address"); return `http://127.0.0.1:${address.port}`; };
+      for (const request of fixture.requests) {
+        const actual = await fetch(new URL(request.url, origin(ours)));
+        expect({ url: request.url, status: actual.status }).toEqual({ url: request.url, status: request.status });
+        if (request.status === 200) expect(await actual.text()).toBe(await (await fetch(new URL(request.url, origin(oracle)))).text());
+        else expect(existsSync(join(union, decodeURIComponent(new URL(request.url, "https://example.invalid").pathname)))).toBe(false);
+      }
+    } finally { await ours.close(); await oracle.close(); rmSync(sandbox, { recursive: true, force: true }); }
+    for (const refusal of fixture.refusals) expect(() => staticDirMountVitePlugins(sandbox, specs(refusal.mounts))).toThrow(refusal.error);
+    console.log(`[DEBUG] static-dir mount table: ${fixture.requests.length} requests match native Vite publicDir, build copy equals the union, ${fixture.refusals.length} double claim refused`);
+  }, 60_000);
 });
 
 describe("font source identity", () => {

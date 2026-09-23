@@ -6,6 +6,8 @@ fn project(node: BuiltNode) -> serde_json::Value {
     serde_json::from_str(&text).expect("independent UI oracle")
 }
 
+/// 🌳️ Each inspection summary field is one `tree_item_desc` row: its value rides the row's own
+/// `description`, not a child `value` node.
 #[test]
 fn presentation_semantic_panels_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
@@ -34,8 +36,8 @@ fn presentation_semantic_panels_match_the_json_oracle() {
         assert_eq!(tree["children"][0]["component"]["label"], row["inspection"]);
         let fields = tree["children"][0]["children"].as_array().expect("summary fields");
         assert_eq!(serde_json::Value::Array(fields.iter().map(|node| node["component"]["label"].clone()).collect()), row["summary"]);
-        assert_eq!(fields[0]["children"][0]["component"]["value"], "animate.presentation");
-        assert_eq!(fields[1]["children"][0]["component"]["value"], tiles.len().to_string());
+        assert_eq!(fields[0]["component"]["description"], "animate.presentation");
+        assert_eq!(fields[1]["component"]["description"], tiles.len().to_string());
     }
     for node in [crate::editor::animate::modes::main::windows::tile_editor::render(&document).expect("editor canvas"), crate::viewer::animate::modes::view::windows::tile_editor::render(&document).expect("viewer canvas")] {
         let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };

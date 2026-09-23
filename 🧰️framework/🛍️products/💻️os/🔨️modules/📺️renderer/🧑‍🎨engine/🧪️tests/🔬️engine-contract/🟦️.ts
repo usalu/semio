@@ -12144,6 +12144,22 @@ describe("node-graph caption clipping (2D replay twin)", () => {
     console.log("[DEBUG] node-graph caption drawn as %o at %spx", text, fontPx);
   });
 
+  it("centres captions on the measured overlay, not on a stale session size", () => {
+    // 🏷️ The live defect: the session reported `width: 1, height: 1` (painted at hand-over, before the
+    // engine canvas was attached) beside an 852×807 overlay, so a node at the world origin was captioned
+    // at (0.5, 0.5) instead of the canvas centre.
+    const stub = labelCanvasStub(0.6);
+    const state = JSON.stringify({
+      camera: { x: 0, y: 0, zoom: 1 },
+      width: 1,
+      height: 1,
+      labels: [{ id: "root", text: "B", layout: "horizontal", x: 0, y: 0, nodeW: 40, nodeH: 28, fontScreenPx: 13.75, ghost: false }],
+    });
+    paintDagLabelOverlays(state, stub.canvas, 852, 807, 1, { selectedIds: [], preselect: { ids: [], removedIds: [] }, hoveredId: null });
+    const [, x, y] = stub.drawn()[0]!.args as [string, number, number];
+    expect([x, y]).toEqual([426, 403.5]);
+  });
+
   it("draws a title that fits whole, which is what the live generation3d operator names do", () => {
     const stub = labelCanvasStub(0.6);
     const state = JSON.stringify({

@@ -1,0 +1,49 @@
+{
+  "why": "A raster surface publishes its paint witness on its own element (data-layers-json, data-assets-json) so an acceptance probe can decide whether a paint-2d window draws anything without reading React internals or WebGPU pixels. The assets witness carries each image key's decoded byte length and PNG IHDR extent, never the base64, so the DOM stays small for any texture size. The 2x2 swatch is the placeholder the curated raster demo shipped until 2026-09-22 (it painted four pixels and passed every codec law); the committed emblem is what it ships now.",
+  "cases": [
+    {
+      "name": "the 2x2 placeholder swatch the raster demo used to ship",
+      "documentSyncJson": "{\"schema\":\"raster.document\",\"id\":\"semio-demo\",\"layers\":[{\"id\":\"backdrop\",\"name\":\"Backdrop\",\"kind\":\"pixel\",\"visible\":true,\"imageKey\":\"semio-emblem\"},{\"id\":\"brighten\",\"name\":\"Brighten\",\"kind\":\"adjustment\",\"visible\":true}]}",
+      "assetsJson": "{\"semio-emblem\":{\"mime\":\"image/png\",\"data\":\"iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC\"}}",
+      "layersJson": "[{\"id\":\"backdrop\",\"name\":\"Backdrop\",\"kind\":\"pixel\",\"visible\":true,\"imageKey\":\"semio-emblem\"},{\"id\":\"brighten\",\"name\":\"Brighten\",\"kind\":\"adjustment\",\"visible\":true}]",
+      "assets": { "semio-emblem": { "mime": "image/png", "bytes": 75, "width": 2, "height": 2 } }
+    },
+    {
+      "name": "a non-PNG payload keeps its byte length and declares no extent",
+      "documentSyncJson": "{\"layers\":[]}",
+      "assetsJson": "{\"gif\":{\"mime\":\"image/gif\",\"data\":\"R0lGODlhAgADAIAAAA==\"}}",
+      "layersJson": "[]",
+      "assets": { "gif": { "mime": "image/gif", "bytes": 13, "width": null, "height": null } }
+    },
+    {
+      "name": "a missing or undecodable payload is an empty asset",
+      "documentSyncJson": "{\"layers\":[{\"id\":\"a\",\"imageKey\":\"x\"}]}",
+      "assetsJson": "{\"x\":{\"mime\":\"image/png\"},\"y\":{\"mime\":\"image/png\",\"data\":\"%%%not-base64%%%\"}}",
+      "layersJson": "[{\"id\":\"a\",\"imageKey\":\"x\"}]",
+      "assets": { "x": { "mime": "image/png", "bytes": 0, "width": null, "height": null }, "y": { "mime": "image/png", "bytes": 12, "width": null, "height": null } }
+    },
+    {
+      "name": "the empty strings a surface without its lanes delivers publish an empty witness",
+      "documentSyncJson": "",
+      "assetsJson": "",
+      "layersJson": "[]",
+      "assets": {}
+    },
+    {
+      "name": "malformed or wrongly shaped JSON publishes an empty witness",
+      "documentSyncJson": "{\"layers\":{\"not\":\"an array\"}}",
+      "assetsJson": "null",
+      "layersJson": "[]",
+      "assets": {}
+    }
+  ],
+  "committedAssets": [
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🖼️semio-emblem.png",
+      "mime": "image/png",
+      "bytes": 25039,
+      "width": 512,
+      "height": 512
+    }
+  ]
+}

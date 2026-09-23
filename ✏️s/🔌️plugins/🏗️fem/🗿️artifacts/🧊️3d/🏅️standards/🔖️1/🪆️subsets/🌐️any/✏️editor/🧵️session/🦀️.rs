@@ -3712,7 +3712,7 @@ pub fn with_live_visual<R>(render: Option<AppRenderOperationContext>, build: imp
     });
     let Some(shell) = shell else { return build(None) };
     let Ok(owner) = shell.try_borrow() else { return build(None) };
-    build(owner.as_ref().and_then(|state| state.current.as_ref()))
+    build(owner.as_ref().and_then(|state| state.current.as_ref().filter(|lease| lease.matches(state.identity.freshness(state.preview_sequence)))))
 }
 
 pub fn publish_solver_scalar(render: AppRenderOperationContext, index: usize, scalar: Fem3dSolverScalar) -> Result<(), Fem3dSolverScalar> {

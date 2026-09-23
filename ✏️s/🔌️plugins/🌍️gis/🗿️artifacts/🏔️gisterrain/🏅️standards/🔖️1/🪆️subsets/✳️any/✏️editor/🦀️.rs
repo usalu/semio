@@ -504,6 +504,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         tools: {
             "setExaggeration" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "setCamera" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setActiveExample" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
 

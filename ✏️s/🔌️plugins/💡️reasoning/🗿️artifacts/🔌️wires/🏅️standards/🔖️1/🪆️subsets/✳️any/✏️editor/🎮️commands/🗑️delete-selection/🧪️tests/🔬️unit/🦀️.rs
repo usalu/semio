@@ -6,14 +6,16 @@ use crate::schema::fixture_nodes;
 use semio_framework_plugin::{artifact_app_laws::meta, InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
 use serde_json::json;
 
-/// 🕹️ `handle`'s macro-only path treats the selection as empty (no `InteractionView` reachable) —
-/// nothing gets deleted.
+/// 🕹️ With no live "graph" selection the reducer deletes nothing. Dispatching is no longer the way to
+/// reach that state: the retained route reads the live `InteractionState`, and `addNode` itself selects
+/// the node it creates, so the reducer is measured directly on the populated document.
 #[semio_framework_async_macros::async_test]
 async fn handle_alone_deletes_nothing_without_a_live_selection() {
     let mut app = new_app().await;
     dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() })).await;
-    dispatch(&mut app, WiresCommand::DeleteSelection(DeleteSelection {})).await;
-    assert_eq!(fixture_nodes(&crate::wires_working_board(&app.snapshot().expect("snapshot"))).len(), 1);
+    let snapshot = app.snapshot().expect("snapshot");
+    assert_eq!(fixture_nodes(&crate::wires_working_board(&snapshot)).len(), 1);
+    assert!(delete_selected(&snapshot, &[]).artifact_mutations.is_empty());
 }
 
 /// 🕹️ End-to-end proof the "graph" domain's live selection actually drives `deleteSelection` —

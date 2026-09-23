@@ -1530,6 +1530,10 @@ impl ArtifactEditor for Process3dPlayApp {
         Some(crate::editor::process3d::config::schema::app_schema_descriptor())
     }
 
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
+        crate::process3d_child_restore_projection(snapshot)
+    }
+
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
         crate::genesis_process3d_child_pack(snapshot, slot, child_id)
     }

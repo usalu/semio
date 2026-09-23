@@ -305,7 +305,7 @@ fn build_demo_layout_snapshot() -> crate::LayoutSnapshot {
         paragraph_styles: vec![ParagraphStyle { id: "paragraph.body".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: "left".into() }],
         character_styles: Vec::new(),
         stories: vec![TextStory { id: "story-1".into(), content: "Hello layout".into(), style_runs: Vec::new() }],
-        links: vec![ImageLink { id: "link-missing".into(), path: "assets/missing.png".into(), hash: "sha256:missing".into(), width: 100, height: 100, dpi: 300, color_profile: None, state: Some("missing".into()), proxy_data_url: None }],
+        links: vec![ImageLink { id: "link-missing".into(), path: "assets/missing.png".into(), hash: "sha256:missing".into(), width: 100, height: 100, dpi: 300, color_profile: None, state: Some("missing".into()), proxy_data_url: None, artifact_kind: String::new(), artifact_ref: String::new() }],
         parent_pages: vec![ParentPage {
             id: "parent-1".into(),
             name: "Master".into(),

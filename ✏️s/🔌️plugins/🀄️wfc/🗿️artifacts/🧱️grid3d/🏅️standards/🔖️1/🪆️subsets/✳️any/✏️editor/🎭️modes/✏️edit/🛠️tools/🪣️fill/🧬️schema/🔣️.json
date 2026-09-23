@@ -21,6 +21,21 @@
       }
     },
     "contradiction": { "type": "boolean" },
-    "done": { "type": "boolean" }
+    "done": { "type": "boolean" },
+    "trace": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["x", "y", "z", "tileId", "discarded"],
+        "properties": {
+          "x": { "type": "integer", "minimum": 0 },
+          "y": { "type": "integer", "minimum": 0 },
+          "z": { "type": "integer", "minimum": 0 },
+          "tileId": { "type": "string", "minLength": 1 },
+          "discarded": { "type": "boolean" }
+        }
+      }
+    }
   }
 }

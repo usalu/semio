@@ -946,6 +946,10 @@ impl ArtifactEditor for FormsPlayApp {
     type Command = FormsCommand;
 
     const DIALECT: Dialect = crate::FORMS_DIALECT;
+    /// 🧬️ The crate's one loaded-parent child projection (`crate::forms_child_restore_projection`).
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+        crate::forms_child_restore_projection(snapshot)
+    }
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {

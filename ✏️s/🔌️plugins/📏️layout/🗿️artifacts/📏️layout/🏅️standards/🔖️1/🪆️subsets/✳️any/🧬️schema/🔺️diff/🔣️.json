@@ -486,6 +486,12 @@
               "type": "null"
             }
           ]
+        },
+        "artifactKind": {
+          "type": "string"
+        },
+        "artifactRef": {
+          "type": "string"
         }
       }
     },

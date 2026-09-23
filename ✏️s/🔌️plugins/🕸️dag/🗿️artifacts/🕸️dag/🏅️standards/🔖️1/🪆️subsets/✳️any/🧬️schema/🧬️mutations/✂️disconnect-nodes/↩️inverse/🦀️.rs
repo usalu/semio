@@ -5,8 +5,12 @@ use crate::{dag_working_scene, DagSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::mutation::DisconnectNodes, base: &DagSnapshot) -> Vec<DagMutation> {
-    match dag_working_scene(base).edges.into_iter().find(|edge| edge.id == payload.id) {
-        Some(edge) => vec![crate::mutations::connect_nodes::mutation::connect_nodes(edge.id, edge.source, edge.target, edge.route_style, edge.properties)],
+    let edges = dag_working_scene(base).edges;
+    match edges.iter().position(|edge| edge.id == payload.id) {
+        Some(index) => {
+            let edge = edges[index].clone();
+            vec![crate::mutations::connect_nodes::mutation::connect_nodes_at(edge.id, edge.source, edge.target, edge.route_style, edge.properties, index)]
+        }
         None => Vec::new(),
     }
 }

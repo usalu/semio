@@ -355,5 +355,6 @@ fn the_python_oracle_vector_matches_the_rust_payload_shape() {
     let expected = payload_from_assignment(2, 2, &[(0, 0), (3, 1)], false, false);
     assert_eq!(payload.pixels, expected.pixels);
     assert_eq!(payload.decided, expected.decided);
+    assert!(payload.trace.iter().any(|event| event.discarded), "the vector keeps a cell the search undid");
 }
 //#endregion 🌡Fill

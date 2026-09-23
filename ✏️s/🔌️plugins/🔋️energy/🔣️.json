@@ -89,7 +89,42 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "nodeId",
+                    "label": {
+                      "native": {
+                        "en": "Node",
+                        "de": "Knoten"
+                      },
+                      "reuse": {
+                        "en": "Node",
+                        "de": "Knoten"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -1432,7 +1467,60 @@
                 },
                 "kind": "mutation",
                 "iconId": "sparkles",
-                "args": [],
+                "args": [
+                  {
+                    "id": "row",
+                    "label": {
+                      "native": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      },
+                      "reuse": {
+                        "en": "Row",
+                        "de": "Zeile"
+                      }
+                    },
+                    "schema": {
+                      "kind": "number",
+                      "integer": false
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "column",
+                    "label": {
+                      "native": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      },
+                      "reuse": {
+                        "en": "Column",
+                        "de": "Spalte"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": true
+                  },
+                  {
+                    "id": "value",
+                    "label": {
+                      "native": {
+                        "en": "Value",
+                        "de": "Wert"
+                      },
+                      "reuse": {
+                        "en": "Value",
+                        "de": "Wert"
+                      }
+                    },
+                    "schema": {
+                      "kind": "string"
+                    },
+                    "required": false
+                  }
+                ],
                 "inPalette": true,
                 "semantics": {
                   "effects": {
@@ -10866,8 +10954,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "9735ce65d83b727b806ef63c189e2020da9f741b7557ced960fe1cbdd1250060",
-    "coreWasmSha256": "c72259ea82c88fd491b0b7a7b02ec27ea92501433a1026966033fa537e33ffdb",
-    "descriptorSha256": "6e7aa51005bb0d4dda0c93e900f9dccd3fe13e1b1b89a9c41208f48f0424b31e"
+    "wasmSha256": "43b20422819d629bf8a7c743b1ae7493539cb582b1ff26d4580b69e8d453fc9d",
+    "coreWasmSha256": "069320bfd6a5b9bee6fefcda29e05547177f2f68a606c4272e5fbd602f85febd",
+    "descriptorSha256": "dcfca48cef9c6f1f863ed010cb4a55e8b90a80cb0ea686785196baf761cd04b4"
   }
 }

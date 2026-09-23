@@ -86,23 +86,46 @@ pub fn live_fill_payload(tool_run: Option<&ToolRunView>) -> Option<BitmapFillPay
     BitmapFillPayload::decode_json(text)
 }
 
-/// 🎨 Paint only decided cells; undecided stay as the bare extent so palette index 0 remains a real colour.
+/// 🎨 Paint decided cells, then the burst. A collapse paints its colour even before the cell is
+/// singleton. A discard paints that tried colour as a marker, including when the search has already
+/// undone it, so the thinking stays on screen.
 pub fn layers_from_fill_payload(document: &BitmapSnapshot, payload: &BitmapFillPayload, pins: &[crate::schema::snapshot::BitmapPinnedPixel]) -> String {
     let (indices, mask) = payload.render_indices();
     let cells = (payload.width as usize).saturating_mul(payload.height as usize);
-    if indices.len() != cells || mask.len() != cells {
+    if indices.len() != cells || mask.len() != cells || payload.width == 0 {
         return crate::bitmap_layers_json("out", document.output.width, document.output.height, &document.input.palette, &[], pins);
     }
     let mut palette = document.input.palette.clone();
     let empty = u8::try_from(palette.len()).unwrap_or(u8::MAX);
     palette.push(BitmapColor { r: 0, g: 0, b: 0, a: 0 });
+    let discard = u8::try_from(palette.len()).unwrap_or(u8::MAX);
+    palette.push(BitmapColor { r: 255, g: 40, b: 160, a: 255 });
     let mut painted = vec![empty; cells];
     for (index, decided) in mask.iter().enumerate() {
         if *decided {
             painted[index] = indices[index];
         }
     }
-    crate::bitmap_layers_json("out", payload.width, payload.height, &palette, &painted, pins)
+    let mut markers = pins.to_vec();
+    let mut undone = vec![false; cells];
+    for event in &payload.trace {
+        let index = event.index as usize;
+        if index >= cells {
+            continue;
+        }
+        if event.color <= u32::from(u8::MAX) {
+            painted[index] = event.color as u8;
+        }
+        undone[index] = event.discarded;
+    }
+    for (index, discarded) in undone.iter().enumerate() {
+        if *discarded {
+            let x = index as u32 % payload.width;
+            let y = index as u32 / payload.width;
+            markers.push(crate::schema::snapshot::BitmapPinnedPixel { x, y, color: u32::from(discard) });
+        }
+    }
+    crate::bitmap_layers_json("out", payload.width, payload.height, &palette, &painted, &markers)
 }
 
 /// 🩺 Contradiction answer: extent plus a distinct overlay id the empty canvas does not carry.

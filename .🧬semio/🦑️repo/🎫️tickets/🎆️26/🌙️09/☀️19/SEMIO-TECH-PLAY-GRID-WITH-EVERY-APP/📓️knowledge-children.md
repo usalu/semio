@@ -839,3 +839,192 @@ ANIMATE descriptor embeds, so `🗑️generated/describe.request/animate` is tou
 after the peer added a `Send` bound to `impl PluginApp for VcsArtifactApp<A, M>` without carrying it
 into their own `artifact_app_laws` helpers (`🔌️plugin/🦀️.rs:7415`, `:7638`, …). Same handling as
 before: requeue the identical command when it compiles.
+
+## 8. 2026-09-23 (session 7 successor, from 01:55)
+
+State found: all three plugins clean against the 00:05 auto-commit `9c641044be` (it carries §7.9); the
+peer carried `Send` into the `artifact_app_laws` helpers, so `semio-framework-plugin` compiles again.
+`pass8-1` (01:55) held the mutex and was compiling when its wrapper vanished at 02:03 without an
+`EXIT=` line (not stopped by this topic); requeued unchanged as `pass8-2`.
+
+### 8.1 Landed while queued (all unverified until pass8-2)
+
+**animate — retained-envelope publication cluster (5 reds: `envelope_helpers_round_trip`,
+`retained_presentation_envelope_{materializes_populated_history_in_order,caller_faults_…,publication_retries_backpressure_exactly_once}`).**
+Every one of these laws drove a NATIVE multi-thread `WorkerPool` with a bare `for _ in 0..10_000`
+busy loop around `maintenance_step`. Each `Pending` there means the worker thread still owns the
+turn; 10 000 non-yielding iterations finish in well under a millisecond, before a condvar-parked
+worker is even scheduled — so the job "never reaches Ready" only because the caller stops asking.
+The framework's own worker-session laws (`🧵️job/🧪️tests/🔬️retained-ownership`) `yield_now()` between
+polls. New test driver `drive_presentation_caller` yields on `Pending`, bounds on liveness (120 s)
+instead of a spin count, and on a stall reports the handle's exact `state`, pending ticket,
+close flag and fault bytes — so if a real production stall remains, the next run names it. All
+seven loops in the file go through it; `close_presentation_registry` yields on `Blocked`.
+File: `✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🧪️tests/🔬️unit/🦀️.rs`.
+
+**animate — `presentation_document_contract_…`** failed on `ValueError("artifact.missing field source")`
+at the DIFF decode: §7.6 fixed `document`, but `diff.artifact` is a full `PresentationArtifact` too.
+It now carries the same `source`/`tiles`. Finding (not fixed yet): the language-neutral JSON schemas
+`🧬️schema/🔣️.json`, `📸️snapshot/🔣️.json`, `🔺️diff/🔣️.json` still list only
+`schema/presentation/animation` — the Rust types gained `source`/`tiles` on 09-21 without the
+schema-first chain (JSON Schema, TS parser, proto, graphql) following.
+
+**writer — PRODUCTION: `writer_text_owner` copied the body on every call.** Since `text` became the
+persisted body it returned `Arc::from(snapshot.text)`, breaking its own documented "without cloning
+its bytes" contract (the `Arc::ptr_eq` red in `child_local_text_fixture_…`) and allocating once per
+worker-job spawn. It now shares the `document` handle's local owner whenever that owner still
+agrees with `text` (they are minted together) and only mints a fresh owner otherwise;
+`writer_snapshot_retained_bytes` reads `snapshot.text.len()` instead of allocating an owner to count it.
+
+**writer — PRODUCTION: the edit-history decoder was a stale hand-rolled copy.** `WriterEditHistoryAuthority`
+routed every token AFTER a field's first straight to the active nested owner, bypassing its
+`OwnedSchemaNestedRecordCursor` and forwarding the OUTER record's `terminal` flag. The `]` that closes
+`forwards` therefore arrived with `terminal = false` and was refused as
+`writer-envelope.mutation-array-entry` at offset 78 — every persisted Writer edit history with a
+mutation was undecodable. The framework already ships the correct generic authority
+(`store::artifact_owned_spr_edit_history_decoder`, which keeps the cursor authoritative and replays a
+pending `(token, terminal)` pair). Writer's catalog now returns it; the 554-line copy
+(`WriterMutationTarget`, `WriterMutationArrayAuthority`, `WRITER_EDIT_FIELDS`, `WriterEditActive`,
+`WriterEditHistoryAuthority`, `WriterEditHistoryDecoder`) is deleted. Its field catalog was
+byte-identical to the framework's.
+
+**writer — stale laws restated (buckets as in v2):**
+- `writer_artifact_store_preparation_…`: one point-invertible item declares
+  `ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS` (= 2: forward + inverse row) since the framework's
+  09-10 footprint change, not 1.
+- `writer_live_envelope_submit_pump_…`: the fixture streamed `vcs.initialSnapshot` as a structured
+  record; the live wire (and the jack/raster/animate fixtures) carries the snapshot's hex
+  `ArtifactPack` scalar. Fixture rebuilt that way.
+- `writer_store_initializer_cancel_and_stale_generation_…`: the stale-generation `Fault` outcome's
+  retained payload was dropped unclosed (`RetainedJobPayload requires one-page close`); it now leaves
+  through its close ladder.
+- `render_carries_the_documents_own_text_and_language_read_only` and
+  `scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack` searched the projection for
+  camelCase JSON keys; the text-editor scene is a packed doc plus payload lanes. Both now decode the
+  typed `TextEditorScene` (`built_surface_scene` / `decode_fixture_scene_with_lanes`) and assert the
+  fields — the viewer law now also proves buffer + language, which the old substring check never did.
+
+### 8.2 animate — the remaining production and stale items (landed 02:15–02:45, unverified natively)
+
+**PRODUCTION: `frames:in` had no concrete resumable importer.** The framework registers the reserved
+`import-media` factory for every app but never a concrete job; without
+`ArtifactEditor::build_reserved_tool_job` every media drop onto the deck failed closed with
+`interactive-job.missing-reserved-builder` (both `import_media_frames_in_*` reds, and the live pane).
+New `PresentationImportJob` (`✏️editor/🦀️.rs` `//#region 🎞️ReservedImport`), the same two-step shape
+as `📏️layout`'s `LayoutImportJob`: decode through the existing `import_media` (the single decoding
+authority), then publish through the completion authority; bounded close ladder with a terminal-empty
+witness. The framework-generic version would belong in `🔌️plugin/🦀️.rs`, which is on the peer's
+no-touch list — seven plugins now carry this copy; flagged for the framework owner.
+
+**PRODUCTION (schema-first): the language-neutral leaves never learned `source`/`tiles`.** The Rust
+types gained them on 09-21; JSON Schema, TS, proto and GraphQL for artifact/snapshot/diff still
+described the old three-field document, and the mutations TS leaf imported `FigureTile*` types from the
+artifact leaf that did not export them. The TS oracle (`presentation-document-contract`) was red on
+`additionalProperties: source/tiles`. All five leaves × three facets now carry them; the figure types
+are defined once in the artifact TS/proto leaf and imported by GraphQL from the mutations leaf that
+already declared them. Verified: TS oracle GREEN (18 native snapshots, 5 committed diffs, all
+rejection vectors), strict `tsc` rc 0 on artifact/snapshot/diff/mutations, graphql-js `buildSchema`
+accepts all three facets with the expected fields. Proto: no parser on this machine; mirrors the
+mutation leaf's syntax. The contract vectors now exercise non-null diff `source`/`tiles`, and the
+invalid diff `{"tiles": []}` (valid since 09-21) became `{"tiles": [{"id": "t1"}]}`.
+The descriptor embeds these leaves → `describe.request/animate` after the native run.
+
+**Stale laws restated:**
+- `app_manifest_declares_expected_operations{,_and_shell_actions}`: app-level actions are resolved into
+  windows at read time (`semio_framework::window_kind_actions`), no longer cloned into
+  `WindowKindDefinition::actions` — the laws now read that resolver, as `🧩️puzzle` does.
+- `export_video_from_deck_reports_no_scene_hashes_as_download_error`: the export compiles assets into a
+  filesystem directory, so `BatchOnlyPendingRewrite` is deliberate. The law now pins BOTH halves: the UI
+  route refuses with `interactive-job.not-ui-safe`, and the batch route (`handle_async`) reports the
+  empty deck as the error download.
+- `delete_selection_with_no_selection_is_a_no_op`: `addTile` selects the tile it creates; the law now
+  empties the selection through the same `interactionSelect` route its sibling law uses.
+- `presentation_semantic_panels_match_the_json_oracle`: a `tree_item_desc` row carries its value in
+  `component.description` (as the note/layout/sequence contracts read it), not a child `value` node.
+
+### 8.3 Live probe on the 03:23 activation (03:47, `⚡️cache/play-fleet/knowledge-children/panes8/`)
+
+`probe-kc.mjs`, headless Chromium `--use-angle=metal`, one page, sequential:
+
+| pane | shell | nodes | console errors | bad assets | content |
+|---|---|---|---|---|---|
+| `#architect` | ready | 1070 | 1 | 1 | adjacency tree, register, graph, report — pixel-identical to the 17:30 evidence |
+| `#animate` | ready | 452 | 1 | 1 | real habitat-67 figure with the 15 `tile-rN-cM` crops — but framed off-centre (below) |
+| `#writer` | ready | 512 | 1 | 1 | the demo body `MATCH … / WHERE a.name = "core" / RETURN a.name, b.name` visible |
+
+The single error on every pane is the same HOST asset:
+`404 /🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin` — the new activation's vendor mount
+lacks the typst font bundle. Not in this topic's plugins (host staging / vendor copy).
+Also observed, not this topic's: in the writer pane the window's floating `Actions` / `Line numbers`
+chrome overlaps the first columns of lines 1–2 (`ATCH`, `RE`).
+
+**animate framing — PRODUCTION, fixed (unverified live until the next activation):** a Canvas2d camera
+names the VIEW CENTRE (`Canvas2dHost.worldToScreen`), and both the editor and the viewer tile canvas
+hard-coded `(0, 0, 1)`, so the deck (world 127–873 × 100–850) started at the pane's centre and ran
+off its bottom-right edge. New `crate::presentation_canvas_camera(deck)` (crate root, next to
+`presentation_working_scene`, shared by editor and viewer): centre of the union of the source frame
+and every tile crop, zoomed down to `PRESENTATION_CANVAS_FIT_EXTENT` = 420 (the 469 px narrowest
+measured pane less a margin), never magnified past 1:1. `PRESENTATION_CANVAS_SCALE` replaces the two
+local `SCALE` copies. Law `the_first_paint_camera_frames_every_layer_inside_the_narrowest_pane`
+(default + demo deck, every layer inside a 469 px square); the panels contract vector's `canvas` is
+now `{500.0, 475.0, 0.56}`.
+
+### 8.4 pass8-4 (04:26) — four crates green, 1 + 2 reds left, all three understood
+
+`⚡️cache/play-fleet/knowledge-children/pass8-4.txt` (pass8-1 vanished mid-compile at 02:03, pass8-2 hit
+a wiped shared build-dir, pass8-3 sat in a flock cycle with raster's cargo — killed my own cargo only):
+
+| crate | pass6-2 | **pass8-4** |
+|---|---|---|
+| `semio-s-artifact-architect-program` | 2087 / 0 | **2087 / 0 GREEN** |
+| `semio-s-plugin-architect` | 2 / 1 | **3 / 0 GREEN** |
+| `semio-s-plugin-animate` | 3 / 0 | **3 / 0 GREEN** |
+| `semio-s-plugin-writer` | 6 / 0 | **6 / 0 GREEN** |
+| `semio-s-artifact-animate-presentation` | 310 / 17 | **327 / 1** |
+| `semio-s-artifact-writer-writer` | 167 / 8 | **173 / 2** |
+
+Everything in §8.1–§8.3 is proven by this run: the retained-envelope cluster is GREEN (it was caller
+starvation, not a production stall), the reserved `frames:in` importer imports, the Writer edit-history
+decoder decodes, the schema-first vectors round-trip natively, the camera law passes.
+
+The three reds and their fixes (queued as `pass9-1`):
+- `delete_selection_with_no_selection_is_a_no_op`: a bare `handle_action(interactionSelect|clearSelection)`
+  only ADMITS a framework reserved job; nothing changes until it is settled. Both delete-selection
+  laws now settle through `settle_framework_reserved_admission` — the sibling law was only green
+  because `addTile` had already selected the tile it created. The no-op law uses `clearSelection`.
+- `child_local_text_fixture_…`: `Arc::ptr_eq` now PASSES (the §8.1 `writer_text_owner` fix is
+  proven); the law's `strong_count == 4` cannot hold with a shallow `ArtifactChild::clone` — the body
+  lives once in the handle's shared owner plus the two retained handles = 3. Restated with the reason.
+- `writer_live_envelope_submit_pump_…`: the wire now decodes, and the load then faulted with
+  `editor did not declare a loaded-parent child projection` — **PRODUCTION**: Writer, Animate and
+  Architect all compose `s.stdio.semio` children but none declared `child_restore_projection`, so a
+  live envelope load of ANY of their documents faulted before the decoded document could replace the
+  store. All six editor/viewer impls now project straight off the snapshot's `#[child]` fields
+  (`store::ChildRestoreProjection::from_snapshot`, the shape `🌊️flow`/`🏭️process`/`📐️cad` use).
+
+### 8.5 pass9-1 (04:54) — ALL SIX CRATES GREEN
+
+`⚡️cache/play-fleet/knowledge-children/pass9-1.txt`, `EXIT=0`, no `--skip`, `--lib --tests --no-fail-fast`:
+
+| crate | pass5-1 | pass6-2 | pass8-4 | **pass9-1** |
+|---|---|---|---|---|
+| `semio-s-artifact-architect-program` | 2087 / 0 | 2087 / 0 | 2087 / 0 | **2087 / 0** |
+| `semio-s-plugin-architect` | 3 / 0 | 2 / 1 | 3 / 0 | **3 / 0** |
+| `semio-s-plugin-animate` | 3 / 0 | 3 / 0 | 3 / 0 | **3 / 0** |
+| `semio-s-plugin-writer` | 6 / 0 | 6 / 0 | 6 / 0 | **6 / 0** |
+| `semio-s-artifact-animate-presentation` | 305 / 22 | 310 / 17 | 327 / 1 | **328 / 0** |
+| `semio-s-artifact-writer-writer` | 156 / 19 | 167 / 8 | 173 / 2 | **175 / 0** |
+
+After it: only `unused-qualifications` cleanups in lines this session wrote (the crates carry many
+pre-existing ones, untouched); `pass9-2` re-measures. Requests touched: `describe.request` and
+`activate.request` for `architect`, `animate`, `writer` (schema leaves in the animate descriptor, the
+new importer, the canvas camera, `child_restore_projection` ×6, the Writer decoder/text-owner fixes).
+Live verification of the animate framing therefore waits for that activation.
+
+Open, not this topic's (for the coordinator):
+- host 404 `🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin` on every pane of the 03:23 activation;
+- writer pane: floating window chrome (`Actions`, `Line numbers`) overlaps the first text columns;
+- the reserved `import-media` resumable importer is now copied in seven plugins (layout, raster,
+  sequence, generation2d, puzzle 2d/5d, and animate) — a framework-generic importer belongs in
+  `🔌️plugin/🦀️.rs` (peer no-touch list);
+- the framework child GraphQL leaf references `ArtifactRef` without an `# import`.

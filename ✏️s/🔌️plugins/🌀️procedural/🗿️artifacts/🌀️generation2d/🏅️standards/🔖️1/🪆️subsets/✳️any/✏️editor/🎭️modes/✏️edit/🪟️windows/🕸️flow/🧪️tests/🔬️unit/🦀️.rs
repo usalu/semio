@@ -10,17 +10,50 @@ async fn renders_main_graph_scene() {
 }
 
 /// 🛍️ The generation2d twin of the generation3d law: the registered operator catalogue is app-static
-/// and rides the reserved `framework.section.catalogue` surface, never this scene's fixed-capacity
-/// payload (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1).
+/// and rides the reserved `framework.section.catalogue` surface. The scene carries DOCUMENT-DERIVED
+/// operator records only (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1), plus the flow-plugin-style
+/// `NodeGraphInteractionDomain` and live selection (ticket 26/09/23/FLOW-AND-PROCEDURAL-FEATURE-COMPLETE).
 #[semio_framework_async_macros::async_test]
 async fn main_graph_scene_exports_flow_backed_node_graph_fields() {
     let mut app = app().await;
     let json = render_body(&mut app, GENERATION2D_PLAY_BODY_MAIN).await;
     close(app);
     let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<NodeGraphScene>(&json).expect("node-graph scene decodes off the rendered surface");
-    assert!(scene.host_snapshot_json.as_deref().is_some_and(|host_snapshot| host_snapshot.contains("flow.host_snapshot")));
+    assert!(
+        scene.host_snapshot_json.as_deref().is_some_and(|host_snapshot| host_snapshot.contains("flow.fixture") || host_snapshot.contains("flow.host_snapshot")),
+        "flow-backed scene must carry a host snapshot"
+    );
     assert!(scene.capabilities_json.as_deref().is_some_and(|capabilities| capabilities.contains("flow")));
-    assert!(scene.operators.is_empty(), "a flow-backed scene must carry no operator records, carries {}", scene.operators.len());
+    let domain = scene.interaction_domain.as_ref().expect("flow window must stamp NodeGraphInteractionDomain");
+    assert_eq!(domain.id, crate::editor::generation2d::GENERATION2D_INTERACTION_DOMAIN);
+    assert!(!domain.node_target_prefix.is_empty());
+    assert!(!domain.edge_target_prefix.is_empty());
+    assert!(!domain.handle_target_prefix.is_empty());
+    assert!(
+        scene.operators.iter().any(|operator| operator.id.contains("math.")),
+        "operators must be document-derived for the open graph's non-core kinds, carries {:?}",
+        scene.operators.iter().map(|operator| operator.id.as_str()).collect::<Vec<_>>()
+    );
+    assert!(scene.operators.len() < 32, "operators must be document-derived, not the registered catalogue, carries {}", scene.operators.len());
+}
+
+/// 🎯️ A live selection handed to `render` is painted onto the scene — the twin of the flow plugin
+/// main window's `selection` field.
+#[test]
+fn render_paints_the_selection_it_is_handed() {
+    let document = crate::Generation2dSnapshot::default();
+    let config = config::Generation2dMainWindowConfig::default();
+    let mut session = FlowEvalSession::new();
+    let selection = vec!["slider".into(), "rect".into()];
+    let node = render(&document, &config, &session, &selection).expect("empty fixture still renders a node-graph scene");
+    let tree = semio_framework_plugin::built_to_component_tree(node);
+    let encoded = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("tree json");
+    session.begin_close();
+    while !session.terminal_is_empty() {
+        let _ = session.close_step(usize::MAX, usize::MAX);
+    }
+    let scene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene::<NodeGraphScene>(&encoded).expect("scene");
+    assert_eq!(scene.selection, selection);
 }
 
 /// 🧪️ Installs one hand-authored `flow.extension` manifest so the shared operator registry this

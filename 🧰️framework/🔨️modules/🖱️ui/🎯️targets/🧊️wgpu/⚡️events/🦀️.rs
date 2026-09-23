@@ -14,7 +14,7 @@ use crate::wgpu::chrome::UiDriverDrag;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{SurfaceKind, UiNode, UiNumberStepperNode, UiSliderNode, UiState, UiTreeItemNode, UiTreeSectionNode};
 use crate::wgpu::geometry::Rect;
-use crate::wgpu::layout::{number_stepper_segments, ring_t_at, slider_value_at, tree_drag_handle_rect, tree_drag_role, tree_item_chevron_rect, tree_section_header_band, tree_section_header_height, TreeRowMetrics};
+use crate::wgpu::layout::{number_stepper_segments, ring_t_at, slider_value_at, tree_drag_handle_rect, tree_drag_role, tree_section_header_band, tree_section_header_height, TreeRowMetrics};
 use crate::wgpu::select;
 use crate::wgpu::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
 use crate::wgpu::{intent_is_stale, UiIntentAddress, UiIntentCommand, UiIntentSequencer};
@@ -1236,15 +1236,9 @@ impl EventRouter {
         tree.toggle_disclosure(id).is_some()
     }
 
-    fn pointer_toggle_disclosure(&mut self, tree: &mut UiTree, id: NodeId, x: f32, y: f32) -> bool {
-        if tree.authored_tree_item(id).is_some() {
-            let Some(rect) = tree.absolute_rect(id) else { return false };
-            let Some(depth) = tree.tree_item_depth(id) else { return false };
-            let metrics = crate::wgpu::mounted_layout::retained_tree_row_metrics(tree, id, &self.tree_drag_metrics);
-            if !tree_item_chevron_rect(rect, depth, &metrics, self.flow.block.is_reversed()).contains(x, y) {
-                return false;
-            }
-        }
+    /// 🖱️ A press anywhere on an expandable row folds it. The chevron paints that state; it is the
+    /// same control, not a separate gate. `toggle_disclosure` already refuses a row with no children.
+    fn pointer_toggle_disclosure(&mut self, tree: &mut UiTree, id: NodeId, _x: f32, _y: f32) -> bool {
         self.toggle_disclosure(tree, id)
     }
 
@@ -2158,7 +2152,9 @@ impl EventRouter {
                                 // a `Stack` with `activate` set fires that action (see
                                 // `paint::paint_stack_frame`'s matching visual for the same field).
                                 let is_select = tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::Select(_)));
-                                if self.pointer_toggle_disclosure(tree, active_id, *x, *y) {
+                                let disclosed = self.pointer_toggle_disclosure(tree, active_id, *x, *y);
+                                let row_also_activates = disclosed && tree.authored_tree_item(active_id).is_some() && tree.node(active_id).is_some_and(|node| matches!(&node.spec.0, UiNode::Stack(stack) if stack.activate.is_some()));
+                                if disclosed && !row_also_activates {
                                 } else if is_select && select_scroll_release {
                                     let _ = select::arm_retained_select_scroll_at(tree, active_id, *x, *y);
                                 } else if is_select {

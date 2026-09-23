@@ -1,0 +1,10 @@
+{
+  "title": "Dashboard Launch Cockpit",
+  "emoji": "🎛️",
+  "status": "open",
+  "description": "The dashboard is the cockpit that runs every launch.json configuration through wizards: action, project, renderer (react default, wasm), examples (all default, subset, specific, none), and the remaining launch dimensions.",
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "20f03a5d-4cd7-405a-8e77-28c2ab997865"
+  ]
+}

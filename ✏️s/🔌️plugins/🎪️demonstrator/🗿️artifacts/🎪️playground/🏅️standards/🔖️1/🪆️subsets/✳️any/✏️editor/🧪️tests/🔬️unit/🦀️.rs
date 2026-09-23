@@ -30,7 +30,7 @@ fn editor_dialect_matches_the_artifact_coordinate() {
 #[test]
 fn change_schema_factory_declares_the_exact_bounded_contract() {
     let factory = PlaygroundCommandJobFactory::new("s.demonstrator.playground@1/*#editor");
-    assert_eq!(factory.keys(), &[ToolFactoryKey::new("s.demonstrator.playground@1/*#editor", "changeSchema")]);
+    assert_eq!(factory.keys(), &[ToolFactoryKey::new("s.demonstrator.playground@1/*#editor", "changeSchema"), ToolFactoryKey::new("s.demonstrator.playground@1/*#editor", "setActiveExample")]);
     assert_eq!(factory.payload_schema_id(), PLAYGROUND_RETAINED_PAYLOAD_SCHEMA);
     assert_eq!(factory.execution_contract(), ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500));
 }
@@ -78,4 +78,17 @@ async fn registry_backed_editor_installs_its_exact_bounded_command_proof() {
 async fn command_from_action_covers_the_declared_action_and_rejects_unknown_ones() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests).await;
     assert!(PlaygroundEditor::command_from_action("noSuchAction", None).is_err());
+}
+
+#[test]
+fn set_active_example_loads_the_demo_schema() {
+    let document = empty_playground_snapshot();
+    let history = HistoryView::empty();
+    let doc = ArtifactView::new(&document, &history);
+    let config = NoConfig::default();
+    let cfg = ConfigView { snapshot: &config, window: None };
+    let command = PlaygroundCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() });
+    let emit = command.dispatch(&doc, &cfg).expect("demo loads");
+    assert_eq!(emit.artifact_mutations, vec![PlaygroundMutation::ChangeSchema(crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema { new_schema: "playground.playground".into() })]);
+    assert!(create_playground_editor().actions.iter().any(|action| action.id == "setActiveExample"));
 }

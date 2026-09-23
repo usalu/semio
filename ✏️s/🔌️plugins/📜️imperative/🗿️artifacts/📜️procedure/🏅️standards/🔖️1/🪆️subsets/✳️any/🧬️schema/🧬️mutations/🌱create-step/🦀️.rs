@@ -13,11 +13,19 @@ use crate::{PathRef, ProcedureSnapshot, Step};
 pub struct CreateStep {
     pub path_ref: PathRef,
     pub step: Step,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn create_step(path_ref: PathRef, step: Step) -> ProcedureMutation {
-    ProcedureMutation::CreateStep(CreateStep { path_ref, step })
+    ProcedureMutation::CreateStep(CreateStep { path_ref, step, index: None })
+}
+
+/// 📍️ Builder — inserts the step at `index` of its step list instead of appending it, which is how
+/// `delete-step`'s inverse restores a step to its exact position in ONE row.
+pub fn create_step_at(path_ref: PathRef, step: Step, index: usize) -> ProcedureMutation {
+    ProcedureMutation::CreateStep(CreateStep { path_ref, step, index: Some(index) })
 }
 
 impl protocol::MutationKind<ProcedureSnapshot, ProcedureMutation> for CreateStep {

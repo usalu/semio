@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::layout::commands::{canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_move, set_camera};
-use crate::editor::layout::unit_tests::context::{dispatch, layout_app, layout_app_with_registry, render, test_screen_point, LayoutApp};
+use crate::editor::layout::unit_tests::context::{dispatch, dispatch_in, layout_app, layout_app_with_registry, scene, test_screen_point, LayoutApp, PREVIEW_WINDOW};
 use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
 use crate::editor::layout::{LayoutCommand, LAYOUT_INTERACTION_ELEMENTS, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_SURFACE_PREVIEW};
 use semio_framework::kernel::Effect;
@@ -57,14 +57,17 @@ async fn set_camera_mutates_config_and_emits_no_operations() {
     assert_eq!(app.snapshot().expect("projection"), before, "camera never mutates the document");
 }
 
+/// 📷️ The camera is owned by the addressed WINDOW instance (`blueprint::config::addressed`), so a
+/// `setCamera` the preview window dispatches moves the preview scene and leaves the blueprint's alone.
+/// The scene rides packed inside the surface doc, so the camera is read off the decoded scene.
 #[semio_framework_async_macros::async_test]
 async fn set_camera_preview_surface_updates_independently_of_blueprint() {
     let mut app = layout_app().await;
-    dispatch(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_PREVIEW.into()), camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 } })).await;
-    let preview_json = render(&mut app, crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_BODY_PREVIEW).await;
-    assert!(preview_json.contains(r#""cameraX":3.0"#), "preview scene reflects config camera: {preview_json}");
-    let blueprint_json = render(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await;
-    assert!(blueprint_json.contains(r#""cameraX":0.0"#), "blueprint surface camera stays independent: {blueprint_json}");
+    dispatch_in(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_PREVIEW.into()), camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 } }), PREVIEW_WINDOW).await;
+    let preview = scene(&mut app, crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_BODY_PREVIEW).await;
+    assert_eq!((preview.camera_x, preview.camera_y, preview.zoom), (3.0, 4.0, 2.0), "preview scene reflects its window's camera");
+    let blueprint = scene(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await;
+    assert_eq!((blueprint.camera_x, blueprint.camera_y), (0.0, 0.0), "blueprint window camera stays independent");
 }
 
 /// 🕹️ Selection is framework-owned: a hit never mutates config, it emits `interactionSelect`
@@ -186,7 +189,7 @@ async fn canvas_drop_adds_frame_at_world_coords() {
     // 🧾️ A MOUNTED app publishes through its retained typed operation, so `result.mutations` is EMPTY
     // (fleet brief v2, stale-test bucket 3) — the settled document below is the committed record.
     let before = app.snapshot().expect("projection").pages[0].frames.len();
-    dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0 })).await;
+    dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0, artifact_ref: String::new(), proxy_data_url: String::new() })).await;
     let doc = app.snapshot().expect("projection");
     assert_eq!(doc.pages[0].frames.len(), before + 1, "one drop appends exactly one frame");
     let frame = doc.pages[0].frames.last().unwrap();
@@ -200,7 +203,7 @@ async fn canvas_drop_page_kind_adds_page() {
     let mut app = layout_app().await;
     let before = app.snapshot().expect("projection").pages.len();
     // 🧾️ Mounted: the settled document is the committed record, never `result.mutations` (bucket 3).
-    dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0 })).await;
+    dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0, artifact_ref: String::new(), proxy_data_url: String::new() })).await;
     assert_eq!(app.snapshot().expect("projection").pages.len(), before + 1);
 }
 
@@ -208,8 +211,8 @@ async fn canvas_drop_page_kind_adds_page() {
 async fn drag_over_emits_ghost_and_leave_clears() {
     let mut app = layout_app().await;
     dispatch(&mut app, LayoutCommand::CanvasDragOver(canvas_drag_over::CanvasDragOver { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 })).await;
-    assert!(render(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await.contains("layout.drop-preview"));
+    assert!(scene(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await.layers_json.contains("layout.drop-preview"), "the blueprint window's transient carries the drop ghost");
 
     dispatch(&mut app, LayoutCommand::CanvasDragLeave(canvas_drag_leave::CanvasDragLeave {})).await;
-    assert!(!render(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await.contains("layout.drop-preview"));
+    assert!(!scene(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await.layers_json.contains("layout.drop-preview"), "drag leave clears the ghost");
 }

@@ -3,6 +3,15 @@ use crate::editor::generation3d::unit_tests::context::{app, render as render_bod
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 #[semio_framework_async_macros::async_test]
+async fn catalogue_component_rows_drag_as_flow_widgets() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app().await;
+    let json = render_body(&mut app, GENERATION_3D_PLAY_BODY_CATALOGUE).await;
+    assert!(json.contains("application/x-flow-widget"), "a catalogue row must publish the flow widget drag mime: {json}");
+    assert!(json.contains("\"draggable\":true"), "a catalogue row must be draggable: {json}");
+}
+
+#[semio_framework_async_macros::async_test]
 async fn generation3d_labels_resolve_native_english_by_default() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
     let mut app = app().await;

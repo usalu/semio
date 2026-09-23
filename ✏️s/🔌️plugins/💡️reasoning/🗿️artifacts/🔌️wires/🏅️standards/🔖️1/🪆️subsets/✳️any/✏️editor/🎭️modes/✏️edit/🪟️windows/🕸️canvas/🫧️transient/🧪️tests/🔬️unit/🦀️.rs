@@ -88,7 +88,9 @@ async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document
         if released.content.child_id != first_party_handle.child_id || released.content.target != first_party_handle.target {
             return Err("bounded release writer disagrees with the first-party graph content handle".into());
         }
-        app.handle_action("undo", None, &ActionMeta { view_state: view.for_window_instance("left"), ..artifact_app_laws::meta("gesture-undo") }).await.map_err(|error| format!("{error:?}"))?;
+        let admitted = app.handle_action("undo", None, &ActionMeta { view_state: view.for_window_instance("left"), ..artifact_app_laws::meta("gesture-undo") }).await.map_err(|error| format!("{error:?}"))?;
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.map_err(|error| format!("{error:?}"))?;
+        artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("{error:?}"))?;
         let undone = app.snapshot().map_err(|error| format!("{error:?}"))?;
         let node = crate::standards::v1::subsets::any::schema::inferences::find_board_node(&undone, vectors["node"].as_str().ok_or("missing node")?).ok_or("undone node is absent")?;
         if crate::schema::node_position(&node) != (0.0, 0.0) {
@@ -319,7 +321,7 @@ async fn window_transient_backwards_restores_the_same_field_from_base() {
 
 #[semio_framework_async_macros::async_test]
 async fn wires_window_transient_retained_pointer_lifecycle_is_partitioned() {
-    use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_up::CanvasPointerUp};
+    use crate::editor::wires::commands::{canvas_pointer_down::CanvasPointerDown, canvas_pointer_up::CanvasPointerUp, node_graph_viewport::NodeGraphViewport};
     use crate::editor::wires::{create_wires_app, ReasoningWiresPlayApp, WiresCommand, WIRES_PLAY_WINDOW_CANVAS};
     use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
     fn manifest() -> App {
@@ -331,29 +333,15 @@ async fn wires_window_transient_retained_pointer_lifecycle_is_partitioned() {
     let left = view.for_window_instance("canvas-left").unwrap();
     let right = view.for_window_instance("canvas-right").unwrap();
     let result: Result<(), String> = async {
+        app.dispatch_typed(WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("canvas") }).await.map_err(|error| format!("{error:?}"))?;
+        artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("canvas window config: {error:?}"))?;
         let document = app.snapshot().map_err(|error| format!("{error:?}"))?;
         let config = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
         for command in [WiresCommand::CanvasPointerDown(CanvasPointerDown { id: None, x: 12.0, y: 24.0 }), WiresCommand::CanvasPointerUp(CanvasPointerUp { cancelled: false })] {
             app.dispatch_typed(command, &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("canvas") }).await.map_err(|error| format!("{error:?}"))?;
-            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-            while app.has_pending_typed_operations() {
-                if std::time::Instant::now() >= deadline {
-                    return Err("canvas lifecycle did not finish".into());
-                }
-                app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
-                app.advance_typed_operation_publication().await.map_err(|error| format!("{error:?}"))?;
-                if let Some(page) = app.take_typed_operation_result_page(1) {
-                    let lane = page.lane;
-                    let bytes = page.bytes().to_vec();
-                    app.acknowledge_typed_operation_result(page.token).map_err(|error| format!("{error:?}"))?;
-                    if lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
-                        return Err(format!("canvas lifecycle fault: {bytes:?}"));
-                    }
-                }
-                app.take_typed_operation_effect();
-                app.take_typed_operation_event();
-                app.take_typed_operation_ui_scope();
-                std::thread::yield_now();
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.map_err(|error| format!("canvas lifecycle did not finish: {error:?}"))?;
+            if receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault) {
+                return Err(format!("canvas lifecycle fault: {:?}", receipt.lanes));
             }
         }
         let local = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("left owner absent")?;
